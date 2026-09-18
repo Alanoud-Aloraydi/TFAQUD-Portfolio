@@ -33,7 +33,75 @@ Initial roles were assigned through voting for a one-month period, with all memb
 The team has not yet finalized its task management tool and is considering Trello and Jira.
 
 ## 2. Ideas Explored
-
+ 
+Over a two-week period, the team explored six directions across different domains before settling on the final concept.
+ 
+### 2.1 Medication Management App
+A mobile app focused on managing medications for a single patient.
+ 
+*Outcome:* Rather than being rejected, this idea was the starting point for the team's selected concept. It was expanded into **TFAQUD**, broadening the scope beyond medication tracking to include appointments, therapy sessions, health measurements, and multi-caregiver coordination (see Section 3).
+ 
+### 2.2 Microbiome-Based Biofouling Prediction for Desalination Plants
+An app to help desalination plants predict biofouling risk — going beyond simple risk prediction by using metagenomics data to identify the microbes and genetic traits associated with biofilm formation, then explaining why the risk had increased.
+ 
+*Reason for Rejection:* On closer analysis, the underlying computation turned out to be too simple — the output could be derived with basic calculations, leaving little room for a substantial application to be built around it.
+ 
+### 2.3 E-Commerce Store Ratings Platform
+A platform aggregating online stores, with ratings submitted only by customers who had actually received the service. Accounts would require identity verification linked to Nafath (Saudi Arabia's national digital identity platform) to prevent fake reviews.
+ 
+*Reason for Rejection:* Government-backed platforms already address this space (e.g., "Mawthoq" and similar trusted-registry apps), making the idea largely redundant.
+ 
+### 2.4 School–Parent Communication Platform
+A platform enabling communication between schools and parents, covering student check-out notifications and attendance/absence management.
+ 
+*Reason for Rejection:* The team did not explore the idea in enough depth and had not clearly defined its scope or boundaries.
+ 
+### 2.5 Repair Worker Booking App
+Similar to on-demand hourly home-cleaning apps, but for home repair workers (electricians, plumbers, etc.), with advance booking and the ability to select a specific, previously-used worker.
+ 
+*Reason for Rejection:* An existing app was found to match the idea very closely, so it was automatically excluded.
+ 
+### 2.6 Event Planning Aggregator
+An app combining all the components needed for planning an event — available halls, catering, photography, decor/booths, and similar services — in one place.
+ 
+*Reason for Rejection:* A previous team had already pursued the exact same idea, making it a duplicate concept.
+ 
+### 2.7 Evaluation Summary
+ 
+**Evaluation Criteria**
+ 
+| Criterion | What it measures |
+|---|---|
+| Feasibility | Can the team realistically build this with the skills, time, and tools available (including tech that needs to be learned, like Flutter)? |
+| Potential Impact | How significant and well-evidenced is the problem, and how meaningfully does the idea solve it? |
+| Technical Alignment | How well does the required tech stack match the team's existing skills (backend, REST APIs, databases, Flask) vs. what needs to be learned from scratch? |
+| Scalability | Room to grow beyond the MVP — additional features, broader user base, future integrations. |
+ 
+Each idea is scored 1 (weak) to 5 (strong) per criterion.
+ 
+**Scoring Matrix**
+ 
+| Idea | Feasibility | Potential Impact | Technical Alignment | Scalability | Total /20 | Rank |
+|---|---|---|---|---|---|---|
+| TFAQUD (Medication/Care Management) | 5 | 5 | 4 | 4 | 18 | 1 |
+| Event Planning Aggregator | 3 | 3 | 3 | 2 | 11 | 2 (tie) |
+| School–Parent Communication | 3 | 3 | 3 | 2 | 11 | 2 (tie) |
+| Repair Worker Booking | 4 | 2 | 3 | 2 | 11 | 2 (tie) |
+| E-Commerce Store Ratings | 3 | 2 | 3 | 2 | 10 | 5 |
+| Microbiome / Biofouling Prediction | 2 | 3 | 2 | 2 | 9 | 6 |
+ 
+**Risks & Constraints per Idea**
+ 
+| Idea | Key Risks / Constraints |
+|---|---|
+| TFAQUD | Learning curve for Flutter and mobile deployment; designing a clear multi-caregiver permission system without confusing users; handling sensitive health data responsibly; device-integration APIs uncertain (kept out of MVP scope). |
+| Microbiome / Biofouling Prediction | Requires specialized domain knowledge (metagenomics) the team doesn't currently have; access to real desalination-plant data is uncertain; core computation too simple to sustain a full MVP. |
+| E-Commerce Store Ratings | Depends on Nafath integration, which may involve approval/access hurdles; direct overlap with existing government-backed trust platforms weakens differentiation. |
+| School–Parent Communication | Scope was never clearly bounded; would likely require partnerships with actual schools to pilot, which is outside the team's control. |
+| Repair Worker Booking | A closely matching app already exists in the market, making differentiation very difficult; discovered late in exploration. |
+| Event Planning Aggregator | A previous cohort/team pursued an identical concept — duplication risk for academic originality; also a crowded market of existing event-planning apps. |
+ 
+TFAQUD comes out clearly on top across all four criteria, which lines up with why it was selected — an evidence-backed problem, a feasible scope, and a stack the team already partially knows.
 ## 3. Selected MVP Concept
 
 ### 3.1 Selected Idea
