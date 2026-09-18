@@ -13,8 +13,12 @@ Patients who require continuous healthcare and their caregivers face challenges 
 These findings highlight challenges related to continuity of follow-up and the time required to maintain it. Patients and their caregivers need to organize and share treatment information, appointments, and tasks — responsibilities that require continuous effort, particularly when more than one person is involved in providing care.
 
 ## Target Audience
-Our initial target audience is caregiving groups in which two or more caregivers, including family members or other caregivers, coordinate ongoing care for a single patient who requires regular medication, healthcare appointments, and health measurements. They need a centralized way to organize schedules, share care information, assign responsibilities, and coordinate daily care.
 
+- **The patient themselves**, when able to fully manage their own treatment, using Detailed Mode independently.
+- **A patient supported by family caregivers**, structured in two ways:
+  - A responsible family member manages the patient's care through Detailed Mode and can invite other family members, assigning each a role (read/edit) to share caregiving responsibilities.
+  - The patient uses the simplified Light Mode to receive reminders and follow instructions for medications they are able to take on their own, while a responsible family member using Detailed Mode adds the medications, manages the information, and adds other family members as needed.
+These users need a centralized way to organize schedules, share treatment information, assign responsibilities, and coordinate daily care around one patient.
 ## Key Features
 
 ### Application Modes
