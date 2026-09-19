@@ -29,11 +29,9 @@ Initial roles were assigned through voting for a one-month period, with all memb
 - **Collaboration:** Use GitHub to share project files and distribute tasks fairly based on skills and required effort.
 - **Decision-Making:** Make decisions by consensus and discuss different perspectives to reach mutual agreement.
 - **Commitment:** Notify the team in advance and provide a reason when unable to participate.
-
-The team has not yet finalized its task management tool and is considering Trello and Jira.
+- **Task Management Tool:** The team is currently evaluating Trello and Jira and will confirm its choice at the next stand-up. This decision does not block current workflow, which continues to run through GitHub for file-sharing and WhatsApp/Discord for coordination.
 
 ## 2. Ideas Explored
-
 
 ### 2.1 Research
 
@@ -43,29 +41,7 @@ The research focused on healthcare management, patient care, communication, task
 
 During the brainstorming process, the team explored several areas, including healthcare and medication management, bioinformatics and water desalination, e-commerce services, communication between schools and parents, home repair services, and event organization. This process resulted in the discussion of six main project directions before selecting the final idea.
 
-### 2.2 Ideas Considered
-
-The following ideas were explored during the brainstorming process:
-
-1. **Medication Management Application**
-   A mobile application focused on helping patients organize their medications, including medication schedules and reminders.
-
-2. **Microbiome-Based Biofouling Prediction in Water Desalination Plants**
-   An application that could use metagenomics data to identify microorganisms and genetic traits associated with biofilm formation and help interpret changes in the level of biofouling risk.
-
-3. **E-commerce Store Evaluation Platform**
-   A platform that brings together online stores and allows verified customers to submit their reviews after receiving the service.
-
-4. **School–Parent Communication Platform**
-   A platform designed to improve communication between schools and parents, including student dismissal notifications and attendance management.
-
-5. **Home Maintenance Worker Booking Application**
-   An on-demand platform for booking home repair workers, such as electricians and plumbers, with the option to select a worker the user has previously worked with.
-
-6. **Comprehensive Event Organization Platform**
-   An application that brings different event organization services together in one place, including venues, catering, photography, decoration, and booths.
-
-### 2.3 Brainstorming Techniques
+### 2.2 Brainstorming Techniques
 
 #### Mind Mapping
 
@@ -99,61 +75,61 @@ The team used "How Might We" questions to transform the healthcare problem into 
 
 The brainstorming process helped the team identify healthcare and patient care coordination as a potential area for developing a mobile application. The initial medication management idea was later expanded into the broader **TFAQUD** concept.
 
+### 2.3 Ideas Considered
 
+The following six directions were explored during the brainstorming process, each with its strengths, weaknesses, and outcome.
 
+**1. Medication Management Application**
+A mobile application focused on helping patients organize their medications, including medication schedules and reminders.
+- *Strength:* Addressed a clear, well-evidenced need (caregiver time pressure and inconsistent follow-up), with a simple and technically approachable starting scope.
+- *Weakness:* Too narrow on its own — limited to medications only, with no coverage of appointments, measurements, or multi-caregiver coordination.
+- *Outcome:* Not rejected — expanded through Mind Mapping and SCAMPER into the broader **TFAQUD** concept (see Section 3).
 
+**2. Microbiome-Based Biofouling Prediction in Water Desalination Plants**
+An application that could use metagenomics data to identify microorganisms and genetic traits associated with biofilm formation and help interpret changes in the level of biofouling risk.
+- *Strength:* A novel, differentiated use of metagenomics data with little existing competition, and a natural fit for the team's bioinformatics background.
+- *Weakness:* On closer analysis, the underlying computation turned out to be too simple — the risk output could be derived with basic calculations, leaving little room for a substantial application to be built around it.
+- *Reason for Rejection:* Insufficient technical depth to sustain a full MVP.
 
+**3. E-Commerce Store Evaluation Platform**
+A platform that brings together online stores and allows verified customers to submit reviews after receiving the service, with accounts verified through Nafath to prevent fake reviews.
+- *Strength:* Directly tackled a real trust problem in online shopping, with a credible anti-fraud mechanism via national identity verification.
+- *Weakness:* Government-backed platforms already address this space (e.g., "Mawthoq" and similar trusted-registry apps).
+- *Reason for Rejection:* Largely redundant with existing government solutions, weakening the case for a new product.
 
+**4. School–Parent Communication Platform**
+A platform designed to improve communication between schools and parents, including student dismissal notifications and attendance management.
+- *Strength:* Addressed a relatable, everyday problem with a clearly identifiable user base (schools and parents).
+- *Weakness:* The team did not explore the idea in enough depth and had not clearly defined its scope or boundaries.
+- *Reason for Rejection:* Insufficiently developed to commit to as an MVP direction.
 
+**5. Home Maintenance Worker Booking Application**
+An on-demand platform for booking home repair workers, such as electricians and plumbers, with the option to select a worker the user has previously worked with.
+- *Strength:* Proven market model (similar to existing hourly home-service apps), technically straightforward to build.
+- *Weakness:* An existing app was found to match the idea very closely.
+- *Reason for Rejection:* Automatically excluded due to lack of differentiation from an already-available product.
 
- 
-Over a two-week period, the team explored six directions across different domains before settling on the final concept.
- 
-### 2.1 Medication Management App
-A mobile app focused on managing medications for a single patient.
- 
-*Outcome:* Rather than being rejected, this idea was the starting point for the team's selected concept. It was expanded into **TFAQUD**, broadening the scope beyond medication tracking to include appointments, therapy sessions, health measurements, and multi-caregiver coordination (see Section 3).
- 
-### 2.2 Microbiome-Based Biofouling Prediction for Desalination Plants
-An app to help desalination plants predict biofouling risk — going beyond simple risk prediction by using metagenomics data to identify the microbes and genetic traits associated with biofilm formation, then explaining why the risk had increased.
- 
-*Reason for Rejection:* On closer analysis, the underlying computation turned out to be too simple — the output could be derived with basic calculations, leaving little room for a substantial application to be built around it.
- 
-### 2.3 E-Commerce Store Ratings Platform
-A platform aggregating online stores, with ratings submitted only by customers who had actually received the service. Accounts would require identity verification linked to Nafath (Saudi Arabia's national digital identity platform) to prevent fake reviews.
- 
-*Reason for Rejection:* Government-backed platforms already address this space (e.g., "Mawthoq" and similar trusted-registry apps), making the idea largely redundant.
- 
-### 2.4 School–Parent Communication Platform
-A platform enabling communication between schools and parents, covering student check-out notifications and attendance/absence management.
- 
-*Reason for Rejection:* The team did not explore the idea in enough depth and had not clearly defined its scope or boundaries.
- 
-### 2.5 Repair Worker Booking App
-Similar to on-demand hourly home-cleaning apps, but for home repair workers (electricians, plumbers, etc.), with advance booking and the ability to select a specific, previously-used worker.
- 
-*Reason for Rejection:* An existing app was found to match the idea very closely, so it was automatically excluded.
- 
-### 2.6 Event Planning Aggregator
-An app combining all the components needed for planning an event — available halls, catering, photography, decor/booths, and similar services — in one place.
- 
-*Reason for Rejection:* A previous team had already pursued the exact same idea, making it a duplicate concept.
- 
-### 2.7 Evaluation Summary
- 
+**6. Comprehensive Event Organization Platform**
+An application that brings different event organization services together in one place, including venues, catering, photography, decoration, and booths.
+- *Strength:* A convenient one-stop-shop concept addressing genuine fragmentation in event planning.
+- *Weakness:* A previous team had already pursued the exact same idea.
+- *Reason for Rejection:* Considered a duplicate concept, raising originality concerns.
+
+### 2.4 Evaluation Summary
+
 **Evaluation Criteria**
- 
+
 | Criterion | What it measures |
 |---|---|
 | Feasibility | Can the team realistically build this with the skills, time, and tools available (including tech that needs to be learned, like Flutter)? |
 | Potential Impact | How significant and well-evidenced is the problem, and how meaningfully does the idea solve it? |
 | Technical Alignment | How well does the required tech stack match the team's existing skills (backend, REST APIs, databases, Flask) vs. what needs to be learned from scratch? |
 | Scalability | Room to grow beyond the MVP — additional features, broader user base, future integrations. |
- 
+
 Each idea is scored 1 (weak) to 5 (strong) per criterion.
- 
+
 **Scoring Matrix**
- 
+
 | Idea | Feasibility | Potential Impact | Technical Alignment | Scalability | Total /20 | Rank |
 |---|---|---|---|---|---|---|
 | TFAQUD (Medication/Care Management) | 5 | 5 | 4 | 4 | 18 | 1 |
@@ -162,9 +138,9 @@ Each idea is scored 1 (weak) to 5 (strong) per criterion.
 | Repair Worker Booking | 4 | 2 | 3 | 2 | 11 | 2 (tie) |
 | E-Commerce Store Ratings | 3 | 2 | 3 | 2 | 10 | 5 |
 | Microbiome / Biofouling Prediction | 2 | 3 | 2 | 2 | 9 | 6 |
- 
+
 **Risks & Constraints per Idea**
- 
+
 | Idea | Key Risks / Constraints |
 |---|---|
 | TFAQUD | Learning curve for Flutter and mobile deployment; designing a clear multi-caregiver permission system without confusing users; handling sensitive health data responsibly; device-integration APIs uncertain (kept out of MVP scope). |
@@ -173,13 +149,14 @@ Each idea is scored 1 (weak) to 5 (strong) per criterion.
 | School–Parent Communication | Scope was never clearly bounded; would likely require partnerships with actual schools to pilot, which is outside the team's control. |
 | Repair Worker Booking | A closely matching app already exists in the market, making differentiation very difficult; discovered late in exploration. |
 | Event Planning Aggregator | A previous cohort/team pursued an identical concept — duplication risk for academic originality; also a crowded market of existing event-planning apps. |
- 
+
 TFAQUD comes out clearly on top across all four criteria, which lines up with why it was selected — an evidence-backed problem, a feasible scope, and a stack the team already partially knows.
+
 ## 3. Selected MVP Concept
 
 ### 3.1 Selected Idea
 
-**Project Name: TFAQUD | تفقُّد**
+**Project Name: TFAQUD | تفقُّد**
 
 The team selected TFAQUD, a mobile application designed to organize healthcare for a single patient, whether the patient manages their own care or a primary caregiver is responsible for it.
 
@@ -190,7 +167,9 @@ The application brings medication management, medical appointments, therapy sess
 The team selected TFAQUD for the following reasons:
 
 - **Technical Feasibility:** The idea aligns with the team's existing skills in backend development, REST APIs, and databases, while providing an opportunity to learn Flutter for mobile development.
+- **Innovation:** The dual application modes — Light Mode for patients and Detailed Mode for caregivers — combined with a multi-caregiver permission and responsibility-sharing system, address a coordination gap that typical single-user medication reminder apps do not solve.
 - **Value Proposition:** The application combines multiple aspects of healthcare management in one place and supports coordination among caregivers.
+- **Potential Impact:** The scoring matrix in Section 2.4 rated TFAQUD highest on Potential Impact (5/5) of any idea considered. The problem it targets — fragmented coordination across medications, appointments, and measurements — affects two distinct, currently underserved groups at once: multi-caregiver households who have no shared system for dividing responsibility, and independent patients who must otherwise track their own care across separate tools. By centralizing both use cases in one application with mode-appropriate views, TFAQUD has a broader potential reach than a single-purpose reminder app while staying within the team's technical capacity.
 - **Alignment with Team Goals:** The project allows the team to apply software development skills and gain experience in mobile development and system integration.
 
 ### 3.3 Problem Statement
@@ -232,8 +211,11 @@ The project aims to:
 
 ### 3.7 Challenges and Opportunities
 
+The challenges below trace directly back to the brainstorming process: the multi-caregiver permission and responsibility-sharing system that emerged from the SCAMPER "Reverse" step and the "How Might We" question on shared caregiving (Section 2.2) is the main source of design and implementation complexity, alongside the following technical challenges:
+
 **Challenges:**
 
+- Designing a multi-caregiver permission and responsibility-sharing system that stays clear and usable rather than confusing.
 - Learning Flutter for mobile application development.
 - Implementing API integration.
 - Working with Docker and deploying the application.
