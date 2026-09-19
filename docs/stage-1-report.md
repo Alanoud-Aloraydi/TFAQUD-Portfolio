@@ -35,8 +35,6 @@ The team has not yet finalized its task management tool and is considering Trell
 ## 2. Ideas Explored
 
 
-##  Research and Brainstorming
-
 ### 2.1 Research
 
 The team conducted individual and group research to identify potential project ideas, based on real-world problems, user needs, and areas where technology could help improve organization and coordination.
