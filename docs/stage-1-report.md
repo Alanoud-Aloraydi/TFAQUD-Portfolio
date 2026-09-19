@@ -33,6 +33,81 @@ Initial roles were assigned through voting for a one-month period, with all memb
 The team has not yet finalized its task management tool and is considering Trello and Jira.
 
 ## 2. Ideas Explored
+
+
+##  Research and Brainstorming
+
+### 2.1 Research
+
+The team conducted individual and group research to identify potential project ideas, based on real-world problems, user needs, and areas where technology could help improve organization and coordination.
+
+The research focused on healthcare management, patient care, communication, task and appointment scheduling, and service organization. The team also considered problems that could be addressed through a mobile application and evaluated the feasibility of developing the ideas based on the team's skills, available time, and technical resources.
+
+During the brainstorming process, the team explored several areas, including healthcare and medication management, bioinformatics and water desalination, e-commerce services, communication between schools and parents, home repair services, and event organization. This process resulted in the discussion of six main project directions before selecting the final idea.
+
+### 2.2 Ideas Considered
+
+The following ideas were explored during the brainstorming process:
+
+1. **Medication Management Application**
+   A mobile application focused on helping patients organize their medications, including medication schedules and reminders.
+
+2. **Microbiome-Based Biofouling Prediction in Water Desalination Plants**
+   An application that could use metagenomics data to identify microorganisms and genetic traits associated with biofilm formation and help interpret changes in the level of biofouling risk.
+
+3. **E-commerce Store Evaluation Platform**
+   A platform that brings together online stores and allows verified customers to submit their reviews after receiving the service.
+
+4. **School–Parent Communication Platform**
+   A platform designed to improve communication between schools and parents, including student dismissal notifications and attendance management.
+
+5. **Home Maintenance Worker Booking Application**
+   An on-demand platform for booking home repair workers, such as electricians and plumbers, with the option to select a worker the user has previously worked with.
+
+6. **Comprehensive Event Organization Platform**
+   An application that brings different event organization services together in one place, including venues, catering, photography, decoration, and booths.
+
+### 2.3 Brainstorming Techniques
+
+#### Mind Mapping
+
+The team used mind mapping to connect real-world problems with potential digital solutions. In the healthcare-related direction, the main concept was **patient care management**, from which several aspects branched out, such as medications, medical appointments, therapy sessions, health measurements, reminders, caregivers, responsibilities, and documentation of care activities.
+
+This helped the team expand the initial idea of medication management into a more comprehensive concept for healthcare and patient care coordination.
+
+#### SCAMPER-Based Thinking
+
+During the brainstorming process, the team explored different ways to improve and expand the initial ideas. In the healthcare direction, the team considered how multiple healthcare-related functions could be integrated into a single application instead of focusing only on medication management.
+
+The initial medication management idea evolved through:
+
+* **Combine:** Combining medication management with medical appointments, therapy sessions, health measurements, reminders, and care responsibilities.
+* **Adapt:** Adapting common reminder and task-management functions to meet the needs of healthcare and patient care.
+* **Modify:** Modifying the application to support patients who are able to manage their own care, as well as patients who require assistance from caregivers.
+* **Eliminate:** Reducing the need to rely on multiple separate tools to organize different aspects of patient care.
+* **Reverse:** Allowing the primary caregiver to manage care responsibilities and distribute them when needed, rather than requiring the patient to manage all aspects of their care independently.
+
+This process helped expand the initial medication management idea into a more comprehensive concept for healthcare and patient care, which later developed into the **TFAQUD** concept.
+
+#### How Might We Questions
+
+The team used "How Might We" questions to transform the healthcare problem into questions that could support the exploration of possible solutions:
+
+* **How might we help caregivers coordinate the care of a single patient?**
+* **How might we make managing medications and medical appointments easier?**
+* **How might we enable multiple caregivers to share and coordinate responsibilities?**
+* **How might we support patients who are able to manage their own care, as well as patients who need assistance?**
+* **How might we bring health information and patient care responsibilities together in one place?**
+
+The brainstorming process helped the team identify healthcare and patient care coordination as a potential area for developing a mobile application. The initial medication management idea was later expanded into the broader **TFAQUD** concept.
+
+
+
+
+
+
+
+
  
 Over a two-week period, the team explored six directions across different domains before settling on the final concept.
  
