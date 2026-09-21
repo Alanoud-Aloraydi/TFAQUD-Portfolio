@@ -43,8 +43,6 @@ Schedule blood sugar and blood pressure measurements, send reminders to take the
 ### Statistics & Reports
 Display useful, easy-to-understand information and statistics that help the user track treatment and health measurements (final indicators and display format still under discussion).
 
-### Medical Device Integration (Under Study)
-Exploring the possibility of connecting the app to blood sugar and blood pressure devices to import readings automatically, provided suitable APIs and user-consented data access are available. Manual entry will remain available as a core function regardless.
 
 ## Team
 - Lama Alzahrani
