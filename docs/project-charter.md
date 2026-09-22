@@ -88,36 +88,16 @@ The application does not support integration with hospital systems or electronic
 
 ## 5. High-Level Project Plan
 
-### Stage 1: Idea Development
-
-**Status:** Completed
-
-**Timeline:** [Actual timeframe]
-
-**Key Milestone:** [Completed deliverable]
-
-### Stage 2: Project Charter Development
-
-**Status:** Current
-
-**Timeline:** [Actual timeframe]
-
-**Key Milestone:** [Expected deliverable]
-
-### Stage 3: Technical Documentation
-
-**Timeline:** [Planned timeframe]
-
-**Key Milestone:** [Expected deliverable]
-
-### Stage 4: MVP Development
-
-**Timeline:** [Planned timeframe]
-
-**Key Milestone:** [Expected deliverable]
-
-### Stage 5: Project Closure
-
-**Timeline:** [Planned timeframe]
-
-**Key Milestone:** [Expected deliverable]
+```mermaid
+gantt
+    title TFAQUD Project Timeline
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+    todayMarker on
+    section Stages
+    Team Formation & Idea Dev   :done, s1, 2026-09-13, 2026-09-19
+    Project Charter             :active, s2, 2026-09-20, 2026-09-26
+    Technical Documentation     :s3, 2026-09-27, 2026-10-10
+    MVP Development             :s4, 2026-10-11, 2026-11-21
+    Project Closure             :s5, 2026-11-22, 2026-12-05
+```
