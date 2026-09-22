@@ -25,18 +25,18 @@ To develop a mobile application for iOS that simplifies the organization and mon
 
 | Classification | Stakeholder | Relationship to the Project |
 |---|---|---|
-| Internal | Project Team: Alanoud Aloraydi, Lama Alzahrani, and Leen Algraawi | Responsible for planning, developing, and delivering TFAQUD. Team members collaborate on project activities and make decisions by consensus. |
-| External | Holberton Monitors | Monitor the team's progress and evaluate the deliverables of each project stage. |
-| External | Patients | Intended users who either manage their own care independently or require assistance from caregivers. |
-| External | Caregivers | Intended users, including family members and other caregivers, who organize and coordinate care for a single patient. The primary target audience includes groups of two or more caregivers sharing caregiving responsibilities. |
+| Internal | Project Team: Alanoud Aloraydi, Lama Alzahrani, and Leen Algraawi | Plan and develop TFAQUD, prepare project deliverables, and make project decisions collaboratively. |
+| Internal | Holberton Monitors | Follow the team's progress and review project deliverables as part of Holberton's academic assessment process. |
+| External | Patients | Intended users who either manage their own care independently or receive assistance from caregivers. |
+| External | Caregivers | Intended users who organize and coordinate care for a single patient. The primary target audience includes groups of two or more caregivers sharing caregiving responsibilities. |
 
 ### 2.2 Team Roles and Responsibilities
 
 | Role | Assigned Member(s) | Responsibilities |
 |---|---|---|
-| Team Lead | Alanoud Aloraydi | Coordinate task assignments, facilitate technical discussions, and oversee the integration of the team's work. |
-| Project Manager | Lama Alzahrani | Organize project meetings, track progress and deadlines, and identify obstacles that may affect the project. |
-| Developer | All Team Members | Collaborate on application development, documentation, work reviews, and project decision-making. |
+| Team Lead | Alanoud Aloraydi | Coordinate task assignments, facilitate technical discussions, and ensure the integration of the team's work. |
+| Project Manager | Lama Alzahrani | Organize meetings, track project progress and deadlines, and identify obstacles that may affect delivery. |
+| Developer | All Team Members | Collaborate on application development and participate in project documentation and work reviews. |
 
 ---
 
