@@ -9,14 +9,13 @@
 ## 1. Project Objectives
 
 ### 1.1 Project Purpose
-
-[Add a short paragraph explaining why TFAQUD is being developed and the problem it aims to address.]
+ 
+To develop a mobile application for iOS that simplifies the organization and monitoring of healthcare for a single patient, whether the patient manages their own care or receives support from family caregivers.
 
 ### 1.2 SMART Objectives
-
-1. [SMART Objective 1]
-2. [SMART Objective 2]
-3. [SMART Objective 3 — optional]
+- Provide a simple and centralized place to manage medications, appointments, and health measurements.
+- Help reduce missed medications and appointments through reminders and follow-up tracking.
+- Enable multiple caregivers to coordinate and divide care responsibilities with clear permissions for each member.
 
 ---
 
@@ -56,13 +55,12 @@
 
 ### 3.1 In Scope
 
-- [Core feature or deliverable]
-- [Core feature or deliverable]
+A mobile application for iOS with Arabic language support, designed to manage the care of a single patient. The application includes medication management, medical appointments, health measurements, reminders, and caregiver coordination with defined permissions.
+
 
 ### 3.2 Out of Scope
 
-- [Explicitly excluded feature or deliverable]
-- [Explicitly excluded feature or deliverable]
+The application does not support integration with hospital systems or electronic medical records, automated medical diagnosis or clinical data interpretation, or automatic data import from medical devices. It also does not support web or desktop platforms.
 
 ---
 
