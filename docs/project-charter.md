@@ -23,33 +23,21 @@ To develop a mobile application for iOS that simplifies the organization and mon
 
 ### 2.1 Stakeholders
 
-**Internal Stakeholders**
-
-- [Stakeholder — relationship to the project]
-
-**External Stakeholders**
-
-- [Stakeholder — relationship to the project]
+| Classification | Stakeholder | Relationship to the Project |
+|---|---|---|
+| Internal | Project Team: Alanoud Aloraydi, Lama Alzahrani, and Leen Algraawi | Responsible for planning, developing, and delivering TFAQUD. Team members collaborate on project activities and make decisions by consensus. |
+| External | Holberton Monitors | Monitor the team's progress and evaluate the deliverables of each project stage. |
+| External | Patients | Intended users who either manage their own care independently or require assistance from caregivers. |
+| External | Caregivers | Intended users, including family members and other caregivers, who organize and coordinate care for a single patient. The primary target audience includes groups of two or more caregivers sharing caregiving responsibilities. |
 
 ### 2.2 Team Roles and Responsibilities
 
-**Team Lead — Alanoud Aloraydi**
+| Role | Assigned Member(s) | Responsibilities |
+|---|---|---|
+| Team Lead | Alanoud Aloraydi | Coordinate task assignments, facilitate technical discussions, and oversee the integration of the team's work. |
+| Project Manager | Lama Alzahrani | Organize project meetings, track progress and deadlines, and identify obstacles that may affect the project. |
+| Developer | All Team Members | Collaborate on application development, documentation, work reviews, and project decision-making. |
 
-- [Agreed responsibilities]
-
-**Project Manager — Lama Alzahrani**
-
-- [Agreed responsibilities]
-
-**Developers — All Team Members**
-
-- [Agreed shared responsibilities]
-
-**Additional Roles (if applicable)**
-
-- [Role — assigned member — responsibilities]
-
----
 
 ## 3. Project Scope
 
