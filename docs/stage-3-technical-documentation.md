@@ -52,7 +52,7 @@ The MVP mockups were created using Figma. They visualize the main screens requir
 
 The Figma file includes the main care-management screens, including medication management, appointments, health measurements, care history, care-circle coordination, emergency alerts, and visit information.
 
-[Figma Mockups Link]()
+[Figma Mockups Link](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?t=a0Dd2REAYqLnGDJk-1)
 
 ## 2. System Architecture
 
