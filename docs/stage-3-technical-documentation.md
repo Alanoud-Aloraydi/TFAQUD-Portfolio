@@ -77,6 +77,14 @@ The following sequence diagrams illustrate two key interactions in the TFAQUD sy
 1. **User Login** – shows how the user logs into the system and how the system verifies the credentials.
 2. **Add Medication** – shows how the caregiver adds a medication and how the system stores the information in the database.
 
+   ### 4.1 User Login
+
+![User Login](images/User%20Login.png)
+
+### 4.2 Add Medication
+
+![Add Medication](images/Add%20Medication.png)
+
 
 ## 5. API Specifications
 
