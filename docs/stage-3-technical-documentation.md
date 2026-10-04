@@ -55,7 +55,7 @@ The Figma file includes the main care-management screens, including medication m
 [Figma Mockups Link](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?t=a0Dd2REAYqLnGDJk-1)
 
 ## 2. System Architecture
-
+![TFAQUD System Architecture](images/system-architecture.png)
 
 ### High-Level System Architecture
 
