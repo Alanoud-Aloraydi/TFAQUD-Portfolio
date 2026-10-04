@@ -72,6 +72,12 @@ The Figma file includes the main care-management screens, including medication m
 
 ### Key System Interactions
 
+The following sequence diagrams illustrate two key interactions in the TFAQUD system:
+
+1. **User Login** – shows how the user logs into the system and how the system verifies the credentials.
+2. **Add Medication** – shows how the caregiver adds a medication and how the system stores the information in the database.
+
+
 ## 5. API Specifications
 
 ### External APIs
