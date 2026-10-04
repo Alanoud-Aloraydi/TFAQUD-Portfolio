@@ -56,6 +56,8 @@ The Figma file includes the main care-management screens, including medication m
 
 ## 2. System Architecture
 
+![TFAQUD System Architecture](images/System%20Architecture.png)
+
 ### High-Level System Architecture
 
 ## 3. Components, Classes, and Database Design
