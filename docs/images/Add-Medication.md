@@ -14,7 +14,7 @@ sequenceDiagram
         App-->>U: Ask to retake the photo
     else Name detected
         App-->>U: Show extracted name
-        U->>App: Review name, enter dose, meal relation and time slots
+        U->>App: Review name, enter dose and time slots
         App->>API: POST /patients/{id}/medications
         API->>MedService: createMedication(data)
         MedService->>DB: Insert medication
