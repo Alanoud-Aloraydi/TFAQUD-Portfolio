@@ -59,7 +59,7 @@ The stories are prioritized using MoSCoW: **Must Have** items are essential to t
 
 ### 1.2 Main Screen Mockups
 
-[View the main screen mockups in Figma]([FIGMA_URL](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1&t=EkiVLBVRuXTGD5P6-1))
+[View the main screen mockups in Figma](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1&t=EkiVLBVRuXTGD5P6-1)
 
 ## 2. System Architecture
 
