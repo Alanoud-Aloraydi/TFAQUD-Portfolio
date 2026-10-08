@@ -185,617 +185,147 @@ The diagram shows every class with its attributes, methods, and relationships. I
 
 ```mermaid
 classDiagram
-    direction TB
-    namespace Account {
-        class User {
-            -id : UUID4
-            -phoneNumber : String
-            -firstName : String
-            -lastName : String
-            -displayName : String
-            -birthYear : Integer[0..1]
-            -city : String[0..1]
-            -quietFrom : Time
-            -quietUntil : Prayer
-            -summaryAfter : Prayer
-            +memberships() List~CircleMember~
-            +lastUsedMembership() CircleMember[0..1]
-            +exportMyData() File
-            +deleteAccount() void
-        }
-        class Device {
-            -id : UUID4
-            -platform : Platform
-            -pushToken : String[0..1]
-            -appVersion : String
-            -notificationsAllowed : Boolean
-            -exactAlarmAllowed : Boolean[0..1]
-            -locationAllowed : Boolean[0..1]
-            -installationId : String
-            +signOut() void
-        }
-        class OtpChallenge {
-            -id : UUID4
-            -phoneNumber : String
-            -codeHash : String
-            -sentAt : DateTime
-            -validUntil : DateTime
-            -resendAvailableAt : DateTime
-            +verify(code : String) Boolean
-            +isExpired(now : DateTime) Boolean
-            +resend() void
-        }
-        class OtpAttemptLimit {
-            -scope : LimitScope
-            -key : String
-            -failedAttempts : Integer
-            -lockedUntil : DateTime[0..1]
-            +attemptsLeft() Integer
-            +recordFailure() void
-            +isLocked(now : DateTime) Boolean
-            +reset() void
-        }
-    }
-    namespace Circles {
-        class Role {
-            <<enumeration>>
-            MANAGER
-            PERFORMER
-            VIEWER
-            PATIENT_SIMPLIFIED
-        }
-        class AppMode {
-            <<enumeration>>
-            SIMPLIFIED
-            DETAILED
-        }
-        class InvitableRole {
-            <<enumeration>>
-            MANAGER
-            PERFORMER
-            VIEWER
-        }
-        class Circle {
-            -id : UUID4
-            -patientMode : AppMode[0..1]
-            -status : CircleStatus
-            -creationPath : CreationPath
-            -createdAt : DateTime
-            -archivedAt : DateTime[0..1]
-            +invite(name : String, phone : String, role : InvitableRole) Invitation
-            +archive(by : CircleMember) void
-            +reopen(by : CircleMember) void
-            +isReadable(now : DateTime) Boolean
-            +detachPatientAccount() void
-            +deleteWhenUnmanaged() void
-            +exportCareRecord(by : CircleMember) CareRecordExport
-            +addPlanItem(by : CircleMember, item : CarePlanItem) void
-        }
-        class Patient {
-            -id : UUID4
-            -firstName : String
-            -lastName : String
-            -birthYear : Integer
-            -photoUrl : String[0..1]
-            -phoneNumber : String[0..1]
-            -afterPrayerOffsetMin : Integer = 20
-            +hasPhone() Boolean
-            +age() Integer
-            +fullName() String
-            +updatePrayerLocation(location : PatientLocation) void
-            +syncIdentityFrom(user : User) void
-        }
-        class PatientLocation {
-            <<dataType>>
-            -city : String
-            -latitude : Decimal
-            -longitude : Decimal
-            -source : LocationSource
-            -updatedAt : DateTime
-        }
-        class MedicalProfile {
-            -bloodType : String[0..1]
-            -allergies : Allergy[0..*]
-            -chronicConditions : String[0..*]
-            -doctors : Doctor[0..*]
-            +edit(by : CircleMember) void
-        }
-        class Allergy {
-            <<dataType>>
-            -name : String
-            -severity : Severity[0..1]
-            -reportedYear : Integer[0..1]
-        }
-        class Doctor {
-            <<dataType>>
-            -name : String
-            -specialty : String[0..1]
-            -place : String[0..1]
-        }
-        class EmergencyContact {
-            -id : UUID4
-            -fullName : String
-            -relationToPatient : String
-            -phoneNumber : String
-            -displayOrder : Integer
-        }
-        class EmergencyCard {
-            <<derived>>
-            -generatedAt : DateTime
-            +view(by : CircleMember) Document
-        }
-        class Consent {
-            -givenAt : DateTime
-            -scope : SharedData[1..*]
-            -givenBy : User
-        }
-        class CareAcknowledgment {
-            -declaredAt : DateTime
-            -declaredBy : User
-        }
-        class CircleRequest {
-            -id : UUID4
-            -patientPhone : String
-            -patientFirstName : String
-            -patientLastName : String
-            -mode : AppMode
-            -patientRole : InvitableRole[0..1]
-            -status : RequestStatus
-            -createdAt : DateTime
-            -expiresAt : DateTime
-            +approve(patient : User) Circle
-            +decline() void
-            +cancel() void
-            +expireIfDue(now : DateTime) void
-        }
-        class Invitation {
-            -id : UUID4
-            -invitedName : String
-            -invitedPhone : String
-            -role : InvitableRole
-            -status : InvitationStatus
-            -createdAt : DateTime
-            -expiresAt : DateTime
-            +isAvailable(now : DateTime) Boolean
-            +accept(user : User) CircleMember
-            +decline() void
-            +cancel() void
-            +sendWhatsAppLink() void
-        }
-        class CircleMember {
-            -id : UUID4
-            -role : Role
-            -relationToPatient : String[0..1]
-            -status : MemberStatus
-            -joinedAt : DateTime
-            -lastUsedAt : DateTime[0..1]
-            +can(permission : Permission) Boolean
-            +isThePatient() Boolean
-            +changeRoleOf(other : CircleMember, role : InvitableRole) void
-            +isLastManager() Boolean
-            +leave() void
-        }
-        class EscalationOrder {
-            -stepMinutes : Integer = 20
-            +arrange(member : CircleMember, position : Integer) void
-            +next(after : CircleMember[0..1]) CircleMember[0..1]
-            +isEligible(member : CircleMember) Boolean
-        }
-        class EscalationEntry {
-            -position : Integer
-        }
-        class PatientPhoneSettings {
-            -fontSize : FontSize
-            -readAloud : Boolean
-            +tryAlert() void
-        }
-        class PatientPhoneStatus {
-            -connectedSince : Date
-            -lastActivityAt : DateTime[0..1]
-            -appStoppedAt : DateTime[0..1]
-            +stopApp() void
-        }
-    }
-    namespace CarePlan {
-        class CarePlanItem {
-            <<abstract>>
-            -id : UUID4
-            -title : String
-            -orderedBy : String[0..1]
-            -startsOn : Date
-            -endsOn : Date[0..1]
-            -status : ItemStatus
-            +generateTasks(day : Date) List~Task~
-        }
-        class ScheduledItem {
-            <<abstract>>
-            -priority : Priority
-            -maxLatenessMin : Integer
-            -performerMode : PerformerMode
-            -repeatEveryMin : Integer = 10
-            +escalates() Boolean
-            +latestAt(task : Task) DateTime
-        }
-        class Medication {
-            -scientificName : String[0..1]
-            -strength : String[0..1]
-            -baseDose : MedicationQuantity
-            -mealRelation : MealRelation
-            -durationDays : Integer[0..1]
-            -instructionIcons : InstructionIcon[0..*]
-            -photoUrl : String[0..1]
-            -lowStockAt : MedicationQuantity[0..1]
-            +changeDose(by : CircleMember, newDose : MedicationQuantity, orderedBy : String, reason : String, from : DateTime) MedicationChange
-            +stop(by : CircleMember, orderedBy : String, reason : String, from : DateTime) MedicationChange
-            +addStock(by : CircleMember, quantity : MedicationQuantity, addedOn : Date) StockAddition
-            +recountStock(by : CircleMember, counted : MedicationQuantity) StockAddition
-            +remainingStock() MedicationQuantity[0..1]
-            +forecastSupply(at : DateTime) SupplyForecast
-            +isLow() Boolean
-            +effectiveDose(at : DateTime) MedicationQuantity[0..1]
-        }
-        class MedicationQuantity {
-            <<dataType>>
-            -value : Decimal
-            -unit : String
-        }
-        class StockAddition {
-            -kind : StockEntryKind
-            -quantity : MedicationQuantity
-            -addedOn : Date
-            -recordedBy : CircleMember
-        }
-        class SupplyForecast {
-            <<dataType>>
-            -estimatedRunOutAt : DateTime[0..1]
-            -treatmentEndsOn : Date[0..1]
-            -coversTreatment : Boolean[0..1]
-            -calculatedAt : DateTime
-        }
-        class MedicationChange {
-            -kind : ChangeKind
-            -previousDose : MedicationQuantity
-            -newDose : MedicationQuantity[0..1]
-            -orderedBy : String
-            -reason : String[0..1]
-            -effectiveFrom : DateTime
-            -madeBy : CircleMember
-            -madeAt : DateTime
-        }
-        class MeasurementPlan {
-            -type : MeasurementType
-            -context : MeasureContext
-            -range : TargetRange[0..1]
-            +isOutsideRange(m : Measurement) Boolean
-            +stopPlan(by : CircleMember, reason : String) void
-            +updateRange(by : CircleMember, range : TargetRange) void
-        }
-        class TargetRange {
-            <<dataType>>
-            -primaryLower : Decimal
-            -primaryUpper : Decimal
-            -secondaryLower : Decimal[0..1]
-            -secondaryUpper : Decimal[0..1]
-            -unit : String
-            -orderedBy : String[0..1]
-        }
-        class Appointment {
-            -kind : AppointmentKind
-            -seriesStartsAt : DateTime
-            -place : String[0..1]
-            -repeat : RepeatRule
-            -preparation : String[0..1]
-            +generateOccurrences(until : Date) List~AppointmentOccurrence~
-            +rescheduleSeries(by : CircleMember, startsAt : DateTime) void
-            +cancel(by : CircleMember, reason : String) void
-        }
-        class AppointmentOccurrence {
-            -id : UUID4
-            -startsAt : DateTime
-            -status : AppointmentStatus
-            +assignCompanion(by : CircleMember, member : CircleMember) void
-            +askCircle() void
-            +volunteer(member : CircleMember) void
-            +hasCompanion() Boolean
-            +reschedule(by : CircleMember, startsAt : DateTime) void
-            +cancel(by : CircleMember, reason : String) void
-        }
-        class TimeSlot {
-            <<dataType>>
-            -kind : SlotKind
-            -prayer : Prayer[0..1]
-            -exactTime : Time[0..1]
-            -daysOfWeek : DayOfWeek[0..7]
-            +resolve(day : Date, times : PrayerTimes, offsetMin : Integer) DateTime
-        }
-    }
-    namespace Tasks {
-            class Task {
-                -id : UUID4
-                -kind : TaskKind
-                -title : String
-                -dueAt : DateTime
-                -prayerPeriod : Prayer[0..1]
-                -plannedDose : MedicationQuantity[0..1]
-                -status : TaskStatus
-                -postponedUntil : DateTime[0..1]
-                -latestAt : DateTime[0..1]
-                -recordedAt : DateTime[0..1]
-                -recordedBy : CircleMember[0..1]
-                -basis : RecordBasis[0..1]
-                -doseTaken : MedicationQuantity[0..1]
-                -outcome : PatientOutcome[0..1]
-                -voiceNoteUrl : String[0..1]
-                -note : String[0..1]
-                -clientActionId : UUID4[0..1]
-                -version : Integer
-                +complete(by : CircleMember, takenAt : DateTime, actionId : UUID4) RecordResult
-                +logFor(by : CircleMember, basis : RecordBasis, at : DateTime) RecordResult
-                +editRecord(newTime : DateTime) void
-                +postpone(until : DateTime) void
-                +couldNot(reason : String) void
-                +markMissed() void
-                +displayStatus(now : DateTime) DisplayStatus
-                +firstRecipients() List~CircleMember~
-                +needsAttention() Boolean
-            }
-            class TaskAssignment {
-                -status : AssignmentStatus
-                -source : AssignmentSource
-                -assignedBy : CircleMember
-                -note : String[0..1]
-                -remindWhenBoxArrives : Boolean
-                -createdAt : DateTime
-                -respondBy : DateTime
-                -respondedAt : DateTime[0..1]
-                -completedAt : DateTime[0..1]
-                -declineReason : String[0..1]
-                +accept() void
-                +decline(reason : String) void
-                +complete(at : DateTime) void
-                +expireIfDue(now : DateTime) void
-                +reassign(to : CircleMember) TaskAssignment
-            }
-            class TemporaryHandover {
-                -periodFrom : DateTime
-                -periodTo : DateTime
-                -scope : HandoverScope
-                -status : HandoverStatus
-                +propose() List~TaskAssignment~
-                +sendRequests() void
-                +statusBoard() List~TaskAssignment~
-                +end() void
-            }
-            class Visit {
-                -date : Date
-                -status : VisitStatus
-                -notes : String[0..1]
-                -voiceNoteUrl : String[0..1]
-                -reportPhotoUrls : String[0..*]
-                -savedAt : DateTime[0..1]
-                -savedBy : CircleMember[0..1]
-                -companionRightsUntil : DateTime[0..1]
-                +save(by : CircleMember) void
-                +mayEdit(member : CircleMember, now : DateTime) Boolean
-                +addNextAppointment() Appointment
-            }
-            class SymptomReport {
-                -reasons : Symptom[1..*]
-                -voiceNoteUrl : String[0..1]
-                -reportedAt : DateTime
-                +askDoctor() FamilyQuestion
-            }
-        }
-        namespace Alerts {
-            class AlertSubject {
-                <<interface>>
-                +circle() Circle
-                +lockScreenText() String
-            }
-            class Notification {
-                -type : NotificationType
-                -strength : Strength
-                -channel : Channel
-                -scheduledAt : DateTime
-                -deliveredAt : DateTime[0..1]
-                -openedAt : DateTime[0..1]
-                -respondedAt : DateTime[0..1]
-                -response : ResponseAction[0..1]
-                +deliver() void
-                +open() void
-                +respond(action : ResponseAction) void
-            }
-            class Escalation {
-                -trigger : EscalationTrigger
-                -status : EscalationStatus
-                -startedAt : DateTime
-                -step : Integer
-                -respondedBy : CircleMember[0..1]
-                -respondedAt : DateTime[0..1]
-                +start() void
-                +notifyNext() void
-                +respond(by : CircleMember) void
-                +isExhausted() Boolean
-            }
-            class AttentionItem {
-                -kind : AttentionKind
-                -importance : Integer
-                -raisedAt : DateTime
-                -resolvedAt : DateTime[0..1]
-                -resolvedBy : CircleMember[0..1]
-                -resolution : Resolution[0..1]
-                +resolve(by : CircleMember, how : Resolution) void
-                +actions() List~AttentionAction~
-            }
-        }
-        namespace Records {
-            class Measurement {
-                -id : UUID4
-                -type : MeasurementType
-                -primaryValue : Decimal
-                -secondaryValue : Decimal[0..1]
-                -pulse : Integer[0..1]
-                -unit : String
-                -context : MeasureContext[0..1]
-                -measuredAt : DateTime
-                -rangeAtRecording : TargetRange[0..1]
-                -recordedBy : CircleMember
-                -clientActionId : UUID4[0..1]
-                +isOutsideRange() Boolean
-            }
-            class ActivityEntry {
-                -type : ActivityType
-                -occurredAt : DateTime
-                -recordedAt : DateTime
-                -actor : CircleMember[0..1]
-                -onBehalf : Boolean
-                -failed : Boolean
-                -details : Json
-                -clientActionId : UUID4[0..1]
-                +record(type : ActivityType, actor : CircleMember, details : Json) ActivityEntry
-            }
-            class FamilyQuestion {
-                -text : String
-                -addedBy : CircleMember
-                -addedAt : DateTime
-                +addToVisitSheet() void
-            }
-            class AdherenceReport {
-                <<derived>>
-                -periodDays : Integer
-                -onTimeShare : Decimal
-                -onTimeCount : Integer
-                -scheduledCount : Integer
-                -lateCount : Integer
-                -missedCount : Integer
-                -outsideRangeCount : Integer
-                +calendar(month : Date) List~DayColor~
-                +perMedicine() List~DoseCount~
-                +compareWithPrevious() AdherenceReport
-            }
-        class CareRecordExport {
-            <<derived>>
-            -generatedAt : DateTime
-            +exportPdf() File
-        }
-        class VisitSheet {
-                <<derived>>
-                -periodDays : Integer = 30
-                -generatedAt : DateTime
-                -footer : String
-                +preview() Document
-                +exportPdf() File
-                +showOnScreen() void
-            }
-            class PrayerTimes {
-                -latitude : Decimal
-                -longitude : Decimal
-                -date : Date
-                -times : Map~Prayer, Time~
-                -source : TimeSource
-                +periodOf(t : Time) Prayer
-            }
-            class OfflineAction {
-                <<device>>
-                -clientActionId : UUID4
-                -kind : ActionKind
-                -payload : Json
-                -originalTime : DateTime
-                -status : SyncStatus
-                +send() RecordResult
-                +retry() void
-            }
-        }
-    User "0..1" --> "0..*" Device : signs in on
-    OtpChallenge "0..*" --> "1" Device : requested from
-    Device ..> OtpAttemptLimit : counted by installationId
-    OtpChallenge "0..*" --> "2" OtpAttemptLimit : checks device and number
-    Circle "1" *-- "1" Patient : cares for
-    Circle "1" *-- "1..*" CircleMember : members
-    User "1" --> "0..*" CircleMember : joins as
-    Patient "0..1" --> "0..1" User : own account
-    Patient "1" *-- "1" PatientLocation : prayer location
-    Patient "1" *-- "1" MedicalProfile : medical file
-    Patient "1" *-- "0..1" PatientPhoneSettings : phone settings
-    Patient "1" *-- "0..1" PatientPhoneStatus : phone access
-    PatientPhoneStatus "0..1" --> "0..1" Device : installed on
-    MedicalProfile "1" *-- "0..*" EmergencyContact : emergency contacts
-    EmergencyCard ..> Patient : full name
-    EmergencyCard ..> MedicalProfile : health details and contacts
-    EmergencyCard ..> Medication : current medicines
-    Circle ..> EmergencyCard : shows
-    Circle "1" *-- "0..*" Consent : patient consent history
-    Circle "1" *-- "0..1" CareAcknowledgment : creator declaration
-    Circle "1" *-- "1" EscalationOrder : notification order
-    EscalationOrder "1" *-- "0..*" EscalationEntry : positions
-    EscalationEntry "0..*" --> "1" CircleMember : ranks
-    Circle "1" *-- "0..*" Invitation : invites
-    Invitation "0..1" --> "0..1" CircleMember : becomes
-    Invitation "0..*" --> "1" CircleMember : invited by
-    CircleRequest "0..*" --> "1" User : created by
-    CircleRequest "0..1" --> "0..1" Circle : creates when approved
-    CircleRequest "0..*" --> "0..1" User : patient approves
-    Circle "1" *-- "0..*" CarePlanItem : care plan
-    CarePlanItem <|-- ScheduledItem
-    ScheduledItem <|-- Medication
-    ScheduledItem <|-- MeasurementPlan
-    CarePlanItem <|-- Appointment
-    ScheduledItem "1" *-- "1..*" TimeSlot : times
-    ScheduledItem "0..*" --> "0..1" CircleMember : specific performer
-    Medication "1" *-- "0..*" MedicationChange : history
-    Medication "1" *-- "0..*" StockAddition : stock additions
-    Medication ..> SupplyForecast : calculates
-    AppointmentOccurrence "0..*" --> "0..1" CircleMember : companion
-    Appointment "1" *-- "0..*" AppointmentOccurrence : occurrences
-    AppointmentOccurrence "1" *-- "0..1" Visit : visit
-    MedicationChange "0..*" --> "0..1" Visit : made at
-    PatientLocation ..> PrayerTimes : coordinates for
-    Circle ..> CareRecordExport : exports
-    CareRecordExport ..> CarePlanItem : current plan
-    CareRecordExport ..> MedicationChange : medication history
-    CareRecordExport ..> Measurement : readings
-    CareRecordExport ..> Appointment : scheduled appointments
-    CareRecordExport ..> AppointmentOccurrence : appointment history
-    CareRecordExport ..> Visit : visit records
-    CareRecordExport ..> Patient : who
-    CareRecordExport ..> MedicalProfile : health details
-    Circle "1" *-- "0..*" Task : tasks
-    CarePlanItem "0..1" --> "0..*" Task : generates
-    AppointmentOccurrence "0..1" --> "0..1" Task : appointment task
-    Task "1" *-- "0..*" TaskAssignment : assigned through
-    TaskAssignment "0..*" --> "1" CircleMember : assigned to
-    Task "0..*" --> "0..1" CircleMember : responsible
-    TemporaryHandover "1" o-- "0..*" TaskAssignment : transfer requests
-    User "1" --> "0..*" TemporaryHandover : asks to hand over
-    TemporaryHandover "0..*" --> "0..*" Circle : covers
-    Task "1" o-- "0..1" SymptomReport : reports
-    Task ..|> AlertSubject
-    Measurement ..|> AlertSubject
-    SymptomReport ..|> AlertSubject
-    Medication ..|> AlertSubject
-    Notification "0..*" --> "0..1" AlertSubject : about
-    Notification "0..*" --> "1" User : sent to
-    Escalation "0..*" --> "0..1" AlertSubject : about
-    Escalation "1" *-- "1..*" Notification : steps
-    Escalation "0..*" --> "1" EscalationOrder : follows
-    AttentionItem "0..*" --> "0..1" AlertSubject : about
-    Circle "1" *-- "0..*" AttentionItem : needs attention
-    Circle "1" *-- "0..*" Measurement : measurements
-    Measurement "0..*" --> "0..1" MeasurementPlan : follows
-    Measurement "0..1" --> "0..1" Task : fulfils
-    Circle "1" *-- "0..*" ActivityEntry : log
-    Circle "1" *-- "0..*" FamilyQuestion : questions
-    FamilyQuestion "0..*" --> "0..1" SymptomReport : from
-    AdherenceReport ..> Task
-    AdherenceReport ..> Measurement
-    VisitSheet ..> AdherenceReport
-    VisitSheet ..> MedicalProfile
-    VisitSheet ..> FamilyQuestion
-    VisitSheet ..> MedicationChange
-    VisitSheet ..> Measurement
-    TimeSlot ..> PrayerTimes : resolved with
-    OfflineAction ..> Task : replays
-    OfflineAction ..> Measurement : replays
+class Circle {
+-id : UUID4
+-patientMode : AppMode[0..1]
+-status : CircleStatus
++invite()
+}
+class Patient {
+-firstName : String
+-lastName : String
+-phoneNumber : String[0..1]
++hasPhone()
+}
+class User {
+-id : UUID4
+-phoneNumber : String
+-displayName : String
++memberships()
+}
+class CircleMember {
+-id : UUID4
+-role : Role
+-status : MemberStatus
++can()
++isThePatient()
+}
+class Invitation {
+-invitedName : String
+-invitedPhone : String
+-role : InvitableRole
+-status : InvitationStatus
+}
+class CarePlanItem {
+<>
+-id : UUID4
+-title : String
+-status : ItemStatus
++generateTasks()
+}
+class ScheduledItem {
+<>
+-priority : Priority
+-maxLatenessMin : Integer
+}
+class Medication {
+-strength : String[0..1]
+-baseDose : MedicationQuantity
+-lowStockAt : MedicationQuantity[0..1]
++changeDose()
++remainingStock()
+}
+class MeasurementPlan {
+-type : MeasurementType
+-context : MeasureContext
+-range : TargetRange[0..1]
++isOutsideRange()
+}
+class Appointment {
+-kind : AppointmentKind
+-seriesStartsAt : DateTime
+-place : String[0..1]
+}
+class Task {
+-id : UUID4
+-kind : TaskKind
+-title : String
+-dueAt : DateTime
++complete()
++displayStatus()
+}
+class TaskAssignment {
+-status : AssignmentStatus
+-respondBy : DateTime
++accept()
++decline()
++complete()
+}
+class Measurement {
+-id : UUID4
+-type : MeasurementType
+-primaryValue : Decimal
+-measuredAt : DateTime
++isOutsideRange()
+}
+class ActivityEntry {
+-type : ActivityType
+-occurredAt : DateTime
++record()
+}
+class AlertSubject {
+<>
++circle()
++lockScreenText()
+}
+class Notification {
+-type : NotificationType
+-strength : Strength
++deliver()
++respond()
+}
+class Escalation {
+-trigger : EscalationTrigger
+-status : EscalationStatus
++start()
++notifyNext()
+}
+class AttentionItem {
+-kind : AttentionKind
+-importance : Integer
++resolve()
+}
+Circle "1" -- "1" Patient : cares for
+Circle "1" -- "1.." CircleMember : members
+User "1" --> "0.." CircleMember : joins as
+Patient "0..1" --> "0..1" User : own account
+Circle "1" -- "0.." Invitation : invites
+Invitation "0.." --> "1" CircleMember : invited by
+Invitation "0..1" --> "0..1" CircleMember : becomes
+Circle "1" -- "0.." CarePlanItem : care plan
+CarePlanItem <|-- ScheduledItem
+CarePlanItem <|-- Appointment
+ScheduledItem <|-- Medication
+ScheduledItem <|-- MeasurementPlan
+ScheduledItem "0.." --> "0..1" CircleMember : specific performer
+Circle "1" -- "0.." Task : tasks
+CarePlanItem "0..1" --> "0.." Task : generates
+Task "1" -- "0.." TaskAssignment : assigned through
+TaskAssignment "0.." --> "1" CircleMember : assigned to
+Task "0.." --> "0..1" CircleMember : responsible
+Circle "1" -- "0.." Measurement : measurements
+Measurement "0.." --> "0..1" MeasurementPlan : follows
+Measurement "0..1" --> "0..1" Task : fulfils
+Circle "1" -- "0.." ActivityEntry : log
+Circle "1" -- "0.." AttentionItem : needs attention
+Task ..|> AlertSubject
+Measurement ..|> AlertSubject
+Medication ..|> AlertSubject
+Notification "0.." --> "1" User : sent to
+Notification "0.." --> "0..1" AlertSubject : about
+Escalation "1" -- "1.." Notification : steps
+Escalation "0.." --> "0..1" AlertSubject : about
+AttentionItem "0.." --> "0..1" AlertSubject : about
 ```
 
 #### 3.1.3 Key classes
