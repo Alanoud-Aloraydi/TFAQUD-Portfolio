@@ -85,20 +85,91 @@ and relationships.]
 
 ## 4. High-Level Sequence Diagrams
 
-[Include diagrams for 2–3 critical use cases.
-Replace the headings below with the selected use case names.]
+### 4.1 User Login
 
-### 4.1 [Use Case 1]
+The user signs in with a one-time code sent by SMS. The API checks the attempt limits for the phone and the device, sends the code, verifies it, then registers the device and returns a session token.
 
-[Insert the sequence diagram.]
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant App as Flutter App
+    participant API as Flask REST API
+    participant DB as PostgreSQL
+    participant SMS as SMS gateway
 
-### 4.2 [Use Case 2]
+    U->>App: Enter phone number
+    App->>API: POST /auth/otp/request (phone, installationId)
+    API->>DB: Load attempt limits (phone and device)
+    DB-->>API: Limits
+    alt Phone or device is locked
+        API-->>App: 429 Too many attempts (lockedUntil)
+        App-->>U: Show try again later
+    else Allowed
+        API->>DB: Save OTP challenge (code hash, validUntil)
+        API->>SMS: Send OTP code to phone
+        SMS-->>U: OTP message
+        API-->>App: 200 Challenge created
+        App-->>U: Ask for the code
+        U->>App: Enter the code
+        App->>API: POST /auth/otp/verify (challengeId, code, installationId, platform, pushToken)
+        API->>DB: Load challenge and attempt limits
+        DB-->>API: Challenge and limits
+        API->>API: Check lock status, expiry and code
+        alt Wrong code, expired code or locked
+            API->>DB: Record failure (phone and device)
+            API-->>App: 401 Invalid code (or 429 if now locked)
+            App-->>U: Show error
+        else Correct code
+            API->>DB: Find or create user by phone number
+            API->>DB: Register or update device (installationId, platform, pushToken)
+            DB-->>API: User and device
+            API-->>App: 200 Session token and user
+            App-->>U: Login completed
+        end
+    end
+```
 
-[Insert the sequence diagram.]
+### 4.2 Add Medication
 
-### 4.3 [Use Case 3]
+The patient or manager photographs the medication package and the app reads the name on the device (OCR). After the user completes the details, the API checks that the circle member is allowed to manage the care plan, then saves the medication and today's tasks in one transaction.
 
-[Include this subsection only if a third use case is selected.]
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Patient / Manager
+    participant App as Flutter App
+    participant API as Flask REST API
+    participant DB as PostgreSQL
+
+    U->>App: Take photo of medication package
+    App->>App: Extract medication name using OCR
+    alt Name not detected
+        App-->>U: Ask to retake the photo
+    else Name detected
+        App-->>U: Show extracted name
+        U->>App: Review name, enter dose, days, times and start date
+        App->>API: POST /circles/{id}/medications
+        API->>DB: Load circle member
+        DB-->>API: Member role
+        API->>API: member.canManage()
+
+        alt Not permitted
+            API-->>App: 403 Forbidden
+            App-->>U: Show permission error
+        else Permitted
+            Note over API,DB: Saved in one transaction
+            API->>DB: Insert care plan item and medication
+            DB-->>API: Medication saved
+            API->>DB: Insert today's tasks
+            DB-->>API: Tasks created
+            API-->>App: 201 Created (medication)
+            App-->>U: Display added medication
+            Note over API: Later days' tasks are generated daily by the scheduler
+        end
+    end
+```
+
 
 ## 5. API Specifications
 
