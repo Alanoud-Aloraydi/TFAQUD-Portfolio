@@ -107,9 +107,269 @@ and how they interact.]
 and methods.]
 
 ### 3.3 Entity Relationship Diagram
+```mermaid
+erDiagram
+    USERS {
+        uuid id PK
+        string phone_number UK
+        string first_name
+        string last_name
+        string display_name
+    }
+    DEVICES {
+        uuid id PK
+        uuid user_id FK
+        string installation_id UK
+        string platform
+        string push_token
+    }
+    OTP_CHALLENGES {
+        uuid id PK
+        uuid device_id FK
+        string phone_number
+        string code_hash
+        datetime valid_until
+    }
+    OTP_ATTEMPT_LIMITS {
+        uuid id PK
+        string scope
+        string limit_key
+        int failed_attempts
+        datetime locked_until
+    }
+    CIRCLES {
+        uuid id PK
+        string patient_mode
+        string status
+        int escalation_step_min
+    }
+    PATIENTS {
+        uuid id PK
+        uuid circle_id FK, UK
+        uuid user_id FK, UK
+        string first_name
+        string last_name
+        int birth_year
+        string phone_number
+        string city
+        decimal latitude
+        decimal longitude
+        string time_zone_id
+        string location_source
+        datetime location_updated_at
+    }
+    CIRCLE_MEMBERS {
+        uuid id PK
+        uuid circle_id FK
+        uuid user_id FK
+        string role
+    }
+    ESCALATION_RECIPIENTS {
+        uuid id PK
+        uuid circle_id FK
+        uuid circle_member_id FK
+        int position
+    }
+    CIRCLE_REQUESTS {
+        uuid id PK
+        uuid created_by_user_id FK
+        uuid patient_user_id FK
+        uuid circle_id FK, UK
+        string patient_phone
+        string patient_first_name
+        string patient_last_name
+        string requested_mode
+        string status
+        datetime expires_at
+    }
+    INVITATIONS {
+        uuid id PK
+        uuid circle_id FK
+        uuid circle_member_id FK, UK
+        string invited_phone
+        string role
+        string status
+    }
+    MEDICAL_PROFILES {
+        uuid id PK
+        uuid patient_id FK, UK
+        string blood_type
+        json allergies
+        json chronic_conditions
+    }
+    EMERGENCY_CONTACTS {
+        uuid id PK
+        uuid medical_profile_id FK
+        string full_name
+        string phone_number
+        string relation_to_patient
+    }
+    CARE_PLAN_ITEMS {
+        uuid id PK
+        uuid circle_id FK
+        string item_type
+        string title
+        date starts_on
+        date ends_on
+        string status
+    }
+    SCHEDULED_ITEMS {
+        uuid care_plan_item_id PK, FK
+        json times
+        json days_of_week
+        int max_lateness_min
+    }
+    MEDICATIONS {
+        uuid care_plan_item_id PK, FK
+        decimal base_dose_value
+        string base_dose_unit
+        string strength
+        decimal low_stock_value
+        string low_stock_unit
+    }
+    MEASUREMENT_PLANS {
+        uuid care_plan_item_id PK, FK
+        string type
+        decimal range_min
+        decimal range_max
+        decimal secondary_min
+        decimal secondary_max
+    }
+    APPOINTMENTS {
+        uuid care_plan_item_id PK, FK
+        string kind
+        string place
+    }
+    APPOINTMENT_OCCURRENCES {
+        uuid id PK
+        uuid appointment_id FK
+        datetime starts_at
+        string status
+    }
+    MEDICATION_CHANGES {
+        uuid id PK
+        uuid medication_id FK
+        string kind
+        decimal new_dose_value
+        string new_dose_unit
+        datetime effective_from
+        string ordered_by
+        string reason
+    }
+    STOCK_ADDITIONS {
+        uuid id PK
+        uuid medication_id FK
+        decimal quantity_value
+        string quantity_unit
+        date added_on
+    }
+    TASKS {
+        uuid id PK
+        uuid circle_id FK
+        uuid care_plan_item_id FK
+        uuid appointment_occurrence_id FK, UK
+        uuid primary_responsible_id FK
+        datetime due_at
+        string prayer_period
+        decimal planned_dose_value
+        string planned_dose_unit
+        decimal dose_taken_value
+        string dose_taken_unit
+        string status
+        datetime recorded_at
+        uuid client_action_id
+        int version
+        string outcome
+    }
+    TASK_ASSIGNMENTS {
+        uuid id PK
+        uuid task_id FK
+        uuid offered_to_member_id FK
+        string status
+        datetime respond_by
+    }
+    MEASUREMENTS {
+        uuid id PK
+        uuid circle_id FK
+        uuid measurement_plan_id FK
+        uuid task_id FK, UK
+        string type
+        decimal primary_value
+        decimal secondary_value
+        string unit
+        datetime measured_at
+        uuid client_action_id
+        json range_at_recording
+    }
+    ESCALATIONS {
+        uuid id PK
+        uuid circle_id FK
+        uuid task_id FK
+        string status
+        int step
+        datetime next_step_at
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid circle_id FK
+        uuid escalation_id FK
+        uuid recipient_member_id FK
+        uuid task_id FK
+        string status
+    }
+    ATTENTION_ITEMS {
+        uuid id PK
+        uuid circle_id FK
+        uuid task_id FK
+        string status
+    }
 
-[Insert the completed ERD showing tables, attributes,
-and relationships.]
+    USERS |o--o{ DEVICES : "signs in on"
+    DEVICES ||--o{ OTP_CHALLENGES : "requested from"
+    USERS |o--o| PATIENTS : "patient account"
+    CIRCLES ||--|| PATIENTS : "cares for"
+    CIRCLES ||--|{ CIRCLE_MEMBERS : "has members"
+    USERS ||--o{ CIRCLE_MEMBERS : "joins as"
+    CIRCLES ||--o{ ESCALATION_RECIPIENTS : "orders"
+    CIRCLE_MEMBERS ||--o{ ESCALATION_RECIPIENTS : "ranked as"
+    USERS ||--o{ CIRCLE_REQUESTS : "creates"
+    USERS |o--o{ CIRCLE_REQUESTS : "approves"
+    CIRCLES |o--o| CIRCLE_REQUESTS : "created from"
+    CIRCLES ||--o{ INVITATIONS : "invites"
+    CIRCLE_MEMBERS |o--o| INVITATIONS : "becomes"
+
+    PATIENTS ||--|| MEDICAL_PROFILES : "medical file"
+    MEDICAL_PROFILES ||--o{ EMERGENCY_CONTACTS : "contacts"
+
+    CIRCLES ||--o{ CARE_PLAN_ITEMS : "plan"
+    CARE_PLAN_ITEMS ||--o| SCHEDULED_ITEMS : "is a"
+    SCHEDULED_ITEMS ||--o| MEDICATIONS : "is a"
+    SCHEDULED_ITEMS ||--o| MEASUREMENT_PLANS : "is a"
+    CARE_PLAN_ITEMS ||--o| APPOINTMENTS : "is a"
+    APPOINTMENTS ||--o{ APPOINTMENT_OCCURRENCES : "dates"
+    MEDICATIONS ||--o{ MEDICATION_CHANGES : "dose history"
+    MEDICATIONS ||--o{ STOCK_ADDITIONS : "stock added"
+
+    CIRCLES ||--o{ TASKS : "tasks"
+    CARE_PLAN_ITEMS |o--o{ TASKS : "generates"
+    APPOINTMENT_OCCURRENCES |o--o| TASKS : "appointment task"
+    CIRCLE_MEMBERS ||--o{ TASKS : "primary responsible"
+    TASKS ||--o{ TASK_ASSIGNMENTS : "assignment history"
+    CIRCLE_MEMBERS |o--o{ TASK_ASSIGNMENTS : "offered to"
+
+    CIRCLES ||--o{ MEASUREMENTS : "readings"
+    MEASUREMENT_PLANS |o--o{ MEASUREMENTS : "follows"
+    TASKS |o--o| MEASUREMENTS : "fulfils"
+
+    CIRCLES ||--o{ ESCALATIONS : "escalations"
+    TASKS |o--o{ ESCALATIONS : "missed task"
+    CIRCLES ||--o{ NOTIFICATIONS : "notifications"
+    ESCALATIONS |o--o{ NOTIFICATIONS : "sends"
+    CIRCLE_MEMBERS ||--o{ NOTIFICATIONS : "recipient"
+    TASKS |o--o{ NOTIFICATIONS : "task reminder"
+    CIRCLES ||--o{ ATTENTION_ITEMS : "needs attention"
+    TASKS |o--o{ ATTENTION_ITEMS : "about"
+```
 
 ## 4. High-Level Sequence Diagrams
 
