@@ -158,14 +158,14 @@ sequenceDiagram
             API-->>App: 403 Forbidden
             App-->>U: Show permission error
         else Permitted
-            Note over API,DB: Saved in one transaction
+
             API->>DB: Insert care plan item and medication
             DB-->>API: Medication saved
             API->>DB: Insert today's tasks
             DB-->>API: Tasks created
             API-->>App: 201 Created (medication)
             App-->>U: Display added medication
-            Note over API: Later days' tasks are generated daily by the scheduler
+
         end
     end
 ```
