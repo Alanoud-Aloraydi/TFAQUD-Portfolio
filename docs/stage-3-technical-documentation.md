@@ -105,13 +105,13 @@ The front end is a Flutter mobile app. All data goes through the Flask REST API,
 |---|---|---|
 | Welcome and login | Collects the phone number and the OTP code, shows the countdown, resend, edit number and wrong-code message | Flask REST API (OTP login), which sends the code through the SMS gateway |
 | Circle setup | Creates a circle for a patient, or joins an existing circle with an invitation code | Flask REST API (circles and permissions) |
-| Simplified mode (Patient) | Shows the patient's next medicine by prayer time, and lets the patient confirm or skip a dose,and shows the appointment, enter a measurement or ask for help | Flask REST API (medications and tasks), reminder notifications |
-| Help and emergency | Calls a circle member or emergency, and shows the medical card | Flask REST API (circle members) |
+| Simplified mode (Patient) | Shows the patient's next medicine by prayer time, lets the patient confirm or skip a dose, enter a measurement or ask for help, and shows the visit sheet to the doctor at the appointment | Flask REST API (medications and tasks), reminder notifications |
+| Help and emergency | Calls a circle member or emergency, and shows the medical card | Flask REST API (medical file and circle members) |
 | Today (Detailed mode) | Shows the day's tasks per patient, records a dose and lists what needs attention | Flask REST API (tasks, reminders and escalation) |
 | Task assignment | Offers a task to a circle member, who accepts or declines | Flask REST API (tasks), push notifications to the member |
 | Plan | Shows the care plan and lets the Manager change or stop a medicine | Flask REST API (medications and care plan) |
 | Add (+) | Adds a medicine, a measurement or an appointment to the plan | Local OCR (reads the medicine photo), Flask REST API |
-| Log | Shows the history and shares the one-page visit sheet (PDF) | Flask REST API |
+| History | Shows the care history (activities, measurements, adherence, previous medicines) and shares the one-page visit sheet (PDF) | Flask REST API |
 | Circle | Manages members and roles, invitations and the medical file | Flask REST API (circles and permissions) |
 | Account | Shows the user's circles, notification settings, language and logout | Flask REST API |
 | Device layer | Asks for system permissions, shows reminders and shares files | Firebase Cloud Messaging (push notifications) |
