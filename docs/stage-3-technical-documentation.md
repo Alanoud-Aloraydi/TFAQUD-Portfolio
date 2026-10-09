@@ -63,9 +63,37 @@ The stories are prioritized using MoSCoW: **Must Have** items are essential to t
 
 ## 2. System Architecture
 
-[Insert the high-level architecture diagram showing the main
-components and data flow, using arrows and annotations.]
+```mermaid
+flowchart TD
+    USER["Patient / Manager / Performer / Viewer"]
 
+    subgraph CAREOS["TFAQUD Care OS"]
+        APP["Flutter mobile app"]
+        OCR["Local OCR"]
+        API["Flask REST API<br/>OTP login<br/>Circles and permissions<br/>Medications and tasks<br/>Reminders and escalation"]
+        DB[("PostgreSQL database")]
+
+        APP -->|"Pass medicine image"| OCR
+        OCR -->|"Extracted raw text"| APP
+       
+        APP -->|"HTTPS request, REST/JSON"| API
+        API -->|"JSON response"| APP
+        API -->|"SQL query"| DB
+        DB -->|"Query result"| API
+    end
+
+    SMS["SMS gateway"]
+    PRAYERAPI["Prayer times API"]
+    FCM["Firebase Cloud Messaging"]
+
+    USER -->|"Uses application & scans medicine"| APP
+    API -->|"OTP code"| SMS
+    SMS -->|"OTP message"| USER
+    API -->|"Patient city"| PRAYERAPI
+    PRAYERAPI -->|"Prayer times"| API
+    API -->|"Trigger reminder"| FCM
+    FCM -->|"Push notification"| APP
+```
 ## 3. Components, Classes, and Database Design
 
 ### 3.1 Front-End Components and Interactions
