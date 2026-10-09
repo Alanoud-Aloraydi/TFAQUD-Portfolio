@@ -871,40 +871,199 @@ sequenceDiagram
 
 ### 5.1 External APIs
 
-[List the external APIs used by the MVP, their purposes,
-and the reasons for choosing them.
-If none are used, state that explicitly.]
+| External API | Purpose | Reason for the choice |
+| --- | --- | --- |
+| SMS provider (Unifonic; alternative: Twilio) | Sends the sign-in code (`OtpChallenge`). | Sign-in uses the phone number. Supports a registered sender name for Saudi numbers. |
+| Firebase Cloud Messaging, HTTP v1 (iPhone through APNs) | Sends push notifications (`Notification`) to the `pushToken` of a `Device`. | One request reaches Android and iPhone. Free of charge. Supports high-priority delivery. |
+| Aladhan prayer-times API | Converts a prayer period (`Task.prayerPeriod`) into a clock time at the `PatientLocation`. | Free. Supports the Umm Al-Qura method used in Saudi Arabia. |
+| WhatsApp link (`https://wa.me/<number>?text=<message>`) | Sends the message of an `Invitation` to its `invitedPhone`. | Free. Needs no business account or message template. The message comes from the inviter's own number. |
 
 ### 5.2 Internal API Endpoints
 
-[For each endpoint, specify:
-- URL path.
-- HTTP method.
-- Input format: JSON, query parameters, or other applicable format.
-- Output format, including the response structure.]
+| Convention | Rule |
+| --- | --- |
+| Base path | `/v1` |
+| Format | JSON (UTF-8) with snake_case names taken from the class diagram. Identifiers are UUIDs, times are ISO 8601, dates are `YYYY-MM-DD`, clock times are `HH:MM`. Visit images use `multipart/form-data`. |
+| Authentication | `Authorization: Bearer <access token>` on every endpoint except `GET /health`, `POST /auth/code/request`, and `POST /auth/code/verify`. |
+| Repeated actions | Recording a task or a measurement carries a `client_action_id`. Changing a task carries the `version` last seen. |
+| Error format | `{"error": {"code": "...", "message": "...", "details": {}}}` |
+| `?` after a field | Optional field. |
+| `query:` | Input given as query parameters. |
+| quantity | `{value, unit}` |
+| `user` | `{id, phone_number, first_name, last_name, display_name}` |
+| `task` | `{id, plan_item: {id, title, type}, due_at, prayer_period?, planned_dose?, dose_taken?, status, outcome?, reason?, recorded_at?, recorded_by?, responsible_member_id?, version}` |
+| `measurement` | Output of `POST /circles/{circle_id}/measurements`. |
+| `handover` | Output of `POST /circles/{circle_id}/handovers`. |
+
+**System**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/health` | `GET` | none | `200 {status}` |
+
+**Authentication and account**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/auth/code/request` | `POST` | `{phone, installation_id, platform}` | `200 {challenge_id, valid_until}` |
+| `/auth/code/verify` | `POST` | `{challenge_id, code}` | `200 {access_token, refresh_token, expires_in, user}` |
+| `/auth/refresh` | `POST` | none (the refresh token is sent in the `Authorization` header) | `200 {access_token, refresh_token, expires_in}` |
+| `/me` | `GET` | none | `200 {user, circles: [{circle_id, member_id, role, patient_name}]}` |
+| `/me` | `PUT` | `{first_name, last_name, display_name}` | `200 {user}` |
+| `/devices/{installation_id}` | `PUT` | `{platform, push_token?}` | `200 {installation_id, platform, push_token?}` |
+| `/me` | `DELETE` | none | `204` |
+
+**Care circles (US-01, US-02, US-03)**
+
+A patient with a phone is added through a request. A circle for oneself, or for a patient without a phone, is created directly.
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles` | `POST` | `{patient_is_me, patient: {first_name, last_name, birth_year?}, patient_mode?}` | `201 {circle_id, member_id, role, patient_mode?, status}` |
+| `/circle-requests` | `POST` | `{patient_phone, patient_first_name, patient_last_name, requested_mode}` | `201 {id, status, expires_at}` |
+| `/circle-requests/pending` | `GET` | none | `200 {items: [{id, created_by, patient_first_name, patient_last_name, requested_mode, expires_at}]}` |
+| `/circle-requests/{id}/approve` | `POST` | none | `200 {circle_id, member_id, role}` |
+| `/circle-requests/{id}/decline` | `POST` | none | `200 {id, status}` |
+| `/circles/{circle_id}` | `GET` | none | `200 {id, patient_mode?, status, created_by, patient: {id, first_name, last_name, birth_year?, phone_number?, location?}, my_member: {member_id, role, is_the_patient}}` |
+| `/circles/{circle_id}/patient-location` | `PUT` | `{city, latitude?, longitude?, time_zone_id, source}` | `200 {city, latitude?, longitude?, time_zone_id, source, updated_at}` |
+| `/circles/{circle_id}` | `DELETE` | none | `204` |
+
+**Members and invitations (US-04, US-05, US-14)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles/{circle_id}/invitations` | `POST` | `{invited_phone, role}` | `201 {id, status, expires_at, whatsapp_link}` |
+| `/invitations/pending` | `GET` | none | `200 {items: [{id, circle_id, patient_name, role, expires_at}]}` |
+| `/invitations/{id}/accept` | `POST` | none | `200 {circle_id, member_id, role}` |
+| `/invitations/{id}/decline` | `POST` | none | `200 {id, status}` |
+| `/circles/{circle_id}/members` | `GET` | none | `200 {items: [{member_id, user_id, display_name, role, is_the_patient}]}` |
+| `/circles/{circle_id}/members/{member_id}` | `DELETE` | query: `replacement_member_id?` | `200 {removed_member_id}` |
+| `/circles/{circle_id}/escalation-recipients` | `PUT` | `{member_ids: [...]}` in the order of escalation | `200 {escalation_recipients: [...], escalation_step_min}` |
+
+**Medical profile and emergency card (US-18, US-19)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles/{circle_id}/medical-profile` | `GET` | none | `200 {blood_type?, allergies, chronic_conditions, emergency_contacts: [{id, full_name, phone_number, relation_to_patient}]}` |
+| `/circles/{circle_id}/medical-profile` | `PUT` | `{blood_type?, allergies, chronic_conditions}` | `200 {blood_type?, allergies, chronic_conditions}` |
+| `/circles/{circle_id}/emergency-contacts` | `POST` | `{full_name, phone_number, relation_to_patient}` | `201 {id, full_name, phone_number, relation_to_patient}` |
+| `/emergency-contacts/{id}` | `PUT` | `{full_name, phone_number, relation_to_patient}` | `200 {id, full_name, phone_number, relation_to_patient}` |
+| `/circles/{circle_id}/emergency-card` | `GET` | none | `200 {patient_full_name, blood_type?, allergies, chronic_conditions, contacts, current_medication_and_dose}` |
+
+**Care plan (US-06, US-07, US-08, US-09)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles/{circle_id}/plan` | `GET` | query: `status?` (`ACTIVE` by default, `STOPPED`, or `ALL`) | `200 {medications, measurement_plans, appointments}`, each a list of items with `id`, `title`, `status`, `starts_on`, `ends_on?` |
+| `/circles/{circle_id}/medications` | `POST` | `{title, strength?, base_dose: {value, unit}, low_stock_at?: {value, unit}, starts_on, ends_on?, times, days_of_week, max_lateness_min, responsible_member_id?}` | `201 {id, title, status}` |
+| `/circles/{circle_id}/measurement-plans` | `POST` | `{title, type, range?: {primary_lower, primary_upper, secondary_lower?, secondary_upper?, unit}, starts_on, ends_on?, times, days_of_week, max_lateness_min, responsible_member_id?}` | `201 {id, title, status}` |
+| `/circles/{circle_id}/appointments` | `POST` | `{title, kind, place?, starts_on, ends_on?, occurrences: [{starts_at}], responsible_member_id?}` | `201 {id, title, status, occurrences: [{id, starts_at, status}]}` |
+| `/plan-items/{id}/responsible` | `PUT` | `{member_id}` | `200 {id, responsible_member_id}` |
+
+**Medication supply and changes (US-16, US-17)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/medications/{id}` | `GET` | query: `at?` | `200 {id, title, strength?, base_dose, effective_dose?, low_stock_at?, remaining_stock?, estimated_run_out_at?, covers_treatment?, status, starts_on, ends_on?, times, days_of_week, max_lateness_min, responsible_member_id?, changes: [{id, kind, new_dose?, effective_from, ordered_by, reason?, made_by}], stock_additions: [{id, quantity, added_on, added_by}]}` |
+| `/medications/{id}/dose-changes` | `POST` | `{dose: {value, unit}, ordered_by, reason?, effective_from}` | `201 {id, kind, new_dose, effective_from, ordered_by, reason?, made_by}` |
+| `/medications/{id}/stop` | `POST` | `{ordered_by, reason?, effective_from}` | `201 {id, kind, effective_from, ordered_by, reason?, made_by}` |
+| `/medications/{id}/stock` | `POST` | `{quantity: {value, unit}, added_on}` | `201 {id, quantity, added_on, added_by}` |
+
+**Tasks and measurements (US-09 to US-12, US-15, US-21, US-22)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles/{circle_id}/tasks` | `GET` | query: `date?`, `status?`, `responsible_member_id?` | `200 {items: [task]}` |
+| `/tasks/{id}` | `GET` | none | `200 {task, assignments: [{id, offered_to, status, respond_by}]}` |
+| `/tasks/{id}/assignments` | `POST` | `{member_id}` | `201 {id, offered_to, status, respond_by}` |
+| `/me/assignments` | `GET` | query: `status?` | `200 {items: [{id, task, status, respond_by}]}` |
+| `/assignments/{id}/accept` | `POST` | none | `200 {id, status, task_id, responsible_member_id}` |
+| `/assignments/{id}/decline` | `POST` | none | `200 {id, status}` |
+| `/tasks/{id}/record` | `POST` | `{dose?: {value, unit}, at, client_action_id, version}` | `200 {task}` |
+| `/tasks/{id}/not-done` | `POST` | `{reason?, at, client_action_id, version}` | `200 {task}` |
+| `/circles/{circle_id}/measurements` | `POST` | `{type, primary_value, secondary_value?, unit, measured_at, plan_id?, task_id?, client_action_id}` | `201 {id, type, primary_value, secondary_value?, unit, measured_at, range_at_recording?, recorded_by, plan_id?, task_id?}` |
+| `/circles/{circle_id}/measurements` | `GET` | query: `plan_id?`, `from?`, `to?` | `200 {items: [measurement]}` |
+| `/appointment-occurrences/{id}/visit` | `POST` | `multipart/form-data`: `notes?`, `images?` (one or more files) | `200 {id, visit_notes?, report_image_urls, visit_recorded_by}` |
+
+**Temporary handover (US-23)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles/{circle_id}/handovers` | `POST` | `{handed_to_member_id, period_from, period_to}` | `201 {id, status, handed_over_by, handed_to, period_from, period_to}` |
+| `/circles/{circle_id}/handovers` | `GET` | query: `status?` | `200 {items: [handover]}` |
+| `/handovers/{id}/end` | `POST` | none | `200 {id, status}` |
+
+**Notifications, escalation, and attention items (US-13, US-14, US-16)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/notifications/{id}/respond` | `POST` | none | `200 {id, status}` |
+| `/circles/{circle_id}/escalations` | `GET` | query: `status?` | `200 {items: [{id, status, step, next_step_at?, task_id?, responded_by?}]}` |
+| `/escalations/{id}/respond` | `POST` | none | `200 {id, status, responded_by}` |
+| `/circles/{circle_id}/attention-items` | `GET` | query: `status?`, `kind?` | `200 {items: [{id, kind, status, raised_at, task_id?, medication_id?, resolved_by?}]}` |
+| `/attention-items/{id}/resolve` | `POST` | none | `200 {id, status, resolved_by}` |
+
+**Care record (US-20)**
+
+| URL path | HTTP method | Input | Output |
+| --- | --- | --- | --- |
+| `/circles/{circle_id}/care-record` | `GET` | none | `200`, a PDF file (`application/pdf`) with the current and previous medications and all recorded measurements |
+
+**Errors**
+
+| HTTP status | Code | Meaning |
+| --- | --- | --- |
+| `400` | `VALIDATION_FAILED`, `WRONG_CODE` | Invalid field, or wrong sign-in code. |
+| `401` | `UNAUTHENTICATED` | Token missing, invalid, or expired. |
+| `403` | `FORBIDDEN_ROLE` | The role of the caller does not allow the action. |
+| `404` | `NOT_FOUND` | The resource does not exist, or the caller is not a member of the circle. |
+| `409` | `ALREADY_RECORDED`, `VERSION_CONFLICT`, `STATE_CONFLICT` | Another member recorded the task first; the task changed since it was loaded; or the resource no longer allows the action. |
+| `410` | `EXPIRED` | The code, request, invitation, or assignment has expired. |
+| `423` | `SIGNIN_LOCKED` | Sign-in is locked after too many wrong codes (`details.locked_until`). |
+| `429` | `TOO_MANY_REQUESTS` | A code was requested again too soon. |
+| `503` | `SMS_UNAVAILABLE` | The SMS provider did not accept the message. |
 
 ## 6. SCM and QA Plans
 
 ### 6.1 Source Control Management
 
-[Specify:
-- Version control tool.
-- Branching strategy.
-- Commit practices.
-- Pull request process.
-- Code review and merge process.]
+**Version control tool.** Git, hosted on GitHub.
+
+**Branching strategy.**
+
+| Branch | Purpose | Rules |
+| --- | --- | --- |
+| `main` | Production code. Each release has a version tag. | Protected. Receives merges from `development` when a milestone is complete. |
+| `development` | Integrated features. Deployed to staging. | Protected. Receives merges from feature branches through pull requests. |
+| `feature/<issue>-<name>` | One task. | Created from `development`. Deleted after the merge. |
+
+**Commit practices.** Commits are small and regular, with one change each. The message starts with a type (`feat`, `fix`, `docs`, `test`, `refactor`, or `chore`) and refers to the issue.
+
+**Pull request process.** Every change reaches `development` through a pull request. Direct pushes to `main` and `development` are not allowed. The pull request states what changed, which user story it implements, and how it was tested.
+
+**Code review and merge process.** A pull request is merged after the approval of one team member who did not write the change and after the automatic checks pass. The reviewer checks that every new endpoint verifies the caller's role and has a test for the refusal.
 
 ### 6.2 Quality Assurance
 
-[Specify:
-- Testing types and what they cover.
-- Testing tools.
-- Manual testing of critical user flows, where applicable.]
+| Type of test | What it covers | Tool |
+| --- | --- | --- |
+| Unit (back-end) | Methods of the classes of the class diagram, such as `Task.record` and `Circle.nextEscalationRecipient`. | `pytest` |
+| Integration (back-end) | Every endpoint of Section 5.2 against PostgreSQL: valid request, invalid input, `401`, `403`, `404`, `409`. | `pytest`, Flask test client |
+| API | Main endpoints on staging: status codes and JSON fields. | Postman, Newman |
+| Unit and widget (application) | Controllers, repositories, and right-to-left Arabic screens. | `flutter_test` |
+| End-to-end | Main flows of the Must Have stories: create a care circle, invite a member, accept an invitation, add a medication, record a task. | `integration_test` on an emulator |
+
+**Manual testing of critical user flows.** The same flows, and notification delivery, are tested on a real Android phone and a real iPhone using a test sheet.
 
 ### 6.3 Deployment Pipeline
 
-[Describe the planned deployment pipeline for staging
-and production environments.]
+GitHub Actions with one Docker image for both environments.
+
+| Environment | Trigger | Steps |
+| --- | --- | --- |
+| Pull request | Opened or updated. | Run the unit, integration, and application tests. Build the image. |
+| Staging | Merge into `development`. | Deploy, migrate the database, check `GET /health`, run the Newman tests, run the manual tests. |
+| Production | Version tag on `main`, after manual approval. | Back up the database, deploy, migrate, check `GET /health`. If the check fails, restore the previous image. |
 
 ## 7. Technical Justifications
 
