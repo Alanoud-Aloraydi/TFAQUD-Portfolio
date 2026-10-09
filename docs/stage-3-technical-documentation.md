@@ -175,8 +175,344 @@ flowchart TD
  
 ### 3.2 Back-End Classes
 
-[Define the key back-end classes, including their attributes
-and methods.]
+| Backend Class | Responsibility | Key methods |
+|---|---|---|
+| `User` | A person with an account, identified by phone number | `deleteAccount()` |
+| `OtpChallenge` | A login code sent to a phone number | `verify(code)` |
+| `OtpAttemptLimit` | Counts failed code attempts per phone or per device and locks them | `recordFailure()`, `isLocked(at)` |
+| `Circle` | The root of the model: one circle cares for one patient | `hasManager()`, `delete(by)`, `removeMember(member, replacement)`, `exportCareRecord()`, `nextEscalationRecipient(after)` |
+| `CircleMember` | A user's membership in a circle, with the role in that circle | `canManage()`, `canRecord(task)`, `isThePatient()` |
+| `CircleRequest` | A request to create a circle for a patient, approved or declined by the patient | `approve(by)`, `decline(by)` |
+| `Invitation` | An invitation to join a circle with a role | `accept(by)` |
+| `Patient` | The person the circle cares for | `fullName()` |
+| `MedicalProfile` | The patient's medical file |  |
+| `EmergencyContact` | A contact person in the medical file |  |
+| `CarePlanItem` (abstract) | An item in the circle's plan | `isActive(on)` |
+| `ScheduledItem` (abstract) | A plan item that repeats on days and times | `occurrencesOn(day, location)` |
+| `Medication` | A medicine in the plan with its dose and stock | `effectiveDose(at)`, `changeDose(by, dose, from)`, `addStock(by, quantity)`, `remainingStock()`, `estimatedRunOutAt(at)`, `coversTreatment(at)` |
+| `MedicationChange` | A record of a dose change or a stop |  |
+| `StockAddition` | A record of stock added to a medicine |  |
+| `MeasurementPlan` | A scheduled measurement (blood glucose or blood pressure) with its target range | `isOutsideRange(reading)` |
+| `Appointment` | A medical appointment |  |
+| `AppointmentOccurrence` | One date of an appointment |  |
+| `Task` | One thing to do at a time, generated from a plan item | `record(by, dose, at, actionId, expectedVersion)` |
+| `TaskAssignment` | An offer of a task to a member, who accepts or declines | `accept()`, `decline()` |
+| `Measurement` | A recorded reading |  |
+| `Escalation` | Moves to the next recipient when a task is missed | `notifyNext()`, `respond(by)` |
+| `Notification` | A message sent to a member | `respond()` |
+| `AttentionItem` | An item that needs a member's attention | `resolve(by)` |
+| `PatientLocation` (dataType) | The patient's location |  |
+| `MedicationQuantity` (dataType) | An amount of a medicine with its unit |  |
+| `TargetRange` (dataType) | The target range of a measurement |  |
+| `EmergencyCard` (dataType) | Built from the current records, not stored |  |
+
+
+```mermaid
+classDiagram
+    direction TB
+ 
+    
+    class User {
+        -UID id
+        -String phoneNumber
+        -String firstName
+        -String lastName
+        -String displayName
+        +deleteAccount()
+    }
+ 
+    class Device {
+        -UID id
+        -String installationId
+        -Platform platform
+        -String pushToken
+    }
+ 
+    class OtpChallenge {
+        -UID id
+        -String phoneNumber
+        -String codeHash
+        -DateTime validUntil
+        +verify()
+    }
+ 
+    class OtpAttemptLimit {
+        -AttemptScope scope
+        -String key
+        -Integer failedAttempts
+        -DateTime lockedUntil
+        +recordFailure()
+        +isLocked()
+    }
+ 
+    
+    class Circle {
+        -UID id
+        -AppMode patientMode
+        -CircleStatus status
+        -List~CircleMember~ escalationRecipients
+        -Integer escalationStepMin = 20
+        +hasManager()
+        +delete()
+        +removeMember()
+        +exportCareRecord()
+        +nextEscalationRecipient()
+    }
+ 
+    class CircleMember {
+        -UID id
+        -Role role
+        +canManage()
+        +canRecord()
+        +isThePatient()
+    }
+ 
+    class CircleRequest {
+        -UID id
+        -String patientPhone
+        -String patientFirstName
+        -String patientLastName
+        -AppMode requestedMode
+        -RequestStatus status
+        -DateTime expiresAt
+        +approve()
+        +decline()
+    }
+ 
+    class Invitation {
+        -UID id
+        -String invitedPhone
+        -InvitableRole role
+        -InvitationStatus status
+        +accept()
+    }
+ 
+    class Patient {
+        -UID id
+        -String firstName
+        -String lastName
+        -Integer birthYear
+        -String phoneNumber
+        -PatientLocation location
+        +fullName()
+    }
+ 
+    class PatientLocation {
+        <<dataType>>
+        -String city
+        -Real latitude
+        -Real longitude
+        -String timeZoneId
+        -LocationSource source
+        -DateTime updatedAt
+    }
+ 
+    class MedicalProfile {
+        -String bloodType
+        -List~String~ allergies
+        -List~String~ chronicConditions
+    }
+ 
+    class EmergencyContact {
+        -UID id
+        -String fullName
+        -String phoneNumber
+        -String relationToPatient
+    }
+ 
+    class EmergencyCard {
+        <<dataType>>
+        -String patientFullName
+        -String bloodType
+        -List~String~ allergies
+        -List~String~ chronicConditions
+        -List~EmergencyContact~ contacts
+        -List~String~ currentMedicationAndDose
+    }
+ 
+    
+    class CarePlanItem {
+        <<abstract>>
+        -UID id
+        -String title
+        -Date startsOn
+        -Date endsOn
+        -ItemStatus status
+        +isActive()
+    }
+ 
+    class ScheduledItem {
+        <<abstract>>
+        -List~Time~ times
+        -List~DayOfWeek~ daysOfWeek
+        -Integer maxLatenessMin
+        +occurrencesOn()
+    }
+ 
+    class Medication {
+        -MedicationQuantity baseDose
+        -String strength
+        -MedicationQuantity lowStockAt
+        +effectiveDose()
+        +changeDose()
+        +addStock()
+        +remainingStock()
+        +estimatedRunOutAt()
+        +coversTreatment()
+    }
+ 
+    class MedicationQuantity {
+        <<dataType>>
+        -Real value
+        -String unit
+    }
+ 
+    class MedicationChange {
+        -UID id
+        -ChangeKind kind
+        -MedicationQuantity newDose
+        -DateTime effectiveFrom
+        -String orderedBy
+        -String reason
+    }
+ 
+    class StockAddition {
+        -UID id
+        -MedicationQuantity quantity
+        -Date addedOn
+    }
+ 
+    class MeasurementPlan {
+        -MeasurementType type
+        -TargetRange range
+        +isOutsideRange()
+    }
+ 
+    class TargetRange {
+        <<dataType>>
+        -Real minimum
+        -Real maximum
+        -Real secondaryMinimum
+        -Real secondaryMaximum
+    }
+ 
+    class Appointment {
+        -AppointmentKind kind
+        -String place
+    }
+ 
+    class AppointmentOccurrence {
+        -UID id
+        -DateTime startsAt
+        -AppointmentStatus status
+    }
+ 
+    
+    class Task {
+        -UID id
+        -DateTime dueAt
+        -Prayer prayerPeriod
+        -MedicationQuantity plannedDose
+        -MedicationQuantity doseTaken
+        -TaskStatus status
+        -DateTime recordedAt
+        -UID clientActionId
+        -Integer version
+        -TaskOutcome outcome
+        +record()
+    }
+ 
+    class TaskAssignment {
+        -UID id
+        -AssignmentStatus status
+        -DateTime respondBy
+        +accept()
+        +decline()
+    }
+ 
+    class Measurement {
+        -UID id
+        -MeasurementType type
+        -Real primaryValue
+        -Real secondaryValue
+        -String unit
+        -DateTime measuredAt
+        -UID clientActionId
+        -TargetRange rangeAtRecording
+    }
+ 
+    
+    class Escalation {
+        -UID id
+        -EscalationStatus status
+        -Integer step
+        -DateTime nextStepAt
+        +notifyNext()
+        +respond()
+    }
+ 
+    class Notification {
+        -UID id
+        -NotificationStatus status
+        +respond()
+    }
+ 
+    class AttentionItem {
+        -UID id
+        -AttentionStatus status
+        +resolve()
+    }
+ 
+    
+    User "0..1" --> "0..*" Device : current installations
+    OtpChallenge "0..*" --> "1" Device : requested from
+    OtpChallenge ..> OtpAttemptLimit : checks device and phone limits
+ 
+    
+    Circle "1" *-- "1" Patient : cares for
+    Patient "0..1" --> "0..1" User : patient account
+    User "1" --> "0..*" CircleMember : joins as
+    Circle "1" *-- "1..*" CircleMember : members
+    CircleRequest "0..*" --> "1" User : created by
+    CircleRequest "0..*" --> "0..1" User : patient approval
+    CircleRequest "0..1" --> "0..1" Circle : creates if approved
+    Circle "1" *-- "0..*" Invitation : invitations
+    Invitation "0..1" --> "0..1" CircleMember : becomes
+ 
+    Patient "1" *-- "1" MedicalProfile : medical file
+    MedicalProfile "1" *-- "0..*" EmergencyContact : contacts
+    Circle ..> EmergencyCard : builds from current records
+ 
+    
+    Circle "1" *-- "0..*" CarePlanItem : plan
+    CarePlanItem <|-- ScheduledItem
+    ScheduledItem <|-- Medication
+    ScheduledItem <|-- MeasurementPlan
+    CarePlanItem <|-- Appointment
+    Appointment "1" *-- "0..*" AppointmentOccurrence : dates
+    Medication "1" *-- "0..*" MedicationChange : dose history
+    Medication "1" *-- "0..*" StockAddition : stock added
+    AppointmentOccurrence "0..1" --> "0..1" Task : appointment task
+ 
+    
+    Circle "1" *-- "0..*" Task : tasks
+    CarePlanItem "0..1" --> "0..*" Task : generates
+    Task "0..*" --> "1" CircleMember : primary responsible
+    Task "1" *-- "0..*" TaskAssignment : assignment history
+    TaskAssignment "0..*" --> "0..1" CircleMember : offered to
+    Circle "1" *-- "0..*" Measurement : readings
+    Measurement "0..*" --> "0..1" MeasurementPlan : follows
+    Measurement "0..1" --> "0..1" Task : fulfils
+ 
+    Circle "1" *-- "0..*" Escalation : escalations
+    Escalation "0..*" --> "0..1" Task : missed task
+    Circle "1" *-- "0..*" Notification : notifications
+    Escalation "0..1" --> "0..*" Notification : sends
+    Notification "0..*" --> "1" CircleMember : recipient
+    Notification "0..*" --> "0..1" Task : task reminder
+    Circle "1" *-- "0..*" AttentionItem : needs attention
+    AttentionItem "0..*" --> "0..1" Task : about
+```
 
 ### 3.3 Entity Relationship Diagram
 ```mermaid
