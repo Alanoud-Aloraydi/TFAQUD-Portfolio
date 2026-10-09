@@ -97,10 +97,82 @@ flowchart TD
 ## 3. Components, Classes, and Database Design
 
 ### 3.1 Front-End Components and Interactions
+The front end is a Flutter mobile app. All data goes through the Flask REST API, and the actions shown on each screen depend on the member's role in the selected circle (`Manager`, `Performer`, `Viewer` or `Patient`).
 
-[Describe the main UI components, their responsibilities,
-and how they interact.]
+### Main Components
+ 
+| Component | Responsibility | Interacts with |
+|---|---|---|
+| Welcome and login | Collects the phone number and the OTP code, shows the countdown, resend, edit number and wrong-code message | Flask REST API (OTP login), which sends the code through the SMS gateway |
+| Circle setup | Creates a circle for a patient, or joins an existing circle with an invitation code | Flask REST API (circles and permissions) |
+| Simplified mode (Patient) | Shows the patient's next medicine by prayer time, and lets the patient confirm or skip a dose,and shows the appointment, enter a measurement or ask for help | Flask REST API (medications and tasks), reminder notifications |
+| Help and emergency | Calls a circle member or emergency, and shows the medical card | Flask REST API (circle members) |
+| Today (Detailed mode) | Shows the day's tasks per patient, records a dose and lists what needs attention | Flask REST API (tasks, reminders and escalation) |
+| Task assignment | Offers a task to a circle member, who accepts or declines | Flask REST API (tasks), push notifications to the member |
+| Plan | Shows the care plan and lets the Manager change or stop a medicine | Flask REST API (medications and care plan) |
+| Add (+) | Adds a medicine, a measurement or an appointment to the plan | Local OCR (reads the medicine photo), Flask REST API |
+| Log | Shows the history and shares the one-page visit sheet (PDF) | Flask REST API |
+| Circle | Manages members and roles, invitations and the medical file | Flask REST API (circles and permissions) |
+| Account | Shows the user's circles, notification settings, language and logout | Flask REST API |
+| Device layer | Asks for system permissions, shows reminders and shares files | Firebase Cloud Messaging (push notifications) |
 
+### Interaction Flowchart
+ 
+```mermaid
+flowchart TD
+    W["Welcome"] --> PH["Phone number"]
+    PH --> OTP["Enter code"]
+    OTP -->|"Registered user"| TODAY
+    OTP -->|"New user"| CHOICE{"How will you use TFAQUD?"}
+ 
+    CHOICE -->|"I care for another person"| WHO["Who will you care for"]
+    CHOICE -->|"I manage my own care"| WHO
+    CHOICE -->|"I have an invitation"| INV["Enter invitation code"]
+ 
+    WHO --> MED["Medical info"]
+    MED -->|"Caring for another person"| MODE["Patient mode choice"]
+    MED -->|"Own care"| TODAY
+    MODE --> TODAY
+    INV --> CARD["Invitation card"]
+    CARD --> TODAY
+ 
+    subgraph TABS["Main tabs"]
+        TODAY["Today"]
+        PLAN["Plan"]
+        ADD["Add (+)"]
+        LOG["History"]
+        CIRCLE["Circle"]
+    end
+ 
+    TODAY --> ATT["Needs attention"]
+    TODAY --> REC["Record dose"]
+    ATT --> ASSIGN["Who brings it"]
+    ASSIGN -.->|"Members listed from"| CIRCLE
+    ASSIGN -->|"Sent to the chosen member"| ACC["Accept or decline"]
+ 
+    PLAN --> MD["Medication details"]
+    MD --> CD["Change dose"]
+    PLAN --> APD["Appointment details"]
+    APD --> VN["Visit notes"]
+ 
+    ADD --> WHAT{"What to add?"}
+    WHAT -->|"Medicine"| SCAN["Scan medicine"]
+    SCAN --> CONF["Confirm what we read"]
+    CONF --> WT["When to take"]
+    WT --> RESP["Who is responsible and what if missed"]
+    RESP --> PLAN
+    WHAT -->|"Measurement"| AM["Add measurement"]
+    AM --> PLAN
+    WHAT -->|"Appointment"| AA["Add appointment"]
+    AA --> PLAN
+ 
+    LOG --> VS["Visit sheet (PDF)"]
+ 
+    CIRCLE --> IC["Invite to circle"]
+    CIRCLE --> MF["Medical file"]
+    CIRCLE --> PS["Patient's phone settings"]
+```
+ 
 ### 3.2 Back-End Classes
 
 [Define the key back-end classes, including their attributes
