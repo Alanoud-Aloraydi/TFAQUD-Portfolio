@@ -62,7 +62,6 @@ The stories are prioritized using MoSCoW: **Must Have** items are essential to t
 [View the main screen mockups in Figma](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1&t=EkiVLBVRuXTGD5P6-1)
 
 ## 2. System Architecture
-
 ```mermaid
 flowchart TD
     USER["Patient / Manager / Performer / Viewer"]
@@ -94,6 +93,7 @@ flowchart TD
     API -->|"Trigger reminder"| FCM
     FCM -->|"Push notification"| APP
 ```
+
 ## 3. Components, Classes, and Database Design
 
 ### 3.1 Front-End Components and Interactions
