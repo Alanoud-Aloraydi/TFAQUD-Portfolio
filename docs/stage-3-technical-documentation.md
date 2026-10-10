@@ -175,7 +175,7 @@ flowchart TD
  
 ### 3.2 Back-End Classes
 
-| Backend Class | Responsibility | Key methods |
+| Key Class | Responsibility | methods |
 |---|---|---|
 | `User` | A person with an account, identified by phone number | `deleteAccount()` |
 | `OtpChallenge` | A login code sent to a phone number | `verify(code)` |
@@ -210,265 +210,420 @@ flowchart TD
 ```mermaid
 classDiagram
     direction TB
- 
-    
+
     class User {
-        -UID id
-        -String phoneNumber
-        -String firstName
-        -String lastName
-        -String displayName
-        +deleteAccount()
+        -id : UUID4
+        -phoneNumber : String
+        -firstName : String
+        -lastName : String
+        -displayName : String
+        +deleteAccount() void
     }
- 
+
     class Device {
-        -UID id
-        -String installationId
-        -Platform platform
-        -String pushToken
+        -id : UUID4
+        -installationId : String
+        -platform : Platform
+        -pushToken : String[0..1]
     }
- 
+
     class OtpChallenge {
-        -UID id
-        -String phoneNumber
-        -String codeHash
-        -DateTime validUntil
-        +verify()
+        -id : UUID4
+        -phoneNumber : String
+        -codeHash : String
+        -validUntil : DateTime
+        +verify(code : String) Boolean
     }
- 
+
     class OtpAttemptLimit {
-        -AttemptScope scope
-        -String key
-        -Integer failedAttempts
-        -DateTime lockedUntil
-        +recordFailure()
-        +isLocked()
+        -scope : AttemptScope
+        -key : String
+        -failedAttempts : Integer
+        -lockedUntil : DateTime[0..1]
+        +recordFailure() void
+        +isLocked(at : DateTime) Boolean
     }
- 
-    
-    class Circle {
-        -UID id
-        -AppMode patientMode
-        -CircleStatus status
-        -List~CircleMember~ escalationRecipients
-        -Integer escalationStepMin = 20
-        +hasManager()
-        +delete()
-        +removeMember()
-        +exportCareRecord()
-        +nextEscalationRecipient()
-    }
- 
-    class CircleMember {
-        -UID id
-        -Role role
-        +canManage()
-        +canRecord()
-        +isThePatient()
-    }
- 
-    class CircleRequest {
-        -UID id
-        -String patientPhone
-        -String patientFirstName
-        -String patientLastName
-        -AppMode requestedMode
-        -RequestStatus status
-        -DateTime expiresAt
-        +approve()
-        +decline()
-    }
- 
-    class Invitation {
-        -UID id
-        -String invitedPhone
-        -InvitableRole role
-        -InvitationStatus status
-        +accept()
-    }
- 
+
     class Patient {
-        -UID id
-        -String firstName
-        -String lastName
-        -Integer birthYear
-        -String phoneNumber
-        -PatientLocation location
-        +fullName()
+        -id : UUID4
+        -firstName : String
+        -lastName : String
+        -birthYear : Integer[0..1]
+        -phoneNumber : String[0..1]
+        -location : PatientLocation[0..1]
+        +fullName() String
     }
- 
+
     class PatientLocation {
         <<dataType>>
-        -String city
-        -Real latitude
-        -Real longitude
-        -String timeZoneId
-        -LocationSource source
-        -DateTime updatedAt
+        -city : String
+        -latitude : Decimal[0..1]
+        -longitude : Decimal[0..1]
+        -timeZoneId : String
+        -source : LocationSource
+        -updatedAt : DateTime
     }
- 
+
+    class Circle {
+        -id : UUID4
+        -patientMode : AppMode[0..1]
+        -status : CircleStatus
+        -escalationRecipients : List~CircleMember~
+        -escalationStepMin : Integer = 20
+        +hasManager() Boolean
+        +delete(by : CircleMember) void
+        +removeMember(member : CircleMember, replacement : CircleMember[0..1]) void
+        +exportCareRecord() File
+        +nextEscalationRecipient(after : CircleMember) CircleMember[0..1]
+    }
+
+
+    class CircleMember {
+        -id : UUID4
+        -role : Role
+        +canManage() Boolean
+        +canRecord(task : Task) Boolean
+        +isThePatient() Boolean
+    }
+
+    class CircleRequest {
+        -id : UUID4
+        -patientPhone : String
+        -patientFirstName : String
+        -patientLastName : String
+        -requestedMode : AppMode
+        -status : RequestStatus
+        -expiresAt : DateTime
+        +approve(by : User) void
+        +decline(by : User) void
+    }
+
+    class Invitation {
+        -id : UUID4
+        -invitedPhone : String
+        -role : InvitableRole
+        -status : InvitationStatus
+        +accept(by : User) void
+    }
+
     class MedicalProfile {
-        -String bloodType
-        -List~String~ allergies
-        -List~String~ chronicConditions
+        -bloodType : String[0..1]
+        -allergies : String[0..*]
+        -chronicConditions : String[0..*]
     }
- 
+
     class EmergencyContact {
-        -UID id
-        -String fullName
-        -String phoneNumber
-        -String relationToPatient
+        -id : UUID4
+        -fullName : String
+        -phoneNumber : String
+        -relationToPatient : String
     }
- 
+
     class EmergencyCard {
         <<dataType>>
-        -String patientFullName
-        -String bloodType
-        -List~String~ allergies
-        -List~String~ chronicConditions
-        -List~EmergencyContact~ contacts
-        -List~String~ currentMedicationAndDose
+        -patientFullName : String
+        -bloodType : String[0..1]
+        -allergies : String[0..*]
+        -chronicConditions : String[0..*]
+        -contacts : List~EmergencyContact~
+        -currentMedicationAndDose : List~String~
     }
- 
-    
+
     class CarePlanItem {
         <<abstract>>
-        -UID id
-        -String title
-        -Date startsOn
-        -Date endsOn
-        -ItemStatus status
-        +isActive()
+        -id : UUID4
+        -title : String
+        -startsOn : Date
+        -endsOn : Date[0..1]
+        -status : ItemStatus
+        +isActive(on : Date) Boolean
     }
- 
+
     class ScheduledItem {
         <<abstract>>
-        -List~Time~ times
-        -List~DayOfWeek~ daysOfWeek
-        -Integer maxLatenessMin
-        +occurrencesOn()
+        -times : List~Time~
+        -daysOfWeek : List~DayOfWeek~
+        -maxLatenessMin : Integer
+        +occurrencesOn(day : Date, location : PatientLocation) List~DateTime~
     }
- 
+
     class Medication {
-        -MedicationQuantity baseDose
-        -String strength
-        -MedicationQuantity lowStockAt
-        +effectiveDose()
-        +changeDose()
-        +addStock()
-        +remainingStock()
-        +estimatedRunOutAt()
-        +coversTreatment()
+        -baseDose : MedicationQuantity
+        -strength : String[0..1]
+        -lowStockAt : MedicationQuantity[0..1]
+        +effectiveDose(at : DateTime) MedicationQuantity[0..1]
+        +changeDose(by : CircleMember, dose : MedicationQuantity, from : DateTime) MedicationChange
+        +addStock(by : CircleMember, quantity : MedicationQuantity) StockAddition
+        +remainingStock() MedicationQuantity[0..1]
+        +estimatedRunOutAt(at : DateTime) DateTime[0..1]
+        +coversTreatment(at : DateTime) Boolean[0..1]
     }
- 
+
     class MedicationQuantity {
         <<dataType>>
-        -Real value
-        -String unit
+        -value : Decimal
+        -unit : String
     }
- 
+
     class MedicationChange {
-        -UID id
-        -ChangeKind kind
-        -MedicationQuantity newDose
-        -DateTime effectiveFrom
-        -String orderedBy
-        -String reason
+        -id : UUID4
+        -kind : ChangeKind
+        -newDose : MedicationQuantity[0..1]
+        -effectiveFrom : DateTime
+        -orderedBy : String
+        -reason : String[0..1]
     }
- 
+
     class StockAddition {
-        -UID id
-        -MedicationQuantity quantity
-        -Date addedOn
+        -id : UUID4
+        -quantity : MedicationQuantity
+        -addedOn : Date
     }
- 
+
     class MeasurementPlan {
-        -MeasurementType type
-        -TargetRange range
-        +isOutsideRange()
+        -type : MeasurementType
+        -range : TargetRange[0..1]
+        +isOutsideRange(reading : Measurement) Boolean
     }
- 
-    class TargetRange {
-        <<dataType>>
-        -Real minimum
-        -Real maximum
-        -Real secondaryMinimum
-        -Real secondaryMaximum
-    }
- 
+
     class Appointment {
-        -AppointmentKind kind
-        -String place
+        -kind : AppointmentKind
+        -place : String[0..1]
     }
- 
+
     class AppointmentOccurrence {
-        -UID id
-        -DateTime startsAt
-        -AppointmentStatus status
+        -id : UUID4
+        -startsAt : DateTime
+        -status : AppointmentStatus
     }
- 
-    
+
     class Task {
-        -UID id
-        -DateTime dueAt
-        -Prayer prayerPeriod
-        -MedicationQuantity plannedDose
-        -MedicationQuantity doseTaken
-        -TaskStatus status
-        -DateTime recordedAt
-        -UID clientActionId
-        -Integer version
-        -TaskOutcome outcome
-        +record()
+        -id : UUID4
+        -dueAt : DateTime
+        -prayerPeriod : Prayer[0..1]
+        -plannedDose : MedicationQuantity[0..1]
+        -doseTaken : MedicationQuantity[0..1]
+        -status : TaskStatus
+        -recordedAt : DateTime[0..1]
+        -clientActionId : UUID4[0..1]
+        -version : Integer
+        -outcome : TaskOutcome[0..1]
+        +record(by : CircleMember, dose : MedicationQuantity[0..1], at : DateTime, actionId : UUID4, expectedVersion : Integer) void
     }
- 
+
     class TaskAssignment {
-        -UID id
-        -AssignmentStatus status
-        -DateTime respondBy
-        +accept()
-        +decline()
+        -id : UUID4
+        -status : AssignmentStatus
+        -respondBy : DateTime
+        +accept() void
+        +decline() void
     }
- 
+
     class Measurement {
-        -UID id
-        -MeasurementType type
-        -Real primaryValue
-        -Real secondaryValue
-        -String unit
-        -DateTime measuredAt
-        -UID clientActionId
-        -TargetRange rangeAtRecording
+        -id : UUID4
+        -type : MeasurementType
+        -primaryValue : Decimal
+        -secondaryValue : Decimal[0..1]
+        -unit : String
+        -measuredAt : DateTime
+        -clientActionId : UUID4[0..1]
+        -rangeAtRecording : TargetRange[0..1]
     }
- 
-    
+
     class Escalation {
-        -UID id
-        -EscalationStatus status
-        -Integer step
-        -DateTime nextStepAt
-        +notifyNext()
-        +respond()
+        -id : UUID4
+        -status : EscalationStatus
+        -step : Integer
+        -nextStepAt : DateTime[0..1]
+        +notifyNext() void
+        +respond(by : CircleMember) void
     }
- 
+
     class Notification {
-        -UID id
-        -NotificationStatus status
-        +respond()
+        -id : UUID4
+        -status : NotificationStatus
+        +respond() void
     }
- 
+
     class AttentionItem {
-        -UID id
-        -AttentionStatus status
-        +resolve()
+        -id : UUID4
+        -status : AttentionStatus
+        +resolve(by : CircleMember) void
     }
- 
-    
+
+    class Platform {
+        <<enumeration>>
+        ANDROID
+        IOS
+    }
+
+    class AttemptScope {
+        <<enumeration>>
+        PHONE
+        DEVICE
+    }
+
+    class LocationSource {
+        <<enumeration>>
+        DEVICE
+        MANUAL
+    }
+
+    class Role {
+        <<enumeration>>
+        MANAGER
+        PERFORMER
+        VIEWER
+        PATIENT
+    }
+
+    class InvitableRole {
+        <<enumeration>>
+        MANAGER
+        PERFORMER
+        VIEWER
+    }
+
+    class AppMode {
+        <<enumeration>>
+        SIMPLIFIED
+        DETAILED
+    }
+
+    class CircleStatus {
+        <<enumeration>>
+        ACTIVE
+    }
+
+    class RequestStatus {
+        <<enumeration>>
+        PENDING
+        APPROVED
+        DECLINED
+        CANCELLED
+        EXPIRED
+    }
+
+    class InvitationStatus {
+        <<enumeration>>
+        PENDING
+        ACCEPTED
+        CANCELLED
+        EXPIRED
+    }
+
+    class ItemStatus {
+        <<enumeration>>
+        ACTIVE
+        STOPPED
+        COMPLETED
+    }
+
+    class DayOfWeek {
+        <<enumeration>>
+        MONDAY
+        TUESDAY
+        WEDNESDAY
+        THURSDAY
+        FRIDAY
+        SATURDAY
+        SUNDAY
+    }
+
+    class ChangeKind {
+        <<enumeration>>
+        DOSE_CHANGED
+        STOPPED
+    }
+
+    class MeasurementType {
+        <<enumeration>>
+        BLOOD_GLUCOSE
+        BLOOD_PRESSURE
+    }
+
+    class AppointmentKind {
+        <<enumeration>>
+        CONSULTATION
+        LAB_TEST
+        IMAGING
+        THERAPY_SESSION
+        OTHER
+    }
+
+    class AppointmentStatus {
+        <<enumeration>>
+        SCHEDULED
+        COMPLETED
+        MISSED
+        CANCELLED
+    }
+
+    class Prayer {
+        <<enumeration>>
+        FAJR
+        DHUHR
+        ASR
+        MAGHRIB
+        ISHA
+    }
+
+    class TaskStatus {
+        <<enumeration>>
+        PENDING
+        COMPLETED
+        MISSED
+        CANCELLED
+    }
+
+    class TaskOutcome {
+        <<enumeration>>
+        ON_TIME
+        LATE
+    }
+
+    class AssignmentStatus {
+        <<enumeration>>
+        PENDING
+        ACCEPTED
+        DECLINED
+        EXPIRED
+        CANCELLED
+    }
+
+    class EscalationStatus {
+        <<enumeration>>
+        ACTIVE
+        RESPONDED
+        EXHAUSTED
+        CANCELLED
+    }
+
+    class NotificationStatus {
+        <<enumeration>>
+        PENDING
+        SENT
+        FAILED
+        RESPONDED
+    }
+
+    class AttentionStatus {
+        <<enumeration>>
+        OPEN
+        RESOLVED
+    }
+    class TargetRange {
+    <<dataType>>
+    -minimum : Decimal[0..1]
+    -maximum : Decimal[0..1]
+    -secondaryMinimum : Decimal[0..1]
+    -secondaryMaximum : Decimal[0..1]
+    }
+
     User "0..1" --> "0..*" Device : current installations
     OtpChallenge "0..*" --> "1" Device : requested from
     OtpChallenge ..> OtpAttemptLimit : checks device and phone limits
- 
-    
+
     Circle "1" *-- "1" Patient : cares for
     Patient "0..1" --> "0..1" User : patient account
     User "1" --> "0..*" CircleMember : joins as
@@ -478,12 +633,11 @@ classDiagram
     CircleRequest "0..1" --> "0..1" Circle : creates if approved
     Circle "1" *-- "0..*" Invitation : invitations
     Invitation "0..1" --> "0..1" CircleMember : becomes
- 
+
     Patient "1" *-- "1" MedicalProfile : medical file
     MedicalProfile "1" *-- "0..*" EmergencyContact : contacts
     Circle ..> EmergencyCard : builds from current records
- 
-    
+
     Circle "1" *-- "0..*" CarePlanItem : plan
     CarePlanItem <|-- ScheduledItem
     ScheduledItem <|-- Medication
@@ -492,18 +646,17 @@ classDiagram
     Appointment "1" *-- "0..*" AppointmentOccurrence : dates
     Medication "1" *-- "0..*" MedicationChange : dose history
     Medication "1" *-- "0..*" StockAddition : stock added
-    AppointmentOccurrence "0..1" --> "0..1" Task : appointment task
- 
-    
+
     Circle "1" *-- "0..*" Task : tasks
     CarePlanItem "0..1" --> "0..*" Task : generates
+    AppointmentOccurrence "0..1" --> "0..1" Task : appointment task
     Task "0..*" --> "1" CircleMember : primary responsible
     Task "1" *-- "0..*" TaskAssignment : assignment history
     TaskAssignment "0..*" --> "0..1" CircleMember : offered to
     Circle "1" *-- "0..*" Measurement : readings
     Measurement "0..*" --> "0..1" MeasurementPlan : follows
     Measurement "0..1" --> "0..1" Task : fulfils
- 
+
     Circle "1" *-- "0..*" Escalation : escalations
     Escalation "0..*" --> "0..1" Task : missed task
     Circle "1" *-- "0..*" Notification : notifications
@@ -512,6 +665,8 @@ classDiagram
     Notification "0..*" --> "0..1" Task : task reminder
     Circle "1" *-- "0..*" AttentionItem : needs attention
     AttentionItem "0..*" --> "0..1" Task : about
+ 
+   
 ```
 
 ### 3.3 Entity Relationship Diagram
