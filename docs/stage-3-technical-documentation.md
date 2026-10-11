@@ -1222,8 +1222,18 @@ GitHub Actions with one Docker image for both environments.
 
 ## 7. Technical Justifications
 
-[Explain the reasons for the selected technologies and designs.
-Connect each decision to functional requirements,
-non-functional requirements, constraints,
-or expert recommendations.
-Include source links where a justification relies on a reference.]
+- **Mobile Application and Flutter:** A mobile application was chosen to support patients and caregivers in following daily care tasks and receiving reminders. Flutter was selected to support both iOS and Android through a shared codebase, reducing duplicated development work for a three-member team.
+
+- **Flask and REST API:** Flask was selected to build on the team's existing experience with Python, Flask, and API development. A REST API separates the mobile interface from care-management logic and authorization, organizing operations around resources such as care circles, medications, and tasks through standard HTTP methods.
+
+- **PostgreSQL:** A relational database was selected because the project's data is interconnected, including patients, care circles, members, and care-plan items. PostgreSQL provides constraints and transactions that help maintain consistent records when multiple members perform updates.
+
+- **Optical Character Recognition (OCR):** OCR was included to reduce manual entry when adding medication information from a photo. Users must review the extracted information before saving it to reduce the impact of recognition errors.
+
+- **Care Circles and Role-Based Permissions:** This design supports coordination among multiple people caring for one patient while defining what each member can view or modify. Authorization is enforced on the backend to protect patient information.
+
+- **Detailed and Simplified Modes:** Two application modes were selected to accommodate different user needs. Detailed Mode supports care management, while Simplified Mode reduces interface complexity for patients who need assistance with follow-up.
+
+- **Reminders and Escalation:** Reminders and ordered escalation support follow-up of incomplete tasks by notifying the configured recipients. Reminder delivery is kept separate from user-confirmed task completion to ensure that care records reflect recorded actions.
+
+- **Care Record and Export:** Current and previous medications and recorded measurements are retained to document care changes and support future reference. Exporting the care record allows patients and caregivers to present this information to a doctor when needed.
