@@ -1,4 +1,4 @@
-# TFAQUD | تفقُّد
+# TFAQUD | تفقُّد
 
 A mobile application for iOS and Android that helps patients and caregivers organize care through shared care circles. Each circle supports one patient, while a user can participate in multiple circles to manage care for more than one patient.
 
@@ -35,6 +35,41 @@ Within each circle, care managers organize the care plan and membership, care as
 - **Core Technologies:** Flutter, Python, Flask REST API, and PostgreSQL.
 - **Supporting Services:** Local OCR, Firebase Cloud Messaging, an SMS gateway, and the Aladhan prayer-times API.
 - **Development and Deployment Tools:** Git, GitHub, Docker, and GitHub Actions.
+
+## Development
+
+### Repository Structure
+
+| Folder | Content |
+| --- | --- |
+| `app/` | The Flutter mobile application |
+| `backend/` | The Flask REST API and the PostgreSQL database |
+| `docs/` | The project charter, the Stage 1 report, and the Stage 3 technical documentation |
+
+### Running the Project
+
+- Back end: see [`backend/README.md`](backend/README.md).
+- Mobile application: see [`app/README.md`](app/README.md).
+
+### Branches and Commits
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | Production code. Each release has a version tag. |
+| `development` | Integrated features. Deployed to staging. |
+| `feature/<issue>-<name>` | One task. Created from `development` and deleted after the merge. |
+
+`main` and `development` are protected. Changes reach them only through pull requests.
+
+Commit messages start with a type (`feat`, `fix`, `docs`, `test`, `refactor`, or `chore`) and refer to the issue. Each commit holds one change.
+
+```text
+feat: add the sign-in code request endpoint (KAN-14)
+```
+
+### Pull Requests
+
+Every change reaches `development` through a pull request that states what changed, which user story it implements, and how it was tested. A pull request is merged after the approval of one team member who did not write the change and after the automatic checks pass.
 
 ## Documentation
 

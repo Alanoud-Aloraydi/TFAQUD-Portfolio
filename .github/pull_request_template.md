@@ -1,0 +1,11 @@
+## What changed
+
+<!-- Describe the change in one or two sentences. -->
+
+## Which user story
+
+<!-- Example: US-04. Add the Jira issue too, for example KAN-22. -->
+
+## How it was tested
+
+<!-- Describe the tests you ran and their result. For a new endpoint, include the test that shows a role that is not allowed is refused. -->

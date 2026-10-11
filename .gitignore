@@ -1,0 +1,41 @@
+# Environment and secrets (keep .env.example)
+.env
+.env.*
+!.env.example
+*-firebase-adminsdk-*.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Flutter and Dart
+.dart_tool/
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+app/android/local.properties
+app/android/.gradle/
+app/android/key.properties
+*.jks
+*.keystore
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Generated.xcconfig
+
+# Editors and operating system
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
