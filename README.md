@@ -1,51 +1,58 @@
-# TFAQUD
+# TFAQUD | تفقُّد
 
-## About the Project
-A mobile application designed to organize healthcare for a single patient, whether the patient manages their own care or a designated caregiver is responsible for it. The app brings medications, medical appointments, therapy sessions, and health measurements together in one place, while providing reminders and follow-up documentation. It also allows multiple caregivers to participate and divide responsibilities among them when needed.
+A mobile application for iOS and Android that helps patients and caregivers organize care through shared care circles. Each circle supports one patient, while a user can participate in multiple circles to manage care for more than one patient.
 
-## Problem
-Patients who require continuous healthcare and their caregivers face challenges in managing medications, appointments, health measurements, and coordinating responsibilities:
+Developed as a Holberton School Graduation Portfolio Project.
 
-- In a Saudi study conducted in 2025, 45.3% of participants reported that caregivers did not have enough time, while 35.9% reported that care was inconsistent due to caregivers' other responsibilities.
-- Interviews with caregivers in Saudi Arabia revealed difficulties in understanding treatment information, with some caregivers having to write down instructions to remember them.
-- In a study conducted in Riyadh, the rate of missed rehabilitation appointments was approximately 21%.
+## Overview
 
-These findings highlight challenges related to continuity of follow-up and the time required to maintain it. Patients and their caregivers need to organize and share treatment information, appointments, and tasks — responsibilities that require continuous effort, particularly when more than one person is involved in providing care.
+Ongoing care requires the organization of medications, medical appointments, therapy sessions, and health measurements. Coordination becomes more demanding when one caregiver supports several patients or multiple caregivers share responsibility for one patient.
 
-## Target Audience
+TFAQUD brings these activities into a care plan for each patient, with daily tasks, defined responsibilities, reminders, and follow-up of missed tasks. The application supports Arabic and provides **Detailed Mode** for care management and **Simplified Mode** for patients who need assistance with daily follow-up.
 
-- **The patient themselves**, when able to fully manage their own treatment, using Detailed Mode independently.
-- **A patient supported by family caregivers**, structured in two ways:
-  - A responsible family member manages the patient's care through Detailed Mode and can invite other family members, assigning each a role (read/edit) to share caregiving responsibilities.
-  - The patient uses the simplified Light Mode to receive reminders and follow instructions for medications they are able to take on their own, while a responsible family member using Detailed Mode adds the medications, manages the information, and adds other family members as needed.
-These users need a centralized way to organize schedules, share treatment information, assign responsibilities, and coordinate daily care around one patient.
-## Key Features
+## Target Users
 
-### Application Modes
-- **Light Mode:** For patients able to take their medications on their own but who need help remembering and sticking to schedules. Displays medications, dosage times, medication photos, and usage instructions. Requires a responsible family member using Detailed Mode.
-- **Detailed Mode:** Provides full treatment management and follow-up functionality. Can be used by the patient themselves (if able to manage their own care) or by a responsible family member who manages the patient's care and can add other members to participate.
+TFAQUD primarily serves:
 
-### Medication & Prescription Management
-Add medications, photos, and prescriptions; log doses, schedules, and treatment duration; save doctor's instructions; and keep a history of past medications.
+- **Caregivers supporting multiple patients:** Organize each patient's care within a separate circle and access their care circles through one account.
+- **Groups sharing responsibility for one patient:** Coordinate responsibilities, share care information, and track task completion.
 
-### Treatment Follow-up
-Medication reminders, dose-taking status tracking, treatment adherence monitoring, and documentation of care notes and updates.
+The application also supports self-managing patients, patients who need a simplified interface, and viewers who follow care without modifying information.
 
-### Family Members & Permissions Management
-Invite family members, assign each member's permissions (read/edit), distribute caregiving responsibilities among them, and notify relevant members when a responsible caregiver is unable to perform their task.
+Within each circle, care managers organize the care plan and membership, care assistants carry out tasks, and viewers access information according to their permissions.
 
-### Medical Appointments Management
-Record doctor's appointments, physical therapy sessions, and recurring appointments, along with any other important health appointments, with reminders sent beforehand.
+## Planned MVP Features
 
-### Health Measurements Management
-Schedule blood sugar and blood pressure measurements, send reminders to take them, manually enter results, keep a record of readings with date and time, and display trends through clear charts.
+- **Care Circles:** Create a circle for each patient, participate in multiple circles, invite members, assign roles, and coordinate responsibilities.
+- **Medication Management:** Organize doses and schedules, track supplies, and retain medication history, with photo-assisted information entry using OCR.
+- **Appointments and Measurements:** Schedule medical visits, therapy sessions, and blood glucose and blood pressure measurements.
+- **Reminders and Follow-Up:** Notify the responsible person and escalate missed tasks according to a configured recipient order.
+- **Care Record:** Review recorded care information and export it as a PDF for future reference or doctor visits.
+- **Medical Profile and Emergency Card:** Maintain essential patient information and emergency contacts.
 
-### Statistics & Reports
-Display useful, easy-to-understand information and statistics that help the user track treatment and health measurements (final indicators and display format still under discussion).
+## Planned Technologies and Services
 
+- **Core Technologies:** Flutter, Python, Flask REST API, and PostgreSQL.
+- **Supporting Services:** Local OCR, Firebase Cloud Messaging, an SMS gateway, and the Aladhan prayer-times API.
+- **Development and Deployment Tools:** Git, GitHub, Docker, and GitHub Actions.
+
+## Documentation
+
+- [Stage 1 — Team Formation and Idea Development](docs/stage-1-report.md)
+- [Stage 2 — Project Charter](docs/project-charter.md)
+- [Stage 3 — Technical Documentation](docs/stage-3-technical-documentation.md)
+- [Application Mockups — Figma](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1)
+
+## Planned Delivery
+
+The Minimum Viable Product (MVP) is scheduled for delivery on **November 21, 2026**.
 
 ## Team
-- Lama Alzahrani
-- Alanoud Aloraydi
-- Leen Algaraawi
 
+| Member | Role |
+| --- | --- |
+| Alanoud Aloraydi | Team Lead and Developer |
+| Lama Alzahrani | Project Manager and Developer |
+| Leen Algraawi | Backend QA Engineer and Developer |
+
+All team members contribute to development, documentation, reviews, and project decisions.
