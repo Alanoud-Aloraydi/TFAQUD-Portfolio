@@ -20,6 +20,7 @@ Initial roles were assigned through voting for a one-month period, with all memb
 |---|---|---|
 | Team Lead | Alanoud | Coordinate task assignments, lead technical discussions, and ensure work integration. |
 | Project Manager | Lama | Organize meetings, track progress and deadlines, and identify obstacles. |
+| Backend QA | Leen | Test the back end, verify that endpoints enforce role permissions, and report defects. |
 | Team Members | All Members | Participate in development, documentation, reviews, and decision-making. |
 
 ### 1.3 Team Norms & Collaboration
@@ -132,7 +133,7 @@ Each idea is scored 1 (weak) to 5 (strong) per criterion.
 
 | Idea | Feasibility | Potential Impact | Technical Alignment | Scalability | Total /20 | Rank |
 |---|---|---|---|---|---|---|
-| TFAQUD (Medication/Care Management) | 5 | 5 | 4 | 4 | 18 | 1 |
+| TFAQUD (Care Circle) | 5 | 5 | 4 | 4 | 18 | 1 |
 | Event Planning Aggregator | 3 | 3 | 3 | 2 | 11 | 2 (tie) |
 | School–Parent Communication | 3 | 3 | 3 | 2 | 11 | 2 (tie) |
 | Repair Worker Booking | 4 | 2 | 3 | 2 | 11 | 2 (tie) |
@@ -143,7 +144,7 @@ Each idea is scored 1 (weak) to 5 (strong) per criterion.
 
 | Idea | Key Risks / Constraints |
 |---|---|
-| TFAQUD | Learning curve for Flutter and mobile deployment; designing a clear multi-caregiver permission system without confusing users; handling sensitive health data responsibly; device-integration APIs uncertain (kept out of MVP scope). |
+| TFAQUD | Learning curve for Flutter and mobile deployment; designing a care circle with clear roles and permissions without confusing users; making sure alerts for missed tasks reach the right person without overwhelming the circle; handling sensitive health data responsibly; device-integration APIs uncertain (kept out of MVP scope). |
 | Microbiome / Biofouling Prediction | Requires specialized domain knowledge (metagenomics) the team doesn't currently have; access to real desalination-plant data is uncertain; core computation too simple to sustain a full MVP. |
 | E-Commerce Store Ratings | Depends on Nafath integration, which may involve approval/access hurdles; direct overlap with existing government-backed trust platforms weakens differentiation. |
 | School–Parent Communication | Scope was never clearly bounded; would likely require partnerships with actual schools to pilot, which is outside the team's control. |
@@ -158,17 +159,19 @@ TFAQUD comes out clearly on top across all four criteria, which lines up with wh
 
 **Project Name: TFAQUD | تفقُّد**
 
-The team selected TFAQUD, a mobile application designed to organize healthcare for a single patient, whether the patient manages their own care or a primary caregiver is responsible for it.
+The team selected TFAQUD, a mobile application designed to organize healthcare through **care circles**, each built around a single patient, whether the patient manages their own care or a care manager is responsible for it. A user can belong to several care circles, with a different role in each, and so care for more than one patient in one application.
 
-The application brings medication management, medical appointments, therapy sessions, and health measurements together in one place. It also provides reminders, care activity documentation, and the ability for multiple caregivers to share responsibilities.
+The application brings medication management, medical appointments, therapy sessions, and health measurements together in one care plan, and turns the plan into daily tasks, each with a responsible person and a recorded result. It also provides reminders, follow-up of missed tasks, care activity documentation, and the ability for care circle members to share responsibilities.
+
+Each care circle includes the patient and the people who take part in the patient's care. Each member has a role: a care manager manages the care plan, a care assistant carries out the tasks assigned to them, a viewer can view care information but cannot modify it, and a patient who manages their own care has manager permissions. When a care manager creates a circle for a patient who has a phone, the patient approves or declines the request first.
 
 ### 3.2 Reasons for Selection
 
 The team selected TFAQUD for the following reasons:
 
 - **Technical Feasibility:** The idea aligns with the team's existing skills in backend development, REST APIs, and databases, while providing an opportunity to learn Flutter for mobile development.
-- **Innovation:** The dual application modes — Light Mode for patients and Detailed Mode for caregivers — combined with a multi-caregiver permission and responsibility-sharing system, address a coordination gap that typical single-user medication reminder apps do not solve.
-- **Value Proposition:** The application combines multiple aspects of healthcare management in one place and supports coordination among caregivers.
+- **Innovation:** The dual application modes — Simplified Mode for patients and Detailed Mode for caregivers — combined with care circles that have role-based permissions, task assignment, and follow-up of missed tasks, and with the ability to belong to several circles to care for more than one patient, address a coordination gap that typical single-user medication reminder apps do not solve.
+- **Value Proposition:** The application combines multiple aspects of healthcare management in one place and supports coordination among care circle members, so that the person responsible for each task and its result are clear.
 - **Potential Impact:** The scoring matrix in Section 2.4 rated TFAQUD highest on Potential Impact (5/5) of any idea considered. The problem it targets — fragmented coordination across medications, appointments, and measurements — affects two distinct, currently underserved groups at once: multi-caregiver households who have no shared system for dividing responsibility, and independent patients who must otherwise track their own care across separate tools. By centralizing both use cases in one application with mode-appropriate views, TFAQUD has a broader potential reach than a single-purpose reminder app while staying within the team's technical capacity.
 - **Alignment with Team Goals:** The project allows the team to apply software development skills and gain experience in mobile development and system integration.
 
@@ -178,24 +181,26 @@ Patients who require continuous healthcare and their caregivers face challenges 
 
 These challenges become more complex when multiple caregivers are involved in managing a patient's care.
 
-TFAQUD aims to address these challenges by providing a centralized platform for organizing and tracking healthcare information and coordinating caregiving responsibilities.
+TFAQUD aims to address these challenges by providing a centralized platform for organizing and tracking healthcare information and coordinating caregiving responsibilities within a care circle, with reminders and follow-up for tasks that are not completed.
 
 ### 3.4 Target Audience
 
 The primary target audience is caregiving groups consisting of two or more caregivers who share responsibility for a single patient requiring regular medication, medical appointments, and health measurements.
 
-The application also supports independent patients who can manage their own care.
+The application also supports independent patients who can manage their own care, patients who need assistance with follow-up through Simplified Mode, and viewers who follow the patient's care without modifying it.
 
 ### 3.5 Key Features
 
 The MVP will include the following core features:
 
-1. **Application Modes:** Detailed Mode for healthcare management and Light Mode for patients who need assistance with follow-up.
-2. **Medication Management:** Record medications, dosages, instructions, and medication history, with reminders and dose tracking.
-3. **Appointment Management:** Organize medical appointments and therapy sessions, with scheduled reminders.
-4. **Health Measurements:** Schedule measurements, manually record results, and display measurement history and charts.
-5. **Care Coordination:** Invite caregivers, manage permissions, assign responsibilities, and document care activities.
-6. **Statistics and Reports:** Display information to help users monitor medication management and health measurements.
+1. **Application Modes:** Detailed Mode for healthcare management and Simplified Mode for patients who need assistance with follow-up. The mode is selected when the care circle is created.
+2. **Medication Management:** Record medications, doses, duration, schedules, and instructions, with medication history, supply tracking, and dose tracking. Medicine details can be read from a photo of the medicine.
+3. **Appointment Management:** Organize medical appointments and therapy sessions, with scheduled reminders, and record visit notes.
+4. **Health Measurements:** Schedule measurements with target ranges, manually record results, and display measurement history.
+5. **Care Coordination:** Create a care circle for each patient, invite members and assign each a role, assign responsibilities that members can accept or decline, and document completed tasks. A user can belong to several circles, with a different role in each.
+6. **Reminders and Escalation:** Remind the person responsible when a task is due and, when a task is missed, notify the recipients in the order configured by the care manager.
+7. **Care Record and Reports:** Display completed tasks, recorded measurements, and previous medications to help users monitor medication management and health measurements, and export the complete care record.
+8. **Medical Profile and Emergency Card:** Keep the patient's medical information and emergency contacts, and show an emergency card with the essential information.
 
 Integration with medical devices is excluded from the initial MVP scope.
 
@@ -205,17 +210,19 @@ The project aims to:
 
 - Provide a centralized place for managing a single patient's healthcare information.
 - Simplify the organization and tracking of medications, appointments, and health measurements.
-- Support responsibility coordination and information sharing among caregivers.
+- Support responsibility coordination and information sharing among care circle members.
 - Help patients and caregivers track care activities through reminders and documentation.
-- Maintain organized records of care activities and health measurements for future reference.
+- Ensure that missed tasks are followed up with the people chosen by the care manager.
+- Maintain organized records of care activities and health measurements for future reference, with the option to export them.
 
 ### 3.7 Challenges and Opportunities
 
-The challenges below trace directly back to the brainstorming process: the multi-caregiver permission and responsibility-sharing system that emerged from the SCAMPER "Reverse" step and the "How Might We" question on shared caregiving (Section 2.2) is the main source of design and implementation complexity, alongside the following technical challenges:
+The challenges below trace directly back to the brainstorming process: the care circle (roles, permissions, and responsibility sharing) that emerged from the SCAMPER "Reverse" step and the "How Might We" question on shared caregiving (Section 2.2) is the main source of design and implementation complexity, alongside the following technical challenges:
 
 **Challenges:**
 
-- Designing a multi-caregiver permission and responsibility-sharing system that stays clear and usable rather than confusing.
+- Designing a care circle with roles, permissions, and responsibility sharing that stays clear and usable rather than confusing.
+- Notifying the right person about a missed task, in the right order, without overwhelming the care circle.
 - Learning Flutter for mobile application development.
 - Implementing API integration.
 - Working with Docker and deploying the application.
