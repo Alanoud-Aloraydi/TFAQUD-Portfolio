@@ -1,27 +1,58 @@
-# Tfaqud Backend
+# TFAQUD backend
 
-The Flask REST API (base path `/v1`) and its PostgreSQL database.
+Flask REST API for the TFAQUD app. All endpoints are under `/api/v1`.
 
-## Run
+## Run it with Docker
 
-```bash
-cp .env.example .env
-docker compose up
+You need Docker Desktop (or Docker Engine) with Compose v2. Check it first:
+
+```
+docker compose version
 ```
 
-The API starts on the port set in `.env`. Check it with `GET /v1/health`, which returns `200 {status}`.
+This must print a version. If it prints an error, see the table "If something
+fails" below.
 
-The Docker files and `.env.example` are added by KAN-12.
+1. Copy the settings template and open the copy:
 
-## Test
+   ```
+   cp .env.example .env
+   ```
 
-```bash
-pytest
+2. In `.env`, set `POSTGRES_PASSWORD` to a password you choose, using letters
+   and digits only. Do not use `$`, spaces, quotes or `#`: Docker Compose reads
+   `$name` in a `.env` file as a variable. The other values work as they are.
+   `.env` is never committed (it is in `.gitignore`).
+
+3. Start the API and the database:
+
+   ```
+   docker compose up --build
+   ```
+
+4. Check that it works. This should print `{"status":"ok"}`:
+
+   ```
+   curl http://localhost:5000/api/v1/health
+   ```
+
+
+## Run it without Docker
+
+You need Python 3.10 or newer. The tests were run on Python 3.13.
+
+```
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+flask --app wsgi run               # the API on http://127.0.0.1:5000
+pytest                             # the tests
 ```
 
-The tests use the Flask test client and a PostgreSQL test database.
+Without a `.env` file the app starts in the `development` environment with a
+built-in secret key. This works on your computer only.
 
-## Notes
+## Settings
 
-- Settings (database address, secret keys, provider keys) are read from environment variables. Never commit `.env`.
-- Every new endpoint verifies the caller's role and has a test for the refusal.
+All settings come from environment variables. `.env.example` lists every one of
+them with a comment. The rules are in `app/config.py`.
