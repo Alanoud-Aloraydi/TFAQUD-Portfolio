@@ -1,4 +1,4 @@
-# Back end
+# Tfaqud Backend
 
 The Flask REST API (base path `/v1`) and its PostgreSQL database.
 
