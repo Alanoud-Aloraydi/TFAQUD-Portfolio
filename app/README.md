@@ -1,21 +1,17 @@
-# Mobile application
+# tfaqud
 
-The Flutter application for Android and iPhone. The interface is in Arabic, right to left.
+A new Flutter project.
 
-## Run
+## Getting Started
 
-```bash
-flutter pub get
-flutter run
-```
+This project is a starting point for a Flutter application.
 
-The address of the API is set in the application settings. The project is created by KAN-17.
+A few resources to get you started if this is your first Flutter project:
 
-## Test
+- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
 
-```bash
-flutter test
-flutter test integration_test
-```
-
-`flutter test` runs the controller, repository, and right-to-left screen tests. `integration_test` runs the main flows on an emulator.
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
