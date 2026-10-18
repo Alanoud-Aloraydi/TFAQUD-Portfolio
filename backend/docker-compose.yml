@@ -1,0 +1,45 @@
+# Local development: the Flask API and a PostgreSQL database (TFQD-8).
+# Settings come from the .env file next to this file (copy .env.example).
+# The .env file is never committed.
+
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      # pytest would try to write its cache into the mounted folder.
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
+    ports:
+      # 127.0.0.1: reachable from this computer only, not from the network.
+      # API_PORT lets you change the port on your computer if 5000 is taken.
+      - "127.0.0.1:${API_PORT:-5000}:5000"
+    volumes:
+      # The code is mounted, so a change in a file reloads the server.
+      - .:/app
+    command: flask --app wsgi run --host 0.0.0.0 --port 5000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tfaqud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the .env file}
+      POSTGRES_DB: ${POSTGRES_DB:-tfaqud}
+    ports:
+      # For tools on your computer (a database viewer). DB_PORT lets you change
+      # the port on your computer if 5432 is taken, for example by a PostgreSQL
+      # that is already installed. The API reaches the database inside Docker
+      # and does not use this port.
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

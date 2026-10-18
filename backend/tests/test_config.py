@@ -1,0 +1,93 @@
+import pytest
+
+from app import create_app
+from app.auth.store import InMemorySessionStore
+from app.clock import SystemClock
+from app.config import ConfigError, load_config
+from app.sms import FakeSmsSender
+
+
+def test_default_token_lifetimes_are_the_proposal_of_tfqd_11(app):
+    assert app.config["ACCESS_TOKEN_MINUTES"] == 15
+    assert app.config["REFRESH_TOKEN_DAYS"] == 30
+
+
+def test_token_lifetimes_can_be_changed_by_environment_variable(monkeypatch):
+    monkeypatch.setenv("ACCESS_TOKEN_MINUTES", "5")
+    monkeypatch.setenv("REFRESH_TOKEN_DAYS", "7")
+
+    config = load_config("testing")
+
+    assert (config["ACCESS_TOKEN_MINUTES"], config["REFRESH_TOKEN_DAYS"]) == (5, 7)
+
+
+@pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
+def test_bad_token_lifetime_is_refused(monkeypatch, value):
+    monkeypatch.setenv("ACCESS_TOKEN_MINUTES", value)
+
+    with pytest.raises(ConfigError, match="ACCESS_TOKEN_MINUTES"):
+        load_config("testing")
+
+
+def test_unknown_environment_is_refused():
+    with pytest.raises(ConfigError, match="APP_ENV"):
+        load_config("prod")
+
+
+def test_app_environment_comes_from_app_env_by_default(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "testing")
+
+    assert load_config()["APP_ENV"] == "testing"
+
+
+@pytest.mark.parametrize("env", ["staging", "production"])
+def test_staging_and_production_need_a_real_secret_key(monkeypatch, env):
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
+    with pytest.raises(ConfigError, match="SECRET_KEY"):
+        load_config(env)
+
+
+def test_a_short_secret_key_is_refused(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "too-short")
+
+    with pytest.raises(ConfigError, match="SECRET_KEY"):
+        load_config("staging")
+
+
+def test_development_works_without_any_setup(monkeypatch):
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
+    app = create_app("development")
+
+    assert app.config["FAKE_SMS_LOG_BODY"] is True  # developer reads the OTP in the log
+
+
+def test_production_refuses_the_in_memory_session_store(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    # A sender object is passed in so that the SMS rule does not stop the app
+    # first: this test is about the session store rule alone.
+    sender = FakeSmsSender(SystemClock())
+
+    with pytest.raises(ConfigError, match="in-memory session store"):
+        create_app("production", sms_sender=sender)
+
+
+def test_staging_starts_with_a_warning_about_the_in_memory_store(monkeypatch, caplog):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+
+    with caplog.at_level("WARNING"):
+        create_app("staging")
+
+    assert "in-memory session store" in caplog.text
+
+
+def test_a_given_session_store_is_used_without_warning(monkeypatch, caplog):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    store = InMemorySessionStore()
+
+    with caplog.at_level("WARNING"):
+        app = create_app("staging", session_store=store)
+
+    assert app.extensions["session_service"]._store is store
+    assert "in-memory session store" not in caplog.text
