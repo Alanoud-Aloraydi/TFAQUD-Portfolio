@@ -22,7 +22,7 @@ def create_sms_sender(config: dict, clock) -> SmsSender:
         raise ConfigError("Tests may only use the fake SMS sender.")
     if backend == "authentica":
         raise ConfigError(
-            "The Authentica sender is not built yet. It is added with TFQD-12 and F01."
+            "The Authentica sender is not built yet. It is added with F01 (TFQD-13)."
         )
     raise ConfigError(f"Unknown SMS_BACKEND {backend!r}. Use 'fake'.")
 
