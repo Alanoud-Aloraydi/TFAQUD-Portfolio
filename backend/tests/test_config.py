@@ -91,3 +91,44 @@ def test_a_given_session_store_is_used_without_warning(monkeypatch, caplog):
 
     assert app.extensions["session_service"]._store is store
     assert "in-memory session store" not in caplog.text
+
+
+def test_default_code_validity_is_300_seconds_like_the_authentica_dashboard(app):
+    assert app.config["OTP_VALID_SECONDS"] == 300
+
+
+def test_code_validity_can_be_changed_by_environment_variable(monkeypatch):
+    monkeypatch.setenv("OTP_VALID_SECONDS", "120")
+
+    assert load_config("testing")["OTP_VALID_SECONDS"] == 120
+
+
+@pytest.mark.parametrize("name", ["OTP_VALID_SECONDS", "AUTHENTICA_TEMPLATE_ID"])
+@pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
+def test_bad_otp_numbers_are_refused(monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+
+    with pytest.raises(ConfigError, match=name):
+        load_config("testing")
+
+
+def test_default_authentica_template_is_5(app):
+    assert app.config["AUTHENTICA_TEMPLATE_ID"] == 5
+
+
+def test_authentica_template_can_be_changed_by_environment_variable(monkeypatch):
+    monkeypatch.setenv("AUTHENTICA_TEMPLATE_ID", "31")
+
+    assert load_config("testing")["AUTHENTICA_TEMPLATE_ID"] == 31
+
+
+def test_the_authentica_key_is_read_from_the_environment_outside_tests(monkeypatch):
+    monkeypatch.setenv("AUTHENTICA_API_KEY", "k" * 30)
+
+    assert load_config("development")["AUTHENTICA_API_KEY"] == "k" * 30
+
+
+def test_the_testing_environment_never_reads_the_authentica_key(monkeypatch):
+    monkeypatch.setenv("AUTHENTICA_API_KEY", "k" * 30)
+
+    assert load_config("testing")["AUTHENTICA_API_KEY"] is None

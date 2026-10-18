@@ -19,6 +19,12 @@ ENVIRONMENTS = ("development", "testing", "staging", "production")
 DEFAULT_ACCESS_TOKEN_MINUTES = 15
 DEFAULT_REFRESH_TOKEN_DAYS = 30
 
+# The sign-in code (docs/api-contracts.md, section 8). Authentica keeps a code for
+# the time set in its dashboard. OTP_VALID_SECONDS must equal that value: the fake
+# sender uses it, and the sign-in endpoints use it to choose the message.
+DEFAULT_OTP_VALID_SECONDS = 300
+DEFAULT_AUTHENTICA_TEMPLATE_ID = 5  # Arabic text, code of 6 digits
+
 MIN_SECRET_KEY_LENGTH = 32
 
 _DEV_SECRET_KEY = "development-only-secret-key-not-for-real-use"
@@ -61,6 +67,11 @@ def load_config(env_name: str | None = None, overrides: dict | None = None) -> d
             "REFRESH_TOKEN_DAYS", DEFAULT_REFRESH_TOKEN_DAYS
         ),
         "SMS_BACKEND": os.environ.get("SMS_BACKEND", "fake"),
+        "OTP_VALID_SECONDS": _int_from_env("OTP_VALID_SECONDS", DEFAULT_OTP_VALID_SECONDS),
+        "AUTHENTICA_API_KEY": os.environ.get("AUTHENTICA_API_KEY"),
+        "AUTHENTICA_TEMPLATE_ID": _int_from_env(
+            "AUTHENTICA_TEMPLATE_ID", DEFAULT_AUTHENTICA_TEMPLATE_ID
+        ),
         # In development the developer needs to read the OTP in the log.
         "FAKE_SMS_LOG_BODY": env_name == "development",
     }
@@ -69,6 +80,7 @@ def load_config(env_name: str | None = None, overrides: dict | None = None) -> d
         # Tests never read the real environment for secrets or the SMS backend.
         config["SECRET_KEY"] = _TEST_SECRET_KEY
         config["SMS_BACKEND"] = "fake"
+        config["AUTHENTICA_API_KEY"] = None
     elif env_name == "development" and not config["SECRET_KEY"]:
         config["SECRET_KEY"] = _DEV_SECRET_KEY
 
