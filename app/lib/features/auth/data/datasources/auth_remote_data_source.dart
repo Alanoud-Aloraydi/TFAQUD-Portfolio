@@ -21,6 +21,11 @@ abstract class BaseAuthRemoteDataSource {
 
   /// POST /api/v1/auth/sign-out. The API answers 204 with an empty body.
   Future<void> signOut();
+
+  /// GET /api/v1/auth/session. The API answers 200 while the session is
+  /// valid. When the answer is a 401 that ends the session, the interceptor
+  /// removes the tokens (and renews an expired access token first).
+  Future<void> checkSession();
 }
 
 @LazySingleton(as: BaseAuthRemoteDataSource)
@@ -66,5 +71,10 @@ class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
   Future<void> signOut() async {
     // The interceptor adds the access token to this request.
     await _client.post(ApiEndpoints.signOut);
+  }
+
+  @override
+  Future<void> checkSession() async {
+    await _client.get(ApiEndpoints.session);
   }
 }

@@ -1,12 +1,14 @@
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/pages/account_prototype_screen.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
+import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
 import 'package:app/features/auth/presentation/pages/code_screen.dart';
 import 'package:app/features/auth/presentation/pages/phone_screen.dart';
+import 'package:app/features/auth/presentation/pages/splash_screen.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
@@ -14,7 +16,8 @@ import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
 import 'package:app/features/placeholder/placeholder_screen.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -22,14 +25,47 @@ import 'package:go_router/go_router.dart';
 import 'routers.dart';
 
 class AppRouter {
+  // How the app decides what to show:
+  //
+  // 1. The first page is the splash page. It asks the server whether this
+  //    phone is signed in, then goes to the home page or the sign-in page.
+  // 2. Every other page needs the tokens of a signed-in phone. Without them
+  //    the router sends the user to the sign-in page, however the page was
+  //    asked for: a tap, an address typed in the browser, or a reload. This
+  //    only decides what the app shows. The data is protected by the server,
+  //    which refuses every request that has no valid token.
+  // 3. On the web a reload keeps the address, so the first navigation is
+  //    also sent to the splash page, which checks the session with the
+  //    server. A phone always starts at the splash page.
+  static bool _startChecked = false;
+
   static final GoRouter router = GoRouter(
-    initialLocation: Routes.today,
+    initialLocation: Routes.splash,
+    redirect: (context, state) async {
+      final String location = state.matchedLocation;
+      if (kIsWeb && !_startChecked) {
+        _startChecked = true;
+        if (location != Routes.splash) return Routes.splash;
+      }
+      String? token;
+      try {
+        token = await GetIt.I<TokenStorage>().readAccessToken();
+      } catch (_) {
+        // The tokens cannot be read (the secure storage failed): the phone
+        // counts as signed out.
+      }
+      return signInRedirect(
+        location,
+        hasTokens: token != null && token.isNotEmpty,
+      );
+    },
     routes: <RouteBase>[
       GoRoute(
         path: Routes.splash,
-        builder: (context, state) {
-          return const Scaffold(body: LoadingWidget());
-        },
+        builder: (context, state) => BlocProvider(
+          create: (context) => SplashCubit(GetIt.I<AuthUseCase>())..decide(),
+          child: const SplashScreen(),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -97,6 +133,23 @@ class AppRouter {
     errorBuilder: (context, state) =>
         Scaffold(body: Center(child: Text(context.tr('error.not_found')))),
   );
+
+  /// The page a phone is sent to instead of [location], or null when it may
+  /// open [location]. The splash page, the sign-in pages and the debug
+  /// gallery are open to everyone. Every other page needs the tokens
+  /// ([hasTokens]); without them the phone is sent to the sign-in page.
+  @visibleForTesting
+  static String? signInRedirect(
+    String location, {
+    required bool hasTokens,
+  }) {
+    if (hasTokens) return null;
+    final bool open = location == Routes.splash ||
+        location == Routes.gallery ||
+        location == Routes.auth ||
+        location.startsWith('${Routes.auth}/');
+    return open ? null : Routes.auth;
+  }
 
   static StatefulShellBranch _branch(String path, String titleKey) {
     return StatefulShellBranch(

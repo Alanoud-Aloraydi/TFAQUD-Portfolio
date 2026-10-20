@@ -25,4 +25,15 @@ abstract class AuthRepositoryDomain {
   /// Success means the server ended the session. A Failure means it could not
   /// be reached or refused, but the tokens are removed in both cases.
   Future<Result<bool, Failure>> signOut();
+
+  /// Whether this phone holds a session that the server still accepts. The
+  /// app asks it once, when it starts, to choose between the home page and
+  /// the sign-in page.
+  ///
+  /// False when there are no tokens, or when the server says the session is
+  /// over (the tokens are then removed). True when the session is valid, and
+  /// also when the server cannot be reached: the user can do nothing without
+  /// it, and the first request after it is back signs the user out if the
+  /// session has ended.
+  Future<bool> hasSession();
 }

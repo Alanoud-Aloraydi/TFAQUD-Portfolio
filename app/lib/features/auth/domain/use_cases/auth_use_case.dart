@@ -21,4 +21,6 @@ class AuthUseCase {
   }) => _repository.verifyCode(verificationId: verificationId, code: code);
 
   Future<Result<bool, Failure>> signOut() => _repository.signOut();
+
+  Future<bool> hasSession() => _repository.hasSession();
 }

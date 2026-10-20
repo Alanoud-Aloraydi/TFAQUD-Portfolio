@@ -68,6 +68,27 @@ class AuthRepositoryData implements AuthRepositoryDomain {
     }
   }
 
+  @override
+  Future<bool> hasSession() async {
+    try {
+      final String? before = await _tokens.readAccessToken();
+      if (before == null || before.isEmpty) return false;
+      try {
+        await _remote.checkSession();
+      } catch (_) {
+        // The answer is decided below from the tokens, not from the error.
+        // When the server ended the session, the interceptor has removed
+        // them. For any other error (no connection, a timeout, a server
+        // error) they are still there and the user is let in.
+      }
+      final String? after = await _tokens.readAccessToken();
+      return after != null && after.isNotEmpty;
+    } catch (_) {
+      // The tokens cannot be read (the secure storage failed): sign in.
+      return false;
+    }
+  }
+
   /// The API code decides the failure for the two code calls. Any other error
   /// (no connection, a timeout, a server error) goes to the shared mapping.
   Failure _signInFailure(Object error) {
