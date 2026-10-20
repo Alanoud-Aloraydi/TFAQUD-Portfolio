@@ -9,4 +9,6 @@ class Routes {
   static const String account = '/account';
   static const String notifications = '/notifications';
   static const String gallery = '/gallery';
+  static const String auth = '/auth';
+  static const String onboarding = '/onboarding';
 }

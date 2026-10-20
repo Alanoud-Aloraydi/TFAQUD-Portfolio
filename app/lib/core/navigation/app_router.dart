@@ -1,10 +1,19 @@
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/dev/component_gallery.dart';
+import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/auth/presentation/pages/account_prototype_screen.dart';
+import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
+import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
+import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
 import 'package:app/features/placeholder/placeholder_screen.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'routers.dart';
 
@@ -28,7 +37,24 @@ class AppRouter {
           _branch(Routes.circle, 'tab.circle'),
         ],
       ),
-      _standalone(Routes.account, 'topbar.account'),
+      GoRoute(
+        path: Routes.account,
+        builder: (context, state) => BlocProvider(
+          create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
+          child: const AccountPrototypeScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.auth,
+        builder: (context, state) => const AuthFeatureScreen(),
+      ),
+      GoRoute(
+        path: Routes.onboarding,
+        builder: (context, state) => BlocProvider(
+          create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
+          child: const OnboardingFeatureScreen(),
+        ),
+      ),
       _standalone(Routes.notifications, 'topbar.notifications'),
       if (kDebugMode)
         GoRoute(
