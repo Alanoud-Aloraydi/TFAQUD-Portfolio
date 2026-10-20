@@ -39,8 +39,12 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
     final OnboardingCubit cubit = context.read<OnboardingCubit>();
     cubit.firstNameChanged(value);
     if (!_displayEdited) {
-      _display.text = value;
-      cubit.displayNameChanged(value);
+      // Text set by code is not cut by the field's limit, so it is cut here.
+      final String shown = value.length > OnboardingCubit.maxDisplayNameLength
+          ? value.substring(0, OnboardingCubit.maxDisplayNameLength)
+          : value;
+      _display.text = shown;
+      cubit.displayNameChanged(shown);
     }
   }
 
@@ -81,6 +85,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                           LabeledTextField(
                             label: context.tr('onboarding.first_name'),
                             controller: _first,
+                            maxLength: OnboardingCubit.maxNameLength,
                             autofocus: true,
                             onChanged: _onFirstNameChanged,
                             errorText:
@@ -93,6 +98,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                           LabeledTextField(
                             label: context.tr('onboarding.last_name'),
                             controller: _last,
+                            maxLength: OnboardingCubit.maxNameLength,
                             onChanged: context
                                 .read<OnboardingCubit>()
                                 .lastNameChanged,
@@ -106,6 +112,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                           LabeledTextField(
                             label: context.tr('onboarding.display_name'),
                             controller: _display,
+                            maxLength: OnboardingCubit.maxDisplayNameLength,
                             textInputAction: TextInputAction.done,
                             onChanged: _onDisplayNameChanged,
                             helperText: context.tr(

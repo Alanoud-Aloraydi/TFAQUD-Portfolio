@@ -32,7 +32,7 @@ services:
       # the port on your computer if 5432 is taken, for example by a PostgreSQL
       # that is already installed. The API reaches the database inside Docker
       # and does not use this port.
-      - "127.0.0.1:${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5433}:5433"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

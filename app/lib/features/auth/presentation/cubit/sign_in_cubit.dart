@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:app/core/errors/failure.dart';
+import 'package:app/features/auth/domain/failures/sign_in_failures.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,24 +35,29 @@ class SignInCubit extends Cubit<SignInState> {
     emit(state.copyWith(code: digits, clearError: true));
   }
 
-  /// Sends the code. Returns true when it was sent, so the page can move on.
+  /// Sends the code from the phone page. This always starts a new request, so
+  /// an earlier request is never reused. Returns true when the code was sent,
+  /// so the page can move on.
   Future<bool> sendCode() async {
     if (state.status == SignInStatus.sendingCode) return false;
     if (!isPhoneValid) {
       emit(state.copyWith(showPhoneError: true, clearError: true));
       return false;
     }
-    return _requestCode();
+    return _requestCode(verificationId: null);
   }
 
-  /// Asks for a new code. Does nothing while the countdown runs.
+  /// Asks for a new code on the code page. Does nothing while the countdown
+  /// runs. The SMS belongs to the same request, so the server keeps counting
+  /// the wrong tries already used. If the server closed the request there is
+  /// no id any more, and a new request starts.
   Future<bool> resendCode() async {
     if (state.resendSeconds > 0) return false;
     if (state.status == SignInStatus.sendingCode) return false;
-    return _requestCode();
+    return _requestCode(verificationId: state.verificationId);
   }
 
-  Future<bool> _requestCode() async {
+  Future<bool> _requestCode({required String? verificationId}) async {
     emit(
       state.copyWith(
         status: SignInStatus.sendingCode,
@@ -59,12 +66,15 @@ class SignInCubit extends Cubit<SignInState> {
         clearError: true,
       ),
     );
-    final result = await _useCase.requestCode(fullPhone);
+    final result = await _useCase.requestCode(
+      fullPhone,
+      verificationId: verificationId,
+    );
     if (isClosed) return false;
     return result.when(
-      (sent) {
+      (id) {
         _startCountdown();
-        emit(state.copyWith(status: SignInStatus.codeSent));
+        emit(state.copyWith(status: SignInStatus.codeSent, verificationId: id));
         return true;
       },
       (failure) {
@@ -72,6 +82,7 @@ class SignInCubit extends Cubit<SignInState> {
           state.copyWith(
             status: SignInStatus.idle,
             errorKey: failure.messageKey,
+            clearVerificationId: _requestIsClosed(failure),
           ),
         );
         return false;
@@ -86,8 +97,17 @@ class SignInCubit extends Cubit<SignInState> {
       emit(state.copyWith(errorKey: 'auth.code_incomplete'));
       return false;
     }
+    final String? verificationId = state.verificationId;
+    if (verificationId == null) {
+      // The server closed the request. Nothing to check the code against.
+      emit(state.copyWith(errorKey: const StartAgainFailure().messageKey));
+      return false;
+    }
     emit(state.copyWith(status: SignInStatus.verifying, clearError: true));
-    final result = await _useCase.verifyCode(fullPhone, state.code);
+    final result = await _useCase.verifyCode(
+      verificationId: verificationId,
+      code: state.code,
+    );
     if (isClosed) return false;
     return result.when(
       (signIn) {
@@ -95,7 +115,7 @@ class SignInCubit extends Cubit<SignInState> {
         emit(
           state.copyWith(
             status: SignInStatus.verified,
-            isNewUser: signIn.isNewUser,
+            needsProfile: signIn.needsProfile,
           ),
         );
         return true;
@@ -107,6 +127,7 @@ class SignInCubit extends Cubit<SignInState> {
             status: SignInStatus.codeSent,
             code: '',
             errorKey: failure.messageKey,
+            clearVerificationId: _requestIsClosed(failure),
           ),
         );
         return false;
@@ -114,7 +135,8 @@ class SignInCubit extends Cubit<SignInState> {
     );
   }
 
-  /// The user leaves the code page to change the number.
+  /// The user leaves the code page to change the number. The request belonged
+  /// to the old number, so it is forgotten.
   void backToPhone() {
     _timer?.cancel();
     emit(
@@ -123,9 +145,16 @@ class SignInCubit extends Cubit<SignInState> {
         code: '',
         resendSeconds: 0,
         clearError: true,
+        clearVerificationId: true,
       ),
     );
   }
+
+  /// True when the server will accept nothing more on this request: the three
+  /// wrong tries are used, or the request is unknown or already finished.
+  /// Asking for a code again must then start a new request.
+  bool _requestIsClosed(Failure failure) =>
+      failure is TooManyAttemptsFailure || failure is StartAgainFailure;
 
   void _startCountdown() {
     _timer?.cancel();

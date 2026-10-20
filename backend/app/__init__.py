@@ -1,7 +1,7 @@
 """The Flask application factory.
 
 `create_app` is the one place where the pieces are connected (clock, SMS sender,
-session store, circle access). Everything else asks for them through
+session store, sign-in code store, user store, circle access). Everything else asks for them through
 `app.extensions`. Tests call `create_app` with fakes instead of the defaults.
 """
 
@@ -10,16 +10,21 @@ from datetime import timedelta
 
 from flask import Flask
 
+from app.auth.otp_store import InMemoryOtpStore, OtpStore
 from app.auth.routes import bp as auth_bp
 from app.auth.service import SessionService
+from app.auth.sign_in import SignInService
 from app.auth.store import InMemorySessionStore, SessionStore
 from app.authz import CircleAccess, DenyAllCircleAccess
 from app.clock import SystemClock
 from app.config import ConfigError, load_config
+from app.cors import register_development_cors
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
+from app.users.routes import bp as users_bp
+from app.users.store import InMemoryUserStore, UserStore
 
 
 def create_app(
@@ -29,6 +34,8 @@ def create_app(
     clock=None,
     sms_sender: SmsSender | None = None,
     session_store: SessionStore | None = None,
+    otp_store: OtpStore | None = None,
+    user_store: UserStore | None = None,
     circle_access: CircleAccess | None = None,
 ) -> Flask:
     app = Flask(__name__, static_folder=None)  # an API serves no static files
@@ -47,33 +54,69 @@ def create_app(
     clock = clock or SystemClock()
     sms_sender = sms_sender or create_sms_sender(app.config, clock)
 
+    # Each store has an in-memory version for development and tests. It is
+    # refused in production and warned about in staging (see each store's file).
     if session_store is None:
-        if env == "production":
-            raise ConfigError(
-                "The in-memory session store cannot be used in production. "
-                "Connect the PostgreSQL session store first."
-            )
-        if env == "staging":
-            app.logger.warning(
-                "Using the in-memory session store: sessions are lost on restart "
-                "and are not shared between worker processes."
-            )
+        _refuse_in_production(env, "session")
+        _warn_in_staging(app, env, "session", "sessions")
         session_store = InMemorySessionStore()
+    if otp_store is None:
+        _refuse_in_production(env, "sign-in code")
+        _warn_in_staging(app, env, "sign-in code", "code requests and their counters")
+        otp_store = InMemoryOtpStore()
+    if user_store is None:
+        _refuse_in_production(env, "user")
+        _warn_in_staging(app, env, "user", "users")
+        user_store = InMemoryUserStore()
 
     app.extensions["clock"] = clock
     app.extensions["sms_sender"] = sms_sender
     app.extensions["circle_access"] = circle_access or DenyAllCircleAccess()
-    app.extensions["session_service"] = SessionService(
+    session_service = SessionService(
         store=session_store,
         secret_key=app.config["SECRET_KEY"],
         access_ttl=timedelta(minutes=app.config["ACCESS_TOKEN_MINUTES"]),
         refresh_ttl=timedelta(days=app.config["REFRESH_TOKEN_DAYS"]),
         clock=clock,
     )
+    app.extensions["session_service"] = session_service
+    app.extensions["user_store"] = user_store
+    app.extensions["sign_in_service"] = SignInService(
+        otp_store=otp_store,
+        user_store=user_store,
+        sms_sender=sms_sender,
+        session_service=session_service,
+        clock=clock,
+        otp_valid_seconds=app.config["OTP_VALID_SECONDS"],
+        max_wrong_tries=app.config["OTP_MAX_WRONG_TRIES"],
+        max_sends_per_hour=app.config["OTP_MAX_SENDS_PER_HOUR"],
+    )
 
     register_request_id(app)
     register_error_handlers(app)
+    if env == "development":
+        # Lets Flutter web in Chrome call this API on this computer. Never on a server.
+        register_development_cors(app)
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(users_bp)
 
     return app
+
+
+def _refuse_in_production(env: str, what: str) -> None:
+    if env == "production":
+        raise ConfigError(
+            f"The in-memory {what} store cannot be used in production. "
+            f"Connect the PostgreSQL {what} store first."
+        )
+
+
+def _warn_in_staging(app: Flask, env: str, what: str, lost: str) -> None:
+    if env == "staging":
+        app.logger.warning(
+            "Using the in-memory %s store: %s are lost on restart "
+            "and are not shared between worker processes.",
+            what,
+            lost,
+        )

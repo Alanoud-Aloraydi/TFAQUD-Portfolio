@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A text field with its label above it, as in the account setup design.
 class LabeledTextField extends StatelessWidget {
@@ -12,6 +13,7 @@ class LabeledTextField extends StatelessWidget {
     this.helperText,
     this.textInputAction = TextInputAction.next,
     this.autofocus = false,
+    this.maxLength,
   });
 
   final String label;
@@ -21,6 +23,9 @@ class LabeledTextField extends StatelessWidget {
   final String? helperText;
   final TextInputAction textInputAction;
   final bool autofocus;
+
+  /// The most characters the user can type. No counter is shown.
+  final int? maxLength;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +40,9 @@ class LabeledTextField extends StatelessWidget {
           onChanged: onChanged,
           autofocus: autofocus,
           textInputAction: textInputAction,
+          inputFormatters: maxLength == null
+              ? null
+              : <TextInputFormatter>[LengthLimitingTextInputFormatter(maxLength)],
           style: text.bodyLarge,
           decoration: InputDecoration(
             errorText: errorText,

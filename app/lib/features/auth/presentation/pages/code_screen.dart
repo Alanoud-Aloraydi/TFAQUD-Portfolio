@@ -38,8 +38,8 @@ class CodeScreen extends StatelessWidget {
     final SignInCubit cubit = context.read<SignInCubit>();
     final bool correct = await cubit.verify();
     if (!context.mounted || !correct) return;
-    // A new number goes on to the name page; a known one goes to the home page.
-    context.go(cubit.state.isNewUser ? Routes.onboarding : Routes.today);
+    // A user who has not saved the name page goes to it; the others go home.
+    context.go(cubit.state.needsProfile ? Routes.onboarding : Routes.today);
   }
 
   @override

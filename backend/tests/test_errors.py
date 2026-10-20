@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.errors import Forbidden, NotFound
+from app.errors import Forbidden, NotFound, ServiceUnavailable, TooManyRequests
 
 
 def assert_error_shape(response, status, code):
@@ -85,3 +85,35 @@ def test_an_unsafe_client_request_id_is_replaced(client, unsafe):
 
     assert response.headers["X-Request-ID"] != unsafe
     assert len(response.headers["X-Request-ID"]) == 32
+
+
+def test_retry_after_is_in_the_body_and_in_the_header(app, client):
+    @app.get("/boom/slow-down")
+    def slow_down():
+        raise TooManyRequests(code="too_many_codes", retry_after=42)
+
+    response = client.get("/boom/slow-down")
+
+    error = assert_error_shape(response, 429, "too_many_codes")
+    assert error["retry_after_seconds"] == 42
+    assert response.headers["Retry-After"] == "42"
+
+
+def test_an_error_without_retry_after_has_no_such_field_or_header(app, client):
+    @app.get("/boom/too-many")
+    def too_many():
+        raise TooManyRequests()
+
+    response = client.get("/boom/too-many")
+
+    error = assert_error_shape(response, 429, "too_many_requests")
+    assert "retry_after_seconds" not in error
+    assert "Retry-After" not in response.headers
+
+
+def test_service_unavailable_is_a_503(app, client):
+    @app.get("/boom/down")
+    def down():
+        raise ServiceUnavailable(code="sms_unavailable")
+
+    assert_error_shape(client.get("/boom/down"), 503, "sms_unavailable")

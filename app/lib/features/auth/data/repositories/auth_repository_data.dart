@@ -1,9 +1,12 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/network/api_error_body.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/failures/invalid_code_failure.dart';
+import 'package:app/features/auth/domain/failures/sign_in_failures.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
@@ -16,27 +19,38 @@ class AuthRepositoryData implements AuthRepositoryDomain {
   final TokenStorage _tokens;
 
   @override
-  Future<Result<bool, Failure>> requestCode(String phone) async {
+  Future<Result<String, Failure>> requestCode(
+    String phone, {
+    String? verificationId,
+  }) async {
     try {
-      await _remote.requestCode(phone);
-      return Success(true);
+      final String id = await _remote.requestCode(
+        phone,
+        verificationId: verificationId,
+      );
+      return Success(id);
     } catch (error) {
-      return Error(FailureExceptions.getException(error));
+      return Error(_signInFailure(error));
     }
   }
 
   @override
-  Future<Result<SignInResult, Failure>> verifyCode(
-    String phone,
-    String code,
-  ) async {
+  Future<Result<SignInResult, Failure>> verifyCode({
+    required String verificationId,
+    required String code,
+  }) async {
     try {
-      final bool isNewUser = await _remote.verifyCode(phone, code);
-      return Success(SignInResult(isNewUser: isNewUser));
-    } on InvalidCodeException {
-      return Error(const InvalidCodeFailure());
+      final VerifyCodeResponse response = await _remote.verifyCode(
+        verificationId: verificationId,
+        code: code,
+      );
+      await _tokens.saveTokens(
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      );
+      return Success(SignInResult(needsProfile: !response.profileComplete));
     } catch (error) {
-      return Error(FailureExceptions.getException(error));
+      return Error(_signInFailure(error));
     }
   }
 
@@ -52,5 +66,20 @@ class AuthRepositoryData implements AuthRepositoryDomain {
       // the call to the server failed.
       await _tokens.clear();
     }
+  }
+
+  /// The API code decides the failure for the two code calls. Any other error
+  /// (no connection, a timeout, a server error) goes to the shared mapping.
+  Failure _signInFailure(Object error) {
+    return switch (apiErrorCodeOf(error)) {
+      ApiErrorCodes.invalidCode => const InvalidCodeFailure(),
+      ApiErrorCodes.codeExpired => const CodeExpiredFailure(),
+      ApiErrorCodes.tooManyAttempts => const TooManyAttemptsFailure(),
+      ApiErrorCodes.tooManyCodes => const TooManyCodesFailure(),
+      ApiErrorCodes.verificationNotFound ||
+      ApiErrorCodes.codeAlreadyUsed => const StartAgainFailure(),
+      ApiErrorCodes.smsUnavailable => const SmsUnavailableFailure(),
+      _ => FailureExceptions.getException(error),
+    };
   }
 }

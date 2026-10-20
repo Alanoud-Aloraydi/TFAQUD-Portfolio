@@ -7,9 +7,13 @@ Every error response has this shape:
         "code": "validation_error",       <- stable, for the app to act on
         "message": "The request is not valid.",   <- for developers and logs
         "request_id": "3f2a...",
-        "details": [ {"field": "...", "code": "...", "message": "..."} ]   <- optional
+        "details": [ {"field": "...", "code": "...", "message": "..."} ],  <- optional
+        "retry_after_seconds": 120   <- optional, only on 429 and 503 when it is known
       }
     }
+
+When `retry_after_seconds` is present, the same number is sent in the standard
+`Retry-After` header.
 
 The Flutter app decides what to do from `code` (and shows its own Arabic text).
 `message` is English and is not meant for the end user.
@@ -26,10 +30,12 @@ class ApiError(Exception):
     default_code = "bad_request"
     default_message = "The request could not be processed."
 
-    def __init__(self, message=None, *, code=None, details=None):
+    def __init__(self, message=None, *, code=None, details=None, retry_after=None):
         self.message = message or self.default_message
         self.code = code or self.default_code
         self.details = details
+        # Whole seconds the client should wait before trying again, or None.
+        self.retry_after = retry_after
         super().__init__(self.message)
 
 
@@ -63,6 +69,18 @@ class ValidationFailed(ApiError):
     default_message = "The request is not valid."
 
 
+class TooManyRequests(ApiError):
+    status = 429
+    default_code = "too_many_requests"
+    default_message = "Too many requests. Try again later."
+
+
+class ServiceUnavailable(ApiError):
+    status = 503
+    default_code = "service_unavailable"
+    default_message = "The service is not available right now. Try again later."
+
+
 # Standard HTTP errors raised by Flask itself (unknown URL, wrong method, ...)
 # are returned in the same format, with these codes.
 _HTTP_CODES = {
@@ -74,7 +92,9 @@ _HTTP_CODES = {
 }
 
 
-def error_response(status: int, code: str, message: str, details=None):
+def error_response(
+    status: int, code: str, message: str, details=None, retry_after=None
+):
     body = {
         "error": {
             "code": code,
@@ -84,8 +104,12 @@ def error_response(status: int, code: str, message: str, details=None):
     }
     if details:
         body["error"]["details"] = details
+    if retry_after is not None:
+        body["error"]["retry_after_seconds"] = retry_after
     response = jsonify(body)
     response.status_code = status
+    if retry_after is not None:
+        response.headers["Retry-After"] = str(retry_after)
     if status == 401:
         response.headers["WWW-Authenticate"] = "Bearer"
     return response
@@ -94,7 +118,13 @@ def error_response(status: int, code: str, message: str, details=None):
 def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(ApiError)
     def handle_api_error(error: ApiError):
-        return error_response(error.status, error.code, error.message, error.details)
+        return error_response(
+            error.status,
+            error.code,
+            error.message,
+            error.details,
+            error.retry_after,
+        )
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(error: HTTPException):

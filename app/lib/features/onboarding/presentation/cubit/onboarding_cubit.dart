@@ -7,6 +7,11 @@ class OnboardingCubit extends Cubit<OnboardingState> {
 
   final OnboardingUseCase _useCase;
 
+  /// The longest names the API accepts (docs/api-contracts.md, section 5). The
+  /// fields stop at these lengths, so the server never has to refuse a name.
+  static const int maxNameLength = 50;
+  static const int maxDisplayNameLength = 30;
+
   void firstNameChanged(String value) {
     emit(state.copyWith(firstName: value, clearError: true));
   }

@@ -10,6 +10,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
+import 'package:app/core/network/dio_client.dart' as _i602;
 import 'package:app/features/onboarding/data/datasources/onboarding_remote_data_source.dart'
     as _i734;
 import 'package:app/features/onboarding/data/repositories/onboarding_repository_data.dart'
@@ -29,7 +30,7 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     gh.lazySingleton<_i734.BaseOnboardingRemoteDataSource>(
-      () => _i734.OnboardingRemoteDataSource(),
+      () => _i734.OnboardingRemoteDataSource(gh<_i602.DioClient>()),
     );
     gh.lazySingleton<_i95.OnboardingRepositoryDomain>(
       () => _i327.OnboardingRepositoryData(

@@ -21,3 +21,11 @@ def get_session_service():
 
 def get_circle_access():
     return current_app.extensions["circle_access"]
+
+
+def get_sign_in_service():
+    return current_app.extensions["sign_in_service"]
+
+
+def get_user_store():
+    return current_app.extensions["user_store"]

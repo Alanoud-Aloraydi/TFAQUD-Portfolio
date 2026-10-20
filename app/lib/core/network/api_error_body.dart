@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart' show DioException;
+
 /// Error codes returned by the Flask API (backend/app/errors.py and
 /// backend/app/auth).
 abstract class ApiErrorCodes {
@@ -14,6 +16,16 @@ abstract class ApiErrorCodes {
   static const String invalidJson = 'invalid_json';
   static const String validationError = 'validation_error';
   static const String internalError = 'internal_error';
+
+  // Sign-in (backend/app/auth/sign_in.py) and the profile.
+  static const String verificationNotFound = 'verification_not_found';
+  static const String userNotFound = 'user_not_found';
+  static const String invalidCode = 'invalid_code';
+  static const String codeExpired = 'code_expired';
+  static const String codeAlreadyUsed = 'code_already_used';
+  static const String tooManyAttempts = 'too_many_attempts';
+  static const String tooManyCodes = 'too_many_codes';
+  static const String smsUnavailable = 'sms_unavailable';
 }
 
 /// Reads `error.code` from a body of the form `{"error": {"code": ...}}`.
@@ -28,3 +40,8 @@ String? apiErrorCode(Object? body) {
   }
   return null;
 }
+
+/// The API error code inside [error], when [error] is a [DioException] whose
+/// response has the API error body. Returns null for any other error.
+String? apiErrorCodeOf(Object error) =>
+    error is DioException ? apiErrorCode(error.response?.data) : null;

@@ -10,13 +10,15 @@ class AuthUseCase {
 
   final AuthRepositoryDomain _repository;
 
-  Future<Result<bool, Failure>> requestCode(String phone) =>
-      _repository.requestCode(phone);
+  Future<Result<String, Failure>> requestCode(
+    String phone, {
+    String? verificationId,
+  }) => _repository.requestCode(phone, verificationId: verificationId);
 
-  Future<Result<SignInResult, Failure>> verifyCode(
-    String phone,
-    String code,
-  ) => _repository.verifyCode(phone, code);
+  Future<Result<SignInResult, Failure>> verifyCode({
+    required String verificationId,
+    required String code,
+  }) => _repository.verifyCode(verificationId: verificationId, code: code);
 
   Future<Result<bool, Failure>> signOut() => _repository.signOut();
 }

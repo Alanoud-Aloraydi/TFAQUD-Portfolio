@@ -12,7 +12,8 @@ class SignInState extends Equatable {
     this.errorKey,
     this.showPhoneError = false,
     this.resendSeconds = 0,
-    this.isNewUser = false,
+    this.verificationId,
+    this.needsProfile = false,
   });
 
   /// The nine digits after +966, written 0-9 (for example 501234567).
@@ -32,8 +33,15 @@ class SignInState extends Equatable {
   /// Seconds left before a new code may be requested.
   final int resendSeconds;
 
-  /// Set when the code was correct.
-  final bool isNewUser;
+  /// The id the server gave for the current request of a code. The code is
+  /// checked against it, and a resend sends it back to stay in the same
+  /// request. Null before the first code, and after the server closed the
+  /// request (too many wrong tries, or already used): the next code starts a
+  /// new request.
+  final String? verificationId;
+
+  /// Set when the code was correct and the user has not saved the name page.
+  final bool needsProfile;
 
   SignInState copyWith({
     String? phone,
@@ -43,7 +51,9 @@ class SignInState extends Equatable {
     bool clearError = false,
     bool? showPhoneError,
     int? resendSeconds,
-    bool? isNewUser,
+    String? verificationId,
+    bool clearVerificationId = false,
+    bool? needsProfile,
   }) {
     return SignInState(
       phone: phone ?? this.phone,
@@ -52,7 +62,10 @@ class SignInState extends Equatable {
       errorKey: clearError ? null : (errorKey ?? this.errorKey),
       showPhoneError: showPhoneError ?? this.showPhoneError,
       resendSeconds: resendSeconds ?? this.resendSeconds,
-      isNewUser: isNewUser ?? this.isNewUser,
+      verificationId: clearVerificationId
+          ? null
+          : (verificationId ?? this.verificationId),
+      needsProfile: needsProfile ?? this.needsProfile,
     );
   }
 
@@ -64,6 +77,7 @@ class SignInState extends Equatable {
     errorKey,
     showPhoneError,
     resendSeconds,
-    isNewUser,
+    verificationId,
+    needsProfile,
   ];
 }

@@ -26,6 +26,7 @@ Each statement carries one of these labels:
 | Field names | `snake_case`. | Built |
 | Times | ISO 8601 with the UTC offset, for example `2026-10-17T17:51:25.157463+00:00`. The server works in UTC. | Built |
 | Request id | Every response has the header `X-Request-ID`. The app may send its own value (1 to 64 letters, digits, `_` or `-`); any other value is replaced. Every error body repeats the id as `request_id`. Send it with a bug report. | Built |
+| Calls from a browser (CORS) | Only when `APP_ENV` is `development`, and only from this computer (`localhost`, `127.0.0.1`), so that Flutter web in Chrome can call the API. Never sent in `testing`, `staging` or `production`. The iPhone app does not need it. | Built |
 | Unknown URL or wrong method | Returned in the error format (404 `not_found`, 405 `method_not_allowed` with an `Allow` header). | Built |
 | Circle endpoints | The circle id is part of the path: `/api/v1/circles/{circle_id}/...`. | Rule |
 
@@ -49,6 +50,8 @@ Every error has this shape and nothing else:
 - The app acts on `code`, which does not change. It shows its own Arabic text.
 - `message` is English, for developers and logs. It is not shown to the user.
 - `details` appears only for `validation_error`.
+- `retry_after_seconds` appears only when the app can be told how long to wait. Today
+  that is `too_many_codes` only. The same number is sent in the header `Retry-After`.
 - A 500 never contains a traceback or any internal detail.
 
 | Status | `code` | When | What the app does | Label |
@@ -61,13 +64,21 @@ Every error has this shape and nothing else:
 | 401 | `invalid_refresh_token` | The refresh token is unknown, expired, or its session was ended. | Sign in again. | Built |
 | 403 | `forbidden` | The caller has no access to this circle (see section 6). | Show "no access". | Built |
 | 404 | `not_found` | The URL does not exist. | Fix the request. | Built |
+| 404 | `verification_not_found` | The `verification_id` is unknown, belongs to another phone number, or its request is finished. | Start again: ask for a new code without the id. | Built |
+| 404 | `user_not_found` | The access token is valid but its user does not exist. | Sign in again. | Built |
 | 405 | `method_not_allowed` | Wrong HTTP method for this URL. | Fix the request. | Built |
-| 422 | `validation_error` | The JSON is valid but a field is missing, has the wrong type, or is unknown. | Fix the request or show the field error. | Built |
+| 422 | `validation_error` | The JSON is valid but a field is missing, has the wrong type, or is unknown. For the phone number, the code and the names, the detail code says why (section 5). | Fix the request or show the field error. | Built |
+| 422 | `invalid_code` | The code is not correct. One of the 3 tries is used. | Show "wrong code". | Built |
+| 422 | `code_expired` | The code is older than 300 seconds. No try is used. | Offer to send a new code (a resend). | Built |
+| 422 | `code_already_used` | The request is finished: its code was accepted before. | Start again. | Built |
+| 429 | `too_many_attempts` | The request used its 3 wrong tries. | Tell the user; start a new request. | Built |
+| 429 | `too_many_codes` | 3 codes were already sent to this phone number in the last hour. Carries `retry_after_seconds`. | Show how long to wait. | Built |
 | 500 | `internal_error` | An unexpected error on the server. | Show a general error. Keep the `request_id`. | Built |
+| 503 | `sms_unavailable` | The SMS provider could not send or check the code. Nothing was counted. | Show "try again". | Built |
 
 Every 401 also carries the header `WWW-Authenticate: Bearer`.
 
-Tests: `tests/test_errors.py`, `tests/test_validation.py`.
+Tests: `tests/test_errors.py`, `tests/test_validation.py`, `tests/test_sign_in.py`.
 
 ## 3. Validation
 
@@ -179,13 +190,216 @@ Needs a valid access token. Tells the app who the token belongs to.
 { "session_id": "23aa61a5d241485ca8b823c04b99c712", "user_id": "user-42" }
 ```
 
-### Sign-in with the phone number and the code (F01)
+### POST /api/v1/auth/request-code
 
-Not built yet (TFQD-13, TFQD-35). When the code is verified the server creates
-the session, and the session service already produces the four values the app
-needs: `access_token`, `access_token_expires_at`, `refresh_token` and
-`refresh_token_expires_at`. The request and the response of the sign-in
-endpoints are written with F01, using the answers of TFQD-12 (section 8).
+Feature F01 (TFQD-13, TFQD-35). No access token. Sends a sign-in code by SMS and
+answers with a `verification_id`. The names of the three sign-in endpoints and of
+their fields are a proposal (**To confirm**) until the app has used them.
+
+Body:
+
+```json
+{ "phone": "+966501234567" }
+```
+
+To send the code again inside the same request (a resend), add the id from the
+first answer:
+
+```json
+{ "phone": "+966501234567", "verification_id": "10648d8694f64637be154c66408900ba" }
+```
+
+200:
+
+```json
+{ "verification_id": "10648d8694f64637be154c66408900ba" }
+```
+
+| Rule | Contract | Label |
+|---|---|---|
+| Phone number | `+966`, then 9 digits that start with 5 (`+9665XXXXXXXX`), English digits only. The app builds it from what the user types. Anything else is 422 `validation_error` with the detail code `invalid_phone`, and no SMS is sent. | Built |
+| New request | Without `verification_id` a new request starts, with its own 3 tries. | Built |
+| Resend | With `verification_id` another SMS is sent for the same request. The wrong tries already used stay used. | Built |
+| Codes per phone number | At most 3 SMS per phone number in any 60 minutes. A resend is an SMS. The 4th is refused with 429 `too_many_codes` and nothing is sent. `retry_after_seconds` (and the header `Retry-After`) says how long to wait: until the oldest SMS of the hour is one hour old. | Built |
+| Request without tries | A resend into a request that already used its 3 wrong tries is refused with 429 `too_many_attempts`. Nothing is sent. The app starts a new request. | Built |
+| Same answer for every number | A phone number with an account and one without get the same answer, so the answer does not tell whether an account exists. | Built |
+| The provider fails | 503 `sms_unavailable`. A send that failed is not counted in the limit of 3, and a request that only had that send is removed. | Built |
+
+Errors: 400 `invalid_json`, 404 `verification_not_found`, 422 `validation_error`,
+429 `too_many_codes`, 429 `too_many_attempts`, 503 `sms_unavailable`.
+
+Real answers:
+
+```
+POST /api/v1/auth/request-code   {"phone": "0501234567"}
+-> 422  validation_error, details: [{"field": "phone", "code": "invalid_phone", ...}]
+
+4th code in one hour
+-> 429  too_many_codes, "retry_after_seconds": 3239, header Retry-After: 3239
+```
+
+### POST /api/v1/auth/verify-code
+
+Feature F01. No access token. Checks the code of a request. If it is right, the
+server finds the user of the phone number (and creates it the first time) and
+starts a session. The phone number is not sent again: the server takes it from the
+request, so a code cannot be checked against another number.
+
+Body:
+
+```json
+{ "verification_id": "10648d8694f64637be154c66408900ba", "code": "123456" }
+```
+
+200:
+
+```json
+{
+  "access_token": "<access token>",
+  "access_token_expires_at": "2026-10-15T12:15:00+00:00",
+  "refresh_token": "<refresh token>",
+  "refresh_token_expires_at": "2026-11-14T12:00:00+00:00",
+  "user": {
+    "id": "1840809a6c1b4814b9d1ecc779b8241b",
+    "phone": "+966501234567",
+    "first_name": null,
+    "last_name": null,
+    "display_name": null,
+    "profile_complete": false
+  }
+}
+```
+
+| Rule | Contract | Label |
+|---|---|---|
+| Format of the code | 6 digits. Arabic-Indic and Persian digits are turned into 0 to 9, and the spaces at both ends are removed. Anything else is 422 `validation_error` with the detail code `invalid_code_format`. Nothing is checked and no try is used. | Built |
+| Wrong code | 422 `invalid_code`. One of the 3 tries is used. | Built |
+| After 3 wrong tries | The request accepts nothing, not even the right code: 429 `too_many_attempts`. Authentica is not called. The app starts a new request. | Built |
+| Expired | If the code is refused and the last SMS of the request was sent more than 300 seconds ago: 422 `code_expired`. No try is used, because a user cannot type a right code that has expired. The app offers a resend. | Built |
+| Used once | After a right code the request is finished. Checking it again is 422 `code_already_used`. Authentica is not called. | Built |
+| The provider fails | 503 `sms_unavailable`. No try is used. | Built |
+| The session | `access_token`, `refresh_token` and their times are those of section 4. | Built |
+| Who is new | `user.profile_complete` is `false` until the profile is saved. The app shows the profile page when it is `false`. This also covers a user who left before saving it. | To confirm |
+
+Errors: 400 `invalid_json`, 404 `verification_not_found`, 422 `validation_error`,
+422 `invalid_code`, 422 `code_expired`, 422 `code_already_used`, 429
+`too_many_attempts`, 503 `sms_unavailable`.
+
+Real answers:
+
+```
+wrong code                 -> 422  invalid_code
+code "12ab"                -> 422  validation_error, details: [{"field": "code", "code": "invalid_code_format", ...}]
+same request after success -> 422  code_already_used
+after 3 wrong tries        -> 429  too_many_attempts
+301 seconds after the SMS  -> 422  code_expired
+```
+
+### PUT /api/v1/users/me/profile
+
+Feature F01, the page after the first sign-in. Needs a valid access token. Saves
+the three names of the user that the token belongs to and replaces the earlier
+values. It is `PUT` because the app sends all three names every time.
+
+Body:
+
+```json
+{ "first_name": "Leen", "last_name": "Algraawi", "display_name": "Leen" }
+```
+
+200:
+
+```json
+{
+  "user": {
+    "id": "e50f735fdbb54d0bafb5e2a0e54570d8",
+    "phone": "+966501234567",
+    "first_name": "Leen",
+    "last_name": "Algraawi",
+    "display_name": "Leen",
+    "profile_complete": true
+  }
+}
+```
+
+| Rule | Contract | Label |
+|---|---|---|
+| Own profile | The user comes from the access token. There is no user id in the URL or the body, and an extra field is an error. | Built |
+| `first_name`, `last_name` | 1 to 50 characters after the spaces at both ends are removed. | To confirm |
+| `display_name` | 1 to 30 characters, the same way. | To confirm |
+| One line | A name cannot contain a line break or another control character (detail code `invalid_name`). | To confirm |
+
+Errors: 400 `invalid_json`, 401 (`missing_token`, `invalid_token`,
+`access_token_expired`, `session_revoked`), 404 `user_not_found`, 422
+`validation_error`.
+
+### What F01 needs from the database (for TFQD-7)
+
+Today the users, the sessions and the code requests are kept in memory, behind
+three interfaces: `UserStore` (`app/users/store.py`), `SessionStore`
+(`app/auth/store.py`) and `OtpStore` (`app/auth/otp_store.py`). The PostgreSQL work
+replaces the in-memory classes with classes that follow the same interfaces.
+
+- `tests/test_user_store.py` and `tests/test_otp_store.py` use only the interface, so
+  the same tests must pass for the new classes: add them to the `STORES` list at
+  the top of each file.
+- `SessionStore` has no test file of its own. `tests/test_sessions.py` tests it
+  through the API, so the same tests must pass once the app is given the new class.
+- The code of the SMS is never stored.
+
+**The tables (To confirm).** They follow the team's ER diagram (updated on 20 October
+2026): the entities USER, AUTH_SESSION, VERIFICATION_REQUEST and VERIFICATION_SMS.
+The code uses older names; the new classes map them: `phone` is `phone_number`,
+`OtpRequest` is a row of `verification_requests`, `OtpSend` is a row of
+`verification_sms`. Other columns of the ER, such as `app_mode`, are not used by F01.
+
+| Table | Columns | Notes |
+|---|---|---|
+| `users` | `id` (uuid, primary key), `phone_number` (unique, not null, international format), `first_name`, `last_name`, `display_name` (all three null until the profile page is saved), `created_at` | One row per phone number. A check: the three names are all null or all filled. The user is created when the phone number is verified, which is before the profile page, so the names cannot be `NOT NULL`. `profile_complete` is not a column: the app works it out from the three names. `get_or_create_by_phone` must give one user when two requests arrive at the same time: use `INSERT ... ON CONFLICT (phone_number) DO NOTHING`, then read. |
+| `auth_sessions` | `id` (uuid, primary key), `user_id` (references `users`, delete with the user), `refresh_token_hash` (unique, not null, SHA-256 in hexadecimal, 64 characters), `created_at`, `refresh_expires_at` (not null), `revoked_at` (null until sign-out) | One row per sign-in. Exactly these columns: by decision no device and no IP address is stored (a test checks the record). The unique key on `refresh_token_hash` is also the index for `POST /api/v1/auth/refresh`. Deleting a user deletes the sessions, which is the rule of section 4. |
+| `verification_requests` | `id` (uuid, primary key; it is the `verification_id` of the API), `phone_number` (not null, international format, no foreign key), `created_at`, `wrong_tries` (integer, default 0, not less than 0), `verified_at` (can be null) | One row per verification request. No foreign key to `users`, because the request starts before the user exists. The limit of 3 wrong tries is not a database check: it comes from the configuration. |
+| `verification_sms` | `id` (uuid, primary key), `request_id` (references `verification_requests`, delete with it), `phone_number`, `sent_at` | One row per SMS. Index on (`phone_number`, `sent_at`). `phone_number` is the same as in the request; a composite foreign key (`request_id`, `phone_number`) can make the database enforce it. |
+
+**Times are written by the app (Built).** Every store method that writes a time
+receives it as an argument (`now` or `at`), so the tests can move the clock. The
+new classes store that value. A column default such as `now()` is only a fallback;
+if it were the only source, the tests that move time could not run against
+PostgreSQL.
+
+**Ids (To confirm).** Today the API returns ids as 32 characters without hyphens
+(`uuid4().hex`). A PostgreSQL `uuid` is written with hyphens. TFQD-7 picks one
+format and the new classes convert it at the edge, so that an id has the same
+form in the token, the responses and the tests.
+
+**Table and column names.** `user` is a reserved word in PostgreSQL, so the table is
+`users`.
+
+Four operations must be correct when two requests arrive at the same time:
+
+- `claim_send`: count the sends of the phone number in the last hour and insert the
+  new one in the same transaction, with a lock for that phone number (for example
+  `pg_advisory_xact_lock(hashtext(phone_number))`). Otherwise two requests can both
+  take the third place and the fourth SMS is sent. When the call has no request id,
+  the new request and its first send are inserted in that same transaction, so a
+  refused call leaves nothing behind.
+- `release_send`: delete the send. If it was the last send of its request, delete
+  the request too.
+- `claim_try`: `UPDATE verification_requests SET wrong_tries = wrong_tries + 1 WHERE
+  id = ... AND wrong_tries < :max RETURNING ...`. No row returned means no tries
+  left. `release_try` is the same update with `- 1` and `AND wrong_tries > 0`.
+- `mark_verified`: `UPDATE ... SET verified_at = ... WHERE id = ... AND verified_at IS
+  NULL`. No row returned means it was already finished.
+
+Revoking a session is allowed twice and keeps the first time:
+`UPDATE auth_sessions SET revoked_at = COALESCE(revoked_at, :at) WHERE id = ...`.
+It returns False only when no row matches.
+
+The phone number is personal data. Rows of `verification_requests` and
+`verification_sms` older than 24 hours serve no purpose and can be deleted by a
+cleanup job.
+
+Tests: `tests/test_sign_in.py`, `tests/test_profile.py`, `tests/test_sessions.py`,
+`tests/test_otp_store.py`, `tests/test_user_store.py`.
 
 ## 6. Authorization
 
@@ -418,37 +632,62 @@ failures apart. TFQD-35 asks for different feedback for an incorrect, an expired
 reused and an excessive-attempt code. Our server can tell them apart with its own
 record of each send, as the steps below show.
 
-**How F01 uses it (Proposal, written with TFQD-13).**
+**How F01 uses it (Built, written with TFQD-13).** The endpoints are in section 5.
 
-Sending a code:
+Sending a code (`request-code`):
 
-1. The server checks the format of the phone number.
-2. The server counts the codes sent to this number in the last hour. If the count
-   is 3, it refuses and does not call Authentica.
+1. The server checks the format of the phone number. A resend must name a request
+   that exists, is open and belongs to this phone number.
+2. The server takes one place in the limit of 3 codes per hour, in one step. If the
+   count is already 3, it refuses and does not call Authentica. Taking the place and
+   counting are one step, so two requests at the same time cannot both take the last
+   place.
 3. The server calls `send-otp` with `method` `sms`, `template_id` 5 and the phone
    number. It sends no `otp` field.
-4. After a success answer, the server records the send: the phone number and the
-   time. A failed call is not counted, because no SMS was sent.
+4. If the call fails, the place is given back, because no SMS was sent. A failed call
+   is never counted.
 
-Checking a code:
+Checking a code (`verify-code`):
 
-1. The server checks that the code has 6 digits.
-2. If the verification request already has 3 wrong tries, the server refuses and
-   does not call Authentica. The counters belong to the verification request, so
-   a new code does not reset them (TFQD-13).
-3. The server calls `verify-otp`. The answer 200 with `status` true is a correct
-   code: the server marks the send as verified and creates the session.
-4. The answer 422 is a failure. The server chooses the message from its record of
-   the send: the send was already verified, so the code is used; more than 300
-   seconds passed since the send, so the code is expired; otherwise the code is
-   wrong, and it counts as one wrong try. Authentica still accepts or refuses the
-   code. The record only chooses the message. The 300 seconds are a setting of the
-   server, and they must equal the value in the dashboard.
+1. The server turns Arabic-Indic digits (٠ to ٩) into 0 to 9, because an Arabic
+   keyboard can type them, and checks that the code has 6 digits. A code that does
+   not fit is refused before anything else and does not count as a try.
+2. The server finds the verification request. An unknown id is refused. A request
+   that is already finished is refused as `code_already_used`. Authentica is not
+   called in either case.
+3. The server takes one try, in one step. If the request already used 3, it refuses
+   and does not call Authentica. The counters belong to the verification request, so
+   a new code (a resend) does not reset them (TFQD-13).
+4. The server calls `verify-otp`. The answer 200 with `status` true is a correct
+   code: the server finishes the request, finds or creates the user of the phone
+   number, and creates the session.
+5. The answer 422 is a failure. The server chooses the message from its record of
+   the sends: if more than 300 seconds passed since the last SMS of the request, the
+   code is expired, and the try is given back; otherwise the code is wrong and the
+   try stays used. Authentica still accepts or refuses the code. The record only
+   chooses the message. The 300 seconds are a setting of the server
+   (`OTP_VALID_SECONDS`), and they must equal the value in the dashboard.
+6. If the sender raises `SmsDeliveryError`, the server answers that the service is
+   not available (503) and gives the try back, because the code was not judged.
 
-**Code in `app/sms`.** Today `SmsSender.send(to, message)` sends a message text.
-F01 replaces it with an interface that has two jobs: send a code to a phone
-number, and check a code. The fake version makes and checks its own 6-digit code,
-so no test calls Authentica.
+**Code in `app/sms` (Built, tested without a network).** `SmsSender` has two jobs:
+`send_code(phone)` and `check_code(phone, code)`.
+
+- `AuthenticaSmsSender` calls `send-otp` with `template_id` 5 and no `otp` field,
+  and `verify-otp`. `check_code` answers `True` for HTTP 200 with `status` true, and
+  `False` for HTTP 422. For anything else (a wrong key, the limit of 60 calls per
+  minute, a server error, no answer, an answer it does not know) it raises
+  `SmsDeliveryError`, because that is not a wrong try and must not be counted as one.
+- `FakeSmsSender` makes and checks its own 6-digit code with the same rules: valid
+  for `OTP_VALID_SECONDS` (300), accepted once, one answer for every refusal, and no
+  block after wrong tries. It keeps only the latest code of a number. Whether
+  Authentica does the same is test 9.
+- Settings: `SMS_BACKEND` (`fake` or `authentica`), `AUTHENTICA_API_KEY`,
+  `AUTHENTICA_TEMPLATE_ID` (5), `OTP_VALID_SECONDS` (300), `OTP_MAX_WRONG_TRIES` (3)
+  and `OTP_MAX_SENDS_PER_HOUR` (3).
+- The sign-in endpoints (section 5) call the sender that `SMS_BACKEND` selects.
+- `scripts/try_authentica_sender.py` tries the real sender once, with one SMS.
+  Not run yet (To confirm).
 
 **OTP rules.** They come from TFQD-13 and TFQD-35, except the length of the code
 and its validity, which were decided on 19 October 2026. The limit of 3 codes per
@@ -458,9 +697,10 @@ hour was confirmed on 18 October 2026.
 |---|---|---|
 | Code | 6 digits, made by Authentica (template 5) | **Decided** |
 | Valid for | 300 seconds (5 minutes), set in the Authentica dashboard | **Decided** |
-| Wrong tries | 3 per verification request, counted by our server | TFQD-13 |
-| Codes per phone number | At most 3 per hour | **Decided** |
-| Counters | A new code does not reset them | TFQD-13 |
+| Wrong tries | 3 per verification request, counted by our server (`OTP_MAX_WRONG_TRIES`) | TFQD-13 |
+| Codes per phone number | At most 3 per hour (`OTP_MAX_SENDS_PER_HOUR`), a resend counts as a code | **Decided** |
+| Counters | A new code for the same request (a resend) does not reset them | TFQD-13 |
+| A new request | A request started without a `verification_id` has its own 3 tries. The limit of 3 codes per hour still counts every SMS, so at most 9 tries per hour per phone number. | To confirm |
 | Not used | A device identifier, an IP address. No phone lock in V1.0. | TFQD-13 |
 
 ## 9. Definition of Done
@@ -515,6 +755,23 @@ change in the pull request review.
 4. The name of the application in the SMS: template 5 has a place for it
    (`{{app_name}}`). It must read TFAQUD. Check it in the real SMS.
 5. TFQD-13 and TFQD-35 say a code of four digits. They must say six.
-6. How long a verification request lives. A new code does not reset its counters
-   (TFQD-13), but TFQD-13 does not say when the counters start again, for
-   example after a correct code or after an hour. It is decided with F01.
+6. `scripts/try_authentica_sender.py`, the first real call of the sender of the app, is
+   not run yet (section 8).
+7. Circle actions before the profile page is saved. A user exists after the first sign-in
+   with no names, and the server does not force the profile page. If such a user accepts
+   a circle request, the patient has a user without names. Either the server refuses
+   circle actions until `profile_complete` is `true`, or every screen that shows a name
+   handles a missing one. To decide with TFQD-7 and the circle features.
+
+**Proposals written with the sign-in endpoints (To confirm).** Built and tested, but
+the team has not reviewed them yet.
+
+| # | Point | Proposal |
+|---|---|---|
+| A | Endpoint names | `POST /api/v1/auth/request-code`, `POST /api/v1/auth/verify-code`, `PUT /api/v1/users/me/profile` (section 5). |
+| B | How long a verification request lives | Until its code is accepted. It has no time limit of its own: its counters never start again, and the code inside it lives 300 seconds. A new request (no `verification_id`) is always possible. This answers the old open point on when the counters start again. Rows older than 24 hours can be deleted (section 5). |
+| C | A new request has new tries | A new request has its own 3 tries, but the 3 codes per hour are shared, so the most a phone number gets is 9 tries per hour. TFQD-13 says the limits do not reset "simply because a new OTP is issued"; here a resend does not reset them, only a request started from the beginning does. |
+| D | An expired code is not a try | A refused code that arrives more than 300 seconds after the last SMS is `code_expired` and costs no try. |
+| E | Phone number | Saudi mobile numbers only, `+9665XXXXXXXX`. |
+| F | Names | 1 to 50 characters (first and last name), 1 to 30 (display name), one line. |
+| G | Who sees the profile page | The app shows it when `user.profile_complete` is `false`. |

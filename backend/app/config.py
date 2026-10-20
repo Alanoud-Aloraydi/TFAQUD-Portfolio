@@ -25,6 +25,11 @@ DEFAULT_REFRESH_TOKEN_DAYS = 30
 DEFAULT_OTP_VALID_SECONDS = 300
 DEFAULT_AUTHENTICA_TEMPLATE_ID = 5  # Arabic text, code of 6 digits
 
+# The limits of TFQD-13 / TFQD-35, counted by our server. They are settings, not
+# constants, so a test server can relax them without a code change.
+DEFAULT_OTP_MAX_WRONG_TRIES = 3  # per verification request
+DEFAULT_OTP_MAX_SENDS_PER_HOUR = 3  # per phone number
+
 MIN_SECRET_KEY_LENGTH = 32
 
 _DEV_SECRET_KEY = "development-only-secret-key-not-for-real-use"
@@ -68,6 +73,12 @@ def load_config(env_name: str | None = None, overrides: dict | None = None) -> d
         ),
         "SMS_BACKEND": os.environ.get("SMS_BACKEND", "fake"),
         "OTP_VALID_SECONDS": _int_from_env("OTP_VALID_SECONDS", DEFAULT_OTP_VALID_SECONDS),
+        "OTP_MAX_WRONG_TRIES": _int_from_env(
+            "OTP_MAX_WRONG_TRIES", DEFAULT_OTP_MAX_WRONG_TRIES
+        ),
+        "OTP_MAX_SENDS_PER_HOUR": _int_from_env(
+            "OTP_MAX_SENDS_PER_HOUR", DEFAULT_OTP_MAX_SENDS_PER_HOUR
+        ),
         # Needed only when SMS_BACKEND is authentica. Never printed or logged.
         "AUTHENTICA_API_KEY": os.environ.get("AUTHENTICA_API_KEY"),
         "AUTHENTICA_TEMPLATE_ID": _int_from_env(

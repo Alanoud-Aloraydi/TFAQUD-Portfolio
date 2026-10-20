@@ -1,6 +1,7 @@
 import pytest
 
 from app import create_app
+from app.auth.otp_store import InMemoryOtpStore
 from app.auth.store import InMemorySessionStore
 from app.clock import SystemClock
 from app.config import ConfigError, load_config
@@ -132,3 +133,53 @@ def test_the_testing_environment_never_reads_the_authentica_key(monkeypatch):
     monkeypatch.setenv("AUTHENTICA_API_KEY", "k" * 30)
 
     assert load_config("testing")["AUTHENTICA_API_KEY"] is None
+
+
+def test_default_sign_in_limits_are_the_ones_of_tfqd_13(app):
+    assert app.config["OTP_MAX_WRONG_TRIES"] == 3
+    assert app.config["OTP_MAX_SENDS_PER_HOUR"] == 3
+
+
+def test_sign_in_limits_can_be_changed_by_environment_variable(monkeypatch):
+    monkeypatch.setenv("OTP_MAX_WRONG_TRIES", "5")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_HOUR", "10")
+
+    config = load_config("testing")
+
+    assert (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_HOUR"]) == (5, 10)
+
+
+@pytest.mark.parametrize("name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_HOUR"])
+@pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
+def test_bad_sign_in_limits_are_refused(monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+
+    with pytest.raises(ConfigError, match=name):
+        load_config("testing")
+
+
+def test_production_refuses_the_in_memory_code_and_user_stores(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    sender = FakeSmsSender(SystemClock())
+    sessions = InMemorySessionStore()
+
+    with pytest.raises(ConfigError, match="in-memory sign-in code store"):
+        create_app("production", sms_sender=sender, session_store=sessions)
+
+    with pytest.raises(ConfigError, match="in-memory user store"):
+        create_app(
+            "production",
+            sms_sender=sender,
+            session_store=sessions,
+            otp_store=InMemoryOtpStore(),
+        )
+
+
+def test_staging_warns_about_every_in_memory_store(monkeypatch, caplog):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+
+    with caplog.at_level("WARNING"):
+        create_app("staging")
+
+    assert "in-memory sign-in code store" in caplog.text
+    assert "in-memory user store" in caplog.text

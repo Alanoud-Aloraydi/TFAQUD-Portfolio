@@ -1,13 +1,15 @@
 import 'package:equatable/equatable.dart';
 
-/// What the server tells the app after a correct code.
+/// What the app learns after a correct code. The session itself (the tokens)
+/// is saved by the repository and is not part of this result.
 class SignInResult extends Equatable {
-  const SignInResult({required this.isNewUser});
+  const SignInResult({required this.needsProfile});
 
-  /// True when this phone number had no account, so the server created one.
-  /// The app then asks for the name; otherwise it goes to the home page.
-  final bool isNewUser;
+  /// True when the user has not saved the name page yet: a new account, or an
+  /// earlier sign-in that stopped before the names were saved. The app then
+  /// shows the name page; otherwise it goes to the home page.
+  final bool needsProfile;
 
   @override
-  List<Object?> get props => [isNewUser];
+  List<Object?> get props => [needsProfile];
 }

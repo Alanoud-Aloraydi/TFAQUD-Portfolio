@@ -11,8 +11,10 @@ import socket
 import pytest
 
 from app import create_app
+from app.auth.otp_store import InMemoryOtpStore
 from app.authz import InMemoryCircleAccess
 from app.clock import ManualClock
+from app.users.store import InMemoryUserStore
 
 
 @pytest.fixture(autouse=True)
@@ -38,8 +40,25 @@ def circle_access():
 
 
 @pytest.fixture
-def app(clock, circle_access):
-    return create_app("testing", clock=clock, circle_access=circle_access)
+def otp_store():
+    """Where the sign-in code requests are kept, so a test can look inside."""
+    return InMemoryOtpStore()
+
+
+@pytest.fixture
+def user_store():
+    return InMemoryUserStore()
+
+
+@pytest.fixture
+def app(clock, circle_access, otp_store, user_store):
+    return create_app(
+        "testing",
+        clock=clock,
+        circle_access=circle_access,
+        otp_store=otp_store,
+        user_store=user_store,
+    )
 
 
 @pytest.fixture

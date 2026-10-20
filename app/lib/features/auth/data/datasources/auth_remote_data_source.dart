@@ -1,19 +1,23 @@
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
+import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:injectable/injectable.dart';
 
-/// The server refused the code because it is wrong.
-class InvalidCodeException implements Exception {
-  const InvalidCodeException();
-}
-
 abstract class BaseAuthRemoteDataSource {
-  /// Asks the server to send the SMS code to [phone] (+9665XXXXXXXX).
-  Future<void> requestCode(String phone);
+  /// POST /api/v1/auth/request-code. Sends the SMS code to [phone]
+  /// (+9665XXXXXXXX) and returns the verification id of the request.
+  ///
+  /// Pass the id of an earlier call as [verificationId] to send another SMS for
+  /// the same request (a resend). Without it a new request starts.
+  Future<String> requestCode(String phone, {String? verificationId});
 
-  /// Checks the code. Returns true when the phone number had no account yet.
-  /// Throws [InvalidCodeException] when the code is wrong.
-  Future<bool> verifyCode(String phone, String code);
+  /// POST /api/v1/auth/verify-code. Returns the tokens and whether the profile
+  /// is complete. A refused code is a DioException with a 4xx answer; the
+  /// repository turns its API code into a Failure.
+  Future<VerifyCodeResponse> verifyCode({
+    required String verificationId,
+    required String code,
+  });
 
   /// POST /api/v1/auth/sign-out. The API answers 204 with an empty body.
   Future<void> signOut();
@@ -25,27 +29,41 @@ class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
 
   final DioClient _client;
 
-  /// The two code endpoints are not built in the API yet, so [requestCode] and
-  /// [verifyCode] answer on the phone. Replace their bodies with `_client.post`
-  /// calls when the API has them; no other file changes.
-  ///
-  /// Test rules: the code 000000 is wrong; any other code is accepted.
-  /// A phone number ending in 0 is a returning user; any other number is new.
+  // No try/catch in this class: the repository turns any error into a Failure,
+  // once. The interceptor does not add the access token to the two code calls
+  // (ApiEndpoints.withoutAccessToken).
+
   @override
-  Future<void> requestCode(String phone) async {
-    await Future<void>.delayed(const Duration(milliseconds: 600));
+  Future<String> requestCode(String phone, {String? verificationId}) async {
+    final response = await _client.post(
+      ApiEndpoints.requestCode,
+      data: <String, dynamic>{
+        'phone': phone,
+        'verification_id': ?verificationId,
+      },
+    );
+    final Object? body = response.data;
+    final Object? id = body is Map ? body['verification_id'] : null;
+    if (id is! String || id.isEmpty) {
+      throw const FormatException('request-code answered without an id.');
+    }
+    return id;
   }
 
   @override
-  Future<bool> verifyCode(String phone, String code) async {
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (code == '000000') throw const InvalidCodeException();
-    return !phone.endsWith('0');
+  Future<VerifyCodeResponse> verifyCode({
+    required String verificationId,
+    required String code,
+  }) async {
+    final response = await _client.post(
+      ApiEndpoints.verifyCode,
+      data: <String, String>{'verification_id': verificationId, 'code': code},
+    );
+    return VerifyCodeResponse.fromJson(response.data);
   }
 
   @override
   Future<void> signOut() async {
-    // No try/catch here: the repository turns any error into a Failure, once.
     // The interceptor adds the access token to this request.
     await _client.post(ApiEndpoints.signOut);
   }
