@@ -3,10 +3,14 @@ import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/pages/account_prototype_screen.dart';
+import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
+import 'package:app/features/auth/presentation/pages/code_screen.dart';
+import 'package:app/features/auth/presentation/pages/phone_screen.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
+import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
 import 'package:app/features/placeholder/placeholder_screen.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -44,16 +48,44 @@ class AppRouter {
           child: const AccountPrototypeScreen(),
         ),
       ),
-      GoRoute(
-        path: Routes.auth,
-        builder: (context, state) => const AuthFeatureScreen(),
-      ),
-      GoRoute(
-        path: Routes.onboarding,
-        builder: (context, state) => BlocProvider(
-          create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
-          child: const OnboardingFeatureScreen(),
+      // Welcome, phone number and code share one SignInCubit, so the code page
+      // knows the number. The cubit is closed when the user leaves these pages.
+      ShellRoute(
+        builder: (context, state, child) => BlocProvider(
+          create: (context) => SignInCubit(GetIt.I<AuthUseCase>()),
+          child: child,
         ),
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.auth,
+            builder: (context, state) => const AuthFeatureScreen(),
+          ),
+          GoRoute(
+            path: Routes.authPhone,
+            builder: (context, state) => const PhoneScreen(),
+          ),
+          GoRoute(
+            path: Routes.authCode,
+            builder: (context, state) => const CodeScreen(),
+          ),
+        ],
+      ),
+      // Name page and start page share one OnboardingCubit.
+      ShellRoute(
+        builder: (context, state, child) => BlocProvider(
+          create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
+          child: child,
+        ),
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.onboarding,
+            builder: (context, state) => const OnboardingFeatureScreen(),
+          ),
+          GoRoute(
+            path: Routes.onboardingStart,
+            builder: (context, state) => const StartScreen(),
+          ),
+        ],
       ),
       _standalone(Routes.notifications, 'topbar.notifications'),
       if (kDebugMode)

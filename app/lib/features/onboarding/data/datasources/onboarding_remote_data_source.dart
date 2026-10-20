@@ -1,19 +1,24 @@
-import 'package:app/features/onboarding/data/models/onboarding_model.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class BaseOnboardingRemoteDataSource {
-  Future<OnboardingModel> getOnboarding();
+  Future<void> saveProfile({
+    required String firstName,
+    required String lastName,
+    required String displayName,
+  });
 }
 
-/// Placeholder data. The real profile calls are written with TFQD-22.
+/// The profile endpoint is not built in the API yet, so [saveProfile] answers
+/// on the phone. Replace its body with a `DioClient` call when the endpoint
+/// exists; no other file changes.
 @LazySingleton(as: BaseOnboardingRemoteDataSource)
 class OnboardingRemoteDataSource implements BaseOnboardingRemoteDataSource {
   @override
-  Future<OnboardingModel> getOnboarding() async {
-    return OnboardingModel(
-      id: 1,
-      firstName: 'Last Name',
-      lastName: 'First Name',
-    );
+  Future<void> saveProfile({
+    required String firstName,
+    required String lastName,
+    required String displayName,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
   }
 }

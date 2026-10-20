@@ -1,7 +1,12 @@
-import 'package:multiple_result/multiple_result.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/onboarding/domain/entities/onboarding_entity.dart';
+import 'package:multiple_result/multiple_result.dart';
 
 abstract class OnboardingRepositoryDomain {
-    Future<Result<OnboardingEntity, Failure>> getOnboarding();
+  /// Saves the name of the new user: full name parts and the display name that
+  /// other members of a circle see.
+  Future<Result<bool, Failure>> saveProfile({
+    required String firstName,
+    required String lastName,
+    required String displayName,
+  });
 }
