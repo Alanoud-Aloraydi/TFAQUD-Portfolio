@@ -1,13 +1,16 @@
-from flask import Blueprint, jsonify
+"""Check process health and the configured database connection."""
+
+from flask import Blueprint, current_app, jsonify
+from sqlalchemy import text
+
+from app.database import db
 
 bp = Blueprint("health", __name__, url_prefix="/api/v1")
 
 
 @bp.get("/health")
 def health():
-    """Answers 200 while the server process is running.
-
-    It does not check the database yet. The database check is added with the
-    PostgreSQL work (TFQD-7); the hosting health check (TFQD-10) uses this URL.
-    """
+    """Check PostgreSQL when configured; fake-only tests remain offline."""
+    if "sqlalchemy" in current_app.extensions:
+        db.session.execute(text("SELECT 1"))
     return jsonify(status="ok")

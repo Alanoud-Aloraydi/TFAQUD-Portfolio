@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.auth.otp_store import InMemoryOtpStore
+from app.auth.otp_store import AttemptsExhausted, InMemoryOtpStore
 
 STORES = [InMemoryOtpStore]
 
@@ -29,6 +29,16 @@ def claim(store, *, request_id=None, phone=PHONE, now=NOW, max_sends=3):
 
 
 # ---- claim_send ------------------------------------------------------------
+
+
+def test_resend_rechecks_attempt_limit_inside_reservation(store):
+    request = claim(store)
+    for _ in range(3):
+        assert store.claim_try(request.request_id, 3)
+    with pytest.raises(AttemptsExhausted):
+        store.claim_send(
+            request.request_id, PHONE, NOW, NOW - HOUR, 3, max_tries=3
+        )
 
 
 def test_claim_without_a_request_id_creates_a_request(store):
@@ -69,7 +79,9 @@ def test_claim_is_refused_after_the_maximum_and_says_when_to_come_back(store):
 
     assert not refused.granted
     assert refused.request_id is None and refused.send_id is None
-    assert refused.oldest_send_at == NOW  # the first send leaves the window first
+    assert (
+        refused.oldest_send_at == NOW
+    )  # the first send leaves the window first
     assert first.granted
 
 
@@ -119,12 +131,13 @@ def test_releasing_a_send_gives_the_place_back(store):
     assert claim(store).granted
 
 
-def test_releasing_the_only_send_removes_the_request(store):
+def test_releasing_the_only_send_retains_failed_delivery_history(store):
     result = claim(store)
 
     store.release_send(result.send_id)
 
-    assert store.get_request(result.request_id) is None
+    assert store.get_request(result.request_id).expires_at is None
+    assert claim(store, max_sends=1).granted
 
 
 def test_releasing_one_send_keeps_a_request_that_has_another(store):
@@ -145,13 +158,17 @@ def test_releasing_an_unknown_send_does_nothing(store):
 
 def test_latest_send_at_is_the_time_of_the_last_send_of_the_request(store):
     first = claim(store, now=NOW)
-    claim(store, request_id=first.request_id, now=NOW + timedelta(minutes=2))
+    later = NOW + timedelta(minutes=2)
+    second = claim(store, request_id=first.request_id, now=later)
+    store.mark_sent(first.send_id, NOW, NOW + timedelta(minutes=5))
+    store.mark_sent(second.send_id, later, later + timedelta(minutes=5))
 
     assert store.latest_send_at(first.request_id) == NOW + timedelta(minutes=2)
 
 
 def test_latest_send_at_ignores_the_sends_of_other_requests(store):
     first = claim(store, now=NOW)
+    store.mark_sent(first.send_id, NOW, NOW + timedelta(minutes=5))
     claim(store, now=NOW + timedelta(minutes=2))  # another request, same phone
 
     assert store.latest_send_at(first.request_id) == NOW
@@ -198,7 +215,7 @@ def test_release_try_never_goes_below_zero(store):
 
 def test_tries_of_one_request_do_not_touch_another(store):
     first = claim(store).request_id
-    second = claim(store).request_id
+    second = claim(store, phone=OTHER_PHONE).request_id
 
     store.claim_try(first, 3)
 

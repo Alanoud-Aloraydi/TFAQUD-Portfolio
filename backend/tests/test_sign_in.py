@@ -17,7 +17,7 @@ OTHER_PHONE = "+966512345678"
 
 
 def request_code(client, phone=PHONE, verification_id=None):
-    body = {"phone": phone}
+    body = {"phone_number": phone}
     if verification_id is not None:
         body["verification_id"] = verification_id
     return client.post("/api/v1/auth/request-code", json=body)
@@ -74,9 +74,9 @@ def provider_calls(sms, monkeypatch):
     return calls
 
 
-def provider_is_down(sms, monkeypatch, *, send=False, check=False):
+def provider_is_down(sms, monkeypatch, *, send=False, check=False, status=503):
     def down(*args, **kwargs):
-        raise SmsDeliveryError("provider is down", status=503)
+        raise SmsDeliveryError("provider rejected the operation", status=status)
 
     if send:
         monkeypatch.setattr(sms, "send_code", down)
@@ -149,7 +149,7 @@ def test_a_bad_phone_number_is_refused_and_nothing_is_sent(client, sms, phone):
     response = request_code(client, phone)
 
     error = error_of(response, 422, "validation_error")
-    assert error["details"][0]["field"] == "phone"
+    assert error["details"][0]["field"] == "phone_number"
     assert error["details"][0]["code"] == "invalid_phone"
     assert sms.outbox == []
 
@@ -171,12 +171,12 @@ def test_request_code_needs_a_phone_number(client):
     response = client.post("/api/v1/auth/request-code", json={})
 
     error = error_of(response, 422, "validation_error")
-    assert error["details"][0]["field"] == "phone"
+    assert error["details"][0]["field"] == "phone_number"
 
 
 def test_request_code_refuses_unknown_fields(client, sms):
     response = client.post(
-        "/api/v1/auth/request-code", json={"phone": PHONE, "country": "SA"}
+        "/api/v1/auth/request-code", json={"phone_number": PHONE, "country": "SA"}
     )
 
     error_of(response, 422, "validation_error")
@@ -306,9 +306,9 @@ def test_a_provider_failure_gives_503(client, sms, monkeypatch):
     error_of(response, 503, "sms_unavailable")
 
 
-def test_a_failed_send_does_not_count_toward_the_hourly_limit(client, sms, monkeypatch):
+def test_a_rejected_send_does_not_count_toward_the_hourly_limit(client, sms, monkeypatch):
     with monkeypatch.context() as down:
-        provider_is_down(sms, down, send=True)
+        provider_is_down(sms, down, send=True, status=422)
         for _ in range(5):
             error_of(request_code(client), 503, "sms_unavailable")
 
@@ -318,14 +318,16 @@ def test_a_failed_send_does_not_count_toward_the_hourly_limit(client, sms, monke
     error_of(request_code(client), 429, "too_many_codes")
 
 
-def test_a_failed_first_send_leaves_no_request_behind(
+def test_a_rejected_first_send_retains_history_without_otp_expiration(
     client, sms, monkeypatch, otp_store
 ):
-    provider_is_down(sms, monkeypatch, send=True)
+    provider_is_down(sms, monkeypatch, send=True, status=422)
     request_code(client)
 
-    # Nothing was kept: the next send (when the provider is back) is the first.
-    assert otp_store._requests == {} and otp_store._sends == {}
+    request = next(iter(otp_store._requests.values()))
+    send = next(iter(otp_store._sends.values()))
+    assert request.expires_at is None
+    assert send.status == "failed"
 
 
 def test_a_failed_resend_keeps_the_request_so_the_user_can_try_again(
@@ -356,11 +358,11 @@ def test_the_right_code_signs_the_user_in(client, sms):
         "access_token_expires_at",
         "refresh_token",
         "refresh_token_expires_at",
-        "user",
+        "account",
     }
-    assert body["user"]["phone"] == PHONE
-    assert body["user"]["first_name"] is None
-    assert body["user"]["profile_complete"] is False
+    assert body["account"]["phone_number"] == PHONE
+    assert body["account"]["first_name"] is None
+    assert body["account"]["profile_complete"] is False
 
 
 def test_the_access_token_from_verify_code_works(client, sms):
@@ -370,7 +372,7 @@ def test_the_access_token_from_verify_code_works(client, sms):
     response = client.get("/api/v1/auth/session", headers=bearer(body["access_token"]))
 
     assert response.status_code == 200
-    assert response.get_json()["user_id"] == body["user"]["id"]
+    assert response.get_json()["account_id"] == body["account"]["id"]
 
 
 def test_the_refresh_token_from_verify_code_works(client, sms):
@@ -389,7 +391,7 @@ def test_the_same_phone_number_is_the_same_user_every_time(client, sms):
     first = verify_code(client, start(client), last_code(sms)).get_json()
     second = verify_code(client, start(client), last_code(sms)).get_json()
 
-    assert second["user"]["id"] == first["user"]["id"]
+    assert second["account"]["id"] == first["account"]["id"]
     assert second["access_token"] != first["access_token"]
     assert second["refresh_token"] != first["refresh_token"]
 
@@ -400,21 +402,21 @@ def test_different_phone_numbers_are_different_users(client, sms):
         client, start(client, OTHER_PHONE), last_code(sms, OTHER_PHONE)
     ).get_json()
 
-    assert second["user"]["id"] != first["user"]["id"]
+    assert second["account"]["id"] != first["account"]["id"]
 
 
 def test_the_profile_of_a_returning_user_is_returned(client, sms):
     first = verify_code(client, start(client), last_code(sms)).get_json()
     client.put(
-        "/api/v1/users/me/profile",
+        "/api/v1/accounts/me/profile",
         json={"first_name": "Leen", "last_name": "Algraawi", "display_name": "Leen"},
         headers=bearer(first["access_token"]),
     )
 
     second = verify_code(client, start(client), last_code(sms)).get_json()
 
-    assert second["user"]["first_name"] == "Leen"
-    assert second["user"]["profile_complete"] is True
+    assert second["account"]["first_name"] == "Leen"
+    assert second["account"]["profile_complete"] is True
 
 
 def test_arabic_digits_are_accepted_for_the_code(client, sms):
@@ -588,7 +590,7 @@ def test_after_signing_in_a_new_request_works(client, sms):
     second = verify_code(client, vid, last_code(sms))
 
     assert second.status_code == 200
-    assert second.get_json()["user"]["id"] == first["user"]["id"]
+    assert second.get_json()["account"]["id"] == first["account"]["id"]
 
 
 # ---- verify-code: input checks ---------------------------------------------
@@ -630,7 +632,7 @@ def test_verify_code_needs_both_fields_and_refuses_unknown_ones(client, sms):
     missing = client.post("/api/v1/auth/verify-code", json={"verification_id": vid})
     extra = client.post(
         "/api/v1/auth/verify-code",
-        json={"verification_id": vid, "code": "123456", "phone": PHONE},
+        json={"verification_id": vid, "code": "123456", "phone_number": PHONE},
     )
 
     error_of(missing, 422, "validation_error")

@@ -9,12 +9,14 @@ import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
 import 'package:app/features/auth/presentation/pages/code_screen.dart';
 import 'package:app/features/auth/presentation/pages/phone_screen.dart';
 import 'package:app/features/auth/presentation/pages/splash_screen.dart';
+import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/home/presentation/cubit/home_cubit.dart';
+import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
 import 'package:app/features/placeholder/placeholder_screen.dart';
-import 'package:app/features/shell/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, visibleForTesting;
@@ -67,14 +69,20 @@ class AppRouter {
           child: const SplashScreen(),
         ),
       ),
+      GoRoute(
+        path: Routes.home,
+        redirect: (context, state) => Routes.today,
+      ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) => BlocProvider(
+          create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+          child: HomeFeatureScreen(navigationShell: navigationShell),
+        ),
         branches: <StatefulShellBranch>[
-          _branch(Routes.today, 'tab.today'),
-          _branch(Routes.plan, 'tab.plan'),
-          _branch(Routes.record, 'tab.record'),
-          _branch(Routes.circle, 'tab.circle'),
+          _branch(Routes.today),
+          _branch(Routes.plan),
+          _branch(Routes.record),
+          _branch(Routes.circle),
         ],
       ),
       GoRoute(
@@ -151,12 +159,12 @@ class AppRouter {
     return open ? null : Routes.auth;
   }
 
-  static StatefulShellBranch _branch(String path, String titleKey) {
+  static StatefulShellBranch _branch(String path) {
     return StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
           path: path,
-          builder: (context, state) => PlaceholderScreen(titleKey: titleKey),
+          builder: (context, state) => const SizedBox.expand(),
         ),
       ],
     );

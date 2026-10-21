@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app/core/network/api_error_body.dart';
+import 'package:app/core/services/token_storage.dart';
 import 'package:dio/dio.dart';
 
 import 'failure.dart';
@@ -10,6 +11,7 @@ class FailureExceptions {
   static Failure getException(Object error) {
     return switch (error) {
       DioException e => _handleDio(e),
+      TokenStorageException _ => const StorageFailure('auth.storage_failed'),
       SocketException e => _handleSocket(e),
       FormatException _ => const FormatFailure(),
       TimeoutException _ => const TimeoutFailure(),
@@ -18,6 +20,9 @@ class FailureExceptions {
   }
 
   static Failure _handleDio(DioException error) {
+    if (error.error is TokenStorageException) {
+      return const StorageFailure('auth.storage_failed');
+    }
     return switch (error.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||

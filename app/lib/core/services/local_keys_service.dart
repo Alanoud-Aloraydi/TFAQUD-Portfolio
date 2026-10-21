@@ -4,7 +4,9 @@ import 'package:injectable/injectable.dart';
 class LocalKeysService {
   LocalKeysService();
 
-  // Auth Keys
+  final String sessionTokens = 'session_tokens';
+
+  // Legacy keys remain readable until the next session write.
   final String accessToken = 'access_token';
   final String refreshToken = 'refresh_token';
 }

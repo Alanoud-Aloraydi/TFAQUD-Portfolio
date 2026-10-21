@@ -14,7 +14,19 @@ class SignOutButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
-        if (state is AuthSignedOutState) context.go(Routes.auth);
+        if (state is AuthErrorState) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.tr(state.messageKey))));
+        }
+        if (state is AuthSignedOutState) {
+          if (!state.serverConfirmed) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.tr('auth.sign_out_local_only'))),
+            );
+          }
+          context.go(Routes.auth);
+        }
       },
       builder: (context, state) {
         final bool busy = state is AuthLoadingState;

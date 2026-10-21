@@ -1,31 +1,25 @@
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
+import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class BaseAuthRemoteDataSource {
-  /// POST /api/v1/auth/request-code. Sends the SMS code to [phone]
-  /// (+9665XXXXXXXX) and returns the verification id of the request.
-  ///
-  /// Pass the id of an earlier call as [verificationId] to send another SMS for
-  /// the same request (a resend). Without it a new request starts.
+  /// Requests an OTP for [phone] and returns its verification identifier.
+  /// An existing [verificationId] resends within the same request.
   Future<String> requestCode(String phone, {String? verificationId});
 
-  /// POST /api/v1/auth/verify-code. Returns the tokens and whether the profile
-  /// is complete. A refused code is a DioException with a 4xx answer; the
-  /// repository turns its API code into a Failure.
+  /// Verifies an OTP and returns the session tokens and profile state.
   Future<VerifyCodeResponse> verifyCode({
     required String verificationId,
     required String code,
   });
 
-  /// POST /api/v1/auth/sign-out. The API answers 204 with an empty body.
+  /// Revokes the current session through POST /api/v1/auth/sign-out.
   Future<void> signOut();
 
-  /// GET /api/v1/auth/session. The API answers 200 while the session is
-  /// valid. When the answer is a 401 that ends the session, the interceptor
-  /// removes the tokens (and renews an expired access token first).
-  Future<void> checkSession();
+  /// Checks the current session; token renewal is handled by the interceptor.
+  Future<AccountStatusResponse> checkSession();
 }
 
 @LazySingleton(as: BaseAuthRemoteDataSource)
@@ -34,16 +28,12 @@ class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
 
   final DioClient _client;
 
-  // No try/catch in this class: the repository turns any error into a Failure,
-  // once. The interceptor does not add the access token to the two code calls
-  // (ApiEndpoints.withoutAccessToken).
-
   @override
   Future<String> requestCode(String phone, {String? verificationId}) async {
     final response = await _client.post(
       ApiEndpoints.requestCode,
       data: <String, dynamic>{
-        'phone': phone,
+        'phone_number': phone,
         'verification_id': ?verificationId,
       },
     );
@@ -69,12 +59,13 @@ class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
 
   @override
   Future<void> signOut() async {
-    // The interceptor adds the access token to this request.
     await _client.post(ApiEndpoints.signOut);
   }
 
   @override
-  Future<void> checkSession() async {
-    await _client.get(ApiEndpoints.session);
+  Future<AccountStatusResponse> checkSession() async {
+    final response = await _client.get(ApiEndpoints.session);
+    final Object? body = response.data;
+    return AccountStatusResponse.fromJson(body is Map ? body['account'] : null);
   }
 }

@@ -1,4 +1,4 @@
-"""PUT /api/v1/users/me/profile: the page after the first sign-in."""
+"""PUT /api/v1/accounts/me/profile: the page after the first sign-in."""
 
 import pytest
 
@@ -7,7 +7,7 @@ from tests.conftest import bearer
 PHONE = "+966501234567"
 OTHER_PHONE = "+966512345678"
 
-URL = "/api/v1/users/me/profile"
+URL = "/api/v1/accounts/me/profile"
 NAMES = {"first_name": "Leen", "last_name": "Algraawi", "display_name": "Leen"}
 
 # "Leen" and "Algraawi" in Arabic, written as code points so the file stays ASCII.
@@ -17,7 +17,7 @@ ARABIC_LAST = "".join(chr(code) for code in (0x0627, 0x0644, 0x063A, 0x0631, 0x0
 
 def sign_in(client, sms, phone=PHONE):
     """Sign a phone number in through the real endpoints. Returns the response body."""
-    vid = client.post("/api/v1/auth/request-code", json={"phone": phone}).get_json()[
+    vid = client.post("/api/v1/auth/request-code", json={"phone_number": phone}).get_json()[
         "verification_id"
     ]
     code = sms.last_message_to(phone).code
@@ -51,9 +51,9 @@ def test_saving_the_profile_returns_the_user_with_a_complete_profile(client, sms
     response = save(client, session["access_token"], NAMES)
 
     assert response.status_code == 200
-    user = response.get_json()["user"]
-    assert user["id"] == session["user"]["id"]
-    assert user["phone"] == PHONE
+    user = response.get_json()["account"]
+    assert user["id"] == session["account"]["id"]
+    assert user["phone_number"] == PHONE
     assert (user["first_name"], user["last_name"], user["display_name"]) == (
         "Leen",
         "Algraawi",
@@ -67,7 +67,7 @@ def test_the_profile_is_kept_in_the_user_store(client, sms, user_store):
 
     save(client, session["access_token"], NAMES)
 
-    stored = user_store.get(session["user"]["id"])
+    stored = user_store.get(session["account"]["id"])
     assert stored.first_name == "Leen"
     assert stored.profile_complete is True
 
@@ -83,14 +83,14 @@ def test_arabic_names_are_accepted(client, sms):
     response = save(client, session["access_token"], body)
 
     assert response.status_code == 200
-    assert response.get_json()["user"]["first_name"] == ARABIC_FIRST
+    assert response.get_json()["account"]["first_name"] == ARABIC_FIRST
 
 
 def test_spaces_around_the_names_are_removed(client, sms):
     session = sign_in(client, sms)
     body = {"first_name": "  Leen ", "last_name": " Algraawi  ", "display_name": " Leen "}
 
-    user = save(client, session["access_token"], body).get_json()["user"]
+    user = save(client, session["access_token"], body).get_json()["account"]
 
     assert (user["first_name"], user["last_name"], user["display_name"]) == (
         "Leen",
@@ -104,7 +104,7 @@ def test_saving_again_replaces_the_names(client, sms):
     save(client, session["access_token"], NAMES)
 
     changed = {"first_name": "Sara", "last_name": "Ali", "display_name": "Sarah"}
-    user = save(client, session["access_token"], changed).get_json()["user"]
+    user = save(client, session["access_token"], changed).get_json()["account"]
 
     assert user["first_name"] == "Sara"
     assert user["display_name"] == "Sarah"
@@ -122,8 +122,8 @@ def test_each_user_has_their_own_profile(client, sms):
     )
 
     # Signing in again returns what each user saved, and only that.
-    assert sign_in(client, sms, PHONE)["user"]["first_name"] == "Leen"
-    assert sign_in(client, sms, OTHER_PHONE)["user"]["first_name"] == "Sara"
+    assert sign_in(client, sms, PHONE)["account"]["first_name"] == "Leen"
+    assert sign_in(client, sms, OTHER_PHONE)["account"]["first_name"] == "Sara"
 
 
 def test_the_names_cannot_choose_a_different_user(client, sms):
@@ -131,11 +131,11 @@ def test_the_names_cannot_choose_a_different_user(client, sms):
     second = sign_in(client, sms, OTHER_PHONE)
 
     response = save(
-        client, first["access_token"], {**NAMES, "user_id": second["user"]["id"]}
+        client, first["access_token"], {**NAMES, "account_id": second["account"]["id"]}
     )
 
     error_of(response, 422, "validation_error")
-    assert sign_in(client, sms, OTHER_PHONE)["user"]["first_name"] is None
+    assert sign_in(client, sms, OTHER_PHONE)["account"]["first_name"] is None
 
 
 @pytest.mark.parametrize("field", ["first_name", "last_name", "display_name"])

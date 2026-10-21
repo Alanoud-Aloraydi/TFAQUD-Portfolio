@@ -22,5 +22,6 @@ class AuthUseCase {
 
   Future<Result<bool, Failure>> signOut() => _repository.signOut();
 
-  Future<bool> hasSession() => _repository.hasSession();
+  Future<Result<SignInResult?, Failure>> restoreSession() =>
+      _repository.restoreSession();
 }

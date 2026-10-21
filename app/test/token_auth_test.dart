@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:app/core/network/auth_interceptor.dart';
+import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/services/local_keys_service.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:dio/dio.dart';
@@ -10,31 +13,44 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// In-memory TokenStorage used instead of the real secure storage.
 class _FakeTokenStorage implements TokenStorage {
+  @override
+  int revision = 0;
   String? access;
   String? refresh;
+  bool unavailable = false;
 
   @override
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
   }) async {
+    revision++;
     access = accessToken;
     refresh = refreshToken;
   }
 
   @override
-  Future<void> saveAccessToken(String accessToken) async {
+  Future<void> saveAccessToken(
+    String accessToken, {
+    int? expectedRevision,
+  }) async {
+    if (expectedRevision != null && revision != expectedRevision) return;
     access = accessToken;
   }
 
   @override
-  Future<String?> readAccessToken() async => access;
+  Future<String?> readAccessToken() async {
+    if (unavailable) throw const TokenStorageException();
+    return access;
+  }
 
   @override
   Future<String?> readRefreshToken() async => refresh;
 
   @override
-  Future<void> clear() async {
+  Future<void> clear({int? expectedRevision}) async {
+    if (expectedRevision != null && revision != expectedRevision) return;
+    revision++;
     access = null;
     refresh = null;
   }
@@ -54,7 +70,7 @@ class _Seen {
   String? get authorization => headers['Authorization'] as String?;
 }
 
-typedef _Responder = ResponseBody Function(_Seen seen);
+typedef _Responder = FutureOr<ResponseBody> Function(_Seen seen);
 
 /// Stands in for the network: records requests and answers from a function.
 class _FakeServer implements HttpClientAdapter {
@@ -88,12 +104,10 @@ ResponseBody _json(int status, Object body) => ResponseBody.fromString(
   },
 );
 
-ResponseBody _apiError(int status, String code) => _json(
-  status,
-  <String, Object>{
-    'error': <String, Object>{'code': code, 'message': 'test'},
-  },
-);
+ResponseBody _apiError(int status, String code) =>
+    _json(status, <String, Object>{
+      'error': <String, Object>{'code': code, 'message': 'test'},
+    });
 
 /// Answers 401 `access_token_expired` until the request carries the new token.
 _Responder _expiringServer() => (_Seen s) {
@@ -139,7 +153,8 @@ Matcher _failsWith(int status) => throwsA(
 
 void main() {
   group('AuthInterceptor token header', () {
-    _Responder ok() => (_Seen s) => _json(200, <String, Object>{});
+    _Responder ok() =>
+        (_Seen s) => _json(200, <String, Object>{});
 
     test('adds the bearer token when one is stored', () async {
       final _Client c = _Client(_FakeTokenStorage()..access = 'abc', ok());
@@ -202,11 +217,12 @@ void main() {
         ..refresh = 'r';
       final _Client c = _Client(tokens, _expiringServer());
 
-      final List<Response<dynamic>> responses =
-          await Future.wait(<Future<Response<dynamic>>>[
-            c.dio.get<dynamic>('/a'),
-            c.dio.get<dynamic>('/b'),
-          ]);
+      final List<Response<dynamic>> responses = await Future.wait(
+        <Future<Response<dynamic>>>[
+          c.dio.get<dynamic>('/a'),
+          c.dio.get<dynamic>('/b'),
+        ],
+      );
 
       expect(responses.map((Response<dynamic> r) => r.statusCode), <int?>[
         200,
@@ -234,20 +250,23 @@ void main() {
       expect(c.sessionEnded, 1);
     });
 
-    test('a missing refresh token ends the session without a renewal', () async {
-      final _FakeTokenStorage tokens = _FakeTokenStorage()..access = 'old';
-      final _Client c = _Client(
-        tokens,
-        (_Seen s) => _apiError(401, 'access_token_expired'),
-      );
+    test(
+      'a missing refresh token ends the session without a renewal',
+      () async {
+        final _FakeTokenStorage tokens = _FakeTokenStorage()..access = 'old';
+        final _Client c = _Client(
+          tokens,
+          (_Seen s) => _apiError(401, 'access_token_expired'),
+        );
 
-      await expectLater(c.dio.get<dynamic>('/ping'), _failsWith(401));
-      await Future<void>.delayed(Duration.zero);
+        await expectLater(c.dio.get<dynamic>('/ping'), _failsWith(401));
+        await Future<void>.delayed(Duration.zero);
 
-      expect(c.server.count('/auth/refresh'), 0);
-      expect(tokens.access, isNull);
-      expect(c.sessionEnded, 1);
-    });
+        expect(c.server.count('/auth/refresh'), 0);
+        expect(tokens.access, isNull);
+        expect(c.sessionEnded, 1);
+      },
+    );
 
     test('a revoked session ends the session without a renewal', () async {
       final _FakeTokenStorage tokens = _FakeTokenStorage()
@@ -298,7 +317,16 @@ void main() {
         return _apiError(401, 'access_token_expired');
       });
 
-      await expectLater(c.dio.get<dynamic>('/ping'), _failsWith(401));
+      await expectLater(
+        c.dio.get<dynamic>('/ping'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.type,
+            'type',
+            DioExceptionType.connectionError,
+          ),
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       expect(tokens.access, 'old');
@@ -306,11 +334,150 @@ void main() {
       expect(c.sessionEnded, 0);
     });
 
+    for (final code in ['access_token_expired', 'session_revoked']) {
+      test('a delayed $code cannot affect another account', () async {
+        final started = Completer<void>();
+        final delayed = Completer<ResponseBody>();
+        final tokens = _FakeTokenStorage()
+          ..access = 'old'
+          ..refresh = 'r';
+        final c = _Client(tokens, (_) {
+          started.complete();
+          return delayed.future;
+        });
+        final pending = c.dio.put<dynamic>('/profile', data: {'name': 'Old'});
+        final assertion = expectLater(
+          pending,
+          throwsA(
+            isA<DioException>().having(
+              (e) => e.type,
+              'type',
+              DioExceptionType.cancel,
+            ),
+          ),
+        );
+        await started.future;
+        await tokens.saveTokens(accessToken: 'other', refreshToken: 'other-r');
+        delayed.complete(_apiError(401, code));
+        await assertion;
+        expect(tokens.access, 'other');
+        expect(c.server.seen.length, 1);
+        expect(c.sessionEnded, 0);
+      });
+    }
+
+    test('an old refresh cannot overwrite a newly signed-in account', () async {
+      final started = Completer<void>();
+      final refreshed = Completer<ResponseBody>();
+      final tokens = _FakeTokenStorage()
+        ..access = 'old'
+        ..refresh = 'r';
+      final c = _Client(tokens, (request) {
+        if (request.path == '/auth/refresh') {
+          started.complete();
+          return refreshed.future;
+        }
+        return _apiError(401, 'access_token_expired');
+      });
+      final assertion = expectLater(
+        c.dio.get<dynamic>('/ping'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.type,
+            'type',
+            DioExceptionType.cancel,
+          ),
+        ),
+      );
+      await started.future;
+      await tokens.saveTokens(accessToken: 'other', refreshToken: 'other-r');
+      refreshed.complete(_json(200, {'access_token': 'old-renewed'}));
+      await assertion;
+      expect(tokens.access, 'other');
+      expect(tokens.refresh, 'other-r');
+      expect(c.server.count('/ping'), 1);
+    });
+
+    test(
+      'temporary refresh failure preserves credentials and its status',
+      () async {
+        final tokens = _FakeTokenStorage()
+          ..access = 'old'
+          ..refresh = 'r';
+        final c = _Client(
+          tokens,
+          (request) => request.path == '/auth/refresh'
+              ? _apiError(503, 'database_unavailable')
+              : _apiError(401, 'access_token_expired'),
+        );
+        await expectLater(c.dio.get<dynamic>('/ping'), _failsWith(503));
+        expect(tokens.access, 'old');
+        expect(tokens.refresh, 'r');
+        expect(c.sessionEnded, 0);
+      },
+    );
+
+    test('malformed refresh response does not end a valid session', () async {
+      final tokens = _FakeTokenStorage()
+        ..access = 'old'
+        ..refresh = 'r';
+      final c = _Client(
+        tokens,
+        (request) => request.path == '/auth/refresh'
+            ? _json(200, {})
+            : _apiError(401, 'access_token_expired'),
+      );
+      await expectLater(
+        c.dio.get<dynamic>('/ping'),
+        throwsA(isA<DioException>()),
+      );
+      expect(tokens.access, 'old');
+      expect(c.sessionEnded, 0);
+    });
+
+    test('revocation on the retried request clears its session', () async {
+      final tokens = _FakeTokenStorage()
+        ..access = 'old'
+        ..refresh = 'r';
+      final c = _Client(tokens, (request) {
+        if (request.path == '/auth/refresh') {
+          return _json(200, {'access_token': 'new'});
+        }
+        return _apiError(
+          401,
+          request.authorization == 'Bearer new'
+              ? 'session_revoked'
+              : 'access_token_expired',
+        );
+      });
+      await expectLater(c.dio.get<dynamic>('/ping'), _failsWith(401));
+      expect(tokens.access, isNull);
+      expect(tokens.refresh, isNull);
+    });
+
+    test(
+      'storage failure is reported without making a network request',
+      () async {
+        final tokens = _FakeTokenStorage()..unavailable = true;
+        final c = _Client(tokens, (_) => _json(200, {}));
+        try {
+          await c.dio.get<dynamic>('/ping');
+          fail('Expected a storage failure');
+        } on DioException catch (error) {
+          expect(FailureExceptions.getException(error), isA<StorageFailure>());
+        }
+        expect(c.server.seen, isEmpty);
+      },
+    );
+
     test('a 401 without a known code is passed through', () async {
       final _FakeTokenStorage tokens = _FakeTokenStorage()
         ..access = 'old'
         ..refresh = 'r';
-      final _Client c = _Client(tokens, (_Seen s) => _json(401, <String, Object>{}));
+      final _Client c = _Client(
+        tokens,
+        (_Seen s) => _json(401, <String, Object>{}),
+      );
 
       await expectLater(c.dio.get<dynamic>('/ping'), _failsWith(401));
       await Future<void>.delayed(Duration.zero);
@@ -356,6 +523,40 @@ void main() {
       expect(await tokens.readAccessToken(), isNull);
       expect(await tokens.readRefreshToken(), isNull);
       expect(await storage.read(key: 'user_id'), '7');
+    });
+
+    test('reads existing credentials and migrates on renewal', () async {
+      await storage.write(key: 'access_token', value: 'legacy-access');
+      await storage.write(key: 'refresh_token', value: 'legacy-refresh');
+      expect(await tokens.readAccessToken(), 'legacy-access');
+      await tokens.saveAccessToken('new-access');
+      final pair = jsonDecode((await storage.read(key: 'session_tokens'))!);
+      expect(pair, {
+        'access_token': 'new-access',
+        'refresh_token': 'legacy-refresh',
+      });
+    });
+
+    test(
+      'signed-out record prevents stale legacy credentials returning',
+      () async {
+        await tokens.clear();
+        await storage.write(key: 'access_token', value: 'stale-access');
+        await storage.write(key: 'refresh_token', value: 'stale-refresh');
+        final reopened = SecureTokenStorage(storage, LocalKeysService());
+        expect(await reopened.readAccessToken(), isNull);
+        expect(await reopened.readRefreshToken(), isNull);
+      },
+    );
+
+    test('a previous session cannot update or clear the new pair', () async {
+      await tokens.saveTokens(accessToken: 'old', refreshToken: 'old-r');
+      final revision = tokens.revision;
+      await tokens.saveTokens(accessToken: 'new', refreshToken: 'new-r');
+      await tokens.saveAccessToken('stale', expectedRevision: revision);
+      await tokens.clear(expectedRevision: revision);
+      expect(await tokens.readAccessToken(), 'new');
+      expect(await tokens.readRefreshToken(), 'new-r');
     });
   });
 }

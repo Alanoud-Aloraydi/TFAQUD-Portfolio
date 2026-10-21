@@ -14,7 +14,12 @@ from flask import Blueprint, jsonify
 
 from app.auth.decorators import current_auth, require_auth
 from app.auth.inputs import Code, Phone, VerificationId
-from app.extensions import get_session_service, get_sign_in_service
+from app.extensions import (
+    get_session_service,
+    get_sign_in_service,
+    get_user_store,
+)
+from app.errors import Unauthorized
 from app.validation import Dto, parse_json_body
 
 bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
@@ -25,7 +30,7 @@ class RefreshRequest(Dto):
 
 
 class RequestCodeRequest(Dto):
-    phone: Phone
+    phone_number: Phone
     # Send it back to ask for another SMS inside the same request (a resend).
     verification_id: VerificationId | None = None
 
@@ -38,7 +43,9 @@ class VerifyCodeRequest(Dto):
 @bp.post("/request-code")
 def request_code():
     body = parse_json_body(RequestCodeRequest)
-    verification_id = get_sign_in_service().request_code(body.phone, body.verification_id)
+    verification_id = get_sign_in_service().request_code(
+        body.phone_number, body.verification_id
+    )
     return jsonify(verification_id=verification_id)
 
 
@@ -52,7 +59,7 @@ def verify_code():
         access_token_expires_at=session.access_token_expires_at.isoformat(),
         refresh_token=session.refresh_token,
         refresh_token_expires_at=session.refresh_token_expires_at.isoformat(),
-        user=result.user.to_dict(),
+        account=result.user.to_dict(),
     )
 
 
@@ -77,4 +84,11 @@ def sign_out():
 @require_auth
 def session_info():
     auth = current_auth()
-    return jsonify(user_id=auth.user_id, session_id=auth.session_id)
+    user = get_user_store().get(auth.user_id)
+    if user is None:
+        raise Unauthorized(code="session_revoked")
+    return jsonify(
+        account_id=auth.user_id,
+        session_id=auth.session_id,
+        account=user.to_dict(),
+    )
