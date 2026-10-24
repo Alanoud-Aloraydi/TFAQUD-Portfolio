@@ -8,9 +8,11 @@ class ApiEndpoints {
   /// Prefix shared by every route of the API.
   static const String prefix = '/api/v1';
 
-  /// Server address from `API_BASE_URL` in `.env`, followed by [prefix].
+  /// Server address from a build override or `.env`, followed by [prefix].
   static String get baseUrl {
-    final String? host = dotenv.env['API_BASE_URL'];
+    const override = String.fromEnvironment('API_BASE_URL');
+    final host = (override.isNotEmpty ? override : dotenv.env['API_BASE_URL'])
+        ?.trim();
     if (host == null || host.isEmpty) {
       throw StateError('API_BASE_URL is not set in .env');
     }
@@ -20,12 +22,13 @@ class ApiEndpoints {
   }
 
   static const String health = '/health';
+  static const String home = '/home';
   static const String refreshToken = '/auth/refresh';
   static const String signOut = '/auth/sign-out';
   static const String session = '/auth/session';
   static const String requestCode = '/auth/request-code';
   static const String verifyCode = '/auth/verify-code';
-  static const String profile = '/users/me/profile';
+  static const String profile = '/accounts/me/profile';
 
   /// Routes that never carry the access token.
   static const Set<String> withoutAccessToken = <String>{

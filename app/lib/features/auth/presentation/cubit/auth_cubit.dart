@@ -1,3 +1,4 @@
+import 'package:app/core/errors/failure.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,10 +11,15 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> signOut() async {
     if (state is AuthLoadingState) return; // a second tap does nothing
     emit(AuthLoadingState());
-    await _useCase.signOut();
+    final result = await _useCase.signOut();
     if (isClosed) return;
-    // The repository removes the tokens even when the server call fails, so
-    // the user is signed out on this phone in both cases.
-    emit(AuthSignedOutState());
+    emit(
+      result.when(
+        (_) => const AuthSignedOutState(),
+        (failure) => failure is StorageFailure
+            ? AuthErrorState(messageKey: failure.messageKey)
+            : const AuthSignedOutState(serverConfirmed: false),
+      ),
+    );
   }
 }

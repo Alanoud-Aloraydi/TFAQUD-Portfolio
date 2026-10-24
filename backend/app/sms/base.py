@@ -1,7 +1,6 @@
 """The sign-in code sender: the interface.
 
-The rest of the app sends and checks a sign-in code only through `SmsSender`. It
-never knows which provider is behind it.
+The application sends and verifies codes through SmsSender.
 
 Authentica makes the code (6 digits), sends it by SMS and checks it
 (docs/api-contracts.md, section 8), so the interface has two jobs:
@@ -15,8 +14,7 @@ F01, because Authentica does not block any try.
 
 Two implementations:
 
-  FakeSmsSender         - development and tests. Sends nothing. Makes and checks
-                          its own code, with the rules that Authentica showed.
+  FakeSmsSender         - isolated tests; no messages leave the process.
   AuthenticaSmsSender   - the real one. The only code that may send a real SMS.
 """
 
@@ -39,6 +37,11 @@ class SmsDeliveryError(Exception):
         super().__init__(message)
         self.status = status
 
+    @property
+    def delivery_rejected(self) -> bool:
+        """A definite client rejection permits releasing delivery quota."""
+        return self.status in {400, 401, 403, 404, 422, 429}
+
 
 class SmsSender(ABC):
     @abstractmethod
@@ -50,7 +53,7 @@ class SmsSender(ABC):
 
     @abstractmethod
     def check_code(self, phone: str, code: str) -> bool:
-        """Say whether `code` is the correct, valid and unused code for `phone`.
+        """Verify an unused code for the given phone number.
 
         Returns False for a wrong, expired or already used code (the provider
         gives the same answer for all of them). Raises SmsDeliveryError if the

@@ -30,8 +30,10 @@ def circle_client(circle_app):
     return circle_app.test_client()
 
 
-def test_member_with_an_allowed_role_gets_in(circle_client, circle_access, signed_in):
-    circle_access.grant("user-1", "circle-A", CircleRole.MANAGER)
+def test_member_with_an_allowed_role_gets_in(
+    circle_client, circle_access, signed_in, signed_in_account
+):
+    circle_access.grant(signed_in_account.id, "circle-A", CircleRole.MANAGER)
 
     response = circle_client.get(
         "/test/circles/circle-A/today", headers=bearer(signed_in.access_token)
@@ -42,9 +44,11 @@ def test_member_with_an_allowed_role_gets_in(circle_client, circle_access, signe
 
 
 def test_member_with_a_role_that_is_not_allowed_is_refused(
-    circle_client, circle_access, signed_in
+    circle_client, circle_access, signed_in, signed_in_account
 ):
-    circle_access.grant("user-1", "circle-A", CircleRole.SIMPLIFIED_PATIENT)
+    circle_access.grant(
+        signed_in_account.id, "circle-A", CircleRole.SIMPLIFIED_PATIENT
+    )
 
     response = circle_client.get(
         "/test/circles/circle-A/today", headers=bearer(signed_in.access_token)
@@ -54,8 +58,10 @@ def test_member_with_a_role_that_is_not_allowed_is_refused(
     assert response.get_json()["error"]["code"] == "forbidden"
 
 
-def test_role_in_one_circle_gives_nothing_in_another(circle_client, circle_access, signed_in):
-    circle_access.grant("user-1", "circle-A", CircleRole.MANAGER)
+def test_role_in_one_circle_gives_nothing_in_another(
+    circle_client, circle_access, signed_in, signed_in_account
+):
+    circle_access.grant(signed_in_account.id, "circle-A", CircleRole.MANAGER)
 
     response = circle_client.get(
         "/test/circles/circle-B/today", headers=bearer(signed_in.access_token)
@@ -64,9 +70,13 @@ def test_role_in_one_circle_gives_nothing_in_another(circle_client, circle_acces
     assert response.status_code == 403
 
 
-def test_a_different_role_in_each_circle_is_respected(circle_client, circle_access, signed_in):
-    circle_access.grant("user-1", "circle-A", CircleRole.MANAGER)
-    circle_access.grant("user-1", "circle-B", CircleRole.SIMPLIFIED_PATIENT)
+def test_a_different_role_in_each_circle_is_respected(
+    circle_client, circle_access, signed_in, signed_in_account
+):
+    circle_access.grant(signed_in_account.id, "circle-A", CircleRole.MANAGER)
+    circle_access.grant(
+        signed_in_account.id, "circle-B", CircleRole.SIMPLIFIED_PATIENT
+    )
     headers = bearer(signed_in.access_token)
 
     assert circle_client.get("/test/circles/circle-A/today", headers=headers).status_code == 200
@@ -88,8 +98,12 @@ def test_non_member_and_unknown_circle_get_the_same_answer(
     assert real_but_not_member.get_json()["error"]["message"] == does_not_exist.get_json()["error"]["message"]
 
 
-def test_no_roles_listed_accepts_any_member(circle_client, circle_access, signed_in):
-    circle_access.grant("user-1", "circle-A", CircleRole.SIMPLIFIED_PATIENT)
+def test_no_roles_listed_accepts_any_member(
+    circle_client, circle_access, signed_in, signed_in_account
+):
+    circle_access.grant(
+        signed_in_account.id, "circle-A", CircleRole.SIMPLIFIED_PATIENT
+    )
 
     response = circle_client.get(
         "/test/circles/circle-A/anyone", headers=bearer(signed_in.access_token)
@@ -107,9 +121,9 @@ def test_not_signed_in_is_401_not_403(circle_client, circle_access):
 
 
 def test_signed_out_user_is_refused_even_if_still_a_member(
-    circle_client, circle_access, signed_in, sessions
+    circle_client, circle_access, signed_in, sessions, signed_in_account
 ):
-    circle_access.grant("user-1", "circle-A", CircleRole.MANAGER)
+    circle_access.grant(signed_in_account.id, "circle-A", CircleRole.MANAGER)
     sessions.sign_out(signed_in.session_id)
 
     response = circle_client.get(

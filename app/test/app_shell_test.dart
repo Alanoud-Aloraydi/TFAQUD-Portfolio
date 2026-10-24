@@ -9,7 +9,8 @@ import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
-import 'package:app/features/placeholder/placeholder_screen.dart';
+import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/home_fakes.dart';
 
 /// Reads the real translation file synchronously, so loading finishes inside
 /// the test clock.
@@ -34,13 +36,15 @@ class _FileAssetLoader extends AssetLoader {
 /// page that needs a sign-in.
 class _SignedInTokens implements TokenStorage {
   @override
+  int get revision => 0;
+  @override
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
   }) async {}
 
   @override
-  Future<void> saveAccessToken(String accessToken) async {}
+  Future<void> saveAccessToken(String accessToken, {int? expectedRevision}) async {}
 
   @override
   Future<String?> readAccessToken() async => 'test-access-token';
@@ -49,7 +53,7 @@ class _SignedInTokens implements TokenStorage {
   Future<String?> readRefreshToken() async => 'test-refresh-token';
 
   @override
-  Future<void> clear() async {}
+  Future<void> clear({int? expectedRevision}) async {}
 }
 
 /// The account page builds an AuthCubit from the AuthUseCase. This repository
@@ -71,7 +75,8 @@ class _OfflineAuthRepository implements AuthRepositoryDomain {
   Future<Result<bool, Failure>> signOut() async => Success(true);
 
   @override
-  Future<bool> hasSession() async => true;
+  Future<Result<SignInResult?, Failure>> restoreSession() async =>
+      const Success(SignInResult(needsProfile: false));
 }
 
 Future<void> pumpApp(WidgetTester tester) async {
@@ -101,11 +106,9 @@ Future<void> pumpApp(WidgetTester tester) async {
 Finder inBar(String text) =>
     find.descendant(of: find.byType(AppBottomBar), matching: find.text(text));
 
-Finder inPage(String text) =>
-    find.descendant(of: find.byType(PlaceholderScreen), matching: find.text(text));
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final home = HomeFakeRepository();
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -114,6 +117,12 @@ void main() {
     GetIt.I.registerSingleton<AuthUseCase>(
       AuthUseCase(_OfflineAuthRepository()),
     );
+    GetIt.I.registerSingleton<HomeUseCase>(HomeUseCase(home));
+  });
+
+  setUp(() {
+    home.response = Success(homeData());
+    home.selections.clear();
   });
 
   tearDownAll(() async {
@@ -129,6 +138,11 @@ void main() {
       expect(find.byTooltip('topbar.notifications'.tr()), findsOneWidget);
       expect(find.byTooltip('topbar.add_circle'.tr()), findsOneWidget);
       expect(find.byTooltip('tab.add'.tr()), findsOneWidget);
+      final account = tester.getCenter(find.byTooltip('topbar.account'.tr()));
+      final addCircle = tester.getCenter(find.byTooltip('topbar.add_circle'.tr()));
+      final bell = tester.getCenter(find.byTooltip('topbar.notifications'.tr()));
+      expect((addCircle.dx - account.dx).abs(),
+          lessThan((addCircle.dx - bell.dx).abs()));
       for (final String key in <String>[
         'tab.today',
         'tab.plan',
@@ -139,9 +153,12 @@ void main() {
       }
     });
 
-    testWidgets('every tab shows its page and keeps both bars',
+    testWidgets('every tab remains empty and keeps both bars and selection',
         (WidgetTester tester) async {
       await pumpApp(tester);
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Circle two'));
+      await tester.pumpAndSettle();
 
       for (final String key in <String>[
         'tab.plan',
@@ -151,7 +168,14 @@ void main() {
       ]) {
         await tester.tap(inBar(key.tr()).first);
         await tester.pumpAndSettle();
-        expect(inPage(key.tr()), findsOneWidget);
+        expect(find.text(key.tr()).evaluate().length,
+            inBar(key.tr()).evaluate().length);
+        expect(AppRouter.router.routeInformationProvider.value.uri.path,
+            '/${key.split('.').last}');
+        final selected = tester.widget<ChoiceChip>(
+          find.widgetWithText(ChoiceChip, 'Circle two'),
+        );
+        expect(selected.selected, isTrue);
         expect(find.byType(AppBottomBar), findsOneWidget);
         expect(find.byTooltip('topbar.account'.tr()), findsOneWidget);
       }
@@ -165,6 +189,20 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('add.title'.tr()), findsOneWidget);
+    });
+
+    testWidgets('no circles shows the real empty state and disabled actions',
+        (WidgetTester tester) async {
+      home.response = Success(homeData(circles: <CareCircleSummary>[]));
+      await pumpApp(tester);
+      expect(find.text('home.no_circles'.tr()), findsOneWidget);
+      for (final key in ['topbar.add_circle', 'topbar.notifications']) {
+        final button = tester.widget<IconButton>(find.byWidgetPredicate(
+          (widget) => widget is IconButton && widget.tooltip == key.tr(),
+        ));
+        expect(button.onPressed, isNull);
+      }
+      expect(find.byType(Badge), findsNothing);
     });
 
     testWidgets('account opens a standalone page and back returns to the shell',

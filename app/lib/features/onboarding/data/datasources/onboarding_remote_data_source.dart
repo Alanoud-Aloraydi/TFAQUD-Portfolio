@@ -3,9 +3,7 @@ import 'package:app/core/network/dio_client.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class BaseOnboardingRemoteDataSource {
-  /// PUT /api/v1/users/me/profile. Saves the three names of the signed-in
-  /// user and replaces the earlier values. The interceptor adds the access
-  /// token that was saved when the code was verified.
+  /// Saves account names through PUT /api/v1/accounts/me/profile.
   Future<void> saveProfile({
     required String firstName,
     required String lastName,
@@ -25,7 +23,6 @@ class OnboardingRemoteDataSource implements BaseOnboardingRemoteDataSource {
     required String lastName,
     required String displayName,
   }) async {
-    // No try/catch: the repository turns any error into a Failure, once.
     await _client.put(
       ApiEndpoints.profile,
       data: <String, String>{
