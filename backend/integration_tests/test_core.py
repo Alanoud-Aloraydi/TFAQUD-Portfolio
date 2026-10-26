@@ -9,12 +9,25 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import db
+from app.authz.postgres import PostgresCircleAccess
+from app.authz.roles import CircleRole
 from app.errors import Forbidden, ValidationFailed
 from app.models import Account, CareCircle, CareCircleCreationRequest
 from app.models import CareCircleManager, CareCircleManagerInvitation, Patient
 from app.users.postgres import PostgresUserStore
 from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run
+
+
+def test_circle_access_joins_an_existing_transaction(database, account):
+    """Authorization composes with caller-owned transactions."""
+    owner = account()
+    circle = offline_circle(database, owner)
+    with db.session.begin():
+        assert (
+            PostgresCircleAccess().role_in(owner.id.hex, circle.id.hex)
+            == CircleRole.MANAGER
+        )
 
 
 def test_migrations_create_care_and_authentication_tables(database):

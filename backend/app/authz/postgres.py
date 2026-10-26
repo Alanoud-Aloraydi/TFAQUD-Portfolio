@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.authz.circle_access import CircleAccess
 from app.authz.roles import CircleRole
-from app.database import db
+from app.database import db, transaction
 from app.models import Account, CareCircleManager, Patient
 
 
@@ -19,7 +19,7 @@ class PostgresCircleAccess(CircleAccess):
             account_id, care_circle_id = UUID(user_id), UUID(circle_id)
         except (ValueError, TypeError, AttributeError):
             return None
-        with db.session.begin():
+        with transaction():
             manager = db.session.scalar(
                 select(CareCircleManager.id).where(
                     CareCircleManager.account_id == account_id,

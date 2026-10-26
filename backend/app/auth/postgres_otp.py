@@ -5,7 +5,12 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, text, update
 
-from app.auth.otp_store import OtpRequest, OtpStore, SendClaim
+from app.auth.otp_store import (
+    AttemptsExhausted,
+    OtpRequest,
+    OtpStore,
+    SendClaim,
+)
 from app.database import transaction
 from app.models import OtpChallenge, OtpSendAttempt
 
@@ -48,9 +53,23 @@ class PostgresOtpStore(OtpStore):
                 expires_at=row.expires_at,
             )
 
-    def claim_send(self, request_id, phone, now, window_start, max_sends):
+    def claim_send(
+        self,
+        request_id,
+        phone,
+        now,
+        window_start,
+        max_sends,
+        *,
+        max_tries=None
+    ):
         with transaction() as session:
             _lock_phone(session, phone)
+            row = (
+                self._challenge(session, request_id, phone, now, max_tries)
+                if request_id is not None
+                else None
+            )
             count, oldest = session.execute(
                 select(func.count(), func.min(OtpSendAttempt.created_at))
                 .join(
@@ -65,7 +84,8 @@ class PostgresOtpStore(OtpStore):
             ).one()
             if count >= max_sends:
                 return SendClaim(granted=False, oldest_send_at=oldest)
-            row = self._challenge(session, request_id, phone, now)
+            if row is None:
+                row = self._challenge(session, None, phone, now, max_tries)
             send = OtpSendAttempt(
                 id=uuid4(), challenge_id=row.id, created_at=now
             )
@@ -76,7 +96,7 @@ class PostgresOtpStore(OtpStore):
             )
 
     @staticmethod
-    def _challenge(session, request_id, phone, now):
+    def _challenge(session, request_id, phone, now, max_tries):
         """Recheck a resend under lock, or supersede older open requests."""
         if request_id is not None:
             key = _key(request_id)
@@ -91,6 +111,8 @@ class PostgresOtpStore(OtpStore):
                 or row.status != "pending"
             ):
                 raise KeyError(request_id)
+            if max_tries is not None and row.attempt_count >= max_tries:
+                raise AttemptsExhausted()
             return row
         session.execute(
             update(OtpChallenge)

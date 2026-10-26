@@ -10,6 +10,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Tokens extends Fake implements TokenStorage {
+  @override
+  int revision = 0;
   String? access = 'access';
   String? refresh = 'refresh';
   bool unavailable = false;
@@ -22,8 +24,10 @@ class _Tokens extends Fake implements TokenStorage {
   }
 
   @override
-  Future<void> clear() async {
+  Future<void> clear({int? expectedRevision}) async {
+    if (expectedRevision != null && revision != expectedRevision) return;
     if (clearFails) throw Exception('Storage unavailable');
+    revision++;
     access = null;
     refresh = null;
   }

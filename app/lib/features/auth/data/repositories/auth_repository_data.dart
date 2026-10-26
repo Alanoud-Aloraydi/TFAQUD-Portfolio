@@ -62,6 +62,7 @@ class AuthRepositoryData implements AuthRepositoryDomain {
 
   @override
   Future<Result<bool, Failure>> signOut() async {
+    final revision = _tokens.revision;
     Result<bool, Failure> result = const Success(true);
     try {
       await _remote.signOut();
@@ -69,7 +70,7 @@ class AuthRepositoryData implements AuthRepositoryDomain {
       result = Error(FailureExceptions.getException(error));
     }
     try {
-      await _tokens.clear();
+      await _tokens.clear(expectedRevision: revision);
     } on Exception {
       return const Error(StorageFailure('auth.sign_out_failed'));
     }

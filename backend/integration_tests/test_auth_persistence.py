@@ -218,6 +218,33 @@ def test_concurrent_quota_claims_cannot_exceed_three(auth_app, database):
         )
 
 
+def test_resend_rechecks_attempts_before_reserving_delivery(
+    auth_app, database, monkeypatch
+):
+    """Attempts consumed just before reservation cannot trigger another SMS."""
+    challenge = start(auth_app.test_client())
+    store = auth_app.extensions["sign_in_service"]._otp
+    reserve = store.claim_send
+
+    def exhausted_before_claim(*args, **kwargs):
+        for _ in range(3):
+            assert store.claim_try(challenge, 3)
+        return reserve(*args, **kwargs)
+
+    monkeypatch.setattr(store, "claim_send", exhausted_before_claim)
+    response = auth_app.test_client().post(
+        "/api/v1/auth/request-code",
+        json={"phone_number": PHONE, "verification_id": challenge},
+    )
+    assert response.status_code == 429
+    assert response.json["error"]["code"] == "too_many_attempts"
+    with Session(database) as session:
+        assert (
+            session.scalar(select(func.count()).select_from(OtpSendAttempt))
+            == 1
+        )
+
+
 def test_concurrent_verification_attempts_cannot_exceed_three(auth_app):
     challenge = start(auth_app.test_client())
 

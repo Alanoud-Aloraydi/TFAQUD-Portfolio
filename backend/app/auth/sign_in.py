@@ -9,7 +9,7 @@ from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import timedelta
 
-from app.auth.otp_store import OtpStore
+from app.auth.otp_store import AttemptsExhausted, OtpStore
 from app.auth.service import IssuedSession, SessionService
 from app.errors import (
     NotFound,
@@ -20,7 +20,7 @@ from app.errors import (
 from app.sms.base import SmsDeliveryError, SmsSender
 from app.users.store import User, UserStore
 
-# "per hour" in the user stories. A fixed rule, not a setting.
+# Rolling interval used by the per-phone delivery quota.
 SEND_WINDOW = timedelta(hours=1)
 
 
@@ -64,30 +64,21 @@ class SignInService:
         With it, the SMS is a resend inside the same request: the tries already
         used stay used.
         """
-        if verification_id is not None:
-            request = self._otp.get_request(verification_id)
-            # An id that is unknown, belongs to another phone number, or is
-            # finished all get the same answer. The app starts a new request.
-            if (
-                request is None
-                or request.phone != phone
-                or request.status != "pending"
-            ):
-                raise NotFound(
-                    "No open verification request exists. Start again.",
-                    code="verification_not_found",
-                )
-            if request.wrong_tries >= self._max_wrong_tries:
-                raise TooManyRequests(
-                    "This request has no tries left. Start a new one.",
-                    code="too_many_attempts",
-                )
-
         now = self._clock.now()
         try:
             claim = self._otp.claim_send(
-                verification_id, phone, now, now - SEND_WINDOW, self._max_sends
+                verification_id,
+                phone,
+                now,
+                now - SEND_WINDOW,
+                self._max_sends,
+                max_tries=self._max_wrong_tries,
             )
+        except AttemptsExhausted:
+            raise TooManyRequests(
+                "This request has no tries left. Start a new one.",
+                code="too_many_attempts",
+            ) from None
         except KeyError:
             raise NotFound(code="verification_not_found") from None
         if not claim.granted:

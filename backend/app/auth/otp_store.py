@@ -11,6 +11,10 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 
 
+class AttemptsExhausted(Exception):
+    """A challenge has no remaining verification attempts."""
+
+
 @dataclass(frozen=True)
 class OtpRequest:
     id: str
@@ -54,6 +58,8 @@ class OtpStore(ABC):
         now: datetime,
         window_start: datetime,
         max_sends: int,
+        *,
+        max_tries: int | None = None,
     ) -> SendClaim:
         """Take one place in the phone number's hourly limit, if there is one.
 
@@ -62,7 +68,7 @@ class OtpStore(ABC):
 
         `request_id=None` also creates a new request for `phone` in the same
         step; a refused claim creates nothing. Unknown or closed IDs raise
-        KeyError.
+        KeyError. Exhausted resend requests raise AttemptsExhausted.
         """
 
     @abstractmethod
@@ -116,8 +122,20 @@ class InMemoryOtpStore(OtpStore):
         now: datetime,
         window_start: datetime,
         max_sends: int,
+        *,
+        max_tries: int | None = None,
     ) -> SendClaim:
         with self._lock:
+            if request_id is not None:
+                request = self._requests.get(request_id)
+                if (
+                    request is None
+                    or request.phone != phone
+                    or request.status != "pending"
+                ):
+                    raise KeyError(request_id)
+                if max_tries is not None and request.wrong_tries >= max_tries:
+                    raise AttemptsExhausted()
             in_window = [
                 s
                 for s in self._sends.values()
@@ -140,14 +158,6 @@ class InMemoryOtpStore(OtpStore):
                 self._requests[request_id] = OtpRequest(
                     id=request_id, phone=phone, created_at=now
                 )
-            else:
-                request = self._requests.get(request_id)
-                if (
-                    request is None
-                    or request.phone != phone
-                    or request.status != "pending"
-                ):
-                    raise KeyError(request_id)
             send = OtpSend(
                 id=uuid.uuid4().hex,
                 request_id=request_id,
