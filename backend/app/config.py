@@ -4,7 +4,7 @@ Settings are read from environment variables when `load_config()` is called, so
 tests can change the environment before creating the app.
 
 Environments:
-  development - local work. Fake SMS, a built-in secret key.
+  development - local work. Configurable SMS, a default development secret.
   testing     - automated tests. Fake SMS only, a fixed secret key.
   staging     - the shared test server (TFQD-10). Needs a real SECRET_KEY.
   production  - the real server. Needs a real SECRET_KEY, refuses the fake SMS
@@ -13,20 +13,20 @@ Environments:
 
 import os
 
+from sqlalchemy.engine import URL, make_url
+from sqlalchemy.exc import ArgumentError
+
 ENVIRONMENTS = ("development", "testing", "staging", "production")
 
-# Token lifetimes are a proposal (TFQD-11) that the team still has to confirm.
+# Default token lifetimes, overridable through environment variables.
 DEFAULT_ACCESS_TOKEN_MINUTES = 15
 DEFAULT_REFRESH_TOKEN_DAYS = 30
 
-# The sign-in code (docs/api-contracts.md, section 8). Authentica keeps a code for
-# the time set in its dashboard. OTP_VALID_SECONDS must equal that value: the fake
-# sender uses it, and the sign-in endpoints use it to choose the message.
+# OTP validity matches the provider's configured lifetime.
 DEFAULT_OTP_VALID_SECONDS = 300
 DEFAULT_AUTHENTICA_TEMPLATE_ID = 5  # Arabic text, code of 6 digits
 
-# The limits of TFQD-13 / TFQD-35, counted by our server. They are settings, not
-# constants, so a test server can relax them without a code change.
+# Server-side limits are configurable per environment.
 DEFAULT_OTP_MAX_WRONG_TRIES = 3  # per verification request
 DEFAULT_OTP_MAX_SENDS_PER_HOUR = 3  # per phone number
 
@@ -47,18 +47,23 @@ def _int_from_env(name: str, default: int) -> int:
     try:
         value = int(raw)
     except ValueError as exc:
-        raise ConfigError(f"{name} must be a whole number, got {raw!r}.") from exc
+        raise ConfigError(
+            f"{name} must be a whole number, got {raw!r}."
+        ) from exc
     if value <= 0:
         raise ConfigError(f"{name} must be greater than zero, got {value}.")
     return value
 
 
-def load_config(env_name: str | None = None, overrides: dict | None = None) -> dict:
+def load_config(
+    env_name: str | None = None, overrides: dict | None = None
+) -> dict:
     """Build the settings dictionary for one environment."""
     env_name = env_name or os.environ.get("APP_ENV", "development")
     if env_name not in ENVIRONMENTS:
         raise ConfigError(
-            f"APP_ENV must be one of {', '.join(ENVIRONMENTS)}, got {env_name!r}."
+            f"APP_ENV must be one of {', '.join(ENVIRONMENTS)}, "
+            f"got {env_name!r}."
         )
 
     config = {
@@ -72,21 +77,44 @@ def load_config(env_name: str | None = None, overrides: dict | None = None) -> d
             "REFRESH_TOKEN_DAYS", DEFAULT_REFRESH_TOKEN_DAYS
         ),
         "SMS_BACKEND": os.environ.get("SMS_BACKEND", "fake"),
-        "OTP_VALID_SECONDS": _int_from_env("OTP_VALID_SECONDS", DEFAULT_OTP_VALID_SECONDS),
+        "OTP_VALID_SECONDS": _int_from_env(
+            "OTP_VALID_SECONDS", DEFAULT_OTP_VALID_SECONDS
+        ),
         "OTP_MAX_WRONG_TRIES": _int_from_env(
             "OTP_MAX_WRONG_TRIES", DEFAULT_OTP_MAX_WRONG_TRIES
         ),
         "OTP_MAX_SENDS_PER_HOUR": _int_from_env(
             "OTP_MAX_SENDS_PER_HOUR", DEFAULT_OTP_MAX_SENDS_PER_HOUR
         ),
-        # Needed only when SMS_BACKEND is authentica. Never printed or logged.
+        # Provider credentials remain server-side.
         "AUTHENTICA_API_KEY": os.environ.get("AUTHENTICA_API_KEY"),
         "AUTHENTICA_TEMPLATE_ID": _int_from_env(
             "AUTHENTICA_TEMPLATE_ID", DEFAULT_AUTHENTICA_TEMPLATE_ID
         ),
-        # In development the developer needs to read the OTP in the log.
+        # Only the fake sender uses development OTP logging.
         "FAKE_SMS_LOG_BODY": env_name == "development",
+        "SQLALCHEMY_DATABASE_URI": None,
+        "SQLALCHEMY_ENGINE_OPTIONS": {
+            "pool_pre_ping": True,
+            "isolation_level": "READ COMMITTED",
+            "hide_parameters": True,
+        },
     }
+
+    # Unit tests keep explicit fakes; database tests supply their own URL.
+    if env_name != "testing":
+        config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+        if not config["SQLALCHEMY_DATABASE_URI"] and os.environ.get(
+            "DATABASE_HOST"
+        ):
+            config["SQLALCHEMY_DATABASE_URI"] = URL.create(
+                "postgresql+psycopg",
+                username=os.environ.get("POSTGRES_USER", "tfaqud"),
+                password=os.environ.get("POSTGRES_PASSWORD"),
+                host=os.environ["DATABASE_HOST"],
+                port=_int_from_env("DATABASE_PORT", 5432),
+                database=os.environ.get("POSTGRES_DB", "tfaqud"),
+            )
 
     if env_name == "testing":
         # Tests never read the real environment for secrets or the SMS backend.
@@ -98,6 +126,22 @@ def load_config(env_name: str | None = None, overrides: dict | None = None) -> d
 
     if overrides:
         config.update(overrides)
+
+    uri = config.get("SQLALCHEMY_DATABASE_URI")
+    if uri:
+        try:
+            url = make_url(uri)
+        except (ArgumentError, TypeError):
+            raise ConfigError(
+                "Invalid database connection settings."
+            ) from None
+        if url.get_backend_name() != "postgresql":
+            raise ConfigError("The care schema requires PostgreSQL.")
+        if url.drivername == "postgresql":
+            url = url.set(drivername="postgresql+psycopg")
+        if url.drivername != "postgresql+psycopg":
+            raise ConfigError("The database driver must be psycopg 3.")
+        config["SQLALCHEMY_DATABASE_URI"] = url
 
     secret = config["SECRET_KEY"]
     if not secret or len(secret) < MIN_SECRET_KEY_LENGTH:

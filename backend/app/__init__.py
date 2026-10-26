@@ -1,8 +1,8 @@
 """The Flask application factory.
 
-`create_app` is the one place where the pieces are connected (clock, SMS sender,
-session store, sign-in code store, user store, circle access). Everything else asks for them through
-`app.extensions`. Tests call `create_app` with fakes instead of the defaults.
+`create_app` connects the clock, SMS sender, stores, and circle access.
+Other modules access these services through `app.extensions`.
+Tests call `create_app` with fakes instead of the defaults.
 """
 
 import logging
@@ -18,6 +18,7 @@ from app.auth.store import InMemorySessionStore, SessionStore
 from app.authz import CircleAccess, DenyAllCircleAccess
 from app.clock import SystemClock
 from app.config import ConfigError, load_config
+from app.database import initialize_database
 from app.cors import register_development_cors
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
@@ -38,14 +39,11 @@ def create_app(
     user_store: UserStore | None = None,
     circle_access: CircleAccess | None = None,
 ) -> Flask:
-    app = Flask(__name__, static_folder=None)  # an API serves no static files
+    app = Flask(__name__, static_folder=None)
     app.config.update(load_config(env_name, overrides))
     env = app.config["APP_ENV"]
 
     if env != "testing":
-        # Show INFO messages (such as the fake SMS) on the console. Without
-        # this, Python prints only warnings and errors. Tests use pytest's own
-        # log capture instead.
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -53,21 +51,33 @@ def create_app(
 
     clock = clock or SystemClock()
     sms_sender = sms_sender or create_sms_sender(app.config, clock)
+    database_enabled = initialize_database(app)
 
-    # Each store has an in-memory version for development and tests. It is
-    # refused in production and warned about in staging (see each store's file).
+    # In-memory authentication stores are restricted to non-production use.
     if session_store is None:
         _refuse_in_production(env, "session")
         _warn_in_staging(app, env, "session", "sessions")
         session_store = InMemorySessionStore()
     if otp_store is None:
         _refuse_in_production(env, "sign-in code")
-        _warn_in_staging(app, env, "sign-in code", "code requests and their counters")
+        _warn_in_staging(
+            app, env, "sign-in code", "code requests and their counters"
+        )
         otp_store = InMemoryOtpStore()
     if user_store is None:
-        _refuse_in_production(env, "user")
-        _warn_in_staging(app, env, "user", "users")
-        user_store = InMemoryUserStore()
+        if database_enabled:
+            from app.users.postgres import PostgresUserStore
+
+            user_store = PostgresUserStore()
+        else:
+            _refuse_in_production(env, "user")
+            _warn_in_staging(app, env, "user", "users")
+            user_store = InMemoryUserStore()
+
+    if circle_access is None and database_enabled:
+        from app.authz.postgres import PostgresCircleAccess
+
+        circle_access = PostgresCircleAccess()
 
     app.extensions["clock"] = clock
     app.extensions["sms_sender"] = sms_sender
@@ -95,7 +105,6 @@ def create_app(
     register_request_id(app)
     register_error_handlers(app)
     if env == "development":
-        # Lets Flutter web in Chrome call this API on this computer. Never on a server.
         register_development_cors(app)
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)

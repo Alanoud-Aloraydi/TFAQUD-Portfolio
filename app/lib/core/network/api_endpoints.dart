@@ -25,7 +25,7 @@ class ApiEndpoints {
   static const String session = '/auth/session';
   static const String requestCode = '/auth/request-code';
   static const String verifyCode = '/auth/verify-code';
-  static const String profile = '/users/me/profile';
+  static const String profile = '/accounts/me/profile';
 
   /// Routes that never carry the access token.
   static const Set<String> withoutAccessToken = <String>{

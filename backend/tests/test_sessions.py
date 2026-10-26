@@ -22,7 +22,7 @@ def test_valid_access_token_reaches_a_protected_endpoint(client, signed_in):
     response = client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token))
 
     assert response.status_code == 200
-    assert response.get_json() == {"user_id": "user-1", "session_id": signed_in.session_id}
+    assert response.get_json() == {"account_id": "user-1", "session_id": signed_in.session_id}
 
 
 def test_missing_header_is_rejected(client):

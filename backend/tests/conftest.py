@@ -18,6 +18,13 @@ from app.users.store import InMemoryUserStore
 
 
 @pytest.fixture(autouse=True)
+def isolate_database_environment(monkeypatch):
+    """Unit tests never inherit a developer or container database target."""
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("DATABASE_HOST", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def block_network(monkeypatch):
     """Fail any test that tries to open a network connection."""
 
@@ -30,7 +37,7 @@ def block_network(monkeypatch):
 
 @pytest.fixture
 def clock():
-    """Starts at 2026-10-15 12:00 UTC and moves only when a test advances it."""
+    """Start at 2026-10-15 12:00 UTC; advance only when requested by a test."""
     return ManualClock()
 
 

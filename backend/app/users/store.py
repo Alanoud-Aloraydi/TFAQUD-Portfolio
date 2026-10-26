@@ -1,15 +1,7 @@
-"""Where users are kept.
+"""Account values and the storage interface used by authentication.
 
-A user is created the first time a phone number is verified (feature F01). The
-phone number is the identity: one phone number is one user.
-
-The name fields are empty until the user fills the profile page after the first
-sign-in. `profile_complete` tells the app whether that page is still to be shown.
-
-`UserStore` is the interface. `InMemoryUserStore` is the only implementation for
-now. It forgets everything on restart and is not shared between server
-processes, so it is for development and tests only. A PostgreSQL store replaces
-it once the `users` table from TFQD-7 exists (docs/api-contracts.md, section 5).
+Profiles remain incomplete until all three names are saved. The in-memory
+implementation supports local tests; PostgresUserStore persists accounts.
 """
 
 import threading
@@ -36,7 +28,7 @@ class User:
         """The user as the API returns it."""
         return {
             "id": self.id,
-            "phone": self.phone,
+            "phone_number": self.phone,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "display_name": self.display_name,
@@ -46,7 +38,9 @@ class User:
 
 class UserStore(ABC):
     @abstractmethod
-    def get_or_create_by_phone(self, phone: str, now: datetime) -> tuple[User, bool]:
+    def get_or_create_by_phone(
+        self, phone: str, now: datetime
+    ) -> tuple[User, bool]:
         """Return the user of this phone number, creating it if there is none.
 
         The second value is True when this call created the user. Two calls at
@@ -60,7 +54,7 @@ class UserStore(ABC):
     def update_profile(
         self, user_id: str, first_name: str, last_name: str, display_name: str
     ) -> User | None:
-        """Replace the three name fields. Returns None if there is no such user."""
+        """Replace all three names, or return None for an unknown account."""
 
 
 class InMemoryUserStore(UserStore):
@@ -69,7 +63,9 @@ class InMemoryUserStore(UserStore):
         self._by_id: dict[str, User] = {}
         self._id_by_phone: dict[str, str] = {}
 
-    def get_or_create_by_phone(self, phone: str, now: datetime) -> tuple[User, bool]:
+    def get_or_create_by_phone(
+        self, phone: str, now: datetime
+    ) -> tuple[User, bool]:
         with self._lock:
             existing_id = self._id_by_phone.get(phone)
             if existing_id is not None:

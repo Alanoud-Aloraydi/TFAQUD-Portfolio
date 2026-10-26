@@ -25,7 +25,7 @@ class RefreshRequest(Dto):
 
 
 class RequestCodeRequest(Dto):
-    phone: Phone
+    phone_number: Phone
     # Send it back to ask for another SMS inside the same request (a resend).
     verification_id: VerificationId | None = None
 
@@ -38,7 +38,7 @@ class VerifyCodeRequest(Dto):
 @bp.post("/request-code")
 def request_code():
     body = parse_json_body(RequestCodeRequest)
-    verification_id = get_sign_in_service().request_code(body.phone, body.verification_id)
+    verification_id = get_sign_in_service().request_code(body.phone_number, body.verification_id)
     return jsonify(verification_id=verification_id)
 
 
@@ -52,7 +52,7 @@ def verify_code():
         access_token_expires_at=session.access_token_expires_at.isoformat(),
         refresh_token=session.refresh_token,
         refresh_token_expires_at=session.refresh_token_expires_at.isoformat(),
-        user=result.user.to_dict(),
+        account=result.user.to_dict(),
     )
 
 
@@ -77,4 +77,4 @@ def sign_out():
 @require_auth
 def session_info():
     auth = current_auth()
-    return jsonify(user_id=auth.user_id, session_id=auth.session_id)
+    return jsonify(account_id=auth.user_id, session_id=auth.session_id)

@@ -74,7 +74,7 @@ def test_the_public_form_of_a_user_has_no_secret_fields(store):
 
     assert set(user.to_dict()) == {
         "id",
-        "phone",
+        "phone_number",
         "first_name",
         "last_name",
         "display_name",
