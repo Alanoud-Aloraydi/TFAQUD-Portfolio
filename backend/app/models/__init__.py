@@ -7,6 +7,8 @@ from app.models.patient import Patient
 from app.models.manager import CareCircleManager
 from app.models.creation_request import CareCircleCreationRequest
 from app.models.invitation import CareCircleManagerInvitation
+from app.models.medical import EmergencyContact, PatientAllergy
+from app.models.medical import PatientCondition
 
 __all__ = [
     "Account",
@@ -18,4 +20,7 @@ __all__ = [
     "CareCircleManager",
     "CareCircleCreationRequest",
     "CareCircleManagerInvitation",
+    "EmergencyContact",
+    "PatientAllergy",
+    "PatientCondition",
 ]

@@ -10,11 +10,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Last page of the account setup: "كيف تريد أن تبدأ؟".
-/// The choice is kept in [OnboardingCubit]; the circle feature will read it to
-/// create the first circle. For now both buttons go to the home page.
+/// Last page of the account setup: "كيف تريد أن تبدأ؟". The "+" next to the
+/// circles opens it again, to add another circle ([addingCircle]). That page
+/// has a back link and no "تخطي الآن", because the account is already set up.
+///
+/// "أدير رعايتي بنفسي" continues to the three steps that create the circle.
+/// "أرعى شخصًا آخر" does not have its pages yet and goes to the home page. The
+/// choice is kept in [OnboardingCubit].
 class StartScreen extends StatelessWidget {
-  const StartScreen({super.key});
+  const StartScreen({super.key, this.addingCircle = false});
+
+  final bool addingCircle;
+
+  void _continue(BuildContext context, OnboardingState state) {
+    if (state.careTarget == CareTarget.self) {
+      context.push(Routes.createSelfCircle);
+    } else {
+      context.go(Routes.today);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +49,11 @@ class StartScreen extends StatelessWidget {
                         children: <Widget>[
                           StepHeader(
                             title: context.tr('onboarding.start_title'),
+                            // After the name page the link is hidden, as in the
+                            // design. From the "+" it takes the user back.
+                            onBack: addingCircle && context.canPop()
+                                ? () => context.pop()
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           ChoiceCard(
@@ -71,16 +90,17 @@ class StartScreen extends StatelessWidget {
                   PillButton(
                     label: context.tr('common.continue'),
                     onPressed: state.canContinueStart
-                        ? () => context.go(Routes.today)
+                        ? () => _continue(context, state)
                         : null,
                   ),
-                  TextButton(
-                    onPressed: () => context.go(Routes.today),
-                    child: Text(
-                      context.tr('onboarding.skip'),
-                      style: text.labelLarge?.copyWith(color: AppColors.ink2),
+                  if (!addingCircle)
+                    TextButton(
+                      onPressed: () => context.go(Routes.today),
+                      child: Text(
+                        context.tr('onboarding.skip'),
+                        style: text.labelLarge?.copyWith(color: AppColors.ink2),
+                      ),
                     ),
-                  ),
                 ],
               );
             },

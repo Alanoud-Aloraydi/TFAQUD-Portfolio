@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart' show DioException;
 
-/// Error codes returned by the Flask API (backend/app/errors.py and
-/// backend/app/auth).
+/// Error codes returned by the Flask API (backend/app/errors.py,
+/// backend/app/auth and backend/app/care.py).
 abstract class ApiErrorCodes {
   ApiErrorCodes._();
 
@@ -26,6 +26,11 @@ abstract class ApiErrorCodes {
   static const String tooManyAttempts = 'too_many_attempts';
   static const String tooManyCodes = 'too_many_codes';
   static const String smsUnavailable = 'sms_unavailable';
+
+  // Circle creation (backend/app/care.py).
+  static const String alreadyHasCircle = 'already_has_circle';
+  static const String profileIncomplete = 'profile_incomplete';
+  static const String invalidBirthDate = 'invalid_birth_date';
 }
 
 /// Reads `error.code` from a body of the form `{"error": {"code": ...}}`.

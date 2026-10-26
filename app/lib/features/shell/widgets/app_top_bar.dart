@@ -5,10 +5,18 @@ import 'package:go_router/go_router.dart';
 
 /// Top bar of the shell: account button, circles area and notifications button.
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
-  const AppTopBar({super.key, this.displayName, this.circles});
+  const AppTopBar({
+    super.key,
+    this.displayName,
+    this.circles,
+    this.onAddCircle,
+  });
 
   final String? displayName;
   final Widget? circles;
+
+  /// Called by the "+" button next to the circles. Null turns the button off.
+  final VoidCallback? onAddCircle;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -29,7 +37,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             tooltip: context.tr('topbar.add_circle'),
             icon: const Icon(Icons.add_circle_outline),
-            onPressed: null,
+            onPressed: onAddCircle,
           ),
           Expanded(child: circles ?? const SizedBox.shrink()),
         ],

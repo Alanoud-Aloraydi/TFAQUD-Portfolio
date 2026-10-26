@@ -13,6 +13,10 @@ void main() {
     Routes.notifications,
     Routes.onboarding,
     Routes.onboardingStart,
+    Routes.addCircle,
+    Routes.createSelfCircle,
+    Routes.createSelfCircleHealth,
+    Routes.createSelfCircleAllergies,
   ];
 
   // Pages that anyone may open.

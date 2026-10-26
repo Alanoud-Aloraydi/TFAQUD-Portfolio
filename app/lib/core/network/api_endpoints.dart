@@ -1,7 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Routes of the Flask API (backend/app/auth/routes.py,
-/// backend/app/users/routes.py, backend/app/health.py).
+/// backend/app/users/routes.py, backend/app/health.py,
+/// backend/app/circles/routes.py).
 class ApiEndpoints {
   ApiEndpoints._();
 
@@ -29,6 +30,8 @@ class ApiEndpoints {
   static const String requestCode = '/auth/request-code';
   static const String verifyCode = '/auth/verify-code';
   static const String profile = '/accounts/me/profile';
+  static const String account = '/accounts/me';
+  static const String selfCircle = '/circles/self';
 
   /// Routes that never carry the access token.
   static const Set<String> withoutAccessToken = <String>{

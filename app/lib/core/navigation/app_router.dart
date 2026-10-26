@@ -9,6 +9,12 @@ import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
 import 'package:app/features/auth/presentation/pages/code_screen.dart';
 import 'package:app/features/auth/presentation/pages/phone_screen.dart';
 import 'package:app/features/auth/presentation/pages/splash_screen.dart';
+import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/presentation/cubit/create_self_circle_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/create_self_circle_state.dart';
+import 'package:app/features/circles/presentation/pages/self_circle_allergies_screen.dart';
+import 'package:app/features/circles/presentation/pages/self_circle_basics_screen.dart';
+import 'package:app/features/circles/presentation/pages/self_circle_health_screen.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
@@ -114,7 +120,8 @@ class AppRouter {
           ),
         ],
       ),
-      // Name page and start page share one OnboardingCubit.
+      // Name page and start page share one OnboardingCubit. The page that adds
+      // another circle is the start page again, so it shares the cubit too.
       ShellRoute(
         builder: (context, state, child) => BlocProvider(
           create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
@@ -128,6 +135,41 @@ class AppRouter {
           GoRoute(
             path: Routes.onboardingStart,
             builder: (context, state) => const StartScreen(),
+          ),
+          GoRoute(
+            path: Routes.addCircle,
+            builder: (context, state) => const StartScreen(addingCircle: true),
+          ),
+        ],
+      ),
+      // The three steps of the circle for your own care share one
+      // CreateSelfCircleCubit, so going back keeps the answers. When the server
+      // says the sign-in ended, any of the steps sends the user to sign-in.
+      ShellRoute(
+        builder: (context, state, child) => BlocProvider(
+          create: (context) => CreateSelfCircleCubit(
+            GetIt.I<CirclesUseCase>(),
+            GetIt.I<HomeUseCase>(),
+          )..loadAccount(),
+          child: BlocListener<CreateSelfCircleCubit, CreateSelfCircleState>(
+            listenWhen: (before, after) =>
+                after.sessionEnded && !before.sessionEnded,
+            listener: (context, state) => context.go(Routes.auth),
+            child: child,
+          ),
+        ),
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.createSelfCircle,
+            builder: (context, state) => const SelfCircleBasicsScreen(),
+          ),
+          GoRoute(
+            path: Routes.createSelfCircleHealth,
+            builder: (context, state) => const SelfCircleHealthScreen(),
+          ),
+          GoRoute(
+            path: Routes.createSelfCircleAllergies,
+            builder: (context, state) => const SelfCircleAllergiesScreen(),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:app/features/auth/di/auth_di.dart';
 import 'package:app/features/onboarding/di/onboarding_di.dart';
 import 'package:app/features/home/di/home_di.dart';
+import 'package:app/features/circles/di/circles_di.dart';
 
 @InjectableInit(
   initializerName: 'init', 
@@ -18,4 +19,5 @@ Future<void> configureDependencies() async {
   configureAuth(getIt);
   configureOnboarding(getIt);
   configureHome(getIt);
+  configureCircles(getIt);
 }

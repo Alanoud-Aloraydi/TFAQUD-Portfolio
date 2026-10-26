@@ -35,7 +35,10 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) context.read<HomeCubit>().load();
+    // The page stays as it is while the data loads again in the background.
+    if (state == AppLifecycleState.resumed) {
+      context.read<HomeCubit>().refresh();
+    }
   }
 
   void _onState(BuildContext context, HomeState state) {
@@ -59,6 +62,9 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
         topBar: AppTopBar(
           displayName: state.data?.displayName,
           circles: HomeWidget(state: state, onSelected: cubit.selectCircle),
+          onAddCircle: state.status == HomeStatus.ready
+              ? () => context.push(Routes.addCircle)
+              : null,
         ),
         body: _body(state, cubit),
       ),
@@ -90,9 +96,19 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            context.tr('home.no_circles'),
-            textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr('home.no_circles'),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.push(Routes.addCircle),
+                child: Text(context.tr('home.create_circle')),
+              ),
+            ],
           ),
         ),
       );

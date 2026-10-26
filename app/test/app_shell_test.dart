@@ -9,15 +9,27 @@ import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/circles/domain/entities/account_summary.dart';
+import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/features/circles/domain/failures/circle_failures.dart';
+import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/presentation/cubit/create_self_circle_cubit.dart';
+import 'package:app/features/circles/presentation/pages/self_circle_basics_screen.dart';
+import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
+import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
+import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
+import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/circles_fakes.dart';
 import 'support/home_fakes.dart';
 
 /// Reads the real translation file synchronously, so loading finishes inside
@@ -79,6 +91,17 @@ class _OfflineAuthRepository implements AuthRepositoryDomain {
       const Success(SignInResult(needsProfile: false));
 }
 
+/// The start page builds an OnboardingCubit from the OnboardingUseCase. The
+/// tests here never save a name.
+class _OfflineOnboardingRepository implements OnboardingRepositoryDomain {
+  @override
+  Future<Result<bool, Failure>> saveProfile({
+    required String firstName,
+    required String lastName,
+    required String displayName,
+  }) async => const Success(true);
+}
+
 Future<void> pumpApp(WidgetTester tester) async {
   AppRouter.router.go(Routes.today);
   await tester.pumpWidget(
@@ -109,6 +132,7 @@ Finder inBar(String text) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final home = HomeFakeRepository();
+  final circles = CirclesFakeRepository();
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -118,11 +142,16 @@ void main() {
       AuthUseCase(_OfflineAuthRepository()),
     );
     GetIt.I.registerSingleton<HomeUseCase>(HomeUseCase(home));
+    GetIt.I.registerSingleton<OnboardingUseCase>(
+      OnboardingUseCase(_OfflineOnboardingRepository()),
+    );
+    GetIt.I.registerSingleton<CirclesUseCase>(CirclesUseCase(circles));
   });
 
   setUp(() {
     home.response = Success(homeData());
     home.selections.clear();
+    circles.reset();
   });
 
   tearDownAll(() async {
@@ -191,17 +220,28 @@ void main() {
       expect(find.text('add.title'.tr()), findsOneWidget);
     });
 
-    testWidgets('no circles shows the real empty state and disabled actions',
+    testWidgets('no circles shows the empty state with a way to create one',
         (WidgetTester tester) async {
       home.response = Success(homeData(circles: <CareCircleSummary>[]));
       await pumpApp(tester);
       expect(find.text('home.no_circles'.tr()), findsOneWidget);
-      for (final key in ['topbar.add_circle', 'topbar.notifications']) {
-        final button = tester.widget<IconButton>(find.byWidgetPredicate(
-          (widget) => widget is IconButton && widget.tooltip == key.tr(),
-        ));
-        expect(button.onPressed, isNull);
-      }
+      expect(find.text('home.create_circle'.tr()), findsOneWidget);
+      final IconButton addCircle = tester.widget<IconButton>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is IconButton &&
+              widget.tooltip == 'topbar.add_circle'.tr(),
+        ),
+      );
+      expect(addCircle.onPressed, isNotNull);
+      final IconButton bell = tester.widget<IconButton>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is IconButton &&
+              widget.tooltip == 'topbar.notifications'.tr(),
+        ),
+      );
+      expect(bell.onPressed, isNull);
       expect(find.byType(Badge), findsNothing);
     });
 
@@ -223,6 +263,298 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.byType(AppBottomBar), findsOneWidget);
+    });
+  });
+
+  group('Circle creation for your own care', () {
+    /// A tall screen, so that no step needs scrolling in a test.
+    void tallPhone(WidgetTester tester) {
+      tester.view.physicalSize = const Size(900, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    /// Opens the first step from the "+" button, with "I manage my own care"
+    /// chosen. Returns the cubit of the flow.
+    Future<CreateSelfCircleCubit> openFirstStep(WidgetTester tester) async {
+      tallPhone(tester);
+      await pumpApp(tester);
+      await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('onboarding.self_title'.tr()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('common.continue'.tr()));
+      await tester.pumpAndSettle();
+      return tester
+          .element(find.byType(SelfCircleBasicsScreen))
+          .read<CreateSelfCircleCubit>();
+    }
+
+    /// Fills what the date picker and the city sheet would fill, then goes to
+    /// the second step.
+    Future<void> finishFirstStep(
+      WidgetTester tester,
+      CreateSelfCircleCubit cubit,
+    ) async {
+      cubit.birthDateChanged(DateTime(1964, 3, 12));
+      cubit.cityChanged('الرياض');
+      await tester.pump();
+      await tester.tap(find.text('circles.next'.tr()));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the "+" opens the start page with a back link and no skip',
+        (WidgetTester tester) async {
+      await pumpApp(tester);
+      await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('onboarding.start_title'.tr()), findsOneWidget);
+      expect(find.text('onboarding.skip'.tr()), findsNothing);
+
+      await tester.tap(find.text('common.back'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBottomBar), findsOneWidget);
+    });
+
+    testWidgets('the empty state button opens the same start page',
+        (WidgetTester tester) async {
+      home.response = Success(homeData(circles: <CareCircleSummary>[]));
+      await pumpApp(tester);
+      await tester.tap(find.text('home.create_circle'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('onboarding.start_title'.tr()), findsOneWidget);
+    });
+
+    testWidgets('the first step shows the account name and asks for the rest',
+        (WidgetTester tester) async {
+      await openFirstStep(tester);
+
+      expect(find.text('circles.self_title'.tr()), findsOneWidget);
+      expect(find.text('Reem Alahmadi'), findsOneWidget);
+
+      await tester.tap(find.text('circles.next'.tr()));
+      await tester.pumpAndSettle();
+      // The birth date and the city are missing; the step stays.
+      expect(find.text('circles.field_required'.tr()), findsNWidgets(2));
+      expect(find.text('circles.self_title'.tr()), findsOneWidget);
+    });
+
+    testWidgets('a name of your own asks for the typed name',
+        (WidgetTester tester) async {
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await tester.tap(find.text('circles.preset.other'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('circles.custom_name'.tr()), findsOneWidget);
+
+      cubit.birthDateChanged(DateTime(1964, 3, 12));
+      cubit.cityChanged('الرياض');
+      await tester.pump();
+      await tester.tap(find.text('circles.next'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('circles.field_required'.tr()), findsOneWidget);
+      expect(find.text('circles.self_title'.tr()), findsOneWidget);
+    });
+
+    testWidgets('the city sheet searches, marks a city and confirms it',
+        (WidgetTester tester) async {
+      await openFirstStep(tester);
+      await tester.tap(find.text('circles.city_hint'.tr()));
+      await tester.pumpAndSettle();
+      // The page below shows the same words as a hint, so look inside the sheet.
+      expect(
+        find.descendant(
+          of: find.byType(CitySheet),
+          matching: find.text('circles.city_sheet_title'.tr()),
+        ),
+        findsOneWidget,
+      );
+
+      final Finder confirm = find.widgetWithText(
+        FilledButton,
+        'circles.city_confirm'.tr(),
+      );
+      expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(CitySheet),
+          matching: find.byType(TextField),
+        ),
+        'ابها',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('الرياض'), findsNothing);
+
+      await tester.tap(find.text('أبها'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<FilledButton>(confirm).onPressed, isNotNull);
+
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+      expect(find.byType(CitySheet), findsNothing);
+      expect(find.text('أبها'), findsOneWidget);
+    });
+
+    testWidgets('the birth date sheet writes every number with the digits 0-9',
+        (WidgetTester tester) async {
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await tester.tap(find.text('circles.birth_date_hint'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.byType(BirthDateSheet), findsOneWidget);
+
+      // No Arabic-Indic or Persian digit is shown anywhere in the sheet.
+      final RegExp easternDigits = RegExp('[\u0660-\u0669\u06F0-\u06F9]');
+      final Iterable<Text> shown = tester.widgetList<Text>(
+        find.descendant(
+          of: find.byType(BirthDateSheet),
+          matching: find.byType(Text),
+        ),
+      );
+      expect(shown, isNotEmpty);
+      for (final Text text in shown) {
+        expect(
+          easternDigits.hasMatch(text.data ?? ''),
+          isFalse,
+          reason: 'digits of "${text.data}"',
+        );
+      }
+
+      // The lists open about 40 years back, on the first of January.
+      await tester.tap(find.text('circles.months.3'.tr()));
+      await tester.pump();
+      await tester.tap(find.text('circles.date_confirm'.tr()));
+      await tester.pumpAndSettle();
+
+      final int year = DateTime.now().year - 40;
+      expect(cubit.state.birthDate, DateTime(year, 3, 1));
+      expect(find.text('1 ${'circles.months.3'.tr()} $year'), findsOneWidget);
+    });
+
+    testWidgets('closing the birth date sheet keeps the field empty',
+        (WidgetTester tester) async {
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await tester.tap(find.text('circles.birth_date_hint'.tr()));
+      await tester.pumpAndSettle();
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BirthDateSheet), findsNothing);
+      expect(cubit.state.birthDate, isNull);
+      expect(find.text('circles.birth_date_hint'.tr()), findsOneWidget);
+    });
+
+    testWidgets('an account that already has a circle is told at once',
+        (WidgetTester tester) async {
+      circles.account = const Success(
+        AccountSummary(
+          firstName: 'Reem',
+          lastName: 'Alahmadi',
+          patientCircleId: 'old-circle',
+        ),
+      );
+      await openFirstStep(tester);
+
+      expect(find.text('circles.already_title'.tr()), findsOneWidget);
+      expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
+      // Nothing to fill in: no form and no next button.
+      expect(find.text('circles.birth_date'.tr()), findsNothing);
+      expect(find.text('circles.next'.tr()), findsNothing);
+
+      await tester.tap(find.text('circles.back_home'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBottomBar), findsOneWidget);
+    });
+
+    testWidgets('three steps create the circle and open the home page',
+        (WidgetTester tester) async {
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await finishFirstStep(tester, cubit);
+
+      // Step 2: blood type and a condition.
+      expect(find.text('circles.health_hint'.tr()), findsOneWidget);
+      await tester.tap(find.text('\u200EO+\u200E'));
+      await tester.tap(find.text('medical.condition.diabetes'.tr()));
+      await tester.pump();
+      await tester.tap(find.text('circles.next'.tr()));
+      await tester.pumpAndSettle();
+
+      // Step 3: an allergy, then the circle is created.
+      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
+      await tester.tap(find.text('medical.medication.penicillin'.tr()));
+      await tester.pump();
+      await tester.tap(find.text('circles.create'.tr()));
+      await tester.pumpAndSettle();
+
+      final request = circles.requests.single;
+      expect(request.name, 'circles.preset.care'.tr());
+      expect(request.birthDate, DateTime(1964, 3, 12));
+      expect(request.city, 'الرياض');
+      expect(
+        request.medicalProfile,
+        const MedicalProfileDraft(
+          bloodType: 'O+',
+          conditions: ConditionsDraft.listed(codes: <String>['diabetes']),
+          allergies: AllergiesDraft.listed(
+            medication: <String>['penicillin'],
+          ),
+        ),
+      );
+      expect(find.byType(AppBottomBar), findsOneWidget);
+    });
+
+    testWidgets('skipping the two health steps sends no medical profile',
+        (WidgetTester tester) async {
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await finishFirstStep(tester, cubit);
+
+      await tester.tap(find.text('circles.skip'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
+
+      await tester.tap(find.text('circles.skip'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(circles.requests.single.medicalProfile, isNull);
+      expect(find.byType(AppBottomBar), findsOneWidget);
+    });
+
+    testWidgets('"other" in the health step asks for its text',
+        (WidgetTester tester) async {
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await finishFirstStep(tester, cubit);
+
+      await tester.tap(find.text('medical.condition.other'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('circles.other_hint'.tr()), findsOneWidget);
+
+      await tester.tap(find.text('circles.next'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('circles.field_required'.tr()), findsOneWidget);
+      expect(find.text('circles.health_hint'.tr()), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Gout');
+      await tester.pump();
+      await tester.tap(find.text('circles.next'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
+    });
+
+    testWidgets('a refusal shows its text and keeps the user on the last step',
+        (WidgetTester tester) async {
+      circles.created = const Error(AlreadyHasCircleFailure());
+      final CreateSelfCircleCubit cubit = await openFirstStep(tester);
+      await finishFirstStep(tester, cubit);
+      await tester.tap(find.text('circles.skip'.tr()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('circles.create'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
+      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
+      expect(find.byType(AppBottomBar), findsNothing);
     });
   });
 }

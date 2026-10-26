@@ -45,3 +45,46 @@ def add_manager(engine, owner, circle, target):
     )
     run(engine, "respond_invitation", target.id, invitation.id, True)
     return invitation
+
+
+class Api:
+    """Call the real endpoints as one signed-in account.
+
+    The session is a real persisted session, issued without sending an SMS,
+    like the `signed_in` helper of test_home.py.
+    """
+
+    def __init__(self, app, account):
+        issued = app.extensions["session_service"].create_session(
+            account.id.hex
+        )
+        self.headers = {"Authorization": "Bearer " + issued.access_token}
+        self.client = app.test_client()
+        self.account = account
+
+    def call(self, method, url, body=None):
+        kwargs = {"headers": self.headers}
+        if body is not None:
+            kwargs["json"] = body
+        return getattr(self.client, method)(url, **kwargs)
+
+    def get(self, url):
+        return self.call("get", url)
+
+    def post(self, url, body=None):
+        return self.call("post", url, body)
+
+    def put(self, url, body=None):
+        return self.call("put", url, body)
+
+    def patch(self, url, body=None):
+        return self.call("patch", url, body)
+
+    def delete(self, url, body=None):
+        return self.call("delete", url, body)
+
+
+def error_code(response, status):
+    """Check the status and return the stable error code of the answer."""
+    assert response.status_code == status, response.get_json()
+    return response.get_json()["error"]["code"]
