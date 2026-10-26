@@ -3,6 +3,7 @@ import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_error_body.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/failures/invalid_code_failure.dart';
@@ -48,7 +49,12 @@ class AuthRepositoryData implements AuthRepositoryDomain {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       );
-      return Success(SignInResult(needsProfile: !response.profileComplete));
+      return Success(
+        SignInResult(
+          needsProfile: !response.profileComplete,
+          appMode: response.appMode,
+        ),
+      );
     } catch (error) {
       return Error(_signInFailure(error));
     }
@@ -56,36 +62,40 @@ class AuthRepositoryData implements AuthRepositoryDomain {
 
   @override
   Future<Result<bool, Failure>> signOut() async {
+    Result<bool, Failure> result = const Success(true);
     try {
       await _remote.signOut();
-      return Success(true);
-    } catch (error) {
-      return Error(FailureExceptions.getException(error));
-    } finally {
-      // The user asked to leave this phone, so the tokens are removed even if
-      // the call to the server failed.
-      await _tokens.clear();
+    } on Exception catch (error) {
+      result = Error(FailureExceptions.getException(error));
     }
+    try {
+      await _tokens.clear();
+    } on Exception {
+      return const Error(StorageFailure('auth.sign_out_failed'));
+    }
+    return result;
   }
 
   @override
-  Future<bool> hasSession() async {
+  Future<Result<SignInResult?, Failure>> restoreSession() async {
     try {
       final String? before = await _tokens.readAccessToken();
-      if (before == null || before.isEmpty) return false;
+      if (before == null || before.isEmpty) return const Success(null);
+      final AccountStatusResponse account = await _remote.checkSession();
+      return Success(
+        SignInResult(
+          needsProfile: !account.profileComplete,
+          appMode: account.appMode,
+        ),
+      );
+    } on Exception catch (error) {
       try {
-        await _remote.checkSession();
-      } catch (_) {
-        // The answer is decided below from the tokens, not from the error.
-        // When the server ended the session, the interceptor has removed
-        // them. For any other error (no connection, a timeout, a server
-        // error) they are still there and the user is let in.
+        final String? after = await _tokens.readAccessToken();
+        if (after == null || after.isEmpty) return const Success(null);
+      } on Exception {
+        return const Error(StorageFailure());
       }
-      final String? after = await _tokens.readAccessToken();
-      return after != null && after.isNotEmpty;
-    } catch (_) {
-      // The tokens cannot be read (the secure storage failed): sign in.
-      return false;
+      return Error(FailureExceptions.getException(error));
     }
   }
 

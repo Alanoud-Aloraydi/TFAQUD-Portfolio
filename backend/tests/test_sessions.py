@@ -22,7 +22,11 @@ def test_valid_access_token_reaches_a_protected_endpoint(client, signed_in):
     response = client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token))
 
     assert response.status_code == 200
-    assert response.get_json() == {"account_id": "user-1", "session_id": signed_in.session_id}
+    body = response.get_json()
+    assert body["session_id"] == signed_in.session_id
+    assert body["account_id"] == body["account"]["id"]
+    assert body["account"]["profile_complete"] is False
+    assert body["account"]["app_mode"] is None
 
 
 def test_missing_header_is_rejected(client):
@@ -219,9 +223,10 @@ def test_signing_out_twice_does_not_break_anything(client, signed_in, sessions):
     assert response.status_code == 401
 
 
-def test_sign_out_ends_only_that_session(client, sessions):
-    phone = sessions.create_session("user-1")
-    tablet = sessions.create_session("user-1")
+def test_sign_out_ends_only_that_session(client, sessions, user_store, clock):
+    user, _ = user_store.get_or_create_by_phone("+966501234567", clock.now())
+    phone = sessions.create_session(user.id)
+    tablet = sessions.create_session(user.id)
 
     client.post("/api/v1/auth/sign-out", headers=bearer(phone.access_token))
 

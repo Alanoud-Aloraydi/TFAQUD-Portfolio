@@ -85,9 +85,15 @@ def sessions(app):
 
 
 @pytest.fixture
-def signed_in(sessions):
+def signed_in_account(user_store, clock):
+    """A stored test identity for session and authorization tests."""
+    return user_store.get_or_create_by_phone("+966501234567", clock.now())[0]
+
+
+@pytest.fixture
+def signed_in(sessions, signed_in_account):
     """A user with a fresh session, as if F01 had just verified their OTP."""
-    return sessions.create_session("user-1")
+    return sessions.create_session(signed_in_account.id)
 
 
 def bearer(token: str) -> dict:

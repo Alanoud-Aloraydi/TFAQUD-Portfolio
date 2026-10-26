@@ -1,5 +1,6 @@
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
+import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:injectable/injectable.dart';
 
@@ -18,7 +19,7 @@ abstract class BaseAuthRemoteDataSource {
   Future<void> signOut();
 
   /// Checks the current session; token renewal is handled by the interceptor.
-  Future<void> checkSession();
+  Future<AccountStatusResponse> checkSession();
 }
 
 @LazySingleton(as: BaseAuthRemoteDataSource)
@@ -62,7 +63,9 @@ class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
   }
 
   @override
-  Future<void> checkSession() async {
-    await _client.get(ApiEndpoints.session);
+  Future<AccountStatusResponse> checkSession() async {
+    final response = await _client.get(ApiEndpoints.session);
+    final Object? body = response.data;
+    return AccountStatusResponse.fromJson(body is Map ? body['account'] : null);
   }
 }

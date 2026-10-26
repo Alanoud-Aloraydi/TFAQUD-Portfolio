@@ -1,28 +1,7 @@
-"""Where sign-in code requests are kept.
+"""OTP metadata interface and a thread-safe implementation for unit tests.
 
-Our server, not the SMS provider, counts the wrong tries and limits the codes
-(docs/api-contracts.md, section 8). This store holds what it needs to count.
-
-Two kinds of record:
-
-  OtpRequest  one "verification request". It starts when the app asks for a code
-              and ends when a code is accepted. It counts the wrong tries (the
-              limit is 3 per request) and remembers which phone number it is for.
-              Asking again with the same `verification_id` (a resend) keeps the
-              same request, so a new SMS does not give the user new tries.
-  OtpSend     one SMS that was sent (or is being sent). The limit of 3 codes per
-              phone number per hour is counted from these.
-
-Two of the methods are "claims": `claim_send` and `claim_try`. They check the
-limit and take the place in ONE step. Two requests that arrive at the same time
-cannot both take the last place. With PostgreSQL this is one statement or one
-transaction; here it is a lock.
-
-`OtpStore` is the interface. `InMemoryOtpStore` is the only implementation for
-now. It forgets everything on restart and is not shared between server
-processes, so it is for development and tests only. A PostgreSQL store replaces
-it once the tables from TFQD-7 exist. `tests/test_otp_store.py` is written
-against the interface, so the same tests must pass for the new store.
+Quota reservations include uncertain sends. Only confirmed failures release
+quota. PostgreSQL provides durable storage through PostgresOtpStore.
 """
 
 import threading
@@ -39,6 +18,8 @@ class OtpRequest:
     created_at: datetime
     wrong_tries: int = 0
     verified_at: datetime | None = None
+    status: str = "pending"
+    expires_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -46,20 +27,14 @@ class OtpSend:
     id: str
     request_id: str
     phone: str
-    sent_at: datetime
+    created_at: datetime
+    sent_at: datetime | None = None
+    status: str = "reserved"
 
 
 @dataclass(frozen=True)
 class SendClaim:
-    """The answer of `claim_send`.
-
-    granted=True   the place is taken. `request_id` is the request the SMS belongs
-                   to (new, or the one that was given) and `send_id` is the record
-                   to give back with `release_send` if the SMS cannot be sent.
-    granted=False  the phone number already has the maximum number of sends in
-                   the window. `oldest_send_at` is the oldest send in the window:
-                   the user can ask again when it leaves the window.
-    """
+    """A quota reservation, or the oldest timestamp blocking another send."""
 
     granted: bool
     request_id: str | None = None
@@ -82,38 +57,38 @@ class OtpStore(ABC):
     ) -> SendClaim:
         """Take one place in the phone number's hourly limit, if there is one.
 
-        The sends of `phone` with `sent_at` AFTER `window_start` are counted. A
-        send exactly on `window_start` is already outside the window. If fewer
-        than `max_sends` are counted, a send is recorded with `sent_at=now`.
+        Nonfailed reservations created after `window_start` count toward quota.
+        A reservation exactly on `window_start` is outside the window.
 
         `request_id=None` also creates a new request for `phone` in the same
-        step, so a refused claim leaves nothing behind. A `request_id` that does
-        not exist raises KeyError.
+        step; a refused claim creates nothing. Unknown or closed IDs raise
+        KeyError.
         """
 
     @abstractmethod
     def release_send(self, send_id: str) -> None:
-        """Give back a place from `claim_send` because the SMS was not sent.
+        """Release quota after a confirmed delivery failure; retain history."""
 
-        If this was the only send of its request, the request is removed too.
-        Releasing a send that does not exist does nothing.
-        """
+    @abstractmethod
+    def mark_sent(
+        self, send_id: str, at: datetime, expires_at: datetime
+    ) -> None:
+        """Confirm delivery and update the challenge's OTP expiration."""
 
     @abstractmethod
     def latest_send_at(self, request_id: str) -> datetime | None:
-        """When the last SMS of this request was sent, or None if there is none."""
+        """Return the latest confirmed send time, or None."""
 
     @abstractmethod
     def claim_try(self, request_id: str, max_tries: int) -> bool:
         """Count one try on the request, if fewer than `max_tries` are counted.
 
-        Returns False (and counts nothing) when the request does not exist or has
-        no tries left.
+        Return False without counting when the request is closed or exhausted.
         """
 
     @abstractmethod
     def release_try(self, request_id: str) -> None:
-        """Give back a try from `claim_try`. The count never goes below zero."""
+        """Release an undecided try without making the count negative."""
 
     @abstractmethod
     def mark_verified(self, request_id: str, at: datetime) -> bool:
@@ -144,51 +119,96 @@ class InMemoryOtpStore(OtpStore):
     ) -> SendClaim:
         with self._lock:
             in_window = [
-                s for s in self._sends.values() if s.phone == phone and s.sent_at > window_start
+                s
+                for s in self._sends.values()
+                if s.phone == phone
+                and s.created_at > window_start
+                and s.status != "failed"
             ]
             if len(in_window) >= max_sends:
                 return SendClaim(
-                    granted=False, oldest_send_at=min(s.sent_at for s in in_window)
+                    granted=False,
+                    oldest_send_at=min(s.created_at for s in in_window),
                 )
             if request_id is None:
+                for key, request in self._requests.items():
+                    if request.phone == phone and request.status == "pending":
+                        self._requests[key] = replace(
+                            request, status="superseded"
+                        )
                 request_id = uuid.uuid4().hex
                 self._requests[request_id] = OtpRequest(
                     id=request_id, phone=phone, created_at=now
                 )
-            elif request_id not in self._requests:
-                raise KeyError(request_id)
+            else:
+                request = self._requests.get(request_id)
+                if (
+                    request is None
+                    or request.phone != phone
+                    or request.status != "pending"
+                ):
+                    raise KeyError(request_id)
             send = OtpSend(
-                id=uuid.uuid4().hex, request_id=request_id, phone=phone, sent_at=now
+                id=uuid.uuid4().hex,
+                request_id=request_id,
+                phone=phone,
+                created_at=now,
             )
             self._sends[send.id] = send
-            return SendClaim(granted=True, request_id=request_id, send_id=send.id)
+            return SendClaim(
+                granted=True, request_id=request_id, send_id=send.id
+            )
 
     def release_send(self, send_id: str) -> None:
         with self._lock:
-            send = self._sends.pop(send_id, None)
-            if send is None:
+            send = self._sends.get(send_id)
+            if send is not None and send.status == "reserved":
+                self._sends[send_id] = replace(send, status="failed")
+
+    def mark_sent(self, send_id, at, expires_at):
+        with self._lock:
+            send = self._sends.get(send_id)
+            if send is None or send.status != "reserved":
                 return
-            still_has_sends = any(s.request_id == send.request_id for s in self._sends.values())
-            if not still_has_sends:
-                self._requests.pop(send.request_id, None)
+            self._sends[send_id] = replace(send, status="sent", sent_at=at)
+            request = self._requests[send.request_id]
+            if request.status == "pending":
+                expiration = max(request.expires_at or expires_at, expires_at)
+                self._requests[request.id] = replace(
+                    request, expires_at=expiration
+                )
 
     def latest_send_at(self, request_id: str) -> datetime | None:
         with self._lock:
-            times = [s.sent_at for s in self._sends.values() if s.request_id == request_id]
+            times = [
+                s.sent_at
+                for s in self._sends.values()
+                if s.request_id == request_id and s.status == "sent"
+            ]
             return max(times) if times else None
 
     def claim_try(self, request_id: str, max_tries: int) -> bool:
         with self._lock:
             request = self._requests.get(request_id)
-            if request is None or request.wrong_tries >= max_tries:
+            if (
+                request is None
+                or request.status != "pending"
+                or request.wrong_tries >= max_tries
+            ):
                 return False
-            self._requests[request_id] = replace(request, wrong_tries=request.wrong_tries + 1)
+            self._requests[request_id] = replace(
+                request, wrong_tries=request.wrong_tries + 1
+            )
             return True
 
     def release_try(self, request_id: str) -> None:
         with self._lock:
             request = self._requests.get(request_id)
-            if request is not None and request.wrong_tries > 0:
+            if (
+                request is not None
+                and request.status == "pending"
+                and request.wrong_tries > 0
+            ):
                 self._requests[request_id] = replace(
                     request, wrong_tries=request.wrong_tries - 1
                 )
@@ -196,7 +216,9 @@ class InMemoryOtpStore(OtpStore):
     def mark_verified(self, request_id: str, at: datetime) -> bool:
         with self._lock:
             request = self._requests.get(request_id)
-            if request is None or request.verified_at is not None:
+            if request is None or request.status != "pending":
                 return False
-            self._requests[request_id] = replace(request, verified_at=at)
+            self._requests[request_id] = replace(
+                request, status="verified", verified_at=at
+            )
             return True

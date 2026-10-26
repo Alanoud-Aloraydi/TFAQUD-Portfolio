@@ -81,20 +81,35 @@ class SessionService:
 
     def authenticate(self, access_token: str) -> AccessClaims:
         """Return who is calling, or raise Unauthorized."""
-        claims = decode_access_token(self._secret, access_token, self._clock.now())
+        claims = decode_access_token(
+            self._secret, access_token, self._clock.now()
+        )
         record = self._store.get(claims.session_id)
         # The signature alone is not enough: the session must still exist and
         # must not have been signed out.
-        if record is None or record.is_revoked:
-            raise Unauthorized("The session has ended. Sign in again.", code="session_revoked")
+        if (
+            record is None
+            or record.is_revoked
+            or record.user_id != claims.user_id
+            or self._clock.now() >= record.refresh_expires_at
+        ):
+            raise Unauthorized(
+                "The session has ended. Sign in again.", code="session_revoked"
+            )
         return claims
 
     def refresh(self, refresh_token: str) -> IssuedAccessToken:
         now = self._clock.now()
-        record = self._store.get_by_refresh_hash(hash_refresh_token(refresh_token))
+        record = self._store.get_by_refresh_hash(
+            hash_refresh_token(refresh_token)
+        )
         # One answer for every failure (unknown, revoked, expired): the app can
         # only do one thing in all three cases, which is to sign in again.
-        if record is None or record.is_revoked or now >= record.refresh_expires_at:
+        if (
+            record is None
+            or record.is_revoked
+            or now >= record.refresh_expires_at
+        ):
             raise Unauthorized(
                 "The refresh token is not valid. Sign in again.",
                 code="invalid_refresh_token",
@@ -104,7 +119,13 @@ class SessionService:
     def sign_out(self, session_id: str) -> None:
         self._store.revoke(session_id, self._clock.now())
 
-    def _issue_access_token(self, user_id: str, session_id: str, now: datetime) -> IssuedAccessToken:
+    def _issue_access_token(
+        self, user_id: str, session_id: str, now: datetime
+    ) -> IssuedAccessToken:
         expires_at = now + self._access_ttl
-        token = encode_access_token(self._secret, user_id, session_id, now, expires_at)
-        return IssuedAccessToken(access_token=token, access_token_expires_at=expires_at)
+        token = encode_access_token(
+            self._secret, user_id, session_id, now, expires_at
+        )
+        return IssuedAccessToken(
+            access_token=token, access_token_expires_at=expires_at
+        )

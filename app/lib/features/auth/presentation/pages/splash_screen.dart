@@ -1,6 +1,7 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,18 +14,36 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SplashCubit, StartDestination>(
+    return BlocConsumer<SplashCubit, StartDestination>(
       listener: (context, destination) {
         switch (destination) {
           case StartDestination.home:
             context.go(Routes.today);
           case StartDestination.signIn:
             context.go(Routes.auth);
+          case StartDestination.onboarding:
+            context.go(Routes.onboarding);
           case StartDestination.checking:
+          case StartDestination.unavailable:
             break;
         }
       },
-      child: const Scaffold(body: LoadingWidget()),
+      builder: (context, destination) => Scaffold(
+        body: destination == StartDestination.unavailable
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(context.tr('auth.session_check_failed')),
+                    FilledButton(
+                      onPressed: context.read<SplashCubit>().decide,
+                      child: Text(context.tr('auth.retry')),
+                    ),
+                  ],
+                ),
+              )
+            : const LoadingWidget(),
+      ),
     );
   }
 }

@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from app.database import db
+from app.database import db, transaction
 from app.errors import ServiceUnavailable
 from app.models import Account
 from app.users.store import User, UserStore
@@ -23,6 +23,7 @@ def as_user(account: Account) -> User:
         first_name=account.first_name,
         last_name=account.last_name,
         display_name=account.display_name,
+        app_mode=account.app_mode,
     )
 
 
@@ -33,7 +34,7 @@ class PostgresUserStore(UserStore):
         self, phone: str, now: datetime
     ) -> tuple[User, bool]:
         """Use database uniqueness, including concurrent first sign-ins."""
-        with db.session.begin():
+        with transaction():
             for _ in range(_CREATION_ATTEMPTS):
                 account = db.session.scalar(
                     insert(Account)
@@ -60,7 +61,7 @@ class PostgresUserStore(UserStore):
             account_id = UUID(user_id)
         except (ValueError, TypeError, AttributeError):
             return None
-        with db.session.begin():
+        with transaction():
             account = db.session.get(Account, account_id)
             return as_user(account) if account else None
 
@@ -72,7 +73,7 @@ class PostgresUserStore(UserStore):
             account_id = UUID(user_id)
         except (ValueError, TypeError, AttributeError):
             return None
-        with db.session.begin():
+        with transaction():
             account = db.session.get(Account, account_id, with_for_update=True)
             if account is None:
                 return None

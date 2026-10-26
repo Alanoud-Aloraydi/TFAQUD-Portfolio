@@ -74,9 +74,9 @@ def provider_calls(sms, monkeypatch):
     return calls
 
 
-def provider_is_down(sms, monkeypatch, *, send=False, check=False):
+def provider_is_down(sms, monkeypatch, *, send=False, check=False, status=503):
     def down(*args, **kwargs):
-        raise SmsDeliveryError("provider is down", status=503)
+        raise SmsDeliveryError("provider rejected the operation", status=status)
 
     if send:
         monkeypatch.setattr(sms, "send_code", down)
@@ -306,9 +306,9 @@ def test_a_provider_failure_gives_503(client, sms, monkeypatch):
     error_of(response, 503, "sms_unavailable")
 
 
-def test_a_failed_send_does_not_count_toward_the_hourly_limit(client, sms, monkeypatch):
+def test_a_rejected_send_does_not_count_toward_the_hourly_limit(client, sms, monkeypatch):
     with monkeypatch.context() as down:
-        provider_is_down(sms, down, send=True)
+        provider_is_down(sms, down, send=True, status=422)
         for _ in range(5):
             error_of(request_code(client), 503, "sms_unavailable")
 
@@ -318,14 +318,16 @@ def test_a_failed_send_does_not_count_toward_the_hourly_limit(client, sms, monke
     error_of(request_code(client), 429, "too_many_codes")
 
 
-def test_a_failed_first_send_leaves_no_request_behind(
+def test_a_rejected_first_send_retains_history_without_otp_expiration(
     client, sms, monkeypatch, otp_store
 ):
-    provider_is_down(sms, monkeypatch, send=True)
+    provider_is_down(sms, monkeypatch, send=True, status=422)
     request_code(client)
 
-    # Nothing was kept: the next send (when the provider is back) is the first.
-    assert otp_store._requests == {} and otp_store._sends == {}
+    request = next(iter(otp_store._requests.values()))
+    send = next(iter(otp_store._sends.values()))
+    assert request.expires_at is None
+    assert send.status == "failed"
 
 
 def test_a_failed_resend_keeps_the_request_so_the_user_can_try_again(

@@ -19,6 +19,7 @@ class User:
     first_name: str | None = None
     last_name: str | None = None
     display_name: str | None = None
+    app_mode: str | None = None
 
     @property
     def profile_complete(self) -> bool:
@@ -33,6 +34,7 @@ class User:
             "last_name": self.last_name,
             "display_name": self.display_name,
             "profile_complete": self.profile_complete,
+            "app_mode": self.app_mode,
         }
 
 

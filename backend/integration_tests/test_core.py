@@ -17,8 +17,8 @@ from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run
 
 
-def test_migrations_create_only_the_six_entities(database):
-    """Alembic's version table is operational metadata, not a care entity."""
+def test_migrations_create_care_and_authentication_tables(database):
+    """Authentication tables are separate from the six core care entities."""
     assert set(inspect(database).get_table_names()) == {
         "account",
         "care_circle",
@@ -27,6 +27,9 @@ def test_migrations_create_only_the_six_entities(database):
         "care_circle_creation_request",
         "care_circle_manager_invitation",
         "alembic_version",
+        "account_session",
+        "otp_challenge",
+        "otp_send_attempt",
     }
 
 

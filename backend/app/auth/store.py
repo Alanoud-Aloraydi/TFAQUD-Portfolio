@@ -5,10 +5,8 @@ user signs out (or after the refresh token's lifetime). The server keeps one
 record per session; this is what makes sign-out real: the record is marked
 revoked, and every later request that depends on it is refused.
 
-`SessionStore` is the interface. `InMemorySessionStore` is the only
-implementation for now. It is correct, but it forgets everything on restart and
-is not shared between server processes, so it is for development and tests
-only. A PostgreSQL store replaces it once the schema from TFQD-7 exists.
+`SessionStore` is the interface. PostgresSessionStore persists sessions across
+workers and restarts. InMemorySessionStore is reserved for isolated tests.
 
 The refresh token itself is never stored, only its SHA-256 hash. If the table
 leaked, the hashes could not be used to refresh a session.

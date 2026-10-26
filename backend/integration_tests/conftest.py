@@ -50,11 +50,11 @@ def database_app():
 
 @pytest.fixture
 def database(database_app):
-    """Clear only the six core tables in the dedicated test database."""
+    """Clear application tables only in the dedicated test database."""
     with db.engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE account, care_circle, patient, care_circle_manager, "
+                "TRUNCATE otp_challenge, account, care_circle, patient, care_circle_manager, "
                 "care_circle_creation_request, care_circle_manager_invitation "
                 "CASCADE"
             )

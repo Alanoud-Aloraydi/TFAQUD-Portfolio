@@ -1,5 +1,7 @@
 """Database initialization shared by models, migrations, and adapters."""
 
+from contextlib import contextmanager
+
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
@@ -25,6 +27,17 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 migrate = Migrate(compare_type=True)
+
+
+@contextmanager
+def transaction():
+    """Join the caller's transaction, or own one store operation."""
+    session = db.session()
+    if session.in_transaction():
+        yield session
+    else:
+        with session.begin():
+            yield session
 
 
 def initialize_database(app) -> bool:

@@ -71,7 +71,8 @@ class _OfflineAuthRepository implements AuthRepositoryDomain {
   Future<Result<bool, Failure>> signOut() async => Success(true);
 
   @override
-  Future<bool> hasSession() async => true;
+  Future<Result<SignInResult?, Failure>> restoreSession() async =>
+      const Success(SignInResult(needsProfile: false));
 }
 
 Future<void> pumpApp(WidgetTester tester) async {

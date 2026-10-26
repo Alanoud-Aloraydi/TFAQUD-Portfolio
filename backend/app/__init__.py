@@ -6,6 +6,7 @@ Tests call `create_app` with fakes instead of the defaults.
 """
 
 import logging
+from contextlib import nullcontext
 from datetime import timedelta
 
 from flask import Flask
@@ -18,7 +19,7 @@ from app.auth.store import InMemorySessionStore, SessionStore
 from app.authz import CircleAccess, DenyAllCircleAccess
 from app.clock import SystemClock
 from app.config import ConfigError, load_config
-from app.database import initialize_database
+from app.database import initialize_database, transaction
 from app.cors import register_development_cors
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
@@ -53,17 +54,26 @@ def create_app(
     sms_sender = sms_sender or create_sms_sender(app.config, clock)
     database_enabled = initialize_database(app)
 
-    # In-memory authentication stores are restricted to non-production use.
     if session_store is None:
-        _refuse_in_production(env, "session")
-        _warn_in_staging(app, env, "session", "sessions")
-        session_store = InMemorySessionStore()
+        if database_enabled:
+            from app.auth.postgres_sessions import PostgresSessionStore
+
+            session_store = PostgresSessionStore()
+        else:
+            _refuse_in_production(env, "session")
+            _warn_in_staging(app, env, "session", "sessions")
+            session_store = InMemorySessionStore()
     if otp_store is None:
-        _refuse_in_production(env, "sign-in code")
-        _warn_in_staging(
-            app, env, "sign-in code", "code requests and their counters"
-        )
-        otp_store = InMemoryOtpStore()
+        if database_enabled:
+            from app.auth.postgres_otp import PostgresOtpStore
+
+            otp_store = PostgresOtpStore()
+        else:
+            _refuse_in_production(env, "sign-in code")
+            _warn_in_staging(
+                app, env, "sign-in code", "code requests and their counters"
+            )
+            otp_store = InMemoryOtpStore()
     if user_store is None:
         if database_enabled:
             from app.users.postgres import PostgresUserStore
@@ -100,6 +110,7 @@ def create_app(
         otp_valid_seconds=app.config["OTP_VALID_SECONDS"],
         max_wrong_tries=app.config["OTP_MAX_WRONG_TRIES"],
         max_sends_per_hour=app.config["OTP_MAX_SENDS_PER_HOUR"],
+        transaction=transaction if database_enabled else nullcontext,
     )
 
     register_request_id(app)
