@@ -18,4 +18,5 @@ class Routes {
   // Account setup after the first sign-in: name, how to start.
   static const String onboarding = '/onboarding';
   static const String onboardingStart = '/onboarding/start';
+  static const String home = '/home';
 }

@@ -8,15 +8,22 @@ import 'package:go_router/go_router.dart';
 /// Shell shown on every tab: top bar, the current tab, bottom bar, and the
 /// docked add button.
 class AppShell extends StatelessWidget {
-  const AppShell({super.key, required this.navigationShell});
+  const AppShell({
+    super.key,
+    required this.navigationShell,
+    this.topBar,
+    this.body,
+  });
 
   final StatefulNavigationShell navigationShell;
+  final PreferredSizeWidget? topBar;
+  final Widget? body;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppTopBar(),
-      body: navigationShell,
+      appBar: topBar ?? const AppTopBar(),
+      body: body ?? navigationShell,
       floatingActionButton: FloatingActionButton(
         tooltip: context.tr('tab.add'),
         onPressed: () => showAddSheet(context),
