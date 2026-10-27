@@ -48,6 +48,19 @@ class FailureExceptions {
       ApiErrorCodes.validationError ||
       ApiErrorCodes.badRequest ||
       ApiErrorCodes.invalidJson => const ValidationFailure(),
+      ApiErrorCodes.medicationPeriodConflict => const ConflictFailure(
+        'medications.period_conflict',
+      ),
+      ApiErrorCodes.medicationVersionConflict => const ConflictFailure(
+        'medications.version_conflict',
+      ),
+      ApiErrorCodes.medicationDiscontinued => const ConflictFailure(
+        'medications.already_discontinued',
+      ),
+      ApiErrorCodes.doseRecordConflict => const ConflictFailure(
+        'medications.dose_record_conflict',
+      ),
+      ApiErrorCodes.dataConflict => const ConflictFailure(),
       ApiErrorCodes.internalError => const ServerFailure(),
       _ => _handleStatusCode(response?.statusCode),
     };
@@ -56,6 +69,7 @@ class FailureExceptions {
   static Failure _handleStatusCode(int? code) {
     return switch (code) {
       400 || 422 => const ValidationFailure(),
+      409 => const ConflictFailure(),
       401 => const UnauthorizedFailure(),
       403 => const ForbiddenFailure(),
       404 => const NotFoundFailure(),

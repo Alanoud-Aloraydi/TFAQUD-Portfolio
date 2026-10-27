@@ -1,6 +1,4 @@
-import 'package:app/features/shell/widgets/add_sheet.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
-import 'package:app/features/shell/widgets/app_top_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,22 +9,24 @@ class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
     required this.navigationShell,
-    this.topBar,
+    required this.topBar,
+    required this.onAdd,
     this.body,
   });
 
   final StatefulNavigationShell navigationShell;
-  final PreferredSizeWidget? topBar;
+  final PreferredSizeWidget topBar;
+  final VoidCallback? onAdd;
   final Widget? body;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: topBar ?? const AppTopBar(),
+      appBar: topBar,
       body: body ?? navigationShell,
       floatingActionButton: FloatingActionButton(
         tooltip: context.tr('tab.add'),
-        onPressed: () => showAddSheet(context),
+        onPressed: onAdd,
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

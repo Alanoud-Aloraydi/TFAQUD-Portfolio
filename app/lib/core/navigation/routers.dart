@@ -19,4 +19,18 @@ class Routes {
   static const String onboarding = '/onboarding';
   static const String onboardingStart = '/onboarding/start';
   static const String home = '/home';
+  static const String medicationNewPath = '/circles/:circleId/medications/new';
+  static const String medicationDetailsPath =
+      '/circles/:circleId/medications/:planId';
+  static const String medicationEditPath =
+      '/circles/:circleId/medications/:planId/edit';
+
+  static String newMedication(String circleId) =>
+      '/circles/$circleId/medications/new';
+
+  static String medicationDetails(String circleId, String planId) =>
+      '/circles/$circleId/medications/$planId';
+
+  static String editMedication(String circleId, String planId) =>
+      '/circles/$circleId/medications/$planId/edit';
 }

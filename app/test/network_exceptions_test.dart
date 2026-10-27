@@ -23,8 +23,10 @@ Map<String, Object> _body(String code) => <String, Object>{
   'error': <String, Object>{'code': code, 'message': 'test'},
 };
 
-DioException _of(DioExceptionType type) =>
-    DioException(requestOptions: RequestOptions(path: '/x'), type: type);
+DioException _of(DioExceptionType type) => DioException(
+  requestOptions: RequestOptions(path: '/x'),
+  type: type,
+);
 
 void main() {
   group('FailureExceptions API codes', () {
@@ -39,6 +41,22 @@ void main() {
       ('validation_error', 422, const ValidationFailure()),
       ('bad_request', 400, const ValidationFailure()),
       ('invalid_json', 400, const ValidationFailure()),
+      (
+        'medication_period_conflict',
+        409,
+        const ConflictFailure('medications.period_conflict'),
+      ),
+      (
+        'medication_version_conflict',
+        409,
+        const ConflictFailure('medications.version_conflict'),
+      ),
+      (
+        'dose_record_conflict',
+        409,
+        const ConflictFailure('medications.dose_record_conflict'),
+      ),
+      ('data_conflict', 409, const ConflictFailure()),
       ('internal_error', 500, const ServerFailure()),
     ];
 
@@ -59,6 +77,7 @@ void main() {
       401: const UnauthorizedFailure(),
       403: const ForbiddenFailure(),
       404: const NotFoundFailure(),
+      409: const ConflictFailure(),
       500: const ServerFailure(),
       502: const ServerFailure(),
       418: const UnknownFailure(),
@@ -78,7 +97,10 @@ void main() {
         DioExceptionType.sendTimeout,
         DioExceptionType.receiveTimeout,
       ]) {
-        expect(FailureExceptions.getException(_of(type)), const TimeoutFailure());
+        expect(
+          FailureExceptions.getException(_of(type)),
+          const TimeoutFailure(),
+        );
       }
       expect(
         FailureExceptions.getException(TimeoutException('t')),
@@ -99,11 +121,15 @@ void main() {
 
     test('socket errors', () {
       expect(
-        FailureExceptions.getException(const SocketException('Failed host lookup')),
+        FailureExceptions.getException(
+          const SocketException('Failed host lookup'),
+        ),
         const NetworkFailure(),
       );
       expect(
-        FailureExceptions.getException(const SocketException('Connection refused')),
+        FailureExceptions.getException(
+          const SocketException('Connection refused'),
+        ),
         const ServerFailure(),
       );
     });

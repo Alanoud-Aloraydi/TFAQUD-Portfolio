@@ -43,6 +43,11 @@ def test_migrations_create_care_and_authentication_tables(database):
         "account_session",
         "otp_challenge",
         "otp_send_attempt",
+        "medication_plan",
+        "medication_plan_version",
+        "medication_schedule",
+        "medication_schedule_day",
+        "medication_dose_record",
     }
 
 

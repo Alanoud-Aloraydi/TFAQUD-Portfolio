@@ -24,6 +24,7 @@ from app.cors import register_development_cors
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.home import bp as home_bp
+from app.medications.routes import bp as medications_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
 from app.users.routes import bp as users_bp
@@ -122,6 +123,7 @@ def create_app(
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(home_bp)
+    app.register_blueprint(medications_bp)
 
     return app
 

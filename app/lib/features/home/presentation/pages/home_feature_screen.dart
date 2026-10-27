@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
+import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:app/features/shell/widgets/app_top_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -21,6 +27,8 @@ class HomeFeatureScreen extends StatefulWidget {
 
 class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     with WidgetsBindingObserver {
+  String? _loadedCircleId;
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +43,11 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) context.read<HomeCubit>().load();
+    if (state != AppLifecycleState.resumed) return;
+    final home = context.read<HomeCubit>();
+    unawaited(home.load());
+    final circleId = home.state.selectedCircleId;
+    if (circleId != null) _loadClinicalData(circleId);
   }
 
   void _onState(BuildContext context, HomeState state) {
@@ -47,6 +59,20 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey!))));
     }
+    if (state.status == HomeStatus.ready &&
+        state.selectedCircleId != null &&
+        state.selectedCircleId != _loadedCircleId) {
+      _loadedCircleId = state.selectedCircleId;
+      _loadClinicalData(state.selectedCircleId!);
+    }
+  }
+
+  void _loadClinicalData(String circleId) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    unawaited(context.read<MedicationsCubit>().load(circleId));
+    unawaited(
+      context.read<MedicationOccurrencesCubit>().load(circleId, today, today),
+    );
   }
 
   @override
@@ -60,6 +86,15 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
           displayName: state.data?.displayName,
           circles: HomeWidget(state: state, onSelected: cubit.selectCircle),
         ),
+        onAdd: state.selectedCircleId == null
+            ? null
+            : () => showHomeAddSheet(
+                context,
+                circleId: state.selectedCircleId!,
+                onMedicationSaved: () {
+                  if (mounted) _loadClinicalData(state.selectedCircleId!);
+                },
+              ),
         body: _body(state, cubit),
       ),
     );
@@ -70,12 +105,12 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     if (state.status == HomeStatus.failure) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(context.tr(state.messageKey!), textAlign: TextAlign.center),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -89,7 +124,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     if (state.data!.circles.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Text(
             context.tr('home.no_circles'),
             textAlign: TextAlign.center,
