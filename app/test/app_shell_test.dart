@@ -226,7 +226,7 @@ void main() {
     ) async {
       await pumpApp(tester);
 
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(find.byTooltip('tab.add'.tr()));
       await tester.pumpAndSettle();
 
       expect(find.text('add.title'.tr()), findsOneWidget);
