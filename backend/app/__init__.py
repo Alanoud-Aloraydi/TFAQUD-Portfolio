@@ -17,6 +17,9 @@ from app.auth.service import SessionService
 from app.auth.sign_in import SignInService
 from app.auth.store import InMemorySessionStore, SessionStore
 from app.authz import CircleAccess, DenyAllCircleAccess
+from app.circles.creation_requests import bp as creation_requests_bp
+from app.circles.invitations import bp as invitations_bp
+from app.circles.routes import bp as circles_bp
 from app.clock import SystemClock
 from app.config import ConfigError, load_config
 from app.database import initialize_database, transaction
@@ -122,6 +125,9 @@ def create_app(
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(home_bp)
+    app.register_blueprint(circles_bp)
+    app.register_blueprint(creation_requests_bp)
+    app.register_blueprint(invitations_bp)
 
     return app
 

@@ -47,6 +47,8 @@ class PhoneField extends StatelessWidget {
     required this.controller,
     required this.onChanged,
     this.showError = false,
+    this.label,
+    this.autofocus = true,
   });
 
   final TextEditingController controller;
@@ -57,6 +59,12 @@ class PhoneField extends StatelessWidget {
   /// Shows the hint in the error style (red border and an error line).
   final bool showError;
 
+  /// The text above the field. Null shows "رقم الجوال", the label of the
+  /// sign-in page; the page for a patient's number gives its own.
+  final String? label;
+
+  final bool autofocus;
+
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
@@ -65,7 +73,7 @@ class PhoneField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          context.tr('auth.phone_label'),
+          label ?? context.tr('auth.phone_label'),
           style: text.titleSmall?.copyWith(color: AppColors.ink2),
         ),
         const SizedBox(height: 8),
@@ -76,7 +84,7 @@ class PhoneField extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 onChanged: onChanged,
-                autofocus: true,
+                autofocus: autofocus,
                 keyboardType: TextInputType.phone,
                 textDirection: TextDirection.ltr,
                 textAlign: TextAlign.left,

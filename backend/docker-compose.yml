@@ -14,7 +14,11 @@ services:
     volumes:
       # Source changes trigger the development server's reloader.
       - .:/app
-    command: flask --app wsgi run --host 0.0.0.0 --port 5000 --reload
+    # Create or update the tables first, then start the server. A new database
+    # is empty, and the API cannot sign anyone in without its tables.
+    command: >
+      sh -c "flask --app wsgi db upgrade &&
+      flask --app wsgi run --host 0.0.0.0 --port 5000 --reload"
     depends_on:
       db:
         condition: service_healthy

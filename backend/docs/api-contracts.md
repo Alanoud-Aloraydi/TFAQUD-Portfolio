@@ -4,7 +4,9 @@ Status: draft. The points marked **Decided** were decided by the project lead
 on 18 October 2026. The team reviews them in the pull request.
 
 This document fixes the rules that every endpoint follows, the endpoints that
-exist today, and the authorization rules. Every example below was produced by
+exist today, and the authorization rules. Section 5 was brought up to date on
+26 October 2026 with the real names of the account, the circle endpoints and the
+database. Every example below was produced by
 running the real code. The tests named in the tables check the rules.
 
 Each statement carries one of these labels:
@@ -63,7 +65,7 @@ Every error has this shape and nothing else:
 | 401 | `session_revoked` | The session was ended by sign-out, or does not exist. | Sign in again. | Built |
 | 401 | `invalid_refresh_token` | The refresh token is unknown, expired, or its session was ended. | Sign in again. | Built |
 | 403 | `forbidden` | The caller has no access to this circle (see section 6). | Show "no access". | Built |
-| 404 | `not_found` | The URL does not exist. | Fix the request. | Built |
+| 404 | `not_found` | The URL does not exist, or an id in it (a circle request, an invitation, an emergency contact) is unknown or belongs to someone else. The two cases look the same on purpose. | Fix the request, or refresh the list. | Built |
 | 404 | `verification_not_found` | The `verification_id` is unknown, belongs to another phone number, or its request is finished. | Start again: ask for a new code without the id. | Built |
 | 404 | `user_not_found` | The access token is valid but its user does not exist. | Sign in again. | Built |
 | 405 | `method_not_allowed` | Wrong HTTP method for this URL. | Fix the request. | Built |
@@ -73,10 +75,45 @@ Every error has this shape and nothing else:
 | 422 | `code_already_used` | The request is finished: its code was accepted before. | Start again. | Built |
 | 429 | `too_many_attempts` | The request used its 3 wrong tries. | Tell the user; start a new request. | Built |
 | 429 | `too_many_codes` | 3 codes were already sent to this phone number in the last hour. Carries `retry_after_seconds`. | Show how long to wait. | Built |
+| 409 | `data_conflict` | The database refused a write that broke one of its rules, for example two requests at the same time. | Reload the data and try once more. | Built |
 | 500 | `internal_error` | An unexpected error on the server. | Show a general error. Keep the `request_id`. | Built |
 | 503 | `sms_unavailable` | The SMS provider could not send or check the code. Nothing was counted. | Show "try again". | Built |
+| 503 | `database_unavailable` | The server cannot reach PostgreSQL. | Show "try again". | Built |
+| 503 | `database_not_migrated` | PostgreSQL is reachable but its tables are missing or old. Only `GET /api/v1/health` returns it (section 5). | A problem of the server setup, not of the app. | Built |
+| 503 | `service_unavailable` | The endpoint needs the database and none is configured (a server started without `DATABASE_URL` or `DATABASE_HOST`). | A problem of the server setup. | Built |
 
 Every 401 also carries the header `WWW-Authenticate: Bearer`.
+
+**Codes of the care endpoints (Built).** All are 422. The `message` of each is
+English and for developers; the app shows its own Arabic text for the `code`.
+
+| `code` | When |
+|---|---|
+| `profile_incomplete` | The account has no names yet. Save the profile first. |
+| `already_has_circle` | The person is already the patient of a circle. |
+| `mode_conflict` | The account already has the other mode. The mode is chosen once. |
+| `invalid_mode` | The proposed mode is not `detailed` or `simplified`. |
+| `invalid_circle_name`, `invalid_city`, `invalid_birth_date` | A blank name or city, or a birth date in the future. |
+| `patient_name_required` | A patient without an account needs both names. |
+| `linked_patient_name` | A patient with an account has no names of their own; they come from the account. |
+| `self_request` | A circle request to your own number. |
+| `accepted_request_exists` | The patient accepted another request that is not finished. |
+| `request_not_pending` | The request was already answered the other way, or is finished. |
+| `request_not_cancelable` | Only a pending or accepted request can be canceled. |
+| `consent_required` | The patient has not accepted this request, so the circle cannot be created. |
+| `self_invitation`, `already_manager` | An invitation to yourself, or to a number that already manages the circle. |
+| `invitation_not_pending`, `invitation_not_cancelable` | The invitation is already answered or canceled. |
+| `confirmation_required` | Leaving as the last manager, or deleting the circle, needs the explicit confirmation. |
+| `last_manager` | Deleting the account would leave a circle without a manager. |
+| `patient_choice_required` | A patient who deletes the account must choose `delete` or `continue`. |
+| `empty_selection`, `duplicate_choice`, `unknown_choice` | A medical list is empty, repeats an item, or has an item that is not in the official list. |
+| `none_is_exclusive` | "No conditions" or "no allergies" was sent together with other items. |
+| `other_text_required`, `other_text_unexpected` | The item `other` needs the typed text, and the text needs `other`. |
+| `too_many_contacts`, `duplicate_contact` | More than 5 emergency contacts, or the same number twice. |
+| `invalid_name` | The name of an emergency contact is blank or longer than 50 characters. |
+
+Errors of the medical lists carry `details` with the `field` to highlight, for
+example `conditions` or `allergies.other_food`.
 
 Tests: `tests/test_errors.py`, `tests/test_validation.py`, `tests/test_sign_in.py`.
 
@@ -149,12 +186,20 @@ Tests: `tests/test_sessions.py`.
 
 ### GET /api/v1/health
 
-No sign-in. Answers 200 while the server process runs. It does not check the
-database yet.
+No sign-in. Answers 200 when the server runs, the database answers, and the
+database is at the newest migration.
 
 ```json
 { "status": "ok" }
 ```
+
+If PostgreSQL answers but its tables are missing or old (for example a new, empty
+database), it answers 503 `database_not_migrated`. This is how a new database is
+noticed at once, and not later as a 500 on the first sign-in. The fix is
+`flask --app wsgi db upgrade`; the Docker setup runs it every time the API starts
+(see the README). If PostgreSQL does not answer, the answer is 503
+`database_unavailable`. A server with no database configured (the unit tests) only
+checks itself.
 
 ### POST /api/v1/auth/refresh
 
@@ -187,26 +232,41 @@ Needs a valid access token. No body. Ends the session of that token.
 Needs a valid access token. Tells the app who the token belongs to.
 
 ```json
-{ "session_id": "23aa61a5d241485ca8b823c04b99c712", "user_id": "user-42" }
+{
+  "session_id": "6a96d52137e544f3aa232f26c5967ad0",
+  "account_id": "efa008d6ed3341b093acb4c552eee7a5",
+  "account": {
+    "id": "efa008d6ed3341b093acb4c552eee7a5",
+    "phone_number": "+966504444441",
+    "first_name": null,
+    "last_name": null,
+    "display_name": null,
+    "profile_complete": false,
+    "app_mode": null
+  }
+}
 ```
+
+The app calls this when it starts, to learn whether the stored token is still
+valid and whether the profile page is needed.
 
 ### POST /api/v1/auth/request-code
 
 Feature F01 (TFQD-13, TFQD-35). No access token. Sends a sign-in code by SMS and
-answers with a `verification_id`. The names of the three sign-in endpoints and of
-their fields are a proposal (**To confirm**) until the app has used them.
+answers with a `verification_id`. The Flutter app calls these endpoints. The
+team has not reviewed their names yet (**To confirm**, section 10, point A).
 
 Body:
 
 ```json
-{ "phone": "+966501234567" }
+{ "phone_number": "+966501234567" }
 ```
 
 To send the code again inside the same request (a resend), add the id from the
 first answer:
 
 ```json
-{ "phone": "+966501234567", "verification_id": "10648d8694f64637be154c66408900ba" }
+{ "phone_number": "+966501234567", "verification_id": "10648d8694f64637be154c66408900ba" }
 ```
 
 200:
@@ -231,8 +291,8 @@ Errors: 400 `invalid_json`, 404 `verification_not_found`, 422 `validation_error`
 Real answers:
 
 ```
-POST /api/v1/auth/request-code   {"phone": "0501234567"}
--> 422  validation_error, details: [{"field": "phone", "code": "invalid_phone", ...}]
+POST /api/v1/auth/request-code   {"phone_number": "0501234567"}
+-> 422  validation_error, details: [{"field": "phone_number", "code": "invalid_phone", ...}]
 
 4th code in one hour
 -> 429  too_many_codes, "retry_after_seconds": 3239, header Retry-After: 3239
@@ -241,7 +301,7 @@ POST /api/v1/auth/request-code   {"phone": "0501234567"}
 ### POST /api/v1/auth/verify-code
 
 Feature F01. No access token. Checks the code of a request. If it is right, the
-server finds the user of the phone number (and creates it the first time) and
+server finds the account of the phone number (and creates it the first time) and
 starts a session. The phone number is not sent again: the server takes it from the
 request, so a code cannot be checked against another number.
 
@@ -259,13 +319,14 @@ Body:
   "access_token_expires_at": "2026-10-15T12:15:00+00:00",
   "refresh_token": "<refresh token>",
   "refresh_token_expires_at": "2026-11-14T12:00:00+00:00",
-  "user": {
+  "account": {
     "id": "1840809a6c1b4814b9d1ecc779b8241b",
-    "phone": "+966501234567",
+    "phone_number": "+966501234567",
     "first_name": null,
     "last_name": null,
     "display_name": null,
-    "profile_complete": false
+    "profile_complete": false,
+    "app_mode": null
   }
 }
 ```
@@ -279,7 +340,7 @@ Body:
 | Used once | After a right code the request is finished. Checking it again is 422 `code_already_used`. Authentica is not called. | Built |
 | The provider fails | 503 `sms_unavailable`. No try is used. | Built |
 | The session | `access_token`, `refresh_token` and their times are those of section 4. | Built |
-| Who is new | `user.profile_complete` is `false` until the profile is saved. The app shows the profile page when it is `false`. This also covers a user who left before saving it. | To confirm |
+| Who is new | `account.profile_complete` is `false` until the profile is saved. The app shows the profile page when it is `false`. This also covers a user who left before saving it. | To confirm |
 
 Errors: 400 `invalid_json`, 404 `verification_not_found`, 422 `validation_error`,
 422 `invalid_code`, 422 `code_expired`, 422 `code_already_used`, 429
@@ -295,10 +356,10 @@ after 3 wrong tries        -> 429  too_many_attempts
 301 seconds after the SMS  -> 422  code_expired
 ```
 
-### PUT /api/v1/users/me/profile
+### PUT /api/v1/accounts/me/profile
 
 Feature F01, the page after the first sign-in. Needs a valid access token. Saves
-the three names of the user that the token belongs to and replaces the earlier
+the three names of the account that the token belongs to and replaces the earlier
 values. It is `PUT` because the app sends all three names every time.
 
 Body:
@@ -311,20 +372,21 @@ Body:
 
 ```json
 {
-  "user": {
+  "account": {
     "id": "e50f735fdbb54d0bafb5e2a0e54570d8",
-    "phone": "+966501234567",
+    "phone_number": "+966501234567",
     "first_name": "Leen",
     "last_name": "Algraawi",
     "display_name": "Leen",
-    "profile_complete": true
+    "profile_complete": true,
+    "app_mode": null
   }
 }
 ```
 
 | Rule | Contract | Label |
 |---|---|---|
-| Own profile | The user comes from the access token. There is no user id in the URL or the body, and an extra field is an error. | Built |
+| Own profile | The account comes from the access token. There is no account id in the URL or the body, and an extra field is an error. | Built |
 | `first_name`, `last_name` | 1 to 50 characters after the spaces at both ends are removed. | To confirm |
 | `display_name` | 1 to 30 characters, the same way. | To confirm |
 | One line | A name cannot contain a line break or another control character (detail code `invalid_name`). | To confirm |
@@ -333,72 +395,413 @@ Errors: 400 `invalid_json`, 401 (`missing_token`, `invalid_token`,
 `access_token_expired`, `session_revoked`), 404 `user_not_found`, 422
 `validation_error`.
 
-### What F01 needs from the database (for TFQD-7)
+### GET /api/v1/accounts/me and DELETE /api/v1/accounts/me
 
-Today the users, the sessions and the code requests are kept in memory, behind
-three interfaces: `UserStore` (`app/users/store.py`), `SessionStore`
-(`app/auth/store.py`) and `OtpStore` (`app/auth/otp_store.py`). The PostgreSQL work
-replaces the in-memory classes with classes that follow the same interfaces.
+`GET` is the data of the account page. Needs a valid access token. 200 has the same
+`account` object as the profile endpoint, plus `patient_circle_id`: the id of the circle
+this account is the patient of, or `null`. The app reads it before it shows the pages
+that create a circle for your own care, so a person who already has one is told at the
+start and not after filling in three pages (the final `already_has_circle` stays as the
+safety net). `Cache-Control: no-store`.
 
-- `tests/test_user_store.py` and `tests/test_otp_store.py` use only the interface, so
-  the same tests must pass for the new classes: add them to the `STORES` list at
-  the top of each file.
-- `SessionStore` has no test file of its own. `tests/test_sessions.py` tests it
-  through the API, so the same tests must pass once the app is given the new class.
-- The code of the SMS is never stored.
+`DELETE` deletes the account and ends every sign-in of it (F05). Body (all fields
+optional; an account with no circles sends no body):
 
-**The tables (To confirm).** They follow the team's ER diagram (updated on 20 October
-2026): the entities USER, AUTH_SESSION, VERIFICATION_REQUEST and VERIFICATION_SMS.
-The code uses older names; the new classes map them: `phone` is `phone_number`,
-`OtpRequest` is a row of `verification_requests`, `OtpSend` is a row of
-`verification_sms`. Other columns of the ER, such as `app_mode`, are not used by F01.
+```json
+{ "patient_choice": "continue", "delete_last_managed_circles": false }
+```
 
-| Table | Columns | Notes |
+| Field | Meaning |
+|---|---|
+| `patient_choice` | Needed when the account is the patient of a circle. `delete` deletes that circle. `continue` keeps it: the patient's names are copied into the circle as plain text, the account is detached, and the other managers go on. |
+| `delete_last_managed_circles` | `true` also deletes the circles where this account is the only manager. Without it, such a circle stops the deletion (422 `last_manager`). |
+
+204, empty body. Errors: 400 `invalid_json`, 401, 422 `patient_choice_required`,
+`last_manager`, `validation_error`.
+
+### Circles, requests, invitations and the medical file
+
+Built on 26 October 2026 for the circle creation, circle management and profile
+screens. The medical tables behind them are **To confirm** (section 10, point 8);
+the team has not approved them yet.
+
+**Rules for all of these endpoints (Built)**
+
+| Rule | Contract |
+|---|---|
+| Ids | Text with hyphens, like the circle ids of `GET /api/v1/home`. The sign-in endpoints still return the account id without hyphens (section 10, point 9). |
+| Dates | `birth_date` is written `YYYY-MM-DD` and cannot be in the future or before 1900. |
+| Location | `latitude` and `longitude` are numbers, sent together or not at all. The city is always required; the location is what "use my location" adds. |
+| One transaction | A request is saved completely or not at all. A circle is never half created: if the medical part of a creation request is wrong, no circle, no patient and no mode change is saved. |
+| Answers | Circle data carries `Cache-Control: no-store`. |
+| Hidden ids | A circle that you are not in and a circle that does not exist both give 403 `forbidden`. A request, an invitation or an emergency contact that is not yours and one that does not exist both give 404 `not_found`. |
+| No database | 503 `service_unavailable`. |
+
+**The endpoints**
+
+| Method and path | Who may call | Success |
 |---|---|---|
-| `users` | `id` (uuid, primary key), `phone_number` (unique, not null, international format), `first_name`, `last_name`, `display_name` (all three null until the profile page is saved), `created_at` | One row per phone number. A check: the three names are all null or all filled. The user is created when the phone number is verified, which is before the profile page, so the names cannot be `NOT NULL`. `profile_complete` is not a column: the app works it out from the three names. `get_or_create_by_phone` must give one user when two requests arrive at the same time: use `INSERT ... ON CONFLICT (phone_number) DO NOTHING`, then read. |
-| `auth_sessions` | `id` (uuid, primary key), `user_id` (references `users`, delete with the user), `refresh_token_hash` (unique, not null, SHA-256 in hexadecimal, 64 characters), `created_at`, `refresh_expires_at` (not null), `revoked_at` (null until sign-out) | One row per sign-in. Exactly these columns: by decision no device and no IP address is stored (a test checks the record). The unique key on `refresh_token_hash` is also the index for `POST /api/v1/auth/refresh`. Deleting a user deletes the sessions, which is the rule of section 4. |
-| `verification_requests` | `id` (uuid, primary key; it is the `verification_id` of the API), `phone_number` (not null, international format, no foreign key), `created_at`, `wrong_tries` (integer, default 0, not less than 0), `verified_at` (can be null) | One row per verification request. No foreign key to `users`, because the request starts before the user exists. The limit of 3 wrong tries is not a database check: it comes from the configuration. |
-| `verification_sms` | `id` (uuid, primary key), `request_id` (references `verification_requests`, delete with it), `phone_number`, `sent_at` | One row per SMS. Index on (`phone_number`, `sent_at`). `phone_number` is the same as in the request; a composite foreign key (`request_id`, `phone_number`) can make the database enforce it. |
+| `POST /api/v1/circles/self` | any signed-in account with a profile | 201 `circle` |
+| `POST /api/v1/circles/patient-without-account` | the same | 201 `circle` |
+| `GET /api/v1/circles/{circle_id}` | manager, simplified patient | 200 `circle` |
+| `PATCH /api/v1/circles/{circle_id}` (rename) | manager | 200 `circle` |
+| `PUT /api/v1/circles/{circle_id}/patient` | manager, simplified patient | 200 `circle` |
+| `POST /api/v1/circles/{circle_id}/leave` | manager | 204 |
+| `DELETE /api/v1/circles/{circle_id}?confirm=true` | manager, simplified patient (the rule below) | 204 |
+| `POST /api/v1/circles/{circle_id}/invitations` | manager | 201 `invitation` |
+| `POST /api/v1/circles/{circle_id}/invitations/{invitation_id}/resend` | manager | 200 `invitation` |
+| `DELETE /api/v1/circles/{circle_id}/invitations/{invitation_id}` | manager | 204 |
+| `GET /api/v1/invitations` | any signed-in account | 200 `invitations` |
+| `POST /api/v1/invitations/{invitation_id}/respond` | the invited account | 200 `invitation` |
+| `POST /api/v1/circle-requests` | any signed-in account with a profile | 201 `request` |
+| `GET /api/v1/circle-requests` | any signed-in account | 200 `sent`, `received` |
+| `POST /api/v1/circle-requests/{request_id}/respond` | the patient the request names | 200 `request` |
+| `POST /api/v1/circle-requests/{request_id}/complete` | the same | 201 `circle` |
+| `DELETE /api/v1/circle-requests/{request_id}` | the sender or the patient | 204 |
+| `GET /api/v1/circles/{circle_id}/medical-profile` | manager, simplified patient | 200 |
+| `GET /api/v1/circles/{circle_id}/emergency-card` | manager, simplified patient | 200 `emergency_card` |
+| `PATCH /api/v1/circles/{circle_id}/medical-profile` | manager, simplified patient | 200 `medical_profile` |
+| `POST /api/v1/circles/{circle_id}/emergency-contacts` | manager, simplified patient | 201 `emergency_contact` |
+| `PUT /api/v1/circles/{circle_id}/emergency-contacts/{contact_id}` | manager, simplified patient | 200 `emergency_contact` |
+| `DELETE /api/v1/circles/{circle_id}/emergency-contacts/{contact_id}` | manager, simplified patient | 204 |
 
-**Times are written by the app (Built).** Every store method that writes a time
-receives it as an argument (`now` or `at`), so the tests can move the clock. The
-new classes store that value. A column default such as `now()` is only a fallback;
-if it were the only source, the tests that move time could not run against
-PostgreSQL.
+A detailed patient is also a manager of their own circle, so the role `manager`
+covers them. "Simplified patient" is a patient who uses Simplified Mode and
+manages nothing.
 
-**Ids (To confirm).** Today the API returns ids as 32 characters without hyphens
-(`uuid4().hex`). A PostgreSQL `uuid` is written with hyphens. TFQD-7 picks one
-format and the new classes convert it at the edge, so that an id has the same
-form in the token, the responses and the tests.
+#### Creating a circle
 
-**Table and column names.** `user` is a reserved word in PostgreSQL, so the table is
-`users`.
+Self-care (PROFILE-01). The account is the patient and the manager. The name of the
+patient is read from the account.
 
-Four operations must be correct when two requests arrive at the same time:
+```json
+POST /api/v1/circles/self
+{
+  "name": "My care",
+  "birth_date": "1954-06-05",
+  "city": "Riyadh",
+  "latitude": 24.7136,
+  "longitude": 46.6753,
+  "medical_profile": { "blood_type": "O+" }
+}
+```
 
-- `claim_send`: count the sends of the phone number in the last hour and insert the
-  new one in the same transaction, with a lock for that phone number (for example
-  `pg_advisory_xact_lock(hashtext(phone_number))`). Otherwise two requests can both
-  take the third place and the fourth SMS is sent. When the call has no request id,
-  the new request and its first send are inserted in that same transaction, so a
-  refused call leaves nothing behind.
-- `release_send`: delete the send. If it was the last send of its request, delete
-  the request too.
-- `claim_try`: `UPDATE verification_requests SET wrong_tries = wrong_tries + 1 WHERE
-  id = ... AND wrong_tries < :max RETURNING ...`. No row returned means no tries
-  left. `release_try` is the same update with `- 1` and `AND wrong_tries > 0`.
-- `mark_verified`: `UPDATE ... SET verified_at = ... WHERE id = ... AND verified_at IS
-  NULL`. No row returned means it was already finished.
+A patient without an account (PROFILE-01B). The caller manages the circle. Same
+body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each).
+In both bodies `latitude`, `longitude` and `medical_profile` are optional, and
+`name` is 1 to 60 characters. The app builds `name` from the chip the user chose,
+for example `Mother Noura`.
 
-Revoking a session is allowed twice and keeps the first time:
-`UPDATE auth_sessions SET revoked_at = COALESCE(revoked_at, :at) WHERE id = ...`.
-It returns False only when no row matches.
+201:
 
-The phone number is personal data. Rows of `verification_requests` and
-`verification_sms` older than 24 hours serve no purpose and can be deleted by a
-cleanup job.
+```json
+{
+  "circle": {
+    "id": "71771639-aaba-41e3-9418-5cb3179894ce",
+    "name": "My care",
+    "role": "manager",
+    "patient": {
+      "first_name": "Leen",
+      "last_name": "Algraawi",
+      "birth_date": "1954-06-05",
+      "city": "Riyadh",
+      "latitude": 24.7136,
+      "longitude": 46.6753,
+      "has_account": true,
+      "app_mode": "detailed",
+      "is_you": true
+    },
+    "members": [
+      { "display_name": "Leen", "is_you": true, "role": "manager" }
+    ],
+    "pending_invitations": []
+  }
+}
+```
 
-Tests: `tests/test_sign_in.py`, `tests/test_profile.py`, `tests/test_sessions.py`,
+| Rule | Contract |
+|---|---|
+| Mode | Creating a circle sets the account mode to `detailed` once. It never changes afterwards (a database rule). |
+| One circle as a patient | An account is the patient of at most one circle (422 `already_has_circle`). It can manage any number. |
+| Profile first | The account needs its three names (422 `profile_incomplete`). |
+
+Errors: 400, 401, 422 (`validation_error`, `profile_incomplete`, `already_has_circle`,
+`mode_conflict`, `patient_name_required`, `invalid_birth_date`, the medical codes),
+503.
+
+#### The circle page
+
+`GET /api/v1/circles/{circle_id}` returns the same `circle` object. The members are
+listed with you first, then by name. A phone number of a member is never returned.
+`pending_invitations` is present for a manager only; a simplified patient does not
+get the key.
+
+```json
+"pending_invitations": [
+  {
+    "id": "b761c8b6-eacb-4b9d-a873-7c30a28edbe0",
+    "invitee_phone_number": "+966505555552",
+    "status": "pending",
+    "created_at": "2026-10-26T08:03:19.751982+00:00",
+    "last_sent_at": "2026-10-26T08:03:19.751216+00:00"
+  }
+]
+```
+
+`PATCH` takes `{ "name": "Grandma Noura" }` (1 to 60 characters) and returns the
+circle. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
+`birth_date` and `city` are required; `latitude`/`longitude` are replaced (sending
+none clears them). A patient without an account also needs `first_name` and
+`last_name`; for a patient with an account those two fields are an error
+(422 `linked_patient_name`), because the names come from the account.
+
+#### Leaving and deleting
+
+| Call | Rule |
+|---|---|
+| `POST .../leave` | A manager leaves. If the manager is the last one, or is the patient, the body must be `{ "confirm_delete": true }` and the circle is deleted with all its data (422 `confirmation_required` without it). The body can be left out otherwise. |
+| `DELETE .../{circle_id}?confirm=true` | Deletes the circle with all its data. The patient can always do it. A manager can do it only when no other manager exists (otherwise 403 `forbidden`). Without `confirm=true`: 422 `confirmation_required`. |
+
+A simplified patient cannot leave, because they are not a manager (section 7).
+
+#### Invitations to manage a circle
+
+`POST .../invitations` takes `{ "invitee_phone_number": "+9665XXXXXXXX" }`. The number
+need not have an account. If an invitation to that number is already pending, it is
+marked as sent again and the same invitation is returned. The invited person sees it
+in `GET /api/v1/invitations` after signing in with that number:
+
+```json
+{ "invitations": [ { "id": "...", "circle_name": "Mother Noura",
+    "invited_by": { "display_name": "Reem" },
+    "created_at": "...", "last_sent_at": "..." } ] }
+```
+
+The circle id is not shown before the invitation is accepted. `respond` takes
+`{ "accept": true }` or `false`. Accepting makes the account a manager and returns
+the circle id in `care_circle_id`; declining returns `null`. No SMS is sent for an
+invitation: the invited person finds it in the app.
+
+Errors: 422 `self_invitation`, `already_manager`, `invitation_not_pending`,
+`invitation_not_cancelable`, `mode_conflict` (the invited account uses Simplified
+Mode), `profile_incomplete`; 404 for an invitation of another circle.
+
+#### Circle requests for a patient who has an account
+
+The patient's answer is the story US-03 (section 7).
+
+The flow has three steps. The circle exists only after step 3.
+
+1. The sender calls `POST /api/v1/circle-requests` with
+   `{ "patient_phone_number": "+9665XXXXXXXX", "circle_label": "Mother", "proposed_app_mode": "simplified" }`.
+   The label is 1 to 30 characters. The number need not have an account yet; the
+   request waits for it. If the sender already has an open request to that number,
+   it is returned instead of a second one.
+2. The patient sees it in `GET /api/v1/circle-requests` under `received`, and calls
+   `POST .../{request_id}/respond` with `{ "accept": true }` or `false`. Accepting
+   is consent only. It does not create the circle.
+3. The patient calls `POST .../{request_id}/complete` with the basic data
+   (PROFILE-01C): `birth_date`, `city`, optional `latitude`, `longitude` and
+   `medical_profile`. This creates the circle (201 `circle`). Calling it again
+   returns the same circle.
+
+The circle name is the label and the first name of the patient, for example
+`Mother Noura`. The sender becomes a manager. The patient becomes a manager too if
+the proposed mode is `detailed`; with `simplified` the patient is only the patient.
+Accepting sets the mode of the patient's account, once.
+
+`GET /api/v1/circle-requests`:
+
+```json
+{
+  "sent": [
+    {
+      "id": "7c054a73-e522-4d1d-ae65-8fac8cf01e85",
+      "patient_phone_number": "+966506666663",
+      "circle_label": "Mother",
+      "proposed_app_mode": "simplified",
+      "status": "pending",
+      "created_at": "2026-10-26T08:03:19.816997+00:00",
+      "responded_at": null,
+      "care_circle_id": null
+    }
+  ],
+  "received": [
+    {
+      "id": "...",
+      "status": "pending",
+      "circle_label": "Mother",
+      "circle_name": "Mother Noura",
+      "proposed_app_mode": "simplified",
+      "requested_by": { "display_name": "Reem", "first_name": "Reem", "last_name": "Family" },
+      "created_at": "..."
+    }
+  ]
+}
+```
+
+`sent` holds the requests that are `pending` or `accepted`, and the ones `declined`
+in the last 7 days, so the sender learns of a refusal. `received` holds `pending` and
+`accepted` requests that name the signed-in account's number. A completed request
+leaves both lists; the circle appears in `GET /api/v1/home`. `DELETE` cancels a
+request that is pending or accepted (sender or patient); canceling twice is
+harmless.
+
+Errors: 422 `self_request`, `already_has_circle`, `accepted_request_exists`,
+`request_not_pending`, `request_not_cancelable`, `consent_required`,
+`profile_incomplete`; 404 `not_found` for a request that is not yours.
+
+#### The medical file (PROFILE-02, PROFILE-03, the medical file page)
+
+`GET /api/v1/circles/{circle_id}/medical-profile` returns everything the page shows:
+
+```json
+{
+  "patient": { "first_name": "Leen", "birth_date": "1954-06-05", "city": "Riyadh", "...": "..." },
+  "medical_profile": {
+    "blood_type": "O+",
+    "conditions": { "status": "listed", "codes": ["diabetes", "other"], "other": "Gout" },
+    "allergies": {
+      "status": "listed",
+      "medication": ["penicillin"], "other_medication": null,
+      "food": ["milk"], "other_food": null
+    }
+  },
+  "emergency_contacts": [
+    { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111" }
+  ]
+}
+```
+
+`PATCH` changes only the parts that are in the body, and answers with
+`{ "medical_profile": ... }`. A part that is left out stays as it is. A part sent as
+`null` is cleared back to unknown. The same object is accepted as `medical_profile`
+in the creation requests.
+
+| Part | Values |
+|---|---|
+| `blood_type` | `A+`, `A-`, `B+`, `B-`, `AB+`, `AB-`, `O+`, `O-`, or `null` |
+| `conditions.status` | `unknown` (nothing saved, never sent), `none` ("no conditions" chip) or `listed` |
+| `conditions.codes` | `diabetes`, `hypertension`, `heart`, `asthma`, `kidney`, `thyroid`, `other` |
+| `allergies.status` | `unknown`, `none` ("no allergies" chip) or `listed` |
+| `allergies.medication` | `penicillin`, `sulfa`, `cephalosporins`, `aspirin_nsaids`, `contrast_media`, `anesthesia`, `other` |
+| `allergies.food` | `milk`, `eggs`, `fish`, `shellfish`, `tree_nuts`, `peanuts`, `wheat`, `soy`, `sesame`, `other` |
+
+| Rule | Contract |
+|---|---|
+| Unknown is not none | "Skip" leaves a part unknown. The chip "no conditions" or "no allergies" is `status: "none"`, a real answer. |
+| Exclusive | `none` cannot come with codes. `listed` needs at least one code and no repeats. |
+| Other | The code `other` needs the typed text of 1 to 100 characters in `other`, `other_medication` or `other_food`, and the text is refused without `other`. |
+| Whole lists | A list that is sent replaces the old one completely. The order of the answer is the order of the table above. |
+| Same time | Two edits of the same circle at the same time run one after the other. |
+
+Emergency contacts (the medical file page): `name` (1 to 50 characters), `relation`
+(`son`, `daughter`, `husband`, `wife`, `other`) and `phone_number` (`+9665XXXXXXXX`).
+At most 5 per patient and no number twice (422 `too_many_contacts`,
+`duplicate_contact`). `PUT` replaces all three fields.
+
+Who may read and change the medical file: every manager of the circle, and the
+patient when the patient has an account. The server checks this again after taking
+the lock, so a manager who has just left is refused.
+
+#### The emergency card (F18, TFQD-27)
+
+`GET /api/v1/circles/{circle_id}/emergency-card` is read-only. It is built from the
+same data as the medical file, so an edit of the file shows on the card at once. It
+carries only what a helper needs and nothing else (no birth date, city or
+coordinates):
+
+```json
+{
+  "emergency_card": {
+    "first_name": "Nora",
+    "last_name": "Alharbi",
+    "blood_type": "O-",
+    "conditions": { "status": "listed", "codes": ["asthma"], "other": null },
+    "allergies": {
+      "status": "listed",
+      "medication": [], "other_medication": null,
+      "food": ["milk"], "other_food": null
+    },
+    "emergency_contacts": [
+      { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111" }
+    ]
+  }
+}
+```
+
+The names come from the account while the patient is linked to one. The roles are
+the same as for the medical file: every manager of the circle and the patient who
+uses Simplified Mode. Any other call is 403 `forbidden`, and `POST`, `PUT`, `PATCH`
+and `DELETE` on the card are 405. The current medicines are not on the card yet;
+they come with the medication feature (F06).
+
+Not built yet: `GET /api/v1/notifications` (section 6). The app can build the "needs
+your answer" list of the notifications page from `GET /api/v1/invitations` and the
+`received` part of `GET /api/v1/circle-requests`.
+
+Tests: `tests/test_circle_inputs.py`, `integration_tests/test_circle_api.py`,
+`test_request_api.py`, `test_medical_api.py`, `test_account_api.py`.
+
+### The database (Built)
+
+Everything is stored in PostgreSQL 16, through SQLAlchemy. Sessions, accounts and
+sign-in code requests use PostgreSQL whenever `DATABASE_URL` (or `DATABASE_HOST`
+with the `POSTGRES_*` settings) is set. The in-memory classes are used only by the
+unit tests, and the server refuses to start with them in production
+(`app/__init__.py`).
+
+**The tables.** Ids are `uuid` (the sign-in endpoints show them as 32 characters
+without hyphens, section 10 point 9). Names follow the ER diagram of the team.
+
+| Table | What it holds | Rules the database enforces |
+|---|---|---|
+| `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. |
+| `account_session` | One row per sign-in: the hash of the refresh token, the times, `revoked_at`. | Deleted with the account. The hash is unique. No device and no IP address are stored. |
+| `otp_challenge`, `otp_send_attempt` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
+| `care_circle` | A circle: `name`. | A circle always has exactly one patient and at least one manager (checked when the transaction commits). |
+| `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `latitude`, `longitude`, `blood_type`. | One per circle. An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
+| `care_circle_manager` | Who manages a circle. | Once per account and circle. A manager has a complete account in `detailed` mode. A detailed patient manages their own circle. |
+| `care_circle_creation_request` | A request to create a circle for a patient: status `pending`, `accepted`, `completed`, `declined`, `canceled` or `superseded`. | One open request per sender and number. A patient can have one accepted request at a time. A completed request points to its circle. |
+| `care_circle_manager_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `canceled`. | One pending invitation per circle and number. |
+| `patient_condition` | Chronic conditions of a patient (`code`, and `other_text` for `other`). | Codes from the official list; `other_text` exactly when the code is `other`; a code once per patient. |
+| `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or one row `none`. | The same rules; the code must belong to the kind. |
+| `emergency_contact` | Contacts of a patient: `name`, `relation`, `phone_number`. | Phone format, relation from the list, a number once per patient. The limit of 5 is checked by the server, not by the database. |
+
+The medical tables (`patient.blood_type`, `patient_condition`, `patient_allergy`,
+`emergency_contact`) are **To confirm**: they are the design of 26 October 2026,
+made from the Figma screens, and the team has not approved them. They are migration
+`0005`; it only adds, so it can be reverted without touching care data.
+
+**Migrations.** `migrations/versions/0001` to `0005`, run by Alembic through
+`flask --app wsgi db upgrade`. The tests start from an empty database and run the
+migrations, so the migrations are tested too (`test_migrations_round_trip`).
+
+**A new database (Built).** A new PostgreSQL has no tables, and the API cannot sign
+anyone in without them. So:
+
+- `docker compose up` runs `flask --app wsgi db upgrade` before it starts the server.
+  Running it again is harmless.
+- `GET /api/v1/health` answers 503 `database_not_migrated` while the tables are
+  missing or old, so the problem is seen at once.
+- Without Docker, run the same command once after creating the database.
+
+**Times are written by the app (Built).** The stores and services receive the time
+as an argument (`now`), so the tests can move the clock. The care workflows use that
+time for `last_sent_at`, `responded_at` and `completed_at`.
+
+**Two requests at the same time (Built).** Every write that changes a circle locks
+the account and then the circle, always in this order, so two requests wait for each
+other and cannot deadlock. The sign-in operations use the same ideas: `INSERT ...
+ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limit
+of 3 codes per hour.
+
+The phone number is personal data. Rows of `otp_challenge` and `otp_send_attempt`
+older than 24 hours serve no purpose and can be deleted by a cleanup job (not built
+yet).
+
+Tests: `integration_tests/` (they need `TEST_DATABASE_URL`, see the README),
+`tests/test_sign_in.py`, `tests/test_profile.py`, `tests/test_sessions.py`,
 `tests/test_otp_store.py`, `tests/test_user_store.py`.
 
 ## 6. Authorization
@@ -429,9 +832,18 @@ endpoint allows.
 | The circle does not exist | 403 `forbidden` |
 
 The last three give the same answer on purpose, so that a caller cannot find out
-which circles exist. The server also fails closed: until the membership lookup
-is connected, nobody is a member of anything, so every circle endpoint refuses
-every request.
+which circles exist. The server also fails closed: a server started with no
+database has no membership lookup, so nobody is a member of anything and every
+circle endpoint refuses every request.
+
+**The roles with PostgreSQL (Built).** The lookup (`app/authz/postgres.py`) answers
+`manager` for a row in `care_circle_manager`, and `simplified_patient` for the linked
+patient of the circle when the account uses Simplified Mode. It never answers
+`patient`: a patient in Detailed Mode is also a manager of their own circle. The
+endpoints of section 5 list the roles each one allows. An endpoint whose URL has a
+request id, an invitation id or a contact id (not a circle id) cannot use the
+decorator; there the service checks the caller and a refusal is returned as 404
+`not_found`, so the ids cannot be probed.
 
 **Authorization scenarios and the tests that check them**
 
@@ -761,17 +1173,48 @@ change in the pull request review.
    with no names, and the server does not force the profile page. If such a user accepts
    a circle request, the patient has a user without names. Either the server refuses
    circle actions until `profile_complete` is `true`, or every screen that shows a name
-   handles a missing one. To decide with TFQD-7 and the circle features.
+   handles a missing one. To decide with TFQD-7 and the circle features. The code
+   now does the first: every circle action of an account without names is refused
+   with 422 `profile_incomplete`. The team confirms it.
+8. The medical tables (`patient.blood_type`, `patient_condition`, `patient_allergy`,
+   `emergency_contact`, section 5) are a design made on 26 October 2026 from the
+   Figma screens. The team approves or changes them. Nothing else depends on
+   them, and the migration (`0005`) can be reverted.
+9. Two spellings of an id. The sign-in endpoints return the account id as 32
+   characters without hyphens; `GET /api/v1/home` and the circle endpoints return
+   ids with hyphens. The app must not compare them as text. One format should be
+   chosen for all.
+10. The Figma account page has one field "full name", but the API stores
+    `first_name` and `last_name`. Either the page shows two fields, or the app joins
+    them to show and splits them to save (a rule for names with several parts is
+    needed), or the API changes.
+11. A circle request to a number that already has a circle is refused with 422
+    `already_has_circle`. That tells the sender that the number has an account. The
+    sign-in endpoints avoid this on purpose. The choice: keep the clear message, or
+    accept the request and let the patient find out.
+12. No limit yet on open requests per sender or pending invitations per circle. A
+    limit such as 10 each would stop spam. The team decides the numbers.
+13. Not built: `GET /api/v1/notifications` (section 6) needs its own table, which
+    the team has not approved. The app uses the two lists of section 5 for the "needs
+    your answer" part until then. The emergency card is built; its current medicines
+    are added when the medication feature (F06) exists.
+14. An invitation to manage a circle sends no SMS. The invited person finds it in
+    the app after signing in with that number. If an SMS is wanted, it needs its own
+    Authentica template.
 
 **Proposals written with the sign-in endpoints (To confirm).** Built and tested, but
 the team has not reviewed them yet.
 
 | # | Point | Proposal |
 |---|---|---|
-| A | Endpoint names | `POST /api/v1/auth/request-code`, `POST /api/v1/auth/verify-code`, `PUT /api/v1/users/me/profile` (section 5). |
+| A | Endpoint names | `POST /api/v1/auth/request-code`, `POST /api/v1/auth/verify-code`, `PUT /api/v1/accounts/me/profile` (section 5). |
 | B | How long a verification request lives | Until its code is accepted. It has no time limit of its own: its counters never start again, and the code inside it lives 300 seconds. A new request (no `verification_id`) is always possible. This answers the old open point on when the counters start again. Rows older than 24 hours can be deleted (section 5). |
 | C | A new request has new tries | A new request has its own 3 tries, but the 3 codes per hour are shared, so the most a phone number gets is 9 tries per hour. TFQD-13 says the limits do not reset "simply because a new OTP is issued"; here a resend does not reset them, only a request started from the beginning does. |
 | D | An expired code is not a try | A refused code that arrives more than 300 seconds after the last SMS is `code_expired` and costs no try. |
 | E | Phone number | Saudi mobile numbers only, `+9665XXXXXXXX`. |
 | F | Names | 1 to 50 characters (first and last name), 1 to 30 (display name), one line. |
-| G | Who sees the profile page | The app shows it when `user.profile_complete` is `false`. |
+| G | Who sees the profile page | The app shows it when `account.profile_complete` is `false`. |
+| H | Shape of the medical data | Blood type, conditions and allergies each have a status: `unknown` (not asked or skipped), `none` (the chip "no conditions" or "no allergies") or `listed`. `PATCH` changes only the parts that are sent (section 5). |
+| I | A declined request stays visible | The sender sees a declined circle request for 7 days, then it leaves the list. |
+| J | Emergency contacts | At most 5 per patient, a number once, Saudi mobile numbers only. |
+| K | Leaving as a patient | A manager who is also the patient cannot leave without deleting the circle (`confirm_delete`), because the circle must keep its patient. |

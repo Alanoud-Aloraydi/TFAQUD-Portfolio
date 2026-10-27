@@ -1,5 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
@@ -35,7 +36,19 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) context.read<HomeCubit>().load();
+    // The page stays as it is while the data loads again in the background.
+    if (state == AppLifecycleState.resumed) {
+      context.read<HomeCubit>().refresh();
+      context.read<InboxCubit>().load();
+    }
+  }
+
+  /// Opens the notifications and counts again when the person comes back,
+  /// because an answer there changes what is left.
+  Future<void> _openNotifications(BuildContext context) async {
+    final InboxCubit inbox = context.read<InboxCubit>();
+    await context.push<void>(Routes.notifications);
+    if (!inbox.isClosed) inbox.load();
   }
 
   void _onState(BuildContext context, HomeState state) {
@@ -59,6 +72,16 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
         topBar: AppTopBar(
           displayName: state.data?.displayName,
           circles: HomeWidget(state: state, onSelected: cubit.selectCircle),
+          onAddCircle: state.status == HomeStatus.ready
+              ? () => context.push(Routes.addCircle)
+              : null,
+          // A person with no circle yet can still have a request to answer.
+          needsReply: context.select<InboxCubit, int>(
+            (InboxCubit inbox) => inbox.state.inbox.needsReply,
+          ),
+          onNotifications: state.status == HomeStatus.ready
+              ? () => _openNotifications(context)
+              : null,
         ),
         body: _body(state, cubit),
       ),
@@ -90,9 +113,19 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            context.tr('home.no_circles'),
-            textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr('home.no_circles'),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.push(Routes.addCircle),
+                child: Text(context.tr('home.create_circle')),
+              ),
+            ],
           ),
         ),
       );

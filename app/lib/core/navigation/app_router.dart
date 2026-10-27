@@ -2,13 +2,36 @@ import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:app/features/auth/presentation/pages/account_prototype_screen.dart';
+import 'package:app/features/account/presentation/cubit/account_cubit.dart';
+import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
 import 'package:app/features/auth/presentation/pages/code_screen.dart';
 import 'package:app/features/auth/presentation/pages/phone_screen.dart';
 import 'package:app/features/auth/presentation/pages/splash_screen.dart';
+import 'package:app/features/circles/domain/entities/received_circle_request.dart';
+import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
+import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/request_reply_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
+import 'package:app/features/circles/presentation/pages/approved_circle_basics_screen.dart';
+import 'package:app/features/circles/presentation/pages/circle_allergies_screen.dart';
+import 'package:app/features/circles/presentation/pages/circle_health_screen.dart';
+import 'package:app/features/circles/presentation/pages/circle_tab_screen.dart';
+import 'package:app/features/circles/presentation/pages/emergency_card_screen.dart';
+import 'package:app/features/circles/presentation/pages/medical_file_edit_screen.dart';
+import 'package:app/features/circles/presentation/pages/medical_file_screen.dart';
+import 'package:app/features/circles/presentation/pages/notifications_screen.dart';
+import 'package:app/features/circles/presentation/pages/patient_circle_basics_screen.dart';
+import 'package:app/features/circles/presentation/pages/request_patient_screen.dart';
+import 'package:app/features/circles/presentation/pages/request_reply_screen.dart';
+import 'package:app/features/circles/presentation/pages/self_circle_basics_screen.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
@@ -16,7 +39,6 @@ import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dar
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
-import 'package:app/features/placeholder/placeholder_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, visibleForTesting;
@@ -74,22 +96,55 @@ class AppRouter {
         redirect: (context, state) => Routes.today,
       ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => BlocProvider(
-          create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+        // The home cubit loads the circles. The inbox cubit counts what waits
+        // for an answer, for the dot on the bell; it loads again whenever the
+        // circles change.
+        builder: (context, state, navigationShell) => MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+            ),
+            BlocProvider(
+              create: (context) => InboxCubit(
+                GetIt.I<CirclesUseCase>(),
+                GetIt.I<HomeUseCase>(),
+                followCircleChanges: true,
+              )..load(),
+            ),
+          ],
           child: HomeFeatureScreen(navigationShell: navigationShell),
         ),
         branches: <StatefulShellBranch>[
           _branch(Routes.today),
           _branch(Routes.plan),
           _branch(Routes.record),
-          _branch(Routes.circle),
+          // The circle tab shows the selected circle with the buttons of its
+          // medical file and its emergency card.
+          _branch(
+            Routes.circle,
+            builder: (context, state) => const CircleTabScreen(),
+          ),
         ],
       ),
+      // The account page: names, phone number, requests that wait for the
+      // patient, sign-out (AuthCubit) and deleting the account.
       GoRoute(
         path: Routes.account,
-        builder: (context, state) => BlocProvider(
-          create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
-          child: const AccountPrototypeScreen(),
+        builder: (context, state) => MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => AccountCubit(
+                GetIt.I<CirclesUseCase>(),
+                GetIt.I<OnboardingUseCase>(),
+                GetIt.I<AuthUseCase>(),
+                GetIt.I<HomeUseCase>(),
+              )..load(),
+            ),
+            BlocProvider(
+              create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
+            ),
+          ],
+          child: const AccountScreen(),
         ),
       ),
       // Welcome, phone number and code share one SignInCubit, so the code page
@@ -114,7 +169,8 @@ class AppRouter {
           ),
         ],
       ),
-      // Name page and start page share one OnboardingCubit.
+      // Name page and start page share one OnboardingCubit. The page that adds
+      // another circle is the start page again, so it shares the cubit too.
       ShellRoute(
         builder: (context, state, child) => BlocProvider(
           create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
@@ -129,9 +185,140 @@ class AppRouter {
             path: Routes.onboardingStart,
             builder: (context, state) => const StartScreen(),
           ),
+          GoRoute(
+            path: Routes.addCircle,
+            builder: (context, state) => const StartScreen(addingCircle: true),
+          ),
         ],
       ),
-      _standalone(Routes.notifications, 'topbar.notifications'),
+      // The three steps of a circle share one CreateCircleCubit, so going back
+      // keeps the answers. The circle for your own care loads the account at
+      // the start, to learn whether it already has a circle. When the server
+      // says the sign-in ended, any of the steps sends the user to sign-in.
+      _createCircleShell(
+        flow: CircleFlow.self,
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.createSelfCircle,
+            builder: (context, state) => const SelfCircleBasicsScreen(),
+          ),
+          GoRoute(
+            path: Routes.createSelfCircleHealth,
+            builder: (context, state) => const CircleHealthScreen(),
+          ),
+          GoRoute(
+            path: Routes.createSelfCircleAllergies,
+            builder: (context, state) => const CircleAllergiesScreen(),
+          ),
+        ],
+      ),
+      // The same three steps for a patient who does not use the app. The names
+      // of the patient are typed, so no account is loaded.
+      _createCircleShell(
+        flow: CircleFlow.patient,
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.createPatientCircle,
+            builder: (context, state) => const PatientCircleBasicsScreen(),
+          ),
+          GoRoute(
+            path: Routes.createPatientCircleHealth,
+            builder: (context, state) => const CircleHealthScreen(),
+          ),
+          GoRoute(
+            path: Routes.createPatientCircleAllergies,
+            builder: (context, state) => const CircleAllergiesScreen(),
+          ),
+        ],
+      ),
+      // A request to a patient who uses the app: the phone number, then the
+      // waiting state on the same page.
+      GoRoute(
+        path: Routes.requestPatient,
+        builder: (context, state) => BlocProvider(
+          create: (context) =>
+              SendCircleRequestCubit(GetIt.I<CirclesUseCase>()),
+          child: const RequestPatientScreen(),
+        ),
+      ),
+      // What waits for an answer: invitations and requests. The page of a
+      // request takes the patient's answer; "agree" leads to the basic data.
+      GoRoute(
+        path: Routes.notifications,
+        builder: (context, state) => BlocProvider(
+          create: (context) =>
+              InboxCubit(GetIt.I<CirclesUseCase>(), GetIt.I<HomeUseCase>())
+                ..load(),
+          child: const NotificationsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.replyRequest,
+        redirect: _requireRequest,
+        builder: (context, state) => BlocProvider(
+          create: (context) => RequestReplyCubit(
+            GetIt.I<CirclesUseCase>(),
+            state.extra! as ReceivedCircleRequest,
+          ),
+          child: const RequestReplyScreen(),
+        ),
+      ),
+      // The basic data after the patient agreed: the same three steps. The
+      // request travels with each step, so a step never loses it.
+      _createCircleShell(
+        flow: CircleFlow.approved,
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.completeRequest,
+            redirect: _requireRequest,
+            builder: (context, state) => const ApprovedCircleBasicsScreen(),
+          ),
+          GoRoute(
+            path: Routes.completeRequestHealth,
+            redirect: _requireRequest,
+            builder: (context, state) => const CircleHealthScreen(),
+          ),
+          GoRoute(
+            path: Routes.completeRequestAllergies,
+            redirect: _requireRequest,
+            builder: (context, state) => const CircleAllergiesScreen(),
+          ),
+        ],
+      ),
+      // The medical file of a circle, its edit page and its emergency card.
+      // Each page loads what it shows from the server for the circle in the
+      // address.
+      GoRoute(
+        path: Routes.medicalFilePath,
+        builder: (context, state) {
+          final String circleId = state.pathParameters['circleId']!;
+          return BlocProvider(
+            create: (context) =>
+                MedicalFileCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
+            child: MedicalFileScreen(circleId: circleId),
+          );
+        },
+      ),
+      GoRoute(
+        path: Routes.medicalFileEditPath,
+        builder: (context, state) => BlocProvider(
+          create: (context) => MedicalFileEditCubit(
+            GetIt.I<CirclesUseCase>(),
+            state.pathParameters['circleId']!,
+          )..load(),
+          child: const MedicalFileEditScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.emergencyCardPath,
+        builder: (context, state) => BlocProvider(
+          create: (context) => EmergencyCardCubit(
+            GetIt.I<CirclesUseCase>(),
+            state.pathParameters['circleId']!,
+          )..load(),
+          child: const EmergencyCardScreen(),
+        ),
+      ),
       if (kDebugMode)
         GoRoute(
           path: Routes.gallery,
@@ -159,22 +346,55 @@ class AppRouter {
     return open ? null : Routes.auth;
   }
 
-  static StatefulShellBranch _branch(String path) {
+  static ShellRoute _createCircleShell({
+    required CircleFlow flow,
+    required List<RouteBase> routes,
+  }) {
+    return ShellRoute(
+      builder: (context, state, child) => BlocProvider(
+        create: (context) {
+          final Object? extra = state.extra;
+          final CreateCircleCubit cubit = CreateCircleCubit(
+            GetIt.I<CirclesUseCase>(),
+            GetIt.I<HomeUseCase>(),
+            flow: flow,
+            request: extra is ReceivedCircleRequest ? extra : null,
+          );
+          // The name field reads the account, and the account says at once
+          // whether it already has a circle of its own care. The names of a
+          // patient without the app are typed, so nothing is loaded for them.
+          if (flow != CircleFlow.patient) cubit.loadAccount();
+          return cubit;
+        },
+        child: BlocListener<CreateCircleCubit, CreateCircleState>(
+          listenWhen: (before, after) =>
+              after.sessionEnded && !before.sessionEnded,
+          listener: (context, state) => context.go(Routes.auth),
+          child: child,
+        ),
+      ),
+      routes: routes,
+    );
+  }
+
+  static StatefulShellBranch _branch(
+    String path, {
+    GoRouterWidgetBuilder? builder,
+  }) {
     return StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
           path: path,
-          builder: (context, state) => const SizedBox.expand(),
+          builder: builder ?? (context, state) => const SizedBox.expand(),
         ),
       ],
     );
   }
 
-  static GoRoute _standalone(String path, String titleKey) {
-    return GoRoute(
-      path: path,
-      builder: (context, state) =>
-          PlaceholderScreen(titleKey: titleKey, standalone: true),
-    );
+  /// A page of the patient's side of a request needs the request, which
+  /// travels as the `extra` of the navigation. Without it (an address typed in
+  /// the browser, a restored page) the notifications page is the way in.
+  static String? _requireRequest(BuildContext context, GoRouterState state) {
+    return state.extra is ReceivedCircleRequest ? null : Routes.notifications;
   }
 }

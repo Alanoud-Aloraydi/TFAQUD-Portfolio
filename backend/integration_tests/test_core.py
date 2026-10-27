@@ -30,8 +30,8 @@ def test_circle_access_joins_an_existing_transaction(database, account):
         )
 
 
-def test_migrations_create_care_and_authentication_tables(database):
-    """Authentication tables are separate from the six core care entities."""
+def test_migrations_create_care_authentication_and_medical_tables(database):
+    """Authentication and medical tables sit beside the six core entities."""
     assert set(inspect(database).get_table_names()) == {
         "account",
         "care_circle",
@@ -43,6 +43,9 @@ def test_migrations_create_care_and_authentication_tables(database):
         "account_session",
         "otp_challenge",
         "otp_send_attempt",
+        "patient_condition",
+        "patient_allergy",
+        "emergency_contact",
     }
 
 

@@ -30,6 +30,10 @@ fails" below.
    docker compose up --build
    ```
 
+   The first time, the database is empty. The API container creates the tables
+   by itself before the server starts (you will see lines that start with
+   `Running upgrade`). Every later start checks again and changes nothing.
+
 4. Check that it works. This should print `{"status":"ok"}`:
 
    ```
@@ -44,6 +48,7 @@ Other commands:
 | Stop everything | `docker compose down` |
 | Stop and delete the database data | `docker compose down -v` |
 | See the logs of the API | `docker compose logs -f api` |
+| Create or update the tables by hand | `docker compose exec api flask --app wsgi db upgrade` |
 
 Editing a file in `app/` reloads the server by itself.
 
@@ -56,7 +61,8 @@ Editing a file in `app/` reloads the server by itself.
 | `Set POSTGRES_PASSWORD in the .env file` | Do step 2. |
 | `The "..." variable is not set. Defaulting to a blank string` | A value in `.env` contains a `$`. Compose treats the text after it as a variable name. Change the value to letters and digits only. A `$` in the middle of a value silently cuts the value at that point. |
 | `port is already allocated` or `address already in use` (port 5000) | On macOS, AirPlay Receiver uses port 5000. In `.env`, remove the `#` from `API_PORT=5000` and set another number, for example `5001`. Then use that number in the `curl` command. |
-| `ports are not available` or `port is already allocated` (port 5432) | A PostgreSQL is already running on your computer. In `.env`, remove the `#` from `DB_PORT=5432` and set another number, for example `5433`. Then run `docker compose up` again. |
+| `ports are not available` or `port is already allocated` (the database port, 5433 by default) | Another program uses that port. In `.env`, set `DB_PORT` to another number, for example `5434`. Then run `docker compose up` again. |
+| `GET /api/v1/health` answers 503 `database_not_migrated` | The database is reachable, but its tables are missing or old. Run `docker compose exec api flask --app wsgi db upgrade`, or restart with `docker compose up`, which does it. |
 
 ## Run it without Docker
 
@@ -73,6 +79,40 @@ pytest                             # the tests
 Without a `.env` file the app starts in the `development` environment with a
 built-in secret key. This works on your computer only.
 
+Without a database setting (`DATABASE_URL`, or `DATABASE_HOST` with the
+`POSTGRES_*` values) the server keeps users and sessions in memory and the circle
+endpoints answer 503 `service_unavailable`. To use PostgreSQL, set `DATABASE_URL`
+(for example `postgresql+psycopg://user:password@localhost:5433/tfaqud`) and run
+`flask --app wsgi db upgrade` once.
+
+## Database and migrations
+
+The tables are created by migrations (`migrations/versions/0001` to `0005`),
+not by hand.
+
+| What | Command |
+|---|---|
+| Create or update all tables | `flask --app wsgi db upgrade` (in Docker: `docker compose exec api flask --app wsgi db upgrade`) |
+| Which version is the database at | `flask --app wsgi db current` |
+| Go back one version | `flask --app wsgi db downgrade` |
+
+A new, empty database has no tables. In Docker the API container runs the first
+command before it starts the server. `GET /api/v1/health` answers 503
+`database_not_migrated` when the tables are missing or old.
+
+**Tests against PostgreSQL.** The tests in `integration_tests/` run the real
+migrations and need a database whose name ends in `_test`. They are skipped when
+`TEST_DATABASE_URL` is not set. They empty the tables of that database, so never
+point it at a database that holds real data. With Docker:
+
+```
+docker compose exec db sh -c 'createdb -U $POSTGRES_USER tfaqud_test'
+docker compose exec api sh -c 'TEST_DATABASE_URL=postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/tfaqud_test pytest'
+```
+
+The first command is needed once. The second runs all the tests, with the
+PostgreSQL ones included.
+
 ## Documents
 
 | File | What it holds |
@@ -80,17 +120,19 @@ built-in secret key. This works on your computer only.
 | `docs/api-contracts.md` | The API rules: errors, validation, sign-in tokens, roles, the endpoints that exist (TFQD-11) |
 | `docs/authentica-test-guide.md` | How to test the Authentica OTP API and what to record (TFQD-12) |
 
-## What is not here yet
+## What is built, and what is not
 
-- The API does not connect to the PostgreSQL container yet. The database
-  connection and the tables come with TFQD-7.
-- Sessions, users and sign-in code requests are kept in memory until then. They are
-  lost when the server restarts.
+- Sign-in with the phone number and the code (F01), the account profile, and the
+  home endpoint are built on PostgreSQL. The circle endpoints are built too: create
+  a circle, circle requests with consent, invitations, rename, leave, delete, the
+  patient's data, the medical file, emergency contacts, the emergency card, and
+  account deletion. The
+  endpoints and the rules are in `docs/api-contracts.md` (section 5).
+- The medical tables (blood type, conditions, allergies, emergency contacts) are a
+  design that the team has not approved yet (`docs/api-contracts.md`, section 10).
+- Not built: the notifications endpoint, the care plan and the records. The
+  emergency card is built without the current medicines (they come with F06).
 - This Docker setup is for development. Staging and production are TFQD-10.
-- Sign-in with the phone number and the code (F01) is built: `request-code`,
-  `verify-code` and the profile endpoint. They run on the in-memory stores above, and
-  the Flutter app is not connected to them yet. The endpoints and the rules are in
-  `docs/api-contracts.md` (section 5).
 - The sign-in endpoints use the sender that `SMS_BACKEND` selects. The Authentica
   sender is tested without a network only (`SMS_BACKEND=authentica` with
   `AUTHENTICA_API_KEY`). `scripts/try_authentica_sender.py` tries it once with the

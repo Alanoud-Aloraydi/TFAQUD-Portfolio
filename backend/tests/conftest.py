@@ -25,6 +25,13 @@ def isolate_database_environment(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def isolate_sms_environment(monkeypatch):
+    """Unit tests never inherit the real SMS settings of a developer's .env."""
+    monkeypatch.delenv("SMS_BACKEND", raising=False)
+    monkeypatch.delenv("AUTHENTICA_API_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def block_network(monkeypatch):
     """Fail any test that tries to open a network connection."""
 

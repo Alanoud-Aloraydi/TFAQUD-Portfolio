@@ -69,7 +69,7 @@ def account(database):
 
     counter = 0
 
-    def create(mode=None, complete=True):
+    def create(mode=None, complete=True, name="Nora"):
         nonlocal counter
         counter += 1
         with Session(database, expire_on_commit=False) as session:
@@ -77,9 +77,9 @@ def account(database):
                 row = Account(
                     phone_number=f"+966500{counter:06d}",
                     app_mode=mode,
-                    first_name="Nora" if complete else None,
+                    first_name=name if complete else None,
                     last_name="Family" if complete else None,
-                    display_name="Nora" if complete else None,
+                    display_name=name if complete else None,
                 )
                 session.add(row)
                 session.flush()
