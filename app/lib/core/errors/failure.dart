@@ -61,6 +61,10 @@ class ValidationFailure extends Failure {
   const ValidationFailure([super.messageKey = 'error.invalid_data']);
 }
 
+class ConflictFailure extends Failure {
+  const ConflictFailure([super.messageKey = 'error.data_conflict']);
+}
+
 class EmptyDataFailure extends Failure {
   const EmptyDataFailure([super.messageKey = 'error.unknown']);
 }

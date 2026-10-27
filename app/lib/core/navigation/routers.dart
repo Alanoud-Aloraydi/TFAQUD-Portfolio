@@ -32,8 +32,7 @@ class Routes {
 
   // The circle of a patient who does not use the app, in the same three steps.
   static const String createPatientCircle = '/circles/new/patient';
-  static const String createPatientCircleHealth =
-      '/circles/new/patient/health';
+  static const String createPatientCircleHealth = '/circles/new/patient/health';
   static const String createPatientCircleAllergies =
       '/circles/new/patient/allergies';
 
@@ -64,4 +63,17 @@ class Routes {
       '/circle/$circleId/medical-file/edit';
   static String emergencyCard(String circleId) =>
       '/circle/$circleId/emergency-card';
+
+  static const String medicationNewPath = '/circles/:circleId/medications/new';
+  static const String medicationDetailsPath =
+      '/circles/:circleId/medications/:planId';
+  static const String medicationEditPath =
+      '/circles/:circleId/medications/:planId/edit';
+
+  static String newMedication(String circleId) =>
+      '/circles/$circleId/medications/new';
+  static String medicationDetails(String circleId, String planId) =>
+      '/circles/$circleId/medications/$planId';
+  static String editMedication(String circleId, String planId) =>
+      '/circles/$circleId/medications/$planId/edit';
 }

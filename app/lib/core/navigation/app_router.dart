@@ -35,6 +35,14 @@ import 'package:app/features/circles/presentation/pages/self_circle_basics_scree
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
+import 'package:app/features/home/presentation/pages/plan_page.dart';
+import 'package:app/features/home/presentation/pages/record_page.dart';
+import 'package:app/features/home/presentation/pages/today_page.dart';
+import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
+import 'package:app/features/medications/presentation/pages/medication_details_page.dart';
+import 'package:app/features/medications/presentation/pages/medication_form_page.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
@@ -46,6 +54,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+
 import 'routers.dart';
 
 class AppRouter {
@@ -91,10 +100,7 @@ class AppRouter {
           child: const SplashScreen(),
         ),
       ),
-      GoRoute(
-        path: Routes.home,
-        redirect: (context, state) => Routes.today,
-      ),
+      GoRoute(path: Routes.home, redirect: (context, state) => Routes.today),
       StatefulShellRoute.indexedStack(
         // The home cubit loads the circles. The inbox cubit counts what waits
         // for an answer, for the dot on the bell; it loads again whenever the
@@ -111,13 +117,24 @@ class AppRouter {
                 followCircleChanges: true,
               )..load(),
             ),
+            BlocProvider(
+              create: (context) =>
+                  MedicationsCubit(GetIt.I<MedicationsUseCase>()),
+            ),
+            BlocProvider(
+              create: (context) =>
+                  MedicationOccurrencesCubit(GetIt.I<MedicationsUseCase>()),
+            ),
           ],
           child: HomeFeatureScreen(navigationShell: navigationShell),
         ),
         branches: <StatefulShellBranch>[
-          _branch(Routes.today),
-          _branch(Routes.plan),
-          _branch(Routes.record),
+          _branch(Routes.today, builder: (context, state) => const TodayPage()),
+          _branch(Routes.plan, builder: (context, state) => const PlanPage()),
+          _branch(
+            Routes.record,
+            builder: (context, state) => const RecordPage(),
+          ),
           // The circle tab shows the selected circle with the buttons of its
           // medical file and its emergency card.
           _branch(
@@ -125,6 +142,43 @@ class AppRouter {
             builder: (context, state) => const CircleTabScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.medicationNewPath,
+        builder: (context, state) {
+          final String circleId = state.pathParameters['circleId']!;
+          return BlocProvider(
+            create: (context) =>
+                MedicationsCubit(GetIt.I<MedicationsUseCase>())..bind(circleId),
+            child: MedicationFormPage(circleId: circleId),
+          );
+        },
+      ),
+      GoRoute(
+        path: Routes.medicationDetailsPath,
+        builder: (context, state) {
+          final String circleId = state.pathParameters['circleId']!;
+          final String planId = state.pathParameters['planId']!;
+          return BlocProvider(
+            create: (context) =>
+                MedicationsCubit(GetIt.I<MedicationsUseCase>())
+                  ..loadPlan(circleId, planId),
+            child: MedicationDetailsPage(circleId: circleId, planId: planId),
+          );
+        },
+      ),
+      GoRoute(
+        path: Routes.medicationEditPath,
+        builder: (context, state) {
+          final String circleId = state.pathParameters['circleId']!;
+          final String planId = state.pathParameters['planId']!;
+          return BlocProvider(
+            create: (context) =>
+                MedicationsCubit(GetIt.I<MedicationsUseCase>())
+                  ..loadPlan(circleId, planId),
+            child: MedicationFormPage(circleId: circleId, planId: planId),
+          );
+        },
       ),
       // The account page: names, phone number, requests that wait for the
       // patient, sign-out (AuthCubit) and deleting the account.
@@ -334,12 +388,10 @@ class AppRouter {
   /// gallery are open to everyone. Every other page needs the tokens
   /// ([hasTokens]); without them the phone is sent to the sign-in page.
   @visibleForTesting
-  static String? signInRedirect(
-    String location, {
-    required bool hasTokens,
-  }) {
+  static String? signInRedirect(String location, {required bool hasTokens}) {
     if (hasTokens) return null;
-    final bool open = location == Routes.splash ||
+    final bool open =
+        location == Routes.splash ||
         location == Routes.gallery ||
         location == Routes.auth ||
         location.startsWith('${Routes.auth}/');

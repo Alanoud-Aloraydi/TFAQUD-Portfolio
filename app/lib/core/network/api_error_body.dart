@@ -16,6 +16,11 @@ abstract class ApiErrorCodes {
   static const String invalidJson = 'invalid_json';
   static const String validationError = 'validation_error';
   static const String internalError = 'internal_error';
+  static const String dataConflict = 'data_conflict';
+  static const String medicationPeriodConflict = 'medication_period_conflict';
+  static const String medicationVersionConflict = 'medication_version_conflict';
+  static const String medicationDiscontinued = 'medication_discontinued';
+  static const String doseRecordConflict = 'dose_record_conflict';
 
   // Sign-in (backend/app/auth/sign_in.py) and the profile.
   static const String verificationNotFound = 'verification_not_found';

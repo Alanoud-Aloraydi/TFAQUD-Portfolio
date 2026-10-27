@@ -14,6 +14,8 @@ class LabeledTextField extends StatelessWidget {
     this.textInputAction = TextInputAction.next,
     this.autofocus = false,
     this.maxLength,
+    this.keyboardType,
+    this.maxLines = 1,
   });
 
   final String label;
@@ -26,6 +28,8 @@ class LabeledTextField extends StatelessWidget {
 
   /// The most characters the user can type. No counter is shown.
   final int? maxLength;
+  final TextInputType? keyboardType;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +44,13 @@ class LabeledTextField extends StatelessWidget {
           onChanged: onChanged,
           autofocus: autofocus,
           textInputAction: textInputAction,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
           inputFormatters: maxLength == null
               ? null
-              : <TextInputFormatter>[LengthLimitingTextInputFormatter(maxLength)],
+              : <TextInputFormatter>[
+                  LengthLimitingTextInputFormatter(maxLength),
+                ],
           style: text.bodyLarge,
           decoration: InputDecoration(
             errorText: errorText,

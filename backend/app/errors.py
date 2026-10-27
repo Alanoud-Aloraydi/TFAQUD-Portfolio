@@ -72,6 +72,12 @@ class ValidationFailed(ApiError):
     default_message = "The request is not valid."
 
 
+class Conflict(ApiError):
+    status = 409
+    default_code = "conflict"
+    default_message = "The resource changed before this request completed."
+
+
 class TooManyRequests(ApiError):
     status = 429
     default_code = "too_many_requests"

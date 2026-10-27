@@ -39,6 +39,10 @@ import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
+import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
@@ -49,6 +53,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'support/circles_fakes.dart';
 import 'support/home_fakes.dart';
 
@@ -59,7 +64,8 @@ class _FileAssetLoader extends AssetLoader {
 
   @override
   Future<Map<String, dynamic>?> load(String path, Locale locale) async {
-    final String text = File('$path/${locale.languageCode}.json').readAsStringSync();
+    final String text = File('$path/${locale.languageCode}.json')
+        .readAsStringSync();
     return jsonDecode(text) as Map<String, dynamic>;
   }
 }
@@ -76,7 +82,10 @@ class _SignedInTokens implements TokenStorage {
   }) async {}
 
   @override
-  Future<void> saveAccessToken(String accessToken, {int? expectedRevision}) async {}
+  Future<void> saveAccessToken(
+    String accessToken, {
+    int? expectedRevision,
+  }) async {}
 
   @override
   Future<String?> readAccessToken() async => 'test-access-token';
@@ -115,6 +124,22 @@ class _OfflineAuthRepository implements AuthRepositoryDomain {
   @override
   Future<Result<SignInResult?, Failure>> restoreSession() async =>
       const Success(SignInResult(needsProfile: false));
+}
+
+class _EmptyMedicationsRepository extends Fake
+    implements MedicationsRepositoryDomain {
+  @override
+  Future<Result<List<MedicationPlan>, Failure>> getPlans(
+    String circleId,
+  ) async => const Success([]);
+
+  @override
+  Future<Result<List<DoseOccurrence>, Failure>> getOccurrences(
+    String circleId,
+    DateTime from,
+    DateTime to, {
+    String? planId,
+  }) async => const Success([]);
 }
 
 /// The start page builds an OnboardingCubit from the OnboardingUseCase, and the
@@ -175,10 +200,11 @@ void main() {
     GetIt.I.registerSingleton<TokenStorage>(_SignedInTokens());
     GetIt.I.registerSingleton<AuthUseCase>(AuthUseCase(auth));
     GetIt.I.registerSingleton<HomeUseCase>(HomeUseCase(home));
-    GetIt.I.registerSingleton<OnboardingUseCase>(
-      OnboardingUseCase(onboarding),
-    );
+    GetIt.I.registerSingleton<OnboardingUseCase>(OnboardingUseCase(onboarding));
     GetIt.I.registerSingleton<CirclesUseCase>(CirclesUseCase(circles));
+    GetIt.I.registerSingleton<MedicationsUseCase>(
+      MedicationsUseCase(_EmptyMedicationsRepository()),
+    );
   });
 
   setUp(() {
@@ -195,8 +221,9 @@ void main() {
   });
 
   group('AppShell', () {
-    testWidgets('shows the top bar actions, four tabs and the add button',
-        (WidgetTester tester) async {
+    testWidgets('shows the top bar actions, four tabs and the add button', (
+      WidgetTester tester,
+    ) async {
       await pumpApp(tester);
 
       expect(find.byTooltip('topbar.account'.tr()), findsOneWidget);
@@ -204,10 +231,16 @@ void main() {
       expect(find.byTooltip('topbar.add_circle'.tr()), findsOneWidget);
       expect(find.byTooltip('tab.add'.tr()), findsOneWidget);
       final account = tester.getCenter(find.byTooltip('topbar.account'.tr()));
-      final addCircle = tester.getCenter(find.byTooltip('topbar.add_circle'.tr()));
-      final bell = tester.getCenter(find.byTooltip('topbar.notifications'.tr()));
-      expect((addCircle.dx - account.dx).abs(),
-          lessThan((addCircle.dx - bell.dx).abs()));
+      final addCircle = tester.getCenter(
+        find.byTooltip('topbar.add_circle'.tr()),
+      );
+      final bell = tester.getCenter(
+        find.byTooltip('topbar.notifications'.tr()),
+      );
+      expect(
+        (addCircle.dx - account.dx).abs(),
+        lessThan((addCircle.dx - bell.dx).abs()),
+      );
       for (final String key in <String>[
         'tab.today',
         'tab.plan',
@@ -218,8 +251,9 @@ void main() {
       }
     });
 
-    testWidgets('every tab keeps both bars and selection',
-        (WidgetTester tester) async {
+    testWidgets('every tab keeps both bars and selection', (
+      WidgetTester tester,
+    ) async {
       await pumpApp(tester);
 
       await tester.tap(find.widgetWithText(ChoiceChip, 'Circle two'));
@@ -233,10 +267,14 @@ void main() {
       ]) {
         await tester.tap(inBar(key.tr()).first);
         await tester.pumpAndSettle();
-        expect(find.text(key.tr()).evaluate().length,
-            inBar(key.tr()).evaluate().length);
-        expect(AppRouter.router.routeInformationProvider.value.uri.path,
-            '/${key.split('.').last}');
+        expect(
+          find.text(key.tr()).evaluate().length,
+          inBar(key.tr()).evaluate().length,
+        );
+        expect(
+          AppRouter.router.routeInformationProvider.value.uri.path,
+          '/${key.split('.').last}',
+        );
         final selected = tester.widget<ChoiceChip>(
           find.widgetWithText(ChoiceChip, 'Circle two'),
         );
@@ -246,18 +284,20 @@ void main() {
       }
     });
 
-    testWidgets('the add button opens the add sheet',
-        (WidgetTester tester) async {
+    testWidgets('the add button opens the add sheet', (
+      WidgetTester tester,
+    ) async {
       await pumpApp(tester);
 
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(find.byTooltip('tab.add'.tr()));
       await tester.pumpAndSettle();
 
       expect(find.text('add.title'.tr()), findsOneWidget);
     });
 
-    testWidgets('no circles shows the empty state with a way to create one',
-        (WidgetTester tester) async {
+    testWidgets('no circles shows the empty state with a way to create one', (
+      WidgetTester tester,
+    ) async {
       home.response = Success(homeData(circles: <CareCircleSummary>[]));
       await pumpApp(tester);
       expect(find.text('home.no_circles'.tr()), findsOneWidget);
@@ -283,20 +323,22 @@ void main() {
       expect(find.byType(Badge), findsNothing);
     });
 
-    testWidgets('account opens a standalone page and back returns to the shell',
-        (WidgetTester tester) async {
-      await pumpApp(tester);
+    testWidgets(
+      'account opens a standalone page and back returns to the shell',
+      (WidgetTester tester) async {
+        await pumpApp(tester);
 
-      await tester.tap(find.byTooltip('topbar.account'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.byType(AccountScreen), findsOneWidget);
-      expect(find.text('account.title'.tr()), findsOneWidget);
-      expect(find.byType(AppBottomBar), findsNothing);
+        await tester.tap(find.byTooltip('topbar.account'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(AccountScreen), findsOneWidget);
+        expect(find.text('account.title'.tr()), findsOneWidget);
+        expect(find.byType(AppBottomBar), findsNothing);
 
-      await tester.tap(find.text('common.back'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.byType(AppBottomBar), findsOneWidget);
-    });
+        await tester.tap(find.text('common.back'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(AppBottomBar), findsOneWidget);
+      },
+    );
   });
 
   group('Circle creation for your own care', () {
@@ -336,8 +378,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('the "+" opens the start page with a back link and no skip',
-        (WidgetTester tester) async {
+    testWidgets('the "+" opens the start page with a back link and no skip', (
+      WidgetTester tester,
+    ) async {
       await pumpApp(tester);
       await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
       await tester.pumpAndSettle();
@@ -350,8 +393,9 @@ void main() {
       expect(find.byType(AppBottomBar), findsOneWidget);
     });
 
-    testWidgets('the empty state button opens the same start page',
-        (WidgetTester tester) async {
+    testWidgets('the empty state button opens the same start page', (
+      WidgetTester tester,
+    ) async {
       home.response = Success(homeData(circles: <CareCircleSummary>[]));
       await pumpApp(tester);
       await tester.tap(find.text('home.create_circle'.tr()));
@@ -359,8 +403,9 @@ void main() {
       expect(find.text('onboarding.start_title'.tr()), findsOneWidget);
     });
 
-    testWidgets('the first step shows the account name and asks for the rest',
-        (WidgetTester tester) async {
+    testWidgets('the first step shows the account name and asks for the rest', (
+      WidgetTester tester,
+    ) async {
       await openFirstStep(tester);
 
       expect(find.text('circles.self_title'.tr()), findsOneWidget);
@@ -373,8 +418,9 @@ void main() {
       expect(find.text('circles.self_title'.tr()), findsOneWidget);
     });
 
-    testWidgets('a name of your own asks for the typed name',
-        (WidgetTester tester) async {
+    testWidgets('a name of your own asks for the typed name', (
+      WidgetTester tester,
+    ) async {
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await tester.tap(find.text('circles.preset.other'.tr()));
       await tester.pumpAndSettle();
@@ -389,8 +435,9 @@ void main() {
       expect(find.text('circles.self_title'.tr()), findsOneWidget);
     });
 
-    testWidgets('the city sheet searches, marks a city and confirms it',
-        (WidgetTester tester) async {
+    testWidgets('the city sheet searches, marks a city and confirms it', (
+      WidgetTester tester,
+    ) async {
       await openFirstStep(tester);
       await tester.tap(find.text('circles.city_hint'.tr()));
       await tester.pumpAndSettle();
@@ -429,43 +476,46 @@ void main() {
       expect(find.text('أبها'), findsOneWidget);
     });
 
-    testWidgets('the birth date sheet writes every number with the digits 0-9',
-        (WidgetTester tester) async {
-      final CreateCircleCubit cubit = await openFirstStep(tester);
-      await tester.tap(find.text('circles.birth_date_hint'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.byType(BirthDateSheet), findsOneWidget);
+    testWidgets(
+      'the birth date sheet writes every number with the digits 0-9',
+      (WidgetTester tester) async {
+        final CreateCircleCubit cubit = await openFirstStep(tester);
+        await tester.tap(find.text('circles.birth_date_hint'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(BirthDateSheet), findsOneWidget);
 
-      // No Arabic-Indic or Persian digit is shown anywhere in the sheet.
-      final RegExp easternDigits = RegExp('[\u0660-\u0669\u06F0-\u06F9]');
-      final Iterable<Text> shown = tester.widgetList<Text>(
-        find.descendant(
-          of: find.byType(BirthDateSheet),
-          matching: find.byType(Text),
-        ),
-      );
-      expect(shown, isNotEmpty);
-      for (final Text text in shown) {
-        expect(
-          easternDigits.hasMatch(text.data ?? ''),
-          isFalse,
-          reason: 'digits of "${text.data}"',
+        // No Arabic-Indic or Persian digit is shown anywhere in the sheet.
+        final RegExp easternDigits = RegExp('[\u0660-\u0669\u06F0-\u06F9]');
+        final Iterable<Text> shown = tester.widgetList<Text>(
+          find.descendant(
+            of: find.byType(BirthDateSheet),
+            matching: find.byType(Text),
+          ),
         );
-      }
+        expect(shown, isNotEmpty);
+        for (final Text text in shown) {
+          expect(
+            easternDigits.hasMatch(text.data ?? ''),
+            isFalse,
+            reason: 'digits of "${text.data}"',
+          );
+        }
 
-      // The lists open about 40 years back, on the first of January.
-      await tester.tap(find.text('circles.months.3'.tr()));
-      await tester.pump();
-      await tester.tap(find.text('circles.date_confirm'.tr()));
-      await tester.pumpAndSettle();
+        // The lists open about 40 years back, on the first of January.
+        await tester.tap(find.text('circles.months.3'.tr()));
+        await tester.pump();
+        await tester.tap(find.text('circles.date_confirm'.tr()));
+        await tester.pumpAndSettle();
 
-      final int year = DateTime.now().year - 40;
-      expect(cubit.state.birthDate, DateTime(year, 3, 1));
-      expect(find.text('1 ${'circles.months.3'.tr()} $year'), findsOneWidget);
-    });
+        final int year = DateTime.now().year - 40;
+        expect(cubit.state.birthDate, DateTime(year, 3, 1));
+        expect(find.text('1 ${'circles.months.3'.tr()} $year'), findsOneWidget);
+      },
+    );
 
-    testWidgets('closing the birth date sheet keeps the field empty',
-        (WidgetTester tester) async {
+    testWidgets('closing the birth date sheet keeps the field empty', (
+      WidgetTester tester,
+    ) async {
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await tester.tap(find.text('circles.birth_date_hint'.tr()));
       await tester.pumpAndSettle();
@@ -478,8 +528,9 @@ void main() {
       expect(find.text('circles.birth_date_hint'.tr()), findsOneWidget);
     });
 
-    testWidgets('an account that already has a circle is told at once',
-        (WidgetTester tester) async {
+    testWidgets('an account that already has a circle is told at once', (
+      WidgetTester tester,
+    ) async {
       circles.account = const Success(
         AccountSummary(
           firstName: 'Reem',
@@ -500,8 +551,9 @@ void main() {
       expect(find.byType(AppBottomBar), findsOneWidget);
     });
 
-    testWidgets('three steps create the circle and open the home page',
-        (WidgetTester tester) async {
+    testWidgets('three steps create the circle and open the home page', (
+      WidgetTester tester,
+    ) async {
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await finishFirstStep(tester, cubit);
 
@@ -529,16 +581,15 @@ void main() {
         const MedicalProfileDraft(
           bloodType: 'O+',
           conditions: ConditionsDraft.listed(codes: <String>['diabetes']),
-          allergies: AllergiesDraft.listed(
-            medication: <String>['penicillin'],
-          ),
+          allergies: AllergiesDraft.listed(medication: <String>['penicillin']),
         ),
       );
       expect(find.byType(AppBottomBar), findsOneWidget);
     });
 
-    testWidgets('skipping the two health steps sends no medical profile',
-        (WidgetTester tester) async {
+    testWidgets('skipping the two health steps sends no medical profile', (
+      WidgetTester tester,
+    ) async {
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await finishFirstStep(tester, cubit);
 
@@ -553,8 +604,9 @@ void main() {
       expect(find.byType(AppBottomBar), findsOneWidget);
     });
 
-    testWidgets('"other" in the health step asks for its text',
-        (WidgetTester tester) async {
+    testWidgets('"other" in the health step asks for its text', (
+      WidgetTester tester,
+    ) async {
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await finishFirstStep(tester, cubit);
 
@@ -574,21 +626,23 @@ void main() {
       expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
     });
 
-    testWidgets('a refusal shows its text and keeps the user on the last step',
-        (WidgetTester tester) async {
-      circles.created = const Error(AlreadyHasCircleFailure());
-      final CreateCircleCubit cubit = await openFirstStep(tester);
-      await finishFirstStep(tester, cubit);
-      await tester.tap(find.text('circles.skip'.tr()));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'a refusal shows its text and keeps the user on the last step',
+      (WidgetTester tester) async {
+        circles.created = const Error(AlreadyHasCircleFailure());
+        final CreateCircleCubit cubit = await openFirstStep(tester);
+        await finishFirstStep(tester, cubit);
+        await tester.tap(find.text('circles.skip'.tr()));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('circles.create'.tr()));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('circles.create'.tr()));
+        await tester.pumpAndSettle();
 
-      expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
-      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-      expect(find.byType(AppBottomBar), findsNothing);
-    });
+        expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
+        expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
+        expect(find.byType(AppBottomBar), findsNothing);
+      },
+    );
   });
 
   group('Circle creation for another person', () {
@@ -631,26 +685,29 @@ void main() {
           .read<CreateCircleCubit>();
     }
 
-    testWidgets('the start page keeps continue off until the question is answered',
-        (WidgetTester tester) async {
-      tallPhone(tester);
-      await pumpApp(tester);
-      await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('onboarding.other_title'.tr()));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'the start page keeps continue off until the question is answered',
+      (WidgetTester tester) async {
+        tallPhone(tester);
+        await pumpApp(tester);
+        await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('onboarding.other_title'.tr()));
+        await tester.pumpAndSettle();
 
-      expect(find.text('onboarding.patient_question'.tr()), findsOneWidget);
-      final Finder next = find.widgetWithText(
-        FilledButton,
-        'common.continue'.tr(),
-      );
-      expect(tester.widget<FilledButton>(next).onPressed, isNull);
-    });
+        expect(find.text('onboarding.patient_question'.tr()), findsOneWidget);
+        final Finder next = find.widgetWithText(
+          FilledButton,
+          'common.continue'.tr(),
+        );
+        expect(tester.widget<FilledButton>(next).onPressed, isNull);
+      },
+    );
 
     group('a patient who uses the app', () {
-      testWidgets('the start page leads to the phone number page',
-          (WidgetTester tester) async {
+      testWidgets('the start page leads to the phone number page', (
+        WidgetTester tester,
+      ) async {
         await openFlow(tester, patientUsesApp: true);
 
         expect(find.byType(RequestPatientScreen), findsOneWidget);
@@ -662,8 +719,9 @@ void main() {
         expect(find.text('circles.request_notice'.tr()), findsOneWidget);
       });
 
-      testWidgets('a wrong number sends nothing and stays on the page',
-          (WidgetTester tester) async {
+      testWidgets('a wrong number sends nothing and stays on the page', (
+        WidgetTester tester,
+      ) async {
         await openFlow(tester, patientUsesApp: true);
         await tester.enterText(find.byType(TextField), '1234');
         await tester.pump();
@@ -675,25 +733,28 @@ void main() {
         expect(find.text('circles.request_waiting_title'.tr()), findsNothing);
       });
 
-      testWidgets('the number is written in English digits and the request is sent',
-          (WidgetTester tester) async {
-        await openFlow(tester, patientUsesApp: true);
-        // An Arabic keyboard types Arabic-Indic digits.
-        await tester.enterText(find.byType(TextField), '٥٠١٢٣٤٥٦٧');
-        await tester.pump();
-        await tester.tap(find.text('circles.mode_detailed'.tr()));
-        await tester.pump();
-        await tester.tap(find.text('circles.send_request'.tr()));
-        await tester.pumpAndSettle();
+      testWidgets(
+        'the number is written in English digits and the request is sent',
+        (WidgetTester tester) async {
+          await openFlow(tester, patientUsesApp: true);
+          // An Arabic keyboard types Arabic-Indic digits.
+          await tester.enterText(find.byType(TextField), '٥٠١٢٣٤٥٦٧');
+          await tester.pump();
+          await tester.tap(find.text('circles.mode_detailed'.tr()));
+          await tester.pump();
+          await tester.tap(find.text('circles.send_request'.tr()));
+          await tester.pumpAndSettle();
 
-        final request = circles.sentRequests.single;
-        expect(request.patientPhoneNumber, '+966501234567');
-        expect(request.circleLabel, 'circles.label.mother'.tr());
-        expect(request.proposedAppMode.name, 'detailed');
-      });
+          final request = circles.sentRequests.single;
+          expect(request.patientPhoneNumber, '+966501234567');
+          expect(request.circleLabel, 'circles.label.mother'.tr());
+          expect(request.proposedAppMode.name, 'detailed');
+        },
+      );
 
-      testWidgets('the waiting page replaces the form and goes back home',
-          (WidgetTester tester) async {
+      testWidgets('the waiting page replaces the form and goes back home', (
+        WidgetTester tester,
+      ) async {
         await openFlow(tester, patientUsesApp: true);
         await tester.enterText(find.byType(TextField), '501234567');
         await tester.pump();
@@ -703,7 +764,10 @@ void main() {
         expect(find.text('circles.request_waiting_title'.tr()), findsOneWidget);
         expect(find.text('circles.request_waiting_body'.tr()), findsOneWidget);
         expect(find.text('+966 50 123 4567'), findsOneWidget);
-        expect(find.text('circles.request_status_pending'.tr()), findsOneWidget);
+        expect(
+          find.text('circles.request_status_pending'.tr()),
+          findsOneWidget,
+        );
         // The form is gone.
         expect(find.text('circles.send_request'.tr()), findsNothing);
 
@@ -712,8 +776,9 @@ void main() {
         expect(find.byType(AppBottomBar), findsOneWidget);
       });
 
-      testWidgets('a request that the patient already accepted says so',
-          (WidgetTester tester) async {
+      testWidgets('a request that the patient already accepted says so', (
+        WidgetTester tester,
+      ) async {
         circles.sent = const Success(
           SentCircleRequest(
             id: 'request-1',
@@ -729,12 +794,19 @@ void main() {
         await tester.tap(find.text('circles.send_request'.tr()));
         await tester.pumpAndSettle();
 
-        expect(find.text('circles.request_accepted_title'.tr()), findsOneWidget);
-        expect(find.text('circles.request_status_accepted'.tr()), findsOneWidget);
+        expect(
+          find.text('circles.request_accepted_title'.tr()),
+          findsOneWidget,
+        );
+        expect(
+          find.text('circles.request_status_accepted'.tr()),
+          findsOneWidget,
+        );
       });
 
-      testWidgets('a refusal shows its text and keeps the form',
-          (WidgetTester tester) async {
+      testWidgets('a refusal shows its text and keeps the form', (
+        WidgetTester tester,
+      ) async {
         circles.sent = const Error(SelfRequestFailure());
         await openFlow(tester, patientUsesApp: true);
         await tester.enterText(find.byType(TextField), '501234567');
@@ -747,8 +819,9 @@ void main() {
         expect(find.text('circles.request_waiting_title'.tr()), findsNothing);
       });
 
-      testWidgets('a label of your own asks for the typed word',
-          (WidgetTester tester) async {
+      testWidgets('a label of your own asks for the typed word', (
+        WidgetTester tester,
+      ) async {
         await openFlow(tester, patientUsesApp: true);
         await tester.tap(find.text('circles.label.other'.tr()));
         await tester.pumpAndSettle();
@@ -764,8 +837,9 @@ void main() {
     });
 
     group('a patient who does not use the app', () {
-      testWidgets('the start page leads to the data of the patient',
-          (WidgetTester tester) async {
+      testWidgets('the start page leads to the data of the patient', (
+        WidgetTester tester,
+      ) async {
         await openPatientBasics(tester);
 
         expect(find.text('circles.patient_title'.tr()), findsOneWidget);
@@ -776,8 +850,9 @@ void main() {
         expect(find.text('Reem Alahmadi'), findsNothing);
       });
 
-      testWidgets('the missing answers are marked and the step stays',
-          (WidgetTester tester) async {
+      testWidgets('the missing answers are marked and the step stays', (
+        WidgetTester tester,
+      ) async {
         await openPatientBasics(tester);
         await tester.tap(find.text('circles.next'.tr()));
         await tester.pumpAndSettle();
@@ -787,35 +862,40 @@ void main() {
         expect(find.text('circles.patient_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('shows how the circle will be named while the name is typed',
-          (WidgetTester tester) async {
-        await openPatientBasics(tester);
-        expect(
-          find.text(
-            'circles.label_hint'.tr(args: <String>['circles.label.mother'.tr()]),
-          ),
-          findsOneWidget,
-        );
+      testWidgets(
+        'shows how the circle will be named while the name is typed',
+        (WidgetTester tester) async {
+          await openPatientBasics(tester);
+          expect(
+            find.text(
+              'circles.label_hint'.tr(
+                args: <String>['circles.label.mother'.tr()],
+              ),
+            ),
+            findsOneWidget,
+          );
 
-        await tester.enterText(find.byType(TextField).first, 'نورة');
-        await tester.pump();
-        final String name = '${'circles.label.mother'.tr()} نورة';
-        expect(
-          find.text('circles.name_preview'.tr(args: <String>[name])),
-          findsOneWidget,
-        );
+          await tester.enterText(find.byType(TextField).first, 'نورة');
+          await tester.pump();
+          final String name = '${'circles.label.mother'.tr()} نورة';
+          expect(
+            find.text('circles.name_preview'.tr(args: <String>[name])),
+            findsOneWidget,
+          );
 
-        await tester.tap(find.text('circles.label.grandmother'.tr()));
-        await tester.pump();
-        final String other = '${'circles.label.grandmother'.tr()} نورة';
-        expect(
-          find.text('circles.name_preview'.tr(args: <String>[other])),
-          findsOneWidget,
-        );
-      });
+          await tester.tap(find.text('circles.label.grandmother'.tr()));
+          await tester.pump();
+          final String other = '${'circles.label.grandmother'.tr()} نورة';
+          expect(
+            find.text('circles.name_preview'.tr(args: <String>[other])),
+            findsOneWidget,
+          );
+        },
+      );
 
-      testWidgets('a label of your own asks for the typed word',
-          (WidgetTester tester) async {
+      testWidgets('a label of your own asks for the typed word', (
+        WidgetTester tester,
+      ) async {
         final CreateCircleCubit cubit = await openPatientBasics(tester);
         await tester.tap(find.text('circles.label.other'.tr()));
         await tester.pumpAndSettle();
@@ -833,8 +913,9 @@ void main() {
         expect(find.text('circles.patient_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('the city sheet asks for the city of the patient',
-          (WidgetTester tester) async {
+      testWidgets('the city sheet asks for the city of the patient', (
+        WidgetTester tester,
+      ) async {
         await openPatientBasics(tester);
         await tester.tap(find.text('circles.patient_city_hint'.tr()));
         await tester.pumpAndSettle();
@@ -848,8 +929,9 @@ void main() {
         );
       });
 
-      testWidgets('three steps create the circle and open the home page',
-          (WidgetTester tester) async {
+      testWidgets('three steps create the circle and open the home page', (
+        WidgetTester tester,
+      ) async {
         final CreateCircleCubit cubit = await openPatientBasics(tester);
         await tester.enterText(find.byType(TextField).at(0), 'نورة');
         await tester.enterText(find.byType(TextField).at(1), 'العتيبي');
@@ -885,27 +967,29 @@ void main() {
         expect(find.byType(AppBottomBar), findsOneWidget);
       });
 
-      testWidgets('a refusal shows its text and keeps the user on the last step',
-          (WidgetTester tester) async {
-        circles.createdPatient = const Error(ModeConflictFailure());
-        final CreateCircleCubit cubit = await openPatientBasics(tester);
-        await tester.enterText(find.byType(TextField).at(0), 'نورة');
-        await tester.enterText(find.byType(TextField).at(1), 'العتيبي');
-        cubit.birthDateChanged(DateTime(1954, 6, 5));
-        cubit.cityChanged('بريدة');
-        await tester.pump();
-        await tester.tap(find.text('circles.next'.tr()));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('circles.skip'.tr()));
-        await tester.pumpAndSettle();
+      testWidgets(
+        'a refusal shows its text and keeps the user on the last step',
+        (WidgetTester tester) async {
+          circles.createdPatient = const Error(ModeConflictFailure());
+          final CreateCircleCubit cubit = await openPatientBasics(tester);
+          await tester.enterText(find.byType(TextField).at(0), 'نورة');
+          await tester.enterText(find.byType(TextField).at(1), 'العتيبي');
+          cubit.birthDateChanged(DateTime(1954, 6, 5));
+          cubit.cityChanged('بريدة');
+          await tester.pump();
+          await tester.tap(find.text('circles.next'.tr()));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('circles.skip'.tr()));
+          await tester.pumpAndSettle();
 
-        await tester.tap(find.text('circles.create'.tr()));
-        await tester.pumpAndSettle();
+          await tester.tap(find.text('circles.create'.tr()));
+          await tester.pumpAndSettle();
 
-        expect(find.text('circles.mode_conflict'.tr()), findsOneWidget);
-        expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-        expect(find.byType(AppBottomBar), findsNothing);
-      });
+          expect(find.text('circles.mode_conflict'.tr()), findsOneWidget);
+          expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
+          expect(find.byType(AppBottomBar), findsNothing);
+        },
+      );
     });
   });
 
@@ -938,14 +1022,17 @@ void main() {
     }
 
     final CircleInbox oneOfEach = inboxOf(
-      received: const <ReceivedCircleRequest>[CirclesFakeRepository.askedOfNoura],
+      received: const <ReceivedCircleRequest>[
+        CirclesFakeRepository.askedOfNoura,
+      ],
       invitations: const <ReceivedInvitation>[
         CirclesFakeRepository.invitedByKhaled,
       ],
     );
 
-    testWidgets('the bell shows a dot and says how many things wait',
-        (WidgetTester tester) async {
+    testWidgets('the bell shows a dot and says how many things wait', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(oneOfEach);
       await pumpApp(tester);
 
@@ -954,16 +1041,18 @@ void main() {
       expect(find.byTooltip('topbar.notifications'.tr()), findsNothing);
     });
 
-    testWidgets('with nothing waiting there is no dot',
-        (WidgetTester tester) async {
+    testWidgets('with nothing waiting there is no dot', (
+      WidgetTester tester,
+    ) async {
       await pumpApp(tester);
 
       expect(find.byType(Badge), findsNothing);
       expect(bell(0), findsOneWidget);
     });
 
-    testWidgets('a request the person already agreed to still counts',
-        (WidgetTester tester) async {
+    testWidgets('a request the person already agreed to still counts', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(
         inboxOf(
           received: const <ReceivedCircleRequest>[
@@ -975,8 +1064,9 @@ void main() {
       expect(bell(1), findsOneWidget);
     });
 
-    testWidgets('the bell opens the page with the invitation and the request',
-        (WidgetTester tester) async {
+    testWidgets('the bell opens the page with the invitation and the request', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(oneOfEach);
       await openNotifications(tester, 2);
 
@@ -994,22 +1084,26 @@ void main() {
       );
       expect(find.text('circles.request_card_title'.tr()), findsOneWidget);
       expect(
-        find.text('circles.request_card_body'.tr(args: <String>['سارة الحربي'])),
+        find.text(
+          'circles.request_card_body'.tr(args: <String>['سارة الحربي']),
+        ),
         findsOneWidget,
       );
       expect(find.text('circles.view_request'.tr()), findsOneWidget);
     });
 
-    testWidgets('the bell opens a page that says nothing waits',
-        (WidgetTester tester) async {
+    testWidgets('the bell opens a page that says nothing waits', (
+      WidgetTester tester,
+    ) async {
       await openNotifications(tester, 0);
 
       expect(find.byType(NotificationsScreen), findsOneWidget);
       expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
     });
 
-    testWidgets('a request the patient declined is told under the events',
-        (WidgetTester tester) async {
+    testWidgets('a request the patient declined is told under the events', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(
         inboxOf(
           sent: const <SentCircleRequest>[
@@ -1036,12 +1130,13 @@ void main() {
       expect(find.text('circles.inbox_empty'.tr()), findsNothing);
     });
 
-    testWidgets('a request still waiting for the patient is not an event',
-        (WidgetTester tester) async {
+    testWidgets('a request still waiting for the patient is not an event', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(
-        inboxOf(sent: const <SentCircleRequest>[
-          CirclesFakeRepository.waitingRequest,
-        ]),
+        inboxOf(
+          sent: const <SentCircleRequest>[CirclesFakeRepository.waitingRequest],
+        ),
       );
       await openNotifications(tester, 0);
 
@@ -1049,29 +1144,32 @@ void main() {
       expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
     });
 
-    testWidgets('accepting an invitation sends the answer and clears the card',
-        (WidgetTester tester) async {
-      circles.inbox = Success(
-        inboxOf(
-          invitations: const <ReceivedInvitation>[
-            CirclesFakeRepository.invitedByKhaled,
-          ],
-        ),
-      );
-      await openNotifications(tester, 1);
-      // The server no longer lists the invitation once it was answered.
-      circles.inbox = const Success(CircleInbox.empty());
+    testWidgets(
+      'accepting an invitation sends the answer and clears the card',
+      (WidgetTester tester) async {
+        circles.inbox = Success(
+          inboxOf(
+            invitations: const <ReceivedInvitation>[
+              CirclesFakeRepository.invitedByKhaled,
+            ],
+          ),
+        );
+        await openNotifications(tester, 1);
+        // The server no longer lists the invitation once it was answered.
+        circles.inbox = const Success(CircleInbox.empty());
 
-      await tester.tap(find.text('circles.accept'.tr()));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('circles.accept'.tr()));
+        await tester.pumpAndSettle();
 
-      expect(circles.invitationAnswers.single, ('invitation-1', true));
-      expect(find.text('circles.invitation_title'.tr()), findsNothing);
-      expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
-    });
+        expect(circles.invitationAnswers.single, ('invitation-1', true));
+        expect(find.text('circles.invitation_title'.tr()), findsNothing);
+        expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
+      },
+    );
 
-    testWidgets('declining an invitation sends "no"',
-        (WidgetTester tester) async {
+    testWidgets('declining an invitation sends "no"', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(
         inboxOf(
           invitations: const <ReceivedInvitation>[
@@ -1090,8 +1188,9 @@ void main() {
       expect(find.text('circles.invitation_title'.tr()), findsNothing);
     });
 
-    testWidgets('a refused answer shows its text and keeps the card',
-        (WidgetTester tester) async {
+    testWidgets('a refused answer shows its text and keeps the card', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(
         inboxOf(
           invitations: const <ReceivedInvitation>[
@@ -1109,8 +1208,9 @@ void main() {
       expect(find.text('circles.invitation_title'.tr()), findsOneWidget);
     });
 
-    testWidgets('a person who cannot be reached sees a retry button',
-        (WidgetTester tester) async {
+    testWidgets('a person who cannot be reached sees a retry button', (
+      WidgetTester tester,
+    ) async {
       tallPhone(tester);
       await pumpApp(tester);
       // The page reads the list again, and that read fails.
@@ -1133,8 +1233,9 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      testWidgets('the request page says who asks and what is asked',
-          (WidgetTester tester) async {
+      testWidgets('the request page says who asks and what is asked', (
+        WidgetTester tester,
+      ) async {
         await openRequest(tester);
 
         expect(find.byType(RequestReplyScreen), findsOneWidget);
@@ -1148,8 +1249,9 @@ void main() {
         expect(find.text('circles.decline'.tr()), findsOneWidget);
       });
 
-      testWidgets('the detailed mode is explained in its own words',
-          (WidgetTester tester) async {
+      testWidgets('the detailed mode is explained in its own words', (
+        WidgetTester tester,
+      ) async {
         circles.inbox = Success(
           inboxOf(
             received: const <ReceivedCircleRequest>[
@@ -1173,8 +1275,9 @@ void main() {
         expect(find.text('circles.reply_body_simplified'.tr()), findsNothing);
       });
 
-      testWidgets('agreeing sends "yes" and opens the page of the basic data',
-          (WidgetTester tester) async {
+      testWidgets('agreeing sends "yes" and opens the page of the basic data', (
+        WidgetTester tester,
+      ) async {
         await openRequest(tester);
 
         await tester.tap(find.text('circles.accept_request'.tr()));
@@ -1191,8 +1294,9 @@ void main() {
         expect(circles.completions, isEmpty);
       });
 
-      testWidgets('declining sends "no" and goes back to the notifications',
-          (WidgetTester tester) async {
+      testWidgets('declining sends "no" and goes back to the notifications', (
+        WidgetTester tester,
+      ) async {
         await openRequest(tester);
         circles.replied = const Success(CircleRequestStatus.declined);
         circles.inbox = Success(
@@ -1214,8 +1318,9 @@ void main() {
         expect(find.text('circles.invitation_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('a request that is gone shows its text and stays',
-          (WidgetTester tester) async {
+      testWidgets('a request that is gone shows its text and stays', (
+        WidgetTester tester,
+      ) async {
         await openRequest(tester);
         circles.replied = const Error(RequestUnavailableFailure());
 
@@ -1227,8 +1332,9 @@ void main() {
         expect(find.byType(ApprovedCircleBasicsScreen), findsNothing);
       });
 
-      testWidgets('going back leaves the request unanswered',
-          (WidgetTester tester) async {
+      testWidgets('going back leaves the request unanswered', (
+        WidgetTester tester,
+      ) async {
         await openRequest(tester);
 
         await tester.tap(find.text('common.back'.tr()));
@@ -1247,8 +1353,9 @@ void main() {
         ],
       );
 
-      testWidgets('waits for the basic data on the page',
-          (WidgetTester tester) async {
+      testWidgets('waits for the basic data on the page', (
+        WidgetTester tester,
+      ) async {
         circles.inbox = Success(agreed);
         await openNotifications(tester, 1);
 
@@ -1264,8 +1371,9 @@ void main() {
         expect(find.text('circles.view_request'.tr()), findsNothing);
       });
 
-      testWidgets('continue opens the basic data page',
-          (WidgetTester tester) async {
+      testWidgets('continue opens the basic data page', (
+        WidgetTester tester,
+      ) async {
         circles.inbox = Success(agreed);
         await openNotifications(tester, 1);
 
@@ -1276,8 +1384,9 @@ void main() {
         expect(find.text('أمي نورة'), findsOneWidget);
       });
 
-      testWidgets('three steps create the circle from the request',
-          (WidgetTester tester) async {
+      testWidgets('three steps create the circle from the request', (
+        WidgetTester tester,
+      ) async {
         circles.inbox = Success(agreed);
         await openNotifications(tester, 1);
         await tester.tap(find.text('common.continue'.tr()));
@@ -1324,8 +1433,9 @@ void main() {
         expect(find.byType(AppBottomBar), findsOneWidget);
       });
 
-      testWidgets('canceling asks first and keeps the request on "no"',
-          (WidgetTester tester) async {
+      testWidgets('canceling asks first and keeps the request on "no"', (
+        WidgetTester tester,
+      ) async {
         circles.inbox = Success(agreed);
         await openNotifications(tester, 1);
 
@@ -1344,41 +1454,46 @@ void main() {
         expect(find.text('circles.complete_card_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('canceling on "yes" cancels this request and clears the card',
-          (WidgetTester tester) async {
-        circles.inbox = Success(agreed);
-        await openNotifications(tester, 1);
-        circles.inbox = const Success(CircleInbox.empty());
+      testWidgets(
+        'canceling on "yes" cancels this request and clears the card',
+        (WidgetTester tester) async {
+          circles.inbox = Success(agreed);
+          await openNotifications(tester, 1);
+          circles.inbox = const Success(CircleInbox.empty());
 
-        await tester.tap(find.text('circles.cancel_request'.tr()));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('circles.cancel_confirm_yes'.tr()));
-        await tester.pumpAndSettle();
+          await tester.tap(find.text('circles.cancel_request'.tr()));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('circles.cancel_confirm_yes'.tr()));
+          await tester.pumpAndSettle();
 
-        expect(circles.canceledIds, <String>['request-in-1']);
-        expect(find.text('circles.complete_card_title'.tr()), findsNothing);
-        expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
-      });
+          expect(circles.canceledIds, <String>['request-in-1']);
+          expect(find.text('circles.complete_card_title'.tr()), findsNothing);
+          expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
+        },
+      );
     });
 
     group('pages that need a request', () {
-      testWidgets('the request page opened without a request goes to the list',
-          (WidgetTester tester) async {
-        await pumpApp(tester);
-        AppRouter.router.go(Routes.replyRequest);
-        await tester.pumpAndSettle();
+      testWidgets(
+        'the request page opened without a request goes to the list',
+        (WidgetTester tester) async {
+          await pumpApp(tester);
+          AppRouter.router.go(Routes.replyRequest);
+          await tester.pumpAndSettle();
 
-        expect(find.byType(RequestReplyScreen), findsNothing);
-        expect(find.byType(NotificationsScreen), findsOneWidget);
-      });
+          expect(find.byType(RequestReplyScreen), findsNothing);
+          expect(find.byType(NotificationsScreen), findsOneWidget);
+        },
+      );
 
       for (final String route in <String>[
         Routes.completeRequest,
         Routes.completeRequestHealth,
         Routes.completeRequestAllergies,
       ]) {
-        testWidgets('$route opened without a request goes to the list',
-            (WidgetTester tester) async {
+        testWidgets('$route opened without a request goes to the list', (
+          WidgetTester tester,
+        ) async {
           await pumpApp(tester);
           AppRouter.router.go(route);
           await tester.pumpAndSettle();
@@ -1414,8 +1529,9 @@ void main() {
       const Duration(days: 5, hours: 1),
     );
 
-    testWidgets('shows the names, the phone number and the sign-out rows',
-        (WidgetTester tester) async {
+    testWidgets('shows the names, the phone number and the sign-out rows', (
+      WidgetTester tester,
+    ) async {
       await openAccount(tester);
 
       expect(find.text('account.my_data'.tr()), findsOneWidget);
@@ -1433,8 +1549,9 @@ void main() {
       expect(find.text('account.awaiting_title'.tr()), findsNothing);
     });
 
-    testWidgets('a failure to load can be tried again',
-        (WidgetTester tester) async {
+    testWidgets('a failure to load can be tried again', (
+      WidgetTester tester,
+    ) async {
       circles.account = const Error(NetworkFailure());
       await openAccount(tester);
       expect(find.text('error.network'.tr()), findsOneWidget);
@@ -1446,8 +1563,9 @@ void main() {
       expect(find.text('account.my_data'.tr()), findsOneWidget);
     });
 
-    testWidgets('lists the circles that wait for the patient',
-        (WidgetTester tester) async {
+    testWidgets('lists the circles that wait for the patient', (
+      WidgetTester tester,
+    ) async {
       circles.inbox = Success(
         CircleInbox(
           sent: <SentCircleRequest>[
@@ -1514,8 +1632,7 @@ void main() {
         );
       });
 
-      testWidgets('opens its details',
-          (WidgetTester tester) async {
+      testWidgets('opens its details', (WidgetTester tester) async {
         await openAccount(tester);
         await openSheet(tester, 'أمي');
 
@@ -1525,8 +1642,9 @@ void main() {
         expect(find.text('circles.cancel_request'.tr()), findsOneWidget);
       });
 
-      testWidgets('is canceled after the sender agrees',
-          (WidgetTester tester) async {
+      testWidgets('is canceled after the sender agrees', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
         await openSheet(tester, 'أمي');
 
@@ -1546,8 +1664,7 @@ void main() {
         expect(find.text('account.request_canceled'.tr()), findsOneWidget);
       });
 
-      testWidgets('stays when the sender says no',
-          (WidgetTester tester) async {
+      testWidgets('stays when the sender says no', (WidgetTester tester) async {
         await openAccount(tester);
         await openSheet(tester, 'أمي');
 
@@ -1560,8 +1677,9 @@ void main() {
         expect(find.text('account.request_sheet_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('stays when the server refuses, and says why',
-          (WidgetTester tester) async {
+      testWidgets('stays when the server refuses, and says why', (
+        WidgetTester tester,
+      ) async {
         circles.canceled = const Error(NetworkFailure());
         await openAccount(tester);
         await openSheet(tester, 'أمي');
@@ -1577,8 +1695,9 @@ void main() {
     });
 
     group('changing the names', () {
-      testWidgets('the display name is saved with the other two names',
-          (WidgetTester tester) async {
+      testWidgets('the display name is saved with the other two names', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
         await openSheet(tester, 'account.display_name'.tr());
 
@@ -1594,8 +1713,9 @@ void main() {
         expect(find.text('account.saved'.tr()), findsOneWidget);
       });
 
-      testWidgets('the full name is saved with the display name',
-          (WidgetTester tester) async {
+      testWidgets('the full name is saved with the display name', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
         await openSheet(tester, 'account.full_name'.tr());
 
@@ -1610,8 +1730,9 @@ void main() {
         expect(find.text('Layla Salem'), findsNWidgets(2));
       });
 
-      testWidgets('an empty name is marked and nothing is sent',
-          (WidgetTester tester) async {
+      testWidgets('an empty name is marked and nothing is sent', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
         await openSheet(tester, 'account.display_name'.tr());
 
@@ -1624,8 +1745,9 @@ void main() {
         expect(find.text('account.edit_display_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('a refusal shows its text and keeps the sheet',
-          (WidgetTester tester) async {
+      testWidgets('a refusal shows its text and keeps the sheet', (
+        WidgetTester tester,
+      ) async {
         onboarding.result = const Error(NetworkFailure());
         await openAccount(tester);
         await openSheet(tester, 'account.display_name'.tr());
@@ -1647,20 +1769,24 @@ void main() {
         matching: find.text(text),
       );
 
-      testWidgets('sign out ends the session and opens the sign-in page',
-          (WidgetTester tester) async {
+      testWidgets('sign out ends the session and opens the sign-in page', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
 
         await tester.tap(find.text('auth.sign_out'.tr()));
         await tester.pumpAndSettle();
 
         expect(auth.signOuts, 1);
-        expect(AppRouter.router.routeInformationProvider.value.uri.path,
-            Routes.auth);
+        expect(
+          AppRouter.router.routeInformationProvider.value.uri.path,
+          Routes.auth,
+        );
       });
 
-      testWidgets('deleting asks first, and "no" deletes nothing',
-          (WidgetTester tester) async {
+      testWidgets('deleting asks first, and "no" deletes nothing', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
 
         await tester.tap(find.text('account.delete_account'.tr()));
@@ -1677,8 +1803,9 @@ void main() {
         expect(find.byType(AccountScreen), findsOneWidget);
       });
 
-      testWidgets('"yes" deletes the account and opens the sign-in page',
-          (WidgetTester tester) async {
+      testWidgets('"yes" deletes the account and opens the sign-in page', (
+        WidgetTester tester,
+      ) async {
         await openAccount(tester);
 
         await tester.tap(find.text('account.delete_account'.tr()));
@@ -1689,12 +1816,15 @@ void main() {
         expect(circles.deletions, <AccountDeletion>[const AccountDeletion()]);
         // The tokens are removed from the phone too.
         expect(auth.signOuts, 1);
-        expect(AppRouter.router.routeInformationProvider.value.uri.path,
-            Routes.auth);
+        expect(
+          AppRouter.router.routeInformationProvider.value.uri.path,
+          Routes.auth,
+        );
       });
 
-      testWidgets('the patient of a circle chooses what happens to it',
-          (WidgetTester tester) async {
+      testWidgets('the patient of a circle chooses what happens to it', (
+        WidgetTester tester,
+      ) async {
         circles.deleted = const Error(PatientChoiceRequiredFailure());
         await openAccount(tester);
 
@@ -1717,8 +1847,9 @@ void main() {
         expect(auth.signOuts, 1);
       });
 
-      testWidgets('stopping at the choice deletes nothing',
-          (WidgetTester tester) async {
+      testWidgets('stopping at the choice deletes nothing', (
+        WidgetTester tester,
+      ) async {
         circles.deleted = const Error(PatientChoiceRequiredFailure());
         await openAccount(tester);
 
@@ -1735,8 +1866,9 @@ void main() {
         expect(find.byType(AlertDialog), findsNothing);
       });
 
-      testWidgets('the only manager of a circle agrees to delete it too',
-          (WidgetTester tester) async {
+      testWidgets('the only manager of a circle agrees to delete it too', (
+        WidgetTester tester,
+      ) async {
         circles.deleted = const Error(LastManagerFailure());
         await openAccount(tester);
 
@@ -1752,13 +1884,16 @@ void main() {
         await tester.tap(inDialog('account.last_manager_confirm'.tr()));
         await tester.pumpAndSettle();
 
-        expect(circles.deletions.last,
-            const AccountDeletion(deleteLastManagedCircles: true));
+        expect(
+          circles.deletions.last,
+          const AccountDeletion(deleteLastManagedCircles: true),
+        );
         expect(auth.signOuts, 1);
       });
 
-      testWidgets('another failure shows its text and keeps the account',
-          (WidgetTester tester) async {
+      testWidgets('another failure shows its text and keeps the account', (
+        WidgetTester tester,
+      ) async {
         circles.deleted = const Error(NetworkFailure());
         await openAccount(tester);
 
@@ -1813,9 +1948,8 @@ void main() {
     }
 
     /// The pencil of a contact, named as the page names it.
-    Finder pencilOf(String name) => find.byTooltip(
-      'circles.contact_edit_action'.tr(args: <String>[name]),
-    );
+    Finder pencilOf(String name) =>
+        find.byTooltip('circles.contact_edit_action'.tr(args: <String>[name]));
 
     /// The fields of the contact form: the name, then the number.
     Finder nameField() => find.byType(TextField).first;
@@ -1845,8 +1979,9 @@ void main() {
         );
 
     group('the Circle tab', () {
-      testWidgets('shows the selected circle with its two buttons',
-          (WidgetTester tester) async {
+      testWidgets('shows the selected circle with its two buttons', (
+        WidgetTester tester,
+      ) async {
         tallPhone(tester);
         await pumpApp(tester);
         await tester.tap(find.widgetWithText(ChoiceChip, 'Circle two'));
@@ -1867,8 +2002,9 @@ void main() {
         expect(find.text('circles.card_title'.tr()), findsOneWidget);
       });
 
-      testWidgets('shows no card when the account has no circle',
-          (WidgetTester tester) async {
+      testWidgets('shows no card when the account has no circle', (
+        WidgetTester tester,
+      ) async {
         home.response = Success(homeData(circles: <CareCircleSummary>[]));
 
         await openCircleTab(tester);
@@ -1878,18 +2014,16 @@ void main() {
     });
 
     group('the medical file', () {
-      testWidgets('shows the patient, the answers and the contacts',
-          (WidgetTester tester) async {
+      testWidgets('shows the patient, the answers and the contacts', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
 
         expect(find.byType(MedicalFileScreen), findsOneWidget);
         expect(find.byType(AppBottomBar), findsNothing);
         expect(circles.medicalFileReads, 1);
         expect(find.text('نورة العتيبي'), findsOneWidget);
-        expect(
-          find.text('5 ${'circles.months.6'.tr()} 1954'),
-          findsOneWidget,
-        );
+        expect(find.text('5 ${'circles.months.6'.tr()} 1954'), findsOneWidget);
         expect(find.text(MedicalTexts.bloodTypeLabel('O+')), findsOneWidget);
         expect(find.text('circles.no_allergies'.tr()), findsOneWidget);
         expect(find.text('medical.condition.diabetes'.tr()), findsOneWidget);
@@ -1902,8 +2036,9 @@ void main() {
         expect(find.text('هدى'), findsOneWidget);
       });
 
-      testWidgets('a part nobody answered reads "غير محدد"',
-          (WidgetTester tester) async {
+      testWidgets('a part nobody answered reads "غير محدد"', (
+        WidgetTester tester,
+      ) async {
         circles.medicalFile = Success(
           CirclesFakeRepository.nouraFile.copyWith(
             profile: const MedicalProfileDraft(),
@@ -1916,24 +2051,27 @@ void main() {
         expect(find.text('circles.file_unknown'.tr()), findsNWidgets(3));
       });
 
-      testWidgets('a file that cannot be read says why and can be tried again',
-          (WidgetTester tester) async {
-        circles.medicalFile = const Error(ServerFailure());
-        await openFile(tester);
+      testWidgets(
+        'a file that cannot be read says why and can be tried again',
+        (WidgetTester tester) async {
+          circles.medicalFile = const Error(ServerFailure());
+          await openFile(tester);
 
-        expect(find.text('error.server'.tr()), findsOneWidget);
-        expect(find.text('circles.file_edit'.tr()), findsNothing);
+          expect(find.text('error.server'.tr()), findsOneWidget);
+          expect(find.text('circles.file_edit'.tr()), findsNothing);
 
-        circles.medicalFile = Success(CirclesFakeRepository.nouraFile);
-        await tester.tap(find.text('auth.retry'.tr()));
-        await tester.pumpAndSettle();
+          circles.medicalFile = Success(CirclesFakeRepository.nouraFile);
+          await tester.tap(find.text('auth.retry'.tr()));
+          await tester.pumpAndSettle();
 
-        expect(find.text('نورة العتيبي'), findsOneWidget);
-        expect(find.text('circles.file_edit'.tr()), findsOneWidget);
-      });
+          expect(find.text('نورة العتيبي'), findsOneWidget);
+          expect(find.text('circles.file_edit'.tr()), findsOneWidget);
+        },
+      );
 
-      testWidgets('a person who left the circle is refused',
-          (WidgetTester tester) async {
+      testWidgets('a person who left the circle is refused', (
+        WidgetTester tester,
+      ) async {
         circles.medicalFile = const Error(ForbiddenFailure());
 
         await openFile(tester);
@@ -1941,8 +2079,9 @@ void main() {
         expect(find.text('error.forbidden'.tr()), findsOneWidget);
       });
 
-      testWidgets('back returns to the Circle tab',
-          (WidgetTester tester) async {
+      testWidgets('back returns to the Circle tab', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
 
         await tester.tap(find.text('common.back'.tr()));
@@ -1955,8 +2094,9 @@ void main() {
     });
 
     group('the emergency contacts', () {
-      testWidgets('a contact is added with its relation and number',
-          (WidgetTester tester) async {
+      testWidgets('a contact is added with its relation and number', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
         await fillNewContact(tester);
 
@@ -1975,8 +2115,9 @@ void main() {
         expect(find.text('+966 55 555 5555'), findsOneWidget);
       });
 
-      testWidgets('a form with nothing filled says what is missing',
-          (WidgetTester tester) async {
+      testWidgets('a form with nothing filled says what is missing', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
         await tester.tap(find.text('circles.contact_add'.tr()));
         await tester.pumpAndSettle();
@@ -1989,8 +2130,9 @@ void main() {
         expect(circles.saveCalls, isEmpty);
       });
 
-      testWidgets('cancel closes the form without saving',
-          (WidgetTester tester) async {
+      testWidgets('cancel closes the form without saving', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
         await fillNewContact(tester);
 
@@ -2002,8 +2144,9 @@ void main() {
         expect(circles.saveCalls, isEmpty);
       });
 
-      testWidgets('a number that is already a contact says why',
-          (WidgetTester tester) async {
+      testWidgets('a number that is already a contact says why', (
+        WidgetTester tester,
+      ) async {
         circles.contactSaved = const Error(DuplicateContactFailure());
         await openFile(tester);
         await fillNewContact(tester);
@@ -2017,8 +2160,9 @@ void main() {
         expect(find.widgetWithText(TextField, 'سلمى'), findsOneWidget);
       });
 
-      testWidgets('a contact is changed from its pencil',
-          (WidgetTester tester) async {
+      testWidgets('a contact is changed from its pencil', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
 
         await tester.tap(pencilOf('خالد'));
@@ -2041,8 +2185,9 @@ void main() {
         expect(pencilOf('هدى'), findsOneWidget);
       });
 
-      testWidgets('a contact is removed only after the person says yes',
-          (WidgetTester tester) async {
+      testWidgets('a contact is removed only after the person says yes', (
+        WidgetTester tester,
+      ) async {
         await openFile(tester);
         await tester.tap(pencilOf('هدى'));
         await tester.pumpAndSettle();
@@ -2071,8 +2216,9 @@ void main() {
         expect(find.text('خالد'), findsOneWidget);
       });
 
-      testWidgets('with no contacts the page says where they are used',
-          (WidgetTester tester) async {
+      testWidgets('with no contacts the page says where they are used', (
+        WidgetTester tester,
+      ) async {
         circles.medicalFile = Success(fileWithContacts(0));
 
         await openFile(tester);
@@ -2081,8 +2227,9 @@ void main() {
         expect(find.text('circles.contact_add'.tr()), findsOneWidget);
       });
 
-      testWidgets('with five contacts the add button gives way to a note',
-          (WidgetTester tester) async {
+      testWidgets('with five contacts the add button gives way to a note', (
+        WidgetTester tester,
+      ) async {
         circles.medicalFile = Success(fileWithContacts(5));
 
         await openFile(tester);
@@ -2093,8 +2240,7 @@ void main() {
     });
 
     group('the edit page', () {
-      testWidgets('starts from the saved values',
-          (WidgetTester tester) async {
+      testWidgets('starts from the saved values', (WidgetTester tester) async {
         await openEdit(tester);
 
         expect(find.byType(MedicalFileEditScreen), findsOneWidget);
@@ -2108,8 +2254,9 @@ void main() {
         expect(bloodType.selected, isTrue);
       });
 
-      testWidgets('saving a new blood type sends only the health answers',
-          (WidgetTester tester) async {
+      testWidgets('saving a new blood type sends only the health answers', (
+        WidgetTester tester,
+      ) async {
         await openEdit(tester);
         final int readsBeforeSave = circles.medicalFileReads;
 
@@ -2130,8 +2277,9 @@ void main() {
         expect(circles.medicalFileReads, readsBeforeSave + 1);
       });
 
-      testWidgets('saving without a change closes the page without a call',
-          (WidgetTester tester) async {
+      testWidgets('saving without a change closes the page without a call', (
+        WidgetTester tester,
+      ) async {
         await openEdit(tester);
 
         await tester.tap(find.text('circles.file_save'.tr()));
@@ -2141,8 +2289,9 @@ void main() {
         expect(find.byType(MedicalFileEditScreen), findsNothing);
       });
 
-      testWidgets('the names of a patient with an account are not editable',
-          (WidgetTester tester) async {
+      testWidgets('the names of a patient with an account are not editable', (
+        WidgetTester tester,
+      ) async {
         circles.medicalFile = Success(CirclesFakeRepository.nouraWithAccount);
 
         await openEdit(tester);
@@ -2152,8 +2301,9 @@ void main() {
         expect(find.widgetWithText(TextField, 'نورة'), findsNothing);
       });
 
-      testWidgets('"other" without its text is not saved',
-          (WidgetTester tester) async {
+      testWidgets('"other" without its text is not saved', (
+        WidgetTester tester,
+      ) async {
         await openEdit(tester);
 
         await tester.tap(find.text('medical.condition.other'.tr()).first);
@@ -2174,8 +2324,9 @@ void main() {
         expect(find.byType(MedicalFileEditScreen), findsNothing);
       });
 
-      testWidgets('a refused save stays on the page and says why',
-          (WidgetTester tester) async {
+      testWidgets('a refused save stays on the page and says why', (
+        WidgetTester tester,
+      ) async {
         circles.profileSaved = const Error(ServerFailure());
         await openEdit(tester);
 
@@ -2193,8 +2344,9 @@ void main() {
     });
 
     group('the emergency card', () {
-      testWidgets('shows the name, the blood type and the people to call',
-          (WidgetTester tester) async {
+      testWidgets('shows the name, the blood type and the people to call', (
+        WidgetTester tester,
+      ) async {
         await openCard(tester);
 
         expect(find.byType(EmergencyCardScreen), findsOneWidget);
@@ -2219,8 +2371,9 @@ void main() {
         );
       });
 
-      testWidgets('a card with nothing answered still opens',
-          (WidgetTester tester) async {
+      testWidgets('a card with nothing answered still opens', (
+        WidgetTester tester,
+      ) async {
         circles.emergencyCard = Success(
           EmergencyCard(
             firstName: 'نورة',
@@ -2238,8 +2391,9 @@ void main() {
         expect(find.text('circles.card_no_contacts'.tr()), findsOneWidget);
       });
 
-      testWidgets('a person who left the circle is refused and can try again',
-          (WidgetTester tester) async {
+      testWidgets('a person who left the circle is refused and can try again', (
+        WidgetTester tester,
+      ) async {
         circles.emergencyCard = const Error(ForbiddenFailure());
         await openCard(tester);
 
@@ -2252,8 +2406,9 @@ void main() {
         expect(find.text('نورة العتيبي'), findsOneWidget);
       });
 
-      testWidgets('back returns to the Circle tab',
-          (WidgetTester tester) async {
+      testWidgets('back returns to the Circle tab', (
+        WidgetTester tester,
+      ) async {
         await openCard(tester);
 
         await tester.tap(find.text('common.back'.tr()));
@@ -2263,8 +2418,9 @@ void main() {
         expect(find.byType(AppBottomBar), findsOneWidget);
       });
 
-      testWidgets('reads the card again at each visit',
-          (WidgetTester tester) async {
+      testWidgets('reads the card again at each visit', (
+        WidgetTester tester,
+      ) async {
         await openCard(tester);
         await tester.tap(find.text('common.back'.tr()));
         await tester.pumpAndSettle();

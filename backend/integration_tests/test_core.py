@@ -46,6 +46,11 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
         "patient_condition",
         "patient_allergy",
         "emergency_contact",
+        "medication_plan",
+        "medication_plan_version",
+        "medication_schedule",
+        "medication_schedule_day",
+        "medication_dose_record",
     }
 
 
