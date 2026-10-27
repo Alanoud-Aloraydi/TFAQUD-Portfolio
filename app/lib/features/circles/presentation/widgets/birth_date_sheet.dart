@@ -25,6 +25,13 @@ Future<DateTime?> showBirthDateSheet(
   );
 }
 
+/// The date as a field shows it, "12 مارس 1964": the day and the year are
+/// written with the digits 0 to 9, like every number of the app.
+String formatBirthDate(BuildContext context, DateTime date) {
+  final String month = context.tr('circles.months.${date.month}');
+  return '${date.day} $month ${date.year}';
+}
+
 /// Three lists (day, month, year) and the confirm button. A tap on a value only
 /// marks it; the confirm button returns the date.
 class BirthDateSheet extends StatefulWidget {

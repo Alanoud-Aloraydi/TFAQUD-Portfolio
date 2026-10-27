@@ -1,9 +1,9 @@
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_cubit.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_state.dart';
+import 'package:app/features/circles/presentation/circle_flow_routes.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
 import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:app/features/circles/presentation/widgets/step_actions.dart';
@@ -12,24 +12,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 2 of 3 of the circle for your own care (PROFILE-02): blood type and
-/// chronic conditions. Both are optional. Needs a [CreateSelfCircleCubit]
-/// above it.
-class SelfCircleHealthScreen extends StatefulWidget {
-  const SelfCircleHealthScreen({super.key});
+/// Step 2 of 3 of a circle (PROFILE-02): blood type and chronic conditions.
+/// Both are optional. The same page serves every [CircleFlow]. Needs a
+/// [CreateCircleCubit] above it.
+class CircleHealthScreen extends StatefulWidget {
+  const CircleHealthScreen({super.key});
 
   @override
-  State<SelfCircleHealthScreen> createState() => _SelfCircleHealthScreenState();
+  State<CircleHealthScreen> createState() => _CircleHealthScreenState();
 }
 
-class _SelfCircleHealthScreenState extends State<SelfCircleHealthScreen> {
+class _CircleHealthScreenState extends State<CircleHealthScreen> {
   late final TextEditingController _other;
 
   @override
   void initState() {
     super.initState();
     _other = TextEditingController(
-      text: context.read<CreateSelfCircleCubit>().state.conditionOther,
+      text: context.read<CreateCircleCubit>().state.conditionOther,
     );
   }
 
@@ -39,20 +39,20 @@ class _SelfCircleHealthScreenState extends State<SelfCircleHealthScreen> {
     super.dispose();
   }
 
-  void _next(BuildContext context, CreateSelfCircleCubit cubit) {
+  void _next(BuildContext context, CreateCircleCubit cubit) {
     if (cubit.continueFromHealth()) {
-      context.push(Routes.createSelfCircleAllergies);
+      context.push(cubit.flow.allergiesRoute, extra: cubit.request);
     }
   }
 
-  void _skip(BuildContext context, CreateSelfCircleCubit cubit) {
+  void _skip(BuildContext context, CreateCircleCubit cubit) {
     cubit.skipHealth();
-    context.push(Routes.createSelfCircleAllergies);
+    context.push(cubit.flow.allergiesRoute, extra: cubit.request);
   }
 
   @override
   Widget build(BuildContext context) {
-    final CreateSelfCircleCubit cubit = context.read<CreateSelfCircleCubit>();
+    final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
       color: AppColors.ink2,
@@ -61,16 +61,16 @@ class _SelfCircleHealthScreenState extends State<SelfCircleHealthScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-          child: BlocConsumer<CreateSelfCircleCubit, CreateSelfCircleState>(
+          child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed text is cleared in the state when "other" is turned
             // off or the step is skipped. The field is cleared with it.
             listenWhen:
-                (CreateSelfCircleState before, CreateSelfCircleState after) =>
+                (CreateCircleState before, CreateCircleState after) =>
                     before.conditionOther != after.conditionOther &&
                     after.conditionOther.isEmpty,
-            listener: (BuildContext context, CreateSelfCircleState state) =>
+            listener: (BuildContext context, CreateCircleState state) =>
                 _other.clear(),
-            builder: (BuildContext context, CreateSelfCircleState state) {
+            builder: (BuildContext context, CreateCircleState state) {
               return Column(
                 children: <Widget>[
                   Expanded(

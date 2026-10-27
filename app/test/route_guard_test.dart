@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   // Pages that need a signed-in phone.
-  const List<String> protectedPages = <String>[
+  final List<String> protectedPages = <String>[
     Routes.today,
     Routes.plan,
     Routes.record,
@@ -17,6 +17,17 @@ void main() {
     Routes.createSelfCircle,
     Routes.createSelfCircleHealth,
     Routes.createSelfCircleAllergies,
+    Routes.createPatientCircle,
+    Routes.createPatientCircleHealth,
+    Routes.createPatientCircleAllergies,
+    Routes.requestPatient,
+    Routes.replyRequest,
+    Routes.completeRequest,
+    Routes.completeRequestHealth,
+    Routes.completeRequestAllergies,
+    Routes.medicalFile('c-1'),
+    Routes.medicalFileEdit('c-1'),
+    Routes.emergencyCard('c-1'),
   ];
 
   // Pages that anyone may open.

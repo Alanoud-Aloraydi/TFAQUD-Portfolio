@@ -1,19 +1,41 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/circle_label.dart';
+import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 import 'package:app/features/circles/domain/entities/new_self_circle.dart';
+import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_state.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:multiple_result/multiple_result.dart';
 
-class CreateSelfCircleCubit extends Cubit<CreateSelfCircleState> {
-  CreateSelfCircleCubit(this._circles, this._home)
-    : super(const CreateSelfCircleState());
+class CreateCircleCubit extends Cubit<CreateCircleState> {
+  /// [request] is the request the patient agreed to, and is needed for the
+  /// [CircleFlow.approved] flow only. Its circle name is the name of the circle.
+  CreateCircleCubit(
+    this._circles,
+    this._home, {
+    required this.flow,
+    this.request,
+  }) : super(CreateCircleState(circleName: request?.circleName ?? ''));
 
   final CirclesUseCase _circles;
   final HomeUseCase _home;
+
+  /// Which circle is created: your own, one for a patient without the app, or
+  /// the one a patient agreed to.
+  final CircleFlow flow;
+
+  /// The request of the [CircleFlow.approved] flow.
+  final ReceivedCircleRequest? request;
+
+  /// The longest first name or last name of a patient the API accepts.
+  static const int maxNameLength = 50;
 
   /// The longest typed circle name. The API accepts 60; a short name is what
   /// fits in the row of circles at the top of the screen.
@@ -74,6 +96,65 @@ class CreateSelfCircleCubit extends Cubit<CreateSelfCircleState> {
       return false;
     }
     emit(state.copyWith(circleName: name, showErrors: false));
+    return true;
+  }
+
+  // ---- step 1 for a patient without the app ------------------------------
+
+  void patientFirstNameChanged(String value) {
+    emit(state.copyWith(patientFirstName: value, clearError: true));
+  }
+
+  void patientLastNameChanged(String value) {
+    emit(state.copyWith(patientLastName: value, clearError: true));
+  }
+
+  void chooseLabel(CircleLabel label) {
+    emit(state.copyWith(label: label, clearError: true));
+  }
+
+  void customLabelChanged(String value) {
+    emit(state.copyWith(customLabel: value, clearError: true));
+  }
+
+  /// Checks the first step of a circle for a patient without the app.
+  /// [labelName] is the text of the chosen chip, which the page translates. The
+  /// circle is named with the label and the first name of the patient. Returns
+  /// true when the page may go to the next step.
+  bool continueFromPatientBasics({required String labelName}) {
+    final String label = state.label == CircleLabel.other
+        ? state.customLabel.trim()
+        : labelName;
+    if (label.isEmpty ||
+        !state.patientNamesComplete ||
+        state.birthDate == null ||
+        state.city == null) {
+      emit(state.copyWith(showErrors: true));
+      return false;
+    }
+    emit(
+      state.copyWith(
+        circleName: CircleNames.compose(label, state.patientFirstName),
+        showErrors: false,
+      ),
+    );
+    return true;
+  }
+
+  // ---- step 1 for a patient who agreed to a request -----------------------
+
+  /// Checks the first step of a circle the patient agreed to: only the birth
+  /// date and the city are typed. Returns true when the page may go to the next
+  /// step.
+  bool continueFromApprovedBasics() {
+    if (state.alreadyHasCircle) return false;
+    if (state.circleName.isEmpty ||
+        state.birthDate == null ||
+        state.city == null) {
+      emit(state.copyWith(showErrors: true));
+      return false;
+    }
+    emit(state.copyWith(showErrors: false));
     return true;
   }
 
@@ -187,8 +268,9 @@ class CreateSelfCircleCubit extends Cubit<CreateSelfCircleState> {
 
   // ---- create ----------------------------------------------------------
 
-  /// Creates the circle. [skipAllergies] drops the answers of the third step
-  /// first. Returns true when the circle was created, so the page can leave.
+  /// Creates the circle of the [flow]. [skipAllergies] drops the answers of the
+  /// third step first. Returns true when the circle was created, so the page can
+  /// leave.
   Future<bool> create({bool skipAllergies = false}) async {
     if (state.status == CreateStatus.saving) return false;
     if (state.alreadyHasCircle) {
@@ -212,7 +294,14 @@ class CreateSelfCircleCubit extends Cubit<CreateSelfCircleState> {
     }
     final DateTime? birthDate = state.birthDate;
     final String? city = state.city;
-    if (!state.basicsComplete || birthDate == null || city == null) {
+    final bool namesMissing =
+        flow == CircleFlow.patient && !state.patientNamesComplete;
+    final bool requestMissing = flow == CircleFlow.approved && request == null;
+    if (!state.basicsComplete ||
+        namesMissing ||
+        requestMissing ||
+        birthDate == null ||
+        city == null) {
       emit(state.copyWith(errorKey: 'error.invalid_data'));
       return false;
     }
@@ -223,14 +312,38 @@ class CreateSelfCircleCubit extends Cubit<CreateSelfCircleState> {
         showErrors: false,
       ),
     );
-    final result = await _circles.createSelfCircle(
-      NewSelfCircle(
-        name: state.circleName,
-        birthDate: birthDate,
-        city: city,
-        medicalProfile: _medicalProfile(),
-      ),
-    );
+    final Result<CareCircleSummary, Failure> result;
+    switch (flow) {
+      case CircleFlow.self:
+        result = await _circles.createSelfCircle(
+          NewSelfCircle(
+            name: state.circleName,
+            birthDate: birthDate,
+            city: city,
+            medicalProfile: _medicalProfile(),
+          ),
+        );
+      case CircleFlow.patient:
+        result = await _circles.createPatientCircle(
+          NewPatientCircle(
+            name: state.circleName,
+            patientFirstName: state.patientFirstName.trim(),
+            patientLastName: state.patientLastName.trim(),
+            birthDate: birthDate,
+            city: city,
+            medicalProfile: _medicalProfile(),
+          ),
+        );
+      case CircleFlow.approved:
+        result = await _circles.completeRequest(
+          request!.id,
+          CompleteCircleRequest(
+            birthDate: birthDate,
+            city: city,
+            medicalProfile: _medicalProfile(),
+          ),
+        );
+    }
     if (isClosed) return false;
     return result.when(
       (circle) {

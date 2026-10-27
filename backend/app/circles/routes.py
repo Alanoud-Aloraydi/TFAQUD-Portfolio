@@ -213,6 +213,21 @@ def get_medical_profile(circle_id):
     return answer(view)
 
 
+@bp.get("/<circle_id>/emergency-card")
+@require_circle_role(*MEMBER)
+def get_emergency_card(circle_id):
+    """The read-only emergency card (F18). It is built from the medical file,
+    so an edit of the file shows on the card at once."""
+    with care_work() as work:
+        patient, profile, contacts = work.medical.get_file(
+            work.actor, parse_id(circle_id, "care circle")
+        )
+        card = views.emergency_card_view(
+            work.session, patient, profile, contacts
+        )
+    return answer({"emergency_card": card})
+
+
 @bp.patch("/<circle_id>/medical-profile")
 @require_circle_role(*MEMBER)
 def update_medical_profile(circle_id):

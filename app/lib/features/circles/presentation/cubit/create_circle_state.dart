@@ -1,24 +1,45 @@
+import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:equatable/equatable.dart';
 
-/// The circle name chips of the first step. [other] lets the user type a name.
+/// The circle name chips of the first step of the circle for your own care.
+/// [other] lets the user type a name.
 enum NamePreset { care, health, circle, other }
+
+/// Which circle the pages create. The health and allergies pages are the same
+/// for both; the first page and the call that creates the circle differ.
+enum CircleFlow {
+  /// A circle for your own care (PROFILE-01): you are the patient.
+  self,
+
+  /// A circle for a patient who does not use the app (PROFILE-01B): you type
+  /// the names of the patient.
+  patient,
+
+  /// The patient agreed to a request and gives the basic data (PROFILE-01C).
+  /// The name comes from the account and the circle name from the request.
+  approved,
+}
 
 /// Loading of the account names shown in the read-only "Name" field.
 enum AccountLoad { loading, loaded, failed }
 
 enum CreateStatus { idle, saving, created }
 
-/// State of the three pages that create the circle of the signed-in person:
-/// basic details, health condition, allergies. One cubit keeps the answers of
-/// all three, so going back never loses them.
-class CreateSelfCircleState extends Equatable {
-  const CreateSelfCircleState({
+/// State of the three pages that create a circle: basic details, health
+/// condition, allergies. One cubit keeps the answers of all three, so going back
+/// never loses them.
+class CreateCircleState extends Equatable {
+  const CreateCircleState({
     this.account,
     this.accountLoad = AccountLoad.loading,
     this.namePreset = NamePreset.care,
     this.customName = '',
+    this.patientFirstName = '',
+    this.patientLastName = '',
+    this.label = CircleLabel.mother,
+    this.customLabel = '',
     this.circleName = '',
     this.birthDate,
     this.city,
@@ -42,6 +63,13 @@ class CreateSelfCircleState extends Equatable {
   // Step 1: basic details.
   final NamePreset namePreset;
   final String customName;
+
+  // Step 1 of a circle for a patient without the app: the patient's names and
+  // the word the circle is named with.
+  final String patientFirstName;
+  final String patientLastName;
+  final CircleLabel label;
+  final String customLabel;
 
   /// The name the circle gets. Set when the first step is complete.
   final String circleName;
@@ -79,6 +107,11 @@ class CreateSelfCircleState extends Equatable {
   /// so the first page says so before anything is filled in.
   bool get alreadyHasCircle => account?.hasOwnCircle ?? false;
 
+  /// Both names of the patient are typed (a circle for a patient without the
+  /// app).
+  bool get patientNamesComplete =>
+      patientFirstName.trim().isNotEmpty && patientLastName.trim().isNotEmpty;
+
   /// The first step is complete and the circle name is set.
   bool get basicsComplete =>
       circleName.isNotEmpty && birthDate != null && city != null;
@@ -93,11 +126,15 @@ class CreateSelfCircleState extends Equatable {
           medicationOther.trim().isNotEmpty) &&
       (!food.contains(MedicalOptions.other) || foodOther.trim().isNotEmpty);
 
-  CreateSelfCircleState copyWith({
+  CreateCircleState copyWith({
     AccountSummary? account,
     AccountLoad? accountLoad,
     NamePreset? namePreset,
     String? customName,
+    String? patientFirstName,
+    String? patientLastName,
+    CircleLabel? label,
+    String? customLabel,
     String? circleName,
     DateTime? birthDate,
     String? city,
@@ -116,11 +153,15 @@ class CreateSelfCircleState extends Equatable {
     bool clearError = false,
     bool? sessionEnded,
   }) {
-    return CreateSelfCircleState(
+    return CreateCircleState(
       account: account ?? this.account,
       accountLoad: accountLoad ?? this.accountLoad,
       namePreset: namePreset ?? this.namePreset,
       customName: customName ?? this.customName,
+      patientFirstName: patientFirstName ?? this.patientFirstName,
+      patientLastName: patientLastName ?? this.patientLastName,
+      label: label ?? this.label,
+      customLabel: customLabel ?? this.customLabel,
       circleName: circleName ?? this.circleName,
       birthDate: birthDate ?? this.birthDate,
       city: city ?? this.city,
@@ -145,6 +186,10 @@ class CreateSelfCircleState extends Equatable {
     accountLoad,
     namePreset,
     customName,
+    patientFirstName,
+    patientLastName,
+    label,
+    customLabel,
     circleName,
     birthDate,
     city,

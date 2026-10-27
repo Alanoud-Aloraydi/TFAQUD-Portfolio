@@ -125,12 +125,13 @@ PostgreSQL ones included.
 - Sign-in with the phone number and the code (F01), the account profile, and the
   home endpoint are built on PostgreSQL. The circle endpoints are built too: create
   a circle, circle requests with consent, invitations, rename, leave, delete, the
-  patient's data, the medical file, emergency contacts, and account deletion. The
+  patient's data, the medical file, emergency contacts, the emergency card, and
+  account deletion. The
   endpoints and the rules are in `docs/api-contracts.md` (section 5).
 - The medical tables (blood type, conditions, allergies, emergency contacts) are a
   design that the team has not approved yet (`docs/api-contracts.md`, section 10).
-- Not built: the notifications endpoint, the emergency card, the care plan and the
-  records.
+- Not built: the notifications endpoint, the care plan and the records. The
+  emergency card is built without the current medicines (they come with F06).
 - This Docker setup is for development. Staging and production are TFQD-10.
 - The sign-in endpoints use the sender that `SMS_BACKEND` selects. The Authentica
   sender is tested without a network only (`SMS_BACKEND=authentica` with

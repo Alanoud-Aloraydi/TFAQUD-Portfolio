@@ -419,6 +419,106 @@ def test_a_contact_is_only_reachable_through_its_own_circle(
     assert still[0]["name"] == "Reem"
 
 
+# ---- the emergency card ---------------------------------------------------
+
+
+def card_url(circle):
+    return url(circle, "/emergency-card")
+
+
+def test_a_new_card_shows_the_name_and_unknown_health_data(setup):
+    api, circle = setup
+
+    response = api.get(card_url(circle))
+
+    assert response.status_code == 200
+    assert response.headers["Cache-Control"] == "no-store"
+    card = response.json["emergency_card"]
+    assert card["first_name"] == "Nora"
+    assert card["blood_type"] is None
+    assert card["conditions"]["status"] == "unknown"
+    assert card["allergies"]["status"] == "unknown"
+    assert card["emergency_contacts"] == []
+
+
+def test_the_card_carries_only_what_a_helper_needs(setup):
+    api, circle = setup
+
+    card = api.get(card_url(circle)).json["emergency_card"]
+
+    assert set(card) == {
+        "first_name",
+        "last_name",
+        "blood_type",
+        "conditions",
+        "allergies",
+        "emergency_contacts",
+    }
+
+
+def test_an_edit_of_the_medical_file_shows_on_the_card(setup):
+    api, circle = setup
+    api.patch(
+        profile_url(circle),
+        {
+            "blood_type": "O-",
+            "conditions": {"status": "listed", "codes": ["asthma"]},
+            "allergies": {"status": "listed", "food": ["milk"]},
+        },
+    )
+    api.post(url(circle, "/emergency-contacts"), contact())
+
+    card = api.get(card_url(circle)).json["emergency_card"]
+
+    assert card["blood_type"] == "O-"
+    assert card["conditions"]["codes"] == ["asthma"]
+    assert card["allergies"]["food"] == ["milk"]
+    assert card["emergency_contacts"][0]["name"] == "Reem"
+    assert card["emergency_contacts"][0]["phone_number"] == PHONE
+
+
+def test_every_manager_and_the_simplified_patient_can_read_the_card(
+    database_app, database, account
+):
+    owner, second, patient = account(), account(), account(name="Huda")
+    circle = simplified_circle(database, owner, patient)
+    add_manager(database, owner, circle, second)
+
+    for who in (owner, second, patient):
+        response = Api(database_app, who).get(card_url(circle))
+        assert response.status_code == 200
+        assert response.json["emergency_card"]["first_name"] == "Huda"
+
+
+def test_a_stranger_and_a_manager_who_left_cannot_read_the_card(
+    database_app, database, account
+):
+    owner, member, stranger = account(), account(), account()
+    circle = offline_circle(database, owner)
+    add_manager(database, owner, circle, member)
+    leaver = Api(database_app, member)
+    assert leaver.get(card_url(circle)).status_code == 200
+    leaver.post(url(circle, "/leave"))
+
+    assert error_code(leaver.get(card_url(circle)), 403) == "forbidden"
+    assert (
+        error_code(Api(database_app, stranger).get(card_url(circle)), 403)
+        == "forbidden"
+    )
+
+
+def test_the_card_cannot_be_changed(setup):
+    api, circle = setup
+
+    for response in (
+        api.post(card_url(circle), {"blood_type": "A+"}),
+        api.put(card_url(circle), {"blood_type": "A+"}),
+        api.patch(card_url(circle), {"blood_type": "A+"}),
+        api.delete(card_url(circle)),
+    ):
+        assert response.status_code == 405
+
+
 # ---- the database refuses wrong data even without the API ----------------
 
 

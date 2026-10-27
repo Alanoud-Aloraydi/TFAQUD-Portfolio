@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
+import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_cubit.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_state.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,12 +21,16 @@ import 'support/home_fakes.dart';
 void main() {
   late CirclesFakeRepository circles;
   late HomeUseCase home;
-  late CreateSelfCircleCubit cubit;
+  late CreateCircleCubit cubit;
 
   setUp(() {
     circles = CirclesFakeRepository();
     home = HomeUseCase(HomeFakeRepository());
-    cubit = CreateSelfCircleCubit(CirclesUseCase(circles), home);
+    cubit = CreateCircleCubit(
+      CirclesUseCase(circles),
+      home,
+      flow: CircleFlow.self,
+    );
   });
 
   tearDown(() => cubit.close());
@@ -341,6 +348,231 @@ void main() {
       await cubit.close();
       wait.complete(const Success(CirclesFakeRepository.newCircle));
       expect(await creating, isFalse);
+    });
+  });
+
+  group('a circle for a patient without the app', () {
+    late CreateCircleCubit patient;
+
+    setUp(() {
+      patient = CreateCircleCubit(
+        CirclesUseCase(circles),
+        home,
+        flow: CircleFlow.patient,
+      );
+    });
+
+    tearDown(() => patient.close());
+
+    /// The names, the birth date and the city, typed.
+    void fillPatient() {
+      patient.patientFirstNameChanged('نورة');
+      patient.patientLastNameChanged('العتيبي');
+      patient.birthDateChanged(DateTime(1954, 6, 5));
+      patient.cityChanged('بريدة');
+    }
+
+    test('the first step needs both names, the birth date and the city', () {
+      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isFalse);
+      expect(patient.state.showErrors, isTrue);
+      patient.patientFirstNameChanged('نورة');
+      patient.birthDateChanged(DateTime(1954, 6, 5));
+      patient.cityChanged('بريدة');
+      // The last name is still missing.
+      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isFalse);
+      patient.patientLastNameChanged('   ');
+      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isFalse);
+      patient.patientLastNameChanged('العتيبي');
+      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isTrue);
+      expect(patient.state.showErrors, isFalse);
+    });
+
+    test('the circle is named with the label and the first name', () {
+      fillPatient();
+      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isTrue);
+      expect(patient.state.circleName, 'أمي نورة');
+      expect(patient.state.basicsComplete, isTrue);
+    });
+
+    test('a label of your own needs its text, without outer spaces', () {
+      fillPatient();
+      patient.chooseLabel(CircleLabel.other);
+      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isFalse);
+      patient.customLabelChanged('   ');
+      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isFalse);
+      patient.customLabelChanged('  عمي ');
+      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isTrue);
+      expect(patient.state.circleName, 'عمي نورة');
+    });
+
+    test('a very long label and first name still make an accepted name', () {
+      patient.patientFirstNameChanged('ب' * CreateCircleCubit.maxNameLength);
+      patient.patientLastNameChanged('العتيبي');
+      patient.birthDateChanged(DateTime(1954, 6, 5));
+      patient.cityChanged('بريدة');
+      patient.chooseLabel(CircleLabel.other);
+      patient.customLabelChanged('ا' * CircleNames.maxLabelLength);
+      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isTrue);
+      expect(patient.state.circleName.length, CircleNames.maxLength);
+    });
+
+    test('creates the circle with the names, the date and the city', () async {
+      fillPatient();
+      patient.continueFromPatientBasics(labelName: 'أمي');
+      patient.chooseBloodType('O+');
+
+      expect(await patient.create(), isTrue);
+
+      final NewPatientCircle sent = circles.patientCircles.single;
+      expect(sent.name, 'أمي نورة');
+      expect(sent.patientFirstName, 'نورة');
+      expect(sent.patientLastName, 'العتيبي');
+      expect(sent.birthDate, DateTime(1954, 6, 5));
+      expect(sent.city, 'بريدة');
+      expect(sent.medicalProfile, const MedicalProfileDraft(bloodType: 'O+'));
+      // It is not a circle for your own care.
+      expect(circles.requests, isEmpty);
+      expect(patient.state.status, CreateStatus.created);
+    });
+
+    test('sends the names without outer spaces', () async {
+      patient.patientFirstNameChanged('  نورة ');
+      patient.patientLastNameChanged(' العتيبي  ');
+      patient.birthDateChanged(DateTime(1954, 6, 5));
+      patient.cityChanged('بريدة');
+      patient.continueFromPatientBasics(labelName: 'أمي');
+      expect(await patient.create(), isTrue);
+      expect(circles.patientCircles.single.patientFirstName, 'نورة');
+      expect(circles.patientCircles.single.patientLastName, 'العتيبي');
+      expect(circles.patientCircles.single.name, 'أمي نورة');
+    });
+
+    test('without the first step nothing is sent', () async {
+      expect(await patient.create(), isFalse);
+      expect(patient.state.errorKey, 'error.invalid_data');
+      expect(circles.patientCircles, isEmpty);
+    });
+
+    test('tells every home screen to load again and select the new circle',
+        () async {
+      fillPatient();
+      patient.continueFromPatientBasics(labelName: 'أمي');
+      final Future<String?> signal = home.changes.first;
+      expect(await patient.create(), isTrue);
+      expect(await signal, CirclesFakeRepository.newCircle.id);
+    });
+
+    test('a refusal keeps the answers and shows its text', () async {
+      fillPatient();
+      patient.continueFromPatientBasics(labelName: 'أمي');
+      circles.createdPatient = const Error(ModeConflictFailure());
+      expect(await patient.create(), isFalse);
+      expect(patient.state.status, CreateStatus.idle);
+      expect(patient.state.errorKey, 'circles.mode_conflict');
+      expect(patient.state.patientFirstName, 'نورة');
+    });
+  });
+
+  group('a circle the patient agreed to', () {
+    late CreateCircleCubit approved;
+
+    setUp(() {
+      approved = CreateCircleCubit(
+        CirclesUseCase(circles),
+        home,
+        flow: CircleFlow.approved,
+        request: CirclesFakeRepository.agreedByNoura,
+      );
+    });
+
+    tearDown(() => approved.close());
+
+    test('the circle name is the one the sender chose', () {
+      expect(approved.state.circleName, 'أمي نورة');
+      expect(approved.request, CirclesFakeRepository.agreedByNoura);
+    });
+
+    test('the first step needs the birth date and the city', () {
+      expect(approved.continueFromApprovedBasics(), isFalse);
+      expect(approved.state.showErrors, isTrue);
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      expect(approved.continueFromApprovedBasics(), isFalse);
+      approved.cityChanged('بريدة');
+      expect(approved.continueFromApprovedBasics(), isTrue);
+      expect(approved.state.showErrors, isFalse);
+    });
+
+    test('the first step stops for an account that already has a circle',
+        () async {
+      circles.account = const Success(
+        AccountSummary(
+          firstName: 'Noura',
+          lastName: 'Alotaibi',
+          patientCircleId: 'old-circle',
+        ),
+      );
+      await approved.loadAccount();
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      approved.cityChanged('بريدة');
+      expect(approved.continueFromApprovedBasics(), isFalse);
+    });
+
+    test('completes the request with the date, the city and the answers',
+        () async {
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      approved.cityChanged('بريدة');
+      approved.chooseBloodType('O+');
+
+      expect(await approved.create(), isTrue);
+
+      expect(circles.completedIds, <String>['request-in-1']);
+      final CompleteCircleRequest sent = circles.completions.single;
+      expect(sent.birthDate, DateTime(1954, 6, 5));
+      expect(sent.city, 'بريدة');
+      expect(sent.medicalProfile, const MedicalProfileDraft(bloodType: 'O+'));
+      // It creates neither of the other two kinds of circle.
+      expect(circles.requests, isEmpty);
+      expect(circles.patientCircles, isEmpty);
+      expect(approved.state.status, CreateStatus.created);
+    });
+
+    test('tells every home screen to load again and select the new circle',
+        () async {
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      approved.cityChanged('بريدة');
+      final Future<String?> signal = home.changes.first;
+      expect(await approved.create(), isTrue);
+      expect(await signal, CirclesFakeRepository.newCircle.id);
+    });
+
+    test('without the first step nothing is sent', () async {
+      expect(await approved.create(), isFalse);
+      expect(approved.state.errorKey, 'error.invalid_data');
+      expect(circles.completions, isEmpty);
+    });
+
+    test('without a request nothing is sent', () async {
+      final CreateCircleCubit lost = CreateCircleCubit(
+        CirclesUseCase(circles),
+        home,
+        flow: CircleFlow.approved,
+      );
+      addTearDown(lost.close);
+      lost.birthDateChanged(DateTime(1954, 6, 5));
+      lost.cityChanged('بريدة');
+      expect(await lost.create(), isFalse);
+      expect(circles.completions, isEmpty);
+    });
+
+    test('a request that is gone shows its own text and keeps the answers',
+        () async {
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      approved.cityChanged('بريدة');
+      circles.completed = const Error(RequestUnavailableFailure());
+      expect(await approved.create(), isFalse);
+      expect(approved.state.status, CreateStatus.idle);
+      expect(approved.state.errorKey, 'circles.request_unavailable');
+      expect(approved.state.city, 'بريدة');
     });
   });
 }

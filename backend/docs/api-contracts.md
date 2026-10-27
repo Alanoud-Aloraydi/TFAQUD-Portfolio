@@ -459,6 +459,7 @@ the team has not approved them yet.
 | `POST /api/v1/circle-requests/{request_id}/complete` | the same | 201 `circle` |
 | `DELETE /api/v1/circle-requests/{request_id}` | the sender or the patient | 204 |
 | `GET /api/v1/circles/{circle_id}/medical-profile` | manager, simplified patient | 200 |
+| `GET /api/v1/circles/{circle_id}/emergency-card` | manager, simplified patient | 200 `emergency_card` |
 | `PATCH /api/v1/circles/{circle_id}/medical-profile` | manager, simplified patient | 200 `medical_profile` |
 | `POST /api/v1/circles/{circle_id}/emergency-contacts` | manager, simplified patient | 201 `emergency_contact` |
 | `PUT /api/v1/circles/{circle_id}/emergency-contacts/{contact_id}` | manager, simplified patient | 200 `emergency_contact` |
@@ -703,10 +704,41 @@ Who may read and change the medical file: every manager of the circle, and the
 patient when the patient has an account. The server checks this again after taking
 the lock, so a manager who has just left is refused.
 
-Not built yet: the emergency card (it also needs the current medicines, which
-come with the medication feature) and `GET /api/v1/notifications` (section 6). The
-app can build the "needs your answer" list of the notifications page from
-`GET /api/v1/invitations` and the `received` part of `GET /api/v1/circle-requests`.
+#### The emergency card (F18, TFQD-27)
+
+`GET /api/v1/circles/{circle_id}/emergency-card` is read-only. It is built from the
+same data as the medical file, so an edit of the file shows on the card at once. It
+carries only what a helper needs and nothing else (no birth date, city or
+coordinates):
+
+```json
+{
+  "emergency_card": {
+    "first_name": "Nora",
+    "last_name": "Alharbi",
+    "blood_type": "O-",
+    "conditions": { "status": "listed", "codes": ["asthma"], "other": null },
+    "allergies": {
+      "status": "listed",
+      "medication": [], "other_medication": null,
+      "food": ["milk"], "other_food": null
+    },
+    "emergency_contacts": [
+      { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111" }
+    ]
+  }
+}
+```
+
+The names come from the account while the patient is linked to one. The roles are
+the same as for the medical file: every manager of the circle and the patient who
+uses Simplified Mode. Any other call is 403 `forbidden`, and `POST`, `PUT`, `PATCH`
+and `DELETE` on the card are 405. The current medicines are not on the card yet;
+they come with the medication feature (F06).
+
+Not built yet: `GET /api/v1/notifications` (section 6). The app can build the "needs
+your answer" list of the notifications page from `GET /api/v1/invitations` and the
+`received` part of `GET /api/v1/circle-requests`.
 
 Tests: `tests/test_circle_inputs.py`, `integration_tests/test_circle_api.py`,
 `test_request_api.py`, `test_medical_api.py`, `test_account_api.py`.
@@ -1163,8 +1195,9 @@ change in the pull request review.
 12. No limit yet on open requests per sender or pending invitations per circle. A
     limit such as 10 each would stop spam. The team decides the numbers.
 13. Not built: `GET /api/v1/notifications` (section 6) needs its own table, which
-    the team has not approved; the emergency card needs the current medicines. The
-    app uses the two lists of section 5 for the "needs your answer" part until then.
+    the team has not approved. The app uses the two lists of section 5 for the "needs
+    your answer" part until then. The emergency card is built; its current medicines
+    are added when the medication feature (F06) exists.
 14. An invitation to manage a circle sends no SMS. The invited person finds it in
     the app after signing in with that number. If an SMS is wanted, it needs its own
     Authentica template.

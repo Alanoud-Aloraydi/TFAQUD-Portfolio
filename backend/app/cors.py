@@ -19,7 +19,7 @@ from flask import Flask, request
 _LOCAL_ORIGIN = re.compile(r"^https?://(localhost|127\.0\.0\.1)(:[0-9]{1,5})?$")
 
 _ALLOWED_HEADERS = "Authorization, Content-Type, X-Request-ID"
-_ALLOWED_METHODS = "GET, POST, PUT, DELETE, OPTIONS"
+_ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
 # Headers the page may read from an answer (a browser hides all others).
 _EXPOSED_HEADERS = "X-Request-ID, Retry-After"
 _PREFLIGHT_CACHE_SECONDS = "600"

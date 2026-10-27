@@ -3,8 +3,8 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_cubit.dart';
-import 'package:app/features/circles/presentation/cubit/create_self_circle_state.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
 import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:app/features/circles/presentation/widgets/step_actions.dart';
@@ -13,26 +13,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 3 of 3 of the circle for your own care (PROFILE-03): allergies to
-/// medicines and to foods. It is optional, and its main button creates the
-/// circle. Needs a [CreateSelfCircleCubit] above it.
-class SelfCircleAllergiesScreen extends StatefulWidget {
-  const SelfCircleAllergiesScreen({super.key});
+/// Step 3 of 3 of a circle (PROFILE-03): allergies to medicines and to foods.
+/// It is optional, and its main button creates the circle of the cubit's
+/// [CircleFlow]. Needs a [CreateCircleCubit] above it.
+class CircleAllergiesScreen extends StatefulWidget {
+  const CircleAllergiesScreen({super.key});
 
   @override
-  State<SelfCircleAllergiesScreen> createState() =>
-      _SelfCircleAllergiesScreenState();
+  State<CircleAllergiesScreen> createState() =>
+      _CircleAllergiesScreenState();
 }
 
-class _SelfCircleAllergiesScreenState extends State<SelfCircleAllergiesScreen> {
+class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
   late final TextEditingController _otherMedication;
   late final TextEditingController _otherFood;
 
   @override
   void initState() {
     super.initState();
-    final CreateSelfCircleState state = context
-        .read<CreateSelfCircleCubit>()
+    final CreateCircleState state = context
+        .read<CreateCircleCubit>()
         .state;
     _otherMedication = TextEditingController(text: state.medicationOther);
     _otherFood = TextEditingController(text: state.foodOther);
@@ -48,7 +48,7 @@ class _SelfCircleAllergiesScreenState extends State<SelfCircleAllergiesScreen> {
   /// Creates the circle and, when it is created, opens the home page. The home
   /// page loads the circles and selects the new one.
   Future<void> _create(
-    CreateSelfCircleCubit cubit, {
+    CreateCircleCubit cubit, {
     bool skipAllergies = false,
   }) async {
     final bool created = await cubit.create(skipAllergies: skipAllergies);
@@ -64,7 +64,7 @@ class _SelfCircleAllergiesScreenState extends State<SelfCircleAllergiesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final CreateSelfCircleCubit cubit = context.read<CreateSelfCircleCubit>();
+    final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
       color: AppColors.ink2,
@@ -73,21 +73,21 @@ class _SelfCircleAllergiesScreenState extends State<SelfCircleAllergiesScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-          child: BlocConsumer<CreateSelfCircleCubit, CreateSelfCircleState>(
+          child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed texts are cleared in the state when "other" is turned
             // off or "no allergies" is chosen. The fields are cleared with
             // them.
             listenWhen:
-                (CreateSelfCircleState before, CreateSelfCircleState after) =>
+                (CreateCircleState before, CreateCircleState after) =>
                     (before.medicationOther != after.medicationOther &&
                         after.medicationOther.isEmpty) ||
                     (before.foodOther != after.foodOther &&
                         after.foodOther.isEmpty),
-            listener: (BuildContext context, CreateSelfCircleState state) {
+            listener: (BuildContext context, CreateCircleState state) {
               if (state.medicationOther.isEmpty) _otherMedication.clear();
               if (state.foodOther.isEmpty) _otherFood.clear();
             },
-            builder: (BuildContext context, CreateSelfCircleState state) {
+            builder: (BuildContext context, CreateCircleState state) {
               final bool saving = state.status == CreateStatus.saving;
               final String requiredText = context.tr('circles.field_required');
               return Column(

@@ -5,21 +5,33 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Opens the "اختر مدينتك" sheet (CREAT-01B). Returns the confirmed city, or
-/// null when the sheet is closed without confirming.
-Future<String?> showCitySheet(BuildContext context, {String? selected}) {
+/// null when the sheet is closed without confirming. [titleKey] is the
+/// translation key of the title; the circle of another person asks for the
+/// city of the patient.
+Future<String?> showCitySheet(
+  BuildContext context, {
+  String? selected,
+  String titleKey = 'circles.city_sheet_title',
+}) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
-    builder: (BuildContext context) => CitySheet(selected: selected),
+    builder: (BuildContext context) =>
+        CitySheet(selected: selected, titleKey: titleKey),
   );
 }
 
 /// A search field, the list of cities and the confirm button. A tap on a city
 /// only marks it; the confirm button returns it.
 class CitySheet extends StatefulWidget {
-  const CitySheet({super.key, this.selected});
+  const CitySheet({
+    super.key,
+    this.selected,
+    this.titleKey = 'circles.city_sheet_title',
+  });
 
   final String? selected;
+  final String titleKey;
 
   @override
   State<CitySheet> createState() => _CitySheetState();
@@ -50,7 +62,7 @@ class _CitySheetState extends State<CitySheet> {
             Semantics(
               header: true,
               child: Text(
-                context.tr('circles.city_sheet_title'),
+                context.tr(widget.titleKey),
                 style: text.headlineSmall,
               ),
             ),

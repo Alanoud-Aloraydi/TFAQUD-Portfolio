@@ -14,9 +14,11 @@ import 'package:go_router/go_router.dart';
 /// circles opens it again, to add another circle ([addingCircle]). That page
 /// has a back link and no "تخطي الآن", because the account is already set up.
 ///
-/// "أدير رعايتي بنفسي" continues to the three steps that create the circle.
-/// "أرعى شخصًا آخر" does not have its pages yet and goes to the home page. The
-/// choice is kept in [OnboardingCubit].
+/// "أدير رعايتي بنفسي" continues to the three steps that create your own circle.
+/// "أرعى شخصًا آخر" asks whether the patient uses the app. If the patient does,
+/// the next page asks for the patient's phone number and sends a request. If the
+/// patient does not, the next pages create the circle directly. The choice is
+/// kept in [OnboardingCubit].
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key, this.addingCircle = false});
 
@@ -25,8 +27,10 @@ class StartScreen extends StatelessWidget {
   void _continue(BuildContext context, OnboardingState state) {
     if (state.careTarget == CareTarget.self) {
       context.push(Routes.createSelfCircle);
+    } else if (state.patientUsesApp == true) {
+      context.push(Routes.requestPatient);
     } else {
-      context.go(Routes.today);
+      context.push(Routes.createPatientCircle);
     }
   }
 

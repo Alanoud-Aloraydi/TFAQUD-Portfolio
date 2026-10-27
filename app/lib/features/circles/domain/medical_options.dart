@@ -1,8 +1,8 @@
 /// The choices of the health pages, written as the API codes them
 /// (docs/api-contracts.md, "The medical file"). The order is the order of the
 /// design. The text of each choice is in assets/translations/ar.json, group
-/// "medical": `medical.condition.<code>`, `medical.medication.<code>` and
-/// `medical.food.<code>`.
+/// "medical": `medical.condition.<code>`, `medical.medication.<code>`,
+/// `medical.food.<code>` and `medical.relation.<code>`.
 abstract class MedicalOptions {
   MedicalOptions._();
 
@@ -58,4 +58,16 @@ abstract class MedicalOptions {
     'soy',
     'sesame',
   ];
+
+  /// How an emergency contact is related to the patient, with "other" last.
+  static const List<String> contactRelations = <String>[
+    'son',
+    'daughter',
+    'husband',
+    'wife',
+    other,
+  ];
+
+  /// The longest name of an emergency contact the API accepts.
+  static const int contactNameMaxLength = 50;
 }
