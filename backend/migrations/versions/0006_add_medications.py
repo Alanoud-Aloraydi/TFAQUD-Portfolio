@@ -5,8 +5,8 @@ from pathlib import Path
 from alembic import op
 import sqlalchemy as sa
 
-revision = "0005"
-down_revision = "0004"
+revision = "0006"
+down_revision = "0005"
 branch_labels = None
 depends_on = None
 
@@ -322,7 +322,7 @@ def upgrade():
     _create_plan_tables()
     _create_schedule_tables()
     _create_dose_records()
-    rules = Path(__file__).with_name("0005_medication_rules.sql")
+    rules = Path(__file__).with_name("0006_medication_rules.sql")
     op.execute(rules.read_text(encoding="utf-8"))
 
 

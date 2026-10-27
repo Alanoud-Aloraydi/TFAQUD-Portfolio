@@ -25,6 +25,10 @@ class Patient(db.Model):
         CheckConstraint("length(btrim(city)) > 0", name="city_nonblank"),
         CheckConstraint("latitude BETWEEN -90 AND 90", name="latitude"),
         CheckConstraint("longitude BETWEEN -180 AND 180", name="longitude"),
+        CheckConstraint(
+            "blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')",
+            name="blood_type",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -45,3 +49,4 @@ class Patient(db.Model):
     city: Mapped[str] = mapped_column(Text)
     latitude: Mapped[float | None]
     longitude: Mapped[float | None]
+    blood_type: Mapped[str | None] = mapped_column(Text)

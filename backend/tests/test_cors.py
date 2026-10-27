@@ -35,6 +35,21 @@ def test_the_browser_check_before_a_call_is_answered(dev_client):
     assert "PUT" in response.headers["Access-Control-Allow-Methods"]
 
 
+def test_the_browser_may_use_every_method_the_api_has(dev_client):
+    # A method missing here is blocked by Chrome before the call leaves the
+    # page, and the app only sees "no internet connection".
+    used = {
+        method
+        for rule in dev_client.application.url_map.iter_rules()
+        for method in rule.methods
+    } - {"HEAD", "OPTIONS"}
+
+    header = preflight(dev_client).headers["Access-Control-Allow-Methods"]
+    allowed = {method.strip() for method in header.split(",")}
+
+    assert used - allowed == set()
+
+
 @pytest.mark.parametrize(
     "origin",
     ["http://localhost:5000", "http://127.0.0.1:8080", "https://localhost", "http://localhost"],

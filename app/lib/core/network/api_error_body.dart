@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart' show DioException;
 
-/// Error codes returned by the Flask API (backend/app/errors.py and
-/// backend/app/auth).
+/// Error codes returned by the Flask API (backend/app/errors.py,
+/// backend/app/auth and backend/app/care.py).
 abstract class ApiErrorCodes {
   ApiErrorCodes._();
 
@@ -31,6 +31,31 @@ abstract class ApiErrorCodes {
   static const String tooManyAttempts = 'too_many_attempts';
   static const String tooManyCodes = 'too_many_codes';
   static const String smsUnavailable = 'sms_unavailable';
+
+  // Circle creation (backend/app/care.py).
+  static const String alreadyHasCircle = 'already_has_circle';
+  static const String profileIncomplete = 'profile_incomplete';
+  static const String invalidBirthDate = 'invalid_birth_date';
+  static const String modeConflict = 'mode_conflict';
+
+  // Circle requests (backend/app/care.py).
+  static const String selfRequest = 'self_request';
+  static const String requestNotPending = 'request_not_pending';
+  static const String requestNotCancelable = 'request_not_cancelable';
+  static const String acceptedRequestExists = 'accepted_request_exists';
+  static const String consentRequired = 'consent_required';
+
+  // Invitations to manage a circle (backend/app/care.py).
+  static const String invitationNotPending = 'invitation_not_pending';
+  static const String alreadyManager = 'already_manager';
+
+  // Deleting the account (backend/app/users).
+  static const String patientChoiceRequired = 'patient_choice_required';
+  static const String lastManager = 'last_manager';
+
+  // Emergency contacts (backend/app/medical.py).
+  static const String tooManyContacts = 'too_many_contacts';
+  static const String duplicateContact = 'duplicate_contact';
 }
 
 /// Reads `error.code` from a body of the form `{"error": {"code": ...}}`.

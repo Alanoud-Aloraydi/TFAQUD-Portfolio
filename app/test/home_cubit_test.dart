@@ -12,11 +12,13 @@ import 'support/home_fakes.dart';
 
 void main() {
   late HomeFakeRepository repository;
+  late HomeUseCase useCase;
   late HomeCubit cubit;
 
   setUp(() {
     repository = HomeFakeRepository();
-    cubit = HomeCubit(HomeUseCase(repository));
+    useCase = HomeUseCase(repository);
+    cubit = HomeCubit(useCase);
   });
 
   tearDown(() => cubit.close());
@@ -147,5 +149,114 @@ void main() {
     await cubit.close();
     pending.complete(Success(homeData()));
     await load;
+  });
+
+  group('refresh', () {
+    test('keeps the screen while the data loads again', () async {
+      await cubit.load();
+      final pending = Completer<Result<HomeEntity, Failure>>();
+      repository.pending = pending.future;
+      final refresh = cubit.refresh();
+      expect(cubit.state.status, HomeStatus.ready);
+      expect(cubit.state.data, isNotNull);
+      repository.pending = null;
+      pending.complete(
+        Success(
+          homeData(
+            circles: [
+              const CareCircleSummary(id: 'one', name: 'Circle one'),
+              const CareCircleSummary(id: 'two', name: 'Circle two'),
+              const CareCircleSummary(id: 'three', name: 'Circle three'),
+            ],
+          ),
+        ),
+      );
+      await refresh;
+      expect(cubit.state.data!.circles, hasLength(3));
+      expect(cubit.state.selectedCircleId, 'one');
+    });
+
+    test('keeps the selected circle', () async {
+      await cubit.load();
+      await cubit.selectCircle('two');
+      await cubit.refresh();
+      expect(cubit.state.selectedCircleId, 'two');
+    });
+
+    test('a failure keeps what is on screen', () async {
+      await cubit.load();
+      repository.response = const Error(NetworkFailure());
+      await cubit.refresh();
+      expect(cubit.state.status, HomeStatus.ready);
+      expect(cubit.state.data, isNotNull);
+    });
+
+    test('an ended session still goes to sign-in', () async {
+      await cubit.load();
+      repository.response = const Error(SessionExpiredFailure());
+      await cubit.refresh();
+      expect(cubit.state.status, HomeStatus.signIn);
+    });
+
+    test('loads normally when there is nothing on screen yet', () async {
+      await cubit.refresh();
+      expect(cubit.state.status, HomeStatus.ready);
+    });
+
+    test('selects the circle it is asked to select and remembers it', () async {
+      await cubit.load();
+      repository.response = Success(
+        homeData(
+          circles: [
+            ...homeData().circles,
+            const CareCircleSummary(id: 'new', name: 'New circle'),
+          ],
+        ),
+      );
+      await cubit.refresh(select: 'new');
+      expect(cubit.state.selectedCircleId, 'new');
+      expect(repository.selections['account-a'], 'new');
+    });
+
+    test('ignores a circle to select that is not in the list', () async {
+      await cubit.load();
+      await cubit.selectCircle('two');
+      await cubit.refresh(select: 'unknown');
+      expect(cubit.state.selectedCircleId, 'two');
+      expect(repository.selections['account-a'], 'two');
+    });
+  });
+
+  group('circles changed', () {
+    test('the home screen loads again and selects the new circle', () async {
+      await cubit.load();
+      repository.response = Success(
+        homeData(
+          circles: [
+            ...homeData().circles,
+            const CareCircleSummary(id: 'new', name: 'New circle'),
+          ],
+        ),
+      );
+      useCase.notifyCirclesChanged(select: 'new');
+      await pumpEventQueue();
+      expect(cubit.state.data!.circles, hasLength(3));
+      expect(cubit.state.selectedCircleId, 'new');
+    });
+
+    test('a signal without a circle keeps the selection', () async {
+      await cubit.load();
+      await cubit.selectCircle('two');
+      useCase.notifyCirclesChanged();
+      await pumpEventQueue();
+      expect(cubit.state.selectedCircleId, 'two');
+    });
+
+    test('a closed home screen no longer listens', () async {
+      await cubit.load();
+      await cubit.close();
+      useCase.notifyCirclesChanged(select: 'two');
+      await pumpEventQueue();
+    });
   });
 }

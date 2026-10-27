@@ -1,7 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Routes of the Flask API (backend/app/auth/routes.py,
-/// backend/app/users/routes.py, backend/app/health.py).
+/// backend/app/users/routes.py, backend/app/health.py,
+/// backend/app/circles/routes.py).
 class ApiEndpoints {
   ApiEndpoints._();
 
@@ -30,6 +31,38 @@ class ApiEndpoints {
   static const String requestCode = '/auth/request-code';
   static const String verifyCode = '/auth/verify-code';
   static const String profile = '/accounts/me/profile';
+  static const String account = '/accounts/me';
+  static const String selfCircle = '/circles/self';
+  static const String patientCircle = '/circles/patient-without-account';
+  static const String circleRequests = '/circle-requests';
+  static const String invitations = '/invitations';
+
+  /// One request: `/circle-requests/{id}`. A request is read from the list; the
+  /// patient answers it with [respondCircleRequest] and completes it with
+  /// [completeCircleRequest]; either side cancels it with DELETE on this path.
+  static String circleRequest(String id) => '$circleRequests/$id';
+  static String respondCircleRequest(String id) =>
+      '${circleRequest(id)}/respond';
+  static String completeCircleRequest(String id) =>
+      '${circleRequest(id)}/complete';
+
+  /// The answer to an invitation to manage a circle.
+  static String respondInvitation(String id) => '$invitations/$id/respond';
+
+  /// The medical file of a circle (the patient, the health answers and the
+  /// contacts: GET; the health answers: PATCH), the basic data of the patient
+  /// (PUT), the emergency contacts and the read-only emergency card.
+  static String circle(String circleId) => '/circles/$circleId';
+  static String medicalProfile(String circleId) =>
+      '${circle(circleId)}/medical-profile';
+  static String circlePatient(String circleId) =>
+      '${circle(circleId)}/patient';
+  static String emergencyContacts(String circleId) =>
+      '${circle(circleId)}/emergency-contacts';
+  static String emergencyContact(String circleId, String contactId) =>
+      '${emergencyContacts(circleId)}/$contactId';
+  static String emergencyCard(String circleId) =>
+      '${circle(circleId)}/emergency-card';
 
   static String medicationPlans(String circleId) =>
       '/circles/$circleId/medication-plans';

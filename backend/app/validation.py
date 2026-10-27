@@ -49,3 +49,14 @@ def parse_json_body(model: type[T]) -> T:
             for err in exc.errors()
         ]
         raise ValidationFailed(details=details) from exc
+
+
+def parse_optional_json_body(model: type[T]) -> T:
+    """Like `parse_json_body`, but a request with no body uses the defaults.
+
+    For endpoints whose fields are all optional, such as "leave the circle".
+    A body that is present must still be valid JSON and must pass the checks.
+    """
+    if not request.get_data():
+        return model()
+    return parse_json_body(model)

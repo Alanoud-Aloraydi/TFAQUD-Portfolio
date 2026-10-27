@@ -1,5 +1,6 @@
 import 'package:app/core/di/configure_dependencies.config.dart';
 import 'package:app/features/auth/di/auth_di.dart';
+import 'package:app/features/circles/di/circles_di.dart';
 import 'package:app/features/home/di/home_di.dart';
 import 'package:app/features/medications/di/medications_di.dart';
 import 'package:app/features/onboarding/di/onboarding_di.dart';
@@ -18,5 +19,6 @@ Future<void> configureDependencies() async {
   configureAuth(getIt);
   configureOnboarding(getIt);
   configureHome(getIt);
+  configureCircles(getIt);
   configureMedications(getIt);
 }
