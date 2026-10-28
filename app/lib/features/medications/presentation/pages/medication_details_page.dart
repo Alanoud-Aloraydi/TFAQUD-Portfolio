@@ -9,7 +9,9 @@ import 'package:app/features/medications/presentation/cubit/medications_state.da
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
+import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -27,6 +29,13 @@ class MedicationDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canManage = context.select<HomeCubit, bool>(
+      (cubit) =>
+          cubit.state.data?.circles.any(
+            (circle) => circle.id == circleId && circle.canManageMedications,
+          ) ??
+          false,
+    );
     return BlocBuilder<MedicationsCubit, MedicationsState>(
       builder: (context, state) {
         if (state.status == MedicationsStatus.loading) {
@@ -46,6 +55,7 @@ class MedicationDetailsPage extends StatelessWidget {
           key: ValueKey(state.plans.first.version.number),
           circleId: circleId,
           plan: state.plans.first,
+          canManage: canManage,
         );
       },
     );
@@ -53,10 +63,16 @@ class MedicationDetailsPage extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({super.key, required this.circleId, required this.plan});
+  const _Content({
+    super.key,
+    required this.circleId,
+    required this.plan,
+    required this.canManage,
+  });
 
   final String circleId;
   final MedicationPlan plan;
+  final bool canManage;
 
   @override
   Widget build(BuildContext context) {
@@ -73,11 +89,12 @@ class _Content extends StatelessWidget {
         appBar: AppBar(
           title: Text(context.tr('medications.details')),
           actions: [
-            IconButton(
-              tooltip: context.tr('medications.edit_title'),
-              onPressed: () => _edit(context),
-              icon: const Icon(Icons.edit_outlined),
-            ),
+            if (canManage && !plan.isPreviousOn(today))
+              IconButton(
+                tooltip: context.tr('medications.edit_title'),
+                onPressed: () => _edit(context),
+                icon: const Icon(Icons.edit_outlined),
+              ),
           ],
         ),
         body: ListView(
@@ -86,7 +103,7 @@ class _Content extends StatelessWidget {
             MedicationDetails(plan: plan),
             const SizedBox(height: AppSpacing.xl),
             MedicationDoseHistory(earliest: plan.version.startsOn),
-            if (plan.discontinuedAt == null) ...[
+            if (canManage && !plan.isPreviousOn(today)) ...[
               const SizedBox(height: AppSpacing.xl),
               OutlinedButton(
                 onPressed: () => _discontinue(context),
@@ -109,17 +126,18 @@ class _Content extends StatelessWidget {
   }
 
   Future<void> _discontinue(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CupertinoAlertDialog(
         title: Text(dialogContext.tr('medications.discontinue_title')),
         content: Text(dialogContext.tr('medications.discontinue_message')),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(dialogContext.tr('common.cancel')),
           ),
-          FilledButton(
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(dialogContext.tr('medications.discontinue_confirm')),
           ),

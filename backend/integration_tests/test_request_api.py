@@ -68,9 +68,15 @@ def test_request_from_sending_to_the_new_circle(
     assert [m["display_name"] for m in circle["members"]] == ["Reem"]
     assert sender.get(BASE).json["sent"] == []
     assert receiver.get(BASE).json["received"] == []
-    for api in (sender, receiver):
+    for api, can_manage in ((sender, True), (receiver, False)):
         listed = api.get("/api/v1/home").json["care_circles"]
-        assert listed == [{"id": circle["id"], "name": "Mother Noura"}]
+        assert listed == [
+            {
+                "id": circle["id"],
+                "name": "Mother Noura",
+                "can_manage_medications": can_manage,
+            }
+        ]
     with Session(database) as session:
         row = session.get(CareCircleCreationRequest, UUID(request_id))
         assert row.status == "completed"

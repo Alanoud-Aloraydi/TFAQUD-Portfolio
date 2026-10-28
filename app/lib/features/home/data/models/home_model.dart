@@ -19,6 +19,8 @@ class HomeModel {
           return CareCircleSummary(
             id: circle['id'] as String,
             name: circle['name'] as String,
+            canManageMedications:
+                circle['can_manage_medications'] as bool? ?? false,
           );
         }).toList(),
       ),

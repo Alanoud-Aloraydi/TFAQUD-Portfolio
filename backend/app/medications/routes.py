@@ -36,7 +36,9 @@ _MEMBER_ROLES = (
 @require_circle_role(*_MEMBER_ROLES)
 def list_plans(circle_id):
     with transaction() as session:
-        plans = MedicationQueries(session).plans(uuid_value(circle_id))
+        plans = MedicationQueries(session, get_clock().now()).plans(
+            uuid_value(circle_id)
+        )
     response = jsonify(medication_plans=plans)
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -54,7 +56,7 @@ def create_plan(circle_id):
             uuid_value(current_auth().user_id),
             body,
         )
-        result = MedicationQueries(session).plan(
+        result = MedicationQueries(session, get_clock().now()).plan(
             uuid_value(circle_id), plan.id
         )
     return jsonify(medication_plan=result), 201
@@ -64,7 +66,7 @@ def create_plan(circle_id):
 @require_circle_role(*_MEMBER_ROLES)
 def get_plan(circle_id, plan_id):
     with transaction() as session:
-        plan = MedicationQueries(session).plan(
+        plan = MedicationQueries(session, get_clock().now()).plan(
             uuid_value(circle_id), uuid_value(plan_id)
         )
     response = jsonify(medication_plan=plan)
@@ -85,7 +87,7 @@ def revise_plan(circle_id, plan_id):
             uuid_value(current_auth().user_id),
             body,
         )
-        result = MedicationQueries(session).plan(
+        result = MedicationQueries(session, get_clock().now()).plan(
             uuid_value(circle_id), plan.id
         )
     return jsonify(medication_plan=result)
@@ -102,7 +104,7 @@ def discontinue_plan(circle_id, plan_id):
             uuid_value(plan_id),
             uuid_value(current_auth().user_id),
         )
-        result = MedicationQueries(session).plan(
+        result = MedicationQueries(session, get_clock().now()).plan(
             uuid_value(circle_id), plan.id
         )
     return jsonify(medication_plan=result)
@@ -114,7 +116,9 @@ def list_occurrences(circle_id):
     query = occurrence_query()
     plan_id = uuid_value(query.plan_id) if query.plan_id else None
     with transaction() as session:
-        occurrences = MedicationQueries(session).occurrences(
+        occurrences = MedicationQueries(
+            session, get_clock().now()
+        ).occurrences(
             uuid_value(circle_id),
             query.from_date,
             query.to_date,

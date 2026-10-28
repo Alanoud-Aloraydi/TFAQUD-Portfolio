@@ -16,6 +16,8 @@ class LabeledTextField extends StatelessWidget {
     this.maxLength,
     this.keyboardType,
     this.maxLines = 1,
+    this.inputFormatters,
+    this.focusNode,
   });
 
   final String label;
@@ -30,6 +32,8 @@ class LabeledTextField extends StatelessWidget {
   final int? maxLength;
   final TextInputType? keyboardType;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -40,17 +44,17 @@ class LabeledTextField extends StatelessWidget {
         Text(label, style: text.titleSmall?.copyWith(color: AppColors.ink2)),
         const SizedBox(height: 8),
         TextField(
+          focusNode: focusNode,
           controller: controller,
           onChanged: onChanged,
           autofocus: autofocus,
           textInputAction: textInputAction,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          inputFormatters: maxLength == null
-              ? null
-              : <TextInputFormatter>[
-                  LengthLimitingTextInputFormatter(maxLength),
-                ],
+          inputFormatters: <TextInputFormatter>[
+            ...?inputFormatters,
+            if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+          ],
           style: text.bodyLarge,
           decoration: InputDecoration(
             errorText: errorText,

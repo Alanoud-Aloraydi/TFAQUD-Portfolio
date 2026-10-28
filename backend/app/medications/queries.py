@@ -1,6 +1,6 @@
 """Read models for medication plans and calculated occurrences."""
 
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -18,8 +18,9 @@ from app.models import MedicationScheduleDay, Patient
 class MedicationQueries:
     """Read plans and derive scheduled occurrences without storing them."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, now: datetime):
         self.session = session
+        self.now = now
 
     def plans(self, circle_id: UUID) -> list[dict]:
         patient = self._patient(circle_id)
@@ -129,7 +130,9 @@ class MedicationQueries:
         rows = list(self.session.execute(statement))
         schedule_ids = {row[2].id for row in rows}
         records = self._records(schedule_ids, from_date, to_date)
-        return build_occurrences(rows, records, from_date, to_date)
+        return build_occurrences(
+            rows, records, from_date, to_date, self.now
+        )
 
     def _patient(self, circle_id: UUID) -> Patient:
         patient = self.session.scalar(

@@ -51,7 +51,11 @@ def test_home_excludes_other_circles_and_pending_invitations(
     assert response.status_code == 200
     assert response.json["account"]["id"] == owner.id.hex
     assert response.json["care_circles"] == [
-        {"id": str(visible.id), "name": visible.name}
+        {
+            "id": str(visible.id),
+            "name": visible.name,
+            "can_manage_medications": True,
+        }
     ]
 
 
@@ -64,7 +68,11 @@ def test_home_lists_patient_manager_circle_once(
         PATH, headers=signed_in(database_app, owner)
     )
     assert response.json["care_circles"] == [
-        {"id": str(circle.id), "name": circle.name}
+        {
+            "id": str(circle.id),
+            "name": circle.name,
+            "can_manage_medications": True,
+        }
     ]
 
 
@@ -88,6 +96,9 @@ def test_home_includes_patient_without_management(
         PATH, headers=signed_in(database_app, patient)
     )
     assert response.json["care_circles"][0]["id"] == str(circle.id)
+    assert response.json["care_circles"][0][
+        "can_manage_medications"
+    ] is False
 
 
 def test_home_rechecks_membership_on_each_request(

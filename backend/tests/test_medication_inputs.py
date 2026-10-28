@@ -25,6 +25,8 @@ def schedule(**changes):
 def plan(**changes):
     value = {
         "name": "Medicine",
+        "strength_value": Decimal("500"),
+        "strength_unit": "mg",
         "dosage_form": "tablet",
         "treatment_starts_on": date(2026, 10, 1),
         "schedules": [schedule()],
@@ -49,6 +51,34 @@ def test_plan_rejects_duplicate_time_on_the_same_weekday():
         PlanRequest.model_validate(
             plan(schedules=[schedule(), schedule(weekdays=[1, 2])])
         )
+
+
+def test_plan_rejects_localized_or_ambiguous_decimal_text():
+    with pytest.raises(ValidationError, match="English digits"):
+        PlanRequest.model_validate(
+            plan(strength_value="٥٠٠")
+        )
+    with pytest.raises(ValidationError, match="leading zero"):
+        PlanRequest.model_validate(
+            plan(strength_value=".5")
+        )
+
+
+def test_injection_accepts_volume_or_units():
+    PlanRequest.model_validate(
+        plan(
+            dosage_form="injection",
+            strength_unit="unit/mL",
+            schedules=[schedule(dose_unit="mL")],
+        )
+    )
+    PlanRequest.model_validate(
+        plan(
+            dosage_form="injection",
+            strength_unit="unit/mL",
+            schedules=[schedule(dose_unit="unit")],
+        )
+    )
 
 
 def test_occurrence_query_accepts_at_most_thirty_two_days():
@@ -78,4 +108,13 @@ def test_skipped_dose_does_not_accept_a_taken_time():
         DoseRecordRequest(
             outcome="skipped",
             taken_at=datetime(2026, 10, 1, tzinfo=timezone.utc),
+        )
+
+
+def test_skip_note_requires_the_other_reason():
+    with pytest.raises(ValidationError, match="other reason"):
+        DoseRecordRequest(
+            outcome="skipped",
+            skip_reason_code="forgotten",
+            skip_reason_note="Details",
         )

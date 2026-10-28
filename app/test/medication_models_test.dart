@@ -2,6 +2,7 @@ import 'package:app/features/medications/data/models/dose_occurrence_model.dart'
 import 'package:app/features/medications/data/models/medication_plan_model.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -13,12 +14,15 @@ void main() {
       'version': {
         'version_number': 1,
         'name': 'Medicine',
-        'strength_text': '5 mg',
+        'strength_value': '5',
+        'strength_unit': 'mg',
         'dosage_form': 'liquid',
         'reason_for_use': null,
         'instructions': null,
         'treatment_starts_on': '2026-10-01',
         'treatment_ends_on': null,
+        'effective_from_on': '2026-10-01',
+        'effective_until_on': null,
         'schedules': [
           {
             'id': 'schedule-1',
@@ -43,11 +47,13 @@ void main() {
       'scheduled_on': '2026-10-27',
       'time_of_day': '08:00',
       'name': 'Medicine',
-      'strength_text': null,
+      'strength_value': '5',
+      'strength_unit': 'mg',
       'dosage_form': 'tablet',
       'dose_value': '1',
       'dose_unit': 'tablet',
       'instructions': null,
+      'timing_state': null,
       'record': {
         'id': 'record-1',
         'outcome': 'taken',
@@ -60,5 +66,23 @@ void main() {
 
     expect(occurrence.record!.outcome, DoseOutcome.taken);
     expect(occurrence.record!.takenAt, isNotNull);
+  });
+
+  test('form reports the first invalid field in reading order', () {
+    final data = MedicationFormData(null);
+    addTearDown(data.dispose);
+
+    expect(data.firstIssue()!.field, MedicationFormField.name);
+    data.name.text = 'Medicine';
+    expect(data.firstIssue()!.field, MedicationFormField.strength);
+    data.strength.text = '5';
+    data.endsOn = data.startsOn.subtract(const Duration(days: 1));
+    expect(data.firstIssue()!.field, MedicationFormField.period);
+    data.endsOn = null;
+    data.schedules.single.doseController.text = '0';
+    expect(data.firstIssue()!.field, MedicationFormField.dose);
+    data.schedules.single.doseController.text = '0.5';
+    data.schedules.single.weekdays.clear();
+    expect(data.firstIssue()!.field, MedicationFormField.weekdays);
   });
 }

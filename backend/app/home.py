@@ -44,13 +44,18 @@ def _circles(account_id: UUID) -> list[dict]:
     receives_care = select(Patient.care_circle_id).where(
         Patient.account_id == account_id
     )
-    statement = (
-        select(CareCircle.id, CareCircle.name)
-        .where(CareCircle.id.in_(manages.union(receives_care)))
-        .order_by(CareCircle.name, CareCircle.id)
-    )
     with transaction() as session:
+        managed_ids = set(session.scalars(manages))
+        statement = (
+            select(CareCircle.id, CareCircle.name)
+            .where(CareCircle.id.in_(manages.union(receives_care)))
+            .order_by(CareCircle.name, CareCircle.id)
+        )
         return [
-            {"id": str(row.id), "name": row.name}
+            {
+                "id": str(row.id),
+                "name": row.name,
+                "can_manage_medications": row.id in managed_ids,
+            }
             for row in session.execute(statement)
         ]

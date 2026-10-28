@@ -29,6 +29,16 @@ class MedicationDoseRecord(db.Model):
             "taken_at IS NULL OR taken_at <= recorded_at",
             name="taken_before_recorded",
         ),
+        CheckConstraint(
+            "skip_reason_code IS NULL OR skip_reason_code IN "
+            "('forgotten', 'unavailable', 'side_effects', "
+            "'patient_refused', 'other')",
+            name="skip_reason",
+        ),
+        CheckConstraint(
+            "skip_reason_note IS NULL OR skip_reason_code = 'other'",
+            name="skip_note",
+        ),
         UniqueConstraint("schedule_id", "scheduled_on"),
     )
 

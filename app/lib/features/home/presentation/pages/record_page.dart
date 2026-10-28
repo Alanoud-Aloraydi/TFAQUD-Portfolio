@@ -8,8 +8,8 @@ class RecordPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SelectedCircleBuilder(
-      builder: (context, circleId) =>
-          MedicationHistorySection(circleId: circleId),
+      builder: (context, circle) =>
+          MedicationHistorySection(circleId: circle.id),
     );
   }
 }

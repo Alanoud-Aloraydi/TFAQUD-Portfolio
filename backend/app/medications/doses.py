@@ -1,7 +1,8 @@
 """Idempotent recording of scheduled medication outcomes."""
 
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,6 +12,8 @@ from app.medications.inputs import DoseRecordRequest
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
 from app.models import MedicationScheduleDay, Patient
+
+RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 class MedicationDoseService:
@@ -28,7 +31,7 @@ class MedicationDoseService:
         actor_id: UUID,
         body: DoseRecordRequest,
     ) -> MedicationDoseRecord:
-        if scheduled_on > self.now.date():
+        if scheduled_on > self.now.astimezone(RIYADH).date():
             raise ValidationFailed(
                 "A future dose cannot be recorded.",
                 code="future_dose_record",
@@ -78,7 +81,11 @@ class MedicationDoseService:
         scheduled_on: date,
     ) -> None:
         row = self.session.execute(
-            select(MedicationPlan, MedicationPlanVersion)
+            select(
+                MedicationPlan,
+                MedicationPlanVersion,
+                MedicationSchedule,
+            )
             .join(
                 MedicationPlanVersion,
                 MedicationPlanVersion.medication_plan_id
@@ -112,17 +119,21 @@ class MedicationDoseService:
         ).first()
         if row is None:
             raise NotFound("The scheduled dose does not exist.")
-        plan, version = row
-        if version.effective_from.date() > scheduled_on:
+        plan, version, schedule = row
+        if version.effective_from_on > scheduled_on:
             raise NotFound("The scheduled dose does not exist.")
         if (
-            version.effective_until is not None
-            and version.effective_until.date() < scheduled_on
+            version.effective_until_on is not None
+            and version.effective_until_on <= scheduled_on
         ):
             raise NotFound("The scheduled dose does not exist.")
         if (
             plan.discontinued_at is not None
-            and plan.discontinued_at.date() < scheduled_on
+            and datetime.combine(
+                scheduled_on,
+                schedule.time_of_day,
+                tzinfo=RIYADH,
+            ) >= plan.discontinued_at
         ):
             raise NotFound("The scheduled dose does not exist.")
 

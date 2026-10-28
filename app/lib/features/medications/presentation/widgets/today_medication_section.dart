@@ -4,6 +4,7 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
+import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,7 +29,9 @@ class TodayMedicationSection extends StatelessWidget {
         return ListView.separated(
           padding: const EdgeInsets.all(AppSpacing.lg),
           itemCount: state.occurrences.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+          separatorBuilder: (_, index) => index == 0
+              ? const SizedBox(height: AppSpacing.md)
+              : const Divider(height: 1),
           itemBuilder: (context, index) {
             if (index == 0) return _Header(count: state.occurrences.length);
             return DoseOccurrenceCard(occurrence: state.occurrences[index - 1]);
@@ -52,8 +55,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateFormat.yMMMMd(context.locale.toString())
-        .format(DateTime.now());
+    final date = formatMedicationDate(context, DateTime.now());
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Column(

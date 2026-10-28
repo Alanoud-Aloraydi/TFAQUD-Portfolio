@@ -5,35 +5,44 @@ class MedicationVersion extends Equatable {
   MedicationVersion({
     required this.number,
     required this.name,
+    required this.strengthValue,
+    required this.strengthUnit,
     required this.dosageForm,
     required this.startsOn,
     required List<MedicationSchedule> schedules,
-    this.strength,
     this.reason,
     this.instructions,
     this.endsOn,
+    this.effectiveUntilOn,
+    required this.effectiveFromOn,
   }) : schedules = List.unmodifiable(schedules);
 
   final int number;
   final String name;
-  final String? strength;
+  final double strengthValue;
+  final StrengthUnit strengthUnit;
   final DosageForm dosageForm;
   final String? reason;
   final String? instructions;
   final DateTime startsOn;
   final DateTime? endsOn;
+  final DateTime effectiveFromOn;
+  final DateTime? effectiveUntilOn;
   final List<MedicationSchedule> schedules;
 
   @override
   List<Object?> get props => [
     number,
     name,
-    strength,
+    strengthValue,
+    strengthUnit,
     dosageForm,
     reason,
     instructions,
     startsOn,
     endsOn,
+    effectiveFromOn,
+    effectiveUntilOn,
     schedules,
   ];
 }
@@ -55,6 +64,8 @@ class MedicationPlan extends Equatable {
       discontinuedAt != null ||
       (version.endsOn != null && version.endsOn!.isBefore(day));
 
+  bool isScheduledOn(DateTime day) => version.effectiveFromOn.isAfter(day);
+
   @override
   List<Object?> get props => [id, createdAt, discontinuedAt, version];
 }
@@ -62,27 +73,32 @@ class MedicationPlan extends Equatable {
 class MedicationPlanDraft extends Equatable {
   MedicationPlanDraft({
     required this.name,
+    required this.strengthValue,
+    required this.strengthUnit,
     required this.dosageForm,
     required this.startsOn,
     required List<MedicationScheduleDraft> schedules,
-    this.strength,
     this.reason,
     this.instructions,
     this.endsOn,
+    this.effectiveFromOn,
   }) : schedules = List.unmodifiable(schedules);
 
   final String name;
-  final String? strength;
+  final double strengthValue;
+  final StrengthUnit strengthUnit;
   final DosageForm dosageForm;
   final String? reason;
   final String? instructions;
   final DateTime startsOn;
   final DateTime? endsOn;
+  final DateTime? effectiveFromOn;
   final List<MedicationScheduleDraft> schedules;
 
   Map<String, Object?> toJson({int? expectedVersion}) => {
     'name': name,
-    'strength_text': strength,
+    'strength_value': strengthValue,
+    'strength_unit': strengthUnit.apiValue,
     'dosage_form': dosageForm.name,
     'reason_for_use': reason,
     'instructions': instructions,
@@ -90,6 +106,7 @@ class MedicationPlanDraft extends Equatable {
     'treatment_ends_on': endsOn == null ? null : _date(endsOn!),
     'schedules': schedules.map((item) => item.toJson()).toList(),
     'expected_version_number': ?expectedVersion,
+    if (effectiveFromOn != null) 'effective_from_on': _date(effectiveFromOn!),
   };
 
   static String _date(DateTime value) =>
@@ -100,12 +117,14 @@ class MedicationPlanDraft extends Equatable {
   @override
   List<Object?> get props => [
     name,
-    strength,
+    strengthValue,
+    strengthUnit,
     dosageForm,
     reason,
     instructions,
     startsOn,
     endsOn,
+    effectiveFromOn,
     schedules,
   ];
 }

@@ -20,6 +20,7 @@ abstract class ApiErrorCodes {
   static const String medicationPeriodConflict = 'medication_period_conflict';
   static const String medicationVersionConflict = 'medication_version_conflict';
   static const String medicationDiscontinued = 'medication_discontinued';
+  static const String medicationRevisionDate = 'medication_revision_date';
   static const String doseRecordConflict = 'dose_record_conflict';
 
   // Sign-in (backend/app/auth/sign_in.py) and the profile.
