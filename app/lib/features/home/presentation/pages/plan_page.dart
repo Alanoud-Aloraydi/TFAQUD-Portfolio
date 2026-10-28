@@ -8,8 +8,7 @@ class PlanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SelectedCircleBuilder(
-      builder: (context, circleId) =>
-          MedicationPlansSection(circleId: circleId),
+      builder: (context, circle) => MedicationPlansSection(circleId: circle.id),
     );
   }
 }

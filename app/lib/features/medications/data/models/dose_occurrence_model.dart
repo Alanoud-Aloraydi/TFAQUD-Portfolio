@@ -18,11 +18,15 @@ class DoseOccurrenceModel {
         scheduledOn: DateTime.parse(json['scheduled_on'] as String),
         time: json['time_of_day'] as String,
         name: json['name'] as String,
-        strength: json['strength_text'] as String?,
+        strengthValue: double.parse(json['strength_value'] as String),
+        strengthUnit: StrengthUnit.fromApi(json['strength_unit'] as String),
         dosageForm: DosageForm.values.byName(json['dosage_form'] as String),
         doseValue: double.parse(json['dose_value'] as String),
         doseUnit: unit,
         instructions: json['instructions'] as String?,
+        timingState: json['timing_state'] == null
+            ? null
+            : DoseTimingState.values.byName(json['timing_state'] as String),
         record: recordJson == null
             ? null
             : DoseRecordModel.fromJson(recordJson).toEntity(),

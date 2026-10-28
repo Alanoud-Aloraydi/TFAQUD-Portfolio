@@ -2,9 +2,10 @@
 
 from datetime import date, datetime, time
 from decimal import Decimal
+import re
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.validation import Dto
 
@@ -14,11 +15,25 @@ DoseValue = Annotated[
     Decimal,
     Field(gt=0, max_digits=10, decimal_places=3),
 ]
+StrengthValue = Annotated[
+    Decimal,
+    Field(gt=0, max_digits=10, decimal_places=3),
+]
 
 DosageForm = Literal[
     "tablet", "capsule", "liquid", "drops", "inhaler", "injection"
 ]
 DoseUnit = Literal["tablet", "capsule", "mL", "drop", "puff", "unit"]
+StrengthUnit = Literal[
+    "mg", "mcg", "mg/mL", "mg/5mL", "mcg/dose", "unit/mL", "%"
+]
+SkipReason = Literal[
+    "forgotten",
+    "unavailable",
+    "side_effects",
+    "patient_refused",
+    "other",
+]
 
 _UNIT_BY_FORM = {
     "tablet": "tablet",
@@ -26,8 +41,17 @@ _UNIT_BY_FORM = {
     "liquid": "mL",
     "drops": "drop",
     "inhaler": "puff",
-    "injection": "unit",
+    "injection": {"mL", "unit"},
 }
+
+_ENGLISH_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
+
+
+def _english_decimal(value):
+    """Reject localized digits and decimal text without a leading zero."""
+    if isinstance(value, str) and not _ENGLISH_DECIMAL.fullmatch(value):
+        raise ValueError("Use English digits with a leading zero.")
+    return value
 
 
 class ScheduleRequest(Dto):
@@ -36,6 +60,11 @@ class ScheduleRequest(Dto):
     dose_unit: DoseUnit
     weekdays: Annotated[list[int], Field(min_length=1, max_length=7)]
     instructions: OptionalText250 = None
+
+    @field_validator("dose_value", mode="before")
+    @classmethod
+    def valid_dose_number(cls, value):
+        return _english_decimal(value)
 
     @model_validator(mode="after")
     def valid_weekdays(self):
@@ -48,7 +77,8 @@ class ScheduleRequest(Dto):
 
 class PlanRequest(Dto):
     name: Text50
-    strength_text: Annotated[str | None, Field(max_length=50)] = None
+    strength_value: StrengthValue
+    strength_unit: StrengthUnit
     dosage_form: DosageForm
     reason_for_use: Annotated[str | None, Field(max_length=100)] = None
     instructions: OptionalText250 = None
@@ -59,6 +89,11 @@ class PlanRequest(Dto):
         Field(min_length=1, max_length=24),
     ]
 
+    @field_validator("strength_value", mode="before")
+    @classmethod
+    def valid_strength_number(cls, value):
+        return _english_decimal(value)
+
     @model_validator(mode="after")
     def valid_definition(self):
         if (
@@ -66,8 +101,13 @@ class PlanRequest(Dto):
             and self.treatment_ends_on < self.treatment_starts_on
         ):
             raise ValueError("Treatment end cannot precede its start.")
-        expected_unit = _UNIT_BY_FORM[self.dosage_form]
-        if any(item.dose_unit != expected_unit for item in self.schedules):
+        expected_units = _UNIT_BY_FORM[self.dosage_form]
+        if isinstance(expected_units, str):
+            expected_units = {expected_units}
+        if any(
+            item.dose_unit not in expected_units
+            for item in self.schedules
+        ):
             raise ValueError("Dose unit does not match the dosage form.")
         occurrences = {
             (item.time_of_day, day)
@@ -82,12 +122,13 @@ class PlanRequest(Dto):
 
 class RevisePlanRequest(PlanRequest):
     expected_version_number: Annotated[int, Field(ge=1)]
+    effective_from_on: date | None = None
 
 
 class DoseRecordRequest(Dto):
     outcome: Literal["taken", "skipped"]
     taken_at: datetime | None = None
-    skip_reason_code: Annotated[str | None, Field(max_length=40)] = None
+    skip_reason_code: SkipReason | None = None
     skip_reason_note: OptionalText250 = None
 
     @model_validator(mode="after")
@@ -99,6 +140,8 @@ class DoseRecordRequest(Dto):
                 raise ValueError("Taken doses cannot include a skip reason.")
         elif self.taken_at is not None:
             raise ValueError("Skipped doses cannot include a taken time.")
+        if self.skip_reason_note and self.skip_reason_code != "other":
+            raise ValueError("A skip note requires the other reason.")
         return self
 
 

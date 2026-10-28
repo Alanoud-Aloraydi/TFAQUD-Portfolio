@@ -13,7 +13,10 @@ class MedicationPlanModel {
     final version = MedicationVersion(
       number: versionJson['version_number'] as int,
       name: versionJson['name'] as String,
-      strength: versionJson['strength_text'] as String?,
+      strengthValue: double.parse(versionJson['strength_value'] as String),
+      strengthUnit: StrengthUnit.fromApi(
+        versionJson['strength_unit'] as String,
+      ),
       dosageForm: DosageForm.values.byName(
         versionJson['dosage_form'] as String,
       ),
@@ -21,6 +24,10 @@ class MedicationPlanModel {
       instructions: versionJson['instructions'] as String?,
       startsOn: DateTime.parse(versionJson['treatment_starts_on'] as String),
       endsOn: _optionalDate(versionJson['treatment_ends_on']),
+      effectiveFromOn: DateTime.parse(
+        versionJson['effective_from_on'] as String,
+      ),
+      effectiveUntilOn: _optionalDate(versionJson['effective_until_on']),
       schedules: schedulesJson
           .map((item) => _schedule(item as Map<String, dynamic>))
           .toList(),

@@ -54,7 +54,8 @@ def plan_response(plan, version) -> dict:
         "version": {
             "version_number": version.version_number,
             "name": version.name,
-            "strength_text": version.strength_text,
+            "strength_value": str(version.strength_value.normalize()),
+            "strength_unit": version.strength_unit,
             "dosage_form": version.dosage_form,
             "reason_for_use": version.reason_for_use,
             "instructions": version.instructions,
@@ -66,11 +67,19 @@ def plan_response(plan, version) -> dict:
                 if version.treatment_ends_on
                 else None
             ),
+            "effective_from_on": version.effective_from_on.isoformat(),
+            "effective_until_on": (
+                version.effective_until_on.isoformat()
+                if version.effective_until_on
+                else None
+            ),
         },
     }
 
 
-def occurrence_response(plan, version, schedule, day, record) -> dict:
+def occurrence_response(
+    plan, version, schedule, day, record, timing_state
+) -> dict:
     """Return one calculated occurrence with its optional outcome."""
     return {
         "plan_id": str(plan.id),
@@ -78,11 +87,13 @@ def occurrence_response(plan, version, schedule, day, record) -> dict:
         "scheduled_on": day.isoformat(),
         "time_of_day": schedule.time_of_day.isoformat(timespec="minutes"),
         "name": version.name,
-        "strength_text": version.strength_text,
+        "strength_value": str(version.strength_value.normalize()),
+        "strength_unit": version.strength_unit,
         "dosage_form": version.dosage_form,
         "dose_value": str(schedule.dose_value.normalize()),
         "dose_unit": schedule.dose_unit,
         "instructions": schedule.instructions,
+        "timing_state": timing_state,
         "record": None if record is None else {
             "id": str(record.id),
             "outcome": record.outcome,

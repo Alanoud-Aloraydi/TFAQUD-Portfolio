@@ -68,6 +68,7 @@ class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState> {
     final to = currentFrom.subtract(const Duration(days: 1));
     final candidate = currentFrom.subtract(const Duration(days: 32));
     final from = candidate.isBefore(earliest) ? earliest : candidate;
+    final revision = ++_revision;
     emit(
       MedicationOccurrencesState(
         status: MedicationOccurrencesStatus.loadingMore,
@@ -80,7 +81,7 @@ class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState> {
       to,
       planId: _planId,
     );
-    if (isClosed) return;
+    if (isClosed || revision != _revision) return;
     result.when(
       (items) {
         _from = from;
@@ -111,10 +112,12 @@ class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState> {
       MedicationOccurrencesState(
         status: MedicationOccurrencesStatus.recording,
         occurrences: state.occurrences,
+        recordingOccurrence: occurrence,
       ),
     );
+    final revision = _revision;
     final result = await _medications.recordDose(circleId, occurrence, record);
-    if (isClosed) return false;
+    if (isClosed || revision != _revision) return false;
     return result.when(
       (saved) async {
         final occurrences = [

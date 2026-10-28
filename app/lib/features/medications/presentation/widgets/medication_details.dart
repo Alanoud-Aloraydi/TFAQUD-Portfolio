@@ -1,6 +1,7 @@
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,10 @@ class MedicationDetails extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(version.name, style: Theme.of(context).textTheme.headlineSmall),
-        if (version.strength case final value?) Text(value),
+        Text(
+          '${formatMedicationNumber(version.strengthValue)} '
+          '${version.strengthUnit.apiValue}',
+        ),
         const SizedBox(height: AppSpacing.lg),
         _Value(
           label: 'medications.dosage_form',
@@ -30,6 +34,11 @@ class MedicationDetails extends StatelessWidget {
           label: 'medications.treatment_period',
           value: _period(context, version.startsOn, version.endsOn),
         ),
+        if (plan.isScheduledOn(DateUtils.dateOnly(DateTime.now())))
+          _Value(
+            label: 'medications.effective_from',
+            value: formatMedicationDate(context, version.effectiveFromOn),
+          ),
         const SizedBox(height: AppSpacing.md),
         Text(
           context.tr('medications.dose_schedules'),
@@ -43,13 +52,18 @@ class MedicationDetails extends StatelessWidget {
   }
 
   String _period(BuildContext context, DateTime start, DateTime? end) {
-    final format = DateFormat.yMd(context.locale.toString());
     if (end == null) {
-      return context.tr('medications.starts_on', args: [format.format(start)]);
+      return context.tr(
+        'medications.starts_on',
+        args: [formatMedicationDate(context, start)],
+      );
     }
     return context.tr(
       'medications.period',
-      args: [format.format(start), format.format(end)],
+      args: [
+        formatMedicationDate(context, start),
+        formatMedicationDate(context, end),
+      ],
     );
   }
 }
@@ -86,29 +100,31 @@ class _ScheduleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final time = DateFormat.jm(context.locale.toString())
-        .format(DateTime.parse('2000-01-01T${schedule.time}'));
+    final time = formatMedicationTime(context, schedule.time);
     final days = schedule.weekdays
         .map((day) => context.tr('medications.weekday.$day'))
         .join(context.tr('medications.list_separator'));
     final dose = context.tr(
       'medications.dose',
       args: [
-        schedule.doseValue.toString().replaceFirst(RegExp(r'\.0$'), ''),
+        formatMedicationNumber(schedule.doseValue),
         context.tr('medications.unit.${schedule.doseUnit.name}'),
       ],
     );
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.schedule_outlined),
-        title: Text('$time · $dose'),
-        subtitle: Text(
-          [
-            days,
-            schedule.instructions,
-          ].whereType<String>().where((value) => value.isNotEmpty).join('\n'),
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.schedule_outlined),
+          title: Text('$time · $dose'),
+          subtitle: Text(
+            [
+              days,
+              schedule.instructions,
+            ].whereType<String>().where((value) => value.isNotEmpty).join('\n'),
+          ),
         ),
-      ),
+        const Divider(height: 1),
+      ],
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:app/features/medications/presentation/widgets/medication_plan_li
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MedicationHistorySection extends StatelessWidget {
@@ -33,21 +34,40 @@ class MedicationHistorySection extends StatelessWidget {
         final previous = state.plans
             .where((plan) => plan.isPreviousOn(today))
             .toList();
+        final visible = switch (state.recordFilter) {
+          MedicationRecordFilter.all => state.plans,
+          MedicationRecordFilter.current => current,
+          MedicationRecordFilter.previous => previous,
+        };
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            MedicationPlanList(
-              title: context.tr('medications.current'),
-              emptyText: context.tr('medications.no_current'),
-              plans: current,
-              circleId: circleId,
-              shrinkWrap: true,
+            CupertinoSlidingSegmentedControl<MedicationRecordFilter>(
+              groupValue: state.recordFilter,
+              children: {
+                for (final filter in MedicationRecordFilter.values)
+                  filter: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    child: Text(
+                      context.tr('medications.filter.${filter.name}'),
+                    ),
+                  ),
+              },
+              onValueChanged: (value) {
+                if (value != null) {
+                  context.read<MedicationsCubit>().setRecordFilter(value);
+                }
+              },
             ),
             const SizedBox(height: AppSpacing.xl),
             MedicationPlanList(
-              title: context.tr('medications.previous'),
-              emptyText: context.tr('medications.no_previous'),
-              plans: previous,
+              title: context.tr(
+                'medications.filter.${state.recordFilter.name}',
+              ),
+              emptyText: context.tr('medications.no_records'),
+              plans: visible,
               circleId: circleId,
               shrinkWrap: true,
             ),

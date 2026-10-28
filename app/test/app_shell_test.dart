@@ -46,6 +46,7 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/widgets/glass_add_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -230,6 +231,7 @@ void main() {
       expect(find.byTooltip('topbar.notifications'.tr()), findsOneWidget);
       expect(find.byTooltip('topbar.add_circle'.tr()), findsOneWidget);
       expect(find.byTooltip('tab.add'.tr()), findsOneWidget);
+      expect(tester.widget<GlassAddButton>(find.byType(GlassAddButton)).onPressed, isNull);
       final account = tester.getCenter(find.byTooltip('topbar.account'.tr()));
       final addCircle = tester.getCenter(
         find.byTooltip('topbar.add_circle'.tr()),
@@ -284,15 +286,47 @@ void main() {
       }
     });
 
-    testWidgets('the add button opens the add sheet', (
+    testWidgets('an admin opens the add sheet', (
       WidgetTester tester,
     ) async {
+      home.response = Success(
+        homeData(
+          circles: const <CareCircleSummary>[
+            CareCircleSummary(
+              id: 'one',
+              name: 'Circle one',
+              canManageMedications: true,
+            ),
+          ],
+        ),
+      );
       await pumpApp(tester);
 
       await tester.tap(find.byTooltip('tab.add'.tr()));
       await tester.pumpAndSettle();
 
       expect(find.text('add.title'.tr()), findsOneWidget);
+
+      await tester.tap(find.text('add.medication'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.text('medications.add_title'.tr()), findsOneWidget);
+      final save = find.text('medications.save'.tr());
+      await tester.dragUntilVisible(
+        save,
+        find.byType(SingleChildScrollView),
+        const Offset(0, -400),
+      );
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -100),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(save);
+      await tester.pump();
+      expect(find.text('medications.field_required'.tr()), findsOneWidget);
+      expect(tester.widget<TextField>(find.byType(TextField).first).focusNode!.hasFocus, isTrue);
+      await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     });
 
     testWidgets('no circles shows the empty state with a way to create one', (

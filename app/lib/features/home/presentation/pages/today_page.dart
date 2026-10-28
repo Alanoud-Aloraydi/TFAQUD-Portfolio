@@ -8,7 +8,7 @@ class TodayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SelectedCircleBuilder(
-      builder: (context, circleId) => const TodayMedicationSection(),
+      builder: (context, circle) => const TodayMedicationSection(),
     );
   }
 }

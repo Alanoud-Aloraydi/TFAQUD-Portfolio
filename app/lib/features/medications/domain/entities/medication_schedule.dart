@@ -4,15 +4,34 @@ enum DosageForm { tablet, capsule, liquid, drops, inhaler, injection }
 
 enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }
 
+enum StrengthUnit {
+  milligram('mg'),
+  microgram('mcg'),
+  milligramPerMilliliter('mg/mL'),
+  milligramPerFiveMilliliters('mg/5mL'),
+  microgramPerDose('mcg/dose'),
+  unitPerMilliliter('unit/mL'),
+  percent('%');
+
+  const StrengthUnit(this.apiValue);
+
+  final String apiValue;
+
+  static StrengthUnit fromApi(String value) =>
+      values.firstWhere((unit) => unit.apiValue == value);
+}
+
 extension DosageFormUnit on DosageForm {
-  DoseUnit get doseUnit => switch (this) {
-    DosageForm.tablet => DoseUnit.tablet,
-    DosageForm.capsule => DoseUnit.capsule,
-    DosageForm.liquid => DoseUnit.milliliter,
-    DosageForm.drops => DoseUnit.drop,
-    DosageForm.inhaler => DoseUnit.puff,
-    DosageForm.injection => DoseUnit.unit,
+  List<DoseUnit> get doseUnits => switch (this) {
+    DosageForm.tablet => const [DoseUnit.tablet],
+    DosageForm.capsule => const [DoseUnit.capsule],
+    DosageForm.liquid => const [DoseUnit.milliliter],
+    DosageForm.drops => const [DoseUnit.drop],
+    DosageForm.inhaler => const [DoseUnit.puff],
+    DosageForm.injection => const [DoseUnit.milliliter, DoseUnit.unit],
   };
+
+  DoseUnit get defaultDoseUnit => doseUnits.first;
 }
 
 extension DoseUnitValue on DoseUnit {

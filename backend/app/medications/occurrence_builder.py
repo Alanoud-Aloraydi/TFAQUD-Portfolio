@@ -1,12 +1,17 @@
 """Expand weekly schedules into calendar occurrences."""
 
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from app.medications.representations import occurrence_response
 
+RIYADH = ZoneInfo("Asia/Riyadh")
 
-def build_occurrences(rows, records, from_date: date, to_date: date):
+
+def build_occurrences(
+    rows, records, from_date: date, to_date: date, now: datetime
+):
     """Build only applicable occurrences, selecting the latest version."""
     by_plan = defaultdict(list)
     for row in rows:
@@ -29,13 +34,23 @@ def build_occurrences(rows, records, from_date: date, to_date: date):
                     or weekday != current.isoweekday()
                 ):
                     continue
+                scheduled_at = datetime.combine(
+                    current, schedule.time_of_day, tzinfo=RIYADH
+                )
+                if (
+                    plan.discontinued_at is not None
+                    and scheduled_at >= plan.discontinued_at
+                ):
+                    continue
+                record = records.get((schedule.id, current))
                 result.append(
                     occurrence_response(
                         plan,
                         version,
                         schedule,
                         current,
-                        records.get((schedule.id, current)),
+                        record,
+                        _timing_state(scheduled_at, now, record),
                     )
                 )
         current += timedelta(days=1)
@@ -55,12 +70,23 @@ def _version_applies(plan, version, day: date) -> bool:
     if version.treatment_ends_on is not None:
         if version.treatment_ends_on < day:
             return False
-    if version.effective_from.date() > day:
+    if version.effective_from_on > day:
         return False
-    if version.effective_until is not None:
-        if version.effective_until.date() < day:
+    if version.effective_until_on is not None:
+        if version.effective_until_on <= day:
             return False
-    return not (
-        plan.discontinued_at is not None
-        and plan.discontinued_at.date() < day
-    )
+    return True
+
+
+def _timing_state(scheduled_at, now, record):
+    """Return timing without persisting calculated occurrences."""
+    if record is not None:
+        return None
+    local_now = now.astimezone(RIYADH)
+    if scheduled_at.date() < local_now.date():
+        return "missed"
+    if local_now < scheduled_at:
+        return "upcoming"
+    if local_now < scheduled_at + timedelta(hours=1):
+        return "due"
+    return "late"

@@ -1,7 +1,9 @@
 """Transactional commands for versioned medication plans."""
 
 import unicodedata
+from datetime import timedelta
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,6 +15,8 @@ from app.medications.plan_versions import add_plan_version
 from app.medications.plan_versions import same_definition
 from app.models import MedicationPlan, MedicationPlanVersion
 from app.models import Patient
+
+RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def normalize_medication_name(value: str) -> str:
@@ -41,11 +45,11 @@ class MedicationPlanService:
             patient.id,
             normalized_name,
             body,
+            effective_from_on=body.treatment_starts_on,
         )
         plan = MedicationPlan(
             patient_id=patient.id,
             created_by_account_id=actor_id,
-            current_normalized_name=normalized_name,
         )
         self.session.add(plan)
         self.session.flush()
@@ -56,7 +60,7 @@ class MedicationPlanService:
             body,
             1,
             normalized_name,
-            self.now,
+            body.treatment_starts_on,
         )
         return plan
 
@@ -77,6 +81,28 @@ class MedicationPlanService:
         if current.version_number != body.expected_version_number:
             raise Conflict(code="medication_version_conflict")
         normalized_name = normalize_medication_name(body.name)
+        effective_from_on = body.effective_from_on or (
+            self.now.astimezone(RIYADH).date() + timedelta(days=1)
+        )
+        today = self.now.astimezone(RIYADH).date()
+        if effective_from_on <= today:
+            raise ValidationFailed(
+                "A revision must start after today.",
+                code="medication_revision_date",
+            )
+        if effective_from_on <= current.effective_from_on:
+            raise ValidationFailed(
+                "A revision must follow the current version.",
+                code="medication_revision_date",
+            )
+        if (
+            body.treatment_ends_on is not None
+            and body.treatment_ends_on < effective_from_on
+        ):
+            raise ValidationFailed(
+                "A revision cannot start after treatment ends.",
+                code="medication_revision_date",
+            )
         if same_definition(
             self.session, current, body, normalized_name
         ):
@@ -87,9 +113,9 @@ class MedicationPlanService:
             normalized_name,
             body,
             exclude_plan_id=plan.id,
+            effective_from_on=effective_from_on,
         )
-        current.effective_until = self.now
-        plan.current_normalized_name = normalized_name
+        current.effective_until_on = effective_from_on
         add_plan_version(
             self.session,
             plan,
@@ -97,7 +123,7 @@ class MedicationPlanService:
             body,
             current.version_number + 1,
             normalized_name,
-            self.now,
+            effective_from_on,
         )
         return plan
 
@@ -110,8 +136,6 @@ class MedicationPlanService:
         plan = self._plan(circle_id, plan_id)
         if plan.discontinued_at is not None:
             return plan
-        current = self._current_version(plan.id)
-        current.effective_until = self.now
         plan.discontinued_at = self.now
         plan.discontinued_by_account_id = actor_id
         self.session.flush()
@@ -146,7 +170,7 @@ class MedicationPlanService:
         version = self.session.scalar(
             select(MedicationPlanVersion).where(
                 MedicationPlanVersion.medication_plan_id == plan_id,
-                MedicationPlanVersion.effective_until.is_(None),
+                MedicationPlanVersion.effective_until_on.is_(None),
             )
         )
         if version is None:

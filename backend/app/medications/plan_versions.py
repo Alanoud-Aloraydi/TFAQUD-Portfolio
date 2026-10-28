@@ -1,5 +1,6 @@
 """Build and compare immutable medication-plan versions."""
 
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import select
@@ -17,7 +18,7 @@ def add_plan_version(
     body: PlanRequest,
     number: int,
     normalized_name: str,
-    effective_from,
+    effective_from_on: date,
 ) -> MedicationPlanVersion:
     """Persist one complete plan version and its dose schedules."""
     version = MedicationPlanVersion(
@@ -25,13 +26,14 @@ def add_plan_version(
         version_number=number,
         name=body.name,
         normalized_name=normalized_name,
-        strength_text=body.strength_text,
+        strength_value=body.strength_value,
+        strength_unit=body.strength_unit,
         dosage_form=body.dosage_form,
         reason_for_use=body.reason_for_use,
         instructions=body.instructions,
         treatment_starts_on=body.treatment_starts_on,
         treatment_ends_on=body.treatment_ends_on,
-        effective_from=effective_from,
+        effective_from_on=effective_from_on,
         created_by_account_id=actor_id,
     )
     session.add(version)
@@ -67,7 +69,8 @@ def same_definition(
     fields_match = (
         version.normalized_name == normalized_name
         and version.name == body.name
-        and version.strength_text == body.strength_text
+        and version.strength_value == body.strength_value
+        and version.strength_unit == body.strength_unit
         and version.dosage_form == body.dosage_form
         and version.reason_for_use == body.reason_for_use
         and version.instructions == body.instructions

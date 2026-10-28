@@ -109,13 +109,17 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
         ),
         onAdd: state.selectedCircleId == null
             ? null
-            : () => showHomeAddSheet(
+            : state.data!.circles
+                  .firstWhere((circle) => circle.id == state.selectedCircleId)
+                  .canManageMedications
+            ? () => showHomeAddSheet(
                 context,
                 circleId: state.selectedCircleId!,
                 onMedicationSaved: () {
                   if (mounted) _loadClinicalData(state.selectedCircleId!);
                 },
-              ),
+              )
+            : null,
         body: _body(state, cubit),
       ),
     );

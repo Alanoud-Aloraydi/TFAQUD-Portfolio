@@ -1,5 +1,6 @@
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
@@ -16,29 +17,53 @@ class DoseRecordControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final record = occurrence.record;
     if (record != null) return _RecordedStatus(record: record);
-    return Row(
+    final isRecording = context.select<MedicationOccurrencesCubit, bool>(
+      (cubit) => cubit.state.recordingOccurrence == occurrence,
+    );
+    if (isRecording) return const _RecordingStatus();
+    final today = DateUtils.dateOnly(DateTime.now());
+    final scheduledOn = DateUtils.dateOnly(occurrence.scheduledOn);
+    if (scheduledOn.isAfter(today)) return const SizedBox.shrink();
+    final isToday = scheduledOn == today;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: () => _take(context),
+        if (isToday) ...[
+          FilledButton.icon(
+            onPressed: () => _takeNow(context),
             icon: const Icon(Icons.check),
-            label: Text(context.tr('medications.taken_action')),
+            label: Text(context.tr('medications.taken_now_action')),
           ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        OutlinedButton(
+          onPressed: () => _takeAtDifferentTime(context),
+          child: Text(context.tr('medications.different_time_action')),
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => _skip(context),
-            child: Text(context.tr('medications.skip_action')),
-          ),
+        TextButton(
+          onPressed: () => _skip(context),
+          child: Text(context.tr('medications.skip_action')),
         ),
       ],
     );
   }
 
-  Future<void> _take(BuildContext context) async {
+  Future<void> _takeNow(BuildContext context) =>
+      _recordTaken(context, DateTime.now());
+
+  Future<void> _takeAtDifferentTime(BuildContext context) async {
     final takenAt = await selectTakenTime(context, occurrence.scheduledOn);
     if (takenAt == null || !context.mounted) return;
+    if (takenAt.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('medications.future_taken_time'))),
+      );
+      return;
+    }
+    await _recordTaken(context, takenAt);
+  }
+
+  Future<void> _recordTaken(BuildContext context, DateTime takenAt) async {
     await context.read<MedicationOccurrencesCubit>().record(
       occurrence,
       DoseRecordDraft(outcome: DoseOutcome.taken, takenAt: takenAt),
@@ -46,11 +71,32 @@ class DoseRecordControls extends StatelessWidget {
   }
 
   Future<void> _skip(BuildContext context) async {
-    final confirmed = await confirmSkippedDose(context);
-    if (!confirmed || !context.mounted) return;
-    await context.read<MedicationOccurrencesCubit>().record(
-      occurrence,
-      const DoseRecordDraft(outcome: DoseOutcome.skipped),
+    final draft = await selectSkippedDose(context);
+    if (draft == null || !context.mounted) return;
+    await context.read<MedicationOccurrencesCubit>().record(occurrence, draft);
+  }
+}
+
+class _RecordingStatus extends StatelessWidget {
+  const _RecordingStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.tr('medications.recording_dose');
+    return Semantics(
+      label: label,
+      liveRegion: true,
+      child: SizedBox(
+        height: 44,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const LoadingWidget(size: 24),
+            const SizedBox(width: AppSpacing.sm),
+            Text(label),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,13 +1,18 @@
 import 'package:equatable/equatable.dart';
 
 class CareCircleSummary extends Equatable {
-  const CareCircleSummary({required this.id, required this.name});
+  const CareCircleSummary({
+    required this.id,
+    required this.name,
+    this.canManageMedications = false,
+  });
 
   final String id;
   final String name;
+  final bool canManageMedications;
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, canManageMedications];
 }
 
 class HomeEntity extends Equatable {

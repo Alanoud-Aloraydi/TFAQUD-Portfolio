@@ -57,6 +57,9 @@ class FailureExceptions {
       ApiErrorCodes.medicationDiscontinued => const ConflictFailure(
         'medications.already_discontinued',
       ),
+      ApiErrorCodes.medicationRevisionDate => const ValidationFailure(
+        'medications.revision_date',
+      ),
       ApiErrorCodes.doseRecordConflict => const ConflictFailure(
         'medications.dose_record_conflict',
       ),

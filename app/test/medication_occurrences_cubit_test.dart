@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -53,6 +55,39 @@ void main() {
     expect(cubit.state.occurrences.single.record, repository.saved);
     expect(repository.ranges, hasLength(1));
   });
+
+  test('identifies the occurrence while its record is being saved', () async {
+    final repository = _Repository();
+    final cubit = MedicationOccurrencesCubit(MedicationsUseCase(repository));
+    addTearDown(cubit.close);
+    final occurrence = _occurrence(DateTime(2026, 10, 1));
+    final pending = Completer<Result<DoseRecord, Failure>>();
+    repository.responses.add(Success([occurrence]));
+    repository.saveResponse = pending.future;
+    repository.saved = DoseRecord(
+      id: 'record-1',
+      outcome: DoseOutcome.taken,
+      recordedAt: DateTime(2026, 10, 1),
+    );
+    await cubit.load(
+      'circle-1',
+      occurrence.scheduledOn,
+      occurrence.scheduledOn,
+    );
+
+    final recording = cubit.record(
+      occurrence,
+      DoseRecordDraft(
+        outcome: DoseOutcome.taken,
+        takenAt: DateTime(2026, 10, 1),
+      ),
+    );
+
+    expect(cubit.state.recordingOccurrence, occurrence);
+    pending.complete(Success(repository.saved!));
+    await recording;
+    expect(cubit.state.recordingOccurrence, isNull);
+  });
 }
 
 DoseOccurrence _occurrence(DateTime day) => DoseOccurrence(
@@ -61,6 +96,8 @@ DoseOccurrence _occurrence(DateTime day) => DoseOccurrence(
   scheduledOn: day,
   time: '08:00',
   name: 'Medicine',
+  strengthValue: 5,
+  strengthUnit: StrengthUnit.milligram,
   dosageForm: DosageForm.tablet,
   doseValue: 1,
   doseUnit: DoseUnit.tablet,
@@ -70,6 +107,7 @@ class _Repository extends Fake implements MedicationsRepositoryDomain {
   final responses = <Result<List<DoseOccurrence>, Failure>>[];
   final ranges = <(DateTime, DateTime)>[];
   DoseRecord? saved;
+  Future<Result<DoseRecord, Failure>>? saveResponse;
 
   @override
   Future<Result<List<DoseOccurrence>, Failure>> getOccurrences(
@@ -87,5 +125,5 @@ class _Repository extends Fake implements MedicationsRepositoryDomain {
     String circleId,
     DoseOccurrence occurrence,
     DoseRecordDraft record,
-  ) async => Success(saved!);
+  ) => saveResponse ?? Future.value(Success(saved!));
 }

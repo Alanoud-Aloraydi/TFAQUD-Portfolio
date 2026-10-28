@@ -3,6 +3,22 @@ import 'package:equatable/equatable.dart';
 
 enum DoseOutcome { taken, skipped }
 
+enum DoseTimingState { upcoming, due, late, missed }
+
+enum DoseSkipReason {
+  forgotten,
+  unavailable,
+  sideEffects,
+  patientRefused,
+  other;
+
+  String get apiValue => switch (this) {
+    sideEffects => 'side_effects',
+    patientRefused => 'patient_refused',
+    _ => name,
+  };
+}
+
 class DoseRecord extends Equatable {
   const DoseRecord({
     required this.id,
@@ -38,10 +54,12 @@ class DoseOccurrence extends Equatable {
     required this.scheduledOn,
     required this.time,
     required this.name,
+    required this.strengthValue,
+    required this.strengthUnit,
     required this.dosageForm,
     required this.doseValue,
     required this.doseUnit,
-    this.strength,
+    this.timingState,
     this.instructions,
     this.record,
   });
@@ -51,12 +69,14 @@ class DoseOccurrence extends Equatable {
   final DateTime scheduledOn;
   final String time;
   final String name;
-  final String? strength;
+  final double strengthValue;
+  final StrengthUnit strengthUnit;
   final DosageForm dosageForm;
   final double doseValue;
   final DoseUnit doseUnit;
   final String? instructions;
   final DoseRecord? record;
+  final DoseTimingState? timingState;
 
   DoseOccurrence withRecord(DoseRecord value) => DoseOccurrence(
     planId: planId,
@@ -64,12 +84,14 @@ class DoseOccurrence extends Equatable {
     scheduledOn: scheduledOn,
     time: time,
     name: name,
-    strength: strength,
+    strengthValue: strengthValue,
+    strengthUnit: strengthUnit,
     dosageForm: dosageForm,
     doseValue: doseValue,
     doseUnit: doseUnit,
     instructions: instructions,
     record: value,
+    timingState: null,
   );
 
   @override
@@ -79,12 +101,14 @@ class DoseOccurrence extends Equatable {
     scheduledOn,
     time,
     name,
-    strength,
+    strengthValue,
+    strengthUnit,
     dosageForm,
     doseValue,
     doseUnit,
     instructions,
     record,
+    timingState,
   ];
 }
 

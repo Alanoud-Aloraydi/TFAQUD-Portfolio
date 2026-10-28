@@ -73,7 +73,11 @@ def test_self_care_circle_is_created_and_listed(
     assert circle["pending_invitations"] == []
     home = api.get("/api/v1/home")
     assert home.json["care_circles"] == [
-        {"id": circle["id"], "name": "My care"}
+        {
+            "id": circle["id"],
+            "name": "My care",
+            "can_manage_medications": True,
+        }
     ]
     with Session(database) as session:
         assert session.get(Account, owner.id).app_mode == "detailed"

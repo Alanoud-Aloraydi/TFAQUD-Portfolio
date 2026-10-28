@@ -159,10 +159,17 @@ class AppRouter {
         builder: (context, state) {
           final String circleId = state.pathParameters['circleId']!;
           final String planId = state.pathParameters['planId']!;
-          return BlocProvider(
-            create: (context) =>
-                MedicationsCubit(GetIt.I<MedicationsUseCase>())
-                  ..loadPlan(circleId, planId),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    MedicationsCubit(GetIt.I<MedicationsUseCase>())
+                      ..loadPlan(circleId, planId),
+              ),
+            ],
             child: MedicationDetailsPage(circleId: circleId, planId: planId),
           );
         },
