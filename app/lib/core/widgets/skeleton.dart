@@ -95,6 +95,244 @@ class SkeletonBox extends StatelessWidget {
   }
 }
 
+/// A line of placeholder text, [widthFactor] of the row's width, from the
+/// start (right in Arabic).
+class SkeletonLine extends StatelessWidget {
+  const SkeletonLine({super.key, this.widthFactor = 1, this.height = 14});
+
+  final double widthFactor;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: FractionallySizedBox(
+        widthFactor: widthFactor,
+        child: SkeletonBox(height: height),
+      ),
+    );
+  }
+}
+
+/// A round placeholder, such as an avatar.
+class SkeletonCircle extends StatelessWidget {
+  const SkeletonCircle({super.key, required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonBox(width: size, height: size, radius: size / 2);
+  }
+}
+
+/// The white card the real content sits on, holding placeholders.
+class SkeletonSurface extends StatelessWidget {
+  const SkeletonSurface({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(AppSpacing.lg),
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: AppColors.surface,
+        shape: AppRadius.shape(AppRadius.l),
+        shadows: AppGlass.cardShadow,
+      ),
+      child: Padding(padding: padding, child: child),
+    );
+  }
+}
+
+/// The large title of a tab, and the line under it when [subtitle].
+class SkeletonLargeTitle extends StatelessWidget {
+  const SkeletonLargeTitle({super.key, this.width = 112, this.subtitle = false});
+
+  final double width;
+  final bool subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SkeletonBox(width: width, height: 36, radius: AppRadius.s),
+          if (subtitle) ...<Widget>[
+            const SizedBox(height: AppSpacing.sm),
+            const SkeletonBox(width: 104, height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A page's skeleton: its own placeholders ([children], in the page's
+/// layout) with the shimmer over them. VoiceOver reads «جارٍ التحميل» once.
+/// [padding] is the page's own padding; with [scrollInsets] the bars' heights
+/// are added, as the page's list does.
+class SkeletonPage extends StatelessWidget {
+  const SkeletonPage({
+    super.key,
+    required this.children,
+    this.padding = const EdgeInsets.all(AppSpacing.lg),
+    this.scrollInsets = true,
+  });
+
+  final List<Widget> children;
+  final EdgeInsets padding;
+  final bool scrollInsets;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: context.tr('common.loading'),
+      liveRegion: true,
+      child: ExcludeSemantics(
+        child: Shimmer(
+          child: ListView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: scrollInsets ? context.scrollPadding(padding) : padding,
+            children: children,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Placeholders for one part of a page that sits inside a scrolling page,
+/// such as a medicine's dose history: the shimmer over a plain column, with
+/// no scrolling of its own.
+class SkeletonBlock extends StatelessWidget {
+  const SkeletonBlock({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: context.tr('common.loading'),
+      liveRegion: true,
+      child: ExcludeSemantics(
+        child: Shimmer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A form section as `FormGroup` draws it: a header line, then a white card
+/// of [rows] rows, each a short label in the label column and a value.
+/// [header] false leaves the header out, as for a field on its own.
+class SkeletonFormGroup extends StatelessWidget {
+  const SkeletonFormGroup({super.key, this.rows = 3, this.header = true});
+
+  final int rows;
+  final bool header;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (header)
+          const Padding(
+            padding: EdgeInsetsDirectional.only(
+              start: AppSpacing.lg,
+              bottom: AppSpacing.sm,
+            ),
+            child: SkeletonLine(widthFactor: 0.3, height: 14),
+          ),
+        SkeletonSurface(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: <Widget>[
+              for (int i = 0; i < rows; i++) ...<Widget>[
+                if (i > 0) const Divider(height: 1, indent: AppSpacing.lg),
+                SizedBox(
+                  height: AppSizes.button,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const SizedBox(
+                          width: AppSizes.formLabel,
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: SkeletonBox(width: 72, height: 14),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        SkeletonBox(width: i.isEven ? 104 : 72, height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A card of rows, each a short label at the start and a value at the end,
+/// as the medical file and the account show their details.
+class SkeletonDetailsCard extends StatelessWidget {
+  const SkeletonDetailsCard({super.key, required this.rows});
+
+  final int rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonSurface(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: <Widget>[
+          for (int i = 0; i < rows; i++) ...<Widget>[
+            if (i > 0)
+              const Divider(
+                height: 1,
+                indent: AppSpacing.lg,
+                endIndent: AppSpacing.lg,
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.lg,
+              ),
+              child: Row(
+                children: <Widget>[
+                  const SkeletonBox(width: 72, height: 14),
+                  const Spacer(),
+                  SkeletonBox(width: i.isEven ? 96 : 64, height: 16),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// A placeholder of a content card: a tile, two lines and a detail line, on
 /// the same white card as the real one.
 class SkeletonCard extends StatelessWidget {

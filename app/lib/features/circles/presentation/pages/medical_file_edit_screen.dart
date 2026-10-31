@@ -3,7 +3,6 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
@@ -12,6 +11,7 @@ import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
+import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/circles/presentation/widgets/option_chips.dart';
@@ -76,7 +76,7 @@ class MedicalFileEditScreen extends StatelessWidget {
   ) {
     switch (state.status) {
       case MedicalFileEditStatus.loading:
-        return const LoadingWidget();
+        return const MedicalFileEditSkeleton();
       case MedicalFileEditStatus.failure:
         return Center(
           child: Column(

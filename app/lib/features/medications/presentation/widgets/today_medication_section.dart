@@ -5,6 +5,7 @@ import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class TodayMedicationSection extends StatelessWidget {
 
   Widget _content(BuildContext context, MedicationOccurrencesState state) {
     if (state.status == MedicationOccurrencesStatus.loading) {
-      return const PageSkeleton(title: true, subtitle: true);
+      return const TodaySkeleton();
     }
     if (state.status == MedicationOccurrencesStatus.failure) {
       return MedicationFailureView(

@@ -1,11 +1,11 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
+import 'package:app/features/account/presentation/widgets/account_skeleton.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/account/presentation/widgets/profile_edit_sheet.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
@@ -123,7 +123,7 @@ class AccountScreen extends StatelessWidget {
   Widget _body(BuildContext context, AccountCubit cubit, AccountState state) {
     switch (state.status) {
       case AccountStatus.loading:
-        return const LoadingWidget();
+        return const AccountSkeleton();
       case AccountStatus.failure:
         return Center(
           child: Column(

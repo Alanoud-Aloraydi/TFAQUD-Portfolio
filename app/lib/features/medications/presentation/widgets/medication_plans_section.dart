@@ -3,6 +3,7 @@ import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class MedicationPlansSection extends StatelessWidget {
   Widget _content(BuildContext context, MedicationsState state) {
     if (state.status == MedicationsStatus.initial ||
         state.status == MedicationsStatus.loading) {
-      return const PageSkeleton(title: true);
+      return const PlansSkeleton();
     }
     if (state.status == MedicationsStatus.failure) {
       return MedicationFailureView(

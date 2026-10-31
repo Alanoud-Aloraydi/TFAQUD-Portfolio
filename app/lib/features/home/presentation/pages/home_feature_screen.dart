@@ -10,6 +10,7 @@ import 'package:app/features/home/presentation/widgets/home_widget.dart';
 import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:app/features/shell/widgets/app_top_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -133,7 +134,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
 
   Widget _body(HomeState state, HomeCubit cubit) {
     if (state.status == HomeStatus.loading) {
-      return const PageSkeleton(title: true, subtitle: true);
+      // The app opens on «اليوم», so the first load looks like it.
+      return const TodaySkeleton();
     }
     if (state.status == HomeStatus.failure) {
       return Center(

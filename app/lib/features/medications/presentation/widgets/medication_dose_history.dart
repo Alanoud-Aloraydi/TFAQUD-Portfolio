@@ -1,8 +1,8 @@
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +19,7 @@ class MedicationDoseHistory extends StatelessWidget {
       listener: _showError,
       builder: (context, state) {
         if (state.status == MedicationOccurrencesStatus.loading) {
-          return const LoadingWidget();
+          return const DoseHistorySkeleton();
         }
         if (state.status == MedicationOccurrencesStatus.failure) {
           return MedicationFailureView(

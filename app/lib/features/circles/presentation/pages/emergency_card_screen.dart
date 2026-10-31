@@ -3,12 +3,12 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_state.dart';
+import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -82,7 +82,7 @@ class EmergencyCardScreen extends StatelessWidget {
   ) {
     switch (state.status) {
       case EmergencyCardStatus.loading:
-        return const LoadingWidget();
+        return const EmergencyCardSkeleton();
       case EmergencyCardStatus.failure:
         return Center(
           child: Column(

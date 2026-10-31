@@ -1,7 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/app_alert.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -9,6 +8,7 @@ import 'package:app/features/medications/presentation/cubit/medications_cubit.da
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -39,7 +39,12 @@ class MedicationDetailsPage extends StatelessWidget {
     return BlocBuilder<MedicationsCubit, MedicationsState>(
       builder: (context, state) {
         if (state.status == MedicationsStatus.loading) {
-          return const Scaffold(body: LoadingWidget());
+          // The page keeps its bar while it loads, so only the content
+          // changes when it comes.
+          return Scaffold(
+            appBar: AppBar(title: Text(context.tr('medications.details'))),
+            body: const MedicationDetailsSkeleton(),
+          );
         }
         if (state.status == MedicationsStatus.failure || state.plans.isEmpty) {
           return Scaffold(

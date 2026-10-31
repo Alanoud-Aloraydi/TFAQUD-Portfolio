@@ -2,7 +2,6 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/app_alert.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
@@ -11,6 +10,7 @@ import 'package:app/features/circles/domain/entities/received_circle_request.dar
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
+import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -112,7 +112,7 @@ class NotificationsScreen extends StatelessWidget {
   Widget _body(BuildContext context, InboxCubit cubit, InboxState state) {
     switch (state.status) {
       case InboxStatus.loading:
-        return const LoadingWidget();
+        return const NotificationsSkeleton();
       case InboxStatus.failure:
         return Center(
           child: Column(

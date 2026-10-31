@@ -2,7 +2,6 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -10,6 +9,7 @@ import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
+import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_tile.dart';
@@ -118,7 +118,7 @@ class MedicalFileScreen extends StatelessWidget {
     final MedicalFile? file = state.file;
     switch (state.status) {
       case MedicalFileStatus.loading:
-        return const LoadingWidget();
+        return const MedicalFileSkeleton();
       case MedicalFileStatus.failure:
         return Center(
           child: Column(

@@ -1,8 +1,9 @@
-import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_form.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,7 +19,10 @@ class MedicationFormPage extends StatelessWidget {
     return BlocBuilder<MedicationsCubit, MedicationsState>(
       builder: (context, state) {
         if (state.status == MedicationsStatus.loading) {
-          return const Scaffold(body: LoadingWidget());
+          return Scaffold(
+            appBar: AppBar(title: Text(context.tr('medications.edit_title'))),
+            body: const MedicationFormSkeleton(),
+          );
         }
         if (state.status == MedicationsStatus.failure || state.plans.isEmpty) {
           return Scaffold(
