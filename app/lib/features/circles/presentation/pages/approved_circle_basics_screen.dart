@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/circles/presentation/circle_flow_routes.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
@@ -55,7 +56,7 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
@@ -75,12 +76,12 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                                 ? () => context.pop()
                                 : () => context.go(Routes.notifications),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           AccountNameField(
                             state: state,
                             onRetry: cubit.loadAccount,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           ReadOnlyField(
                             label: context.tr('circles.approved_circle_name'),
                             note: context.tr('circles.set_by_requester'),
@@ -89,7 +90,7 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           PickerField(
                             label: context.tr('circles.birth_date'),
                             hint: context.tr('circles.birth_date_hint'),
@@ -107,7 +108,7 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           PickerField(
                             label: context.tr('circles.city'),
                             hint: context.tr('circles.city_hint'),
@@ -122,7 +123,7 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.next'),
                     onPressed: () => _next(context, cubit),

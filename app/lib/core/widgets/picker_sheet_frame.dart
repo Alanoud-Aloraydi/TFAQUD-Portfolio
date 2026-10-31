@@ -13,7 +13,8 @@ class PickerSheetFrame extends StatelessWidget {
 
   final String title;
   final String confirmLabel;
-  final VoidCallback onConfirm;
+  /// Null turns the confirm button off.
+  final VoidCallback? onConfirm;
   final Widget child;
 
   @override

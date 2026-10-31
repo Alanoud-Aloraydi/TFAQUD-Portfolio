@@ -1,7 +1,7 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/large_title.dart';
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
@@ -17,27 +17,37 @@ class TodayMedicationSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<MedicationOccurrencesCubit, MedicationOccurrencesState>(
       listener: _showError,
-      builder: (context, state) {
-        if (state.status == MedicationOccurrencesStatus.loading) {
-          return const LoadingWidget();
-        }
-        if (state.status == MedicationOccurrencesStatus.failure) {
-          return MedicationFailureView(
-            messageKey: state.messageKey!,
-            onRetry: context.read<MedicationOccurrencesCubit>().reload,
-          );
-        }
-        return ListView.separated(
-          padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
-          itemCount: state.occurrences.length + 1,
-          separatorBuilder: (_, index) => index == 0
-              ? const SizedBox(height: AppSpacing.md)
-              : const Divider(height: 1),
-          itemBuilder: (context, index) {
-            if (index == 0) return _Header(count: state.occurrences.length);
-            return DoseOccurrenceCard(occurrence: state.occurrences[index - 1]);
-          },
-        );
+      builder: (context, state) => ContentSwitcher(
+        // Only loading, error and content fade; recording a dose does not.
+        stateKey: switch (state.status) {
+          MedicationOccurrencesStatus.loading => 'loading',
+          MedicationOccurrencesStatus.failure => 'failure',
+          _ => 'content',
+        },
+        child: _content(context, state),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context, MedicationOccurrencesState state) {
+    if (state.status == MedicationOccurrencesStatus.loading) {
+      return const PageSkeleton(title: true, subtitle: true);
+    }
+    if (state.status == MedicationOccurrencesStatus.failure) {
+      return MedicationFailureView(
+        messageKey: state.messageKey!,
+        onRetry: context.read<MedicationOccurrencesCubit>().reload,
+      );
+    }
+    return ListView.separated(
+      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+      itemCount: state.occurrences.length + 1,
+      separatorBuilder: (_, index) => index == 0
+          ? const SizedBox(height: AppSpacing.md)
+          : const Divider(height: 1),
+      itemBuilder: (context, index) {
+        if (index == 0) return _Header(count: state.occurrences.length);
+        return DoseOccurrenceCard(occurrence: state.occurrences[index - 1]);
       },
     );
   }

@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/presentation/widgets/option_chips.dart';
@@ -44,7 +45,7 @@ class CircleLabelPicker extends StatelessWidget {
           context.tr('circles.label_title'),
           style: text.titleSmall?.copyWith(color: AppColors.slate),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         OptionChips(
           options: <ChipOption>[
             for (final CircleLabel label in CircleLabel.values)
@@ -54,7 +55,7 @@ class CircleLabelPicker extends StatelessWidget {
           onTap: (String code) => onSelected(CircleLabel.values.byName(code)),
         ),
         if (selected == CircleLabel.other) ...<Widget>[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           LabeledTextField(
             label: context.tr('circles.custom_label'),
             controller: customController,
@@ -64,7 +65,7 @@ class CircleLabelPicker extends StatelessWidget {
             errorText: customError,
           ),
         ],
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Text(hint, style: text.bodySmall?.copyWith(color: AppColors.slate)),
       ],
     );

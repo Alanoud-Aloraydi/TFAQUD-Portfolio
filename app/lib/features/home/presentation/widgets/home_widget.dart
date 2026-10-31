@@ -1,15 +1,14 @@
-import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/widgets/glass.dart';
+import 'package:app/core/widgets/glass_menu.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The circle switcher in the middle of the top bar (design system TopBar):
 /// a glass capsule with the selected circle's name and a down chevron. A tap
-/// opens an iOS action sheet with every circle (the current one in bold) and
-/// «إضافة دائرة». The choice is shared by all the home tabs. With no circle
+/// grows it into a glass menu, in place, with every circle (a check mark on
+/// the current one) and «إضافة دائرة». The choice is shared by all the home tabs. With no circle
 /// yet, the capsule is «إضافة دائرة» itself.
 class HomeWidget extends StatelessWidget {
   const HomeWidget({
@@ -62,29 +61,27 @@ class HomeWidget extends StatelessWidget {
     List<CareCircleSummary> circles,
     String selectedId,
   ) async {
-    const TextStyle style = TextStyle(fontFamily: AppTextTheme.fontFamily);
-    final String? picked = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (BuildContext sheetContext) => CupertinoActionSheet(
-        title: Text(sheetContext.tr('topbar.circles_title'), style: style),
-        actions: <Widget>[
+    final String? picked = await showGlassMenu<String>(
+      anchorContext: context,
+      semanticLabel: context.tr('topbar.circles_title'),
+      sections: <List<GlassMenuItem<String>>>[
+        <GlassMenuItem<String>>[
           for (final CareCircleSummary circle in circles)
-            CupertinoActionSheetAction(
-              isDefaultAction: circle.id == selectedId,
-              onPressed: () => Navigator.pop(sheetContext, circle.id),
-              child: Text(circle.name, style: style),
-            ),
-          if (onAddCircle != null)
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(sheetContext, _addCircle),
-              child: Text(sheetContext.tr('topbar.add_circle'), style: style),
+            GlassMenuItem<String>(
+              value: circle.id,
+              label: circle.name,
+              selected: circle.id == selectedId,
             ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheetContext),
-          child: Text(sheetContext.tr('common.cancel'), style: style),
-        ),
-      ),
+        if (onAddCircle != null)
+          <GlassMenuItem<String>>[
+            GlassMenuItem<String>(
+              value: _addCircle,
+              label: context.tr('topbar.add_circle'),
+              icon: Icons.add,
+            ),
+          ],
+      ],
     );
     if (picked == null || !context.mounted) return;
     if (picked == _addCircle) {

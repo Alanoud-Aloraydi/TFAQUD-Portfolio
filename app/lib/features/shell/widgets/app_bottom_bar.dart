@@ -82,8 +82,9 @@ class AppBottomBar extends StatelessWidget {
     return NativeGlassNavBar(
       currentIndex: currentIndex,
       onTap: onTab,
-      // Selected tab in ink, the brand color.
-      tintColor: AppColors.ink,
+      // Only the selected tab takes the color (the palette's dark green);
+      // the other tabs stay dark.
+      tintColor: AppColors.tabSelected,
       actionButton: add == null
           ? null
           : TabBarActionButton(symbol: 'plus', onTap: add),
@@ -131,7 +132,7 @@ class _FrostedTabBar extends StatelessWidget {
           backgroundColor: scheme.surface.withValues(alpha: kFrostedAlpha),
           outlineBorderColor: scheme.surface,
           borderWidth: 1,
-          selectedItemColor: scheme.primary,
+          selectedItemColor: AppColors.tabSelected,
           unselectedItemColor: scheme.onSurfaceVariant,
           // Selection: the leaf-tint capsule with the filled ink icon.
           indicatorColor: AppColors.leafTint,

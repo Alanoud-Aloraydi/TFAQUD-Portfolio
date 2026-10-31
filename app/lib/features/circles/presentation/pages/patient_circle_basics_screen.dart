@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
@@ -87,7 +88,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               final String requiredText = context.tr('circles.field_required');
@@ -106,7 +107,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           LabeledTextField(
                             label: context.tr('circles.patient_first_name'),
                             controller: _firstName,
@@ -118,7 +119,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           LabeledTextField(
                             label: context.tr('circles.patient_last_name'),
                             controller: _lastName,
@@ -131,7 +132,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           PickerField(
                             label: context.tr('circles.birth_date'),
                             hint: context.tr('circles.birth_date_hint'),
@@ -149,7 +150,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           CircleLabelPicker(
                             selected: state.label,
                             onSelected: cubit.chooseLabel,
@@ -167,7 +168,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           PickerField(
                             label: context.tr('circles.city'),
                             hint: context.tr('circles.patient_city_hint'),
@@ -182,7 +183,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.next'),
                     onPressed: () => _next(context, cubit),

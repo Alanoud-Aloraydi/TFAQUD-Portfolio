@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/core/widgets/step_header.dart';
@@ -28,7 +29,7 @@ class RequestReplyScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocConsumer<RequestReplyCubit, RequestReplyState>(
             listenWhen: (RequestReplyState before, RequestReplyState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -60,9 +61,9 @@ class RequestReplyScreen extends StatelessWidget {
                                 ? () => context.pop()
                                 : () => context.go(Routes.notifications),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           _RequestDetails(request: request),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             context.tr('circles.reply_decline_note'),
                             style: text.bodyMedium?.copyWith(
@@ -70,20 +71,20 @@ class RequestReplyScreen extends StatelessWidget {
                             ),
                           ),
                           if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),
                           ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.accept_request'),
                     isLoading: state.sending,
                     onPressed: cubit.accept,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
@@ -121,7 +122,7 @@ class _RequestDetails extends StatelessWidget {
     final String name = request.requesterName.trim();
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -145,7 +146,7 @@ class _RequestDetails extends StatelessWidget {
                   style: text.titleLarge?.copyWith(color: AppColors.ink),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +173,7 @@ class _RequestDetails extends StatelessWidget {
               foreground: AppColors.ink,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           _Row(
             label: context.tr('circles.reply_mode'),
             child: StatusPill(
@@ -183,7 +184,7 @@ class _RequestDetails extends StatelessWidget {
               foreground: AppColors.ink,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.tr(
               detailed

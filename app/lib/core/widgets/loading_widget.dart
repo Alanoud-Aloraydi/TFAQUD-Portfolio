@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -51,19 +52,26 @@ class LoadingWidgetOverlay {
   }
 }
 
+/// A page that is loading. With no [size] it is the page's shimmering
+/// skeleton (design system Skeleton), so every loading page shimmers instead
+/// of spinning. With a [size] it is a small spinner, for a control that is
+/// busy, such as a dose being recorded.
 class LoadingWidget extends StatelessWidget {
-  const LoadingWidget({super.key, this.size = 50});
+  const LoadingWidget({super.key, this.size});
+
   final double? size;
+
   @override
   Widget build(BuildContext context) {
+    final double? spinner = size;
+    if (spinner == null) return const PageSkeleton();
     return Center(
       child: LoadingAnimationWidget.discreteCircle(
         secondRingColor: AppColors.honey,
         thirdRingColor: AppColors.leaf,
         color: AppColors.ink,
-        size: size ?? 50,
+        size: spinner,
       ),
     );
   }
 }
-

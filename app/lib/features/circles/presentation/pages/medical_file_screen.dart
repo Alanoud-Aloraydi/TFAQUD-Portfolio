@@ -1,7 +1,9 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
 import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -56,7 +58,7 @@ class MedicalFileScreen extends StatelessWidget {
           builder: (BuildContext context, MedicalFileState state) {
             final MedicalFile? file = state.file;
             return Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -65,7 +67,7 @@ class MedicalFileScreen extends StatelessWidget {
                         ? () => context.pop()
                         : () => context.go(Routes.circle),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: <Widget>[
                       Expanded(
@@ -91,8 +93,14 @@ class MedicalFileScreen extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -120,7 +128,7 @@ class MedicalFileScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -142,7 +150,7 @@ class MedicalFileScreen extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final ContactForm? form = state.form;
     return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       children: <Widget>[
         SettingsCard(
           children: <Widget>[
@@ -172,7 +180,7 @@ class MedicalFileScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xl),
         Semantics(
           header: true,
           child: Text(
@@ -180,7 +188,7 @@ class MedicalFileScreen extends StatelessWidget {
             style: text.titleMedium,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         if (file.contacts.isEmpty && form == null)
           Text(
             context.tr('circles.file_contacts_empty'),
@@ -195,7 +203,7 @@ class MedicalFileScreen extends StatelessWidget {
               // One form is open at a time.
               onEdit: form == null ? () => cubit.startEdit(contact.id) : null,
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
         ],
         if (form != null && form.isNew) _form(context, cubit, form, null),
         if (form == null && file.canAddContact)

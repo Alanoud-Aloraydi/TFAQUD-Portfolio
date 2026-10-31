@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/core/widgets/pill_button.dart';
@@ -63,7 +64,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
               final String requiredText = context.tr('onboarding.field_required');
@@ -81,7 +82,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                             // to, so the link is hidden.
                             onBack: context.canPop() ? () => context.pop() : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           LabeledTextField(
                             label: context.tr('onboarding.first_name'),
                             controller: _first,
@@ -94,7 +95,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           LabeledTextField(
                             label: context.tr('onboarding.last_name'),
                             controller: _last,
@@ -108,7 +109,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           LabeledTextField(
                             label: context.tr('onboarding.display_name'),
                             controller: _display,
@@ -125,14 +126,14 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                                 : null,
                           ),
                           if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),
                           ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('common.continue'),
                     isLoading: state.status == OnboardingStatus.saving,

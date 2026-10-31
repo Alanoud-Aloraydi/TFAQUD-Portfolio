@@ -1,5 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/app_alert.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -11,7 +12,6 @@ import 'package:app/features/medications/presentation/widgets/medication_dose_hi
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -126,23 +126,18 @@ class _Content extends StatelessWidget {
   }
 
   Future<void> _discontinue(BuildContext context) async {
-    final confirmed = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: Text(dialogContext.tr('medications.discontinue_title')),
-        content: Text(dialogContext.tr('medications.discontinue_message')),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(dialogContext.tr('common.cancel')),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(dialogContext.tr('medications.discontinue_confirm')),
-          ),
-        ],
-      ),
+    final confirmed = await showAppAlert<bool>(
+      context,
+      title: context.tr('medications.discontinue_title'),
+      message: context.tr('medications.discontinue_message'),
+      actions: [
+        AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
+        AppAlertAction<bool>(
+          label: context.tr('medications.discontinue_confirm'),
+          value: true,
+          primary: true,
+        ),
+      ],
     );
     if (confirmed != true || !context.mounted) return;
     final changed = await context.read<MedicationsCubit>().discontinue(plan);

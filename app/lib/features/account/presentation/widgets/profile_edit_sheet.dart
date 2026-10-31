@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/core/widgets/pill_button.dart';
@@ -120,7 +121,7 @@ class _ProfileEditSheetState extends State<_ProfileEditSheet> {
                   style: text.titleLarge,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               if (displayOnly)
                 LabeledTextField(
                   label: context.tr('account.display_name'),
@@ -145,7 +146,7 @@ class _ProfileEditSheetState extends State<_ProfileEditSheet> {
                       ? requiredText
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 LabeledTextField(
                   label: context.tr('onboarding.last_name'),
                   controller: _last,
@@ -158,10 +159,10 @@ class _ProfileEditSheetState extends State<_ProfileEditSheet> {
                 ),
               ],
               if (_errorKey != null) ...<Widget>[
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 InlineError(messageKey: _errorKey!),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
               PillButton(
                 label: context.tr('account.save'),
                 isLoading: _saving,

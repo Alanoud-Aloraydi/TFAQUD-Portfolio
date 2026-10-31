@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/core/widgets/step_header.dart';
@@ -48,7 +49,7 @@ class CodeScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocBuilder<SignInCubit, SignInState>(
             builder: (BuildContext context, SignInState state) {
               final String phone =
@@ -68,7 +69,7 @@ class CodeScreen extends StatelessWidget {
                             ),
                             onBack: () => _back(context),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           TextButton(
                             onPressed: () => _back(context),
                             style: TextButton.styleFrom(
@@ -83,7 +84,7 @@ class CodeScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           OtpField(
                             length: SignInCubit.codeLength,
                             value: state.code,
@@ -91,10 +92,10 @@ class CodeScreen extends StatelessWidget {
                             onChanged: context.read<SignInCubit>().codeChanged,
                           ),
                           if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),
                           ],
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Center(
                             child: state.resendSeconds > 0
                                 ? Text(
@@ -117,7 +118,7 @@ class CodeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('auth.confirm'),
                     isLoading: state.status == SignInStatus.verifying,

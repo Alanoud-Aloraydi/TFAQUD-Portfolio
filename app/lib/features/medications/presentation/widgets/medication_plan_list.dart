@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 class MedicationPlanList extends StatelessWidget {
   const MedicationPlanList({
     super.key,
-    required this.title,
+    this.title,
     required this.emptyText,
     required this.plans,
     required this.circleId,
@@ -15,7 +15,9 @@ class MedicationPlanList extends StatelessWidget {
     this.header,
   });
 
-  final String title;
+  /// The section title. Null when something above already names the list,
+  /// such as the record tab's filter.
+  final String? title;
   final String emptyText;
   final List<MedicationPlan> plans;
   final String circleId;
@@ -28,8 +30,10 @@ class MedicationPlanList extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = <Widget>[
       if (header != null) header!,
-      Text(title, style: Theme.of(context).textTheme.headlineSmall),
-      const SizedBox(height: AppSpacing.md),
+      if (title != null) ...[
+        Text(title!, style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: AppSpacing.md),
+      ],
       if (plans.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),

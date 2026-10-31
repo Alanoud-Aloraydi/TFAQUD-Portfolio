@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// One option of a single-choice question: icon, title, hint, and a radio mark.
@@ -40,7 +41,7 @@ class ChoiceCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: <Widget>[
                 Container(
@@ -52,7 +53,7 @@ class ChoiceCard extends StatelessWidget {
                   ),
                   child: Icon(icon, size: 20, color: AppColors.ink),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +64,7 @@ class ChoiceCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 _RadioMark(selected: selected),
               ],
             ),

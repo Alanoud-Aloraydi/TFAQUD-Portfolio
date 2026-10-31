@@ -2,7 +2,7 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/glass_segmented_control.dart';
 import 'package:app/core/widgets/large_title.dart';
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
@@ -19,54 +19,62 @@ class MedicationHistorySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MedicationsCubit, MedicationsState>(
-      builder: (context, state) {
-        if (state.status == MedicationsStatus.loading) {
-          return const LoadingWidget();
-        }
-        if (state.status == MedicationsStatus.failure) {
-          return MedicationFailureView(
-            messageKey: state.messageKey!,
-            onRetry: () => context.read<MedicationsCubit>().load(circleId),
-          );
-        }
-        final today = DateUtils.dateOnly(DateTime.now());
-        final current = state.plans
-            .where((plan) => !plan.isPreviousOn(today))
-            .toList();
-        final previous = state.plans
-            .where((plan) => plan.isPreviousOn(today))
-            .toList();
-        final visible = switch (state.recordFilter) {
-          MedicationRecordFilter.all => state.plans,
-          MedicationRecordFilter.current => current,
-          MedicationRecordFilter.previous => previous,
-        };
-        return ListView(
-          padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
-          children: [
-            LargeTitle(title: context.tr('tab.record')),
-            // «الكل · الحالية · السابقة»: the glass segmented control.
-            GlassSegmentedControl<MedicationRecordFilter>(
-              segments: {
-                for (final filter in MedicationRecordFilter.values)
-                  filter: context.tr('medications.filter.${filter.name}'),
-              },
-              selected: state.recordFilter,
-              onChanged: context.read<MedicationsCubit>().setRecordFilter,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            MedicationPlanList(
-              title: context.tr(
-                'medications.filter.${state.recordFilter.name}',
-              ),
-              emptyText: context.tr('medications.no_records'),
-              plans: visible,
-              circleId: circleId,
-              shrinkWrap: true,
-            ),
-          ],
-        );
-      },
+      builder: (context, state) => ContentSwitcher(
+        // Only loading, error and content fade; saving a change does not.
+        stateKey: switch (state.status) {
+          MedicationsStatus.initial || MedicationsStatus.loading => 'loading',
+          MedicationsStatus.failure => 'failure',
+          _ => 'content',
+        },
+        child: _content(context, state),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context, MedicationsState state) {
+    if (state.status == MedicationsStatus.initial ||
+        state.status == MedicationsStatus.loading) {
+      return const PageSkeleton(title: true, filter: true);
+    }
+    if (state.status == MedicationsStatus.failure) {
+      return MedicationFailureView(
+        messageKey: state.messageKey!,
+        onRetry: () => context.read<MedicationsCubit>().load(circleId),
+      );
+    }
+    final today = DateUtils.dateOnly(DateTime.now());
+    final current = state.plans
+        .where((plan) => !plan.isPreviousOn(today))
+        .toList();
+    final previous = state.plans
+        .where((plan) => plan.isPreviousOn(today))
+        .toList();
+    final visible = switch (state.recordFilter) {
+      MedicationRecordFilter.all => state.plans,
+      MedicationRecordFilter.current => current,
+      MedicationRecordFilter.previous => previous,
+    };
+    return ListView(
+      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+      children: [
+        LargeTitle(title: context.tr('tab.record')),
+        // «الكل · الحالية · السابقة»: the glass segmented control.
+        GlassSegmentedControl<MedicationRecordFilter>(
+          segments: {
+            for (final filter in MedicationRecordFilter.values)
+              filter: context.tr('medications.filter.${filter.name}'),
+          },
+          selected: state.recordFilter,
+          onChanged: context.read<MedicationsCubit>().setRecordFilter,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        MedicationPlanList(
+          emptyText: context.tr('medications.no_records'),
+          plans: visible,
+          circleId: circleId,
+          shrinkWrap: true,
+        ),
+      ],
     );
   }
 }

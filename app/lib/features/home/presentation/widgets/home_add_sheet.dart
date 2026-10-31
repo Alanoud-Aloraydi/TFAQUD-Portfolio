@@ -96,7 +96,8 @@ class _AddOption extends StatelessWidget {
         leading: Icon(icon),
         title: Text(title),
         subtitle: Text(hint),
-        trailing: onTap == null ? null : const Icon(Icons.chevron_left),
+        // chevron_right mirrors in Arabic, so it points left.
+        trailing: onTap == null ? null : const Icon(Icons.chevron_right),
       ),
     );
   }

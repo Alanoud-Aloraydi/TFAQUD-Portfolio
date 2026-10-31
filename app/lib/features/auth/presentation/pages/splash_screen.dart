@@ -42,7 +42,7 @@ class SplashScreen extends StatelessWidget {
                   ],
                 ),
               )
-            : const LoadingWidget(),
+            : const LoadingWidget(size: 50),
       ),
     );
   }

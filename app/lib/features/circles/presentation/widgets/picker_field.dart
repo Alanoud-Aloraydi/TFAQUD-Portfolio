@@ -1,10 +1,11 @@
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/inset_group.dart';
 import 'package:flutter/material.dart';
 
-/// A field that opens a picker when tapped (the birth date and the city). Its
-/// label is above it, like [LabeledTextField]. [value] is null until the user
-/// picks, and the field then shows [hint].
+/// A field that opens a picker when tapped (the birth date and the city), in
+/// the design system's form row: the small label on the right, the value (or
+/// [hint] until the user picks) right after it, and [icon] at the end.
 class PickerField extends StatelessWidget {
   const PickerField({
     super.key,
@@ -25,58 +26,16 @@ class PickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final bool hasError = errorText != null;
-    final BorderRadius radius = BorderRadius.circular(AppRadius.field);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return InsetGroup(
       children: <Widget>[
-        Text(label, style: text.titleSmall),
-        const SizedBox(height: 8),
-        Semantics(
-          button: true,
+        InsetRow(
           label: label,
-          value: value ?? hint,
-          excludeSemantics: true,
+          value: value,
+          placeholder: hint,
           onTap: onTap,
-          child: Material(
-            color: AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: radius,
-              side: BorderSide(
-                color: hasError ? AppColors.error : AppColors.stone,
-              ),
-            ),
-            child: InkWell(
-              onTap: onTap,
-              customBorder: RoundedRectangleBorder(borderRadius: radius),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 14),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        value ?? hint,
-                        style: value == null
-                            ? text.bodyLarge?.copyWith(color: AppColors.slate)
-                            : text.bodyLarge,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Icon(icon, size: 22, color: AppColors.slate),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          errorText: errorText,
+          trailing: Icon(icon, size: AppSizes.iconSmall, color: AppColors.stone),
         ),
-        if (hasError) ...<Widget>[
-          const SizedBox(height: 6),
-          Text(
-            errorText!,
-            style: text.bodySmall?.copyWith(color: AppColors.error),
-          ),
-        ],
       ],
     );
   }

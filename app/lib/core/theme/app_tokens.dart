@@ -48,6 +48,11 @@ abstract class AppSizes {
 
   static const double icon = 24;
   static const double iconSmall = 20;
+
+  /// The label column of a form row (design system `size-form-label`): the
+  /// small grey label sits in it, and values and typed text start after it,
+  /// so every row of a form lines up.
+  static const double formLabel = 112;
 }
 
 /// Starting values of the custom glass (blur, white tint). They are values to

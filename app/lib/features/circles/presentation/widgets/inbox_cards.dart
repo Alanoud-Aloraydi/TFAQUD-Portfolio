@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
@@ -37,8 +38,8 @@ class _InboxCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -63,7 +64,7 @@ class _InboxCard extends StatelessWidget {
                   style: text.titleMedium?.copyWith(color: avatarForeground),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,12 +81,12 @@ class _InboxCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (pill != null) ...<Widget>[const SizedBox(width: 8), pill!],
+              if (pill != null) ...<Widget>[const SizedBox(width: AppSpacing.sm), pill!],
             ],
           ),
-          if (extra != null) ...<Widget>[const SizedBox(height: 8), extra!],
+          if (extra != null) ...<Widget>[const SizedBox(height: AppSpacing.sm), extra!],
           if (actions != null) ...<Widget>[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             actions!,
           ],
         ],
@@ -144,7 +145,7 @@ class _ReplyButtons extends StatelessWidget {
                 : Text(acceptLabel),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: OutlinedButton(
             onPressed: busy ? null : onDecline,
@@ -281,7 +282,7 @@ class AcceptedRequestCard extends StatelessWidget {
               child: Text(context.tr('common.continue')),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: OutlinedButton(
               onPressed: busy ? null : onCancel,

@@ -56,7 +56,7 @@ class CircleCard extends StatelessWidget {
         ? ''
         : String.fromCharCode(name.runes.first);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -79,7 +79,7 @@ class CircleCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Semantics(
                   header: true,
@@ -88,7 +88,7 @@ class CircleCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Row(
             children: <Widget>[
               Expanded(
@@ -104,7 +104,7 @@ class CircleCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () =>

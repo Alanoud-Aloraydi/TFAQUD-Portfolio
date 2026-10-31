@@ -65,6 +65,13 @@ class AppColors {
   /// Input and operation errors only. 6.60:1 on [surface].
   static const Color error = Color(0xFFA53636);
 
+  // Role aliases: not new colors.
+  /// The selected tab's icon and label in the tab bar: the dark green of the
+  /// palette, so the tapped tab changes color while the others stay dark.
+  /// The light greens cannot be read on glass (1.58:1); this is 7.10:1 on
+  /// white and 6.23:1 on [leafTint].
+  static const Color tabSelected = success;
+
   /// Dimming layer behind modal sheets and overlays: [ink] at 40%.
   static const Color scrim = Color(0x66202734);
 }

@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
@@ -76,7 +77,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
         form.showErrors && !MedicalFileCubit.isValidPhone(form.phone);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -96,12 +97,12 @@ class _ContactFormCardState extends State<ContactFormCard> {
               style: text.titleMedium,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             context.tr('circles.contact_relation'),
             style: text.titleSmall?.copyWith(color: AppColors.slate),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           OptionChips(
             options: <ChipOption>[
               for (final String code in MedicalOptions.contactRelations)
@@ -117,7 +118,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
               style: text.bodySmall?.copyWith(color: AppColors.error),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           LabeledTextField(
             label: context.tr('circles.contact_name'),
             controller: _name,
@@ -127,7 +128,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
                 ? requiredText
                 : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           PhoneField(
             controller: _phone,
             label: context.tr('circles.contact_phone'),
@@ -137,10 +138,10 @@ class _ContactFormCardState extends State<ContactFormCard> {
                 widget.onPhone(ArabicDigits.digitsOnly(typed)),
           ),
           if (form.errorKey != null) ...<Widget>[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             InlineError(messageKey: form.errorKey!),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Row(
             children: <Widget>[
               Expanded(
@@ -150,7 +151,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
                   onPressed: widget.onSave,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: OutlinedButton(
                   onPressed: form.saving ? null : widget.onCancel,
@@ -166,7 +167,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
             ],
           ),
           if (widget.onDelete != null) ...<Widget>[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(

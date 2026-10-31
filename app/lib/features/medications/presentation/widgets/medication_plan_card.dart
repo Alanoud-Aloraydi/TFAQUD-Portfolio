@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -58,7 +59,13 @@ class MedicationPlanCard extends StatelessWidget {
                   ),
                   _PlanStatus(state: status),
                   const SizedBox(width: AppSpacing.sm),
-                  const Icon(Icons.chevron_left),
+                  // chevron_right mirrors in Arabic, so it points left:
+                  // the card opens the medicine.
+                  const Icon(
+                    Icons.chevron_right,
+                    size: AppSizes.iconSmall,
+                    color: AppColors.stone,
+                  ),
                 ],
               ),
               if (subtitle.isNotEmpty) ...[

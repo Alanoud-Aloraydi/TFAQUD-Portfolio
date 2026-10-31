@@ -6,7 +6,9 @@ import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/widgets/app_alert.dart';
 import 'package:app/core/widgets/glass.dart';
+import 'package:app/core/widgets/glass_menu.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
@@ -50,7 +52,6 @@ import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dar
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:app/features/shell/widgets/glass_add_button.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,16 +189,16 @@ Future<void> pumpApp(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// The app's alert, whatever the type of its answer.
+Finder findAlert() => find.byWidgetPredicate((Widget w) => w is AppAlert);
+
 Finder inBar(String text) =>
     find.descendant(of: find.byType(AppBottomBar), matching: find.text(text));
 
-/// Taps [text] in the open iOS action sheet.
+/// Taps [text] in the open glass menu of the circle switcher.
 Future<void> tapInSheet(WidgetTester tester, String text) async {
   await tester.tap(
-    find.descendant(
-      of: find.byType(CupertinoActionSheet),
-      matching: find.text(text),
-    ),
+    find.descendant(of: find.byType(GlassMenu), matching: find.text(text)),
   );
   await tester.pumpAndSettle();
 }
@@ -209,7 +210,7 @@ Future<void> chooseCircle(WidgetTester tester, String name) async {
   await tapInSheet(tester, name);
 }
 
-/// Opens «إضافة دائرة» from the circle switcher's sheet.
+/// Opens «إضافة دائرة» from the circle switcher's menu.
 Future<void> openAddCircle(WidgetTester tester) async {
   await tester.tap(find.byType(HomeWidget));
   await tester.pumpAndSettle();
@@ -1822,7 +1823,7 @@ void main() {
 
     group('signing out and deleting', () {
       Finder inDialog(String text) => find.descendant(
-        of: find.byType(AlertDialog),
+        of: findAlert(),
         matching: find.text(text),
       );
 
@@ -1856,7 +1857,7 @@ void main() {
 
         expect(circles.deletions, isEmpty);
         expect(auth.signOuts, 0);
-        expect(find.byType(AlertDialog), findsNothing);
+        expect(findAlert(), findsNothing);
         expect(find.byType(AccountScreen), findsOneWidget);
       });
 
@@ -1920,7 +1921,7 @@ void main() {
         // Only the first try reached the server, and it was refused.
         expect(circles.deletions, <AccountDeletion>[const AccountDeletion()]);
         expect(auth.signOuts, 0);
-        expect(find.byType(AlertDialog), findsNothing);
+        expect(findAlert(), findsNothing);
       });
 
       testWidgets('the only manager of a circle agrees to delete it too', (
@@ -2251,7 +2252,7 @@ void main() {
         await tester.tap(find.text('circles.contact_delete'.tr()));
         await tester.pumpAndSettle();
 
-        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(findAlert(), findsOneWidget);
         expect(
           find.text('circles.contact_delete_body'.tr(args: <String>['هدى'])),
           findsOneWidget,
@@ -2259,7 +2260,7 @@ void main() {
 
         await tester.tap(find.text('circles.contact_delete_no'.tr()));
         await tester.pumpAndSettle();
-        expect(find.byType(AlertDialog), findsNothing);
+        expect(findAlert(), findsNothing);
         expect(circles.deletedContactIds, isEmpty);
 
         await tester.tap(find.text('circles.contact_delete'.tr()));

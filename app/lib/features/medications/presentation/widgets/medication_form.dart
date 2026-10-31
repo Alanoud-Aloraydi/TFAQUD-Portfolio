@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/app_alert.dart';
 import 'package:app/core/widgets/inset_group.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -11,7 +12,6 @@ import 'package:app/features/medications/presentation/widgets/medication_period_
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -184,23 +184,18 @@ class _MedicationFormState extends State<MedicationForm> {
   }
 
   Future<void> _confirmDiscard() async {
-    final discard = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: Text(dialogContext.tr('medications.discard_title')),
-        content: Text(dialogContext.tr('medications.discard_message')),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(dialogContext.tr('common.cancel')),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(dialogContext.tr('medications.discard_confirm')),
-          ),
-        ],
-      ),
+    final discard = await showAppAlert<bool>(
+      context,
+      title: context.tr('medications.discard_title'),
+      message: context.tr('medications.discard_message'),
+      actions: [
+        AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
+        AppAlertAction<bool>(
+          label: context.tr('medications.discard_confirm'),
+          value: true,
+          primary: true,
+        ),
+      ],
     );
     if (discard == true && mounted) {
       _dirty = false;

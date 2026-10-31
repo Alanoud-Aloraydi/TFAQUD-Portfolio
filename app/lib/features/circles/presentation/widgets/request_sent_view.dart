@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/auth/presentation/widgets/phone_field.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
@@ -56,7 +57,7 @@ class RequestSentView extends StatelessWidget {
                         : AppColors.slate,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Semantics(
                   header: true,
                   child: Text(
@@ -69,7 +70,7 @@ class RequestSentView extends StatelessWidget {
                     style: text.headlineMedium,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   context.tr(
                     accepted
@@ -79,13 +80,13 @@ class RequestSentView extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: text.bodyMedium?.copyWith(color: AppColors.slate),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 _DetailsCard(request: request, accepted: accepted),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -115,7 +116,7 @@ class _DetailsCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -178,7 +179,7 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Row(
         children: <Widget>[
           Expanded(

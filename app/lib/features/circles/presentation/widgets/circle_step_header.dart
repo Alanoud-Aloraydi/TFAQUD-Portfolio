@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -40,10 +41,10 @@ class CircleStepHeader extends StatelessWidget {
           BackLink(onPressed: onBack!)
         else
           const SizedBox(height: 44),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         // The line below says the same in words, so the bars are not read.
         ExcludeSemantics(child: _Bars(step: step)),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Text(
           context.tr(
             'circles.step',
@@ -51,10 +52,10 @@ class CircleStepHeader extends StatelessWidget {
           ),
           style: text.bodySmall?.copyWith(color: AppColors.slate),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         Semantics(header: true, child: Text(title, style: text.headlineMedium)),
         if (subtitle != null) ...<Widget>[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             subtitle!,
             style: text.bodyMedium?.copyWith(color: AppColors.slate),
@@ -78,7 +79,7 @@ class _Bars extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: EdgeInsetsDirectional.only(
-                end: i < CircleStepHeader.totalSteps ? 8 : 0,
+                end: i < CircleStepHeader.totalSteps ? AppSpacing.sm : 0,
               ),
               child: Container(
                 height: 4,

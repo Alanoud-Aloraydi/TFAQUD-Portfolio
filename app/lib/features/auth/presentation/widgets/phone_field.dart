@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 // easy_localization also exports a TextDirection (from intl); hide it so the
 // name means Flutter's TextDirection.
@@ -76,7 +77,7 @@ class PhoneField extends StatelessWidget {
           label ?? context.tr('auth.phone_label'),
           style: text.titleSmall?.copyWith(color: AppColors.slate),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -99,7 +100,7 @@ class PhoneField extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             const _CountryCodeBox(),
           ],
         ),

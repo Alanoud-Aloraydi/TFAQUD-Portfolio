@@ -1,4 +1,3 @@
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inset_group.dart';
 import 'package:app/core/widgets/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -32,8 +31,6 @@ class MedicationScheduleEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
-    final TextTheme text = Theme.of(context).textTheme;
     final VoidCallback? remove = onRemove;
     return InsetGroup(
       header: context.tr(
@@ -60,6 +57,7 @@ class MedicationScheduleEditor extends StatelessWidget {
         ),
         InsetTextRow(
           label: context.tr('medications.dose_value'),
+          hint: context.tr('medications.dose_hint'),
           controller: data.doseController,
           focusNode: data.doseFocus,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -77,56 +75,23 @@ class MedicationScheduleEditor extends StatelessWidget {
           showChevron: true,
           onTap: () => _chooseUnit(context),
         ),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(context.tr('medications.weekdays'), style: text.bodyLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Focus(
-                focusNode: data.weekdaysFocus,
-                child: Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: <Widget>[
-                    for (int day = 1; day <= 7; day++)
-                      FilterChip(
-                        label: Text(context.tr('medications.weekday.$day')),
-                        selected: data.weekdays.contains(day),
-                        onSelected: (bool selected) {
-                          if (selected) {
-                            data.weekdays.add(day);
-                          } else {
-                            data.weekdays.remove(day);
-                          }
-                          onChanged();
-                        },
-                      ),
-                  ],
-                ),
-              ),
-              if (issue?.field == MedicationFormField.weekdays) ...<Widget>[
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(Icons.error_outline, size: 18, color: tokens.error),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        context.tr('medications.weekday_required'),
-                        style: text.bodySmall?.copyWith(color: tokens.errorText),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
+        // The days, as Apple Health asks them: one row with a summary that
+        // opens a list with check marks.
+        Focus(
+          focusNode: data.weekdaysFocus,
+          child: InsetRow(
+            label: context.tr('medications.repeat'),
+            value: _daysSummary(context),
+            showChevron: true,
+            onTap: () => _chooseDays(context),
+            errorText: issue?.field == MedicationFormField.weekdays
+                ? context.tr('medications.weekday_required')
+                : null,
           ),
         ),
         InsetTextRow(
-          label: context.tr('medications.schedule_instructions'),
+          label: context.tr('medications.dose_note'),
+          hint: context.tr('medications.dose_note_hint'),
           controller: data.instructionsController,
           maxLength: 250,
           maxLines: 2,
@@ -134,6 +99,36 @@ class MedicationScheduleEditor extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// The week as it is read in Saudi Arabia: Sunday first. The numbers are
+  /// those of [DateTime.weekday] (Monday 1 … Sunday 7).
+  static const List<int> _weekOrder = <int>[7, 1, 2, 3, 4, 5, 6];
+
+  /// «كل يوم», or the chosen days in week order: «الأحد، الأربعاء».
+  /// Null (an empty row) when no day is chosen; the row then shows an error.
+  String? _daysSummary(BuildContext context) {
+    if (data.weekdays.length == 7) return context.tr('medications.every_day');
+    if (data.weekdays.isEmpty) return null;
+    return <String>[
+      for (final int day in _weekOrder)
+        if (data.weekdays.contains(day)) context.tr('medications.weekday.$day'),
+    ].join('، ');
+  }
+
+  Future<void> _chooseDays(BuildContext context) async {
+    final Set<int>? days = await showChecklistSheet<int>(
+      context,
+      title: context.tr('medications.repeat'),
+      options: _weekOrder,
+      labelOf: (int day) => context.tr('medications.weekday.$day'),
+      selected: data.weekdays,
+    );
+    if (days == null) return;
+    data.weekdays
+      ..clear()
+      ..addAll(days);
+    onChanged();
   }
 
   Future<void> _selectTime(BuildContext context) async {

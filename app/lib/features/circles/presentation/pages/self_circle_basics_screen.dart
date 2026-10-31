@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
@@ -79,7 +80,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
@@ -99,14 +100,14 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           Text(
                             context.tr('circles.circle_name'),
                             style: text.titleSmall?.copyWith(
                               color: AppColors.slate,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: <ChipOption>[
                               for (final NamePreset preset in NamePreset.values)
@@ -123,7 +124,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           ),
                           if (state.namePreset == NamePreset.other)
                             ...<Widget>[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppSpacing.md),
                               LabeledTextField(
                                 label: context.tr('circles.custom_name'),
                                 controller: _customName,
@@ -138,19 +139,19 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                                     : null,
                               ),
                             ],
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             context.tr('circles.name_hint'),
                             style: text.bodySmall?.copyWith(
                               color: AppColors.slate,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           AccountNameField(
                             state: state,
                             onRetry: cubit.loadAccount,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           PickerField(
                             label: context.tr('circles.birth_date'),
                             hint: context.tr('circles.birth_date_hint'),
@@ -168,7 +169,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           PickerField(
                             label: context.tr('circles.city'),
                             hint: context.tr('circles.city_hint'),
@@ -183,7 +184,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.next'),
                     onPressed: () => _next(context, cubit),

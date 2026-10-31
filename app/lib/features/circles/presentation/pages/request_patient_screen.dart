@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/glass_segmented_control.dart';
 import 'package:app/core/widgets/inline_error.dart';
@@ -51,7 +52,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocConsumer<SendCircleRequestCubit, SendCircleRequestState>(
             listenWhen:
                 (SendCircleRequestState before, SendCircleRequestState after) =>
@@ -87,7 +88,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   title: context.tr('circles.request_title'),
                   onBack: context.canPop() ? () => context.pop() : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 PhoneField(
                   controller: _phone,
                   label: context.tr('circles.patient_phone_label'),
@@ -96,7 +97,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   onChanged: (String typed) =>
                       cubit.phoneChanged(ArabicDigits.digitsOnly(typed)),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 CircleLabelPicker(
                   selected: state.label,
                   onSelected: cubit.chooseLabel,
@@ -112,12 +113,12 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                       ? requiredText
                       : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Text(
                   context.tr('circles.proposed_mode'),
                   style: text.titleSmall?.copyWith(color: AppColors.slate),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 // In a right-to-left language the first segment is on the
                 // right: detailed, then simplified, as in the design.
                 GlassSegmentedControl<CircleAppMode>(
@@ -130,7 +131,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   selected: state.mode,
                   onChanged: cubit.chooseMode,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   context.tr(
                     state.mode == CircleAppMode.simplified
@@ -139,17 +140,17 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   ),
                   style: text.bodySmall?.copyWith(color: AppColors.slate),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 _Notice(text: context.tr('circles.request_notice')),
                 if (state.errorKey != null) ...<Widget>[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   InlineError(messageKey: state.errorKey!),
                 ],
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         PillButton(
           label: context.tr('circles.send_request'),
           isLoading: state.status == SendStatus.sending,
@@ -172,7 +173,7 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.canvas,
         borderRadius: BorderRadius.circular(AppRadius.field),
@@ -181,7 +182,7 @@ class _Notice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           const Icon(Icons.info_outline, size: 20, color: AppColors.slate),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,

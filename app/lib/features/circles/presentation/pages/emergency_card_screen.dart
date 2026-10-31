@@ -1,8 +1,10 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
 import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
@@ -32,7 +34,7 @@ class EmergencyCardScreen extends StatelessWidget {
               context.go(Routes.auth),
           builder: (BuildContext context, EmergencyCardState state) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -41,7 +43,7 @@ class EmergencyCardScreen extends StatelessWidget {
                         ? () => context.pop()
                         : () => context.go(Routes.circle),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: <Widget>[
                       Expanded(
@@ -56,8 +58,14 @@ class EmergencyCardScreen extends StatelessWidget {
                       const _ReadOnlyPill(),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -84,7 +92,7 @@ class EmergencyCardScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -95,10 +103,10 @@ class EmergencyCardScreen extends StatelessWidget {
       case EmergencyCardStatus.ready:
         final EmergencyCard card = state.card!;
         return ListView(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
           children: <Widget>[
             _NameCard(card: card),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             _DetailsCard(card: card),
           ],
         );
@@ -114,16 +122,16 @@ class _ReadOnlyPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: AppColors.line,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.capsule),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           const Icon(Icons.lock_outline, size: 14, color: AppColors.slate),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             context.tr('circles.card_read_only'),
             style: text.bodySmall?.copyWith(color: AppColors.slate),
@@ -148,7 +156,7 @@ class _NameCard extends StatelessWidget {
     return MergeSemantics(
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.space5),
         decoration: BoxDecoration(
           color: AppColors.ink,
           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -166,7 +174,7 @@ class _NameCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Container(
                   width: 56,
                   height: 56,
@@ -187,7 +195,7 @@ class _NameCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               context.tr('circles.blood_type'),
               style: text.bodyMedium?.copyWith(color: AppColors.surface),
@@ -210,7 +218,7 @@ class _DetailsCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -252,7 +260,7 @@ class _DetailsCard extends StatelessWidget {
                           style: text.bodyLarge,
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                           child: Text(
                             MedicalTexts.phone(contact),
                             textDirection: TextDirection.ltr,
@@ -281,7 +289,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -289,7 +297,7 @@ class _Section extends StatelessWidget {
             label,
             style: text.titleSmall?.copyWith(color: AppColors.slate),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           child,
         ],
       ),

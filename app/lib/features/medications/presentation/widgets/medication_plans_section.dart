@@ -1,5 +1,5 @@
 import 'package:app/core/widgets/large_title.dart';
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
@@ -16,28 +16,39 @@ class MedicationPlansSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MedicationsCubit, MedicationsState>(
-      builder: (context, state) {
-        if (state.status == MedicationsStatus.loading) {
-          return const LoadingWidget();
-        }
-        if (state.status == MedicationsStatus.failure) {
-          return MedicationFailureView(
-            messageKey: state.messageKey!,
-            onRetry: () => context.read<MedicationsCubit>().load(circleId),
-          );
-        }
-        final today = DateUtils.dateOnly(DateTime.now());
-        final current = state.plans
-            .where((plan) => !plan.isPreviousOn(today))
-            .toList();
-        return MedicationPlanList(
-          header: LargeTitle(title: context.tr('tab.plan')),
-          title: context.tr('medications.current'),
-          emptyText: context.tr('medications.no_current'),
-          plans: current,
-          circleId: circleId,
-        );
-      },
+      builder: (context, state) => ContentSwitcher(
+        // Only loading, error and content fade; saving a change does not.
+        stateKey: switch (state.status) {
+          MedicationsStatus.initial || MedicationsStatus.loading => 'loading',
+          MedicationsStatus.failure => 'failure',
+          _ => 'content',
+        },
+        child: _content(context, state),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context, MedicationsState state) {
+    if (state.status == MedicationsStatus.initial ||
+        state.status == MedicationsStatus.loading) {
+      return const PageSkeleton(title: true);
+    }
+    if (state.status == MedicationsStatus.failure) {
+      return MedicationFailureView(
+        messageKey: state.messageKey!,
+        onRetry: () => context.read<MedicationsCubit>().load(circleId),
+      );
+    }
+    final today = DateUtils.dateOnly(DateTime.now());
+    final current = state.plans
+        .where((plan) => !plan.isPreviousOn(today))
+        .toList();
+    return MedicationPlanList(
+      header: LargeTitle(title: context.tr('tab.plan')),
+      title: context.tr('medications.current'),
+      emptyText: context.tr('medications.no_current'),
+      plans: current,
+      circleId: circleId,
     );
   }
 }

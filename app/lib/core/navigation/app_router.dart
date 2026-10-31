@@ -1,3 +1,4 @@
+import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
@@ -101,7 +102,13 @@ class AppRouter {
         ),
       ),
       GoRoute(path: Routes.home, redirect: (context, state) => Routes.today),
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
+        // The tabs fade into each other instead of swapping at once.
+        navigatorContainerBuilder: (context, navigationShell, children) =>
+            FadingBranches(
+              currentIndex: navigationShell.currentIndex,
+              children: children,
+            ),
         // The home cubit loads the circles. The inbox cubit counts what waits
         // for an answer, for the dot on the bell; it loads again whenever the
         // circles change.

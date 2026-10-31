@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -75,7 +76,7 @@ class _OtpFieldState extends State<OtpField> {
             Row(
               children: <Widget>[
                 for (int i = 0; i < widget.length; i++) ...<Widget>[
-                  if (i > 0) const SizedBox(width: 8),
+                  if (i > 0) const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _OtpBox(
                       digit: i < filled ? widget.value[i] : '',

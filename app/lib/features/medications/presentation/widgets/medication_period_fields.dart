@@ -52,7 +52,7 @@ class MedicationPeriodFields extends StatelessWidget {
                 },
               ),
             _DateRow(
-              label: context.tr('medications.ends_optional'),
+              label: context.tr('medications.ends'),
               value: data.endsOn,
               placeholder: context.tr('medications.no_end_date'),
               allowClear: true,

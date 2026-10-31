@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/circle_flow_routes.dart';
@@ -60,7 +61,7 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed text is cleared in the state when "other" is turned
             // off or the step is skipped. The field is cleared with it.
@@ -87,12 +88,12 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           Text(
                             context.tr('circles.blood_type'),
                             style: sectionStyle,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: <ChipOption>[
                               for (final String type
@@ -105,12 +106,12 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
                                 code == state.bloodType,
                             onTap: cubit.chooseBloodType,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           Text(
                             context.tr('circles.conditions'),
                             style: sectionStyle,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: <ChipOption>[
                               for (final String code in <String>[
@@ -128,7 +129,7 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
                           ),
                           if (state.conditions.contains(MedicalOptions.other))
                             ...<Widget>[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppSpacing.md),
                               LabeledTextField(
                                 label: context.tr('circles.other_hint'),
                                 controller: _other,
@@ -146,7 +147,7 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   StepActions(
                     nextLabel: context.tr('circles.next'),
                     onNext: () => _next(context, cubit),

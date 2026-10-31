@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/auth/presentation/widgets/orbit_painter.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,7 +23,7 @@ class AuthFeatureScreen extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -30,7 +31,7 @@ class AuthFeatureScreen extends StatelessWidget {
                       label: context.tr('auth.start'),
                       onPressed: () => context.push(Routes.authPhone),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     Text(
                       context.tr('auth.terms_note'),
                       textAlign: TextAlign.center,
@@ -80,7 +81,7 @@ class _WelcomePanel extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         context.tr('auth.tagline'),
                         textAlign: TextAlign.center,

@@ -2,13 +2,15 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/picker_sheet_frame.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// iOS inset grouped section, as in Settings and Health: a header above a
-/// white card of rows divided by inset lines, and an optional footer.
+/// iOS inset grouped section, as in Settings and Health (design system
+/// FormGroup): a header above a white card of rows divided by inset lines,
+/// and an optional footer.
 ///
 /// The card is radius-l; rows inside keep 16 side padding, so anything
 /// rounded inside a row is radius-s (28 − 16).
@@ -93,8 +95,63 @@ class InsetGroup extends StatelessWidget {
   }
 }
 
-/// One tappable row: the label at the start, the value (or a placeholder) at
-/// the end, and an optional chevron. At least 50 high, so it is easy to tap.
+/// The small grey label at the start of a form row. It reads like a hint, so
+/// the value or the typed text, set larger in ink, is what stands out. Every
+/// label has the same column width, so values line up from row to row.
+class _RowLabel extends StatelessWidget {
+  const _RowLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: AppSizes.formLabel,
+      child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+    );
+  }
+}
+
+/// An error under a form row, lined up with the value column: an icon and a
+/// short message, so it is not color alone.
+class _RowError extends StatelessWidget {
+  const _RowError(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens tokens = context.tokens;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpacing.lg + AppSizes.formLabel + AppSpacing.md,
+        end: AppSpacing.lg,
+        bottom: AppSpacing.md,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.error_outline, size: 18, color: tokens.error),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: tokens.errorText,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One tappable row. With a [leading] icon it is an action row, such as
+/// «إضافة موعد جرعة»: the icon and the label in ink. Otherwise it is a field
+/// row: the small label in its column, then the value (or a placeholder)
+/// starting right after it, and an optional chevron at the end. At least 50
+/// high, so it is easy to tap.
 class InsetRow extends StatelessWidget {
   const InsetRow({
     super.key,
@@ -107,6 +164,8 @@ class InsetRow extends StatelessWidget {
     this.showChevron = false,
     this.focusNode,
     this.labelColor,
+    this.errorText,
+    this.labelOnly = false,
   });
 
   final String label;
@@ -114,7 +173,7 @@ class InsetRow extends StatelessWidget {
   /// The chosen value, in ink.
   final String? value;
 
-  /// Shown when there is no value, in the secondary text color.
+  /// Shown when there is no value, in a lighter grey.
   final String? placeholder;
   final Widget? leading;
   final Widget? trailing;
@@ -125,14 +184,113 @@ class InsetRow extends StatelessWidget {
   /// For an action row such as «إضافة موعد».
   final Color? labelColor;
 
+  /// Shown under the row, lined up with the value.
+  final String? errorText;
+
+  /// A row that is only its label, in ink, such as one choice in a list.
+  final bool labelOnly;
+
   @override
   Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
     final TextTheme text = Theme.of(context).textTheme;
     final String? shown = value ?? placeholder;
-    return InkWell(
-      onTap: onTap,
-      focusNode: focusNode,
+    final List<Widget> content = labelOnly
+        ? <Widget>[Expanded(child: Text(label, style: text.bodyLarge))]
+        : leading != null
+        ? <Widget>[
+            IconTheme.merge(
+              data: IconThemeData(
+                color: labelColor ?? AppColors.ink,
+                size: AppSizes.iconSmall,
+              ),
+              child: leading!,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                label,
+                style: text.bodyLarge?.copyWith(color: labelColor),
+              ),
+            ),
+          ]
+        : <Widget>[
+            _RowLabel(label),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: shown == null
+                  ? const SizedBox.shrink()
+                  : Text(
+                      shown,
+                      style: value == null
+                          ? text.bodyMedium?.copyWith(color: AppColors.stone)
+                          : text.bodyLarge,
+                    ),
+            ),
+          ];
+    // One VoiceOver stop per row: the label, the value and the tap.
+    return MergeSemantics(
+      child: Semantics(
+        button: onTap != null,
+        child: InkWell(
+          onTap: onTap,
+          focusNode: focusNode,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: AppSizes.button),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      ...content,
+                      if (trailing != null) ...<Widget>[
+                        const SizedBox(width: AppSpacing.xs),
+                        trailing!,
+                      ],
+                      if (showChevron) ...<Widget>[
+                        const SizedBox(width: AppSpacing.xs),
+                        // chevron_right mirrors in Arabic: it points to the
+                        // end (left), where the row leads.
+                        const Icon(
+                          Icons.chevron_right,
+                          size: AppSizes.iconSmall,
+                          color: AppColors.stone,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              if (errorText != null) _RowError(errorText!),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A row that cannot be tapped, with the small label in its column and any
+/// widget as its value, such as a name read from the account.
+class InsetFieldRow extends StatelessWidget {
+  const InsetFieldRow({
+    super.key,
+    required this.label,
+    required this.child,
+    this.trailing,
+  });
+
+  final String label;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return MergeSemantics(
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: AppSizes.button),
         child: Padding(
@@ -142,42 +300,12 @@ class InsetRow extends StatelessWidget {
           ),
           child: Row(
             children: <Widget>[
-              if (leading != null) ...<Widget>[
-                IconTheme.merge(
-                  data: IconThemeData(
-                    color: labelColor ?? AppColors.ink,
-                    size: AppSizes.iconSmall,
-                  ),
-                  child: leading!,
-                ),
-                const SizedBox(width: AppSpacing.md),
-              ],
-              Flexible(
-                child: Text(
-                  label,
-                  style: text.bodyLarge?.copyWith(color: labelColor),
-                ),
-              ),
+              _RowLabel(label),
               const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: shown == null
-                    ? const SizedBox.shrink()
-                    : Text(
-                        shown,
-                        textAlign: TextAlign.end,
-                        style: text.bodyLarge?.copyWith(
-                          color: value == null ? tokens.textSecondary : AppColors.ink,
-                        ),
-                      ),
-              ),
+              Expanded(child: child),
               if (trailing != null) ...<Widget>[
-                const SizedBox(width: AppSpacing.xs),
+                const SizedBox(width: AppSpacing.sm),
                 trailing!,
-              ],
-              if (showChevron) ...<Widget>[
-                const SizedBox(width: AppSpacing.xs),
-                // chevron_right mirrors in Arabic: it points to the end.
-                const Icon(Icons.chevron_right, size: AppSizes.iconSmall, color: AppColors.stone),
               ],
             ],
           ),
@@ -187,9 +315,11 @@ class InsetRow extends StatelessWidget {
   }
 }
 
-/// A row with its label at the start and a borderless text field after it.
-/// The card is the field's boundary, as in iOS forms. A hint and an error
-/// show under the row; the error also has an icon, so it is not color alone.
+/// A row with the small label in its column and a borderless text field
+/// after it. The card is the field's boundary, as in iOS forms. Typed text
+/// starts on the right, after the label, as Arabic is read. A short [hint]
+/// inside the field says what to type; it replaces any line under the row.
+/// An error shows under the row, with an icon, so it is not color alone.
 class InsetTextRow extends StatelessWidget {
   const InsetTextRow({
     super.key,
@@ -198,7 +328,6 @@ class InsetTextRow extends StatelessWidget {
     required this.onChanged,
     this.focusNode,
     this.hint,
-    this.helperText,
     this.errorText,
     this.keyboardType,
     this.inputFormatters,
@@ -206,14 +335,16 @@ class InsetTextRow extends StatelessWidget {
     this.maxLines = 1,
     this.textInputAction = TextInputAction.next,
     this.trailing,
+    this.autofocus = false,
   });
 
   final String label;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final FocusNode? focusNode;
+
+  /// What to type, such as «مثال: 500» or «اختياري».
   final String? hint;
-  final String? helperText;
   final String? errorText;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
@@ -225,21 +356,23 @@ class InsetTextRow extends StatelessWidget {
 
   /// A small control after the field, such as a unit button.
   final Widget? trailing;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
     final TextTheme text = Theme.of(context).textTheme;
     final bool multiline = maxLines > 1;
     final Widget field = TextField(
       controller: controller,
       focusNode: focusNode,
+      autofocus: autofocus,
       onChanged: onChanged,
       keyboardType: keyboardType,
       textInputAction: multiline ? TextInputAction.newline : textInputAction,
       maxLines: maxLines,
       minLines: 1,
-      textAlign: multiline ? TextAlign.start : TextAlign.end,
+      // Arabic is read from the right: the text starts after the label.
+      textAlign: TextAlign.start,
       style: text.bodyLarge,
       inputFormatters: <TextInputFormatter>[
         ...?inputFormatters,
@@ -247,6 +380,7 @@ class InsetTextRow extends StatelessWidget {
       ],
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: text.bodyMedium?.copyWith(color: AppColors.stone),
         filled: false,
         isDense: true,
         border: InputBorder.none,
@@ -258,71 +392,49 @@ class InsetTextRow extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       ),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          // The visible label and the field merge into one node, so
-          // VoiceOver reads the label with the field.
-          if (multiline)
-            MergeSemantics(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  const SizedBox(height: AppSpacing.md),
-                  Text(label, style: text.bodyLarge),
-                  field,
-                ],
-              ),
-            )
-          else
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: AppSizes.button),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: MergeSemantics(
-                      child: Row(
-                        children: <Widget>[
-                          Text(label, style: text.bodyLarge),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: field),
-                        ],
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSizes.button),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Row(
+              crossAxisAlignment: multiline
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
+              children: <Widget>[
+                // The visible label and the field merge into one node, so
+                // VoiceOver reads the label with the field.
+                Expanded(
+                  child: MergeSemantics(
+                    child: Row(
+                      crossAxisAlignment: multiline
+                          ? CrossAxisAlignment.start
+                          : CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: multiline ? AppSpacing.md : 0,
+                          ),
+                          child: _RowLabel(label),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(child: field),
+                      ],
                     ),
                   ),
-                  if (trailing != null) ...<Widget>[
-                    const SizedBox(width: AppSpacing.xs),
-                    trailing!,
-                  ],
-                ],
-              ),
-            ),
-          if (errorText != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Icon(Icons.error_outline, size: 18, color: tokens.error),
+                ),
+                if (trailing != null) ...<Widget>[
                   const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      errorText!,
-                      style: text.bodySmall?.copyWith(color: tokens.errorText),
-                    ),
-                  ),
+                  trailing!,
                 ],
-              ),
-            )
-          else if (helperText != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: Text(helperText!, style: text.bodySmall),
+              ],
             ),
-        ],
-      ),
+          ),
+        ),
+        if (errorText != null) _RowError(errorText!),
+      ],
     );
   }
 }
@@ -394,5 +506,62 @@ Future<T?> showOptionSheet<T>(
         child: Text(sheetContext.tr('common.cancel'), style: style),
       ),
     ),
+  );
+}
+
+/// A sheet to pick several options, as Apple Health picks the days of a
+/// medicine: a grouped list with a check mark on each chosen row, and the
+/// confirm button. Confirm stays off until at least [minimum] are chosen.
+/// Returns null when the sheet is closed without confirming.
+Future<Set<T>?> showChecklistSheet<T>(
+  BuildContext context, {
+  required String title,
+  required List<T> options,
+  required String Function(T option) labelOf,
+  required Set<T> selected,
+  int minimum = 1,
+}) {
+  return showModalBottomSheet<Set<T>>(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext sheetContext) {
+      final Set<T> chosen = <T>{...selected};
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return PickerSheetFrame(
+            title: title,
+            confirmLabel: context.tr('common.confirm'),
+            onConfirm: chosen.length < minimum
+                ? null
+                : () => Navigator.pop(context, chosen),
+            child: InsetGroup(
+              children: <Widget>[
+                for (final T option in options)
+                  Semantics(
+                    selected: chosen.contains(option),
+                    child: InsetRow(
+                      label: labelOf(option),
+                      labelOnly: true,
+                      trailing: chosen.contains(option)
+                          ? const Icon(
+                              Icons.check,
+                              size: AppSizes.iconSmall,
+                              color: AppColors.ink,
+                            )
+                          : null,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          if (!chosen.remove(option)) chosen.add(option);
+                        });
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    },
   );
 }

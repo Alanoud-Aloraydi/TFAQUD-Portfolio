@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
@@ -72,7 +73,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed texts are cleared in the state when "other" is turned
             // off or "no allergies" is chosen. The fields are cleared with
@@ -105,12 +106,12 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             context.tr('circles.allergies_hint'),
                             style: sectionStyle,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: <ChipOption>[
                               ChipOption(
@@ -121,12 +122,12 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                             isSelected: (String code) => state.noAllergies,
                             onTap: (String code) => cubit.toggleNoAllergies(),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             context.tr('circles.allergy_medication'),
                             style: sectionStyle,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: _options(
                               'medication',
@@ -137,7 +138,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                           ),
                           if (state.medication.contains(MedicalOptions.other))
                             ...<Widget>[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppSpacing.md),
                               LabeledTextField(
                                 label: context.tr('circles.other_hint'),
                                 controller: _otherMedication,
@@ -151,12 +152,12 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                                     : null,
                               ),
                             ],
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             context.tr('circles.allergy_food'),
                             style: sectionStyle,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: _options('food', MedicalOptions.foods),
                             isSelected: state.food.contains,
@@ -164,7 +165,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                           ),
                           if (state.food.contains(MedicalOptions.other))
                             ...<Widget>[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppSpacing.md),
                               LabeledTextField(
                                 label: context.tr('circles.other_hint'),
                                 controller: _otherFood,
@@ -179,14 +180,14 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                               ),
                             ],
                           if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),
                           ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   StepActions(
                     nextLabel: context.tr('circles.create'),
                     isLoading: saving,

@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/circles/domain/saudi_cities.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -66,7 +67,7 @@ class _CitySheetState extends State<CitySheet> {
                 style: text.headlineSmall,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               onChanged: (String value) => setState(() => _query = value),
               textInputAction: TextInputAction.search,
@@ -75,7 +76,7 @@ class _CitySheetState extends State<CitySheet> {
                 prefixIcon: const Icon(Icons.search),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             SizedBox(
               height: listHeight,
               child: cities.isEmpty
@@ -115,7 +116,7 @@ class _CitySheetState extends State<CitySheet> {
                       },
                     ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             PillButton(
               label: context.tr('circles.city_confirm'),
               onPressed: _selected == null

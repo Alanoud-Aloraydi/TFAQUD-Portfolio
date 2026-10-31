@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class AlreadyHasCircleView extends StatelessWidget {
                 size: 56,
                 color: AppColors.ink,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Semantics(
                 header: true,
                 child: Text(
@@ -33,7 +34,7 @@ class AlreadyHasCircleView extends StatelessWidget {
                   style: text.headlineSmall,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 context.tr('circles.already_has_circle'),
                 textAlign: TextAlign.center,

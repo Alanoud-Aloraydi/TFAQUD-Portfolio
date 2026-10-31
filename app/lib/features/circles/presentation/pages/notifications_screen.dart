@@ -1,6 +1,9 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/app_alert.dart';
 import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
@@ -37,23 +40,21 @@ class NotificationsScreen extends StatelessWidget {
     InboxCubit cubit,
     ReceivedCircleRequest request,
   ) async {
-    final bool? yes = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text(context.tr('circles.cancel_confirm_title')),
-        content: Text(context.tr('circles.cancel_confirm_body_patient')),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(context.tr('circles.cancel_confirm_no')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.ink),
-            child: Text(context.tr('circles.cancel_confirm_yes')),
-          ),
-        ],
-      ),
+    final bool? yes = await showAppAlert<bool>(
+      context,
+      title: context.tr('circles.cancel_confirm_title'),
+      message: context.tr('circles.cancel_confirm_body_patient'),
+      actions: <AppAlertAction<bool>>[
+        AppAlertAction<bool>(
+          label: context.tr('circles.cancel_confirm_no'),
+          value: false,
+        ),
+        AppAlertAction<bool>(
+          label: context.tr('circles.cancel_confirm_yes'),
+          value: true,
+          primary: true,
+        ),
+      ],
     );
     if (yes == true) await cubit.cancelRequest(request.id);
   }
@@ -64,7 +65,7 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
           child: BlocConsumer<InboxCubit, InboxState>(
             listenWhen: (InboxState before, InboxState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -91,8 +92,14 @@ class NotificationsScreen extends StatelessWidget {
                         ? () => context.pop()
                         : () => context.go(Routes.today),
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               );
             },
@@ -115,7 +122,7 @@ class NotificationsScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -150,7 +157,7 @@ class NotificationsScreen extends StatelessWidget {
               size: 56,
               color: AppColors.slate,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               context.tr('circles.inbox_empty'),
               textAlign: TextAlign.center,
@@ -164,11 +171,11 @@ class NotificationsScreen extends StatelessWidget {
       onRefresh: cubit.load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
         children: <Widget>[
           if (inbox.needsReply > 0) ...<Widget>[
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: Text(
                 context.tr(
                   'circles.needs_reply',
@@ -204,7 +211,7 @@ class NotificationsScreen extends StatelessWidget {
           ],
           if (declined.isNotEmpty) ...<Widget>[
             Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 8),
+              padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.sm),
               child: Text(context.tr('circles.events_title'), style: sectionStyle),
             ),
             for (final SentCircleRequest request in declined)

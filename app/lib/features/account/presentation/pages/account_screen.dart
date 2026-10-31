@@ -1,6 +1,8 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
@@ -65,7 +67,7 @@ class AccountScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
           child: BlocConsumer<AccountCubit, AccountState>(
             listenWhen: (AccountState before, AccountState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -101,8 +103,14 @@ class AccountScreen extends StatelessWidget {
                         ? () => context.pop()
                         : () => context.go(Routes.today),
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               );
             },
@@ -125,7 +133,7 @@ class AccountScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -152,12 +160,12 @@ class AccountScreen extends StatelessWidget {
       onRefresh: cubit.load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
         children: <Widget>[
           SettingsCard(
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: <Widget>[
                     Container(
@@ -175,7 +183,7 @@ class AccountScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(account.fullName, style: text.titleLarge),
                     ),
@@ -184,7 +192,7 @@ class AccountScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           SettingsSection(
             title: context.tr('account.my_data'),
             children: <Widget>[
@@ -216,7 +224,7 @@ class AccountScreen extends StatelessWidget {
             ],
           ),
           if (state.sent.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             SettingsSection(
               title: context.tr('account.awaiting_title'),
               children: <Widget>[
@@ -232,12 +240,12 @@ class AccountScreen extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.tr('account.medical_note'),
             style: text.bodySmall?.copyWith(color: AppColors.slate),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           SettingsCard(
             children: <Widget>[
               const SignOutRow(),
@@ -271,7 +279,7 @@ class _SentRequestRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
         child: Row(
           children: <Widget>[
             Container(
@@ -289,7 +297,7 @@ class _SentRequestRow extends StatelessWidget {
                 style: text.titleMedium?.copyWith(color: AppColors.ink),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +311,7 @@ class _SentRequestRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             StatusPill(
               icon: accepted ? Icons.check : Icons.schedule,
               text: context.tr(
@@ -318,7 +326,7 @@ class _SentRequestRow extends StatelessWidget {
                   ? AppColors.success
                   : AppColors.slate,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.
             const Icon(Icons.chevron_right, color: AppColors.slate),
           ],

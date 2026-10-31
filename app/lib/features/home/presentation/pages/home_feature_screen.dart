@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
@@ -123,13 +123,18 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
                 },
               )
             : null,
-        body: _body(state, cubit),
+        body: ContentSwitcher(
+          stateKey: state.status,
+          child: _body(state, cubit),
+        ),
       ),
     );
   }
 
   Widget _body(HomeState state, HomeCubit cubit) {
-    if (state.status == HomeStatus.loading) return const LoadingWidget();
+    if (state.status == HomeStatus.loading) {
+      return const PageSkeleton(title: true, subtitle: true);
+    }
     if (state.status == HomeStatus.failure) {
       return Center(
         child: Padding(

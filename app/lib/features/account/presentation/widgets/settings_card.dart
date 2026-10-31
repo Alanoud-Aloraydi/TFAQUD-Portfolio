@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// A small grey title above a white card, as the account page groups its rows.
@@ -16,7 +17,7 @@ class SettingsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: Semantics(
             header: true,
             child: Text(
@@ -84,15 +85,15 @@ class InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final Widget row = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
       child: Row(
         children: <Widget>[
           if (onEdit != null) ...<Widget>[
             const Icon(Icons.edit_outlined, size: 18, color: AppColors.ink),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
           ],
           Text(label, style: text.bodyMedium?.copyWith(color: AppColors.slate)),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               value,
@@ -137,7 +138,7 @@ class ActionRow extends StatelessWidget {
     return InkWell(
       onTap: busy ? null : onPressed,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
         child: Row(
           children: <Widget>[
             Expanded(

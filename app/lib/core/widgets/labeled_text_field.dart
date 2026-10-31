@@ -1,7 +1,11 @@
+import 'package:app/core/widgets/inset_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A text field with its label above it, as in the account setup design.
+/// A text field on its own, in the design system's form row (FormGroup): a
+/// white card with the small grey label on the right and the typed text
+/// starting right after it. Nothing is stacked: [helperText] becomes the
+/// hint inside the empty field, and an error shows under the row.
 class LabeledTextField extends StatelessWidget {
   const LabeledTextField({
     super.key,
@@ -23,6 +27,8 @@ class LabeledTextField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final String? errorText;
+
+  /// What to type. Shown inside the field while it is empty.
   final String? helperText;
   final TextInputAction textInputAction;
   final bool autofocus;
@@ -36,33 +42,21 @@ class LabeledTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return InsetGroup(
       children: <Widget>[
-        // Design system: field labels are 15 semibold in ink, above the field.
-        Text(label, style: text.titleSmall),
-        const SizedBox(height: 8),
-        TextField(
-          focusNode: focusNode,
+        InsetTextRow(
+          label: label,
           controller: controller,
           onChanged: onChanged,
-          autofocus: autofocus,
-          textInputAction: textInputAction,
+          focusNode: focusNode,
+          hint: helperText,
+          errorText: errorText,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          maxLength: maxLength,
           maxLines: maxLines,
-          inputFormatters: <TextInputFormatter>[
-            ...?inputFormatters,
-            if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
-          ],
-          style: text.bodyLarge,
-          decoration: InputDecoration(
-            errorText: errorText,
-            errorMaxLines: 2,
-            helperText: helperText,
-            helperMaxLines: 2,
-            helperStyle: text.bodySmall,
-          ),
+          textInputAction: textInputAction,
+          autofocus: autofocus,
         ),
       ],
     );

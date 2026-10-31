@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/core/widgets/step_header.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
@@ -40,7 +41,7 @@ class StartScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.sm),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
               final OnboardingCubit cubit = context.read<OnboardingCubit>();
@@ -59,7 +60,7 @@ class StartScreen extends StatelessWidget {
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           ChoiceCard(
                             icon: Icons.favorite_border,
                             title: context.tr('onboarding.self_title'),
@@ -69,7 +70,7 @@ class StartScreen extends StatelessWidget {
                               CareTarget.self,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.md),
                           ChoiceCard(
                             icon: Icons.people_outline,
                             title: context.tr('onboarding.other_title'),
@@ -90,7 +91,7 @@ class StartScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('common.continue'),
                     onPressed: state.canContinueStart
@@ -127,9 +128,9 @@ class _PatientQuestion extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final OnboardingCubit cubit = context.read<OnboardingCubit>();
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 16, top: 16),
+      padding: const EdgeInsetsDirectional.only(start: AppSpacing.lg, top: AppSpacing.lg),
       child: Container(
-        padding: const EdgeInsetsDirectional.only(start: 12),
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.md),
         decoration: const BoxDecoration(
           border: BorderDirectional(
             start: BorderSide(color: AppColors.leafTint, width: 3),
@@ -142,7 +143,7 @@ class _PatientQuestion extends StatelessWidget {
               context.tr('onboarding.patient_question'),
               style: text.bodyMedium,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             ChoiceCard(
               icon: Icons.people_outline,
               title: context.tr('onboarding.patient_uses_title'),
@@ -150,7 +151,7 @@ class _PatientQuestion extends StatelessWidget {
               selected: state.patientUsesApp == true,
               onTap: () => cubit.selectPatientUsesApp(usesApp: true),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             ChoiceCard(
               icon: Icons.person_outline,
               title: context.tr('onboarding.patient_no_title'),

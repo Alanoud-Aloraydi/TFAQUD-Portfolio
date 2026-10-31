@@ -1,4 +1,4 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/widgets/app_alert.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -16,28 +16,22 @@ Future<bool?> showDeleteConfirmDialog(BuildContext context) {
 /// The account is the patient of a circle: delete it with the account, or keep
 /// it. Null when the person stopped.
 Future<PatientChoice?> showPatientChoiceDialog(BuildContext context) {
-  return showDialog<PatientChoice>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) => AlertDialog(
-      title: Text(context.tr('account.patient_choice_title')),
-      content: Text(context.tr('account.patient_choice_body')),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(PatientChoice.keep),
-          child: Text(context.tr('account.patient_choice_keep')),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(PatientChoice.delete),
-          style: TextButton.styleFrom(foregroundColor: AppColors.ink),
-          child: Text(context.tr('account.patient_choice_delete')),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.tr('account.cancel')),
-        ),
-      ],
-    ),
+  return showAppAlert<PatientChoice>(
+    context,
+    title: context.tr('account.patient_choice_title'),
+    message: context.tr('account.patient_choice_body'),
+    actions: <AppAlertAction<PatientChoice>>[
+      AppAlertAction<PatientChoice>(
+        label: context.tr('account.patient_choice_keep'),
+        value: PatientChoice.keep,
+        primary: true,
+      ),
+      AppAlertAction<PatientChoice>(
+        label: context.tr('account.patient_choice_delete'),
+        value: PatientChoice.delete,
+      ),
+      AppAlertAction<PatientChoice>(label: context.tr('account.cancel')),
+    ],
   );
 }
 
@@ -71,23 +65,13 @@ Future<bool?> _confirm(
   required String yes,
   String no = 'account.cancel',
 }) {
-  return showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) => AlertDialog(
-      title: Text(context.tr(title)),
-      content: Text(context.tr(body)),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(context.tr(no)),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: TextButton.styleFrom(foregroundColor: AppColors.ink),
-          child: Text(context.tr(yes)),
-        ),
-      ],
-    ),
+  return showAppAlert<bool>(
+    context,
+    title: context.tr(title),
+    message: context.tr(body),
+    actions: <AppAlertAction<bool>>[
+      AppAlertAction<bool>(label: context.tr(no), value: false),
+      AppAlertAction<bool>(label: context.tr(yes), value: true, primary: true),
+    ],
   );
 }

@@ -1,9 +1,11 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/core/widgets/pill_button.dart';
+import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
@@ -33,7 +35,7 @@ class MedicalFileEditScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
           child: BlocConsumer<MedicalFileEditCubit, MedicalFileEditState>(
             listenWhen:
                 (MedicalFileEditState before, MedicalFileEditState after) =>
@@ -50,8 +52,14 @@ class MedicalFileEditScreen extends StatelessWidget {
                         ? () => context.pop()
                         : () => context.go(Routes.medicalFile(cubit.circleId)),
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               );
             },
@@ -78,7 +86,7 @@ class MedicalFileEditScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -214,7 +222,7 @@ class _EditFormState extends State<_EditForm> {
                         ? requiredText
                         : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   LabeledTextField(
                     label: context.tr('circles.patient_last_name'),
                     controller: _lastName,
@@ -234,7 +242,7 @@ class _EditFormState extends State<_EditForm> {
                       style: text.bodyLarge,
                     ),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 PickerField(
                   label: context.tr('circles.birth_date'),
                   hint: context.tr('circles.birth_date_hint'),
@@ -247,7 +255,7 @@ class _EditFormState extends State<_EditForm> {
                       ? requiredText
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 PickerField(
                   label: context.tr('circles.city'),
                   hint: context.tr('circles.patient_city_hint'),
@@ -258,9 +266,9 @@ class _EditFormState extends State<_EditForm> {
                       ? requiredText
                       : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Text(context.tr('circles.blood_type'), style: sectionStyle),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
                     for (final String type in MedicalOptions.bloodTypes)
@@ -269,9 +277,9 @@ class _EditFormState extends State<_EditForm> {
                   isSelected: (String code) => code == form.bloodType,
                   onTap: cubit.chooseBloodType,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Text(context.tr('circles.conditions'), style: sectionStyle),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
                     for (final String code in <String>[
@@ -286,7 +294,7 @@ class _EditFormState extends State<_EditForm> {
                 ),
                 if (form.conditions.contains(MedicalOptions.other))
                   ...<Widget>[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     LabeledTextField(
                       label: context.tr('circles.other_hint'),
                       controller: _conditionOther,
@@ -299,9 +307,9 @@ class _EditFormState extends State<_EditForm> {
                           : null,
                     ),
                   ],
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Text(context.tr('circles.allergies_title'), style: sectionStyle),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
                     ChipOption(
@@ -312,9 +320,9 @@ class _EditFormState extends State<_EditForm> {
                   isSelected: (String code) => form.noAllergies,
                   onTap: (String code) => cubit.toggleNoAllergies(),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(context.tr('circles.allergy_medication'), style: sectionStyle),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: _options('medication', MedicalOptions.medications),
                   isSelected: form.medication.contains,
@@ -322,7 +330,7 @@ class _EditFormState extends State<_EditForm> {
                 ),
                 if (form.medication.contains(MedicalOptions.other))
                   ...<Widget>[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     LabeledTextField(
                       label: context.tr('circles.other_hint'),
                       controller: _medicationOther,
@@ -335,9 +343,9 @@ class _EditFormState extends State<_EditForm> {
                           : null,
                     ),
                   ],
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(context.tr('circles.allergy_food'), style: sectionStyle),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: _options('food', MedicalOptions.foods),
                   isSelected: form.food.contains,
@@ -345,7 +353,7 @@ class _EditFormState extends State<_EditForm> {
                 ),
                 if (form.food.contains(MedicalOptions.other))
                   ...<Widget>[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     LabeledTextField(
                       label: context.tr('circles.other_hint'),
                       controller: _foodOther,
@@ -358,15 +366,15 @@ class _EditFormState extends State<_EditForm> {
                     ),
                   ],
                 if (state.errorKey != null) ...<Widget>[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   InlineError(messageKey: state.errorKey!),
                 ],
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         PillButton(
           label: context.tr('circles.file_save'),
           isLoading: state.saving,

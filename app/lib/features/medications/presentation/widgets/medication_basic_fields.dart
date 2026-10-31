@@ -26,7 +26,7 @@ class MedicationBasicFields extends StatelessWidget {
       children: <Widget>[
         InsetTextRow(
           label: context.tr('medications.name'),
-          helperText: context.tr('medications.name_helper'),
+          hint: context.tr('medications.name_hint'),
           controller: data.name,
           focusNode: data.nameFocus,
           errorText: issue?.field == MedicationFormField.name
@@ -37,6 +37,7 @@ class MedicationBasicFields extends StatelessWidget {
         ),
         InsetTextRow(
           label: context.tr('medications.strength'),
+          hint: context.tr('medications.strength_hint'),
           controller: data.strength,
           focusNode: data.strengthFocus,
           errorText: issue?.field == MedicationFormField.strength
@@ -62,12 +63,14 @@ class MedicationBasicFields extends StatelessWidget {
         ),
         InsetTextRow(
           label: context.tr('medications.reason'),
+          hint: context.tr('medications.optional'),
           controller: data.reason,
           maxLength: 100,
           onChanged: (_) => onChanged(),
         ),
         InsetTextRow(
           label: context.tr('medications.instructions'),
+          hint: context.tr('medications.optional'),
           controller: data.instructions,
           maxLength: 250,
           maxLines: 3,
