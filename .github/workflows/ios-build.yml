@@ -25,7 +25,8 @@ on:
 
 jobs:
   build:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ios]')
+    # "[ios" matches both [ios] and [ios api=...].
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ios')
     # GitHub's Xcode 27 Mac (Apple Silicon). The glass tab bar package
     # (native_glass_navbar) needs Xcode 27 for the native glass. If this
     # label is not available, macos-26 has Xcode 26.6.
