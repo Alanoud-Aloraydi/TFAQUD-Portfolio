@@ -18,6 +18,7 @@ import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/circles/presentation/widgets/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -99,7 +100,8 @@ class AccountScreen extends StatelessWidget {
                 children: <Widget>[
                   StepHeader(
                     title: context.tr('account.title'),
-                    onBack: context.canPop()
+                    // The page is a modal: the close button takes it down.
+                    onClose: context.canPop()
                         ? () => context.pop()
                         : () => context.go(Routes.today),
                   ),
@@ -251,7 +253,7 @@ class AccountScreen extends StatelessWidget {
               const SignOutRow(),
               ActionRow(
                 label: context.tr('account.delete_account'),
-                color: AppColors.ink,
+                color: AppColors.error,
                 busy: state.deleting,
                 onPressed: cubit.startDelete,
               ),
@@ -313,7 +315,7 @@ class _SentRequestRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             StatusPill(
-              icon: accepted ? Icons.check : Icons.schedule,
+              icon: accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
               text: context.tr(
                 accepted
                     ? 'account.status_accepted_short'
@@ -328,7 +330,7 @@ class _SentRequestRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.
-            const Icon(Icons.chevron_right, color: AppColors.slate),
+            const Icon(CupertinoIcons.forward, color: AppColors.slate),
           ],
         ),
       ),

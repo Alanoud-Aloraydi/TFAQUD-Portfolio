@@ -131,7 +131,7 @@ class _RowError extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(Icons.error_outline, size: 18, color: tokens.error),
+          Icon(CupertinoIcons.exclamationmark_circle, size: 18, color: tokens.error),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
@@ -253,10 +253,10 @@ class InsetRow extends StatelessWidget {
                       ],
                       if (showChevron) ...<Widget>[
                         const SizedBox(width: AppSpacing.xs),
-                        // chevron_right mirrors in Arabic: it points to the
+                        // The forward chevron (SF chevron.forward) mirrors in Arabic: it points to the
                         // end (left), where the row leads.
                         const Icon(
-                          Icons.chevron_right,
+                          CupertinoIcons.forward,
                           size: AppSizes.iconSmall,
                           color: AppColors.stone,
                         ),
@@ -471,7 +471,7 @@ class InsetChoiceButton extends StatelessWidget {
           children: <Widget>[
             Text(label),
             const SizedBox(width: 2),
-            const Icon(Icons.unfold_more, size: 18),
+            const Icon(CupertinoIcons.chevron_up_chevron_down, size: 18),
           ],
         ),
       ),
@@ -544,7 +544,7 @@ Future<Set<T>?> showChecklistSheet<T>(
                       labelOnly: true,
                       trailing: chosen.contains(option)
                           ? const Icon(
-                              Icons.check,
+                              CupertinoIcons.checkmark,
                               size: AppSizes.iconSmall,
                               color: AppColors.ink,
                             )

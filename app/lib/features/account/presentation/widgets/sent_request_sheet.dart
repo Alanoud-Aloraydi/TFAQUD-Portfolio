@@ -7,6 +7,7 @@ import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/circles/presentation/widgets/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Opens the details of a request the account sent, with a button that cancels
@@ -84,7 +85,7 @@ class _SentRequestSheet extends StatelessWidget {
             _Line(
               label: context.tr('circles.request_status'),
               child: StatusPill(
-                icon: accepted ? Icons.check : Icons.schedule,
+                icon: accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
                 text: context.tr(
                   accepted
                       ? 'account.status_accepted'
@@ -103,10 +104,11 @@ class _SentRequestSheet extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () => _cancel(context),
+                // Cancelling a request cannot be undone: the error red.
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
                   minimumSize: const Size.fromHeight(48),
-                  foregroundColor: AppColors.ink,
+                  foregroundColor: AppColors.error,
                   side: const BorderSide(color: AppColors.stone),
                 ),
                 child: Text(context.tr('circles.cancel_request')),

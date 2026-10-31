@@ -7,6 +7,7 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -47,7 +48,7 @@ class MedicationPlanCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    Icons.medication_outlined,
+                    CupertinoIcons.capsule,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -59,10 +60,10 @@ class MedicationPlanCard extends StatelessWidget {
                   ),
                   _PlanStatus(state: status),
                   const SizedBox(width: AppSpacing.sm),
-                  // chevron_right mirrors in Arabic, so it points left:
+                  // The forward chevron (SF chevron.forward) mirrors in Arabic, so it points left:
                   // the card opens the medicine.
                   const Icon(
-                    Icons.chevron_right,
+                    CupertinoIcons.forward,
                     size: AppSizes.iconSmall,
                     color: AppColors.stone,
                   ),
@@ -74,7 +75,7 @@ class MedicationPlanCard extends StatelessWidget {
               ],
               const SizedBox(height: AppSpacing.md),
               _InfoLine(
-                icon: Icons.schedule_outlined,
+                icon: CupertinoIcons.clock,
                 text: context.tr(
                   'medications.schedule_count',
                   args: [version.schedules.length.toString()],
@@ -82,7 +83,7 @@ class MedicationPlanCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               _InfoLine(
-                icon: Icons.date_range_outlined,
+                icon: CupertinoIcons.calendar,
                 text: _period(context, version.startsOn, version.endsOn),
               ),
             ],

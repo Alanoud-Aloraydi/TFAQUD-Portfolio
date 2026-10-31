@@ -13,6 +13,7 @@ import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -52,7 +53,7 @@ class NotificationsScreen extends StatelessWidget {
         AppAlertAction<bool>(
           label: context.tr('circles.cancel_confirm_yes'),
           value: true,
-          primary: true,
+          destructive: true,
         ),
       ],
     );
@@ -88,7 +89,8 @@ class NotificationsScreen extends StatelessWidget {
                 children: <Widget>[
                   StepHeader(
                     title: context.tr('topbar.notifications'),
-                    onBack: context.canPop()
+                    // The page is a modal: the close button takes it down.
+                    onClose: context.canPop()
                         ? () => context.pop()
                         : () => context.go(Routes.today),
                   ),
@@ -153,7 +155,7 @@ class NotificationsScreen extends StatelessWidget {
           children: <Widget>[
             const SizedBox(height: 96),
             const Icon(
-              Icons.notifications_none,
+              CupertinoIcons.bell,
               size: 56,
               color: AppColors.slate,
             ),

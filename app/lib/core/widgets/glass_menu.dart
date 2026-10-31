@@ -5,6 +5,7 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/glass.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
@@ -381,7 +382,7 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final IconData? icon = entry.selected ? Icons.check : entry.icon;
+    final IconData? icon = entry.selected ? CupertinoIcons.checkmark : entry.icon;
     return Semantics(
       button: true,
       selected: entry.selected,

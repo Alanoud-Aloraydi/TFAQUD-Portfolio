@@ -15,6 +15,7 @@ import 'package:app/features/circles/presentation/cubit/send_circle_request_stat
 import 'package:app/features/circles/presentation/widgets/circle_label_picker.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -181,7 +182,7 @@ class _Notice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(Icons.info_outline, size: 20, color: AppColors.slate),
+          const Icon(CupertinoIcons.info_circle, size: 20, color: AppColors.slate),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

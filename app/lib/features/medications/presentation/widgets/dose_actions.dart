@@ -3,6 +3,7 @@ import 'package:app/core/widgets/time_picker_sheet.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 Future<DateTime?> selectTakenTime(
@@ -97,7 +98,7 @@ class _SkipDoseSheetState extends State<_SkipDoseSheet> {
       minVerticalPadding: 0,
       onTap: () => setState(() => _reason = selected ? null : reason),
       title: Text(context.tr('medications.skip_reason.${reason.name}')),
-      trailing: Icon(selected ? Icons.check_circle : Icons.circle_outlined),
+      trailing: Icon(selected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle),
     );
   }
 

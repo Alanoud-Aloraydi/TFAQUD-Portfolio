@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
+import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
@@ -251,6 +252,23 @@ void main() {
   });
 
   group('AppShell', () {
+    testWidgets('nothing dims the tab pages', (WidgetTester tester) async {
+      await pumpApp(tester);
+
+      // A tab page is see-through; a tinted barrier under it would darken
+      // the whole tab and leave a lighter band under the top bar.
+      expect(
+        find.descendant(
+          of: find.byType(FadingBranches),
+          matching: find.byWidgetPredicate(
+            (Widget widget) =>
+                widget is ModalBarrier && (widget.color?.a ?? 0) > 0,
+          ),
+        ),
+        findsNothing,
+      );
+    });
+
     testWidgets('shows the top bar actions, four tabs and the add button', (
       WidgetTester tester,
     ) async {
@@ -384,7 +402,7 @@ void main() {
     });
 
     testWidgets(
-      'account opens a standalone page and back returns to the shell',
+      'account rises as a modal page and its close button returns to the shell',
       (WidgetTester tester) async {
         await pumpApp(tester);
 
@@ -393,8 +411,14 @@ void main() {
         expect(find.byType(AccountScreen), findsOneWidget);
         expect(find.text('account.title'.tr()), findsOneWidget);
         expect(find.byType(AppBottomBar), findsNothing);
+        // A modal: it rises from the bottom, and has ✕ in place of «رجوع».
+        final PageRoute<dynamic> route =
+            ModalRoute.of(tester.element(find.byType(AccountScreen)))!
+                as PageRoute<dynamic>;
+        expect(route.fullscreenDialog, isTrue);
+        expect(find.text('common.back'.tr()), findsNothing);
 
-        await tester.tap(find.text('common.back'.tr()));
+        await tester.tap(find.byTooltip('common.close'.tr()));
         await tester.pumpAndSettle();
         expect(find.byType(AppBottomBar), findsOneWidget);
       },
@@ -1129,6 +1153,11 @@ void main() {
       await openNotifications(tester, 2);
 
       expect(find.byType(NotificationsScreen), findsOneWidget);
+      // The bell's page is a modal too: it rises from the bottom.
+      final PageRoute<dynamic> route =
+          ModalRoute.of(tester.element(find.byType(NotificationsScreen)))!
+              as PageRoute<dynamic>;
+      expect(route.fullscreenDialog, isTrue);
       expect(
         find.text('circles.needs_reply'.tr(args: <String>['2'])),
         findsOneWidget,

@@ -17,7 +17,7 @@ Future<bool?> showDeleteContactDialog(BuildContext context, String name) {
       AppAlertAction<bool>(
         label: context.tr('circles.contact_delete_yes'),
         value: true,
-        primary: true,
+        destructive: true,
       ),
     ],
   );

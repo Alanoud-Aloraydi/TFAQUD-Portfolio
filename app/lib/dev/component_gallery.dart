@@ -4,6 +4,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:dio/dio.dart' show Response;
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -23,23 +24,23 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   bool _apiBusy = false;
 
   static const List<IconData> _icons = <IconData>[
-    Icons.chevron_left,
-    Icons.check,
-    Icons.add,
-    Icons.notifications_none,
-    Icons.person_outline,
-    Icons.people_outline,
-    Icons.info_outline,
-    Icons.warning_amber,
-    Icons.schedule,
-    Icons.calendar_today,
-    Icons.medication,
-    Icons.favorite_border,
-    Icons.water_drop,
-    Icons.search,
-    Icons.delete_outline,
-    Icons.edit,
-    Icons.share,
+    CupertinoIcons.back,
+    CupertinoIcons.checkmark,
+    CupertinoIcons.add,
+    CupertinoIcons.bell,
+    CupertinoIcons.person,
+    CupertinoIcons.person_2,
+    CupertinoIcons.info_circle,
+    CupertinoIcons.exclamationmark_triangle,
+    CupertinoIcons.clock,
+    CupertinoIcons.calendar,
+    CupertinoIcons.capsule_fill,
+    CupertinoIcons.heart,
+    CupertinoIcons.drop_fill,
+    CupertinoIcons.search,
+    CupertinoIcons.delete,
+    CupertinoIcons.pencil,
+    CupertinoIcons.share,
   ];
 
   /// Calls GET /health and shows the address used and the result.
@@ -83,7 +84,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
               TextButton(onPressed: () {}, child: const Text('Text link')),
               FilledButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.add),
+                icon: const Icon(CupertinoIcons.add),
                 label: const Text('With icon'),
               ),
             ],

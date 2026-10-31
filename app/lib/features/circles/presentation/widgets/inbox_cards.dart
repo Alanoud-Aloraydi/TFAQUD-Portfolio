@@ -7,6 +7,7 @@ import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/circles/presentation/widgets/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The white card every item of the notifications page sits in.
@@ -102,7 +103,7 @@ String _initial(String name) {
 }
 
 StatusPill _needsReplyPill(BuildContext context) => StatusPill(
-  icon: Icons.schedule,
+  icon: CupertinoIcons.clock,
   text: context.tr('circles.needs_reply_pill'),
   background: AppColors.canvas,
   foreground: AppColors.slate,
@@ -286,10 +287,11 @@ class AcceptedRequestCard extends StatelessWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: busy ? null : onCancel,
+              // Cancelling a request cannot be undone: the error red.
               style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(),
                 minimumSize: const Size.fromHeight(44),
-                foregroundColor: AppColors.ink,
+                foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.stone),
               ),
               child: Text(context.tr('circles.cancel_request')),

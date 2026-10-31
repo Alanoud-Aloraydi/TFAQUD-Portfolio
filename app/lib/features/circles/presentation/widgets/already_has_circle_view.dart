@@ -3,6 +3,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,7 +22,7 @@ class AlreadyHasCircleView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Icon(
-                Icons.check_circle_outline,
+                CupertinoIcons.checkmark_circle,
                 size: 56,
                 color: AppColors.ink,
               ),

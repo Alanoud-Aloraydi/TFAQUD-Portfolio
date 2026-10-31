@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/app_alert.dart';
@@ -12,6 +13,7 @@ import 'package:app/features/medications/presentation/widgets/medication_skeleto
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -98,7 +100,7 @@ class _Content extends StatelessWidget {
               IconButton(
                 tooltip: context.tr('medications.edit_title'),
                 onPressed: () => _edit(context),
-                icon: const Icon(Icons.edit_outlined),
+                icon: const Icon(CupertinoIcons.pencil),
               ),
           ],
         ),
@@ -110,7 +112,11 @@ class _Content extends StatelessWidget {
             MedicationDoseHistory(earliest: plan.version.startsOn),
             if (canManage && !plan.isPreviousOn(today)) ...[
               const SizedBox(height: AppSpacing.xl),
+              // Ending the treatment cannot be undone: the error red.
               OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                ),
                 onPressed: () => _discontinue(context),
                 child: Text(context.tr('medications.discontinue')),
               ),
@@ -140,7 +146,7 @@ class _Content extends StatelessWidget {
         AppAlertAction<bool>(
           label: context.tr('medications.discontinue_confirm'),
           value: true,
-          primary: true,
+          destructive: true,
         ),
       ],
     );

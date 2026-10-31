@@ -3,6 +3,7 @@ import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class MedicationDetails extends StatelessWidget {
@@ -114,7 +115,7 @@ class _ScheduleRow extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.schedule_outlined),
+          leading: const Icon(CupertinoIcons.clock),
           title: Text('$time · $dose'),
           subtitle: Text(
             [

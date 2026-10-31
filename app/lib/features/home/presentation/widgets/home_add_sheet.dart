@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,18 +53,18 @@ class _HomeAddSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _AddOption(
-              icon: Icons.medication_outlined,
+              icon: CupertinoIcons.capsule,
               title: context.tr('add.medication'),
               hint: context.tr('add.medication_hint'),
               onTap: onMedication,
             ),
             _AddOption(
-              icon: Icons.water_drop_outlined,
+              icon: CupertinoIcons.drop,
               title: context.tr('add.measurement'),
               hint: context.tr('add.measurement_hint'),
             ),
             _AddOption(
-              icon: Icons.event_outlined,
+              icon: CupertinoIcons.calendar,
               title: context.tr('add.appointment'),
               hint: context.tr('add.appointment_hint'),
             ),
@@ -96,8 +97,8 @@ class _AddOption extends StatelessWidget {
         leading: Icon(icon),
         title: Text(title),
         subtitle: Text(hint),
-        // chevron_right mirrors in Arabic, so it points left.
-        trailing: onTap == null ? null : const Icon(Icons.chevron_right),
+        // The forward chevron (SF chevron.forward) mirrors in Arabic, so it points left.
+        trailing: onTap == null ? null : const Icon(CupertinoIcons.forward),
       ),
     );
   }

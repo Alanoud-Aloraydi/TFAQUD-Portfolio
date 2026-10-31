@@ -12,6 +12,7 @@ import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -94,7 +95,7 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                           PickerField(
                             label: context.tr('circles.birth_date'),
                             hint: context.tr('circles.birth_date_hint'),
-                            icon: Icons.calendar_today_outlined,
+                            icon: CupertinoIcons.calendar,
                             value: state.birthDate == null
                                 ? null
                                 : formatBirthDate(context, state.birthDate!),
@@ -112,7 +113,7 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                           PickerField(
                             label: context.tr('circles.city'),
                             hint: context.tr('circles.city_hint'),
-                            icon: Icons.location_on_outlined,
+                            icon: CupertinoIcons.map_pin,
                             value: state.city,
                             onTap: () => _pickCity(context, cubit, state.city),
                             errorText: state.showErrors && state.city == null

@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// An error line with an icon (color is never the only signal).
@@ -19,7 +20,7 @@ class InlineError extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.only(top: 2),
             child: Icon(
-              Icons.error_outline,
+              CupertinoIcons.exclamationmark_circle,
               size: 18,
               color: AppColors.error,
             ),

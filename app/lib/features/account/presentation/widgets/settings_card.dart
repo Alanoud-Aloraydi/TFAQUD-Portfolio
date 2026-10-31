@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// A small grey title above a white card, as the account page groups its rows.
@@ -89,7 +90,7 @@ class InfoRow extends StatelessWidget {
       child: Row(
         children: <Widget>[
           if (onEdit != null) ...<Widget>[
-            const Icon(Icons.edit_outlined, size: 18, color: AppColors.ink),
+            const Icon(CupertinoIcons.pencil, size: 18, color: AppColors.ink),
             const SizedBox(width: AppSpacing.sm),
           ],
           Text(label, style: text.bodyMedium?.copyWith(color: AppColors.slate)),

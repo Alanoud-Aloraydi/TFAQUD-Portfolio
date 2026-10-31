@@ -3,6 +3,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DoseOccurrenceCard extends StatelessWidget {
@@ -87,10 +88,10 @@ class _TimingState extends StatelessWidget {
   Widget build(BuildContext context) {
     if (state == null) return const SizedBox.shrink();
     final icon = switch (state!) {
-      DoseTimingState.upcoming => Icons.schedule_outlined,
-      DoseTimingState.due => Icons.notifications_active_outlined,
-      DoseTimingState.late => Icons.warning_amber_rounded,
-      DoseTimingState.missed => Icons.event_busy_outlined,
+      DoseTimingState.upcoming => CupertinoIcons.clock,
+      DoseTimingState.due => CupertinoIcons.alarm,
+      DoseTimingState.late => CupertinoIcons.exclamationmark_triangle,
+      DoseTimingState.missed => CupertinoIcons.calendar_badge_minus,
     };
     final label = context.tr('medications.timing.${state!.name}');
     final color = Theme.of(context).colorScheme.primary;

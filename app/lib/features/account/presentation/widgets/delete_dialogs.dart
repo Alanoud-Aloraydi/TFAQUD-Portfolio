@@ -29,6 +29,7 @@ Future<PatientChoice?> showPatientChoiceDialog(BuildContext context) {
       AppAlertAction<PatientChoice>(
         label: context.tr('account.patient_choice_delete'),
         value: PatientChoice.delete,
+        destructive: true,
       ),
       AppAlertAction<PatientChoice>(label: context.tr('account.cancel')),
     ],
@@ -71,7 +72,13 @@ Future<bool?> _confirm(
     message: context.tr(body),
     actions: <AppAlertAction<bool>>[
       AppAlertAction<bool>(label: context.tr(no), value: false),
-      AppAlertAction<bool>(label: context.tr(yes), value: true, primary: true),
+      // Each of these deletes or cancels for good: the red of a
+      // destructive action.
+      AppAlertAction<bool>(
+        label: context.tr(yes),
+        value: true,
+        destructive: true,
+      ),
     ],
   );
 }

@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:app/core/widgets/loading_widget.dart';
@@ -13,7 +14,7 @@ extension ContextExtensions on BuildContext {
         content: Row(
           children: <Widget>[
             Icon(
-              isError ? Icons.error_outline : Icons.check_circle_outline,
+              isError ? CupertinoIcons.exclamationmark_circle : CupertinoIcons.checkmark_circle,
               color: AppColors.surface,
               size: 20,
             ),

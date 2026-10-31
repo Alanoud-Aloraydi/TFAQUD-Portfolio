@@ -82,6 +82,14 @@ abstract class AppTheme {
       // iOS push and pop (with the swipe back) on every platform, the web
       // preview included, so testing in Chrome feels like the phone.
       pageTransitionsTheme: _iosTransitions,
+      // The back and close buttons Material draws by itself (the app bar of
+      // a medicine's pages) use Apple's symbols, as every icon in the app.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (BuildContext context) =>
+            const Icon(CupertinoIcons.back),
+        closeButtonIconBuilder: (BuildContext context) =>
+            const Icon(CupertinoIcons.xmark),
+      ),
       // Cupertino widgets (pickers, action sheets, dialogs) use the app font
       // and ink instead of the system blue.
       cupertinoOverrideTheme: const NoDefaultCupertinoThemeData(

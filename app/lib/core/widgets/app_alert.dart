@@ -11,6 +11,7 @@ class AppAlertAction<T> {
     required this.label,
     this.value,
     this.primary = false,
+    this.destructive = false,
   });
 
   final String label;
@@ -18,9 +19,19 @@ class AppAlertAction<T> {
   /// What [showAppAlert] returns when this button is tapped.
   final T? value;
 
-  /// The action the alert asks about, such as «تجاهل التغييرات»: an ink
-  /// capsule. The others are light grey capsules.
+  /// The action the alert asks about, such as «حفظ»: an ink capsule. The
+  /// others are light grey capsules.
   final bool primary;
+
+  /// The action deletes something or cannot be undone, such as «حذف»,
+  /// «تسجيل الخروج» or «تجاهل التغييرات»: a light grey capsule with its
+  /// label in the error red (#A53636, 4.98:1 on the grey), as iOS draws a
+  /// destructive action. It takes the place of the action the alert asks
+  /// about.
+  final bool destructive;
+
+  /// Whether this is the action the alert asks about (not the way out).
+  bool get isAction => primary || destructive;
 }
 
 /// Shows the app's alert (design system Alert), in the iOS 26 style: a
@@ -111,12 +122,12 @@ class AppAlert<T> extends StatelessWidget {
     // action on top, cancel last, as iOS 26 does.
     final List<AppAlertAction<T>> ordered = sideBySide
         ? <AppAlertAction<T>>[
-            ...actions.where((AppAlertAction<T> a) => !a.primary),
-            ...actions.where((AppAlertAction<T> a) => a.primary),
+            ...actions.where((AppAlertAction<T> a) => !a.isAction),
+            ...actions.where((AppAlertAction<T> a) => a.isAction),
           ]
         : <AppAlertAction<T>>[
-            ...actions.where((AppAlertAction<T> a) => a.primary),
-            ...actions.where((AppAlertAction<T> a) => !a.primary),
+            ...actions.where((AppAlertAction<T> a) => a.isAction),
+            ...actions.where((AppAlertAction<T> a) => !a.isAction),
           ];
     final List<Widget> buttons = <Widget>[
       for (final AppAlertAction<T> action in ordered) _AlertButton<T>(action: action),
@@ -214,7 +225,7 @@ class _AlertButton<T> extends StatelessWidget {
     final Widget label = Text(action.label, textAlign: TextAlign.center);
     void tap() => Navigator.of(context).pop(action.value);
     const Size size = Size.fromHeight(48);
-    if (action.primary) {
+    if (action.primary && !action.destructive) {
       return FilledButton(
         onPressed: tap,
         style: FilledButton.styleFrom(minimumSize: size),
@@ -226,7 +237,8 @@ class _AlertButton<T> extends StatelessWidget {
       style: FilledButton.styleFrom(
         minimumSize: size,
         backgroundColor: AppColors.line,
-        foregroundColor: AppColors.ink,
+        foregroundColor:
+            action.destructive ? AppColors.error : AppColors.ink,
       ).copyWith(
         overlayColor: const WidgetStatePropertyAll<Color>(Color(0x14202734)),
       ),

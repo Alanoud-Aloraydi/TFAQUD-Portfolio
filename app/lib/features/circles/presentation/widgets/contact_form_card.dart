@@ -11,6 +11,7 @@ import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart'
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The card that adds an emergency contact or changes one (CIRCLE-05): the
@@ -172,10 +173,11 @@ class _ContactFormCardState extends State<ContactFormCard> {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: form.saving ? null : widget.onDelete,
-                icon: const Icon(Icons.delete_outline, size: 20),
+                icon: const Icon(CupertinoIcons.delete, size: 20),
                 label: Text(context.tr('circles.contact_delete')),
+                // Deleting is a destructive action: the error red.
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.ink,
+                  foregroundColor: AppColors.error,
                 ),
               ),
             ),

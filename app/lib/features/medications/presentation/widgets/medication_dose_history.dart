@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
@@ -11,6 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class MedicationDoseHistory extends StatelessWidget {
   const MedicationDoseHistory({super.key, required this.earliest});
 
+  /// The first day of the medicine. When it is after today, nothing has
+  /// been due yet and the history says when it begins.
   final DateTime earliest;
 
   @override
@@ -36,7 +39,14 @@ class MedicationDoseHistory extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.md),
-            if (items.isEmpty)
+            if (items.isEmpty && earliest.isAfter(_today()))
+              Text(
+                context.tr(
+                  'medications.dose_history_not_started',
+                  args: <String>[formatMedicationDate(context, earliest)],
+                ),
+              )
+            else if (items.isEmpty)
               Text(context.tr('medications.no_dose_history'))
             else
               for (final item in items) ...[
@@ -62,6 +72,8 @@ class MedicationDoseHistory extends StatelessWidget {
       },
     );
   }
+
+  static DateTime _today() => DateUtils.dateOnly(DateTime.now());
 
   void _showError(BuildContext context, MedicationOccurrencesState state) {
     if (state.messageKey == null) return;

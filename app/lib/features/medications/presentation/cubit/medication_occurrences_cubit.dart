@@ -25,6 +25,15 @@ class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState> {
     _to = to;
     _planId = planId;
     final revision = ++_revision;
+    // A range that ends before it starts (a medicine that begins after
+    // today, asked from its first day to today) holds no dose. The server
+    // refuses such a range as invalid data, so it is never sent.
+    if (to.isBefore(from)) {
+      emit(
+        MedicationOccurrencesState(status: MedicationOccurrencesStatus.ready),
+      );
+      return;
+    }
     emit(MedicationOccurrencesState());
     final result = await _medications.getOccurrences(
       circleId,

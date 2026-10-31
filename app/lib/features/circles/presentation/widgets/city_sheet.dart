@@ -3,6 +3,7 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/circles/domain/saudi_cities.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Opens the "اختر مدينتك" sheet (CREAT-01B). Returns the confirmed city, or
@@ -73,7 +74,7 @@ class _CitySheetState extends State<CitySheet> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: context.tr('circles.city_search'),
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(CupertinoIcons.search),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -97,7 +98,7 @@ class _CitySheetState extends State<CitySheet> {
                         final bool chosen = city == _selected;
                         return ListTile(
                           leading: Icon(
-                            Icons.location_on_outlined,
+                            CupertinoIcons.map_pin,
                             color: chosen ? AppColors.ink : AppColors.slate,
                           ),
                           title: Text(
@@ -109,7 +110,7 @@ class _CitySheetState extends State<CitySheet> {
                             ),
                           ),
                           trailing: chosen
-                              ? const Icon(Icons.check, color: AppColors.ink)
+                              ? const Icon(CupertinoIcons.checkmark, color: AppColors.ink)
                               : null,
                           onTap: () => setState(() => _selected = city),
                         );

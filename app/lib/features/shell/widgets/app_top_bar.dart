@@ -3,6 +3,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/glass.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -49,7 +50,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
           child: GlassIconButton(
             tooltip: context.tr('topbar.account'),
             icon: displayName == null
-                ? const Icon(Icons.person_outline)
+                ? const Icon(CupertinoIcons.person)
                 : Text(
                     displayName!.characters.first,
                     semanticsLabel: displayName,
@@ -76,9 +77,9 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   label: Text('$needsReply'),
                   backgroundColor: AppColors.ink,
                   textColor: AppColors.surface,
-                  child: const Icon(Icons.notifications_none),
+                  child: const Icon(CupertinoIcons.bell),
                 )
-              : const Icon(Icons.notifications_none),
+              : const Icon(CupertinoIcons.bell),
           onPressed: onNotifications,
         ),
         const SizedBox(width: AppSpacing.lg),

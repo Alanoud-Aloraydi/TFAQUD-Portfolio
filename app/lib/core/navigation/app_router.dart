@@ -199,7 +199,7 @@ class AppRouter {
       // patient, sign-out (AuthCubit) and deleting the account.
       GoRoute(
         path: Routes.account,
-        pageBuilder: _iosPage((context, state) => MultiBlocProvider(
+        pageBuilder: _iosModalPage((context, state) => MultiBlocProvider(
           providers: [
             BlocProvider(
               create: (context) => AccountCubit(
@@ -314,7 +314,7 @@ class AppRouter {
       // request takes the patient's answer; "agree" leads to the basic data.
       GoRoute(
         path: Routes.notifications,
-        pageBuilder: _iosPage((context, state) => BlocProvider(
+        pageBuilder: _iosModalPage((context, state) => BlocProvider(
           create: (context) =>
               InboxCubit(GetIt.I<CirclesUseCase>(), GetIt.I<HomeUseCase>())
                 ..load(),
@@ -448,11 +448,24 @@ class AppRouter {
     String path, {
     GoRouterWidgetBuilder? builder,
   }) {
+    final GoRouterWidgetBuilder page =
+        builder ?? (context, state) => const SizedBox.expand();
     return StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
           path: path,
-          pageBuilder: _iosPage(builder ?? (context, state) => const SizedBox.expand()),
+          // A tab page is the first page of its own navigator and has no
+          // background of its own: the shell's canvas shows through it. An
+          // iOS page (CupertinoPage) draws a light shadow (9% black) under
+          // itself, which over a see-through page darkened the whole tab and
+          // left a lighter band under the top bar. A tab page never slides
+          // in (tabs fade, FadingBranches), so it is a plain page.
+          pageBuilder: (context, state) => NoTransitionPage<void>(
+            key: state.pageKey,
+            name: state.name ?? state.path,
+            restorationId: state.pageKey.value,
+            child: page(context, state),
+          ),
         ),
       ],
     );
@@ -466,11 +479,12 @@ class AppRouter {
   }
 }
 
-// Every page is an iOS page (CupertinoPage): it slides in from the leading
-// edge and back out, with the edge swipe to go back. In Arabic the leading
-// edge is the left: a new page, such as the notifications, comes in from
-// left to right, and «رجوع» takes it back from right to left, as iOS does in
-// Arabic (Apple, Human Interface Guidelines, Right to left).
+// Every page that is not a tab and not a modal is an iOS page
+// (CupertinoPage): it slides in from the leading edge and back out, with
+// the edge swipe to go back. In Arabic the leading edge is the left: a new
+// page, such as the medical file, comes in from left to right, and «رجوع»
+// takes it back from right to left, as iOS does in Arabic (Apple, Human
+// Interface Guidelines, Right to left).
 //
 // The pages are built here on purpose. go_router 18 picks the page type by
 // looking for the MaterialApp of package:material_ui, but this app's
@@ -482,6 +496,21 @@ GoRouterPageBuilder _iosPage(GoRouterWidgetBuilder builder) =>
       key: state.pageKey,
       name: state.name ?? state.path,
       restorationId: state.pageKey.value,
+      child: builder(context, state),
+    );
+
+// The notifications (the bell) and the account open as an iOS full-screen
+// modal: the page rises from the bottom and goes back down when closed, and
+// the page under it stays still. A modal has no back arrow and no edge
+// swipe; its top has the close button (✕) instead, on the leading side, as
+// Apple's guidelines ask for a modal view (Human Interface Guidelines,
+// Modality and Sheets).
+GoRouterPageBuilder _iosModalPage(GoRouterWidgetBuilder builder) =>
+    (BuildContext context, GoRouterState state) => CupertinoPage<void>(
+      key: state.pageKey,
+      name: state.name ?? state.path,
+      restorationId: state.pageKey.value,
+      fullscreenDialog: true,
       child: builder(context, state),
     );
 

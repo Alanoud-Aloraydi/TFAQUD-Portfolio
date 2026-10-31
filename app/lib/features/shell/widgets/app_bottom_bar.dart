@@ -4,6 +4,7 @@ import 'package:app/features/shell/widgets/glass_add_button.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
@@ -18,29 +19,29 @@ typedef _Tab = ({
 const List<_Tab> _tabs = <_Tab>[
   (
     labelKey: 'tab.today',
-    icon: Icons.wb_sunny,
-    outlinedIcon: Icons.wb_sunny_outlined,
+    icon: CupertinoIcons.sun_max_fill,
+    outlinedIcon: CupertinoIcons.sun_max,
     symbol: 'sun.max',
     selectedSymbol: 'sun.max.fill',
   ),
   (
     labelKey: 'tab.plan',
-    icon: Icons.description,
-    outlinedIcon: Icons.description_outlined,
+    icon: CupertinoIcons.doc_text_fill,
+    outlinedIcon: CupertinoIcons.doc_text,
     symbol: 'doc.text',
     selectedSymbol: 'doc.text.fill',
   ),
   (
     labelKey: 'tab.record',
-    icon: Icons.book,
-    outlinedIcon: Icons.book_outlined,
+    icon: CupertinoIcons.book_fill,
+    outlinedIcon: CupertinoIcons.book,
     symbol: 'book',
     selectedSymbol: 'book.fill',
   ),
   (
     labelKey: 'tab.circle',
-    icon: Icons.people,
-    outlinedIcon: Icons.people_outline,
+    icon: CupertinoIcons.person_2_fill,
+    outlinedIcon: CupertinoIcons.person_2,
     symbol: 'person.2',
     selectedSymbol: 'person.2.fill',
   ),

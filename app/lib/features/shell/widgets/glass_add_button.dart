@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/glass.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Opacity of the white fill of the frosted shell surfaces: the bottom bar and
@@ -43,7 +44,7 @@ class GlassAddButton extends StatelessWidget {
               onTap: onPressed,
               child: Center(
                 child: Icon(
-                  Icons.add,
+                  CupertinoIcons.add,
                   size: 28,
                   color: enabled
                       ? AppColors.ink

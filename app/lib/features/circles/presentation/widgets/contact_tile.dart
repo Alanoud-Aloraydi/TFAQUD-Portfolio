@@ -4,6 +4,7 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// One emergency contact of the medical file: a round letter, the name, the
@@ -68,7 +69,7 @@ class ContactTile extends StatelessWidget {
           if (onEdit != null)
             IconButton(
               onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, color: AppColors.ink),
+              icon: const Icon(CupertinoIcons.pencil, color: AppColors.ink),
               tooltip: context.tr(
                 'circles.contact_edit_action',
                 args: <String>[contact.name],

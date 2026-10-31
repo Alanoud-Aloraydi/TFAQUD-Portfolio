@@ -55,6 +55,8 @@ void main() {
         expect(contrast(status, AppColors.canvas), greaterThanOrEqualTo(4.5));
         expect(contrast(status, AppColors.leafTint), greaterThanOrEqualTo(4.5));
       }
+      // A destructive action in an alert: the red label on the grey capsule.
+      expect(contrast(AppColors.error, AppColors.line), greaterThanOrEqualTo(4.5));
       // Control borders and focus reach 3:1.
       expect(contrast(AppColors.stone, AppColors.surface), greaterThanOrEqualTo(3));
       expect(contrast(AppColors.stone, AppColors.canvas), greaterThanOrEqualTo(3));

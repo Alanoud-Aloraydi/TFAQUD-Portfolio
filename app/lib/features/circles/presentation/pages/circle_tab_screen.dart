@@ -8,6 +8,7 @@ import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -95,7 +96,7 @@ class CircleCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () =>
                       context.push(Routes.medicalFile(circle.id)),
-                  icon: const Icon(Icons.description_outlined),
+                  icon: const Icon(CupertinoIcons.doc_text),
                   label: Text(context.tr('circles.file_title')),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
@@ -109,7 +110,7 @@ class CircleCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () =>
                       context.push(Routes.emergencyCard(circle.id)),
-                  icon: const Icon(Icons.favorite_border),
+                  icon: const Icon(CupertinoIcons.heart),
                   label: Text(context.tr('circles.card_title')),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),

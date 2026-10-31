@@ -6,6 +6,7 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -32,6 +33,27 @@ void main() {
     expect(cubit.state.occurrences, [older, recent]);
     expect(repository.ranges[1].$1, DateTime(2026, 8, 30));
     expect(repository.ranges[1].$2, DateTime(2026, 9, 30));
+  });
+
+  test('a medicine that starts after today asks the server nothing', () async {
+    final repository = _Repository();
+    final cubit = MedicationOccurrencesCubit(MedicationsUseCase(repository));
+    addTearDown(cubit.close);
+
+    // From its first day (30 November) to today (31 October): the range
+    // ends before it starts, which the server refuses as invalid data.
+    await cubit.load(
+      'circle-1',
+      DateTime(2026, 11, 30),
+      DateTime(2026, 10, 31),
+      planId: 'plan-1',
+    );
+
+    expect(repository.ranges, isEmpty);
+    expect(cubit.state.status, MedicationOccurrencesStatus.ready);
+    expect(cubit.state.occurrences, isEmpty);
+    expect(cubit.state.messageKey, isNull);
+    expect(cubit.canLoadEarlier(DateTime(2026, 11, 30)), isFalse);
   });
 
   test('records an outcome without reloading an oversized range', () async {

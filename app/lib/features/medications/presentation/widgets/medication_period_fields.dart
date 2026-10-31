@@ -4,6 +4,7 @@ import 'package:app/core/widgets/inset_group.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The treatment period as one iOS grouped section: start, the date a change
@@ -74,7 +75,7 @@ class MedicationPeriodFields extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Icon(Icons.error_outline, size: 18, color: tokens.error),
+                Icon(CupertinoIcons.exclamationmark_circle, size: 18, color: tokens.error),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
@@ -124,7 +125,7 @@ class _DateRow extends StatelessWidget {
           ? IconButton(
               tooltip: context.tr('medications.no_end_date'),
               onPressed: () => onChanged(null),
-              icon: const Icon(Icons.cancel, size: 20),
+              icon: const Icon(CupertinoIcons.xmark_circle_fill, size: 20),
             )
           : null,
       showChevron: !(allowClear && date != null),

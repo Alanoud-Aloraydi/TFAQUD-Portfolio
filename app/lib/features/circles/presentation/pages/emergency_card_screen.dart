@@ -11,6 +11,7 @@ import 'package:app/features/circles/presentation/cubit/emergency_card_state.dar
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -130,7 +131,7 @@ class _ReadOnlyPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(Icons.lock_outline, size: 14, color: AppColors.slate),
+          const Icon(CupertinoIcons.lock, size: 14, color: AppColors.slate),
           const SizedBox(width: AppSpacing.xs),
           Text(
             context.tr('circles.card_read_only'),

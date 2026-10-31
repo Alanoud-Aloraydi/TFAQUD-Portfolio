@@ -9,6 +9,7 @@ import 'package:app/features/circles/presentation/widgets/status_pill.dart';
 // easy_localization also exports a TextDirection (from intl); hide it so the
 // name means Flutter's TextDirection.
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -50,7 +51,7 @@ class RequestSentView extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    accepted ? Icons.check : Icons.schedule,
+                    accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
                     size: 36,
                     color: accepted
                         ? AppColors.success
@@ -149,7 +150,7 @@ class _DetailsCard extends StatelessWidget {
           _DetailRow(
             label: context.tr('circles.request_status'),
             child: StatusPill(
-              icon: accepted ? Icons.check : Icons.schedule,
+              icon: accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
               text: context.tr(
                 accepted
                     ? 'circles.request_status_accepted'

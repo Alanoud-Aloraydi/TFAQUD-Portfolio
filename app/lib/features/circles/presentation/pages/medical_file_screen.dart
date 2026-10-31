@@ -15,6 +15,7 @@ import 'package:app/features/circles/presentation/widgets/contact_form_card.dart
 import 'package:app/features/circles/presentation/widgets/contact_tile.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -82,7 +83,7 @@ class MedicalFileScreen extends StatelessWidget {
                       if (file != null)
                         ActionChip(
                           avatar: const Icon(
-                            Icons.edit_outlined,
+                            CupertinoIcons.pencil,
                             size: 16,
                             color: AppColors.ink,
                           ),
@@ -211,7 +212,7 @@ class MedicalFileScreen extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
               onPressed: cubit.startAdd,
-              icon: const Icon(Icons.add),
+              icon: const Icon(CupertinoIcons.add),
               label: Text(context.tr('circles.contact_add')),
             ),
           ),

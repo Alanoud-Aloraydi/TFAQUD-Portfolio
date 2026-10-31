@@ -34,7 +34,8 @@ class SignOutRow extends StatelessWidget {
       builder: (BuildContext context, AuthState state) {
         return ActionRow(
           label: context.tr('auth.sign_out'),
-          color: AppColors.ink,
+          // Signing out is a destructive action: the error red.
+          color: AppColors.error,
           busy: state is AuthLoadingState,
           onPressed: () => context.read<AuthCubit>().signOut(),
         );

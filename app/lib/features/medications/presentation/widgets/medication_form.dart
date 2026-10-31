@@ -11,6 +11,7 @@ import 'package:app/features/medications/presentation/widgets/medication_basic_f
 import 'package:app/features/medications/presentation/widgets/medication_period_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -97,7 +98,7 @@ class _MedicationFormState extends State<MedicationForm> {
               children: [
                 InsetRow(
                   label: context.tr('medications.add_schedule'),
-                  leading: const Icon(Icons.add_circle),
+                  leading: const Icon(CupertinoIcons.add_circled_solid),
                   onTap: _addSchedule,
                 ),
               ],
@@ -193,7 +194,7 @@ class _MedicationFormState extends State<MedicationForm> {
         AppAlertAction<bool>(
           label: context.tr('medications.discard_confirm'),
           value: true,
-          primary: true,
+          destructive: true,
         ),
       ],
     );
