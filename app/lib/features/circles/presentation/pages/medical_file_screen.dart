@@ -85,7 +85,7 @@ class MedicalFileScreen extends StatelessWidget {
                             color: AppColors.ink,
                           ),
                           label: Text(context.tr('circles.file_edit')),
-                          backgroundColor: AppColors.honeyTint,
+                          backgroundColor: AppColors.leafTint,
                           side: BorderSide.none,
                           onPressed: () => _edit(context, cubit),
                         ),

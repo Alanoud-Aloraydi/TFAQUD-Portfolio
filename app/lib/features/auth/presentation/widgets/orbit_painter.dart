@@ -14,7 +14,7 @@ class OrbitPainter extends CustomPainter {
   // The panel is honey, so the orbit's accent dots are ink.
   static const Color _orange = AppColors.ink;
   static const Color _dotLight = AppColors.surface;
-  static const Color _dotMuted = AppColors.honeyTint;
+  static const Color _dotMuted = AppColors.leafTint;
 
   static const List<double> _ringRadii = <double>[66, 112, 158, 204];
 
@@ -41,7 +41,7 @@ class OrbitPainter extends CustomPainter {
     dot(const Offset(74, 190), 5.5, _dotMuted);
 
     // Brand mark: white disc with a soft shadow, an ink ring and a small
-    // honey dot on the ring.
+    // green dot on the ring (green stays a small accent).
     canvas.drawCircle(
       center + const Offset(0, 6),
       46,
@@ -54,7 +54,7 @@ class OrbitPainter extends CustomPainter {
     canvas.drawCircle(center, 14, Paint()..color = AppColors.surface);
     const Offset mark = Offset(16, -16);
     canvas.drawCircle(center + mark, 6.5, Paint()..color = AppColors.surface);
-    canvas.drawCircle(center + mark, 5, Paint()..color = AppColors.honey);
+    canvas.drawCircle(center + mark, 5, Paint()..color = AppColors.leaf);
   }
 
   @override

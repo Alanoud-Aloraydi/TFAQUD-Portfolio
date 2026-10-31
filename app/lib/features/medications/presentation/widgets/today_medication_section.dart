@@ -1,11 +1,11 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/large_title.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,17 +56,21 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = formatMedicationDate(context, DateTime.now());
+    final DateTime now = DateTime.now();
+    // "السبت 31 أكتوبر": the weekday, then the date with the digits 0 to 9.
+    final String date =
+        '${context.tr('common.weekdays.${now.weekday}')} '
+        '${now.day} ${context.tr('circles.months.${now.month}')}';
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          LargeTitle(title: context.tr('tab.today'), subtitle: date),
           Text(
             context.tr('medications.today'),
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          Text(date, style: Theme.of(context).textTheme.bodySmall),
           if (count == 0) ...[
             const SizedBox(height: AppSpacing.xxl),
             Center(child: Text(context.tr('medications.no_doses_today'))),

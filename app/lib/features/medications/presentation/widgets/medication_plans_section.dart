@@ -1,3 +1,4 @@
+import 'package:app/core/widgets/large_title.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
@@ -30,6 +31,7 @@ class MedicationPlansSection extends StatelessWidget {
             .where((plan) => !plan.isPreviousOn(today))
             .toList();
         return MedicationPlanList(
+          header: LargeTitle(title: context.tr('tab.plan')),
           title: context.tr('medications.current'),
           emptyText: context.tr('medications.no_current'),
           plans: current,

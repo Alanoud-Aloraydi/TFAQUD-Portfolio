@@ -1,5 +1,7 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/glass_segmented_control.dart';
+import 'package:app/core/widgets/large_title.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
@@ -7,7 +9,6 @@ import 'package:app/features/medications/presentation/widgets/medication_plan_li
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MedicationHistorySection extends StatelessWidget {
@@ -43,24 +44,15 @@ class MedicationHistorySection extends StatelessWidget {
         return ListView(
           padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
           children: [
-            CupertinoSlidingSegmentedControl<MedicationRecordFilter>(
-              groupValue: state.recordFilter,
-              children: {
+            LargeTitle(title: context.tr('tab.record')),
+            // «الكل · الحالية · السابقة»: the glass segmented control.
+            GlassSegmentedControl<MedicationRecordFilter>(
+              segments: {
                 for (final filter in MedicationRecordFilter.values)
-                  filter: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    child: Text(
-                      context.tr('medications.filter.${filter.name}'),
-                    ),
-                  ),
+                  filter: context.tr('medications.filter.${filter.name}'),
               },
-              onValueChanged: (value) {
-                if (value != null) {
-                  context.read<MedicationsCubit>().setRecordFilter(value);
-                }
-              },
+              selected: state.recordFilter,
+              onChanged: context.read<MedicationsCubit>().setRecordFilter,
             ),
             const SizedBox(height: AppSpacing.xl),
             MedicationPlanList(

@@ -132,7 +132,7 @@ class _PatientQuestion extends StatelessWidget {
         padding: const EdgeInsetsDirectional.only(start: 12),
         decoration: const BoxDecoration(
           border: BorderDirectional(
-            start: BorderSide(color: AppColors.honeyTint, width: 3),
+            start: BorderSide(color: AppColors.leafTint, width: 3),
           ),
         ),
         child: Column(

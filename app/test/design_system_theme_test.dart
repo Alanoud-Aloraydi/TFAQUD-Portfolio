@@ -24,18 +24,15 @@ void main() {
       for (final Color ground in <Color>[
         AppColors.surface,
         AppColors.canvas,
-        AppColors.honeyTint,
+        AppColors.leafTint,
+        AppColors.leaf,
         AppColors.honey,
         AppColors.line,
       ]) {
         expect(contrast(AppColors.ink, ground), greaterThanOrEqualTo(7));
       }
-      // The white label on the primary action in every state.
-      for (final Color fill in <Color>[
-        AppColors.ink,
-        AppColors.inkHover,
-        AppColors.inkPressed,
-      ]) {
+      // The white label on the primary action, default and pressed.
+      for (final Color fill in <Color>[AppColors.ink, AppColors.slate]) {
         expect(contrast(AppColors.onInk, fill), greaterThanOrEqualTo(7));
       }
       // Supporting text reaches 4.5:1 on the light grounds (and turns ink
@@ -43,7 +40,7 @@ void main() {
       for (final Color ground in <Color>[
         AppColors.surface,
         AppColors.canvas,
-        AppColors.honeyTint,
+        AppColors.leafTint,
         AppColors.line,
       ]) {
         expect(contrast(AppColors.slate, ground), greaterThanOrEqualTo(4.5));
@@ -56,6 +53,7 @@ void main() {
       ]) {
         expect(contrast(status, AppColors.surface), greaterThanOrEqualTo(4.5));
         expect(contrast(status, AppColors.canvas), greaterThanOrEqualTo(4.5));
+        expect(contrast(status, AppColors.leafTint), greaterThanOrEqualTo(4.5));
       }
       // Control borders and focus reach 3:1.
       expect(contrast(AppColors.stone, AppColors.surface), greaterThanOrEqualTo(3));
@@ -65,8 +63,10 @@ void main() {
       expect(contrast(AppColors.honey, AppColors.ink), greaterThanOrEqualTo(3));
     });
 
-    test('honey is an accent, not a text color', () {
+    test('honey and the greens are accents, not text colors', () {
       expect(contrast(AppColors.honey, AppColors.surface), lessThan(3));
+      expect(contrast(AppColors.leaf, AppColors.surface), lessThan(3));
+      expect(contrast(AppColors.leafTint, AppColors.surface), lessThan(1.5));
     });
   });
 
@@ -75,12 +75,8 @@ void main() {
       final ButtonStyle style = AppTheme.lightTheme.filledButtonTheme.style!;
       expect(resolve(style.backgroundColor, <WidgetState>{}), AppColors.ink);
       expect(
-        resolve(style.backgroundColor, <WidgetState>{WidgetState.hovered}),
-        AppColors.inkHover,
-      );
-      expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.pressed}),
-        AppColors.inkPressed,
+        AppColors.slate,
       );
       expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.disabled}),
@@ -121,6 +117,11 @@ void main() {
     test('the text theme uses IBM Plex Sans Arabic, 11 or larger', () {
       final TextTheme text = AppTheme.lightTheme.textTheme;
       expect(text.bodyLarge!.fontFamily, 'IBMPlexSansArabic');
+      // Component styles that replace Material's own name the font too.
+      expect(
+        AppTheme.lightTheme.chipTheme.labelStyle!.fontFamily,
+        'IBMPlexSansArabic',
+      );
       for (final TextStyle? style in <TextStyle?>[
         text.displaySmall,
         text.headlineLarge,

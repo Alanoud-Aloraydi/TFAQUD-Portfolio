@@ -31,7 +31,7 @@ class ContactTile extends StatelessWidget {
         children: <Widget>[
           ExcludeSemantics(
             child: CircleAvatar(
-              backgroundColor: AppColors.honeyTint,
+              backgroundColor: AppColors.leafTint,
               foregroundColor: AppColors.ink,
               child: Text(
                 contact.initial,

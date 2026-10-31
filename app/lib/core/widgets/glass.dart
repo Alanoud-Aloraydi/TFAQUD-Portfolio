@@ -137,3 +137,75 @@ class GlassIconButton extends StatelessWidget {
     );
   }
 }
+
+/// Glass capsule with a short label and an icon after it, such as the circle
+/// switcher in the middle of the top bar. At least 44 high. [semanticLabel]
+/// is what VoiceOver reads, so a long name cut short on screen is still read
+/// in full.
+class GlassCapsuleButton extends StatelessWidget {
+  const GlassCapsuleButton({
+    super.key,
+    required this.label,
+    required this.semanticLabel,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final String semanticLabel;
+  final IconData icon;
+
+  /// Null keeps the capsule visible but inert.
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: semanticLabel,
+      onTap: onPressed,
+      excludeSemantics: true,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: AppSizes.touch,
+          minWidth: AppSizes.touch,
+        ),
+        child: GlassSurface(
+          borderRadius: const BorderRadius.all(
+            Radius.circular(AppSizes.touch / 2),
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onPressed,
+              customBorder: const StadiumBorder(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.titleLarge,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Icon(icon, size: AppSizes.iconSmall, color: AppColors.ink),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

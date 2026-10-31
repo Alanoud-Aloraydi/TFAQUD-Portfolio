@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/glass_segmented_control.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/core/widgets/step_header.dart';
@@ -117,36 +118,17 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   style: text.titleSmall?.copyWith(color: AppColors.slate),
                 ),
                 const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<CircleAppMode>(
-                    // In a right-to-left language the first segment is on the
-                    // right: detailed, then simplified, as in the design.
-                    segments: <ButtonSegment<CircleAppMode>>[
-                      ButtonSegment<CircleAppMode>(
-                        value: CircleAppMode.detailed,
-                        label: Text(context.tr('circles.mode_detailed')),
-                      ),
-                      ButtonSegment<CircleAppMode>(
-                        value: CircleAppMode.simplified,
-                        label: Text(context.tr('circles.mode_simplified')),
-                      ),
-                    ],
-                    selected: <CircleAppMode>{state.mode},
-                    showSelectedIcon: false,
-                    onSelectionChanged: (Set<CircleAppMode> modes) =>
-                        cubit.chooseMode(modes.first),
-                    style: SegmentedButton.styleFrom(
-                      foregroundColor: AppColors.slate,
-                      selectedForegroundColor: AppColors.ink,
-                      selectedBackgroundColor: AppColors.honeyTint,
-                      side: const BorderSide(color: AppColors.stone),
-                    ).copyWith(
-                      minimumSize: const WidgetStatePropertyAll<Size>(
-                        Size.fromHeight(48),
-                      ),
+                // In a right-to-left language the first segment is on the
+                // right: detailed, then simplified, as in the design.
+                GlassSegmentedControl<CircleAppMode>(
+                  segments: <CircleAppMode, String>{
+                    CircleAppMode.detailed: context.tr('circles.mode_detailed'),
+                    CircleAppMode.simplified: context.tr(
+                      'circles.mode_simplified',
                     ),
-                  ),
+                  },
+                  selected: state.mode,
+                  onChanged: cubit.chooseMode,
                 ),
                 const SizedBox(height: 8),
                 Text(

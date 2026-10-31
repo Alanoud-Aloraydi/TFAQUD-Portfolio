@@ -6,6 +6,7 @@ import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/widgets/glass.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
@@ -39,6 +40,7 @@ import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
+import 'package:app/features/home/presentation/widgets/home_widget.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
@@ -48,6 +50,7 @@ import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dar
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:app/features/shell/widgets/glass_add_button.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +191,31 @@ Future<void> pumpApp(WidgetTester tester) async {
 Finder inBar(String text) =>
     find.descendant(of: find.byType(AppBottomBar), matching: find.text(text));
 
+/// Taps [text] in the open iOS action sheet.
+Future<void> tapInSheet(WidgetTester tester, String text) async {
+  await tester.tap(
+    find.descendant(
+      of: find.byType(CupertinoActionSheet),
+      matching: find.text(text),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Chooses a circle with the circle switcher in the middle of the top bar.
+Future<void> chooseCircle(WidgetTester tester, String name) async {
+  await tester.tap(find.byType(HomeWidget));
+  await tester.pumpAndSettle();
+  await tapInSheet(tester, name);
+}
+
+/// Opens «إضافة دائرة» from the circle switcher's sheet.
+Future<void> openAddCircle(WidgetTester tester) async {
+  await tester.tap(find.byType(HomeWidget));
+  await tester.pumpAndSettle();
+  await tapInSheet(tester, 'topbar.add_circle'.tr());
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final home = HomeFakeRepository();
@@ -229,20 +257,18 @@ void main() {
 
       expect(find.byTooltip('topbar.account'.tr()), findsOneWidget);
       expect(find.byTooltip('topbar.notifications'.tr()), findsOneWidget);
-      expect(find.byTooltip('topbar.add_circle'.tr()), findsOneWidget);
+      expect(find.byType(HomeWidget), findsOneWidget);
       expect(find.byTooltip('tab.add'.tr()), findsOneWidget);
       expect(tester.widget<GlassAddButton>(find.byType(GlassAddButton)).onPressed, isNull);
       final account = tester.getCenter(find.byTooltip('topbar.account'.tr()));
-      final addCircle = tester.getCenter(
-        find.byTooltip('topbar.add_circle'.tr()),
-      );
+      final switcher = tester.getCenter(find.byType(HomeWidget));
       final bell = tester.getCenter(
         find.byTooltip('topbar.notifications'.tr()),
       );
-      expect(
-        (addCircle.dx - account.dx).abs(),
-        lessThan((addCircle.dx - bell.dx).abs()),
-      );
+      // Right to left: the account at the start (right), the circle switcher
+      // in the middle, the bell at the end (left).
+      expect(account.dx, greaterThan(switcher.dx));
+      expect(switcher.dx, greaterThan(bell.dx));
       for (final String key in <String>[
         'tab.today',
         'tab.plan',
@@ -258,8 +284,7 @@ void main() {
     ) async {
       await pumpApp(tester);
 
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Circle two'));
-      await tester.pumpAndSettle();
+      await chooseCircle(tester, 'Circle two');
 
       for (final String key in <String>[
         'tab.plan',
@@ -270,17 +295,16 @@ void main() {
         await tester.tap(inBar(key.tr()).first);
         await tester.pumpAndSettle();
         expect(
-          find.text(key.tr()).evaluate().length,
-          inBar(key.tr()).evaluate().length,
-        );
-        expect(
           AppRouter.router.routeInformationProvider.value.uri.path,
           '/${key.split('.').last}',
         );
-        final selected = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, 'Circle two'),
+        expect(
+          find.descendant(
+            of: find.byType(HomeWidget),
+            matching: find.text('Circle two'),
+          ),
+          findsOneWidget,
         );
-        expect(selected.selected, isTrue);
         expect(find.byType(AppBottomBar), findsOneWidget);
         expect(find.byTooltip('topbar.account'.tr()), findsOneWidget);
       }
@@ -336,13 +360,14 @@ void main() {
       await pumpApp(tester);
       expect(find.text('home.no_circles'.tr()), findsOneWidget);
       expect(find.text('home.create_circle'.tr()), findsOneWidget);
-      final IconButton addCircle = tester.widget<IconButton>(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is IconButton &&
-              widget.tooltip == 'topbar.add_circle'.tr(),
+      // With no circle yet, the switcher is «إضافة دائرة» itself.
+      final GlassCapsuleButton addCircle = tester.widget<GlassCapsuleButton>(
+        find.descendant(
+          of: find.byType(HomeWidget),
+          matching: find.byType(GlassCapsuleButton),
         ),
       );
+      expect(addCircle.label, 'topbar.add_circle'.tr());
       expect(addCircle.onPressed, isNotNull);
       final IconButton bell = tester.widget<IconButton>(
         find.byWidgetPredicate(
@@ -388,7 +413,7 @@ void main() {
     Future<CreateCircleCubit> openFirstStep(WidgetTester tester) async {
       tallPhone(tester);
       await pumpApp(tester);
-      await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+      await openAddCircle(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.text('onboarding.self_title'.tr()));
       await tester.pumpAndSettle();
@@ -416,7 +441,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await pumpApp(tester);
-      await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+      await openAddCircle(tester);
       await tester.pumpAndSettle();
 
       expect(find.text('onboarding.start_title'.tr()), findsOneWidget);
@@ -535,15 +560,13 @@ void main() {
           );
         }
 
-        // The lists open about 40 years back, on the first of January.
-        await tester.tap(find.text('circles.months.3'.tr()));
-        await tester.pump();
+        // The wheel opens about 40 years back, on the first of January.
         await tester.tap(find.text('circles.date_confirm'.tr()));
         await tester.pumpAndSettle();
 
         final int year = DateTime.now().year - 40;
-        expect(cubit.state.birthDate, DateTime(year, 3, 1));
-        expect(find.text('1 ${'circles.months.3'.tr()} $year'), findsOneWidget);
+        expect(cubit.state.birthDate, DateTime(year, 1, 1));
+        expect(find.text('1 ${'circles.months.1'.tr()} $year'), findsOneWidget);
       },
     );
 
@@ -696,7 +719,7 @@ void main() {
     }) async {
       tallPhone(tester);
       await pumpApp(tester);
-      await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+      await openAddCircle(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.text('onboarding.other_title'.tr()));
       await tester.pumpAndSettle();
@@ -724,7 +747,7 @@ void main() {
       (WidgetTester tester) async {
         tallPhone(tester);
         await pumpApp(tester);
-        await tester.tap(find.byTooltip('topbar.add_circle'.tr()));
+        await openAddCircle(tester);
         await tester.pumpAndSettle();
         await tester.tap(find.text('onboarding.other_title'.tr()));
         await tester.pumpAndSettle();
@@ -2018,8 +2041,7 @@ void main() {
       ) async {
         tallPhone(tester);
         await pumpApp(tester);
-        await tester.tap(find.widgetWithText(ChoiceChip, 'Circle two'));
-        await tester.pumpAndSettle();
+        await chooseCircle(tester, 'Circle two');
 
         await tester.tap(inBar('tab.circle'.tr()).first);
         await tester.pumpAndSettle();

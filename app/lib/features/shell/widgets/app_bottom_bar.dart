@@ -51,7 +51,7 @@ const double _barRadius = 32;
 
 /// Bottom bar with four tabs. An iPhone on iOS 26 or later gets the native
 /// glass tab bar; every other device gets a frosted Flutter bar styled as the
-/// design system's TabBar: 64 high, a capsule, the selected tab on honey-tint. The add
+/// design system's TabBar: 64 high, a capsule, the selected tab on leaf-tint. The add
 /// button is not part of it: the shell floats it above the bar.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
@@ -133,8 +133,8 @@ class _FrostedTabBar extends StatelessWidget {
           borderWidth: 1,
           selectedItemColor: scheme.primary,
           unselectedItemColor: scheme.onSurfaceVariant,
-          // Selection: the honey-tint capsule with the filled ink icon.
-          indicatorColor: AppColors.honeyTint,
+          // Selection: the leaf-tint capsule with the filled ink icon.
+          indicatorColor: AppColors.leafTint,
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: scheme.shadow.withValues(alpha: 0.08),

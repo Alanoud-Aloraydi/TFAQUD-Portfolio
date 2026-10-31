@@ -95,10 +95,13 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
         navigationShell: widget.navigationShell,
         topBar: AppTopBar(
           displayName: state.data?.displayName,
-          circles: HomeWidget(state: state, onSelected: cubit.selectCircle),
-          onAddCircle: state.status == HomeStatus.ready
-              ? () => context.push(Routes.addCircle)
-              : null,
+          circles: HomeWidget(
+            state: state,
+            onSelected: cubit.selectCircle,
+            onAddCircle: state.status == HomeStatus.ready
+                ? () => context.push(Routes.addCircle)
+                : null,
+          ),
           // A person with no circle yet can still have a request to answer.
           needsReply: context.select<InboxCubit, int>(
             (InboxCubit inbox) => inbox.state.inbox.needsReply,

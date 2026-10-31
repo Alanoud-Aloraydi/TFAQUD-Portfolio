@@ -12,6 +12,7 @@ class MedicationPlanList extends StatelessWidget {
     required this.plans,
     required this.circleId,
     this.shrinkWrap = false,
+    this.header,
   });
 
   final String title;
@@ -20,9 +21,13 @@ class MedicationPlanList extends StatelessWidget {
   final String circleId;
   final bool shrinkWrap;
 
+  /// Shown above the title, such as the tab's large title.
+  final Widget? header;
+
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[
+      if (header != null) header!,
       Text(title, style: Theme.of(context).textTheme.headlineSmall),
       const SizedBox(height: AppSpacing.md),
       if (plans.isEmpty)

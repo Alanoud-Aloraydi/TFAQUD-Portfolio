@@ -54,18 +54,20 @@ abstract class AppComponentThemes {
         elevation: const WidgetStatePropertyAll<double>(0),
         backgroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
           if (states.contains(WidgetState.disabled)) return AppColors.line;
-          if (states.contains(WidgetState.pressed)) return AppColors.inkPressed;
-          if (states.contains(WidgetState.hovered)) return AppColors.inkHover;
+          // Pressed (and pointer hover) lightens to slate, the next navy of
+          // the palette; the white label stays 10.19:1.
+          if (states.contains(WidgetState.pressed)) return AppColors.slate;
+          if (states.contains(WidgetState.hovered)) return AppColors.slate;
           return AppColors.ink;
         }),
         foregroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
           if (states.contains(WidgetState.disabled)) return tokens.textSecondary;
           return AppColors.onInk;
         }),
-        // The hover and pressed shades already show the state.
+        // The pressed shade already shows the state.
         overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         side: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-          // Slate is only 2.05:1 on ink; the focus ring on ink is honey.
+          // Slate is only 1.47:1 on ink; the focus ring on ink is honey.
           if (states.contains(WidgetState.focused)) {
             return const BorderSide(color: AppColors.honey, width: 2);
           }
@@ -141,11 +143,13 @@ abstract class AppComponentThemes {
       focusedBorder: _outline(tokens.focus, 2),
       errorBorder: _outline(tokens.error, 2),
       focusedErrorBorder: _outline(tokens.error, 2),
-      hintStyle: TextStyle(color: tokens.textSecondary, fontSize: 17, height: 26 / 17),
-      labelStyle: TextStyle(color: tokens.textSecondary, fontSize: 15, height: 22 / 15),
-      floatingLabelStyle: const TextStyle(color: AppColors.ink, fontSize: 15, height: 22 / 15),
-      helperStyle: TextStyle(color: tokens.textSecondary, fontSize: 13, height: 20 / 13),
-      errorStyle: TextStyle(color: tokens.errorText, fontSize: 13, height: 20 / 13),
+      // Every style names the app font: a component style that leaves it out
+      // can fall back to the system font.
+      hintStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 17, height: 26 / 17),
+      labelStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 15, height: 22 / 15),
+      floatingLabelStyle: const TextStyle(fontFamily: AppTextTheme.fontFamily, color: AppColors.ink, fontSize: 15, height: 22 / 15),
+      helperStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 13, height: 20 / 13),
+      errorStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.errorText, fontSize: 13, height: 20 / 13),
       prefixIconColor: tokens.textSecondary,
       suffixIconColor: tokens.textSecondary,
     );
@@ -154,13 +158,17 @@ abstract class AppComponentThemes {
   static ChipThemeData chip(AppTokens tokens) {
     return ChipThemeData(
       backgroundColor: AppColors.surface,
-      selectedColor: AppColors.honeyTint,
+      selectedColor: AppColors.leafTint,
       checkmarkColor: AppColors.ink,
       disabledColor: AppColors.line,
       side: BorderSide(color: tokens.borderControl),
       shape: const StadiumBorder(),
       showCheckmark: true,
+      // The chip theme's label style replaces Material's default, so it must
+      // name the app font itself; without it the options of «الأمراض
+      // المزمنة» and «الحساسية» showed in the system font.
       labelStyle: const TextStyle(
+        fontFamily: AppTextTheme.fontFamily,
         color: AppColors.ink,
         fontSize: 15,
         height: 22 / 15,

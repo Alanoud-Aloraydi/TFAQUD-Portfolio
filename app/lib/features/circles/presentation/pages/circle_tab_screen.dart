@@ -2,6 +2,8 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/large_title.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
@@ -28,8 +30,11 @@ class CircleTabScreen extends StatelessWidget {
         }
         if (circle == null) return const SizedBox.shrink();
         return ListView(
-          padding: context.scrollPadding(const EdgeInsets.fromLTRB(24, 8, 24, 24)),
-          children: <Widget>[CircleCard(circle: circle)],
+          padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+          children: <Widget>[
+            LargeTitle(title: context.tr('tab.circle')),
+            CircleCard(circle: circle),
+          ],
         );
       },
     );
@@ -65,7 +70,7 @@ class CircleCard extends StatelessWidget {
               ExcludeSemantics(
                 child: CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.honeyTint,
+                  backgroundColor: AppColors.leafTint,
                   child: Text(
                     initial,
                     style: text.titleLarge?.copyWith(
