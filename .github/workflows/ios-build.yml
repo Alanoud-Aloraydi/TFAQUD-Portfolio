@@ -71,8 +71,38 @@ jobs:
       - name: Get packages
         run: flutter pub get
 
+      # When a device build fails, Flutter shows a general "Development Team"
+      # message and hides Xcode's own error lines. So the full output goes to
+      # build.log. Xcode's storyboard tool sometimes fails on build servers,
+      # so a failed build is tried once more; if it fails again, the lines
+      # that name the error are printed here and build.log is kept.
       - name: Build the iPhone app (not signed)
-        run: flutter build ios --release --no-codesign
+        run: |
+          build() { flutter build ios --release --no-codesign -v > build.log 2>&1; }
+          if build; then
+            tail -n 5 build.log
+            exit 0
+          fi
+          echo "The build failed. Trying once more..."
+          if build; then
+            tail -n 5 build.log
+            exit 0
+          fi
+          echo "::group::Xcode errors"
+          grep -nE "error:|Error \(Xcode\)|\*\* BUILD FAILED \*\*|The following build commands failed|Command [A-Za-z]+ failed|Exception" build.log | head -n 150 || true
+          echo "::endgroup::"
+          echo "Last 150 lines of the build:"
+          tail -n 150 build.log
+          exit 1
+
+      - name: Keep the build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: app/build.log
+          retention-days: 7
+          if-no-files-found: ignore
 
       # An .ipa is a zip file with the app inside a folder named Payload.
       - name: Package the .ipa
