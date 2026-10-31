@@ -2,7 +2,7 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
 /// Shimmer (design system Skeleton): a soft light band that sweeps over
