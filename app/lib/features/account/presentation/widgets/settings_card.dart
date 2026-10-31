@@ -21,7 +21,7 @@ class SettingsSection extends StatelessWidget {
             header: true,
             child: Text(
               title,
-              style: text.titleSmall?.copyWith(color: AppColors.ink2),
+              style: text.titleSmall?.copyWith(color: AppColors.slate),
             ),
           ),
         ),
@@ -88,10 +88,10 @@ class InfoRow extends StatelessWidget {
       child: Row(
         children: <Widget>[
           if (onEdit != null) ...<Widget>[
-            const Icon(Icons.edit_outlined, size: 18, color: AppColors.brand),
+            const Icon(Icons.edit_outlined, size: 18, color: AppColors.ink),
             const SizedBox(width: 8),
           ],
-          Text(label, style: text.bodyMedium?.copyWith(color: AppColors.ink2)),
+          Text(label, style: text.bodyMedium?.copyWith(color: AppColors.slate)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -122,7 +122,7 @@ class ActionRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
-    this.color = AppColors.brand,
+    this.color = AppColors.ink,
     this.busy = false,
   });
 

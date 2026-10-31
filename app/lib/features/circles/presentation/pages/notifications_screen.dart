@@ -49,7 +49,7 @@ class NotificationsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.dangerInk),
+            style: TextButton.styleFrom(foregroundColor: AppColors.ink),
             child: Text(context.tr('circles.cancel_confirm_yes')),
           ),
         ],
@@ -136,7 +136,7 @@ class NotificationsScreen extends StatelessWidget {
         if (sent.status == CircleRequestStatus.declined) sent,
     ];
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppColors.ink2,
+      color: AppColors.slate,
     );
     if (inbox.needsReply == 0 && declined.isEmpty) {
       return RefreshIndicator(
@@ -148,13 +148,13 @@ class NotificationsScreen extends StatelessWidget {
             const Icon(
               Icons.notifications_none,
               size: 56,
-              color: AppColors.ink3,
+              color: AppColors.slate,
             ),
             const SizedBox(height: 16),
             Text(
               context.tr('circles.inbox_empty'),
               textAlign: TextAlign.center,
-              style: text.bodyLarge?.copyWith(color: AppColors.ink2),
+              style: text.bodyLarge?.copyWith(color: AppColors.slate),
             ),
           ],
         ),

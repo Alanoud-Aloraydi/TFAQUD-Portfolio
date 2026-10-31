@@ -67,7 +67,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppColors.ink2,
+      color: AppColors.slate,
     );
     return Scaffold(
       body: SafeArea(

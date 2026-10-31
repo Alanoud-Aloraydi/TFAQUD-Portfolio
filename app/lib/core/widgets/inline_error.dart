@@ -21,7 +21,7 @@ class InlineError extends StatelessWidget {
             child: Icon(
               Icons.error_outline,
               size: 18,
-              color: AppColors.dangerInk,
+              color: AppColors.error,
             ),
           ),
           const SizedBox(width: 8),
@@ -29,7 +29,7 @@ class InlineError extends StatelessWidget {
             child: Text(
               context.tr(messageKey),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.dangerInk,
+                color: AppColors.error,
               ),
             ),
           ),

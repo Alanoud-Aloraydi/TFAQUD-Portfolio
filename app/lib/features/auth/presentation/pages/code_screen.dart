@@ -72,14 +72,14 @@ class CodeScreen extends StatelessWidget {
                           TextButton(
                             onPressed: () => _back(context),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.brand,
+                              foregroundColor: AppColors.ink,
                               padding: EdgeInsets.zero,
                               alignment: AlignmentDirectional.centerStart,
                             ),
                             child: Text(
                               context.tr('auth.edit_phone'),
                               style: text.labelLarge?.copyWith(
-                                color: AppColors.brand,
+                                color: AppColors.ink,
                               ),
                             ),
                           ),

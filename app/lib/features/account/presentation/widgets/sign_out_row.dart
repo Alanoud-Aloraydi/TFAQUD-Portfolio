@@ -34,7 +34,7 @@ class SignOutRow extends StatelessWidget {
       builder: (BuildContext context, AuthState state) {
         return ActionRow(
           label: context.tr('auth.sign_out'),
-          color: AppColors.brand,
+          color: AppColors.ink,
           busy: state is AuthLoadingState,
           onPressed: () => context.read<AuthCubit>().signOut(),
         );

@@ -75,7 +75,7 @@ class _InboxCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       body,
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -103,8 +103,8 @@ String _initial(String name) {
 StatusPill _needsReplyPill(BuildContext context) => StatusPill(
   icon: Icons.schedule,
   text: context.tr('circles.needs_reply_pill'),
-  background: AppColors.warningTint,
-  foreground: AppColors.warningInk,
+  background: AppColors.canvas,
+  foreground: AppColors.slate,
 );
 
 /// Accept and decline side by side. While [busy] the buttons are off.
@@ -138,7 +138,7 @@ class _ReplyButtons extends StatelessWidget {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppColors.onBrand,
+                      color: AppColors.ink,
                     ),
                   )
                 : Text(acceptLabel),
@@ -151,8 +151,8 @@ class _ReplyButtons extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(),
               minimumSize: const Size.fromHeight(44),
-              foregroundColor: AppColors.dangerInk,
-              side: const BorderSide(color: AppColors.danger),
+              foregroundColor: AppColors.ink,
+              side: const BorderSide(color: AppColors.stone),
             ),
             child: Text(context.tr('circles.decline')),
           ),
@@ -183,8 +183,8 @@ class InvitationCard extends StatelessWidget {
     final String name = by ?? '';
     return _InboxCard(
       avatarText: _initial(name),
-      avatarBackground: AppColors.successTint,
-      avatarForeground: AppColors.successInk,
+      avatarBackground: AppColors.leafTint,
+      avatarForeground: AppColors.ink,
       title: context.tr('circles.invitation_title'),
       body: by == null || by.trim().isEmpty
           ? context.tr(
@@ -218,8 +218,8 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
-      avatarBackground: AppColors.brandTint,
-      avatarForeground: AppColors.brand,
+      avatarBackground: AppColors.leafTint,
+      avatarForeground: AppColors.ink,
       title: context.tr('circles.request_card_title'),
       body: context.tr(
         'circles.request_card_body',
@@ -261,8 +261,8 @@ class AcceptedRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
-      avatarBackground: AppColors.brandTint,
-      avatarForeground: AppColors.brand,
+      avatarBackground: AppColors.leafTint,
+      avatarForeground: AppColors.ink,
       title: context.tr('circles.complete_card_title'),
       body: context.tr(
         'circles.complete_card_body',
@@ -288,8 +288,8 @@ class AcceptedRequestCard extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(),
                 minimumSize: const Size.fromHeight(44),
-                foregroundColor: AppColors.dangerInk,
-                side: const BorderSide(color: AppColors.danger),
+                foregroundColor: AppColors.ink,
+                side: const BorderSide(color: AppColors.stone),
               ),
               child: Text(context.tr('circles.cancel_request')),
             ),
@@ -312,8 +312,8 @@ class DeclinedRequestCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return _InboxCard(
       avatarText: '!',
-      avatarBackground: AppColors.dangerTint,
-      avatarForeground: AppColors.dangerInk,
+      avatarBackground: AppColors.line,
+      avatarForeground: AppColors.slate,
       title: context.tr('circles.declined_title'),
       body: context.tr(
         'circles.declined_body',
@@ -322,7 +322,7 @@ class DeclinedRequestCard extends StatelessWidget {
       extra: Text(
         RequestSentView.displayPhone(request.patientPhoneNumber),
         textDirection: TextDirection.ltr,
-        style: text.bodyMedium?.copyWith(color: AppColors.ink3),
+        style: text.bodyMedium?.copyWith(color: AppColors.slate),
       ),
     );
   }

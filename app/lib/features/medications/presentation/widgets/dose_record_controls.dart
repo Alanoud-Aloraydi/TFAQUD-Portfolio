@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/loading_widget.dart';
@@ -109,22 +110,23 @@ class _RecordedStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taken = record.outcome == DoseOutcome.taken;
-    final color = taken
-        ? context.tokens.successTint
-        : Theme.of(context).colorScheme.errorContainer;
-    final ink = taken
-        ? context.tokens.successInk
-        : Theme.of(context).colorScheme.onErrorContainer;
+    // Care status map: taken is success; recorded as not taken is neutral,
+    // never an error. The icon keeps its color; the word follows the
+    // contrast setting.
+    final Color iconColor = taken ? context.tokens.success : AppColors.slate;
+    final Color ink = taken
+        ? context.tokens.successText
+        : context.tokens.textSecondary;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: color,
+        color: AppColors.canvas,
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Row(
         children: [
-          Icon(taken ? Icons.check_circle : Icons.remove_circle, color: ink),
+          Icon(taken ? Icons.check_circle : Icons.remove_circle, color: iconColor),
           const SizedBox(width: AppSpacing.sm),
           Text(
             context.tr(

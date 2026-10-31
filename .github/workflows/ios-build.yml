@@ -1,0 +1,83 @@
+# Builds the TFAQUD iPhone app on a GitHub-hosted Mac, without signing, and
+# offers it as an .ipa download. A sideloading tool on Windows (for example
+# Sideloadly) signs it with your Apple ID and installs it on the iPhone.
+#
+# When it runs:
+#   - on a push whose commit message contains [ios], on any branch
+#   - from the Actions tab ("Run workflow"), once this file is on the
+#     default branch; there you can also set the API address
+#
+# The result is a release build: it opens on the phone without a cable, but
+# there is no hot reload.
+
+name: iOS build
+
+on:
+  push:
+    paths:
+      - "app/**"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "API address the app calls, without /api/v1 (for example http://192.168.1.20:5000)"
+        required: false
+        default: "http://localhost:5000"
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ios]')
+    # GitHub's Xcode 27 Mac (Apple Silicon). The glass tab bar package
+    # (native_glass_navbar) needs Xcode 27 for the native glass. If this
+    # label is not available, macos-26 has Xcode 26.6.
+    runs-on: xcode-27
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Show the tool versions
+        run: |
+          flutter --version
+          xcodebuild -version
+
+      # .env is not in Git. The example file holds no secrets, only the API
+      # address, so the build creates .env from it and sets the address.
+      - name: Create .env
+        env:
+          API_BASE_URL: ${{ inputs.api_base_url || 'http://localhost:5000' }}
+        run: |
+          cp .env.example .env
+          sed -i '' "s#^API_BASE_URL=.*#API_BASE_URL=${API_BASE_URL}#" .env
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Build the iPhone app (not signed)
+        run: flutter build ios --release --no-codesign
+
+      # An .ipa is a zip file with the app inside a folder named Payload.
+      - name: Package the .ipa
+        run: |
+          rm -rf Payload tfaqud.ipa
+          mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry tfaqud.ipa Payload
+          ls -lh tfaqud.ipa
+
+      - name: Offer the .ipa as a download
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfaqud-ios
+          path: app/tfaqud.ipa
+          retention-days: 7
+          if-no-files-found: error

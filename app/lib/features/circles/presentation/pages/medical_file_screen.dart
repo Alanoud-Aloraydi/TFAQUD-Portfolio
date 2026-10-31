@@ -82,10 +82,10 @@ class MedicalFileScreen extends StatelessWidget {
                           avatar: const Icon(
                             Icons.edit_outlined,
                             size: 16,
-                            color: AppColors.brand,
+                            color: AppColors.ink,
                           ),
                           label: Text(context.tr('circles.file_edit')),
-                          backgroundColor: AppColors.brandTint,
+                          backgroundColor: AppColors.leafTint,
                           side: BorderSide.none,
                           onPressed: () => _edit(context, cubit),
                         ),
@@ -184,7 +184,7 @@ class MedicalFileScreen extends StatelessWidget {
         if (file.contacts.isEmpty && form == null)
           Text(
             context.tr('circles.file_contacts_empty'),
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(color: AppColors.slate),
           ),
         for (final EmergencyContact contact in file.contacts) ...<Widget>[
           if (form != null && form.contactId == contact.id)
@@ -210,7 +210,7 @@ class MedicalFileScreen extends StatelessWidget {
         if (form == null && !file.canAddContact)
           Text(
             context.tr('circles.contact_max'),
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(color: AppColors.slate),
           ),
       ],
     );

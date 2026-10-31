@@ -66,7 +66,7 @@ class RequestReplyScreen extends StatelessWidget {
                           Text(
                             context.tr('circles.reply_decline_note'),
                             style: text.bodyMedium?.copyWith(
-                              color: AppColors.ink2,
+                              color: AppColors.slate,
                             ),
                           ),
                           if (state.errorKey != null) ...<Widget>[
@@ -91,8 +91,8 @@ class RequestReplyScreen extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         shape: const StadiumBorder(),
                         minimumSize: const Size.fromHeight(48),
-                        foregroundColor: AppColors.dangerInk,
-                        side: const BorderSide(color: AppColors.danger),
+                        foregroundColor: AppColors.ink,
+                        side: const BorderSide(color: AppColors.stone),
                       ),
                       child: Text(context.tr('circles.decline')),
                     ),
@@ -137,12 +137,12 @@ class _RequestDetails extends StatelessWidget {
                 height: 56,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
-                  color: AppColors.brandTint,
+                  color: AppColors.leafTint,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   name.isEmpty ? '؟' : name.characters.first,
-                  style: text.titleLarge?.copyWith(color: AppColors.brand),
+                  style: text.titleLarge?.copyWith(color: AppColors.ink),
                 ),
               ),
               const SizedBox(width: 12),
@@ -156,7 +156,7 @@ class _RequestDetails extends StatelessWidget {
                     ),
                     Text(
                       context.tr('circles.reply_subtitle'),
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -168,7 +168,7 @@ class _RequestDetails extends StatelessWidget {
             label: context.tr('circles.approved_circle_name'),
             child: StatusPill(
               text: request.circleName,
-              background: AppColors.sunken,
+              background: AppColors.line,
               foreground: AppColors.ink,
             ),
           ),
@@ -179,8 +179,8 @@ class _RequestDetails extends StatelessWidget {
               text: context.tr(
                 detailed ? 'circles.mode_detailed' : 'circles.mode_simplified',
               ),
-              background: AppColors.brandTint,
-              foreground: AppColors.brand,
+              background: AppColors.leafTint,
+              foreground: AppColors.ink,
             ),
           ),
           const SizedBox(height: 12),
@@ -190,7 +190,7 @@ class _RequestDetails extends StatelessWidget {
                   ? 'circles.reply_body_detailed'
                   : 'circles.reply_body_simplified',
             ),
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(color: AppColors.slate),
           ),
         ],
       ),
@@ -213,7 +213,7 @@ class _Row extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.ink2),
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.slate),
           ),
         ),
         child,

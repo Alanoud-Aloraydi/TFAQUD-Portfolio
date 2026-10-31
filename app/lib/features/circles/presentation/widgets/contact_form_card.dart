@@ -99,7 +99,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
           const SizedBox(height: 16),
           Text(
             context.tr('circles.contact_relation'),
-            style: text.titleSmall?.copyWith(color: AppColors.ink2),
+            style: text.titleSmall?.copyWith(color: AppColors.slate),
           ),
           const SizedBox(height: 8),
           OptionChips(
@@ -114,7 +114,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
             const SizedBox(height: 6),
             Text(
               requiredText,
-              style: text.bodySmall?.copyWith(color: AppColors.dangerInk),
+              style: text.bodySmall?.copyWith(color: AppColors.error),
             ),
           ],
           const SizedBox(height: 16),
@@ -157,8 +157,8 @@ class _ContactFormCardState extends State<ContactFormCard> {
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
                     minimumSize: const Size.fromHeight(48),
-                    foregroundColor: AppColors.brand,
-                    side: const BorderSide(color: AppColors.brand),
+                    foregroundColor: AppColors.ink,
+                    side: const BorderSide(color: AppColors.stone),
                   ),
                   child: Text(context.tr('circles.contact_cancel')),
                 ),
@@ -174,7 +174,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
                 icon: const Icon(Icons.delete_outline, size: 20),
                 label: Text(context.tr('circles.contact_delete')),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.dangerInk,
+                  foregroundColor: AppColors.ink,
                 ),
               ),
             ),

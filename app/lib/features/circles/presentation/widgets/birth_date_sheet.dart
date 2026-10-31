@@ -188,7 +188,7 @@ class _ValueColumnState extends State<_ValueColumn> {
         Text(
           widget.label,
           textAlign: TextAlign.center,
-          style: text.titleSmall?.copyWith(color: AppColors.ink2),
+          style: text.titleSmall?.copyWith(color: AppColors.slate),
         ),
         const SizedBox(height: 8),
         Container(
@@ -212,11 +212,11 @@ class _ValueColumnState extends State<_ValueColumn> {
                   onTap: () => widget.onSelected(value),
                   child: Container(
                     alignment: Alignment.center,
-                    color: chosen ? AppColors.brandTint : null,
+                    color: chosen ? AppColors.leafTint : null,
                     child: Text(
                       widget.format(value),
                       style: text.bodyLarge?.copyWith(
-                        color: chosen ? AppColors.brand : AppColors.ink,
+                        color: chosen ? AppColors.ink : AppColors.ink,
                         fontWeight: chosen ? FontWeight.w700 : FontWeight.w400,
                       ),
                     ),

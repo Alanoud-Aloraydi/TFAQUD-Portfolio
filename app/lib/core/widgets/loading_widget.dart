@@ -25,14 +25,14 @@ class LoadingWidgetOverlay {
       builder: (context) => Stack(
         children: [
           ModalBarrier(
-            color: AppColors.background.withAlpha(225),
+            color: AppColors.canvas.withAlpha(225),
             dismissible: false,
           ),
           Center(
             child: LoadingAnimationWidget.discreteCircle(
-              secondRingColor: AppColors.secondary,
-              thirdRingColor: AppColors.ink3,
-              color: AppColors.brand,
+              secondRingColor: AppColors.leaf,
+              thirdRingColor: AppColors.honey,
+              color: AppColors.ink,
               size: 50,
             ),
           ),
@@ -58,9 +58,9 @@ class LoadingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: LoadingAnimationWidget.discreteCircle(
-        secondRingColor: AppColors.secondary,
-        thirdRingColor: AppColors.ink3,
-        color: AppColors.brand,
+        secondRingColor: AppColors.leaf,
+        thirdRingColor: AppColors.honey,
+        color: AppColors.ink,
         size: size ?? 50,
       ),
     );

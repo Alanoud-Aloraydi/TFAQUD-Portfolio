@@ -25,21 +25,21 @@ class ReadOnlyField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(label, style: text.titleSmall?.copyWith(color: AppColors.ink2)),
+        Text(label, style: text.titleSmall),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
           constraints: const BoxConstraints(minHeight: 52),
           padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
           decoration: BoxDecoration(
-            color: AppColors.sunken,
+            color: AppColors.line,
             borderRadius: BorderRadius.circular(AppRadius.field),
           ),
           child: Row(
             children: <Widget>[
               Expanded(child: child),
               const SizedBox(width: 12),
-              Text(note, style: text.bodySmall?.copyWith(color: AppColors.ink3)),
+              Text(note, style: text.bodySmall?.copyWith(color: AppColors.slate)),
             ],
           ),
         ),

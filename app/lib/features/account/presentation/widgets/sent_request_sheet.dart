@@ -76,8 +76,8 @@ class _SentRequestSheet extends StatelessWidget {
                       ? 'circles.mode_detailed'
                       : 'circles.mode_simplified',
                 ),
-                background: AppColors.brandTint,
-                foreground: AppColors.brand,
+                background: AppColors.leafTint,
+                foreground: AppColors.ink,
               ),
             ),
             _Line(
@@ -90,11 +90,11 @@ class _SentRequestSheet extends StatelessWidget {
                       : 'circles.request_status_pending',
                 ),
                 background: accepted
-                    ? AppColors.successTint
-                    : AppColors.warningTint,
+                    ? AppColors.canvas
+                    : AppColors.canvas,
                 foreground: accepted
-                    ? AppColors.successInk
-                    : AppColors.warningInk,
+                    ? AppColors.success
+                    : AppColors.slate,
               ),
             ),
             const SizedBox(height: 16),
@@ -105,8 +105,8 @@ class _SentRequestSheet extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
                   minimumSize: const Size.fromHeight(48),
-                  foregroundColor: AppColors.dangerInk,
-                  side: const BorderSide(color: AppColors.danger),
+                  foregroundColor: AppColors.ink,
+                  side: const BorderSide(color: AppColors.stone),
                 ),
                 child: Text(context.tr('circles.cancel_request')),
               ),
@@ -135,7 +135,7 @@ class _Line extends StatelessWidget {
               label,
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.ink2),
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.slate),
             ),
           ),
           child,

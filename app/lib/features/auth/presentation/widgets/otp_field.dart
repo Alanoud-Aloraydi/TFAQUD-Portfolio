@@ -156,10 +156,11 @@ class _OtpBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Control borders use fieldBorder (3:1 contrast), as the other fields do.
+    // Control borders use stone (3.98:1), as the other fields do; the active
+    // box shows the focus color.
     final Color border = hasError
-        ? AppColors.danger
-        : (isActive ? AppColors.brand : AppColors.fieldBorder);
+        ? AppColors.error
+        : (isActive ? AppColors.slate : AppColors.stone);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
       alignment: Alignment.center,

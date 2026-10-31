@@ -193,7 +193,7 @@ class _EditFormState extends State<_EditForm> {
     final MedicalForm form = state.form;
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppColors.ink2,
+      color: AppColors.slate,
     );
     final String requiredText = context.tr('circles.field_required');
     final bool showErrors = state.showErrors;

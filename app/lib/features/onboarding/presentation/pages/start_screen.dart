@@ -102,7 +102,7 @@ class StartScreen extends StatelessWidget {
                       onPressed: () => context.go(Routes.today),
                       child: Text(
                         context.tr('onboarding.skip'),
-                        style: text.labelLarge?.copyWith(color: AppColors.ink2),
+                        style: text.labelLarge?.copyWith(color: AppColors.slate),
                       ),
                     ),
                 ],
@@ -132,7 +132,7 @@ class _PatientQuestion extends StatelessWidget {
         padding: const EdgeInsetsDirectional.only(start: 12),
         decoration: const BoxDecoration(
           border: BorderDirectional(
-            start: BorderSide(color: AppColors.brandTint, width: 3),
+            start: BorderSide(color: AppColors.leafTint, width: 3),
           ),
         ),
         child: Column(

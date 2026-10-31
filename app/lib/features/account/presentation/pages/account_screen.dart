@@ -165,13 +165,13 @@ class AccountScreen extends StatelessWidget {
                       height: 48,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
-                        color: AppColors.brandTint,
+                        color: AppColors.leafTint,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         shown.isEmpty ? '؟' : shown.characters.first,
                         style: text.titleLarge?.copyWith(
-                          color: AppColors.brand,
+                          color: AppColors.ink,
                         ),
                       ),
                     ),
@@ -235,7 +235,7 @@ class AccountScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             context.tr('account.medical_note'),
-            style: text.bodySmall?.copyWith(color: AppColors.ink3),
+            style: text.bodySmall?.copyWith(color: AppColors.slate),
           ),
           const SizedBox(height: 24),
           SettingsCard(
@@ -243,7 +243,7 @@ class AccountScreen extends StatelessWidget {
               const SignOutRow(),
               ActionRow(
                 label: context.tr('account.delete_account'),
-                color: AppColors.dangerInk,
+                color: AppColors.ink,
                 busy: state.deleting,
                 onPressed: cubit.startDelete,
               ),
@@ -279,14 +279,14 @@ class _SentRequestRow extends StatelessWidget {
               height: 40,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                color: AppColors.warningTint,
+                color: AppColors.leafTint,
                 shape: BoxShape.circle,
               ),
               child: Text(
                 request.circleLabel.isEmpty
                     ? '؟'
                     : request.circleLabel.characters.first,
-                style: text.titleMedium?.copyWith(color: AppColors.warningInk),
+                style: text.titleMedium?.copyWith(color: AppColors.ink),
               ),
             ),
             const SizedBox(width: 12),
@@ -298,7 +298,7 @@ class _SentRequestRow extends StatelessWidget {
                   if (days != null)
                     Text(
                       _ageText(context, days),
-                      style: text.bodySmall?.copyWith(color: AppColors.ink3),
+                      style: text.bodySmall?.copyWith(color: AppColors.slate),
                     ),
                 ],
               ),
@@ -312,15 +312,15 @@ class _SentRequestRow extends StatelessWidget {
                     : 'circles.request_status_pending',
               ),
               background: accepted
-                  ? AppColors.successTint
-                  : AppColors.warningTint,
+                  ? AppColors.canvas
+                  : AppColors.canvas,
               foreground: accepted
-                  ? AppColors.successInk
-                  : AppColors.warningInk,
+                  ? AppColors.success
+                  : AppColors.slate,
             ),
             const SizedBox(width: 4),
             // Mirrored on a right-to-left screen: it points to the end of the row.
-            const Icon(Icons.chevron_right, color: AppColors.ink3),
+            const Icon(Icons.chevron_right, color: AppColors.slate),
           ],
         ),
       ),

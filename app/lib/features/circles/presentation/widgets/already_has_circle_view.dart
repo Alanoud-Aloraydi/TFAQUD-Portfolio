@@ -22,7 +22,7 @@ class AlreadyHasCircleView extends StatelessWidget {
               const Icon(
                 Icons.check_circle_outline,
                 size: 56,
-                color: AppColors.brand,
+                color: AppColors.ink,
               ),
               const SizedBox(height: 16),
               Semantics(
@@ -37,7 +37,7 @@ class AlreadyHasCircleView extends StatelessWidget {
               Text(
                 context.tr('circles.already_has_circle'),
                 textAlign: TextAlign.center,
-                style: text.bodyLarge?.copyWith(color: AppColors.ink2),
+                style: text.bodyLarge?.copyWith(color: AppColors.slate),
               ),
             ],
           ),

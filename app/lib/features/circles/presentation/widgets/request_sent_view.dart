@@ -44,16 +44,16 @@ class RequestSentView extends StatelessWidget {
                   height: 72,
                   decoration: BoxDecoration(
                     color: accepted
-                        ? AppColors.successTint
-                        : AppColors.warningTint,
+                        ? AppColors.surface
+                        : AppColors.surface,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     accepted ? Icons.check : Icons.schedule,
                     size: 36,
                     color: accepted
-                        ? AppColors.successInk
-                        : AppColors.warningInk,
+                        ? AppColors.success
+                        : AppColors.slate,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -77,7 +77,7 @@ class RequestSentView extends StatelessWidget {
                         : 'circles.request_waiting_body',
                   ),
                   textAlign: TextAlign.center,
-                  style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                  style: text.bodyMedium?.copyWith(color: AppColors.slate),
                 ),
                 const SizedBox(height: 24),
                 _DetailsCard(request: request, accepted: accepted),
@@ -93,8 +93,8 @@ class RequestSentView extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(),
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: AppColors.brand,
-              side: const BorderSide(color: AppColors.brand),
+              foregroundColor: AppColors.ink,
+              side: const BorderSide(color: AppColors.stone),
             ),
             child: Text(context.tr('circles.request_back')),
           ),
@@ -140,8 +140,8 @@ class _DetailsCard extends StatelessWidget {
                     ? 'circles.mode_detailed'
                     : 'circles.mode_simplified',
               ),
-              background: AppColors.brandTint,
-              foreground: AppColors.brand,
+              background: AppColors.leafTint,
+              foreground: AppColors.ink,
             ),
           ),
           const Divider(height: 1),
@@ -155,11 +155,11 @@ class _DetailsCard extends StatelessWidget {
                     : 'circles.request_status_pending',
               ),
               background: accepted
-                  ? AppColors.successTint
-                  : AppColors.warningTint,
+                  ? AppColors.canvas
+                  : AppColors.canvas,
               foreground: accepted
-                  ? AppColors.successInk
-                  : AppColors.warningInk,
+                  ? AppColors.success
+                  : AppColors.slate,
             ),
           ),
         ],
@@ -184,7 +184,7 @@ class _DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+              style: text.bodyMedium?.copyWith(color: AppColors.slate),
             ),
           ),
           child,

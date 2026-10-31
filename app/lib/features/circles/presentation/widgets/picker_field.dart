@@ -31,7 +31,7 @@ class PickerField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(label, style: text.titleSmall?.copyWith(color: AppColors.ink2)),
+        Text(label, style: text.titleSmall),
         const SizedBox(height: 8),
         Semantics(
           button: true,
@@ -44,7 +44,7 @@ class PickerField extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: radius,
               side: BorderSide(
-                color: hasError ? AppColors.danger : AppColors.fieldBorder,
+                color: hasError ? AppColors.error : AppColors.stone,
               ),
             ),
             child: InkWell(
@@ -58,12 +58,12 @@ class PickerField extends StatelessWidget {
                       child: Text(
                         value ?? hint,
                         style: value == null
-                            ? text.bodyLarge?.copyWith(color: AppColors.ink3)
+                            ? text.bodyLarge?.copyWith(color: AppColors.slate)
                             : text.bodyLarge,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Icon(icon, size: 22, color: AppColors.ink2),
+                    Icon(icon, size: 22, color: AppColors.slate),
                   ],
                 ),
               ),
@@ -74,7 +74,7 @@ class PickerField extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             errorText!,
-            style: text.bodySmall?.copyWith(color: AppColors.dangerInk),
+            style: text.bodySmall?.copyWith(color: AppColors.error),
           ),
         ],
       ],

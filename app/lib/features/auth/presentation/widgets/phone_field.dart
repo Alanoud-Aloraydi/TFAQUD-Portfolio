@@ -74,7 +74,7 @@ class PhoneField extends StatelessWidget {
       children: <Widget>[
         Text(
           label ?? context.tr('auth.phone_label'),
-          style: text.titleSmall?.copyWith(color: AppColors.ink2),
+          style: text.titleSmall?.copyWith(color: AppColors.slate),
         ),
         const SizedBox(height: 8),
         Row(
@@ -120,7 +120,7 @@ class _CountryCodeBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.field),
-        border: Border.all(color: AppColors.fieldBorder),
+        border: Border.all(color: AppColors.stone),
       ),
       child: Text(
         '+966',

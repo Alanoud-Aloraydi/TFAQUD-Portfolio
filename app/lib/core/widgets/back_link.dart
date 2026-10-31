@@ -18,7 +18,7 @@ class BackLink extends StatelessWidget {
         icon: const Icon(Icons.arrow_back, size: 20),
         label: Text(context.tr('common.back')),
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.brand,
+          foregroundColor: AppColors.ink,
           padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
       ),

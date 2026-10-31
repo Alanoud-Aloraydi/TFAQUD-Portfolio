@@ -31,11 +31,11 @@ class ContactTile extends StatelessWidget {
         children: <Widget>[
           ExcludeSemantics(
             child: CircleAvatar(
-              backgroundColor: AppColors.successTint,
-              foregroundColor: AppColors.successInk,
+              backgroundColor: AppColors.leafTint,
+              foregroundColor: AppColors.ink,
               child: Text(
                 contact.initial,
-                style: text.titleMedium?.copyWith(color: AppColors.successInk),
+                style: text.titleMedium?.copyWith(color: AppColors.ink),
               ),
             ),
           ),
@@ -52,12 +52,12 @@ class ContactTile extends StatelessWidget {
                   children: <Widget>[
                     Text(
                       MedicalTexts.relation(context, contact),
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
                     ),
                     Text(
                       MedicalTexts.phone(contact),
                       textDirection: TextDirection.ltr,
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -67,7 +67,7 @@ class ContactTile extends StatelessWidget {
           if (onEdit != null)
             IconButton(
               onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, color: AppColors.brand),
+              icon: const Icon(Icons.edit_outlined, color: AppColors.ink),
               tooltip: context.tr(
                 'circles.contact_edit_action',
                 args: <String>[contact.name],

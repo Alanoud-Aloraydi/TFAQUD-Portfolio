@@ -37,7 +37,7 @@ class AccountNameField extends StatelessWidget {
           Flexible(
             child: Text(
               context.tr('circles.name_failed'),
-              style: text.bodyMedium?.copyWith(color: AppColors.dangerInk),
+              style: text.bodyMedium?.copyWith(color: AppColors.error),
             ),
           ),
           TextButton(onPressed: onRetry, child: Text(context.tr('auth.retry'))),

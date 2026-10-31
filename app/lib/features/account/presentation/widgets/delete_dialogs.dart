@@ -29,7 +29,7 @@ Future<PatientChoice?> showPatientChoiceDialog(BuildContext context) {
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(PatientChoice.delete),
-          style: TextButton.styleFrom(foregroundColor: AppColors.dangerInk),
+          style: TextButton.styleFrom(foregroundColor: AppColors.ink),
           child: Text(context.tr('account.patient_choice_delete')),
         ),
         TextButton(
@@ -84,7 +84,7 @@ Future<bool?> _confirm(
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: TextButton.styleFrom(foregroundColor: AppColors.dangerInk),
+          style: TextButton.styleFrom(foregroundColor: AppColors.ink),
           child: Text(context.tr(yes)),
         ),
       ],

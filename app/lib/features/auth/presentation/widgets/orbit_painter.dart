@@ -11,9 +11,9 @@ class OrbitPainter extends CustomPainter {
   /// Vertical position of the brand mark, in pixels from the top of the area.
   final double centerY;
 
-  static const Color _orange = Color(0xFFE9A23B);
-  static const Color _dotLight = Color(0xFFE9EFF1);
-  static const Color _dotMuted = Color(0xFFC1D5DB);
+  static const Color _orange = AppColors.honey;
+  static const Color _dotLight = AppColors.surface;
+  static const Color _dotMuted = AppColors.leafTint;
 
   static const List<double> _ringRadii = <double>[66, 112, 158, 204];
 
@@ -24,7 +24,7 @@ class OrbitPainter extends CustomPainter {
     final Paint ring = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
-      ..color = Colors.white.withValues(alpha: 0.18);
+      ..color = AppColors.ink.withValues(alpha: 0.12);
     for (final double radius in _ringRadii) {
       canvas.drawCircle(center, radius, ring);
     }
@@ -39,20 +39,20 @@ class OrbitPainter extends CustomPainter {
     dot(const Offset(-117, 107), 7, _orange);
     dot(const Offset(74, 190), 5.5, _dotMuted);
 
-    // Brand mark: white disc with a soft shadow, a teal ring and a small
-    // orange dot on the ring.
+    // Brand mark: white disc with a soft shadow, an ink ring and a small
+    // honey dot on the ring.
     canvas.drawCircle(
       center + const Offset(0, 6),
       46,
       Paint()
-        ..color = Colors.black.withValues(alpha: 0.18)
+        ..color = AppColors.ink.withValues(alpha: 0.18)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
-    canvas.drawCircle(center, 46, Paint()..color = Colors.white);
-    canvas.drawCircle(center, 22, Paint()..color = AppColors.brand);
-    canvas.drawCircle(center, 14, Paint()..color = Colors.white);
+    canvas.drawCircle(center, 46, Paint()..color = AppColors.surface);
+    canvas.drawCircle(center, 22, Paint()..color = AppColors.ink);
+    canvas.drawCircle(center, 14, Paint()..color = AppColors.surface);
     const Offset mark = Offset(16, -16);
-    canvas.drawCircle(center + mark, 6.5, Paint()..color = Colors.white);
+    canvas.drawCircle(center + mark, 6.5, Paint()..color = AppColors.surface);
     canvas.drawCircle(center + mark, 5, Paint()..color = _orange);
   }
 

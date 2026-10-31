@@ -103,7 +103,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           Text(
                             context.tr('circles.circle_name'),
                             style: text.titleSmall?.copyWith(
-                              color: AppColors.ink2,
+                              color: AppColors.slate,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -142,7 +142,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           Text(
                             context.tr('circles.name_hint'),
                             style: text.bodySmall?.copyWith(
-                              color: AppColors.ink3,
+                              color: AppColors.slate,
                             ),
                           ),
                           const SizedBox(height: 24),

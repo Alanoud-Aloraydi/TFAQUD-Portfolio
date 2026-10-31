@@ -1,30 +1,60 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
-/// System font, sizes from the iOS "Large" type scale. Minimum size is 12.
-/// Line-height multipliers for Arabic are a design choice not yet validated on a device.
+/// Type scale of the design system, set in IBM Plex Sans Arabic.
+/// Sizes follow Apple's default Dynamic Type sizes; line heights are about
+/// 1.5 times the size because Arabic needs room for dots and marks.
+/// Weights 400 to 700 only. Nothing is smaller than 11.
+///
+/// Material slot -> design style:
+///   displaySmall large-title 34 · headlineLarge title-1 28 ·
+///   headlineMedium title-2 22 · headlineSmall title-3 20 ·
+///   titleLarge headline 17 · titleMedium 16 semibold · titleSmall 15 semibold ·
+///   bodyLarge body 17 · bodyMedium subheadline 15 · bodySmall footnote 13 ·
+///   labelLarge button 17 · labelMedium 13 semibold · labelSmall caption-1 12
 abstract class AppTextTheme {
   AppTextTheme._();
 
-  static const double _headingHeight = 1.3;
-  static const double _textHeight = 1.5;
+  /// Family name declared in pubspec.yaml.
+  static const String fontFamily = 'IBMPlexSansArabic';
 
-  static const TextTheme textTheme = TextTheme(
-    // Title 1, Title 2, Title 3
-    headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, height: _headingHeight, color: AppColors.ink),
-    headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, height: _headingHeight, color: AppColors.ink),
-    headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: _headingHeight, color: AppColors.ink),
-    // Headline, Callout, Subhead
-    titleLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    // Body, Subhead, Footnote
-    bodyLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w400, height: _textHeight, color: AppColors.ink),
-    bodyMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w400, height: _textHeight, color: AppColors.ink2),
-    bodySmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: _textHeight, color: AppColors.ink3),
-    // Buttons and chips: Headline, Footnote, Caption 1
-    labelLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    labelMedium: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink3),
+  /// Tab bar labels (caption-2).
+  static const TextStyle caption2 = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 11,
+    height: 16 / 11,
+    fontWeight: FontWeight.w500,
+    leadingDistribution: TextLeadingDistribution.even,
   );
+
+  static TextStyle _style(double size, double lineHeight, FontWeight weight, Color color) {
+    return TextStyle(
+      fontSize: size,
+      height: lineHeight / size,
+      fontWeight: weight,
+      color: color,
+      leadingDistribution: TextLeadingDistribution.even,
+    );
+  }
+
+  /// [secondary] is slate in the light theme and ink with Increased Contrast.
+  static TextTheme build({Color secondary = AppColors.slate}) {
+    return TextTheme(
+      displaySmall: _style(34, 48, FontWeight.w700, AppColors.ink),
+      headlineLarge: _style(28, 40, FontWeight.w700, AppColors.ink),
+      headlineMedium: _style(22, 32, FontWeight.w700, AppColors.ink),
+      headlineSmall: _style(20, 30, FontWeight.w600, AppColors.ink),
+      titleLarge: _style(17, 26, FontWeight.w600, AppColors.ink),
+      titleMedium: _style(16, 24, FontWeight.w600, AppColors.ink),
+      titleSmall: _style(15, 22, FontWeight.w600, AppColors.ink),
+      bodyLarge: _style(17, 26, FontWeight.w400, AppColors.ink),
+      bodyMedium: _style(15, 22, FontWeight.w400, secondary),
+      bodySmall: _style(13, 20, FontWeight.w400, secondary),
+      labelLarge: _style(17, 26, FontWeight.w600, AppColors.ink),
+      labelMedium: _style(13, 20, FontWeight.w600, AppColors.ink),
+      labelSmall: _style(12, 18, FontWeight.w500, secondary),
+    );
+  }
+
+  static final TextTheme textTheme = build();
 }

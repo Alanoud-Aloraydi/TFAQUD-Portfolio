@@ -33,7 +33,7 @@ class StepHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitle!,
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(color: AppColors.slate),
           ),
         ],
       ],

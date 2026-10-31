@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/shell/widgets/glass_add_button.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
@@ -49,7 +50,8 @@ const double _barHeight = 64;
 const double _barRadius = 32;
 
 /// Bottom bar with four tabs. An iPhone on iOS 26 or later gets the native
-/// glass tab bar; every other device gets a frosted Flutter bar. The add
+/// glass tab bar; every other device gets a frosted Flutter bar styled as the
+/// design system's TabBar: 64 high, a capsule, the selected tab on leaf-tint. The add
 /// button is not part of it: the shell floats it above the bar.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
@@ -74,6 +76,8 @@ class AppBottomBar extends StatelessWidget {
     return NativeGlassNavBar(
       currentIndex: currentIndex,
       onTap: onTab,
+      // Selected tab in ink: leaf is a fill, never a text or icon color.
+      tintColor: AppColors.ink,
       tabs: <NativeGlassNavBarItem>[
         for (final _Tab tab in _tabs)
           NativeGlassNavBarItem(
@@ -120,7 +124,8 @@ class _FrostedTabBar extends StatelessWidget {
           borderWidth: 1,
           selectedItemColor: scheme.primary,
           unselectedItemColor: scheme.onSurfaceVariant,
-          indicatorColor: scheme.primary.withValues(alpha: 0.12),
+          // Selection: the leaf-tint capsule with the filled ink icon.
+          indicatorColor: AppColors.leafTint,
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: scheme.shadow.withValues(alpha: 0.08),

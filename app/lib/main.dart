@@ -38,6 +38,8 @@ class MainApp extends StatelessWidget {
           locale: context.locale,
           themeMode: ThemeMode.light,
           theme: AppTheme.lightTheme,
+          // iOS Increase Contrast: secondary text and status words turn ink.
+          highContrastTheme: AppTheme.highContrastTheme,
           debugShowCheckedModeBanner: false,
         );
       },

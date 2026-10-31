@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:app/core/widgets/loading_widget.dart';
@@ -6,9 +7,20 @@ extension ContextExtensions on BuildContext {
   // Snackbar
   void showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(this).showSnackBar(
+      // Ink background from the theme. The icon tells an error from a
+      // confirmation, so the meaning never rests on color alone.
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        content: Row(
+          children: <Widget>[
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle_outline,
+              color: AppColors.surface,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
       ),
     );
   }

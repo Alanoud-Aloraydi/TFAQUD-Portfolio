@@ -39,8 +39,8 @@ class StepActions extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(),
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: AppColors.brand,
-              side: const BorderSide(color: AppColors.brand),
+              foregroundColor: AppColors.ink,
+              side: const BorderSide(color: AppColors.stone),
             ),
             child: Text(context.tr('circles.skip')),
           ),

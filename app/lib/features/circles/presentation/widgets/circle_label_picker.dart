@@ -42,7 +42,7 @@ class CircleLabelPicker extends StatelessWidget {
       children: <Widget>[
         Text(
           context.tr('circles.label_title'),
-          style: text.titleSmall?.copyWith(color: AppColors.ink2),
+          style: text.titleSmall?.copyWith(color: AppColors.slate),
         ),
         const SizedBox(height: 8),
         OptionChips(
@@ -65,7 +65,7 @@ class CircleLabelPicker extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 8),
-        Text(hint, style: text.bodySmall?.copyWith(color: AppColors.ink3)),
+        Text(hint, style: text.bodySmall?.copyWith(color: AppColors.slate)),
       ],
     );
   }

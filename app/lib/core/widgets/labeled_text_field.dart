@@ -1,4 +1,3 @@
-import 'package:app/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -41,7 +40,8 @@ class LabeledTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(label, style: text.titleSmall?.copyWith(color: AppColors.ink2)),
+        // Design system: field labels are 15 semibold in ink, above the field.
+        Text(label, style: text.titleSmall),
         const SizedBox(height: 8),
         TextField(
           focusNode: focusNode,

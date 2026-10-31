@@ -20,7 +20,7 @@ Future<bool?> showDeleteContactDialog(BuildContext context, String name) {
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: TextButton.styleFrom(foregroundColor: AppColors.dangerInk),
+          style: TextButton.styleFrom(foregroundColor: AppColors.ink),
           child: Text(context.tr('circles.contact_delete_yes')),
         ),
       ],

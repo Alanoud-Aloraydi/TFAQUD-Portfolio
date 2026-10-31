@@ -49,7 +49,7 @@ class CircleStepHeader extends StatelessWidget {
             'circles.step',
             args: <String>['$step', '$totalSteps', stepTitle],
           ),
-          style: text.bodySmall?.copyWith(color: AppColors.ink3),
+          style: text.bodySmall?.copyWith(color: AppColors.slate),
         ),
         const SizedBox(height: 12),
         Semantics(header: true, child: Text(title, style: text.headlineMedium)),
@@ -57,7 +57,7 @@ class CircleStepHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitle!,
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(color: AppColors.slate),
           ),
         ],
       ],
@@ -83,7 +83,7 @@ class _Bars extends StatelessWidget {
               child: Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: i <= step ? AppColors.brand : AppColors.sunken,
+                  color: i <= step ? AppColors.ink : AppColors.line,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

@@ -114,7 +114,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                 const SizedBox(height: 24),
                 Text(
                   context.tr('circles.proposed_mode'),
-                  style: text.titleSmall?.copyWith(color: AppColors.ink2),
+                  style: text.titleSmall?.copyWith(color: AppColors.slate),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -137,10 +137,10 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                     onSelectionChanged: (Set<CircleAppMode> modes) =>
                         cubit.chooseMode(modes.first),
                     style: SegmentedButton.styleFrom(
-                      foregroundColor: AppColors.ink2,
-                      selectedForegroundColor: AppColors.brand,
-                      selectedBackgroundColor: AppColors.brandTint,
-                      side: const BorderSide(color: AppColors.fieldBorder),
+                      foregroundColor: AppColors.slate,
+                      selectedForegroundColor: AppColors.ink,
+                      selectedBackgroundColor: AppColors.leafTint,
+                      side: const BorderSide(color: AppColors.stone),
                     ).copyWith(
                       minimumSize: const WidgetStatePropertyAll<Size>(
                         Size.fromHeight(48),
@@ -155,7 +155,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                         ? 'circles.mode_simplified_hint'
                         : 'circles.mode_detailed_hint',
                   ),
-                  style: text.bodySmall?.copyWith(color: AppColors.ink3),
+                  style: text.bodySmall?.copyWith(color: AppColors.slate),
                 ),
                 const SizedBox(height: 24),
                 _Notice(text: context.tr('circles.request_notice')),
@@ -192,19 +192,19 @@ class _Notice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.warningTint,
+        color: AppColors.canvas,
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(Icons.info_outline, size: 20, color: AppColors.warningInk),
+          const Icon(Icons.info_outline, size: 20, color: AppColors.slate),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.warningInk,
+                color: AppColors.slate,
               ),
             ),
           ),

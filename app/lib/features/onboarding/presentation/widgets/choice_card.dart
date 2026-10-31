@@ -33,7 +33,7 @@ class ChoiceCard extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(
-            color: selected ? AppColors.brand : AppColors.line,
+            color: selected ? AppColors.ink : AppColors.line,
             width: selected ? 2 : 1,
           ),
         ),
@@ -47,10 +47,10 @@ class ChoiceCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: const BoxDecoration(
-                    color: AppColors.brandTint,
+                    color: AppColors.leafTint,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 20, color: AppColors.brand),
+                  child: Icon(icon, size: 20, color: AppColors.ink),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -88,7 +88,7 @@ class _RadioMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? AppColors.brand : AppColors.fieldBorder,
+          color: selected ? AppColors.ink : AppColors.stone,
           width: 2,
         ),
       ),
@@ -97,7 +97,7 @@ class _RadioMark extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: const BoxDecoration(
-                color: AppColors.brand,
+                color: AppColors.ink,
                 shape: BoxShape.circle,
               ),
             )

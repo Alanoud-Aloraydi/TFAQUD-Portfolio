@@ -116,17 +116,17 @@ class _ReadOnlyPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.sunken,
+        color: AppColors.line,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(Icons.lock_outline, size: 14, color: AppColors.ink2),
+          const Icon(Icons.lock_outline, size: 14, color: AppColors.slate),
           const SizedBox(width: 4),
           Text(
             context.tr('circles.card_read_only'),
-            style: text.bodySmall?.copyWith(color: AppColors.ink2),
+            style: text.bodySmall?.copyWith(color: AppColors.slate),
           ),
         ],
       ),
@@ -134,7 +134,8 @@ class _ReadOnlyPill extends StatelessWidget {
   }
 }
 
-/// The red card: the full name and the blood type in a round badge.
+/// The name card: the full name and the blood type in a round badge, white
+/// on ink. Red is kept for errors.
 class _NameCard extends StatelessWidget {
   const _NameCard({required this.card});
 
@@ -149,7 +150,7 @@ class _NameCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.danger,
+          color: AppColors.ink,
           borderRadius: BorderRadius.circular(AppRadius.card),
         ),
         child: Column(
@@ -161,7 +162,7 @@ class _NameCard extends StatelessWidget {
                   child: Text(
                     card.fullName,
                     style: text.headlineMedium?.copyWith(
-                      color: AppColors.onBrand,
+                      color: AppColors.surface,
                     ),
                   ),
                 ),
@@ -172,14 +173,14 @@ class _NameCard extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.onBrand.withAlpha(51),
+                    color: AppColors.surface.withAlpha(51),
                   ),
                   child: Text(
                     // A dash when nobody entered the blood type yet.
                     bloodType ?? '—',
                     textDirection: TextDirection.ltr,
                     style: text.titleLarge?.copyWith(
-                      color: AppColors.onBrand,
+                      color: AppColors.surface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -189,7 +190,7 @@ class _NameCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               context.tr('circles.blood_type'),
-              style: text.bodyMedium?.copyWith(color: AppColors.onBrand),
+              style: text.bodyMedium?.copyWith(color: AppColors.surface),
             ),
           ],
         ),
@@ -256,7 +257,7 @@ class _DetailsCard extends StatelessWidget {
                             MedicalTexts.phone(contact),
                             textDirection: TextDirection.ltr,
                             style: text.bodyLarge?.copyWith(
-                              color: AppColors.ink2,
+                              color: AppColors.slate,
                             ),
                           ),
                         ),
@@ -286,7 +287,7 @@ class _Section extends StatelessWidget {
         children: <Widget>[
           Text(
             label,
-            style: text.titleSmall?.copyWith(color: AppColors.ink2),
+            style: text.titleSmall?.copyWith(color: AppColors.slate),
           ),
           const SizedBox(height: 4),
           child,

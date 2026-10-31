@@ -56,7 +56,7 @@ class _WelcomePanel extends StatelessWidget {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
       child: ColoredBox(
-        color: AppColors.brand,
+        color: AppColors.leaf,
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             // The brand mark sits a little above the middle of the panel.
@@ -76,7 +76,7 @@ class _WelcomePanel extends StatelessWidget {
                       Text(
                         context.tr('auth.app_name'),
                         style: text.headlineLarge?.copyWith(
-                          color: AppColors.onBrand,
+                          color: AppColors.ink,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -85,7 +85,7 @@ class _WelcomePanel extends StatelessWidget {
                         context.tr('auth.tagline'),
                         textAlign: TextAlign.center,
                         style: text.bodyLarge?.copyWith(
-                          color: AppColors.onBrand,
+                          color: AppColors.ink,
                         ),
                       ),
                     ],

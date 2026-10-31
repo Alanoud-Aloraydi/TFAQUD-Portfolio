@@ -83,7 +83,7 @@ class _CitySheetState extends State<CitySheet> {
                       child: Text(
                         context.tr('circles.city_none_found'),
                         style: text.bodyMedium?.copyWith(
-                          color: AppColors.ink2,
+                          color: AppColors.slate,
                         ),
                       ),
                     )
@@ -97,7 +97,7 @@ class _CitySheetState extends State<CitySheet> {
                         return ListTile(
                           leading: Icon(
                             Icons.location_on_outlined,
-                            color: chosen ? AppColors.brand : AppColors.ink3,
+                            color: chosen ? AppColors.ink : AppColors.slate,
                           ),
                           title: Text(
                             city,
@@ -108,7 +108,7 @@ class _CitySheetState extends State<CitySheet> {
                             ),
                           ),
                           trailing: chosen
-                              ? const Icon(Icons.check, color: AppColors.brand)
+                              ? const Icon(Icons.check, color: AppColors.ink)
                               : null,
                           onTap: () => setState(() => _selected = city),
                         );

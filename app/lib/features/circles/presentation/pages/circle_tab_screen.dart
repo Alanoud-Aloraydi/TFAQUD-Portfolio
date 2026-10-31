@@ -64,11 +64,11 @@ class CircleCard extends StatelessWidget {
               ExcludeSemantics(
                 child: CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.warningTint,
+                  backgroundColor: AppColors.leafTint,
                   child: Text(
                     initial,
                     style: text.titleLarge?.copyWith(
-                      color: AppColors.warningInk,
+                      color: AppColors.ink,
                     ),
                   ),
                 ),
@@ -93,8 +93,8 @@ class CircleCard extends StatelessWidget {
                   label: Text(context.tr('circles.file_title')),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
-                    foregroundColor: AppColors.brand,
-                    side: const BorderSide(color: AppColors.brand),
+                    foregroundColor: AppColors.ink,
+                    side: const BorderSide(color: AppColors.stone),
                   ),
                 ),
               ),
@@ -107,8 +107,8 @@ class CircleCard extends StatelessWidget {
                   label: Text(context.tr('circles.card_title')),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
-                    foregroundColor: AppColors.dangerInk,
-                    side: const BorderSide(color: AppColors.danger),
+                    foregroundColor: AppColors.ink,
+                    side: const BorderSide(color: AppColors.stone),
                   ),
                 ),
               ),

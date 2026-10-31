@@ -1,17 +1,20 @@
-import 'dart:ui' show ImageFilter;
-
+import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 
 /// Opacity of the white fill of the frosted shell surfaces: the bottom bar and
-/// the add button share it so they read as one material.
-const double kFrostedAlpha = 0.7;
+/// the add button share it so they read as one material (design system glass
+/// recipe; a starting value to test on a device).
+const double kFrostedAlpha = AppGlass.tintAlpha;
 
 /// Blur behind the frosted shell surfaces.
-const double kFrostedBlurSigma = 20;
+const double kFrostedBlurSigma = AppGlass.blurSigma;
 
 const double _size = 56;
 
-/// Round frosted add button, floated above the bottom bar by the shell.
+/// Round glass add button, floated above the bottom bar by the shell.
+/// Neutral glass with an ink plus; a green tint is still under study.
 /// A null [onPressed] keeps it visible but dimmed and inert.
 class GlassAddButton extends StatelessWidget {
   const GlassAddButton({
@@ -25,31 +28,26 @@ class GlassAddButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
     final bool enabled = onPressed != null;
 
     return Tooltip(
       message: tooltip,
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: kFrostedBlurSigma,
-            sigmaY: kFrostedBlurSigma,
-          ),
+      child: SizedBox.square(
+        dimension: _size,
+        child: GlassSurface(
+          borderRadius: BorderRadius.circular(_size / 2),
           child: Material(
-            color: scheme.surface.withValues(alpha: kFrostedAlpha),
-            shape: CircleBorder(side: BorderSide(color: scheme.surface)),
+            type: MaterialType.transparency,
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: onPressed,
-              child: SizedBox(
-                width: _size,
-                height: _size,
+              child: Center(
                 child: Icon(
                   Icons.add,
+                  size: 28,
                   color: enabled
-                      ? scheme.primary
-                      : scheme.onSurface.withValues(alpha: 0.38),
+                      ? AppColors.ink
+                      : AppColors.slate.withValues(alpha: 0.45),
                 ),
               ),
             ),
