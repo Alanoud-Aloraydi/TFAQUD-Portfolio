@@ -3,9 +3,11 @@
 # Sideloadly) signs it with your Apple ID and installs it on the iPhone.
 #
 # When it runs:
-#   - on a push whose commit message contains [ios], on any branch
+#   - on a push whose commit message contains [ios], on any branch.
+#     Add the server address to the same message to build for it:
+#     [ios api=http://192.168.1.20:5000]
 #   - from the Actions tab ("Run workflow"), once this file is on the
-#     default branch; there you can also set the API address
+#     default branch; there the address is a field
 #
 # The result is a release build: it opens on the phone without a cable, but
 # there is no hot reload.
@@ -14,9 +16,6 @@ name: iOS build
 
 on:
   push:
-    paths:
-      - "app/**"
-      - ".github/workflows/ios-build.yml"
   workflow_dispatch:
     inputs:
       api_base_url:
@@ -51,11 +50,20 @@ jobs:
           xcodebuild -version
 
       # .env is not in Git. The example file holds no secrets, only the API
-      # address, so the build creates .env from it and sets the address.
+      # address, so the build creates .env from it and sets the address:
+      # the Run workflow field, else api=... in the commit message, else
+      # localhost.
       - name: Create .env
         env:
-          API_BASE_URL: ${{ inputs.api_base_url || 'http://localhost:5000' }}
+          INPUT_API: ${{ inputs.api_base_url }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
+          API_BASE_URL="$INPUT_API"
+          if [ -z "$API_BASE_URL" ]; then
+            API_BASE_URL=$(printf '%s' "$COMMIT_MESSAGE" | grep -oE 'api=https?://[^] [:space:]]+' | head -n 1 | cut -d= -f2- || true)
+          fi
+          API_BASE_URL="${API_BASE_URL:-http://localhost:5000}"
+          echo "The app will call: $API_BASE_URL"
           cp .env.example .env
           sed -i '' "s#^API_BASE_URL=.*#API_BASE_URL=${API_BASE_URL}#" .env
 
