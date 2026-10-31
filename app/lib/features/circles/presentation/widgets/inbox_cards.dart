@@ -138,7 +138,7 @@ class _ReplyButtons extends StatelessWidget {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppColors.ink,
+                      color: AppColors.onInk,
                     ),
                   )
                 : Text(acceptLabel),
@@ -183,7 +183,7 @@ class InvitationCard extends StatelessWidget {
     final String name = by ?? '';
     return _InboxCard(
       avatarText: _initial(name),
-      avatarBackground: AppColors.leafTint,
+      avatarBackground: AppColors.honeyTint,
       avatarForeground: AppColors.ink,
       title: context.tr('circles.invitation_title'),
       body: by == null || by.trim().isEmpty
@@ -218,7 +218,7 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
-      avatarBackground: AppColors.leafTint,
+      avatarBackground: AppColors.honeyTint,
       avatarForeground: AppColors.ink,
       title: context.tr('circles.request_card_title'),
       body: context.tr(
@@ -261,7 +261,7 @@ class AcceptedRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
-      avatarBackground: AppColors.leafTint,
+      avatarBackground: AppColors.honeyTint,
       avatarForeground: AppColors.ink,
       title: context.tr('circles.complete_card_title'),
       body: context.tr(

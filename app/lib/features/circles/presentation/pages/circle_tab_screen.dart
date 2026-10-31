@@ -1,3 +1,4 @@
+import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_component_themes.dart';
@@ -27,7 +28,7 @@ class CircleTabScreen extends StatelessWidget {
         }
         if (circle == null) return const SizedBox.shrink();
         return ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: context.scrollPadding(const EdgeInsets.fromLTRB(24, 8, 24, 24)),
           children: <Widget>[CircleCard(circle: circle)],
         );
       },
@@ -64,7 +65,7 @@ class CircleCard extends StatelessWidget {
               ExcludeSemantics(
                 child: CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.leafTint,
+                  backgroundColor: AppColors.honeyTint,
                   child: Text(
                     initial,
                     style: text.titleLarge?.copyWith(

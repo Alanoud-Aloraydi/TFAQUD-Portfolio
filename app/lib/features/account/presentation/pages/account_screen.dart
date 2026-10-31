@@ -165,7 +165,7 @@ class AccountScreen extends StatelessWidget {
                       height: 48,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
-                        color: AppColors.leafTint,
+                        color: AppColors.honeyTint,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
@@ -279,7 +279,7 @@ class _SentRequestRow extends StatelessWidget {
               height: 40,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                color: AppColors.leafTint,
+                color: AppColors.honeyTint,
                 shape: BoxShape.circle,
               ),
               child: Text(

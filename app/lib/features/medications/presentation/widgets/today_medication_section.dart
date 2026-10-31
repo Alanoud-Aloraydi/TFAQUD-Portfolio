@@ -1,3 +1,4 @@
+import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/loading_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -27,7 +28,7 @@ class TodayMedicationSection extends StatelessWidget {
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
           itemCount: state.occurrences.length + 1,
           separatorBuilder: (_, index) => index == 0
               ? const SizedBox(height: AppSpacing.md)

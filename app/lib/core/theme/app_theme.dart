@@ -2,14 +2,15 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/picker_wheel_style.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The TFAQUD theme (design system "TFAQUD"): light only, plus the variant the
 /// app uses when iOS Increase Contrast is on.
 ///
-/// [ColorScheme.primary] is ink, not leaf: Material paints text, icons and
-/// selection marks in primary, and leaf is not a text color. The leaf fill of
-/// the primary action comes from the filled button theme.
+/// [ColorScheme.primary] is ink: Material paints text, icons, selection marks
+/// and the primary action in it, with white on top.
 abstract class AppTheme {
   AppTheme._();
 
@@ -18,11 +19,11 @@ abstract class AppTheme {
       brightness: Brightness.light,
       primary: AppColors.ink,
       onPrimary: AppColors.surface,
-      primaryContainer: AppColors.leafTint,
+      primaryContainer: AppColors.honeyTint,
       onPrimaryContainer: AppColors.ink,
       secondary: AppColors.slate,
       onSecondary: AppColors.surface,
-      secondaryContainer: AppColors.leaf,
+      secondaryContainer: AppColors.honeyTint,
       onSecondaryContainer: AppColors.ink,
       tertiary: AppColors.honey,
       onTertiary: AppColors.ink,
@@ -45,7 +46,7 @@ abstract class AppTheme {
       scrim: AppColors.scrim,
       inverseSurface: AppColors.ink,
       onInverseSurface: AppColors.surface,
-      inversePrimary: AppColors.leaf,
+      inversePrimary: AppColors.honey,
       surfaceTint: Colors.transparent,
     );
   }
@@ -78,9 +79,34 @@ abstract class AppTheme {
       radioTheme: AppComponentThemes.radio,
       // iOS shows a press as a short dim, not a ripple.
       splashFactory: NoSplash.splashFactory,
+      // iOS push and pop (with the swipe back) on every platform, the web
+      // preview included, so testing in Chrome feels like the phone.
+      pageTransitionsTheme: _iosTransitions,
+      // Cupertino widgets (pickers, action sheets, dialogs) use the app font
+      // and ink instead of the system blue.
+      cupertinoOverrideTheme: const NoDefaultCupertinoThemeData(
+        primaryColor: AppColors.ink,
+        scaffoldBackgroundColor: AppColors.canvas,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: AppColors.ink,
+          pickerTextStyle: PickerWheelStyle.text,
+          dateTimePickerTextStyle: PickerWheelStyle.text,
+        ),
+      ),
       highlightColor: const Color(0x14202734),
     );
   }
+
+  static const PageTransitionsTheme _iosTransitions = PageTransitionsTheme(
+    builders: <TargetPlatform, PageTransitionsBuilder>{
+      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: CupertinoPageTransitionsBuilder(),
+    },
+  );
 
   static final ThemeData lightTheme = _build(AppTokens.light);
 

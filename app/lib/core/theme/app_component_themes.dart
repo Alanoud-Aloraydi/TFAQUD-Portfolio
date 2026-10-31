@@ -41,7 +41,7 @@ abstract class AppComponentThemes {
     fontWeight: FontWeight.w600,
   );
 
-  /// Primary: leaf fill, ink label, capsule, 50 high.
+  /// Primary: ink fill, white label, capsule, 50 high.
   static FilledButtonThemeData filledButton(AppTokens tokens) {
     return FilledButtonThemeData(
       style: ButtonStyle(
@@ -54,19 +54,20 @@ abstract class AppComponentThemes {
         elevation: const WidgetStatePropertyAll<double>(0),
         backgroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
           if (states.contains(WidgetState.disabled)) return AppColors.line;
-          if (states.contains(WidgetState.pressed)) return AppColors.leafPressed;
-          if (states.contains(WidgetState.hovered)) return AppColors.leafHover;
-          return AppColors.leaf;
+          if (states.contains(WidgetState.pressed)) return AppColors.inkPressed;
+          if (states.contains(WidgetState.hovered)) return AppColors.inkHover;
+          return AppColors.ink;
         }),
         foregroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
           if (states.contains(WidgetState.disabled)) return tokens.textSecondary;
-          return AppColors.ink;
+          return AppColors.onInk;
         }),
         // The hover and pressed shades already show the state.
         overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         side: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+          // Slate is only 2.05:1 on ink; the focus ring on ink is honey.
           if (states.contains(WidgetState.focused)) {
-            return BorderSide(color: tokens.focus, width: 2);
+            return const BorderSide(color: AppColors.honey, width: 2);
           }
           return BorderSide.none;
         }),
@@ -153,7 +154,7 @@ abstract class AppComponentThemes {
   static ChipThemeData chip(AppTokens tokens) {
     return ChipThemeData(
       backgroundColor: AppColors.surface,
-      selectedColor: AppColors.leafTint,
+      selectedColor: AppColors.honeyTint,
       checkmarkColor: AppColors.ink,
       disabledColor: AppColors.line,
       side: BorderSide(color: tokens.borderControl),
@@ -199,8 +200,8 @@ abstract class AppComponentThemes {
 
   /// Any other floating action button follows the primary action.
   static final FloatingActionButtonThemeData fab = FloatingActionButtonThemeData(
-    backgroundColor: AppColors.leaf,
-    foregroundColor: AppColors.ink,
+    backgroundColor: AppColors.ink,
+    foregroundColor: AppColors.onInk,
     elevation: 0,
     focusElevation: 0,
     hoverElevation: 0,

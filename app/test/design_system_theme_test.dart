@@ -20,26 +20,33 @@ Color? resolve(WidgetStateProperty<Color?>? property, Set<WidgetState> states) =
 void main() {
   group('palette', () {
     test('text pairs of the design system stay readable', () {
-      // Primary text on every approved ground, and on the leaf states.
+      // Primary text on every approved ground.
       for (final Color ground in <Color>[
         AppColors.surface,
         AppColors.canvas,
-        AppColors.leaf,
-        AppColors.leafHover,
-        AppColors.leafPressed,
-        AppColors.leafTint,
+        AppColors.honeyTint,
+        AppColors.honey,
         AppColors.line,
       ]) {
         expect(contrast(AppColors.ink, ground), greaterThanOrEqualTo(7));
       }
-      // Supporting text reaches 7:1 on the light grounds too.
+      // The white label on the primary action in every state.
+      for (final Color fill in <Color>[
+        AppColors.ink,
+        AppColors.inkHover,
+        AppColors.inkPressed,
+      ]) {
+        expect(contrast(AppColors.onInk, fill), greaterThanOrEqualTo(7));
+      }
+      // Supporting text reaches 4.5:1 on the light grounds (and turns ink
+      // with Increased Contrast).
       for (final Color ground in <Color>[
         AppColors.surface,
         AppColors.canvas,
-        AppColors.leafTint,
+        AppColors.honeyTint,
         AppColors.line,
       ]) {
-        expect(contrast(AppColors.slate, ground), greaterThanOrEqualTo(7));
+        expect(contrast(AppColors.slate, ground), greaterThanOrEqualTo(4.5));
       }
       // Status words on the grounds they are approved on.
       for (final Color status in <Color>[
@@ -53,34 +60,36 @@ void main() {
       // Control borders and focus reach 3:1.
       expect(contrast(AppColors.stone, AppColors.surface), greaterThanOrEqualTo(3));
       expect(contrast(AppColors.stone, AppColors.canvas), greaterThanOrEqualTo(3));
-      expect(contrast(AppColors.slate, AppColors.leaf), greaterThanOrEqualTo(3));
+      // Focus: slate around controls on canvas, honey on an ink fill.
+      expect(contrast(AppColors.slate, AppColors.canvas), greaterThanOrEqualTo(3));
+      expect(contrast(AppColors.honey, AppColors.ink), greaterThanOrEqualTo(3));
     });
 
-    test('leaf is a fill, not a text color', () {
-      expect(contrast(AppColors.leaf, AppColors.surface), lessThan(3));
+    test('honey is an accent, not a text color', () {
+      expect(contrast(AppColors.honey, AppColors.surface), lessThan(3));
     });
   });
 
   group('theme', () {
-    test('the primary action is leaf with an ink label in every state', () {
+    test('the primary action is ink with a white label in every state', () {
       final ButtonStyle style = AppTheme.lightTheme.filledButtonTheme.style!;
-      expect(resolve(style.backgroundColor, <WidgetState>{}), AppColors.leaf);
+      expect(resolve(style.backgroundColor, <WidgetState>{}), AppColors.ink);
       expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.hovered}),
-        AppColors.leafHover,
+        AppColors.inkHover,
       );
       expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.pressed}),
-        AppColors.leafPressed,
+        AppColors.inkPressed,
       );
       expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.disabled}),
         AppColors.line,
       );
-      expect(resolve(style.foregroundColor, <WidgetState>{}), AppColors.ink);
+      expect(resolve(style.foregroundColor, <WidgetState>{}), AppColors.onInk);
     });
 
-    test('text, icons and selection marks are ink, never leaf', () {
+    test('text, icons and selection marks are ink', () {
       final ColorScheme scheme = AppTheme.lightTheme.colorScheme;
       expect(scheme.primary, AppColors.ink);
       expect(scheme.onSurface, AppColors.ink);

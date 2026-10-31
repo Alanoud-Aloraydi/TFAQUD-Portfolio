@@ -139,7 +139,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                     style: SegmentedButton.styleFrom(
                       foregroundColor: AppColors.slate,
                       selectedForegroundColor: AppColors.ink,
-                      selectedBackgroundColor: AppColors.leafTint,
+                      selectedBackgroundColor: AppColors.honeyTint,
                       side: const BorderSide(color: AppColors.stone),
                     ).copyWith(
                       minimumSize: const WidgetStatePropertyAll<Size>(

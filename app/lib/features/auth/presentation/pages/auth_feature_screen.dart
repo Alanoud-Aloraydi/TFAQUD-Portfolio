@@ -56,7 +56,7 @@ class _WelcomePanel extends StatelessWidget {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
       child: ColoredBox(
-        color: AppColors.leaf,
+        color: AppColors.honey,
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             // The brand mark sits a little above the middle of the panel.

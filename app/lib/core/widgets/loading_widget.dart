@@ -30,8 +30,8 @@ class LoadingWidgetOverlay {
           ),
           Center(
             child: LoadingAnimationWidget.discreteCircle(
-              secondRingColor: AppColors.leaf,
-              thirdRingColor: AppColors.honey,
+              secondRingColor: AppColors.honey,
+              thirdRingColor: AppColors.slate,
               color: AppColors.ink,
               size: 50,
             ),
@@ -58,8 +58,8 @@ class LoadingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: LoadingAnimationWidget.discreteCircle(
-        secondRingColor: AppColors.leaf,
-        thirdRingColor: AppColors.honey,
+        secondRingColor: AppColors.honey,
+        thirdRingColor: AppColors.slate,
         color: AppColors.ink,
         size: size ?? 50,
       ),

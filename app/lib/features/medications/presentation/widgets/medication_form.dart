@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/inset_group.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -67,21 +68,18 @@ class _MedicationFormState extends State<MedicationForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            _title('medications.basic_details'),
             MedicationBasicFields(
               data: _data,
               issue: _issue,
               onChanged: _changed,
             ),
             const SizedBox(height: AppSpacing.xl),
-            _title('medications.treatment_period'),
             MedicationPeriodFields(
               data: _data,
               issue: _issue,
               onChanged: _changed,
             ),
             const SizedBox(height: AppSpacing.xl),
-            _title('medications.dose_schedules'),
             for (var index = 0; index < _data.schedules.length; index++) ...[
               MedicationScheduleEditor(
                 index: index,
@@ -93,12 +91,16 @@ class _MedicationFormState extends State<MedicationForm> {
                     ? null
                     : () => _removeSchedule(index),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.xl),
             ],
-            OutlinedButton.icon(
-              onPressed: _addSchedule,
-              icon: const Icon(Icons.add),
-              label: Text(context.tr('medications.add_schedule')),
+            InsetGroup(
+              children: [
+                InsetRow(
+                  label: context.tr('medications.add_schedule'),
+                  leading: const Icon(Icons.add_circle),
+                  onTap: _addSchedule,
+                ),
+              ],
             ),
             if (_errorKey case final error?) ...[
               const SizedBox(height: AppSpacing.lg),
@@ -121,11 +123,6 @@ class _MedicationFormState extends State<MedicationForm> {
       ),
     );
   }
-
-  Widget _title(String key) => Padding(
-    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-    child: Text(context.tr(key), style: Theme.of(context).textTheme.titleLarge),
-  );
 
   void _changed() => setState(() {
     _dirty = true;

@@ -140,7 +140,7 @@ class _DetailsCard extends StatelessWidget {
                     ? 'circles.mode_detailed'
                     : 'circles.mode_simplified',
               ),
-              background: AppColors.leafTint,
+              background: AppColors.honeyTint,
               foreground: AppColors.ink,
             ),
           ),

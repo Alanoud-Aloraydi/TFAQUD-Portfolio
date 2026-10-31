@@ -47,7 +47,7 @@ class ChoiceCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: const BoxDecoration(
-                    color: AppColors.leafTint,
+                    color: AppColors.honeyTint,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, size: 20, color: AppColors.ink),

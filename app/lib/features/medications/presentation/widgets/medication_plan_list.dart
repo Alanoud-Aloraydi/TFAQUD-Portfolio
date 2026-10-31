@@ -1,3 +1,4 @@
+import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
@@ -37,7 +38,7 @@ class MedicationPlanList extends StatelessWidget {
     ];
     if (shrinkWrap) return Column(children: children);
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
       children: children,
     );
   }

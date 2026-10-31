@@ -212,7 +212,7 @@ class _ValueColumnState extends State<_ValueColumn> {
                   onTap: () => widget.onSelected(value),
                   child: Container(
                     alignment: Alignment.center,
-                    color: chosen ? AppColors.leafTint : null,
+                    color: chosen ? AppColors.honeyTint : null,
                     child: Text(
                       widget.format(value),
                       style: text.bodyLarge?.copyWith(

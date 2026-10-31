@@ -39,6 +39,10 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
+      // No bar behind the controls: content scrolls under them, fading out
+      // (a soft scroll edge effect) so the controls stay readable.
+      backgroundColor: Colors.transparent,
+      flexibleSpace: const IgnorePointer(child: _ScrollEdge()),
       toolbarHeight: kToolbarHeight + AppSpacing.sm,
       leadingWidth: AppSizes.glassButton + AppSpacing.lg,
       leading: Padding(
@@ -88,6 +92,29 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         const SizedBox(width: AppSpacing.lg),
       ],
+    );
+  }
+}
+
+/// Soft scroll edge effect: the canvas fades in behind the top controls.
+class _ScrollEdge extends StatelessWidget {
+  const _ScrollEdge();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[
+            AppColors.canvas.withValues(alpha: 0.96),
+            AppColors.canvas.withValues(alpha: 0.75),
+            AppColors.canvas.withValues(alpha: 0),
+          ],
+          stops: const <double>[0, 0.6, 1],
+        ),
+      ),
     );
   }
 }

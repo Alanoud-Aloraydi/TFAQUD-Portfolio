@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/inset_group.dart';
 import 'package:app/core/widgets/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
@@ -8,6 +9,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// One dose time as an iOS grouped section: time, amount, unit, weekdays and
+/// the instructions for this dose. The header names the dose and holds its
+/// delete button.
 class MedicationScheduleEditor extends StatelessWidget {
   const MedicationScheduleEditor({
     super.key,
@@ -28,143 +32,131 @@ class MedicationScheduleEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.tr(
-                      'medications.schedule_number',
-                      args: [(index + 1).toString()],
-                    ),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                if (onRemove != null)
-                  IconButton(
-                    tooltip: context.tr('medications.remove_schedule'),
-                    onPressed: onRemove,
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-              ],
+    final AppTokens tokens = context.tokens;
+    final TextTheme text = Theme.of(context).textTheme;
+    final VoidCallback? remove = onRemove;
+    return InsetGroup(
+      header: context.tr(
+        'medications.schedule_number',
+        args: <String>[(index + 1).toString()],
+      ),
+      headerAction: remove == null
+          ? null
+          : IconButton(
+              tooltip: context.tr('medications.remove_schedule'),
+              onPressed: remove,
+              icon: const Icon(Icons.delete_outline),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _selectTime(context),
-                    icon: const Icon(Icons.schedule_outlined),
-                    label: Text(
-                      formatMedicationTime(
-                        context,
-                        '${data.time.hour.toString().padLeft(2, '0')}:'
-                        '${data.time.minute.toString().padLeft(2, '0')}',
+      children: <Widget>[
+        InsetRow(
+          label: context.tr('medications.time'),
+          value: formatMedicationTime(
+            context,
+            '${data.time.hour.toString().padLeft(2, '0')}:'
+            '${data.time.minute.toString().padLeft(2, '0')}',
+          ),
+          showChevron: true,
+          onTap: () => _selectTime(context),
+        ),
+        InsetTextRow(
+          label: context.tr('medications.dose_value'),
+          controller: data.doseController,
+          focusNode: data.doseFocus,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+          ],
+          errorText: issue?.field == MedicationFormField.dose
+              ? context.tr('medications.positive_number')
+              : null,
+          onChanged: (_) => onChanged(),
+        ),
+        InsetRow(
+          label: context.tr('medications.dose_unit'),
+          value: context.tr('medications.unit.${data.doseUnit.name}'),
+          showChevron: true,
+          onTap: () => _chooseUnit(context),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(context.tr('medications.weekdays'), style: text.bodyLarge),
+              const SizedBox(height: AppSpacing.sm),
+              Focus(
+                focusNode: data.weekdaysFocus,
+                child: Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: <Widget>[
+                    for (int day = 1; day <= 7; day++)
+                      FilterChip(
+                        label: Text(context.tr('medications.weekday.$day')),
+                        selected: data.weekdays.contains(day),
+                        onSelected: (bool selected) {
+                          if (selected) {
+                            data.weekdays.add(day);
+                          } else {
+                            data.weekdays.remove(day);
+                          }
+                          onChanged();
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              if (issue?.field == MedicationFormField.weekdays) ...<Widget>[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Icon(Icons.error_outline, size: 18, color: tokens.error),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        context.tr('medications.weekday_required'),
+                        style: text.bodySmall?.copyWith(color: tokens.errorText),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: TextField(
-                    focusNode: data.doseFocus,
-                    controller: data.doseController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    onChanged: (_) => onChanged(),
-                    decoration: InputDecoration(
-                      labelText: context.tr('medications.dose_value'),
-                      errorText: issue?.field == MedicationFormField.dose
-                          ? context.tr('medications.positive_number')
-                          : null,
-                    ),
-                  ),
+                  ],
                 ),
               ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<DoseUnit>(
-              initialValue: data.doseUnit,
-              decoration: InputDecoration(
-                labelText: context.tr('medications.dose_unit'),
-              ),
-              items: [
-                for (final unit in units)
-                  DropdownMenuItem(
-                    value: unit,
-                    child: Text(context.tr('medications.unit.${unit.name}')),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value == null) return;
-                data.doseUnit = value;
-                onChanged();
-              },
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              context.tr('medications.weekdays'),
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Focus(
-              focusNode: data.weekdaysFocus,
-              child: Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                for (var day = 1; day <= 7; day++)
-                  FilterChip(
-                    label: Text(context.tr('medications.weekday.$day')),
-                    selected: data.weekdays.contains(day),
-                    onSelected: (selected) {
-                      if (selected) {
-                        data.weekdays.add(day);
-                      } else {
-                        data.weekdays.remove(day);
-                      }
-                      onChanged();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            if (issue?.field == MedicationFormField.weekdays)
-              Text(
-                context.tr('medications.weekday_required'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            const SizedBox(height: AppSpacing.lg),
-        TextField(
+            ],
+          ),
+        ),
+        InsetTextRow(
+          label: context.tr('medications.schedule_instructions'),
           controller: data.instructionsController,
           maxLength: 250,
           maxLines: 2,
           onChanged: (_) => onChanged(),
-          decoration: InputDecoration(
-            labelText: context.tr('medications.schedule_instructions'),
-            counterText: '',
-          ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        const Divider(),
       ],
     );
   }
 
   Future<void> _selectTime(BuildContext context) async {
-    final selected = await showTafaqodTimeSheet(
+    final TimeOfDay? selected = await showTafaqodTimeSheet(
       context,
       initialTime: data.time,
       title: context.tr('medications.select_time'),
     );
     if (selected == null) return;
     data.time = selected;
+    onChanged();
+  }
+
+  Future<void> _chooseUnit(BuildContext context) async {
+    final DoseUnit? unit = await showOptionSheet<DoseUnit>(
+      context,
+      title: context.tr('medications.dose_unit'),
+      options: units,
+      labelOf: (DoseUnit unit) => context.tr('medications.unit.${unit.name}'),
+      selected: data.doseUnit,
+    );
+    if (unit == null) return;
+    data.doseUnit = unit;
     onChanged();
   }
 }

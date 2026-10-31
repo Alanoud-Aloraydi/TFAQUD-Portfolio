@@ -124,6 +124,7 @@
     "weekdays": "أيام الأسبوع",
     "schedule_instructions": "تعليمات هذه الجرعة (اختياري)",
     "select_time": "اختر وقت الجرعة",
+    "time": "الوقت",
     "add_schedule": "إضافة موعد جرعة",
     "form_invalid": "تحقق من الحقول ومواعيد الجرعات.",
     "field_required": "هذا الحقل مطلوب",

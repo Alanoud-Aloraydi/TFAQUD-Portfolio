@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/picker_sheet_frame.dart';
+import 'package:app/core/widgets/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -47,12 +48,14 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
               initial: _hour - 1,
               label: (index) => '${index + 1}',
               onSelected: (index) => _hour = index + 1,
+              position: WheelPosition.first,
             ),
             _Wheel(
               count: 60,
               initial: _minute,
               label: (index) => index.toString().padLeft(2, '0'),
               onSelected: (index) => _minute = index,
+              position: WheelPosition.middle,
             ),
             _Wheel(
               count: 2,
@@ -60,6 +63,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
               label: (index) =>
                   context.tr(index == 0 ? 'common.am' : 'common.pm'),
               onSelected: (index) => _isPm = index == 1,
+              position: WheelPosition.last,
             ),
           ],
         ),
@@ -74,22 +78,25 @@ class _Wheel extends StatelessWidget {
     required this.initial,
     required this.label,
     required this.onSelected,
+    required this.position,
   });
 
   final int count;
   final int initial;
   final String Function(int) label;
   final ValueChanged<int> onSelected;
+  final WheelPosition position;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: CupertinoPicker.builder(
         scrollController: FixedExtentScrollController(initialItem: initial),
-        itemExtent: 44,
+        itemExtent: PickerWheelStyle.itemExtent,
         childCount: count,
+        selectionOverlay: PickerWheelStyle.overlay(position),
         onSelectedItemChanged: onSelected,
-        itemBuilder: (_, index) => Center(child: Text(label(index))),
+        itemBuilder: (_, index) => PickerWheelStyle.item(label(index)),
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:flutter/material.dart';
 
@@ -30,18 +29,9 @@ class PickerSheetFrame extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          // The sheet's own drag handle comes from the bottom sheet theme;
+          // a second one here drew two lines.
           children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(AppRadius.field),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
             Semantics(
               header: true,
               child: Text(

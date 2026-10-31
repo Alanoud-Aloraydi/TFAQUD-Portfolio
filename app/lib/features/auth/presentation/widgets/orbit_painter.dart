@@ -11,9 +11,10 @@ class OrbitPainter extends CustomPainter {
   /// Vertical position of the brand mark, in pixels from the top of the area.
   final double centerY;
 
-  static const Color _orange = AppColors.honey;
+  // The panel is honey, so the orbit's accent dots are ink.
+  static const Color _orange = AppColors.ink;
   static const Color _dotLight = AppColors.surface;
-  static const Color _dotMuted = AppColors.leafTint;
+  static const Color _dotMuted = AppColors.honeyTint;
 
   static const List<double> _ringRadii = <double>[66, 112, 158, 204];
 
@@ -53,7 +54,7 @@ class OrbitPainter extends CustomPainter {
     canvas.drawCircle(center, 14, Paint()..color = AppColors.surface);
     const Offset mark = Offset(16, -16);
     canvas.drawCircle(center + mark, 6.5, Paint()..color = AppColors.surface);
-    canvas.drawCircle(center + mark, 5, Paint()..color = _orange);
+    canvas.drawCircle(center + mark, 5, Paint()..color = AppColors.honey);
   }
 
   @override

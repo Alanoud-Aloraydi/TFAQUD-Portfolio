@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:app/core/widgets/picker_sheet_frame.dart';
+import 'package:app/core/widgets/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -97,6 +98,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
               selected: _day,
               label: (value) => '$value',
               onSelected: (value) => _select(day: value),
+              position: WheelPosition.first,
             ),
             _Wheel(
               values: _months,
@@ -104,12 +106,14 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
               label: (value) => context.tr('circles.months.$value'),
               onSelected: (value) => _select(month: value),
               flex: 2,
+              position: WheelPosition.middle,
             ),
             _Wheel(
               values: years,
               selected: _year,
               label: (value) => '$value',
               onSelected: (value) => _select(year: value),
+              position: WheelPosition.last,
             ),
           ],
         ),
@@ -124,6 +128,7 @@ class _Wheel extends StatelessWidget {
     required this.selected,
     required this.label,
     required this.onSelected,
+    required this.position,
     this.flex = 1,
   });
 
@@ -131,6 +136,7 @@ class _Wheel extends StatelessWidget {
   final int selected;
   final String Function(int) label;
   final ValueChanged<int> onSelected;
+  final WheelPosition position;
   final int flex;
 
   @override
@@ -140,10 +146,11 @@ class _Wheel extends StatelessWidget {
       flex: flex,
       child: CupertinoPicker(
         scrollController: FixedExtentScrollController(initialItem: index),
-        itemExtent: 44,
+        itemExtent: PickerWheelStyle.itemExtent,
+        selectionOverlay: PickerWheelStyle.overlay(position),
         onSelectedItemChanged: (index) => onSelected(values[index]),
         children: [
-          for (final value in values) Center(child: Text(label(value))),
+          for (final value in values) PickerWheelStyle.item(label(value)),
         ],
       ),
     );

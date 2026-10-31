@@ -37,7 +37,7 @@ class PillButton extends StatelessWidget {
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: AppColors.ink,
+                  color: AppColors.onInk,
                 ),
               )
             : Text(label),

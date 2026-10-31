@@ -51,21 +51,27 @@ const double _barRadius = 32;
 
 /// Bottom bar with four tabs. An iPhone on iOS 26 or later gets the native
 /// glass tab bar; every other device gets a frosted Flutter bar styled as the
-/// design system's TabBar: 64 high, a capsule, the selected tab on leaf-tint. The add
+/// design system's TabBar: 64 high, a capsule, the selected tab on honey-tint. The add
 /// button is not part of it: the shell floats it above the bar.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     super.key,
     required this.currentIndex,
     required this.onTab,
+    this.onAdd,
   });
 
   /// Selected branch: 0 today, 1 plan, 2 record, 3 circle.
   final int currentIndex;
   final ValueChanged<int> onTab;
 
+  /// The add action. On the native bar it becomes the round glass button
+  /// beside the tabs; elsewhere the shell shows its own add button.
+  final VoidCallback? onAdd;
+
   @override
   Widget build(BuildContext context) {
+    final VoidCallback? add = onAdd;
     final Widget frosted = _FrostedTabBar(
       currentIndex: currentIndex,
       onTab: onTab,
@@ -76,8 +82,11 @@ class AppBottomBar extends StatelessWidget {
     return NativeGlassNavBar(
       currentIndex: currentIndex,
       onTap: onTab,
-      // Selected tab in ink: leaf is a fill, never a text or icon color.
+      // Selected tab in ink, the brand color.
       tintColor: AppColors.ink,
+      actionButton: add == null
+          ? null
+          : TabBarActionButton(symbol: 'plus', onTap: add),
       tabs: <NativeGlassNavBarItem>[
         for (final _Tab tab in _tabs)
           NativeGlassNavBarItem(
@@ -124,8 +133,8 @@ class _FrostedTabBar extends StatelessWidget {
           borderWidth: 1,
           selectedItemColor: scheme.primary,
           unselectedItemColor: scheme.onSurfaceVariant,
-          // Selection: the leaf-tint capsule with the filled ink icon.
-          indicatorColor: AppColors.leafTint,
+          // Selection: the honey-tint capsule with the filled ink icon.
+          indicatorColor: AppColors.honeyTint,
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: scheme.shadow.withValues(alpha: 0.08),

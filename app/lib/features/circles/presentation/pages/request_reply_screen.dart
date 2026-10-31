@@ -137,7 +137,7 @@ class _RequestDetails extends StatelessWidget {
                 height: 56,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
-                  color: AppColors.leafTint,
+                  color: AppColors.honeyTint,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
@@ -179,7 +179,7 @@ class _RequestDetails extends StatelessWidget {
               text: context.tr(
                 detailed ? 'circles.mode_detailed' : 'circles.mode_simplified',
               ),
-              background: AppColors.leafTint,
+              background: AppColors.honeyTint,
               foreground: AppColors.ink,
             ),
           ),
