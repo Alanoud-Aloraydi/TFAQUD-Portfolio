@@ -1,8 +1,12 @@
+import 'package:app/core/theme/components/surface_themes.dart';
+import 'package:app/core/theme/components/selection_themes.dart';
+import 'package:app/core/theme/components/navigation_themes.dart';
+import 'package:app/core/theme/components/field_themes.dart';
+import 'package:app/core/theme/components/feedback_themes.dart';
+import 'package:app/core/theme/components/button_themes.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/picker_wheel_style.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -60,23 +64,23 @@ abstract class AppTheme {
       canvasColor: AppColors.canvas,
       textTheme: AppTextTheme.build(secondary: tokens.textSecondary),
       extensions: <ThemeExtension<dynamic>>[tokens],
-      filledButtonTheme: AppComponentThemes.filledButton(tokens),
-      outlinedButtonTheme: AppComponentThemes.outlinedButton(tokens),
-      textButtonTheme: AppComponentThemes.textButton(tokens),
-      iconButtonTheme: AppComponentThemes.iconButton,
-      inputDecorationTheme: AppComponentThemes.inputDecoration(tokens),
-      chipTheme: AppComponentThemes.chip(tokens),
-      cardTheme: AppComponentThemes.card,
-      dialogTheme: AppComponentThemes.dialog,
-      bottomSheetTheme: AppComponentThemes.bottomSheet,
-      dividerTheme: AppComponentThemes.divider,
-      appBarTheme: AppComponentThemes.appBar,
-      floatingActionButtonTheme: AppComponentThemes.fab,
-      progressIndicatorTheme: AppComponentThemes.progress,
-      snackBarTheme: AppComponentThemes.snackBar,
-      listTileTheme: AppComponentThemes.listTile(tokens),
-      checkboxTheme: AppComponentThemes.checkbox,
-      radioTheme: AppComponentThemes.radio,
+      filledButtonTheme: AppButtonThemes.filledButton(tokens),
+      outlinedButtonTheme: AppButtonThemes.outlinedButton(tokens),
+      textButtonTheme: AppButtonThemes.textButton(tokens),
+      iconButtonTheme: AppButtonThemes.iconButton,
+      inputDecorationTheme: AppFieldThemes.inputDecoration(tokens),
+      chipTheme: AppSelectionThemes.chip(tokens),
+      cardTheme: AppSurfaceThemes.card,
+      dialogTheme: AppSurfaceThemes.dialog,
+      bottomSheetTheme: AppSurfaceThemes.bottomSheet,
+      dividerTheme: AppSurfaceThemes.divider,
+      appBarTheme: AppNavigationThemes.appBar,
+      floatingActionButtonTheme: AppButtonThemes.fab,
+      progressIndicatorTheme: AppFeedbackThemes.progress,
+      snackBarTheme: AppFeedbackThemes.snackBar,
+      listTileTheme: AppSurfaceThemes.listTile(tokens),
+      checkboxTheme: AppSelectionThemes.checkbox,
+      radioTheme: AppSelectionThemes.radio,
       // iOS shows a press as a short dim, not a ripple.
       splashFactory: NoSplash.splashFactory,
       // iOS push and pop (with the swipe back) on every platform, the web
@@ -97,8 +101,8 @@ abstract class AppTheme {
         scaffoldBackgroundColor: AppColors.canvas,
         textTheme: CupertinoTextThemeData(
           primaryColor: AppColors.ink,
-          pickerTextStyle: PickerWheelStyle.text,
-          dateTimePickerTextStyle: PickerWheelStyle.text,
+          pickerTextStyle: AppTextTheme.picker,
+          dateTimePickerTextStyle: AppTextTheme.picker,
         ),
       ),
       highlightColor: const Color(0x14202734),

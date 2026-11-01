@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -66,7 +67,12 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            0,
+          ),
           child: BlocConsumer<InboxCubit, InboxState>(
             listenWhen: (InboxState before, InboxState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -78,9 +84,8 @@ class NotificationsScreen extends StatelessWidget {
               }
               final String? key = state.errorKey;
               if (key == null) return;
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(context.tr(key))));
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(context.tr(key))));
               cubit.errorShown();
             },
             builder: (BuildContext context, InboxState state) {
@@ -154,11 +159,7 @@ class NotificationsScreen extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           children: <Widget>[
             const SizedBox(height: 96),
-            const Icon(
-              CupertinoIcons.bell,
-              size: 56,
-              color: AppColors.slate,
-            ),
+            const Icon(CupertinoIcons.bell, size: 56, color: AppColors.slate),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.tr('circles.inbox_empty'),
@@ -213,8 +214,14 @@ class NotificationsScreen extends StatelessWidget {
           ],
           if (declined.isNotEmpty) ...<Widget>[
             Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.sm),
-              child: Text(context.tr('circles.events_title'), style: sectionStyle),
+              padding: const EdgeInsets.only(
+                top: AppSpacing.sm,
+                bottom: AppSpacing.sm,
+              ),
+              child: Text(
+                context.tr('circles.events_title'),
+                style: sectionStyle,
+              ),
             ),
             for (final SentCircleRequest request in declined)
               DeclinedRequestCard(request: request),

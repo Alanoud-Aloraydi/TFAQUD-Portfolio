@@ -1,7 +1,8 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/large_title.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -70,9 +71,7 @@ class CircleCard extends StatelessWidget {
                   backgroundColor: AppColors.leafTint,
                   child: Text(
                     initial,
-                    style: text.titleLarge?.copyWith(
-                      color: AppColors.ink,
-                    ),
+                    style: text.titleLarge?.copyWith(color: AppColors.ink),
                   ),
                 ),
               ),
@@ -90,8 +89,7 @@ class CircleCard extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () =>
-                      context.push(Routes.medicalFile(circle.id)),
+                  onPressed: () => context.push(Routes.medicalFile(circle.id)),
                   icon: const Icon(CupertinoIcons.doc_text),
                   label: Text(context.tr('circles.file_title')),
                   style: OutlinedButton.styleFrom(

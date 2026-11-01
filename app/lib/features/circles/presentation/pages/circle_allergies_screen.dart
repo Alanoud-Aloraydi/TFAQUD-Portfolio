@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -21,8 +22,7 @@ class CircleAllergiesScreen extends StatefulWidget {
   const CircleAllergiesScreen({super.key});
 
   @override
-  State<CircleAllergiesScreen> createState() =>
-      _CircleAllergiesScreenState();
+  State<CircleAllergiesScreen> createState() => _CircleAllergiesScreenState();
 }
 
 class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
@@ -32,9 +32,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
   @override
   void initState() {
     super.initState();
-    final CreateCircleState state = context
-        .read<CreateCircleCubit>()
-        .state;
+    final CreateCircleState state = context.read<CreateCircleCubit>().state;
     _otherMedication = TextEditingController(text: state.medicationOther);
     _otherFood = TextEditingController(text: state.foodOther);
   }
@@ -73,17 +71,21 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed texts are cleared in the state when "other" is turned
             // off or "no allergies" is chosen. The fields are cleared with
             // them.
-            listenWhen:
-                (CreateCircleState before, CreateCircleState after) =>
-                    (before.medicationOther != after.medicationOther &&
-                        after.medicationOther.isEmpty) ||
-                    (before.foodOther != after.foodOther &&
-                        after.foodOther.isEmpty),
+            listenWhen: (CreateCircleState before, CreateCircleState after) =>
+                (before.medicationOther != after.medicationOther &&
+                    after.medicationOther.isEmpty) ||
+                (before.foodOther != after.foodOther &&
+                    after.foodOther.isEmpty),
             listener: (BuildContext context, CreateCircleState state) {
               if (state.medicationOther.isEmpty) _otherMedication.clear();
               if (state.foodOther.isEmpty) _otherFood.clear();
@@ -136,22 +138,23 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                             isSelected: state.medication.contains,
                             onTap: cubit.toggleMedication,
                           ),
-                          if (state.medication.contains(MedicalOptions.other))
-                            ...<Widget>[
-                              const SizedBox(height: AppSpacing.md),
-                              LabeledTextField(
-                                label: context.tr('circles.other_hint'),
-                                controller: _otherMedication,
-                                maxLength: MedicalOptions.otherMaxLength,
-                                textInputAction: TextInputAction.done,
-                                onChanged: cubit.medicationOtherChanged,
-                                errorText:
-                                    state.showErrors &&
-                                        state.medicationOther.trim().isEmpty
-                                    ? requiredText
-                                    : null,
-                              ),
-                            ],
+                          if (state.medication.contains(
+                            MedicalOptions.other,
+                          )) ...<Widget>[
+                            const SizedBox(height: AppSpacing.md),
+                            LabeledTextField(
+                              label: context.tr('circles.other_hint'),
+                              controller: _otherMedication,
+                              maxLength: MedicalOptions.otherMaxLength,
+                              textInputAction: TextInputAction.done,
+                              onChanged: cubit.medicationOtherChanged,
+                              errorText:
+                                  state.showErrors &&
+                                      state.medicationOther.trim().isEmpty
+                                  ? requiredText
+                                  : null,
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.lg),
                           Text(
                             context.tr('circles.allergy_food'),
@@ -163,22 +166,23 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                             isSelected: state.food.contains,
                             onTap: cubit.toggleFood,
                           ),
-                          if (state.food.contains(MedicalOptions.other))
-                            ...<Widget>[
-                              const SizedBox(height: AppSpacing.md),
-                              LabeledTextField(
-                                label: context.tr('circles.other_hint'),
-                                controller: _otherFood,
-                                maxLength: MedicalOptions.otherMaxLength,
-                                textInputAction: TextInputAction.done,
-                                onChanged: cubit.foodOtherChanged,
-                                errorText:
-                                    state.showErrors &&
-                                        state.foodOther.trim().isEmpty
-                                    ? requiredText
-                                    : null,
-                              ),
-                            ],
+                          if (state.food.contains(
+                            MedicalOptions.other,
+                          )) ...<Widget>[
+                            const SizedBox(height: AppSpacing.md),
+                            LabeledTextField(
+                              label: context.tr('circles.other_hint'),
+                              controller: _otherFood,
+                              maxLength: MedicalOptions.otherMaxLength,
+                              textInputAction: TextInputAction.done,
+                              onChanged: cubit.foodOtherChanged,
+                              errorText:
+                                  state.showErrors &&
+                                      state.foodOther.trim().isEmpty
+                                  ? requiredText
+                                  : null,
+                            ),
+                          ],
                           if (state.errorKey != null) ...<Widget>[
                             const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),

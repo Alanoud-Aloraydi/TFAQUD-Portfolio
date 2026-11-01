@@ -1,3 +1,5 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
@@ -104,9 +106,8 @@ class _TimingState extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-            ),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: color),
           ),
         ],
       ),

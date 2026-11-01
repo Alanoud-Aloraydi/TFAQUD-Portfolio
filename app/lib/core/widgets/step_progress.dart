@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
@@ -39,14 +40,19 @@ class StepProgress extends StatelessWidget {
                           : i == step
                           // The current step fills from the start side.
                           ? TweenAnimationBuilder<double>(
-                              tween: Tween<double>(begin: still ? 1 : 0, end: 1),
+                              tween: Tween<double>(
+                                begin: still ? 1 : 0,
+                                end: 1,
+                              ),
                               duration: const Duration(milliseconds: 420),
                               curve: Curves.easeOutCubic,
                               builder: (BuildContext context, double t, _) =>
                                   FractionallySizedBox(
                                     alignment: AlignmentDirectional.centerStart,
                                     widthFactor: t,
-                                    child: const ColoredBox(color: AppColors.ink),
+                                    child: const ColoredBox(
+                                      color: AppColors.ink,
+                                    ),
                                   ),
                             )
                           : null,

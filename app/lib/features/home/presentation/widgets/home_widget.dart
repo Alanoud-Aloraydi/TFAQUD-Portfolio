@@ -1,3 +1,5 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/glass.dart';
@@ -66,13 +68,13 @@ class _HomeWidgetState extends State<HomeWidget> {
     return Opacity(
       opacity: _menuOpen ? 0 : 1,
       child: GlassCapsuleButton(
-      label: name,
-      semanticLabel: context.tr(
-        'topbar.switch_circle',
-        args: <String>[selected.name],
-      ),
-      icon: CupertinoIcons.chevron_down,
-      onPressed: () => _choose(context, circles, selectedId, name),
+        label: name,
+        semanticLabel: context.tr(
+          'topbar.switch_circle',
+          args: <String>[selected.name],
+        ),
+        icon: CupertinoIcons.chevron_down,
+        onPressed: () => _choose(context, circles, selectedId, name),
       ),
     );
   }

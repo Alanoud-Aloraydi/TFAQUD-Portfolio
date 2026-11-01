@@ -1,6 +1,7 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/glass_segmented_control.dart';
@@ -53,11 +54,17 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<SendCircleRequestCubit, SendCircleRequestState>(
-            listenWhen:
-                (SendCircleRequestState before, SendCircleRequestState after) =>
-                    after.sessionEnded && !before.sessionEnded,
+            listenWhen: (
+              SendCircleRequestState before,
+              SendCircleRequestState after,
+            ) => after.sessionEnded && !before.sessionEnded,
             listener: (BuildContext context, SendCircleRequestState state) =>
                 context.go(Routes.auth),
             builder: (BuildContext context, SendCircleRequestState state) {
@@ -182,14 +189,17 @@ class _Notice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(CupertinoIcons.info_circle, size: 20, color: AppColors.slate),
+          const Icon(
+            CupertinoIcons.info_circle,
+            size: 20,
+            color: AppColors.slate,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.slate,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: AppColors.slate),
             ),
           ),
         ],

@@ -1,3 +1,5 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/cupertino.dart';
@@ -40,7 +42,11 @@ class StepperControl extends StatelessWidget {
           ),
           const SizedBox(
             height: AppSpacing.lg,
-            child: VerticalDivider(width: 1, thickness: 1, color: AppColors.stone),
+            child: VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: AppColors.stone,
+            ),
           ),
           _Half(
             icon: CupertinoIcons.add,
@@ -54,7 +60,11 @@ class StepperControl extends StatelessWidget {
 }
 
 class _Half extends StatelessWidget {
-  const _Half({required this.icon, required this.label, required this.onPressed});
+  const _Half({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   final IconData icon;
   final String label;

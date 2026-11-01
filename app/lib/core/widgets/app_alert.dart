@@ -1,7 +1,9 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+
 import 'dart:ui' show lerpDouble;
 
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -55,13 +57,11 @@ Future<T?> showAppAlert<T>(
     barrierLabel: title,
     barrierColor: AppColors.scrim,
     transitionDuration: const Duration(milliseconds: 320),
-    pageBuilder:
-        (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) =>
-        AppAlert<T>(title: title, message: message, actions: actions),
+    pageBuilder: (
+      BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+    ) => AppAlert<T>(title: title, message: message, actions: actions),
     transitionBuilder:
         (
           BuildContext context,
@@ -83,7 +83,12 @@ Future<T?> showAppAlert<T>(
                   : lerpDouble(
                       1.08,
                       1,
-                      const Cubic(0.2, 0.9, 0.3, 1.04).transform(animation.value),
+                      const Cubic(
+                        0.2,
+                        0.9,
+                        0.3,
+                        1.04,
+                      ).transform(animation.value),
                     )!;
               return Opacity(
                 opacity: opacity,
@@ -117,7 +122,9 @@ class AppAlert<T> extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final bool sideBySide =
         actions.length == 2 &&
-        actions.every((AppAlertAction<T> a) => a.label.length <= _sideBySideLength);
+        actions.every(
+          (AppAlertAction<T> a) => a.label.length <= _sideBySideLength,
+        );
     // Side by side: cancel first (on the right in Arabic). Stacked: the
     // action on top, cancel last, as iOS 26 does.
     final List<AppAlertAction<T>> ordered = sideBySide
@@ -130,7 +137,8 @@ class AppAlert<T> extends StatelessWidget {
             ...actions.where((AppAlertAction<T> a) => !a.isAction),
           ];
     final List<Widget> buttons = <Widget>[
-      for (final AppAlertAction<T> action in ordered) _AlertButton<T>(action: action),
+      for (final AppAlertAction<T> action in ordered)
+        _AlertButton<T>(action: action),
     ];
     return Center(
       child: Padding(
@@ -236,14 +244,18 @@ class _AlertButton<T> extends StatelessWidget {
     }
     return FilledButton(
       onPressed: tap,
-      style: FilledButton.styleFrom(
-        minimumSize: size,
-        backgroundColor: AppColors.line,
-        foregroundColor:
-            action.destructive ? AppColors.error : AppColors.ink,
-      ).copyWith(
-        overlayColor: const WidgetStatePropertyAll<Color>(Color(0x14202734)),
-      ),
+      style:
+          FilledButton.styleFrom(
+            minimumSize: size,
+            backgroundColor: AppColors.line,
+            foregroundColor: action.destructive
+                ? AppColors.error
+                : AppColors.ink,
+          ).copyWith(
+            overlayColor: const WidgetStatePropertyAll<Color>(
+              Color(0x14202734),
+            ),
+          ),
       child: label,
     );
   }

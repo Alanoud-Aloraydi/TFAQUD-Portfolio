@@ -13,13 +13,7 @@ abstract class PickerWheelStyle {
 
   static const double itemExtent = 44;
 
-  static const TextStyle text = TextStyle(
-    fontFamily: AppTextTheme.fontFamily,
-    fontSize: 22,
-    height: 1.2,
-    fontWeight: FontWeight.w400,
-    color: AppColors.ink,
-  );
+  static const TextStyle text = AppTextTheme.picker;
 
   /// Only the outer wheels round the band's ends, so the band reads as one
   /// piece. Start and end follow the reading direction.
@@ -32,8 +26,6 @@ abstract class PickerWheelStyle {
 
   /// One wheel item: centered, in [text].
   static Widget item(String label) {
-    return Center(
-      child: Text(label, style: text, maxLines: 1),
-    );
+    return Center(child: Text(label, style: text, maxLines: 1));
   }
 }

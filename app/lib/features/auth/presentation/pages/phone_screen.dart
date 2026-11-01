@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
@@ -58,7 +59,12 @@ class _PhoneScreenState extends State<PhoneScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<SignInCubit, SignInState>(
             builder: (BuildContext context, SignInState state) {
               return Column(

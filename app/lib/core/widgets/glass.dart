@@ -1,3 +1,7 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
+
 import 'dart:ui' show ImageFilter;
 
 import 'package:app/core/constants/app_colors.dart';
@@ -66,7 +70,9 @@ class GlassSurface extends StatelessWidget {
                     : const <Color>[Color(0xB8FFFFFF), Color(0x73FFFFFF)],
               ),
               border: Border.all(
-                color: highContrast ? tokens.glassBorder : const Color(0x1F202734),
+                color: highContrast
+                    ? tokens.glassBorder
+                    : const Color(0x1F202734),
                 width: highContrast ? 1.5 : _edge,
               ),
             ),

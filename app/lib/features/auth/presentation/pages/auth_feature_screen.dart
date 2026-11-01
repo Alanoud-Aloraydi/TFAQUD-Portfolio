@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -85,9 +86,7 @@ class _WelcomePanel extends StatelessWidget {
                       Text(
                         context.tr('auth.tagline'),
                         textAlign: TextAlign.center,
-                        style: text.bodyLarge?.copyWith(
-                          color: AppColors.ink,
-                        ),
+                        style: text.bodyLarge?.copyWith(color: AppColors.ink),
                       ),
                     ],
                   ),

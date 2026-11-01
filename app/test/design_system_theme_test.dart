@@ -1,5 +1,6 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -15,8 +16,10 @@ double contrast(Color a, Color b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-Color? resolve(WidgetStateProperty<Color?>? property, Set<WidgetState> states) =>
-    property?.resolve(states);
+Color? resolve(
+  WidgetStateProperty<Color?>? property,
+  Set<WidgetState> states,
+) => property?.resolve(states);
 
 void main() {
   group('palette', () {
@@ -57,12 +60,24 @@ void main() {
         expect(contrast(status, AppColors.leafTint), greaterThanOrEqualTo(4.5));
       }
       // A destructive action in an alert: the red label on the grey capsule.
-      expect(contrast(AppColors.error, AppColors.line), greaterThanOrEqualTo(4.5));
+      expect(
+        contrast(AppColors.error, AppColors.line),
+        greaterThanOrEqualTo(4.5),
+      );
       // Control borders and focus reach 3:1.
-      expect(contrast(AppColors.stone, AppColors.surface), greaterThanOrEqualTo(3));
-      expect(contrast(AppColors.stone, AppColors.canvas), greaterThanOrEqualTo(3));
+      expect(
+        contrast(AppColors.stone, AppColors.surface),
+        greaterThanOrEqualTo(3),
+      );
+      expect(
+        contrast(AppColors.stone, AppColors.canvas),
+        greaterThanOrEqualTo(3),
+      );
       // Focus: slate around controls on canvas, honey on an ink fill.
-      expect(contrast(AppColors.slate, AppColors.canvas), greaterThanOrEqualTo(3));
+      expect(
+        contrast(AppColors.slate, AppColors.canvas),
+        greaterThanOrEqualTo(3),
+      );
       expect(contrast(AppColors.honey, AppColors.ink), greaterThanOrEqualTo(3));
     });
 

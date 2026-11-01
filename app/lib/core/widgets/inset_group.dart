@@ -1,5 +1,7 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/picker_sheet_frame.dart';
@@ -52,7 +54,9 @@ class InsetGroup extends StatelessWidget {
                     header: true,
                     child: Text(
                       header ?? '',
-                      style: text.titleSmall?.copyWith(color: tokens.textSecondary),
+                      style: text.titleSmall?.copyWith(
+                        color: tokens.textSecondary,
+                      ),
                     ),
                   ),
                 ),
@@ -127,14 +131,17 @@ class _RowError extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(CupertinoIcons.exclamationmark_circle, size: AppSizes.iconSmall, color: tokens.error),
+          Icon(
+            CupertinoIcons.exclamationmark_circle,
+            size: AppSizes.iconSmall,
+            color: tokens.error,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: tokens.errorText,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: tokens.errorText),
             ),
           ),
         ],
@@ -608,9 +615,8 @@ class InsetBlock extends StatelessWidget {
                   Expanded(
                     child: Text(
                       errorText!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: tokens.errorText,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: tokens.errorText),
                     ),
                   ),
                 ],

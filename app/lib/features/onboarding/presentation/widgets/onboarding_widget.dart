@@ -1,4 +1,4 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class OnboardingWidget extends StatelessWidget {
   const OnboardingWidget({super.key});
@@ -7,4 +7,4 @@ class OnboardingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Placeholder();
   }
-  }
+}

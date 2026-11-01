@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -42,7 +43,12 @@ class StartScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.sm,
+          ),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
               final OnboardingCubit cubit = context.read<OnboardingCubit>();
@@ -71,9 +77,8 @@ class StartScreen extends StatelessWidget {
                             title: context.tr('onboarding.self_title'),
                             hint: context.tr('onboarding.self_hint'),
                             selected: state.careTarget == CareTarget.self,
-                            onTap: () => cubit.selectCareTarget(
-                              CareTarget.self,
-                            ),
+                            onTap: () =>
+                                cubit.selectCareTarget(CareTarget.self),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           ChoiceCard(
@@ -81,9 +86,8 @@ class StartScreen extends StatelessWidget {
                             title: context.tr('onboarding.other_title'),
                             hint: context.tr('onboarding.other_hint'),
                             selected: state.careTarget == CareTarget.other,
-                            onTap: () => cubit.selectCareTarget(
-                              CareTarget.other,
-                            ),
+                            onTap: () =>
+                                cubit.selectCareTarget(CareTarget.other),
                           ),
                           AnimatedSize(
                             duration: const Duration(milliseconds: 200),
@@ -108,7 +112,9 @@ class StartScreen extends StatelessWidget {
                       onPressed: () => context.go(Routes.today),
                       child: Text(
                         context.tr('onboarding.skip'),
-                        style: text.labelLarge?.copyWith(color: AppColors.slate),
+                        style: text.labelLarge?.copyWith(
+                          color: AppColors.slate,
+                        ),
                       ),
                     ),
                 ],
@@ -133,7 +139,10 @@ class _PatientQuestion extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final OnboardingCubit cubit = context.read<OnboardingCubit>();
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: AppSpacing.lg, top: AppSpacing.lg),
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpacing.lg,
+        top: AppSpacing.lg,
+      ),
       child: Container(
         padding: const EdgeInsetsDirectional.only(start: AppSpacing.md),
         decoration: const BoxDecoration(

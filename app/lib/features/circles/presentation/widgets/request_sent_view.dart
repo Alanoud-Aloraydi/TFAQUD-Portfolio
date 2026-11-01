@@ -1,6 +1,7 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/auth/presentation/widgets/phone_field.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
@@ -45,17 +46,13 @@ class RequestSentView extends StatelessWidget {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: accepted
-                        ? AppColors.surface
-                        : AppColors.surface,
+                    color: accepted ? AppColors.surface : AppColors.surface,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
                     size: 36,
-                    color: accepted
-                        ? AppColors.success
-                        : AppColors.slate,
+                    color: accepted ? AppColors.success : AppColors.slate,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -152,12 +149,8 @@ class _DetailsCard extends StatelessWidget {
                     ? 'circles.request_status_accepted'
                     : 'circles.request_status_pending',
               ),
-              background: accepted
-                  ? AppColors.canvas
-                  : AppColors.canvas,
-              foreground: accepted
-                  ? AppColors.success
-                  : AppColors.slate,
+              background: accepted ? AppColors.canvas : AppColors.canvas,
+              foreground: accepted ? AppColors.success : AppColors.slate,
             ),
           ),
         ],

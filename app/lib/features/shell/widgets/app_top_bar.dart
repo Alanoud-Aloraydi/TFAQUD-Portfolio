@@ -1,3 +1,5 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -21,6 +23,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   final String? displayName;
+
   /// The circle switcher, centered between the two buttons.
   final Widget? circles;
 
@@ -32,7 +35,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onNotifications;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight + AppSpacing.sm);
+  Size get preferredSize =>
+      const Size.fromHeight(kToolbarHeight + AppSpacing.sm);
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +72,10 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
           // The tooltip is also what a screen reader says, so it carries the
           // count: the dot alone would be a colour and nothing else.
           tooltip: needsReply > 0
-              ? context.tr('topbar.notifications_new', args: <String>['$needsReply'])
+              ? context.tr(
+                  'topbar.notifications_new',
+                  args: <String>['$needsReply'],
+                )
               : context.tr('topbar.notifications'),
           // The badge is an ink capsule with the count in white (14.99:1);
           // it never uses the error red.

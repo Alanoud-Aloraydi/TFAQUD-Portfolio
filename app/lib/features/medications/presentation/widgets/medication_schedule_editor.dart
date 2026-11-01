@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inset_group.dart';
@@ -182,8 +183,12 @@ class MedicationScheduleEditor extends StatelessWidget {
           StepperControl(
             decrementLabel: context.tr('medications.dose_less'),
             incrementLabel: context.tr('medications.dose_more'),
-            onDecrement: dose != null && dose > _step ? () => _stepDose(-1) : null,
-            onIncrement: dose == null || dose < _maxDose ? () => _stepDose(1) : null,
+            onDecrement: dose != null && dose > _step
+                ? () => _stepDose(-1)
+                : null,
+            onIncrement: dose == null || dose < _maxDose
+                ? () => _stepDose(1)
+                : null,
           ),
         ],
       ),
@@ -228,8 +233,9 @@ class MedicationScheduleEditor extends StatelessWidget {
           for (final int day in _weekOrder)
             ChipOption('$day', context.tr('medications.weekday.$day')),
         ],
-        isSelected: (String code) =>
-            code == _everyDay ? everyDay : data.weekdays.contains(int.parse(code)),
+        isSelected: (String code) => code == _everyDay
+            ? everyDay
+            : data.weekdays.contains(int.parse(code)),
         onTap: (String code) {
           if (code == _everyDay) {
             // «كل يوم» chooses the whole week; tapped again, it clears it.

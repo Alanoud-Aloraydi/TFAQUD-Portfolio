@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
 import 'package:app/core/widgets/pill_button.dart';
@@ -89,7 +90,12 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               final String requiredText = context.tr('circles.field_required');
@@ -141,11 +147,8 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                             value: state.birthDate == null
                                 ? null
                                 : formatBirthDate(context, state.birthDate!),
-                            onTap: () => _pickBirthDate(
-                              context,
-                              cubit,
-                              state.birthDate,
-                            ),
+                            onTap: () =>
+                                _pickBirthDate(context, cubit, state.birthDate),
                             errorText:
                                 state.showErrors && state.birthDate == null
                                 ? requiredText

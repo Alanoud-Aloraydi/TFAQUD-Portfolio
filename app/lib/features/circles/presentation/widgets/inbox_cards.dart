@@ -1,5 +1,7 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
@@ -78,10 +80,16 @@ class _InboxCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (pill != null) ...<Widget>[const SizedBox(width: AppSpacing.sm), pill!],
+              if (pill != null) ...<Widget>[
+                const SizedBox(width: AppSpacing.sm),
+                pill!,
+              ],
             ],
           ),
-          if (extra != null) ...<Widget>[const SizedBox(height: AppSpacing.sm), extra!],
+          if (extra != null) ...<Widget>[
+            const SizedBox(height: AppSpacing.sm),
+            extra!,
+          ],
           if (actions != null) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
             actions!,

@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -93,9 +94,24 @@ class _ComponentGalleryState extends State<ComponentGallery> {
           _Section(
             title: 'Text fields',
             children: const <Widget>[
-              TextField(decoration: InputDecoration(labelText: 'Label', hintText: 'Hint')),
-              TextField(decoration: InputDecoration(labelText: 'Label', errorText: 'Required field')),
-              TextField(decoration: InputDecoration(labelText: '\u0627\u0644\u0627\u0633\u0645', hintText: '\u0645\u0631\u062D\u0628\u0627')),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Label',
+                  hintText: 'Hint',
+                ),
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Label',
+                  errorText: 'Required field',
+                ),
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: '\u0627\u0644\u0627\u0633\u0645',
+                  hintText: '\u0645\u0631\u062D\u0628\u0627',
+                ),
+              ),
             ],
           ),
           _Section(
@@ -167,7 +183,8 @@ class _ComponentGalleryState extends State<ComponentGallery> {
                 spacing: 16,
                 runSpacing: 16,
                 children: <Widget>[
-                  for (final IconData icon in _icons) Icon(icon, size: AppSizes.icon),
+                  for (final IconData icon in _icons)
+                    Icon(icon, size: AppSizes.icon),
                 ],
               ),
             ],

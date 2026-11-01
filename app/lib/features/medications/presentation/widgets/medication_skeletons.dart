@@ -1,4 +1,6 @@
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
@@ -82,7 +84,10 @@ class DoseRowSkeleton extends StatelessWidget {
               radius: AppRadius.capsule,
             ),
             const SizedBox(height: AppSpacing.sm),
-            const SkeletonBox(height: AppSizes.touch, radius: AppRadius.capsule),
+            const SkeletonBox(
+              height: AppSizes.touch,
+              radius: AppRadius.capsule,
+            ),
           ],
         ],
       ),
@@ -104,10 +109,7 @@ class PlansSkeleton extends StatelessWidget {
       children: <Widget>[
         const SkeletonLargeTitle(width: 88),
         if (filter) ...<Widget>[
-          const SkeletonBox(
-            height: AppSizes.touch,
-            radius: AppRadius.capsule,
-          ),
+          const SkeletonBox(height: AppSizes.touch, radius: AppRadius.capsule),
           const SizedBox(height: AppSpacing.xl),
         ] else ...<Widget>[
           const SkeletonLine(widthFactor: 0.38, height: 24),

@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -36,11 +37,17 @@ class MedicalFileEditScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<MedicalFileEditCubit, MedicalFileEditState>(
-            listenWhen:
-                (MedicalFileEditState before, MedicalFileEditState after) =>
-                    after.sessionEnded && !before.sessionEnded,
+            listenWhen: (
+              MedicalFileEditState before,
+              MedicalFileEditState after,
+            ) => after.sessionEnded && !before.sessionEnded,
             listener: (BuildContext context, MedicalFileEditState state) =>
                 context.go(Routes.auth),
             builder: (BuildContext context, MedicalFileEditState state) {
@@ -293,23 +300,24 @@ class _EditFormState extends State<_EditForm> {
                   isSelected: form.conditions.contains,
                   onTap: cubit.toggleCondition,
                 ),
-                if (form.conditions.contains(MedicalOptions.other))
-                  ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    LabeledTextField(
-                      label: context.tr('circles.other_hint'),
-                      controller: _conditionOther,
-                      maxLength: MedicalOptions.otherMaxLength,
-                      textInputAction: TextInputAction.done,
-                      onChanged: cubit.conditionOtherChanged,
-                      errorText:
-                          showErrors && form.conditionOther.trim().isEmpty
-                          ? requiredText
-                          : null,
-                    ),
-                  ],
+                if (form.conditions.contains(MedicalOptions.other)) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  LabeledTextField(
+                    label: context.tr('circles.other_hint'),
+                    controller: _conditionOther,
+                    maxLength: MedicalOptions.otherMaxLength,
+                    textInputAction: TextInputAction.done,
+                    onChanged: cubit.conditionOtherChanged,
+                    errorText: showErrors && form.conditionOther.trim().isEmpty
+                        ? requiredText
+                        : null,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.xl),
-                Text(context.tr('circles.allergies_title'), style: sectionStyle),
+                Text(
+                  context.tr('circles.allergies_title'),
+                  style: sectionStyle,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
@@ -322,28 +330,29 @@ class _EditFormState extends State<_EditForm> {
                   onTap: (String code) => cubit.toggleNoAllergies(),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Text(context.tr('circles.allergy_medication'), style: sectionStyle),
+                Text(
+                  context.tr('circles.allergy_medication'),
+                  style: sectionStyle,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: _options('medication', MedicalOptions.medications),
                   isSelected: form.medication.contains,
                   onTap: cubit.toggleMedication,
                 ),
-                if (form.medication.contains(MedicalOptions.other))
-                  ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    LabeledTextField(
-                      label: context.tr('circles.other_hint'),
-                      controller: _medicationOther,
-                      maxLength: MedicalOptions.otherMaxLength,
-                      textInputAction: TextInputAction.done,
-                      onChanged: cubit.medicationOtherChanged,
-                      errorText:
-                          showErrors && form.medicationOther.trim().isEmpty
-                          ? requiredText
-                          : null,
-                    ),
-                  ],
+                if (form.medication.contains(MedicalOptions.other)) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  LabeledTextField(
+                    label: context.tr('circles.other_hint'),
+                    controller: _medicationOther,
+                    maxLength: MedicalOptions.otherMaxLength,
+                    textInputAction: TextInputAction.done,
+                    onChanged: cubit.medicationOtherChanged,
+                    errorText: showErrors && form.medicationOther.trim().isEmpty
+                        ? requiredText
+                        : null,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.lg),
                 Text(context.tr('circles.allergy_food'), style: sectionStyle),
                 const SizedBox(height: AppSpacing.sm),
@@ -352,20 +361,19 @@ class _EditFormState extends State<_EditForm> {
                   isSelected: form.food.contains,
                   onTap: cubit.toggleFood,
                 ),
-                if (form.food.contains(MedicalOptions.other))
-                  ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    LabeledTextField(
-                      label: context.tr('circles.other_hint'),
-                      controller: _foodOther,
-                      maxLength: MedicalOptions.otherMaxLength,
-                      textInputAction: TextInputAction.done,
-                      onChanged: cubit.foodOtherChanged,
-                      errorText: showErrors && form.foodOther.trim().isEmpty
-                          ? requiredText
-                          : null,
-                    ),
-                  ],
+                if (form.food.contains(MedicalOptions.other)) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  LabeledTextField(
+                    label: context.tr('circles.other_hint'),
+                    controller: _foodOther,
+                    maxLength: MedicalOptions.otherMaxLength,
+                    textInputAction: TextInputAction.done,
+                    onChanged: cubit.foodOtherChanged,
+                    errorText: showErrors && form.foodOther.trim().isEmpty
+                        ? requiredText
+                        : null,
+                  ),
+                ],
                 if (state.errorKey != null) ...<Widget>[
                   const SizedBox(height: AppSpacing.lg),
                   InlineError(messageKey: state.errorKey!),

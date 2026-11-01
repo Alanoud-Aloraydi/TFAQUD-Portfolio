@@ -1,5 +1,7 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -51,7 +53,11 @@ class ChoiceCard extends StatelessWidget {
                     color: AppColors.leafTint,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: AppSizes.iconSmall, color: AppColors.ink),
+                  child: Icon(
+                    icon,
+                    size: AppSizes.iconSmall,
+                    color: AppColors.ink,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(

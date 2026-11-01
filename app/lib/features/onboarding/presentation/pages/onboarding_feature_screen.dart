@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
@@ -64,10 +65,17 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
-              final String requiredText = context.tr('onboarding.field_required');
+              final String requiredText = context.tr(
+                'onboarding.field_required',
+              );
               return Column(
                 children: <Widget>[
                   Expanded(
@@ -84,7 +92,9 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                             subtitle: context.tr('onboarding.name_subtitle'),
                             // After the code page there is nothing to go back
                             // to, so the link is hidden.
-                            onBack: context.canPop() ? () => context.pop() : null,
+                            onBack: context.canPop()
+                                ? () => context.pop()
+                                : null,
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           LabeledTextField(

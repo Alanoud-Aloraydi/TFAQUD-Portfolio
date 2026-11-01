@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -19,10 +20,7 @@ class LargeTitle extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Semantics(
-            header: true,
-            child: Text(title, style: text.displaySmall),
-          ),
+          Semantics(header: true, child: Text(title, style: text.displaySmall)),
           if (subtitle != null) Text(subtitle!, style: text.bodySmall),
         ],
       ),

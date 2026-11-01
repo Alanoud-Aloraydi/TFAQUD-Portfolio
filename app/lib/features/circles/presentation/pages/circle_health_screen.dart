@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
@@ -61,14 +62,18 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed text is cleared in the state when "other" is turned
             // off or the step is skipped. The field is cleared with it.
-            listenWhen:
-                (CreateCircleState before, CreateCircleState after) =>
-                    before.conditionOther != after.conditionOther &&
-                    after.conditionOther.isEmpty,
+            listenWhen: (CreateCircleState before, CreateCircleState after) =>
+                before.conditionOther != after.conditionOther &&
+                after.conditionOther.isEmpty,
             listener: (BuildContext context, CreateCircleState state) =>
                 _other.clear(),
             builder: (BuildContext context, CreateCircleState state) {
@@ -127,22 +132,23 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
                             isSelected: state.conditions.contains,
                             onTap: cubit.toggleCondition,
                           ),
-                          if (state.conditions.contains(MedicalOptions.other))
-                            ...<Widget>[
-                              const SizedBox(height: AppSpacing.md),
-                              LabeledTextField(
-                                label: context.tr('circles.other_hint'),
-                                controller: _other,
-                                maxLength: MedicalOptions.otherMaxLength,
-                                textInputAction: TextInputAction.done,
-                                onChanged: cubit.conditionOtherChanged,
-                                errorText:
-                                    state.showErrors &&
-                                        state.conditionOther.trim().isEmpty
-                                    ? context.tr('circles.field_required')
-                                    : null,
-                              ),
-                            ],
+                          if (state.conditions.contains(
+                            MedicalOptions.other,
+                          )) ...<Widget>[
+                            const SizedBox(height: AppSpacing.md),
+                            LabeledTextField(
+                              label: context.tr('circles.other_hint'),
+                              controller: _other,
+                              maxLength: MedicalOptions.otherMaxLength,
+                              textInputAction: TextInputAction.done,
+                              onChanged: cubit.conditionOtherChanged,
+                              errorText:
+                                  state.showErrors &&
+                                      state.conditionOther.trim().isEmpty
+                                  ? context.tr('circles.field_required')
+                                  : null,
+                            ),
+                          ],
                         ],
                       ),
                     ),

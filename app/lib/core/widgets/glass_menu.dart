@@ -1,8 +1,11 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, lerpDouble;
 
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/glass.dart';
 import 'package:flutter/cupertino.dart';
@@ -217,7 +220,10 @@ class _GlassMenuState extends State<GlassMenu> {
     final bool still = MediaQuery.disableAnimationsOf(context);
     final bool highContrast = MediaQuery.highContrastOf(context);
     final double row = GlassMenu.rowHeight(context);
-    final int rows = sections.fold(0, (int n, List<GlassMenuEntry> s) => n + s.length);
+    final int rows = sections.fold(
+      0,
+      (int n, List<GlassMenuEntry> s) => n + s.length,
+    );
     final double edge = highContrast ? 3 : 1;
     final double height =
         2 * AppSpacing.sm +
@@ -320,7 +326,6 @@ class _GlassMenuState extends State<GlassMenu> {
       },
     );
   }
-
 }
 
 /// The rows at their final size; the glass around them clips them while it
@@ -382,7 +387,9 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final IconData? icon = entry.selected ? CupertinoIcons.checkmark : entry.icon;
+    final IconData? icon = entry.selected
+        ? CupertinoIcons.checkmark
+        : entry.icon;
     return Semantics(
       button: true,
       selected: entry.selected,
@@ -407,7 +414,11 @@ class _MenuRow extends StatelessWidget {
                     width: AppSizes.icon,
                     child: icon == null
                         ? null
-                        : Icon(icon, size: AppSizes.iconSmall, color: AppColors.ink),
+                        : Icon(
+                            icon,
+                            size: AppSizes.iconSmall,
+                            color: AppColors.ink,
+                          ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

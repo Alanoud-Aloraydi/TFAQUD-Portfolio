@@ -1,12 +1,18 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// A small grey title above a white card, as the account page groups its rows.
 class SettingsSection extends StatelessWidget {
-  const SettingsSection({super.key, required this.title, required this.children});
+  const SettingsSection({
+    super.key,
+    required this.title,
+    required this.children,
+  });
 
   final String title;
   final List<Widget> children;
@@ -84,7 +90,10 @@ class InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final Widget row = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       child: Row(
         children: <Widget>[
           Text(label, style: text.bodyMedium?.copyWith(color: AppColors.slate)),
@@ -141,7 +150,10 @@ class ActionRow extends StatelessWidget {
     return InkWell(
       onTap: busy ? null : onPressed,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.lg,
+        ),
         child: Row(
           children: <Widget>[
             Expanded(

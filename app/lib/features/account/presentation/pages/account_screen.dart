@@ -1,3 +1,5 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -68,7 +70,12 @@ class AccountScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            0,
+          ),
           child: BlocConsumer<AccountCubit, AccountState>(
             listenWhen: (AccountState before, AccountState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -85,9 +92,8 @@ class AccountScreen extends StatelessWidget {
               }
               final String? key = state.errorKey ?? state.noticeKey;
               if (key != null) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(context.tr(key))));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(context.tr(key))));
                 cubit.messagesShown();
               }
               if (state.deletePrompt != DeletePrompt.none) {
@@ -180,9 +186,7 @@ class AccountScreen extends StatelessWidget {
                       ),
                       child: Text(
                         shown.isEmpty ? '؟' : shown.characters.first,
-                        style: text.titleLarge?.copyWith(
-                          color: AppColors.ink,
-                        ),
+                        style: text.titleLarge?.copyWith(color: AppColors.ink),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -281,7 +285,10 @@ class _SentRequestRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: Row(
           children: <Widget>[
             Container(
@@ -321,12 +328,8 @@ class _SentRequestRow extends StatelessWidget {
                     ? 'account.status_accepted_short'
                     : 'circles.request_status_pending',
               ),
-              background: accepted
-                  ? AppColors.canvas
-                  : AppColors.canvas,
-              foreground: accepted
-                  ? AppColors.success
-                  : AppColors.slate,
+              background: accepted ? AppColors.canvas : AppColors.canvas,
+              foreground: accepted ? AppColors.success : AppColors.slate,
             ),
             const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.

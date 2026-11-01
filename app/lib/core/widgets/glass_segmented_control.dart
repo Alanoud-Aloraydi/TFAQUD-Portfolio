@@ -1,3 +1,6 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+
 import 'dart:math' as math;
 
 import 'package:app/core/constants/app_colors.dart';
@@ -41,7 +44,9 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: AppSizes.touch),
       child: GlassSurface(
-        borderRadius: const BorderRadius.all(Radius.circular(AppSizes.touch / 2)),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(AppSizes.touch / 2),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(_inset),
           child: LayoutBuilder(

@@ -1,3 +1,5 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/date_picker_sheet.dart';
 import 'package:app/core/widgets/inset_group.dart';
@@ -75,14 +77,17 @@ class MedicationPeriodFields extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Icon(CupertinoIcons.exclamationmark_circle, size: AppSizes.iconSmall, color: tokens.error),
+                Icon(
+                  CupertinoIcons.exclamationmark_circle,
+                  size: AppSizes.iconSmall,
+                  color: tokens.error,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
                     context.tr('medications.invalid_period'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: tokens.errorText,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: tokens.errorText),
                   ),
                 ),
               ],
@@ -125,7 +130,10 @@ class _DateRow extends StatelessWidget {
           ? IconButton(
               tooltip: context.tr('medications.no_end_date'),
               onPressed: () => onChanged(null),
-              icon: const Icon(CupertinoIcons.xmark_circle, size: AppSizes.iconSmall),
+              icon: const Icon(
+                CupertinoIcons.xmark_circle,
+                size: AppSizes.iconSmall,
+              ),
             )
           : null,
       showChevron: !(allowClear && date != null),

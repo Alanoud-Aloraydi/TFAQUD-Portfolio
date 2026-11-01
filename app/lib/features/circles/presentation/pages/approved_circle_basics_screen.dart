@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
@@ -57,7 +58,12 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
@@ -99,11 +105,8 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                             value: state.birthDate == null
                                 ? null
                                 : formatBirthDate(context, state.birthDate!),
-                            onTap: () => _pickBirthDate(
-                              context,
-                              cubit,
-                              state.birthDate,
-                            ),
+                            onTap: () =>
+                                _pickBirthDate(context, cubit, state.birthDate),
                             errorText:
                                 state.showErrors && state.birthDate == null
                                 ? requiredText

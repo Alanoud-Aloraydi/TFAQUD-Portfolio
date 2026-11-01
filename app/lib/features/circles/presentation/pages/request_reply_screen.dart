@@ -1,6 +1,8 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/pill_button.dart';
@@ -29,7 +31,12 @@ class RequestReplyScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<RequestReplyCubit, RequestReplyState>(
             listenWhen: (RequestReplyState before, RequestReplyState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -208,9 +215,8 @@ class _Row extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.slate),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: AppColors.slate),
           ),
         ),
         child,

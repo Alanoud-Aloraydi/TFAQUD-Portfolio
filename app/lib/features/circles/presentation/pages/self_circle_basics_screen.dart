@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -81,7 +82,12 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
@@ -123,23 +129,21 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                               NamePreset.values.byName(code),
                             ),
                           ),
-                          if (state.namePreset == NamePreset.other)
-                            ...<Widget>[
-                              const SizedBox(height: AppSpacing.md),
-                              LabeledTextField(
-                                label: context.tr('circles.custom_name'),
-                                controller: _customName,
-                                maxLength:
-                                    CreateCircleCubit.maxCustomNameLength,
-                                textInputAction: TextInputAction.done,
-                                onChanged: cubit.customNameChanged,
-                                errorText:
-                                    state.showErrors &&
-                                        state.customName.trim().isEmpty
-                                    ? requiredText
-                                    : null,
-                              ),
-                            ],
+                          if (state.namePreset == NamePreset.other) ...<Widget>[
+                            const SizedBox(height: AppSpacing.md),
+                            LabeledTextField(
+                              label: context.tr('circles.custom_name'),
+                              controller: _customName,
+                              maxLength: CreateCircleCubit.maxCustomNameLength,
+                              textInputAction: TextInputAction.done,
+                              onChanged: cubit.customNameChanged,
+                              errorText:
+                                  state.showErrors &&
+                                      state.customName.trim().isEmpty
+                                  ? requiredText
+                                  : null,
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             context.tr('circles.name_hint'),
@@ -160,11 +164,8 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                             value: state.birthDate == null
                                 ? null
                                 : formatBirthDate(context, state.birthDate!),
-                            onTap: () => _pickBirthDate(
-                              context,
-                              cubit,
-                              state.birthDate,
-                            ),
+                            onTap: () =>
+                                _pickBirthDate(context, cubit, state.birthDate),
                             errorText:
                                 state.showErrors && state.birthDate == null
                                 ? requiredText

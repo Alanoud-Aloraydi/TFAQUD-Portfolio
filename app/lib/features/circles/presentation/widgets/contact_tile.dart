@@ -1,5 +1,6 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
@@ -23,7 +24,12 @@ class ContactTile extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsetsDirectional.fromSTEB(AppSpacing.lg, AppSpacing.md, AppSpacing.sm, AppSpacing.md),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+      ),
       decoration: AppSurfaces.card(),
       child: Row(
         children: <Widget>[

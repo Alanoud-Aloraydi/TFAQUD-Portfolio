@@ -1,6 +1,9 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -149,7 +152,11 @@ class SkeletonSurface extends StatelessWidget {
 
 /// The large title of a tab, and the line under it when [subtitle].
 class SkeletonLargeTitle extends StatelessWidget {
-  const SkeletonLargeTitle({super.key, this.width = 112, this.subtitle = false});
+  const SkeletonLargeTitle({
+    super.key,
+    this.width = 112,
+    this.subtitle = false,
+  });
 
   final double width;
   final bool subtitle;
@@ -409,7 +416,11 @@ class PageSkeleton extends StatelessWidget {
               if (title) ...<Widget>[
                 const Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: SkeletonBox(width: 132, height: 36, radius: AppRadius.s),
+                  child: SkeletonBox(
+                    width: 132,
+                    height: 36,
+                    radius: AppRadius.s,
+                  ),
                 ),
                 if (subtitle) ...<Widget>[
                   const SizedBox(height: AppSpacing.sm),
@@ -458,7 +469,9 @@ class ContentSwitcher extends StatelessWidget {
     final bool still = MediaQuery.disableAnimationsOf(context);
     return AnimatedSwitcher(
       duration: still ? Duration.zero : const Duration(milliseconds: 280),
-      reverseDuration: still ? Duration.zero : const Duration(milliseconds: 160),
+      reverseDuration: still
+          ? Duration.zero
+          : const Duration(milliseconds: 160),
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       layoutBuilder: (Widget? current, List<Widget> previous) => Stack(

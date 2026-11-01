@@ -1,6 +1,9 @@
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
 import 'package:app/core/widgets/skeleton.dart';
@@ -35,7 +38,12 @@ class EmergencyCardScreen extends StatelessWidget {
               context.go(Routes.auth),
           builder: (BuildContext context, EmergencyCardState state) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -123,7 +131,10 @@ class _ReadOnlyPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: AppColors.line,
         borderRadius: BorderRadius.circular(AppRadius.capsule),
@@ -131,7 +142,11 @@ class _ReadOnlyPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(CupertinoIcons.lock, size: AppSizes.iconSmall, color: AppColors.slate),
+          const Icon(
+            CupertinoIcons.lock,
+            size: AppSizes.iconSmall,
+            color: AppColors.slate,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             context.tr('circles.card_read_only'),
@@ -219,7 +234,10 @@ class _DetailsCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       decoration: AppSurfaces.card(),
       child: Column(
         children: <Widget>[
@@ -290,10 +308,7 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            label,
-            style: text.titleSmall?.copyWith(color: AppColors.slate),
-          ),
+          Text(label, style: text.titleSmall?.copyWith(color: AppColors.slate)),
           const SizedBox(height: AppSpacing.xs),
           child,
         ],

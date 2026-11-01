@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/shell/widgets/glass_add_button.dart';
@@ -15,10 +16,22 @@ import 'package:native_glass_navbar/native_glass_navbar.dart';
 typedef _Tab = ({String labelKey, IconData icon, String symbol});
 
 const List<_Tab> _tabs = <_Tab>[
-  (labelKey: 'tab.today', icon: CupertinoIcons.sun_max_fill, symbol: 'sun.max.fill'),
-  (labelKey: 'tab.plan', icon: CupertinoIcons.doc_text_fill, symbol: 'doc.text.fill'),
+  (
+    labelKey: 'tab.today',
+    icon: CupertinoIcons.sun_max_fill,
+    symbol: 'sun.max.fill',
+  ),
+  (
+    labelKey: 'tab.plan',
+    icon: CupertinoIcons.doc_text_fill,
+    symbol: 'doc.text.fill',
+  ),
   (labelKey: 'tab.record', icon: CupertinoIcons.book_fill, symbol: 'book.fill'),
-  (labelKey: 'tab.circle', icon: CupertinoIcons.person_2_fill, symbol: 'person.2.fill'),
+  (
+    labelKey: 'tab.circle',
+    icon: CupertinoIcons.person_2_fill,
+    symbol: 'person.2.fill',
+  ),
 ];
 
 const double _barHeight = 64;

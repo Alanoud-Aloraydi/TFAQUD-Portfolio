@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/app_alert.dart';
 import 'package:app/core/widgets/inset_group.dart';
@@ -69,57 +70,57 @@ class _MedicationFormState extends State<MedicationForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            MedicationBasicFields(
-              data: _data,
-              issue: _issue,
-              onChanged: _changed,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            MedicationDosageFormGroup(data: _data, onChanged: _changed),
-            const SizedBox(height: AppSpacing.xl),
-            MedicationPeriodFields(
-              data: _data,
-              issue: _issue,
-              onChanged: _changed,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            for (var index = 0; index < _data.schedules.length; index++) ...[
-              MedicationScheduleEditor(
-                index: index,
-                data: _data.schedules[index],
-                units: _data.form.doseUnits,
-                issue: _issue?.scheduleIndex == index ? _issue : null,
+              MedicationBasicFields(
+                data: _data,
+                issue: _issue,
                 onChanged: _changed,
-                onRemove: _data.schedules.length == 1
-                    ? null
-                    : () => _removeSchedule(index),
               ),
               const SizedBox(height: AppSpacing.xl),
-            ],
-            InsetGroup(
-              children: [
-                InsetRow(
-                  label: context.tr('medications.add_schedule'),
-                  leading: const Icon(CupertinoIcons.add_circled),
-                  onTap: _addSchedule,
+              MedicationDosageFormGroup(data: _data, onChanged: _changed),
+              const SizedBox(height: AppSpacing.xl),
+              MedicationPeriodFields(
+                data: _data,
+                issue: _issue,
+                onChanged: _changed,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              for (var index = 0; index < _data.schedules.length; index++) ...[
+                MedicationScheduleEditor(
+                  index: index,
+                  data: _data.schedules[index],
+                  units: _data.form.doseUnits,
+                  issue: _issue?.scheduleIndex == index ? _issue : null,
+                  onChanged: _changed,
+                  onRemove: _data.schedules.length == 1
+                      ? null
+                      : () => _removeSchedule(index),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
+              InsetGroup(
+                children: [
+                  InsetRow(
+                    label: context.tr('medications.add_schedule'),
+                    leading: const Icon(CupertinoIcons.add_circled),
+                    onTap: _addSchedule,
+                  ),
+                ],
+              ),
+              if (_errorKey case final error?) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  context.tr(error),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ],
-            ),
-            if (_errorKey case final error?) ...[
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                context.tr(error),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: AppSpacing.xl),
+              PillButton(
+                label: context.tr('medications.save'),
+                onPressed: _submit,
+                isLoading: saving,
               ),
-            ],
-            const SizedBox(height: AppSpacing.xl),
-            PillButton(
-              label: context.tr('medications.save'),
-              onPressed: _submit,
-              isLoading: saving,
-            ),
-            const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ),

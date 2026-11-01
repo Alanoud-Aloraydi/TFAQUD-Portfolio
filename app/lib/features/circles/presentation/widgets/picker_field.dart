@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inset_group.dart';
@@ -34,7 +35,11 @@ class PickerField extends StatelessWidget {
           placeholder: hint,
           onTap: onTap,
           errorText: errorText,
-          trailing: Icon(icon, size: AppSizes.iconSmall, color: AppColors.stone),
+          trailing: Icon(
+            icon,
+            size: AppSizes.iconSmall,
+            color: AppColors.stone,
+          ),
         ),
       ],
     );

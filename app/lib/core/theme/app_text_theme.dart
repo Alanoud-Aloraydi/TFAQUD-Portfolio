@@ -20,10 +20,24 @@ abstract class AppTextTheme {
   /// Family name declared in pubspec.yaml.
   static const String fontFamily = 'IBMPlexSansArabic';
 
+  /// Typography shared by date and time wheels.
+  static const TextStyle picker = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 22,
+    height: 1.2,
+    fontWeight: FontWeight.w400,
+    color: AppColors.ink,
+  );
+
   /// The five sizes of the scale, largest first.
   static const List<double> sizes = <double>[34, 22, 17, 15, 13];
 
-  static TextStyle _style(double size, double lineHeight, FontWeight weight, Color color) {
+  static TextStyle _style(
+    double size,
+    double lineHeight,
+    FontWeight weight,
+    Color color,
+  ) {
     return TextStyle(
       fontSize: size,
       height: lineHeight / size,

@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
@@ -45,7 +46,12 @@ class _SentRequestSheet extends StatelessWidget {
     final bool accepted = request.status == CircleRequestStatus.accepted;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,18 +91,16 @@ class _SentRequestSheet extends StatelessWidget {
             _Line(
               label: context.tr('circles.request_status'),
               child: StatusPill(
-                icon: accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
+                icon: accepted
+                    ? CupertinoIcons.checkmark
+                    : CupertinoIcons.clock,
                 text: context.tr(
                   accepted
                       ? 'account.status_accepted'
                       : 'circles.request_status_pending',
                 ),
-                background: accepted
-                    ? AppColors.canvas
-                    : AppColors.canvas,
-                foreground: accepted
-                    ? AppColors.success
-                    : AppColors.slate,
+                background: accepted ? AppColors.canvas : AppColors.canvas,
+                foreground: accepted ? AppColors.success : AppColors.slate,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -136,9 +140,8 @@ class _Line extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.slate),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: AppColors.slate),
             ),
           ),
           child,

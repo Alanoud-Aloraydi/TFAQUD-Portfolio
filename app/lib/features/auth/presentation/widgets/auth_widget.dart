@@ -1,4 +1,4 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AuthWidget extends StatelessWidget {
   const AuthWidget({super.key});
@@ -7,4 +7,4 @@ class AuthWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Placeholder();
   }
-  }
+}

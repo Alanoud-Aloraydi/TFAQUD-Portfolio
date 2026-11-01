@@ -1,4 +1,6 @@
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +23,10 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(AppRadius.capsule),
@@ -35,10 +40,8 @@ class StatusPill extends StatelessWidget {
           ],
           Text(
             text,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: foreground,
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: foreground, fontWeight: FontWeight.w600),
           ),
         ],
       ),
