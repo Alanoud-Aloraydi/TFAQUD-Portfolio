@@ -8,43 +8,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
-typedef _Tab = ({
-  String labelKey,
-  IconData icon,
-  IconData outlinedIcon,
-  String symbol,
-  String selectedSymbol,
-});
+// Every tab uses the filled symbol, selected or not, as Apple's tab bars do
+// (Health: heart.fill, person.2.fill …): one style in the bar. The selected
+// tab is told by its color and the glass capsule behind it, not by a
+// different icon.
+typedef _Tab = ({String labelKey, IconData icon, String symbol});
 
 const List<_Tab> _tabs = <_Tab>[
-  (
-    labelKey: 'tab.today',
-    icon: CupertinoIcons.sun_max_fill,
-    outlinedIcon: CupertinoIcons.sun_max,
-    symbol: 'sun.max',
-    selectedSymbol: 'sun.max.fill',
-  ),
-  (
-    labelKey: 'tab.plan',
-    icon: CupertinoIcons.doc_text_fill,
-    outlinedIcon: CupertinoIcons.doc_text,
-    symbol: 'doc.text',
-    selectedSymbol: 'doc.text.fill',
-  ),
-  (
-    labelKey: 'tab.record',
-    icon: CupertinoIcons.book_fill,
-    outlinedIcon: CupertinoIcons.book,
-    symbol: 'book',
-    selectedSymbol: 'book.fill',
-  ),
-  (
-    labelKey: 'tab.circle',
-    icon: CupertinoIcons.person_2_fill,
-    outlinedIcon: CupertinoIcons.person_2,
-    symbol: 'person.2',
-    selectedSymbol: 'person.2.fill',
-  ),
+  (labelKey: 'tab.today', icon: CupertinoIcons.sun_max_fill, symbol: 'sun.max.fill'),
+  (labelKey: 'tab.plan', icon: CupertinoIcons.doc_text_fill, symbol: 'doc.text.fill'),
+  (labelKey: 'tab.record', icon: CupertinoIcons.book_fill, symbol: 'book.fill'),
+  (labelKey: 'tab.circle', icon: CupertinoIcons.person_2_fill, symbol: 'person.2.fill'),
 ];
 
 const double _barHeight = 64;
@@ -94,7 +68,7 @@ class AppBottomBar extends StatelessWidget {
           NativeGlassNavBarItem(
             label: context.tr(tab.labelKey),
             symbol: tab.symbol,
-            selectedSymbol: tab.selectedSymbol,
+            selectedSymbol: tab.symbol,
           ),
       ],
       fallback: frosted,
@@ -148,7 +122,7 @@ class _FrostedTabBar extends StatelessWidget {
             for (final _Tab tab in _tabs)
               CrystalNavigationBarItem(
                 icon: tab.icon,
-                unselectedIcon: tab.outlinedIcon,
+                unselectedIcon: tab.icon,
                 label: context.tr(tab.labelKey),
               ),
           ],

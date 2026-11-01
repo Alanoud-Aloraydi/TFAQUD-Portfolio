@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
+import 'package:app/core/widgets/option_chips.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
@@ -10,7 +11,6 @@ import 'package:app/features/circles/presentation/widgets/already_has_circle_vie
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
 import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -81,7 +81,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();

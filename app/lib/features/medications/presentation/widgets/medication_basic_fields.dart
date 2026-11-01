@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/inset_group.dart';
+import 'package:app/core/widgets/option_chips.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -6,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// The medicine's details as one iOS grouped section: name, strength with
-/// its unit, dosage form, reason and general instructions.
+/// its unit, reason and general instructions. The dosage form has its own
+/// section of chips ([MedicationDosageFormGroup]).
 class MedicationBasicFields extends StatelessWidget {
   const MedicationBasicFields({
     super.key,
@@ -55,12 +57,6 @@ class MedicationBasicFields extends StatelessWidget {
             onPressed: () => _chooseStrengthUnit(context),
           ),
         ),
-        InsetRow(
-          label: context.tr('medications.dosage_form'),
-          value: context.tr('medications.form.${data.form.name}'),
-          showChevron: true,
-          onTap: () => _chooseForm(context),
-        ),
         InsetTextRow(
           label: context.tr('medications.reason'),
           hint: context.tr('medications.optional'),
@@ -92,18 +88,46 @@ class MedicationBasicFields extends StatelessWidget {
     data.strengthUnit = unit;
     onChanged();
   }
+}
 
-  Future<void> _chooseForm(BuildContext context) async {
-    final DosageForm? form = await showOptionSheet<DosageForm>(
-      context,
-      title: context.tr('medications.dosage_form'),
-      options: DosageForm.values,
-      labelOf: (DosageForm form) => context.tr('medications.form.${form.name}'),
-      selected: data.form,
+/// The dosage form as chips, every form on the screen at once (أقراص،
+/// كبسولات، سائل، قطرات، بخاخ، حقن), as a booking app shows its choices
+/// instead of an empty field. Choosing one keeps each dose's unit when the
+/// new form allows it, else sets the form's own unit.
+class MedicationDosageFormGroup extends StatelessWidget {
+  const MedicationDosageFormGroup({
+    super.key,
+    required this.data,
+    required this.onChanged,
+  });
+
+  final MedicationFormData data;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final String title = context.tr('medications.dosage_form');
+    return InsetGroup(
+      header: title,
+      children: <Widget>[
+        InsetBlock(
+          semanticLabel: title,
+          child: OptionChips(
+            options: <ChipOption>[
+              for (final DosageForm form in DosageForm.values)
+                ChipOption(form.name, context.tr('medications.form.${form.name}')),
+            ],
+            isSelected: (String code) => code == data.form.name,
+            onTap: (String code) => _choose(DosageForm.values.byName(code)),
+          ),
+        ),
+      ],
     );
-    if (form == null) return;
+  }
+
+  void _choose(DosageForm form) {
+    if (form == data.form) return;
     data.form = form;
-    // A schedule keeps its unit only if the new form allows it.
     final List<DoseUnit> allowed = form.doseUnits;
     for (final schedule in data.schedules) {
       if (!allowed.contains(schedule.doseUnit)) {

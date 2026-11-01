@@ -35,7 +35,7 @@ class EmergencyCardScreen extends StatelessWidget {
               context.go(Routes.auth),
           builder: (BuildContext context, EmergencyCardState state) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -123,7 +123,7 @@ class _ReadOnlyPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: AppColors.line,
         borderRadius: BorderRadius.circular(AppRadius.capsule),
@@ -131,7 +131,7 @@ class _ReadOnlyPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(CupertinoIcons.lock, size: 14, color: AppColors.slate),
+          const Icon(CupertinoIcons.lock, size: AppSizes.iconSmall, color: AppColors.slate),
           const SizedBox(width: AppSpacing.xs),
           Text(
             context.tr('circles.card_read_only'),
@@ -158,9 +158,9 @@ class _NameCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.space5),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: AppColors.ink,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          shape: AppRadius.shape(AppRadius.card),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,8 +177,8 @@ class _NameCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: AppSizes.avatarLarge,
+                  height: AppSizes.avatarLarge,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -220,11 +220,7 @@ class _DetailsCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         children: <Widget>[
           _Section(

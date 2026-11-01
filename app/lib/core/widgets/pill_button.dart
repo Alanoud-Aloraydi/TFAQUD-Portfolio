@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Full-width pill button of the sign-in and account setup pages.
@@ -29,12 +30,12 @@ class PillButton extends StatelessWidget {
         onPressed: action,
         style: FilledButton.styleFrom(
           shape: const StadiumBorder(),
-          minimumSize: const Size.fromHeight(48),
+          minimumSize: const Size.fromHeight(AppSizes.button),
         ),
         child: isLoading
             ? const SizedBox(
-                width: 22,
-                height: 22,
+                width: AppSizes.iconSmall,
+                height: AppSizes.iconSmall,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
                   color: AppColors.onInk,

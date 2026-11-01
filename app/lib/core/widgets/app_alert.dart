@@ -148,11 +148,13 @@ class AppAlert<T> extends StatelessWidget {
                 decoration: ShapeDecoration(
                   shape: AppRadius.shape(AppRadius.xl),
                   color: AppColors.surface,
+                  // A light, soft shadow: the dim behind already sets the
+                  // alert apart.
                   shadows: const <BoxShadow>[
                     BoxShadow(
-                      color: Color(0x29202734),
-                      blurRadius: 40,
-                      offset: Offset(0, 16),
+                      color: Color(0x1F202734),
+                      blurRadius: 24,
+                      offset: Offset(0, 8),
                     ),
                   ],
                 ),

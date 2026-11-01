@@ -18,7 +18,7 @@ class TodaySkeleton extends StatelessWidget {
     return const SkeletonPage(
       children: <Widget>[
         SkeletonLargeTitle(width: 96, subtitle: true),
-        SkeletonLine(widthFactor: 0.32, height: 22),
+        SkeletonLine(widthFactor: 0.32, height: 24),
         SizedBox(height: AppSpacing.md),
         DoseRowSkeleton(withButtons: true),
         Divider(height: 1),
@@ -65,7 +65,7 @@ class DoseRowSkeleton extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    SkeletonLine(widthFactor: 0.55, height: 18),
+                    SkeletonLine(widthFactor: 0.55, height: 20),
                     SizedBox(height: AppSpacing.sm),
                     SkeletonLine(widthFactor: 0.3),
                     SizedBox(height: AppSpacing.sm),
@@ -110,7 +110,7 @@ class PlansSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
         ] else ...<Widget>[
-          const SkeletonLine(widthFactor: 0.38, height: 22),
+          const SkeletonLine(widthFactor: 0.38, height: 24),
           const SizedBox(height: AppSpacing.md),
         ],
         for (int i = 0; i < 3; i++) ...<Widget>[
@@ -137,10 +137,10 @@ class PlanCardSkeleton extends StatelessWidget {
             children: <Widget>[
               SkeletonBox(width: 24, height: 24, radius: AppRadius.xs),
               SizedBox(width: AppSpacing.sm),
-              Expanded(child: SkeletonLine(widthFactor: 0.55, height: 18)),
-              SkeletonBox(width: 56, height: 26, radius: AppRadius.s),
+              Expanded(child: SkeletonLine(widthFactor: 0.55, height: 20)),
+              SkeletonBox(width: 56, height: 24, radius: AppRadius.s),
               SizedBox(width: AppSpacing.sm),
-              SkeletonBox(width: 10, height: 18),
+              SkeletonBox(width: 12, height: 20),
             ],
           ),
           SizedBox(height: AppSpacing.sm),
@@ -255,7 +255,7 @@ class DoseHistorySkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SkeletonBlock(
       children: <Widget>[
-        SkeletonLine(widthFactor: 0.35, height: 22),
+        SkeletonLine(widthFactor: 0.35, height: 24),
         SizedBox(height: AppSpacing.sm),
         DoseRowSkeleton(),
         Divider(height: 1),

@@ -116,7 +116,7 @@ class _CountryCodeBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 84,
-      height: 50,
+      height: AppSizes.field,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.surface,

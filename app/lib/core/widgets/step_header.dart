@@ -1,6 +1,8 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
 import 'package:app/core/widgets/glass.dart';
+import 'package:app/core/widgets/step_progress.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +19,10 @@ class StepHeader extends StatelessWidget {
     this.subtitle,
     this.onBack,
     this.onClose,
-  }) : assert(onBack == null || onClose == null);
+    this.step,
+    this.totalSteps,
+  }) : assert(onBack == null || onClose == null),
+       assert((step == null) == (totalSteps == null));
 
   final String title;
   final String? subtitle;
@@ -28,6 +33,11 @@ class StepHeader extends StatelessWidget {
   /// The close button of a modal page, on the leading side (the right in
   /// Arabic), in glass as the buttons of the top bar.
   final VoidCallback? onClose;
+
+  /// The page's place in a step-by-step flow, such as the first account
+  /// set-up: the progress bar and «الخطوة 1 من 2» show above the title.
+  final int? step;
+  final int? totalSteps;
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +54,23 @@ class StepHeader extends StatelessWidget {
         else if (onBack != null)
           BackLink(onPressed: onBack!)
         else
-          const SizedBox(height: 44),
-        const SizedBox(height: 12),
+          const SizedBox(height: AppSizes.touch),
+        if (step != null) ...<Widget>[
+          const SizedBox(height: AppSpacing.sm),
+          StepProgress(step: step!, total: totalSteps!),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            context.tr(
+              'common.step_of',
+              args: <String>['$step', '$totalSteps'],
+            ),
+            style: text.bodySmall?.copyWith(color: AppColors.slate),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.md),
         Semantics(header: true, child: Text(title, style: text.headlineMedium)),
         if (subtitle != null) ...<Widget>[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             subtitle!,
             style: text.bodyMedium?.copyWith(color: AppColors.slate),

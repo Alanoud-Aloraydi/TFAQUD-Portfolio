@@ -58,7 +58,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocBuilder<SignInCubit, SignInState>(
             builder: (BuildContext context, SignInState state) {
               return Column(

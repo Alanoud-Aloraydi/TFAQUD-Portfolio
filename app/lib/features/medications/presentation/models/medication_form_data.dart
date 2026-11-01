@@ -131,9 +131,11 @@ class MedicationFormData {
     }
   }
 
+  // A new dose starts on the most common answer (one tablet at 8:00, every
+  // day), so most people only check it.
   static ScheduleFormData _newSchedule() => ScheduleFormData(
     time: const TimeOfDay(hour: 8, minute: 0),
-    dose: 0.5,
+    dose: 1,
     doseUnit: DoseUnit.tablet,
     weekdays: {1, 2, 3, 4, 5, 6, 7},
   );

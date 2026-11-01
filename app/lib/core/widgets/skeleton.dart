@@ -141,11 +141,7 @@ class SkeletonSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: AppColors.surface,
-        shape: AppRadius.shape(AppRadius.l),
-        shadows: AppGlass.cardShadow,
-      ),
+      decoration: AppSurfaces.card(),
       child: Padding(padding: padding, child: child),
     );
   }
@@ -255,7 +251,7 @@ class SkeletonFormGroup extends StatelessWidget {
               start: AppSpacing.lg,
               bottom: AppSpacing.sm,
             ),
-            child: SkeletonLine(widthFactor: 0.3, height: 14),
+            child: SkeletonLine(widthFactor: 0.3, height: 16),
           ),
         SkeletonSurface(
           padding: EdgeInsets.zero,
@@ -275,7 +271,7 @@ class SkeletonFormGroup extends StatelessWidget {
                           width: AppSizes.formLabel,
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
-                            child: SkeletonBox(width: 72, height: 14),
+                            child: SkeletonBox(width: 72, height: 16),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -320,7 +316,7 @@ class SkeletonDetailsCard extends StatelessWidget {
               ),
               child: Row(
                 children: <Widget>[
-                  const SkeletonBox(width: 72, height: 14),
+                  const SkeletonBox(width: 72, height: 16),
                   const Spacer(),
                   SkeletonBox(width: i.isEven ? 96 : 64, height: 16),
                 ],
@@ -341,11 +337,7 @@ class SkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: AppColors.surface,
-        shape: AppRadius.shape(AppRadius.l),
-        shadows: AppGlass.cardShadow,
-      ),
+      decoration: AppSurfaces.card(),
       child: const Padding(
         padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(

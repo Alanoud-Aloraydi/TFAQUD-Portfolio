@@ -37,17 +37,24 @@ abstract class AppSizes {
   /// Round glass buttons at the top: account and notifications.
   static const double glassButton = 44;
 
-  /// Large capsule buttons such as «حفظ».
-  static const double button = 50;
+  /// Large capsule buttons such as «حفظ» (on the 4-point grid).
+  static const double button = 48;
 
-  /// Single-line text fields.
-  static const double field = 50;
+  /// Single-line text fields: a 28 line and 12 above and below.
+  static const double field = 52;
 
   /// The floating tab bar, and the add button beside it.
   static const double tabBar = 64;
 
   static const double icon = 24;
   static const double iconSmall = 20;
+
+  /// The round initial of a person or circle in a row.
+  static const double avatar = 40;
+
+  /// The round initial at the top of a page or a card that stands for one
+  /// person: the account, a request, the emergency card.
+  static const double avatarLarge = 56;
 
   /// The label column of a form row (design system `size-form-label`): the
   /// small grey label sits in it, and values and typed text start after it,
@@ -63,16 +70,11 @@ abstract class AppGlass {
   static const double blurSigma = 14;
   static const double tintAlpha = 0.72;
 
-  /// Soft shadow under floating glass: ink at low opacity.
+  /// A light, soft shadow under floating glass: ink at 8% and 5%. Cards
+  /// have no shadow; they have a 1px line edge (AppSurfaces.card).
   static const List<BoxShadow> shadow = <BoxShadow>[
-    BoxShadow(color: Color(0x1F202734), blurRadius: 24, offset: Offset(0, 8)),
-    BoxShadow(color: Color(0x14202734), blurRadius: 3, offset: Offset(0, 1)),
-  ];
-
-  /// Soft shadow under opaque cards on canvas (surface is only 1.07:1 there).
-  static const List<BoxShadow> cardShadow = <BoxShadow>[
+    BoxShadow(color: Color(0x14202734), blurRadius: 16, offset: Offset(0, 4)),
     BoxShadow(color: Color(0x0D202734), blurRadius: 2, offset: Offset(0, 1)),
-    BoxShadow(color: Color(0x0D202734), blurRadius: 16, offset: Offset(0, 4)),
   ];
 }
 

@@ -20,7 +20,7 @@ class AccountSkeleton extends StatelessWidget {
             children: <Widget>[
               SkeletonCircle(size: 48),
               SizedBox(width: AppSpacing.md),
-              Expanded(child: SkeletonLine(widthFactor: 0.5, height: 18)),
+              Expanded(child: SkeletonLine(widthFactor: 0.5, height: 20)),
             ],
           ),
         ),

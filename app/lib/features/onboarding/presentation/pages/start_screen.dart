@@ -42,7 +42,7 @@ class StartScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.sm),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
               final OnboardingCubit cubit = context.read<OnboardingCubit>();
@@ -54,6 +54,10 @@ class StartScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           StepHeader(
+                            // Step 2 of the first set-up; from the "+" it is
+                            // one page, with no steps.
+                            step: addingCircle ? null : 2,
+                            totalSteps: addingCircle ? null : 2,
                             title: context.tr('onboarding.start_title'),
                             // After the name page the link is hidden, as in the
                             // design. From the "+" it takes the user back.

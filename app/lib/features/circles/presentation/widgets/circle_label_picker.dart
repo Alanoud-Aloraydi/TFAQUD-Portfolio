@@ -1,8 +1,8 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
+import 'package:app/core/widgets/option_chips.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
-import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

@@ -180,7 +180,7 @@ class GlassMenu extends StatefulWidget {
   /// Height of one row: at least 48, more with larger text.
   static double rowHeight(BuildContext context) => math.max(
     AppSizes.touch + AppSpacing.xs,
-    MediaQuery.textScalerOf(context).scale(26) + 2 * AppSpacing.sm,
+    MediaQuery.textScalerOf(context).scale(28) + 2 * AppSpacing.sm,
   );
 
   @override

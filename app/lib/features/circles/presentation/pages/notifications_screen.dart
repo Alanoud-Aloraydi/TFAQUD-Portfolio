@@ -66,7 +66,7 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
           child: BlocConsumer<InboxCubit, InboxState>(
             listenWhen: (InboxState before, InboxState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||

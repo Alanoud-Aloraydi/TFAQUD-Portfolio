@@ -21,7 +21,7 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(AppRadius.capsule),
@@ -30,7 +30,7 @@ class StatusPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           if (icon != null) ...<Widget>[
-            Icon(icon, size: 14, color: foreground),
+            Icon(icon, size: AppSizes.iconSmall, color: foreground),
             const SizedBox(width: AppSpacing.xs),
           ],
           Text(

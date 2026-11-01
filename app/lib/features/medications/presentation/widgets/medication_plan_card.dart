@@ -36,9 +36,10 @@ class MedicationPlanCard extends StatelessWidget {
         : plan.isScheduledOn(today)
         ? _PlanState.scheduled
         : _PlanState.current;
+    // The card clips its ripple to its own iOS corner.
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: () => _openDetails(context),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),

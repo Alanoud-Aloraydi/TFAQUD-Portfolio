@@ -34,7 +34,7 @@ class InsetGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
     final TextTheme text = Theme.of(context).textTheme;
-    final ShapeBorder shape = AppRadius.shape(AppRadius.l);
+    final ShapeBorder shape = AppSurfaces.cardShape();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -61,11 +61,7 @@ class InsetGroup extends StatelessWidget {
             ),
           ),
         DecoratedBox(
-          decoration: ShapeDecoration(
-            shape: shape,
-            color: AppColors.surface,
-            shadows: AppGlass.cardShadow,
-          ),
+          decoration: AppSurfaces.card(),
           child: Material(
             type: MaterialType.transparency,
             shape: shape,
@@ -131,7 +127,7 @@ class _RowError extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(CupertinoIcons.exclamationmark_circle, size: 18, color: tokens.error),
+          Icon(CupertinoIcons.exclamationmark_circle, size: AppSizes.iconSmall, color: tokens.error),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
@@ -150,7 +146,7 @@ class _RowError extends StatelessWidget {
 /// One tappable row. With a [leading] icon it is an action row, such as
 /// «إضافة موعد جرعة»: the icon and the label in ink. Otherwise it is a field
 /// row: the small label in its column, then the value (or a placeholder)
-/// starting right after it, and an optional chevron at the end. At least 50
+/// starting right after it, and an optional chevron at the end. At least 48
 /// high, so it is easy to tap.
 class InsetRow extends StatelessWidget {
   const InsetRow({
@@ -470,8 +466,11 @@ class InsetChoiceButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text(label),
-            const SizedBox(width: 2),
-            const Icon(CupertinoIcons.chevron_up_chevron_down, size: 18),
+            const SizedBox(width: AppSpacing.xs),
+            const Icon(
+              CupertinoIcons.chevron_up_chevron_down,
+              size: AppSizes.iconSmall,
+            ),
           ],
         ),
       ),
@@ -564,4 +563,62 @@ Future<Set<T>?> showChecklistSheet<T>(
       );
     },
   );
+}
+
+/// A block inside a group that is not a row, such as chips that show every
+/// choice at once instead of a row that opens a list (design system
+/// FormGroup). It has the rows' side padding and room above and below.
+/// [semanticLabel] names the block for VoiceOver, and [errorText] shows
+/// under it with the error icon, as under a row.
+class InsetBlock extends StatelessWidget {
+  const InsetBlock({
+    super.key,
+    required this.child,
+    this.semanticLabel,
+    this.errorText,
+  });
+
+  final Widget child;
+  final String? semanticLabel;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens tokens = context.tokens;
+    return Semantics(
+      container: true,
+      label: semanticLabel,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            child,
+            if (errorText != null) ...<Widget>[
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Icon(
+                    CupertinoIcons.exclamationmark_circle,
+                    size: AppSizes.iconSmall,
+                    color: tokens.error,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      errorText!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: tokens.errorText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

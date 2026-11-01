@@ -1,12 +1,12 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
+import 'package:app/core/widgets/option_chips.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/circle_flow_routes.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
-import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:app/features/circles/presentation/widgets/step_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +61,7 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocConsumer<CreateCircleCubit, CreateCircleState>(
             // The typed text is cleared in the state when "other" is turned
             // off or the step is skipped. The field is cleared with it.

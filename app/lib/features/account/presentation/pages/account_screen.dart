@@ -68,7 +68,7 @@ class AccountScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
           child: BlocConsumer<AccountCubit, AccountState>(
             listenWhen: (AccountState before, AccountState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -171,8 +171,8 @@ class AccountScreen extends StatelessWidget {
                 child: Row(
                   children: <Widget>[
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: AppSizes.avatarLarge,
+                      height: AppSizes.avatarLarge,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
                         color: AppColors.leafTint,
@@ -281,12 +281,12 @@ class _SentRequestRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         child: Row(
           children: <Widget>[
             Container(
-              width: 40,
-              height: 40,
+              width: AppSizes.avatar,
+              height: AppSizes.avatar,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
                 color: AppColors.leafTint,

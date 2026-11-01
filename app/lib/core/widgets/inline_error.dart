@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,13 +18,11 @@ class InlineError extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Icon(
-              CupertinoIcons.exclamationmark_circle,
-              size: 18,
-              color: AppColors.error,
-            ),
+          // The icon is as tall as the text's 20 line, so it sits on it.
+          const Icon(
+            CupertinoIcons.exclamationmark_circle,
+            size: AppSizes.iconSmall,
+            color: AppColors.error,
           ),
           const SizedBox(width: 8),
           Expanded(

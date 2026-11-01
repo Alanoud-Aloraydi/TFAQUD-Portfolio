@@ -75,7 +75,7 @@ class MedicationPeriodFields extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Icon(CupertinoIcons.exclamationmark_circle, size: 18, color: tokens.error),
+                Icon(CupertinoIcons.exclamationmark_circle, size: AppSizes.iconSmall, color: tokens.error),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
@@ -125,7 +125,7 @@ class _DateRow extends StatelessWidget {
           ? IconButton(
               tooltip: context.tr('medications.no_end_date'),
               onPressed: () => onChanged(null),
-              icon: const Icon(CupertinoIcons.xmark_circle_fill, size: 20),
+              icon: const Icon(CupertinoIcons.xmark_circle, size: AppSizes.iconSmall),
             )
           : null,
       showChevron: !(allowClear && date != null),

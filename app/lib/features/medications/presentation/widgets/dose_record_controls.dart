@@ -127,7 +127,10 @@ class _RecordedStatus extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(taken ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.minus_circle_fill, color: iconColor),
+          Icon(
+            taken ? CupertinoIcons.checkmark_circle : CupertinoIcons.minus_circle,
+            color: iconColor,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Text(
             context.tr(

@@ -75,6 +75,8 @@ class _MedicationFormState extends State<MedicationForm> {
               onChanged: _changed,
             ),
             const SizedBox(height: AppSpacing.xl),
+            MedicationDosageFormGroup(data: _data, onChanged: _changed),
+            const SizedBox(height: AppSpacing.xl),
             MedicationPeriodFields(
               data: _data,
               issue: _issue,
@@ -98,7 +100,7 @@ class _MedicationFormState extends State<MedicationForm> {
               children: [
                 InsetRow(
                   label: context.tr('medications.add_schedule'),
-                  leading: const Icon(CupertinoIcons.add_circled_solid),
+                  leading: const Icon(CupertinoIcons.add_circled),
                   onTap: _addSchedule,
                 ),
               ],

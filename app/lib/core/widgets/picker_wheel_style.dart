@@ -15,7 +15,7 @@ abstract class PickerWheelStyle {
 
   static const TextStyle text = TextStyle(
     fontFamily: AppTextTheme.fontFamily,
-    fontSize: 21,
+    fontSize: 22,
     height: 1.2,
     fontWeight: FontWeight.w400,
     color: AppColors.ink,

@@ -64,7 +64,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
               final String requiredText = context.tr('onboarding.field_required');
@@ -76,6 +76,10 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           StepHeader(
+                            // The first account set-up: the name, then where
+                            // to start.
+                            step: 1,
+                            totalSteps: 2,
                             title: context.tr('onboarding.name_title'),
                             subtitle: context.tr('onboarding.name_subtitle'),
                             // After the code page there is nothing to go back

@@ -140,7 +140,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     if (state.status == HomeStatus.failure) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -159,7 +159,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     if (state.data!.circles.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

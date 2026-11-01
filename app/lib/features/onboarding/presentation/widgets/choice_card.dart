@@ -31,8 +31,8 @@ class ChoiceCard extends StatelessWidget {
       child: Material(
         color: AppColors.surface,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.card),
+        shape: AppRadius.shape(
+          AppRadius.card,
           side: BorderSide(
             color: selected ? AppColors.ink : AppColors.line,
             width: selected ? 2 : 1,
@@ -45,13 +45,13 @@ class ChoiceCard extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: AppSizes.avatar,
+                  height: AppSizes.avatar,
                   decoration: const BoxDecoration(
                     color: AppColors.leafTint,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 20, color: AppColors.ink),
+                  child: Icon(icon, size: AppSizes.iconSmall, color: AppColors.ink),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -59,7 +59,7 @@ class ChoiceCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(title, style: text.titleLarge),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(hint, style: text.bodySmall),
                     ],
                   ),

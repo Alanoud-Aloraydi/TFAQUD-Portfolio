@@ -59,7 +59,7 @@ class MedicalFileScreen extends StatelessWidget {
           builder: (BuildContext context, MedicalFileState state) {
             final MedicalFile? file = state.file;
             return Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[

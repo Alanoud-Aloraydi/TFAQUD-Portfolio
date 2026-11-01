@@ -43,11 +43,7 @@ class SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         children: <Widget>[
           for (int i = 0; i < children.length; i++) ...<Widget>[
@@ -61,7 +57,9 @@ class SettingsCard extends StatelessWidget {
 }
 
 /// A row with the label on the start side and the value on the other. When
-/// [onEdit] is set the whole row is a button with a pencil.
+/// [onEdit] is set the whole row is a button with a pencil at its end, as
+/// iOS puts a row's mark at the end: every label starts on the same line,
+/// with or without a pencil.
 class InfoRow extends StatelessWidget {
   const InfoRow({
     super.key,
@@ -86,13 +84,9 @@ class InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final Widget row = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       child: Row(
         children: <Widget>[
-          if (onEdit != null) ...<Widget>[
-            const Icon(CupertinoIcons.pencil, size: 18, color: AppColors.ink),
-            const SizedBox(width: AppSpacing.sm),
-          ],
           Text(label, style: text.bodyMedium?.copyWith(color: AppColors.slate)),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -103,6 +97,14 @@ class InfoRow extends StatelessWidget {
               style: text.bodyLarge,
             ),
           ),
+          if (onEdit != null) ...<Widget>[
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(
+              CupertinoIcons.pencil,
+              size: AppSizes.iconSmall,
+              color: AppColors.slate,
+            ),
+          ],
         ],
       ),
     );
@@ -150,8 +152,8 @@ class ActionRow extends StatelessWidget {
             ),
             if (busy)
               const SizedBox(
-                width: 18,
-                height: 18,
+                width: AppSizes.iconSmall,
+                height: AppSizes.iconSmall,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
           ],

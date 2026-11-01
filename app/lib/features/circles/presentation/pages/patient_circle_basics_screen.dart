@@ -89,7 +89,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               final String requiredText = context.tr('circles.field_required');

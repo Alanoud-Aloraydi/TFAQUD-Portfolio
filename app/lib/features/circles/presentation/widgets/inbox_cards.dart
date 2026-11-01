@@ -41,11 +41,7 @@ class _InboxCard extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -53,8 +49,8 @@ class _InboxCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                width: 40,
-                height: 40,
+                width: AppSizes.avatar,
+                height: AppSizes.avatar,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: avatarBackground,
@@ -74,7 +70,7 @@ class _InboxCard extends StatelessWidget {
                       header: true,
                       child: Text(title, style: text.titleMedium),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       body,
                       style: text.bodyMedium?.copyWith(color: AppColors.slate),

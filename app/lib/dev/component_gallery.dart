@@ -2,6 +2,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:dio/dio.dart' show Response;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -34,9 +35,9 @@ class _ComponentGalleryState extends State<ComponentGallery> {
     CupertinoIcons.exclamationmark_triangle,
     CupertinoIcons.clock,
     CupertinoIcons.calendar,
-    CupertinoIcons.capsule_fill,
+    CupertinoIcons.capsule,
     CupertinoIcons.heart,
-    CupertinoIcons.drop_fill,
+    CupertinoIcons.drop,
     CupertinoIcons.search,
     CupertinoIcons.delete,
     CupertinoIcons.pencil,
@@ -166,7 +167,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
                 spacing: 16,
                 runSpacing: 16,
                 children: <Widget>[
-                  for (final IconData icon in _icons) Icon(icon, size: 28),
+                  for (final IconData icon in _icons) Icon(icon, size: AppSizes.icon),
                 ],
               ),
             ],

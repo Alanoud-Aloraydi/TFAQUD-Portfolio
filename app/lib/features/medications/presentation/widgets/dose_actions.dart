@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:app/core/widgets/time_picker_sheet.dart';
+import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -98,7 +99,12 @@ class _SkipDoseSheetState extends State<_SkipDoseSheet> {
       minVerticalPadding: 0,
       onTap: () => setState(() => _reason = selected ? null : reason),
       title: Text(context.tr('medications.skip_reason.${reason.name}')),
-      trailing: Icon(selected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle),
+      // As an iOS list: a check mark on the chosen reason, nothing on the
+      // others.
+      selected: selected,
+      trailing: selected
+          ? const Icon(CupertinoIcons.checkmark, color: AppColors.ink)
+          : null,
     );
   }
 

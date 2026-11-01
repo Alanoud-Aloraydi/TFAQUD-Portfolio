@@ -45,7 +45,7 @@ class _SentRequestSheet extends StatelessWidget {
     final bool accepted = request.status == CircleRequestStatus.accepted;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
@@ -124,16 +125,30 @@ void main() {
         AppTheme.lightTheme.chipTheme.labelStyle!.fontFamily,
         'IBMPlexSansArabic',
       );
-      for (final TextStyle? style in <TextStyle?>[
+      // Five sizes only, each with a line height on the 4-point grid.
+      final List<TextStyle?> styles = <TextStyle?>[
         text.displaySmall,
         text.headlineLarge,
+        text.headlineMedium,
+        text.headlineSmall,
         text.titleLarge,
+        text.titleMedium,
+        text.titleSmall,
         text.bodyLarge,
         text.bodyMedium,
         text.bodySmall,
+        text.labelLarge,
+        text.labelMedium,
         text.labelSmall,
-      ]) {
-        expect(style!.fontSize, greaterThanOrEqualTo(11));
+      ];
+      final Set<double> sizes = <double>{
+        for (final TextStyle? style in styles) style!.fontSize!,
+      };
+      expect(sizes, <double>{...AppTextTheme.sizes});
+      for (final TextStyle? style in styles) {
+        final double line = style!.fontSize! * style.height!;
+        expect(line.round() % 4, 0, reason: '${style.fontSize} has line $line');
+        expect(style.fontSize, greaterThanOrEqualTo(13));
       }
     });
   });

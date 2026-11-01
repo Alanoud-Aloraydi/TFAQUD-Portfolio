@@ -58,11 +58,7 @@ class CircleCard extends StatelessWidget {
         : String.fromCharCode(name.runes.first);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[

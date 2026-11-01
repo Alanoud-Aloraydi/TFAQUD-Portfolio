@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// One choice of a [OptionChips] group: the API code and the text shown.
@@ -8,9 +9,11 @@ class ChipOption {
   final String label;
 }
 
-/// A group of chips that wraps onto several lines. Whether the group is a
-/// single choice or a multiple choice is decided by what [onTap] does; the
-/// chips only show which codes are chosen ([isSelected]).
+/// A group of chips that wraps onto several lines: every choice is on the
+/// screen, one tap away, instead of behind a field that opens a list.
+/// Whether the group is a single choice or a multiple choice is decided by
+/// what [onTap] does; the chips only show which codes are chosen
+/// ([isSelected]).
 class OptionChips extends StatelessWidget {
   const OptionChips({
     super.key,
@@ -26,8 +29,8 @@ class OptionChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: <Widget>[
         for (final ChipOption option in options)
           FilterChip(

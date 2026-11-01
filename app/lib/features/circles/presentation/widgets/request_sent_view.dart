@@ -118,11 +118,7 @@ class _DetailsCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         children: <Widget>[
           _DetailRow(

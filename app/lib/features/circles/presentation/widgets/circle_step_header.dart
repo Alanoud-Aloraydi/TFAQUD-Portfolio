@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/back_link.dart';
+import 'package:app/core/widgets/step_progress.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +44,7 @@ class CircleStepHeader extends StatelessWidget {
           const SizedBox(height: 44),
         const SizedBox(height: AppSpacing.sm),
         // The line below says the same in words, so the bars are not read.
-        ExcludeSemantics(child: _Bars(step: step)),
+        StepProgress(step: step, total: totalSteps),
         const SizedBox(height: AppSpacing.sm),
         Text(
           context.tr(
@@ -61,35 +62,6 @@ class CircleStepHeader extends StatelessWidget {
             style: text.bodyMedium?.copyWith(color: AppColors.slate),
           ),
         ],
-      ],
-    );
-  }
-}
-
-class _Bars extends StatelessWidget {
-  const _Bars({required this.step});
-
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        for (int i = 1; i <= CircleStepHeader.totalSteps; i++)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsetsDirectional.only(
-                end: i < CircleStepHeader.totalSteps ? AppSpacing.sm : 0,
-              ),
-              child: Container(
-                height: 4,
-                decoration: BoxDecoration(
-                  color: i <= step ? AppColors.ink : AppColors.line,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

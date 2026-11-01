@@ -35,6 +35,22 @@ abstract class AppRadius {
   }
 }
 
+/// The app's opaque card (design system Card): surface, the iOS smooth
+/// corner, and a 1px `line` edge in place of a shadow. Cards on the canvas
+/// need an edge (surface is only 1.07:1 there); a thin line is lighter and
+/// crisper than a blurred shadow.
+abstract class AppSurfaces {
+  AppSurfaces._();
+
+  static const BorderSide edge = BorderSide(color: AppColors.line);
+
+  static ShapeBorder cardShape([double radius = AppRadius.card]) =>
+      AppRadius.shape(radius, side: edge);
+
+  static ShapeDecoration card([double radius = AppRadius.card]) =>
+      ShapeDecoration(color: AppColors.surface, shape: cardShape(radius));
+}
+
 /// Component themes. Shared components stay plain Material widgets where
 /// Material has one; they read these themes from ThemeData.
 abstract class AppComponentThemes {
@@ -43,11 +59,11 @@ abstract class AppComponentThemes {
   static const TextStyle _buttonLarge = TextStyle(
     fontFamily: AppTextTheme.fontFamily,
     fontSize: 17,
-    height: 26 / 17,
+    height: 28 / 17,
     fontWeight: FontWeight.w600,
   );
 
-  /// Primary: ink fill, white label, capsule, 50 high.
+  /// Primary: ink fill, white label, capsule, 48 high.
   static FilledButtonThemeData filledButton(AppTokens tokens) {
     return FilledButtonThemeData(
       style: ButtonStyle(
@@ -96,7 +112,7 @@ abstract class AppComponentThemes {
         textStyle: const TextStyle(
           fontFamily: AppTextTheme.fontFamily,
           fontSize: 15,
-          height: 22 / 15,
+          height: 24 / 15,
           fontWeight: FontWeight.w600,
         ),
         side: BorderSide(color: tokens.borderControl),
@@ -116,7 +132,7 @@ abstract class AppComponentThemes {
         textStyle: const TextStyle(
           fontFamily: AppTextTheme.fontFamily,
           fontSize: 15,
-          height: 22 / 15,
+          height: 24 / 15,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -137,7 +153,8 @@ abstract class AppComponentThemes {
     );
   }
 
-  /// Fields: 50 high, radius-s, a control border; focus and error are 2px.
+  /// Fields: 52 high (a 28 line, 12 above and below), radius-s, a control
+  /// border; focus and error are 2px.
   static InputDecorationThemeData inputDecoration(AppTokens tokens) {
     return InputDecorationThemeData(
       filled: true,
@@ -151,9 +168,9 @@ abstract class AppComponentThemes {
       focusedErrorBorder: _outline(tokens.error, 2),
       // Every style names the app font: a component style that leaves it out
       // can fall back to the system font.
-      hintStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 17, height: 26 / 17),
-      labelStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 15, height: 22 / 15),
-      floatingLabelStyle: const TextStyle(fontFamily: AppTextTheme.fontFamily, color: AppColors.ink, fontSize: 15, height: 22 / 15),
+      hintStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 17, height: 28 / 17),
+      labelStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 15, height: 24 / 15),
+      floatingLabelStyle: const TextStyle(fontFamily: AppTextTheme.fontFamily, color: AppColors.ink, fontSize: 15, height: 24 / 15),
       helperStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.textSecondary, fontSize: 13, height: 20 / 13),
       errorStyle: TextStyle(fontFamily: AppTextTheme.fontFamily, color: tokens.errorText, fontSize: 13, height: 20 / 13),
       prefixIconColor: tokens.textSecondary,
@@ -177,20 +194,19 @@ abstract class AppComponentThemes {
         fontFamily: AppTextTheme.fontFamily,
         color: AppColors.ink,
         fontSize: 15,
-        height: 22 / 15,
+        height: 24 / 15,
         fontWeight: FontWeight.w600,
       ),
     );
   }
 
-  /// Opaque cards on canvas: surface, radius-l, a soft ink shadow.
+  /// Opaque cards on canvas: surface, radius-l, a 1px line edge, no shadow.
   static final CardThemeData card = CardThemeData(
     color: AppColors.surface,
-    elevation: 1,
-    shadowColor: const Color(0x33202734),
+    elevation: 0,
     margin: EdgeInsets.zero,
     surfaceTintColor: Colors.transparent,
-    shape: AppRadius.shape(AppRadius.l),
+    shape: AppRadius.shape(AppRadius.l, side: AppSurfaces.edge),
   );
 
   static final DialogThemeData dialog = DialogThemeData(
@@ -238,7 +254,7 @@ abstract class AppComponentThemes {
       fontFamily: AppTextTheme.fontFamily,
       color: AppColors.ink,
       fontSize: 17,
-      height: 26 / 17,
+      height: 28 / 17,
       fontWeight: FontWeight.w600,
     ),
   );
@@ -261,7 +277,7 @@ abstract class AppComponentThemes {
       fontFamily: AppTextTheme.fontFamily,
       color: AppColors.surface,
       fontSize: 15,
-      height: 22 / 15,
+      height: 24 / 15,
     ),
     behavior: SnackBarBehavior.floating,
     shape: StadiumBorder(),

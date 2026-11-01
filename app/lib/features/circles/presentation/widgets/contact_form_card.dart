@@ -4,12 +4,12 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
+import 'package:app/core/widgets/option_chips.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/features/auth/presentation/widgets/phone_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
-import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -79,11 +79,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -113,7 +109,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
             onTap: form.saving ? (_) {} : widget.onRelation,
           ),
           if (form.showErrors && form.relation == null) ...<Widget>[
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               requiredText,
               style: text.bodySmall?.copyWith(color: AppColors.error),
@@ -173,11 +169,13 @@ class _ContactFormCardState extends State<ContactFormCard> {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: form.saving ? null : widget.onDelete,
-                icon: const Icon(CupertinoIcons.delete, size: 20),
+                icon: const Icon(CupertinoIcons.delete, size: AppSizes.iconSmall),
                 label: Text(context.tr('circles.contact_delete')),
-                // Deleting is a destructive action: the error red.
+                // Deleting is a destructive action: the error red. No start
+                // padding, so the trash sits on the card's content edge.
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.error,
+                  padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
                 ),
               ),
             ),

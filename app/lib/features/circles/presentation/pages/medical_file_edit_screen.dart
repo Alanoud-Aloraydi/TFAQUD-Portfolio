@@ -3,6 +3,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/inline_error.dart';
 import 'package:app/core/widgets/labeled_text_field.dart';
+import 'package:app/core/widgets/option_chips.dart';
 import 'package:app/core/widgets/pill_button.dart';
 import 'package:app/core/widgets/skeleton.dart';
 import 'package:app/core/widgets/step_header.dart';
@@ -14,7 +15,6 @@ import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart'
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
-import 'package:app/features/circles/presentation/widgets/option_chips.dart';
 import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -36,7 +36,7 @@ class MedicalFileEditScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocConsumer<MedicalFileEditCubit, MedicalFileEditState>(
             listenWhen:
                 (MedicalFileEditState before, MedicalFileEditState after) =>

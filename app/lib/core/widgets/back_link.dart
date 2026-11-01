@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,11 +18,13 @@ class BackLink extends StatelessWidget {
       alignment: AlignmentDirectional.centerStart,
       child: TextButton.icon(
         onPressed: onPressed,
-        icon: const Icon(CupertinoIcons.back, size: 20),
+        icon: const Icon(CupertinoIcons.back, size: AppSizes.iconSmall),
         label: Text(context.tr('common.back')),
+        // No padding on the start side: the chevron sits on the page margin,
+        // on the same line as the title under it.
         style: TextButton.styleFrom(
           foregroundColor: AppColors.ink,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
         ),
       ),
     );

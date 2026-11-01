@@ -23,7 +23,7 @@ class AuthFeatureScreen extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -68,7 +68,7 @@ class _WelcomePanel extends StatelessWidget {
                   child: CustomPaint(painter: OrbitPainter(centerY: centerY)),
                 ),
                 Positioned(
-                  top: centerY + 86,
+                  top: centerY + 88,
                   left: 24,
                   right: 24,
                   child: Column(
@@ -76,7 +76,7 @@ class _WelcomePanel extends StatelessWidget {
                     children: <Widget>[
                       Text(
                         context.tr('auth.app_name'),
-                        style: text.headlineLarge?.copyWith(
+                        style: text.displaySmall?.copyWith(
                           color: AppColors.ink,
                           fontWeight: FontWeight.w700,
                         ),

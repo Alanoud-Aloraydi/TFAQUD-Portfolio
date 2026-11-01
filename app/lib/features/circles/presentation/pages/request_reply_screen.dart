@@ -29,7 +29,7 @@ class RequestReplyScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: BlocConsumer<RequestReplyCubit, RequestReplyState>(
             listenWhen: (RequestReplyState before, RequestReplyState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -123,19 +123,15 @@ class _RequestDetails extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
               Container(
-                width: 56,
-                height: 56,
+                width: AppSizes.avatarLarge,
+                height: AppSizes.avatarLarge,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
                   color: AppColors.leafTint,

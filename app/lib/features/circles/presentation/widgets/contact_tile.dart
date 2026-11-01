@@ -24,11 +24,7 @@ class ContactTile extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsetsDirectional.fromSTEB(AppSpacing.lg, AppSpacing.md, AppSpacing.sm, AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      decoration: AppSurfaces.card(),
       child: Row(
         children: <Widget>[
           ExcludeSemantics(
@@ -47,7 +43,7 @@ class ContactTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(contact.name, style: text.titleMedium),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.xs),
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 8,
