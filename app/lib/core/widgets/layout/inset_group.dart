@@ -4,7 +4,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/picker_sheet_frame.dart';
+import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

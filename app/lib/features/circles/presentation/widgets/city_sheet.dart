@@ -1,7 +1,7 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/pill_button.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/circles/domain/saudi_cities.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';

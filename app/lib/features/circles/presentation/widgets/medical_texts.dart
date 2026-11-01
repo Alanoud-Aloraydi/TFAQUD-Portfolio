@@ -1,4 +1,4 @@
-import 'package:app/features/auth/presentation/widgets/phone_field.dart';
+import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/medical_options.dart';

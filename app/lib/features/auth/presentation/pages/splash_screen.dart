@@ -1,5 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

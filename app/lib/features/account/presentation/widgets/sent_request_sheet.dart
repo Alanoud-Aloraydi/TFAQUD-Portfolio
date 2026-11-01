@@ -6,7 +6,7 @@ import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:app/features/circles/presentation/widgets/status_pill.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

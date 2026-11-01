@@ -1,10 +1,11 @@
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/app_alert.dart';
-import 'package:app/core/widgets/skeleton.dart';
-import 'package:app/core/widgets/step_header.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';

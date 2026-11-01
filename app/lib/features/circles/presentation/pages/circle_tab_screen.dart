@@ -4,7 +4,7 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/large_title.dart';
+import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';

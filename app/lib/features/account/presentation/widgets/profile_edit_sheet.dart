@@ -1,8 +1,8 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/inline_error.dart';
-import 'package:app/core/widgets/labeled_text_field.dart';
-import 'package:app/core/widgets/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:easy_localization/easy_localization.dart';

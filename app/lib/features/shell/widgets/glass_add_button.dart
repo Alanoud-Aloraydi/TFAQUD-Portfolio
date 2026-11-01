@@ -1,7 +1,7 @@
 import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/glass.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

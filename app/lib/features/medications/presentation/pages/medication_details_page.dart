@@ -2,7 +2,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/app_alert.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';

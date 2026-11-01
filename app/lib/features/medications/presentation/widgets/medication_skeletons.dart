@@ -2,7 +2,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 
 // Each medicine page has its own skeleton (design system Skeleton), drawn in

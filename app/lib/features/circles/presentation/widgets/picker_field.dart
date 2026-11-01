@@ -1,7 +1,7 @@
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:flutter/material.dart';
 
 /// A field that opens a picker when tapped (the birth date and the city), in

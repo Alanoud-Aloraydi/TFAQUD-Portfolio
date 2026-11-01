@@ -2,7 +2,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';

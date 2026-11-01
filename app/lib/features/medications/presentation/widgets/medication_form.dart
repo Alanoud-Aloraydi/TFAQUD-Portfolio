@@ -1,8 +1,8 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/app_alert.dart';
-import 'package:app/core/widgets/inset_group.dart';
-import 'package:app/core/widgets/pill_button.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';

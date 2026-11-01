@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/app_alert.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

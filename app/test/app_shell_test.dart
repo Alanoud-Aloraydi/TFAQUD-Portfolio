@@ -7,9 +7,9 @@ import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/core/widgets/app_alert.dart';
-import 'package:app/core/widgets/glass.dart';
-import 'package:app/core/widgets/glass_menu.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
@@ -278,7 +278,10 @@ void main() {
       expect(find.byTooltip('topbar.notifications'.tr()), findsOneWidget);
       expect(find.byType(HomeWidget), findsOneWidget);
       expect(find.byTooltip('tab.add'.tr()), findsOneWidget);
-      expect(tester.widget<GlassAddButton>(find.byType(GlassAddButton)).onPressed, isNull);
+      expect(
+        tester.widget<GlassAddButton>(find.byType(GlassAddButton)).onPressed,
+        isNull,
+      );
       final account = tester.getCenter(find.byTooltip('topbar.account'.tr()));
       final switcher = tester.getCenter(find.byType(HomeWidget));
       final bell = tester.getCenter(
@@ -329,9 +332,7 @@ void main() {
       }
     });
 
-    testWidgets('an admin opens the add sheet', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('an admin opens the add sheet', (WidgetTester tester) async {
       home.response = Success(
         homeData(
           circles: const <CareCircleSummary>[
@@ -367,7 +368,13 @@ void main() {
       await tester.tap(save);
       await tester.pump();
       expect(find.text('medications.field_required'.tr()), findsOneWidget);
-      expect(tester.widget<TextField>(find.byType(TextField).first).focusNode!.hasFocus, isTrue);
+      expect(
+        tester
+            .widget<TextField>(find.byType(TextField).first)
+            .focusNode!
+            .hasFocus,
+        isTrue,
+      );
       await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     });
@@ -1851,10 +1858,8 @@ void main() {
     });
 
     group('signing out and deleting', () {
-      Finder inDialog(String text) => find.descendant(
-        of: findAlert(),
-        matching: find.text(text),
-      );
+      Finder inDialog(String text) =>
+          find.descendant(of: findAlert(), matching: find.text(text));
 
       testWidgets('sign out ends the session and opens the sign-in page', (
         WidgetTester tester,

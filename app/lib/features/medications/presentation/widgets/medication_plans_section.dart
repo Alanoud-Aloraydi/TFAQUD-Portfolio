@@ -1,5 +1,6 @@
-import 'package:app/core/widgets/large_title.dart';
-import 'package:app/core/widgets/skeleton.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';

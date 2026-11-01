@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/date_picker_sheet.dart';
+import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/features/circles/domain/birth_date_rules.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

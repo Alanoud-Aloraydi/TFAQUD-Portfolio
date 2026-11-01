@@ -7,7 +7,7 @@ import 'dart:ui' show ImageFilter, lerpDouble;
 
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/glass.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';

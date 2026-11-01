@@ -3,10 +3,10 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/features/auth/presentation/widgets/phone_field.dart';
+import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/presentation/widgets/status_pill.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 // easy_localization also exports a TextDirection (from intl); hide it so the
 // name means Flutter's TextDirection.
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;

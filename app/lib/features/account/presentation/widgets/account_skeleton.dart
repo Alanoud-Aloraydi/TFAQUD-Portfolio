@@ -1,6 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 
 /// The account page while it loads (design system Skeleton): the card with

@@ -1,5 +1,5 @@
 import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/widgets/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 

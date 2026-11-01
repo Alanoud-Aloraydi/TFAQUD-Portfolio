@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:flutter/material.dart';
 
 /// A field the person cannot change, in the design system's form row: the
@@ -26,10 +26,7 @@ class ReadOnlyField extends StatelessWidget {
         InsetFieldRow(
           label: label,
           trailing: Text(note, style: text.bodySmall),
-          child: DefaultTextStyle.merge(
-            style: text.bodyLarge,
-            child: child,
-          ),
+          child: DefaultTextStyle.merge(style: text.bodyLarge, child: child),
         ),
       ],
     );

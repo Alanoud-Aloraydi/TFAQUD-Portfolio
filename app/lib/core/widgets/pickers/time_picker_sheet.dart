@@ -1,5 +1,5 @@
-import 'package:app/core/widgets/picker_sheet_frame.dart';
-import 'package:app/core/widgets/picker_wheel_style.dart';
+import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
+import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

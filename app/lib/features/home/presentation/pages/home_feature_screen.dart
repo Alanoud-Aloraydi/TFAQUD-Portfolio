@@ -1,10 +1,11 @@
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 
 import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:app/core/widgets/picker_sheet_frame.dart';
-import 'package:app/core/widgets/picker_wheel_style.dart';
+import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
+import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +79,9 @@ class _DateWheelSheetState extends State<DateWheelSheet> {
   ];
 
   List<int> get _months {
-    final int first = _year == widget.firstDate.year ? widget.firstDate.month : 1;
+    final int first = _year == widget.firstDate.year
+        ? widget.firstDate.month
+        : 1;
     final int last = _year == widget.lastDate.year ? widget.lastDate.month : 12;
     return <int>[for (int month = first; month <= last; month++) month];
   }

@@ -1,5 +1,5 @@
-import 'package:app/core/widgets/inset_group.dart';
-import 'package:app/core/widgets/option_chips.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -115,7 +115,10 @@ class MedicationDosageFormGroup extends StatelessWidget {
           child: OptionChips(
             options: <ChipOption>[
               for (final DosageForm form in DosageForm.values)
-                ChipOption(form.name, context.tr('medications.form.${form.name}')),
+                ChipOption(
+                  form.name,
+                  context.tr('medications.form.${form.name}'),
+                ),
             ],
             isSelected: (String code) => code == data.form.name,
             onTap: (String code) => _choose(DosageForm.values.byName(code)),

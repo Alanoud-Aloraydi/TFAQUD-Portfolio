@@ -1,8 +1,8 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/back_link.dart';
-import 'package:app/core/widgets/step_progress.dart';
+import 'package:app/core/widgets/buttons/back_link.dart';
+import 'package:app/core/widgets/layout/step_progress.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
