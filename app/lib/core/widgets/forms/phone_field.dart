@@ -1,14 +1,14 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
-// easy_localization also exports a TextDirection (from intl); hide it so the
-// name means Flutter's TextDirection.
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// easy_localization also exports a TextDirection (from intl); hide it so the
+// name means Flutter's TextDirection.
 
 /// Keeps what the user types as a Saudi mobile number: digits only (an Arabic
 /// keyboard may type Arabic-Indic digits), no leading zero, at most nine
@@ -77,7 +77,9 @@ class PhoneField extends StatelessWidget {
       children: <Widget>[
         Text(
           label ?? context.tr('auth.phone_label'),
-          style: text.titleSmall?.copyWith(color: AppColors.slate),
+          style: text.titleSmall?.copyWith(
+            color: AppSemanticColors.textSupporting,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(
@@ -117,13 +119,13 @@ class _CountryCodeBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 84,
+      width: AppSizes.phonePrefix,
       height: AppSizes.field,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppSemanticColors.surfaceContent,
         borderRadius: BorderRadius.circular(AppRadius.field),
-        border: Border.all(color: AppColors.stone),
+        border: Border.all(color: AppSemanticColors.borderControlBase),
       ),
       child: Text(
         '+966',

@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:flutter/material.dart';
 
 /// Holds the four tabs and fades between them (design system Motion): the
@@ -77,10 +78,12 @@ class _BranchState extends State<_Branch> {
               opacity: active ? 1 : 0,
               duration: widget.still
                   ? Duration.zero
-                  : Duration(milliseconds: active ? 260 : 140),
-              curve: active
-                  ? const Interval(0.3, 1, curve: Curves.easeOut)
-                  : Curves.easeIn,
+                  : Duration(
+                      milliseconds: active
+                          ? AppMotion.branchEnterMilliseconds
+                          : AppMotion.branchExitMilliseconds,
+                    ),
+              curve: active ? AppMotion.branchEnter : AppMotion.easeIn,
               onEnd: widget.still ? null : _faded,
               // A hidden tab's own animations pause; the fade sits above
               // this, so it still runs.

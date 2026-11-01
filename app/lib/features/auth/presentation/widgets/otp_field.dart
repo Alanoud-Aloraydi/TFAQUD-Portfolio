@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -98,8 +98,8 @@ class _OtpFieldState extends State<OtpField> {
                 textInputAction: TextInputAction.done,
                 showCursor: false,
                 enableInteractiveSelection: false,
-                style: const TextStyle(color: Colors.transparent),
-                cursorColor: Colors.transparent,
+                style: const TextStyle(color: AppSemanticColors.transparent),
+                cursorColor: AppSemanticColors.transparent,
                 inputFormatters: <TextInputFormatter>[
                   _DigitsFormatter(widget.length),
                 ],
@@ -161,13 +161,15 @@ class _OtpBox extends StatelessWidget {
     // Control borders use stone (3.98:1), as the other fields do; the active
     // box shows the focus color.
     final Color border = hasError
-        ? AppColors.error
-        : (isActive ? AppColors.slate : AppColors.stone);
+        ? AppSemanticColors.statusError
+        : (isActive
+              ? AppSemanticColors.textSupporting
+              : AppSemanticColors.borderControlBase);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
+      duration: AppMotion.fieldFeedback,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppSemanticColors.surfaceContent,
         borderRadius: BorderRadius.circular(AppRadius.field),
         border: Border.all(
           color: border,

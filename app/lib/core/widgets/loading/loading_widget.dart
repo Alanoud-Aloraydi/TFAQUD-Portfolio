@@ -1,4 +1,6 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -25,16 +27,13 @@ class LoadingWidgetOverlay {
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
-          ModalBarrier(
-            color: AppColors.canvas.withAlpha(225),
-            dismissible: false,
-          ),
+          ModalBarrier(color: AppEffects.loadingScrim, dismissible: false),
           Center(
             child: LoadingAnimationWidget.discreteCircle(
-              secondRingColor: AppColors.honey,
-              thirdRingColor: AppColors.leaf,
-              color: AppColors.ink,
-              size: 50,
+              secondRingColor: AppSemanticColors.accentWarm,
+              thirdRingColor: AppSemanticColors.accentLeaf,
+              color: AppSemanticColors.textPrimary,
+              size: AppSizes.loadingIndicator,
             ),
           ),
         ],
@@ -67,9 +66,9 @@ class LoadingWidget extends StatelessWidget {
     if (spinner == null) return const PageSkeleton();
     return Center(
       child: LoadingAnimationWidget.discreteCircle(
-        secondRingColor: AppColors.honey,
-        thirdRingColor: AppColors.leaf,
-        color: AppColors.ink,
+        secondRingColor: AppSemanticColors.accentWarm,
+        thirdRingColor: AppSemanticColors.accentLeaf,
+        color: AppSemanticColors.textPrimary,
         size: spinner,
       ),
     );

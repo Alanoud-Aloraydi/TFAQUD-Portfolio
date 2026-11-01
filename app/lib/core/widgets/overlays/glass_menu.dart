@@ -1,16 +1,16 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, lerpDouble;
 
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 /// One row of a [GlassMenu].
@@ -97,25 +97,6 @@ class GlassMenuEntry {
   final bool selected;
 }
 
-/// The spring of iOS glass: it reaches about 90% within the first eighth of
-/// a second, passes its size by about 4% and settles, as in the system menus.
-/// (Stiffness 300, damping ratio 0.72, over 420 ms.)
-class _GlassSpring extends Curve {
-  const _GlassSpring();
-
-  static final SpringSimulation _spring = SpringSimulation(
-    SpringDescription.withDampingRatio(mass: 1, stiffness: 300, ratio: 0.72),
-    0,
-    1,
-    0,
-  );
-
-  static const double _seconds = 0.42;
-
-  @override
-  double transformInternal(double t) => _spring.x(t * _seconds);
-}
-
 class _GlassMenuRoute extends PopupRoute<Object?> {
   _GlassMenuRoute({
     required this.anchor,
@@ -139,10 +120,10 @@ class _GlassMenuRoute extends PopupRoute<Object?> {
   String? get barrierLabel => semanticLabel;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 420);
+  Duration get transitionDuration => AppMotion.menuEnter;
 
   @override
-  Duration get reverseTransitionDuration => const Duration(milliseconds: 260);
+  Duration get reverseTransitionDuration => AppMotion.menuExit;
 
   @override
   Widget buildPage(
@@ -201,8 +182,8 @@ class GlassMenu extends StatefulWidget {
 class _GlassMenuState extends State<GlassMenu> {
   late final CurvedAnimation _curve = CurvedAnimation(
     parent: widget.animation,
-    curve: const _GlassSpring(),
-    reverseCurve: Curves.easeInCubic,
+    curve: AppMotion.menuSpring,
+    reverseCurve: AppMotion.easeInCubic,
   );
 
   @override
@@ -365,7 +346,10 @@ class _MenuRows extends StatelessWidget {
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.xs,
                     ),
-                    child: Divider(height: 1, color: Color(0x1F202734)),
+                    child: Divider(
+                      height: AppSizes.divider,
+                      color: AppEffects.subtleEdge,
+                    ),
                   ),
                 for (final GlassMenuEntry entry in sections[s])
                   _MenuRow(entry: entry, height: rowHeight),
@@ -405,7 +389,7 @@ class _MenuRow extends StatelessWidget {
               Navigator.of(context).pop(entry.value);
             },
             customBorder: AppRadius.shape(AppRadius.m),
-            highlightColor: const Color(0x14202734),
+            highlightColor: AppEffects.interactionOverlay,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               child: Row(
@@ -417,7 +401,7 @@ class _MenuRow extends StatelessWidget {
                         : Icon(
                             icon,
                             size: AppSizes.iconSmall,
-                            color: AppColors.ink,
+                            color: AppSemanticColors.textPrimary,
                           ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -428,8 +412,8 @@ class _MenuRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: text.bodyLarge?.copyWith(
                         fontWeight: entry.selected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
+                            ? AppTextTheme.semibold
+                            : AppTextTheme.regular,
                       ),
                     ),
                   ),

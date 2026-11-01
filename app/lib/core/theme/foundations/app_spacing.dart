@@ -22,4 +22,9 @@ abstract class AppSpacing {
 
   /// Above a screen's first section and around empty states.
   static const double space10 = 40;
+
+  static const double hairlineGap = 2;
+  static const double tight = 6;
+  static const double compact = 10;
+  static const double intermediate = 18;
 }

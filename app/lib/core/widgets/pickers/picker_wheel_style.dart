@@ -1,5 +1,5 @@
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:flutter/cupertino.dart';
 
 /// Where a wheel sits in a row of wheels.
@@ -11,7 +11,7 @@ enum WheelPosition { first, middle, last }
 abstract class PickerWheelStyle {
   PickerWheelStyle._();
 
-  static const double itemExtent = 44;
+  static const double itemExtent = AppSizes.touch;
 
   static const TextStyle text = AppTextTheme.picker;
 

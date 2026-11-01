@@ -1,9 +1,8 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
@@ -68,10 +67,12 @@ class CircleCard extends StatelessWidget {
               ExcludeSemantics(
                 child: CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.leafTint,
+                  backgroundColor: AppSemanticColors.selectedSurface,
                   child: Text(
                     initial,
-                    style: text.titleLarge?.copyWith(color: AppColors.ink),
+                    style: text.titleLarge?.copyWith(
+                      color: AppSemanticColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -94,8 +95,10 @@ class CircleCard extends StatelessWidget {
                   label: Text(context.tr('circles.file_title')),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
-                    foregroundColor: AppColors.ink,
-                    side: const BorderSide(color: AppColors.stone),
+                    foregroundColor: AppSemanticColors.textPrimary,
+                    side: const BorderSide(
+                      color: AppSemanticColors.borderControlBase,
+                    ),
                   ),
                 ),
               ),
@@ -108,8 +111,10 @@ class CircleCard extends StatelessWidget {
                   label: Text(context.tr('circles.card_title')),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
-                    foregroundColor: AppColors.ink,
-                    side: const BorderSide(color: AppColors.stone),
+                    foregroundColor: AppSemanticColors.textPrimary,
+                    side: const BorderSide(
+                      color: AppSemanticColors.borderControlBase,
+                    ),
                   ),
                 ),
               ),

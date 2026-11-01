@@ -1,9 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-
 import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

@@ -1,4 +1,4 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Roles that change with the Increased Contrast setting, plus the colors that
@@ -42,29 +42,29 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color glassBorder;
 
   static const AppTokens light = AppTokens(
-    textSecondary: AppColors.slate,
-    focus: AppColors.slate,
-    borderControl: AppColors.stone,
-    success: AppColors.success,
-    successText: AppColors.success,
-    warning: AppColors.warning,
-    warningText: AppColors.warning,
-    error: AppColors.error,
-    errorText: AppColors.error,
-    glassBorder: AppColors.surface,
+    textSecondary: AppSemanticColors.textSupporting,
+    focus: AppSemanticColors.textSupporting,
+    borderControl: AppSemanticColors.borderControlBase,
+    success: AppSemanticColors.statusSuccess,
+    successText: AppSemanticColors.statusSuccess,
+    warning: AppSemanticColors.statusWarning,
+    warningText: AppSemanticColors.statusWarning,
+    error: AppSemanticColors.statusError,
+    errorText: AppSemanticColors.statusError,
+    glassBorder: AppSemanticColors.surfaceContent,
   );
 
   static const AppTokens contrast = AppTokens(
-    textSecondary: AppColors.ink,
-    focus: AppColors.slate,
-    borderControl: AppColors.slate,
-    success: AppColors.success,
-    successText: AppColors.ink,
-    warning: AppColors.warning,
-    warningText: AppColors.ink,
-    error: AppColors.error,
-    errorText: AppColors.ink,
-    glassBorder: AppColors.slate,
+    textSecondary: AppSemanticColors.textPrimary,
+    focus: AppSemanticColors.textSupporting,
+    borderControl: AppSemanticColors.textSupporting,
+    success: AppSemanticColors.statusSuccess,
+    successText: AppSemanticColors.textPrimary,
+    warning: AppSemanticColors.statusWarning,
+    warningText: AppSemanticColors.textPrimary,
+    error: AppSemanticColors.statusError,
+    errorText: AppSemanticColors.textPrimary,
+    glassBorder: AppSemanticColors.textSupporting,
   );
 
   @override

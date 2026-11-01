@@ -1,10 +1,9 @@
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -91,11 +90,11 @@ class MedicalFileScreen extends StatelessWidget {
                         ActionChip(
                           avatar: const Icon(
                             CupertinoIcons.pencil,
-                            size: 16,
-                            color: AppColors.ink,
+                            size: AppSizes.iconCompact,
+                            color: AppSemanticColors.textPrimary,
                           ),
                           label: Text(context.tr('circles.file_edit')),
-                          backgroundColor: AppColors.leafTint,
+                          backgroundColor: AppSemanticColors.selectedSurface,
                           side: BorderSide.none,
                           onPressed: () => _edit(context, cubit),
                         ),
@@ -200,7 +199,9 @@ class MedicalFileScreen extends StatelessWidget {
         if (file.contacts.isEmpty && form == null)
           Text(
             context.tr('circles.file_contacts_empty'),
-            style: text.bodyMedium?.copyWith(color: AppColors.slate),
+            style: text.bodyMedium?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
         for (final EmergencyContact contact in file.contacts) ...<Widget>[
           if (form != null && form.contactId == contact.id)
@@ -226,7 +227,9 @@ class MedicalFileScreen extends StatelessWidget {
         if (form == null && !file.canAddContact)
           Text(
             context.tr('circles.contact_max'),
-            style: text.bodyMedium?.copyWith(color: AppColors.slate),
+            style: text.bodyMedium?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
       ],
     );

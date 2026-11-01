@@ -1,6 +1,5 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
@@ -44,7 +43,9 @@ class CircleLabelPicker extends StatelessWidget {
       children: <Widget>[
         Text(
           context.tr('circles.label_title'),
-          style: text.titleSmall?.copyWith(color: AppColors.slate),
+          style: text.titleSmall?.copyWith(
+            color: AppSemanticColors.textSupporting,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         OptionChips(
@@ -67,7 +68,12 @@ class CircleLabelPicker extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.sm),
-        Text(hint, style: text.bodySmall?.copyWith(color: AppColors.slate)),
+        Text(
+          hint,
+          style: text.bodySmall?.copyWith(
+            color: AppSemanticColors.textSupporting,
+          ),
+        ),
       ],
     );
   }

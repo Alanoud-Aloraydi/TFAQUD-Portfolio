@@ -1,13 +1,11 @@
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
-import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
@@ -210,7 +208,7 @@ class _EditFormState extends State<_EditForm> {
     final MedicalForm form = state.form;
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppColors.slate,
+      color: AppSemanticColors.textSupporting,
     );
     final String requiredText = context.tr('circles.field_required');
     final bool showErrors = state.showErrors;

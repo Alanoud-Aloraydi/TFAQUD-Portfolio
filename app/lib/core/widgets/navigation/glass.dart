@@ -1,11 +1,11 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/materials/glass_style.dart';
-
 import 'dart:ui' show ImageFilter;
 
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:flutter/material.dart';
 
 /// Custom Liquid Glass for the navigation layer (design system "TFAQUD",
@@ -33,9 +33,6 @@ class GlassSurface extends StatelessWidget {
   final BorderRadius borderRadius;
   final Widget child;
 
-  static const double _rim = 1;
-  static const double _edge = 0.5;
-
   @override
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
@@ -43,7 +40,8 @@ class GlassSurface extends StatelessWidget {
     // The inner rim sits inside the hairline edge: its radius is the outer
     // radius minus the edge width, so the two stay concentric.
     final BorderRadius inner =
-        borderRadius - const BorderRadius.all(Radius.circular(_edge));
+        borderRadius -
+        const BorderRadius.all(Radius.circular(AppGlass.edgeWidth));
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -66,33 +64,38 @@ class GlassSurface extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: highContrast
-                    ? const <Color>[Color(0xF2FFFFFF), Color(0xE6FFFFFF)]
-                    : const <Color>[Color(0xB8FFFFFF), Color(0x73FFFFFF)],
+                    ? const <Color>[
+                        AppGlass.contrastTop,
+                        AppGlass.contrastBottom,
+                      ]
+                    : const <Color>[AppGlass.normalTop, AppGlass.normalBottom],
               ),
               border: Border.all(
                 color: highContrast
                     ? tokens.glassBorder
-                    : const Color(0x1F202734),
-                width: highContrast ? 1.5 : _edge,
+                    : AppEffects.subtleEdge,
+                width: highContrast
+                    ? AppGlass.contrastEdgeWidth
+                    : AppGlass.edgeWidth,
               ),
             ),
             child: Padding(
-              padding: EdgeInsets.all(highContrast ? 1.5 : _edge),
+              padding: EdgeInsets.all(
+                highContrast ? AppGlass.contrastEdgeWidth : AppGlass.edgeWidth,
+              ),
               child: DecoratedBox(
                 position: DecorationPosition.foreground,
                 // Bright inner rim and the specular highlight.
                 decoration: BoxDecoration(
                   borderRadius: inner,
                   border: Border.all(
-                    color: highContrast
-                        ? const Color(0x00FFFFFF)
-                        : const Color(0xD9FFFFFF),
-                    width: _rim,
+                    color: highContrast ? AppGlass.clear : AppGlass.innerRim,
+                    width: AppGlass.rimWidth,
                   ),
                   gradient: const RadialGradient(
                     center: AlignmentDirectional(-0.55, -0.85),
                     radius: 0.9,
-                    colors: <Color>[Color(0x66FFFFFF), Color(0x00FFFFFF)],
+                    colors: <Color>[AppGlass.highlight, AppGlass.clear],
                   ),
                 ),
                 child: child,
@@ -134,7 +137,7 @@ class GlassIconButton extends StatelessWidget {
           onPressed: onPressed,
           icon: icon,
           iconSize: AppSizes.icon,
-          color: AppColors.ink,
+          color: AppSemanticColors.textPrimary,
           padding: EdgeInsets.zero,
           constraints: BoxConstraints.tight(Size.square(size)),
           style: IconButton.styleFrom(shape: const CircleBorder()),
@@ -204,7 +207,11 @@ class GlassCapsuleButton extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Icon(icon, size: AppSizes.iconSmall, color: AppColors.ink),
+                    Icon(
+                      icon,
+                      size: AppSizes.iconSmall,
+                      color: AppSemanticColors.textPrimary,
+                    ),
                   ],
                 ),
               ),

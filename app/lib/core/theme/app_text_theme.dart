@@ -1,4 +1,4 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Type scale of the design system, set in IBM Plex Sans Arabic: five
@@ -20,13 +20,18 @@ abstract class AppTextTheme {
   /// Family name declared in pubspec.yaml.
   static const String fontFamily = 'IBMPlexSansArabic';
 
+  static const FontWeight regular = FontWeight.w400;
+  static const FontWeight medium = FontWeight.w500;
+  static const FontWeight semibold = FontWeight.w600;
+  static const FontWeight bold = FontWeight.w700;
+
   /// Typography shared by date and time wheels.
   static const TextStyle picker = TextStyle(
     fontFamily: fontFamily,
     fontSize: 22,
     height: 1.2,
     fontWeight: FontWeight.w400,
-    color: AppColors.ink,
+    color: AppSemanticColors.textPrimary,
   );
 
   /// The five sizes of the scale, largest first.
@@ -48,20 +53,65 @@ abstract class AppTextTheme {
   }
 
   /// [secondary] is slate in the light theme and ink with Increased Contrast.
-  static TextTheme build({Color secondary = AppColors.slate}) {
+  static TextTheme build({Color secondary = AppSemanticColors.textSupporting}) {
     return TextTheme(
-      displaySmall: _style(34, 48, FontWeight.w700, AppColors.ink),
-      headlineLarge: _style(22, 32, FontWeight.w700, AppColors.ink),
-      headlineMedium: _style(22, 32, FontWeight.w700, AppColors.ink),
-      headlineSmall: _style(22, 32, FontWeight.w600, AppColors.ink),
-      titleLarge: _style(17, 28, FontWeight.w600, AppColors.ink),
-      titleMedium: _style(17, 28, FontWeight.w600, AppColors.ink),
-      titleSmall: _style(15, 24, FontWeight.w600, AppColors.ink),
-      bodyLarge: _style(17, 28, FontWeight.w400, AppColors.ink),
+      displaySmall: _style(
+        34,
+        48,
+        FontWeight.w700,
+        AppSemanticColors.textPrimary,
+      ),
+      headlineLarge: _style(
+        22,
+        32,
+        FontWeight.w700,
+        AppSemanticColors.textPrimary,
+      ),
+      headlineMedium: _style(
+        22,
+        32,
+        FontWeight.w700,
+        AppSemanticColors.textPrimary,
+      ),
+      headlineSmall: _style(
+        22,
+        32,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      titleLarge: _style(
+        17,
+        28,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      titleMedium: _style(
+        17,
+        28,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      titleSmall: _style(
+        15,
+        24,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      bodyLarge: _style(17, 28, FontWeight.w400, AppSemanticColors.textPrimary),
       bodyMedium: _style(15, 24, FontWeight.w400, secondary),
       bodySmall: _style(13, 20, FontWeight.w400, secondary),
-      labelLarge: _style(17, 28, FontWeight.w600, AppColors.ink),
-      labelMedium: _style(13, 20, FontWeight.w600, AppColors.ink),
+      labelLarge: _style(
+        17,
+        28,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      labelMedium: _style(
+        13,
+        20,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
       labelSmall: _style(13, 20, FontWeight.w500, secondary),
     );
   }

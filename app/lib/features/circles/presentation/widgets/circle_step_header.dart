@@ -1,6 +1,5 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
 import 'package:app/core/widgets/layout/step_progress.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -52,7 +51,9 @@ class CircleStepHeader extends StatelessWidget {
             'circles.step',
             args: <String>['$step', '$totalSteps', stepTitle],
           ),
-          style: text.bodySmall?.copyWith(color: AppColors.slate),
+          style: text.bodySmall?.copyWith(
+            color: AppSemanticColors.textSupporting,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         Semantics(header: true, child: Text(title, style: text.headlineMedium)),
@@ -60,7 +61,9 @@ class CircleStepHeader extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             subtitle!,
-            style: text.bodyMedium?.copyWith(color: AppColors.slate),
+            style: text.bodyMedium?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
         ],
       ],

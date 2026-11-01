@@ -1,4 +1,4 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,8 +9,8 @@ abstract class AppNavigationThemes {
 
   /// Bars carry no background or divider: glass controls float on canvas.
   static final AppBarThemeData appBar = AppBarThemeData(
-    backgroundColor: AppColors.canvas,
-    foregroundColor: AppColors.ink,
+    backgroundColor: AppSemanticColors.background,
+    foregroundColor: AppSemanticColors.textPrimary,
     surfaceTintColor: Colors.transparent,
     elevation: 0,
     scrolledUnderElevation: 0,
@@ -20,7 +20,7 @@ abstract class AppNavigationThemes {
     systemOverlayStyle: SystemUiOverlayStyle.dark,
     titleTextStyle: TextStyle(
       fontFamily: AppTextTheme.fontFamily,
-      color: AppColors.ink,
+      color: AppSemanticColors.textPrimary,
       fontSize: 17,
       height: 28 / 17,
       fontWeight: FontWeight.w600,

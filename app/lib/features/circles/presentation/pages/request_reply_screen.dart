@@ -1,17 +1,16 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/presentation/cubit/request_reply_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/request_reply_state.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -74,7 +73,7 @@ class RequestReplyScreen extends StatelessWidget {
                           Text(
                             context.tr('circles.reply_decline_note'),
                             style: text.bodyMedium?.copyWith(
-                              color: AppColors.slate,
+                              color: AppSemanticColors.textSupporting,
                             ),
                           ),
                           if (state.errorKey != null) ...<Widget>[
@@ -99,8 +98,10 @@ class RequestReplyScreen extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         shape: const StadiumBorder(),
                         minimumSize: const Size.fromHeight(48),
-                        foregroundColor: AppColors.ink,
-                        side: const BorderSide(color: AppColors.stone),
+                        foregroundColor: AppSemanticColors.textPrimary,
+                        side: const BorderSide(
+                          color: AppSemanticColors.borderControlBase,
+                        ),
                       ),
                       child: Text(context.tr('circles.decline')),
                     ),
@@ -141,12 +142,14 @@ class _RequestDetails extends StatelessWidget {
                 height: AppSizes.avatarLarge,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
-                  color: AppColors.leafTint,
+                  color: AppSemanticColors.selectedSurface,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   name.isEmpty ? '؟' : name.characters.first,
-                  style: text.titleLarge?.copyWith(color: AppColors.ink),
+                  style: text.titleLarge?.copyWith(
+                    color: AppSemanticColors.textPrimary,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -160,7 +163,9 @@ class _RequestDetails extends StatelessWidget {
                     ),
                     Text(
                       context.tr('circles.reply_subtitle'),
-                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
+                      style: text.bodyMedium?.copyWith(
+                        color: AppSemanticColors.textSupporting,
+                      ),
                     ),
                   ],
                 ),
@@ -172,8 +177,8 @@ class _RequestDetails extends StatelessWidget {
             label: context.tr('circles.approved_circle_name'),
             child: StatusPill(
               text: request.circleName,
-              background: AppColors.line,
-              foreground: AppColors.ink,
+              background: AppSemanticColors.borderSubtle,
+              foreground: AppSemanticColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -183,8 +188,8 @@ class _RequestDetails extends StatelessWidget {
               text: context.tr(
                 detailed ? 'circles.mode_detailed' : 'circles.mode_simplified',
               ),
-              background: AppColors.leafTint,
-              foreground: AppColors.ink,
+              background: AppSemanticColors.selectedSurface,
+              foreground: AppSemanticColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -194,7 +199,9 @@ class _RequestDetails extends StatelessWidget {
                   ? 'circles.reply_body_detailed'
                   : 'circles.reply_body_simplified',
             ),
-            style: text.bodyMedium?.copyWith(color: AppColors.slate),
+            style: text.bodyMedium?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
         ],
       ),
@@ -216,7 +223,7 @@ class _Row extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: AppColors.slate),
+                ?.copyWith(color: AppSemanticColors.textSupporting),
           ),
         ),
         child,

@@ -1,4 +1,4 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
@@ -9,10 +9,10 @@ abstract class AppSelectionThemes {
 
   static ChipThemeData chip(AppTokens tokens) {
     return ChipThemeData(
-      backgroundColor: AppColors.surface,
-      selectedColor: AppColors.leafTint,
-      checkmarkColor: AppColors.ink,
-      disabledColor: AppColors.line,
+      backgroundColor: AppSemanticColors.surfaceContent,
+      selectedColor: AppSemanticColors.selectedSurface,
+      checkmarkColor: AppSemanticColors.textPrimary,
+      disabledColor: AppSemanticColors.borderSubtle,
       side: BorderSide(color: tokens.borderControl),
       shape: const StadiumBorder(),
       showCheckmark: true,
@@ -21,7 +21,7 @@ abstract class AppSelectionThemes {
       // المزمنة» and «الحساسية» showed in the system font.
       labelStyle: const TextStyle(
         fontFamily: AppTextTheme.fontFamily,
-        color: AppColors.ink,
+        color: AppSemanticColors.textPrimary,
         fontSize: 15,
         height: 24 / 15,
         fontWeight: FontWeight.w600,
@@ -30,11 +30,11 @@ abstract class AppSelectionThemes {
   }
 
   static final CheckboxThemeData checkbox = CheckboxThemeData(
-    checkColor: WidgetStatePropertyAll<Color>(AppColors.surface),
-    side: BorderSide(color: AppColors.stone, width: 1.5),
+    checkColor: WidgetStatePropertyAll<Color>(AppSemanticColors.surfaceContent),
+    side: BorderSide(color: AppSemanticColors.borderControlBase, width: 1.5),
   );
 
   static final RadioThemeData radio = RadioThemeData(
-    fillColor: WidgetStatePropertyAll<Color>(AppColors.ink),
+    fillColor: WidgetStatePropertyAll<Color>(AppSemanticColors.textPrimary),
   );
 }

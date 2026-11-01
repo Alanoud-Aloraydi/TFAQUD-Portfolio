@@ -1,10 +1,11 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-
 import 'dart:ui' show lerpDouble;
 
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// One button of an [AppAlert].
@@ -55,8 +56,8 @@ Future<T?> showAppAlert<T>(
     context: context,
     barrierDismissible: false,
     barrierLabel: title,
-    barrierColor: AppColors.scrim,
-    transitionDuration: const Duration(milliseconds: 320),
+    barrierColor: AppSemanticColors.overlayScrim,
+    transitionDuration: AppMotion.alert,
     pageBuilder: (
       BuildContext context,
       Animation<double> animation,
@@ -74,21 +75,18 @@ Future<T?> showAppAlert<T>(
             animation: animation,
             builder: (BuildContext context, Widget? child) {
               final bool closing = animation.status == AnimationStatus.reverse;
-              final double opacity = Curves.easeOut.transform(animation.value);
+              final double opacity = AppMotion.easeOut.transform(
+                animation.value,
+              );
               if (still) return Opacity(opacity: opacity, child: child);
               // Opening: from 108% down to its size with a small overshoot.
               // Closing: a slight shrink while it fades.
               final double scale = closing
-                  ? lerpDouble(0.96, 1, animation.value)!
+                  ? lerpDouble(AppMotion.alertClosingScale, 1, animation.value)!
                   : lerpDouble(
-                      1.08,
+                      AppMotion.alertOpeningScale,
                       1,
-                      const Cubic(
-                        0.2,
-                        0.9,
-                        0.3,
-                        1.04,
-                      ).transform(animation.value),
+                      AppMotion.alertSpring.transform(animation.value),
                     )!;
               return Opacity(
                 opacity: opacity,
@@ -144,7 +142,7 @@ class AppAlert<T> extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space10),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 320),
+          constraints: const BoxConstraints(maxWidth: AppSizes.alertWidth),
           child: Semantics(
             scopesRoute: true,
             namesRoute: true,
@@ -155,16 +153,8 @@ class AppAlert<T> extends StatelessWidget {
               child: DecoratedBox(
                 decoration: ShapeDecoration(
                   shape: AppRadius.shape(AppRadius.xl),
-                  color: AppColors.surface,
-                  // A light, soft shadow: the dim behind already sets the
-                  // alert apart.
-                  shadows: const <BoxShadow>[
-                    BoxShadow(
-                      color: Color(0x1F202734),
-                      blurRadius: 24,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
+                  color: AppSemanticColors.surfaceContent,
+                  shadows: AppEffects.alertPanelShadow,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -234,7 +224,7 @@ class _AlertButton<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final Widget label = Text(action.label, textAlign: TextAlign.center);
     void tap() => Navigator.of(context).pop(action.value);
-    const Size size = Size.fromHeight(48);
+    const Size size = Size.fromHeight(AppSizes.compactButton);
     if (action.primary && !action.destructive) {
       return FilledButton(
         onPressed: tap,
@@ -247,13 +237,13 @@ class _AlertButton<T> extends StatelessWidget {
       style:
           FilledButton.styleFrom(
             minimumSize: size,
-            backgroundColor: AppColors.line,
+            backgroundColor: AppSemanticColors.borderSubtle,
             foregroundColor: action.destructive
-                ? AppColors.error
-                : AppColors.ink,
+                ? AppSemanticColors.statusError
+                : AppSemanticColors.textPrimary,
           ).copyWith(
             overlayColor: const WidgetStatePropertyAll<Color>(
-              Color(0x14202734),
+              AppEffects.interactionOverlay,
             ),
           ),
       child: label,

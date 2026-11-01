@@ -1,8 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// One option of a single-choice question: icon, title, hint, and a radio mark.
@@ -31,12 +30,14 @@ class ChoiceCard extends StatelessWidget {
       inMutuallyExclusiveGroup: true,
       checked: selected,
       child: Material(
-        color: AppColors.surface,
+        color: AppSemanticColors.surfaceContent,
         clipBehavior: Clip.antiAlias,
         shape: AppRadius.shape(
           AppRadius.card,
           side: BorderSide(
-            color: selected ? AppColors.ink : AppColors.line,
+            color: selected
+                ? AppSemanticColors.textPrimary
+                : AppSemanticColors.borderSubtle,
             width: selected ? 2 : 1,
           ),
         ),
@@ -50,13 +51,13 @@ class ChoiceCard extends StatelessWidget {
                   width: AppSizes.avatar,
                   height: AppSizes.avatar,
                   decoration: const BoxDecoration(
-                    color: AppColors.leafTint,
+                    color: AppSemanticColors.selectedSurface,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
                     size: AppSizes.iconSmall,
-                    color: AppColors.ink,
+                    color: AppSemanticColors.textPrimary,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -95,8 +96,10 @@ class _RadioMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? AppColors.ink : AppColors.stone,
-          width: 2,
+          color: selected
+              ? AppSemanticColors.textPrimary
+              : AppSemanticColors.borderControlBase,
+          width: AppSizes.borderEmphasis,
         ),
       ),
       child: selected
@@ -104,7 +107,7 @@ class _RadioMark extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: const BoxDecoration(
-                color: AppColors.ink,
+                color: AppSemanticColors.textPrimary,
                 shape: BoxShape.circle,
               ),
             )

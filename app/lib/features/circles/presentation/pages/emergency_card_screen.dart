@@ -1,13 +1,13 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
@@ -137,7 +137,7 @@ class _ReadOnlyPill extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.line,
+        color: AppSemanticColors.borderSubtle,
         borderRadius: BorderRadius.circular(AppRadius.capsule),
       ),
       child: Row(
@@ -146,12 +146,14 @@ class _ReadOnlyPill extends StatelessWidget {
           const Icon(
             CupertinoIcons.lock,
             size: AppSizes.iconSmall,
-            color: AppColors.slate,
+            color: AppSemanticColors.textSupporting,
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             context.tr('circles.card_read_only'),
-            style: text.bodySmall?.copyWith(color: AppColors.slate),
+            style: text.bodySmall?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
         ],
       ),
@@ -175,7 +177,7 @@ class _NameCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.space5),
         decoration: ShapeDecoration(
-          color: AppColors.ink,
+          color: AppSemanticColors.textPrimary,
           shape: AppRadius.shape(AppRadius.card),
         ),
         child: Column(
@@ -187,7 +189,7 @@ class _NameCard extends StatelessWidget {
                   child: Text(
                     card.fullName,
                     style: text.headlineMedium?.copyWith(
-                      color: AppColors.surface,
+                      color: AppSemanticColors.surfaceContent,
                     ),
                   ),
                 ),
@@ -198,15 +200,15 @@ class _NameCard extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.surface.withAlpha(51),
+                    color: AppEffects.emergencyCardBorder,
                   ),
                   child: Text(
                     // A dash when nobody entered the blood type yet.
                     bloodType ?? '—',
                     textDirection: TextDirection.ltr,
                     style: text.titleLarge?.copyWith(
-                      color: AppColors.surface,
-                      fontWeight: FontWeight.w700,
+                      color: AppSemanticColors.surfaceContent,
+                      fontWeight: AppTextTheme.bold,
                     ),
                   ),
                 ),
@@ -215,7 +217,9 @@ class _NameCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               context.tr('circles.blood_type'),
-              style: text.bodyMedium?.copyWith(color: AppColors.surface),
+              style: text.bodyMedium?.copyWith(
+                color: AppSemanticColors.surfaceContent,
+              ),
             ),
           ],
         ),
@@ -249,7 +253,7 @@ class _DetailsCard extends StatelessWidget {
               style: text.bodyLarge,
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: AppSizes.divider),
           _Section(
             label: context.tr('circles.conditions'),
             child: Text(
@@ -257,7 +261,7 @@ class _DetailsCard extends StatelessWidget {
               style: text.bodyLarge,
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: AppSizes.divider),
           _Section(
             label: context.tr('circles.card_contact'),
             child: card.contacts.isEmpty
@@ -281,7 +285,7 @@ class _DetailsCard extends StatelessWidget {
                             MedicalTexts.phone(contact),
                             textDirection: TextDirection.ltr,
                             style: text.bodyLarge?.copyWith(
-                              color: AppColors.slate,
+                              color: AppSemanticColors.textSupporting,
                             ),
                           ),
                         ),
@@ -309,7 +313,12 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(label, style: text.titleSmall?.copyWith(color: AppColors.slate)),
+          Text(
+            label,
+            style: text.titleSmall?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xs),
           child,
         ],

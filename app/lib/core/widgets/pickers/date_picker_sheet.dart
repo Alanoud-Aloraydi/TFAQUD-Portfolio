@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -115,7 +116,7 @@ class _DateWheelSheetState extends State<DateWheelSheet> {
       confirmLabel: widget.confirmLabel ?? context.tr('common.confirm'),
       onConfirm: () => Navigator.pop(context, DateTime(_year, _month, _day)),
       child: SizedBox(
-        height: 216,
+        height: AppSizes.pickerViewport,
         child: Row(
           children: <Widget>[
             _Wheel(

@@ -1,7 +1,6 @@
-import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -35,11 +34,13 @@ class ContactTile extends StatelessWidget {
         children: <Widget>[
           ExcludeSemantics(
             child: CircleAvatar(
-              backgroundColor: AppColors.leafTint,
-              foregroundColor: AppColors.ink,
+              backgroundColor: AppSemanticColors.selectedSurface,
+              foregroundColor: AppSemanticColors.textPrimary,
               child: Text(
                 contact.initial,
-                style: text.titleMedium?.copyWith(color: AppColors.ink),
+                style: text.titleMedium?.copyWith(
+                  color: AppSemanticColors.textPrimary,
+                ),
               ),
             ),
           ),
@@ -56,12 +57,16 @@ class ContactTile extends StatelessWidget {
                   children: <Widget>[
                     Text(
                       MedicalTexts.relation(context, contact),
-                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
+                      style: text.bodyMedium?.copyWith(
+                        color: AppSemanticColors.textSupporting,
+                      ),
                     ),
                     Text(
                       MedicalTexts.phone(contact),
                       textDirection: TextDirection.ltr,
-                      style: text.bodyMedium?.copyWith(color: AppColors.slate),
+                      style: text.bodyMedium?.copyWith(
+                        color: AppSemanticColors.textSupporting,
+                      ),
                     ),
                   ],
                 ),
@@ -71,7 +76,10 @@ class ContactTile extends StatelessWidget {
           if (onEdit != null)
             IconButton(
               onPressed: onEdit,
-              icon: const Icon(CupertinoIcons.pencil, color: AppColors.ink),
+              icon: const Icon(
+                CupertinoIcons.pencil,
+                color: AppSemanticColors.textPrimary,
+              ),
               tooltip: context.tr(
                 'circles.contact_edit_action',
                 args: <String>[contact.name],

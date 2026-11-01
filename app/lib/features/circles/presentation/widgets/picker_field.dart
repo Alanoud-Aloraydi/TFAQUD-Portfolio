@@ -1,6 +1,5 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:flutter/material.dart';
 
@@ -38,7 +37,7 @@ class PickerField extends StatelessWidget {
           trailing: Icon(
             icon,
             size: AppSizes.iconSmall,
-            color: AppColors.stone,
+            color: AppSemanticColors.borderControlBase,
           ),
         ),
       ],

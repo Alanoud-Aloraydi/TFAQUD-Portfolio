@@ -1,12 +1,11 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -84,8 +83,8 @@ class _SentRequestSheet extends StatelessWidget {
                       ? 'circles.mode_detailed'
                       : 'circles.mode_simplified',
                 ),
-                background: AppColors.leafTint,
-                foreground: AppColors.ink,
+                background: AppSemanticColors.selectedSurface,
+                foreground: AppSemanticColors.textPrimary,
               ),
             ),
             _Line(
@@ -99,8 +98,12 @@ class _SentRequestSheet extends StatelessWidget {
                       ? 'account.status_accepted'
                       : 'circles.request_status_pending',
                 ),
-                background: accepted ? AppColors.canvas : AppColors.canvas,
-                foreground: accepted ? AppColors.success : AppColors.slate,
+                background: accepted
+                    ? AppSemanticColors.background
+                    : AppSemanticColors.background,
+                foreground: accepted
+                    ? AppSemanticColors.statusSuccess
+                    : AppSemanticColors.textSupporting,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -112,8 +115,10 @@ class _SentRequestSheet extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
                   minimumSize: const Size.fromHeight(48),
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.stone),
+                  foregroundColor: AppSemanticColors.statusError,
+                  side: const BorderSide(
+                    color: AppSemanticColors.borderControlBase,
+                  ),
                 ),
                 child: Text(context.tr('circles.cancel_request')),
               ),
@@ -141,7 +146,7 @@ class _Line extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.slate),
+                  ?.copyWith(color: AppSemanticColors.textSupporting),
             ),
           ),
           child,

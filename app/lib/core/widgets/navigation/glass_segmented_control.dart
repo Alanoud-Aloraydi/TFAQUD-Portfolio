@@ -1,10 +1,13 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-
 import 'dart:math' as math;
 
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,9 +33,6 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
   final T selected;
   final ValueChanged<T> onChanged;
 
-  static const double _inset = 3.5;
-  static const Duration _slide = Duration(milliseconds: 260);
-
   @override
   Widget build(BuildContext context) {
     final List<T> values = segments.keys.toList(growable: false);
@@ -48,15 +48,15 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
           Radius.circular(AppSizes.touch / 2),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(_inset),
+          padding: const EdgeInsets.all(AppGlass.segmentInset),
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               final double width = constraints.maxWidth / values.length;
               return Stack(
                 children: <Widget>[
                   AnimatedPositionedDirectional(
-                    duration: still ? Duration.zero : _slide,
-                    curve: Curves.easeOutCubic,
+                    duration: still ? Duration.zero : AppMotion.segmentSlide,
+                    curve: AppMotion.easeOutCubic,
                     start: index * width,
                     width: width,
                     top: 0,
@@ -64,14 +64,8 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
                     child: const DecoratedBox(
                       decoration: ShapeDecoration(
                         shape: StadiumBorder(),
-                        color: AppColors.leafTint,
-                        shadows: <BoxShadow>[
-                          BoxShadow(
-                            color: Color(0x14202734),
-                            blurRadius: 4,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
+                        color: AppSemanticColors.selectedSurface,
+                        shadows: AppEffects.segmentShadow,
                       ),
                     ),
                   ),
@@ -92,7 +86,9 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
                               },
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
-                                  minHeight: AppSizes.touch - 2 * _inset,
+                                  minHeight:
+                                      AppSizes.touch -
+                                      2 * AppGlass.segmentInset,
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -105,11 +101,11 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
                                       textAlign: TextAlign.center,
                                       style: text.titleSmall?.copyWith(
                                         color: i == index
-                                            ? AppColors.ink
+                                            ? AppSemanticColors.textPrimary
                                             : tokens.textSecondary,
                                         fontWeight: i == index
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
+                                            ? AppTextTheme.bold
+                                            : AppTextTheme.medium,
                                       ),
                                     ),
                                   ),

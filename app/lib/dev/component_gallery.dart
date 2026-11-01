@@ -1,9 +1,8 @@
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:dio/dio.dart' show Response;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';

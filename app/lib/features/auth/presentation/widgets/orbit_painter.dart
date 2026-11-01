@@ -1,4 +1,5 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
 import 'package:flutter/material.dart';
 
 /// Welcome page picture: the brand mark inside four thin orbit rings, with
@@ -12,9 +13,9 @@ class OrbitPainter extends CustomPainter {
   final double centerY;
 
   // The panel is honey, so the orbit's accent dots are ink.
-  static const Color _orange = AppColors.ink;
-  static const Color _dotLight = AppColors.surface;
-  static const Color _dotMuted = AppColors.leafTint;
+  static const Color _orange = AppSemanticColors.textPrimary;
+  static const Color _dotLight = AppSemanticColors.surfaceContent;
+  static const Color _dotMuted = AppSemanticColors.selectedSurface;
 
   static const List<double> _ringRadii = <double>[66, 112, 158, 204];
 
@@ -25,7 +26,7 @@ class OrbitPainter extends CustomPainter {
     final Paint ring = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
-      ..color = AppColors.ink.withValues(alpha: 0.12);
+      ..color = AppEffects.orbitLine;
     for (final double radius in _ringRadii) {
       canvas.drawCircle(center, radius, ring);
     }
@@ -46,15 +47,35 @@ class OrbitPainter extends CustomPainter {
       center + const Offset(0, 6),
       46,
       Paint()
-        ..color = AppColors.ink.withValues(alpha: 0.18)
+        ..color = AppEffects.orbitOutline
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
-    canvas.drawCircle(center, 46, Paint()..color = AppColors.surface);
-    canvas.drawCircle(center, 22, Paint()..color = AppColors.ink);
-    canvas.drawCircle(center, 14, Paint()..color = AppColors.surface);
+    canvas.drawCircle(
+      center,
+      46,
+      Paint()..color = AppSemanticColors.surfaceContent,
+    );
+    canvas.drawCircle(
+      center,
+      22,
+      Paint()..color = AppSemanticColors.textPrimary,
+    );
+    canvas.drawCircle(
+      center,
+      14,
+      Paint()..color = AppSemanticColors.surfaceContent,
+    );
     const Offset mark = Offset(16, -16);
-    canvas.drawCircle(center + mark, 6.5, Paint()..color = AppColors.surface);
-    canvas.drawCircle(center + mark, 5, Paint()..color = AppColors.leaf);
+    canvas.drawCircle(
+      center + mark,
+      6.5,
+      Paint()..color = AppSemanticColors.surfaceContent,
+    );
+    canvas.drawCircle(
+      center + mark,
+      5,
+      Paint()..color = AppSemanticColors.accentLeaf,
+    );
   }
 
   @override

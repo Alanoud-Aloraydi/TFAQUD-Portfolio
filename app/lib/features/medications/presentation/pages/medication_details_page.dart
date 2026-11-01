@@ -1,8 +1,8 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -12,7 +12,6 @@ import 'package:app/features/medications/presentation/widgets/medication_details
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
-import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -116,7 +115,7 @@ class _Content extends StatelessWidget {
               // Ending the treatment cannot be undone: the error red.
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
+                  foregroundColor: AppSemanticColors.statusError,
                 ),
                 onPressed: () => _discontinue(context),
                 child: Text(context.tr('medications.discontinue')),

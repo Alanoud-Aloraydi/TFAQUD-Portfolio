@@ -1,7 +1,6 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 
@@ -23,9 +22,9 @@ class TodaySkeleton extends StatelessWidget {
         SkeletonLine(widthFactor: 0.32, height: 24),
         SizedBox(height: AppSpacing.md),
         DoseRowSkeleton(withButtons: true),
-        Divider(height: 1),
+        Divider(height: AppSizes.divider),
         DoseRowSkeleton(),
-        Divider(height: 1),
+        Divider(height: AppSizes.divider),
         DoseRowSkeleton(),
       ],
     );
@@ -260,7 +259,7 @@ class DoseHistorySkeleton extends StatelessWidget {
         SkeletonLine(widthFactor: 0.35, height: 24),
         SizedBox(height: AppSpacing.sm),
         DoseRowSkeleton(),
-        Divider(height: 1),
+        Divider(height: AppSizes.divider),
         DoseRowSkeleton(),
       ],
     );

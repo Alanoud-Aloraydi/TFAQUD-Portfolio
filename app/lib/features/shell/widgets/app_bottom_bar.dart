@@ -1,11 +1,11 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/features/shell/widgets/glass_add_button.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
@@ -33,9 +33,6 @@ const List<_Tab> _tabs = <_Tab>[
     symbol: 'person.2.fill',
   ),
 ];
-
-const double _barHeight = 64;
-const double _barRadius = 32;
 
 /// Bottom bar with four tabs. An iPhone on iOS 26 or later gets the native
 /// glass tab bar; every other device gets a frosted Flutter bar styled as the
@@ -72,7 +69,7 @@ class AppBottomBar extends StatelessWidget {
       onTap: onTab,
       // Only the selected tab takes the color (the palette's dark green);
       // the other tabs stay dark.
-      tintColor: AppColors.tabSelected,
+      tintColor: AppSemanticColors.navigationSelected,
       actionButton: add == null
           ? null
           : TabBarActionButton(symbol: 'plus', onTap: add),
@@ -111,26 +108,20 @@ class _FrostedTabBar extends StatelessWidget {
         child: CrystalNavigationBar(
           currentIndex: currentIndex,
           onTap: onTab,
-          height: _barHeight,
+          height: AppSizes.tabBar,
           showLabels: true,
           marginR: EdgeInsets.zero,
           paddingR: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          borderRadius: _barRadius,
-          blurSigma: kFrostedBlurSigma,
-          backgroundColor: scheme.surface.withValues(alpha: kFrostedAlpha),
+          borderRadius: AppSizes.tabBar / 2,
+          blurSigma: AppGlass.blurSigma,
+          backgroundColor: AppGlass.frostedSurface(scheme.surface),
           outlineBorderColor: scheme.surface,
           borderWidth: 1,
-          selectedItemColor: AppColors.tabSelected,
+          selectedItemColor: AppSemanticColors.navigationSelected,
           unselectedItemColor: scheme.onSurfaceVariant,
           // Selection: the leaf-tint capsule with the filled ink icon.
-          indicatorColor: AppColors.leafTint,
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: scheme.shadow.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          indicatorColor: AppSemanticColors.selectedSurface,
+          boxShadow: AppGlass.tabShadow(scheme.shadow),
           items: <CrystalNavigationBarItem>[
             for (final _Tab tab in _tabs)
               CrystalNavigationBarItem(

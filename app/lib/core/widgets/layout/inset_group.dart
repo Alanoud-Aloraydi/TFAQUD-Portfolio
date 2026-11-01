@@ -1,9 +1,9 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -60,7 +60,7 @@ class InsetGroup extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (headerAction != null) headerAction!,
+                ?headerAction,
               ],
             ),
           ),
@@ -74,7 +74,11 @@ class InsetGroup extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 for (int i = 0; i < children.length; i++) ...<Widget>[
-                  if (i > 0) const Divider(height: 1, indent: AppSpacing.lg),
+                  if (i > 0)
+                    const Divider(
+                      height: AppSizes.divider,
+                      indent: AppSpacing.lg,
+                    ),
                   children[i],
                 ],
               ],
@@ -203,7 +207,7 @@ class InsetRow extends StatelessWidget {
         ? <Widget>[
             IconTheme.merge(
               data: IconThemeData(
-                color: labelColor ?? AppColors.ink,
+                color: labelColor ?? AppSemanticColors.textPrimary,
                 size: AppSizes.iconSmall,
               ),
               child: leading!,
@@ -225,7 +229,9 @@ class InsetRow extends StatelessWidget {
                   : Text(
                       shown,
                       style: value == null
-                          ? text.bodyMedium?.copyWith(color: AppColors.stone)
+                          ? text.bodyMedium?.copyWith(
+                              color: AppSemanticColors.borderControlBase,
+                            )
                           : text.bodyLarge,
                     ),
             ),
@@ -261,7 +267,7 @@ class InsetRow extends StatelessWidget {
                         const Icon(
                           CupertinoIcons.forward,
                           size: AppSizes.iconSmall,
-                          color: AppColors.stone,
+                          color: AppSemanticColors.borderControlBase,
                         ),
                       ],
                     ],
@@ -383,7 +389,9 @@ class InsetTextRow extends StatelessWidget {
       ],
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: text.bodyMedium?.copyWith(color: AppColors.stone),
+        hintStyle: text.bodyMedium?.copyWith(
+          color: AppSemanticColors.borderControlBase,
+        ),
         filled: false,
         isDense: true,
         border: InputBorder.none,
@@ -552,7 +560,7 @@ Future<Set<T>?> showChecklistSheet<T>(
                           ? const Icon(
                               CupertinoIcons.checkmark,
                               size: AppSizes.iconSmall,
-                              color: AppColors.ink,
+                              color: AppSemanticColors.textPrimary,
                             )
                           : null,
                       onTap: () {

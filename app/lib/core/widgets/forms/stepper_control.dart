@@ -1,7 +1,6 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +28,7 @@ class StepperControl extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const ShapeDecoration(
-        color: AppColors.line,
+        color: AppSemanticColors.borderSubtle,
         shape: StadiumBorder(),
       ),
       child: Row(
@@ -45,7 +44,7 @@ class StepperControl extends StatelessWidget {
             child: VerticalDivider(
               width: 1,
               thickness: 1,
-              color: AppColors.stone,
+              color: AppSemanticColors.borderControlBase,
             ),
           ),
           _Half(
@@ -76,8 +75,8 @@ class _Half extends StatelessWidget {
       tooltip: label,
       onPressed: onPressed,
       icon: Icon(icon, size: AppSizes.iconSmall),
-      color: AppColors.ink,
-      disabledColor: AppColors.stone,
+      color: AppSemanticColors.textPrimary,
+      disabledColor: AppSemanticColors.borderControlBase,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints.tight(const Size.square(AppSizes.touch)),
       style: IconButton.styleFrom(shape: const StadiumBorder()),

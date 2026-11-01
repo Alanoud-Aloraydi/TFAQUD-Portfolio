@@ -1,7 +1,8 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
@@ -90,7 +91,7 @@ class StartScreen extends StatelessWidget {
                                 cubit.selectCareTarget(CareTarget.other),
                           ),
                           AnimatedSize(
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppMotion.formScroll,
                             alignment: Alignment.topCenter,
                             child: state.careTarget == CareTarget.other
                                 ? _PatientQuestion(state: state)
@@ -113,7 +114,7 @@ class StartScreen extends StatelessWidget {
                       child: Text(
                         context.tr('onboarding.skip'),
                         style: text.labelLarge?.copyWith(
-                          color: AppColors.slate,
+                          color: AppSemanticColors.textSupporting,
                         ),
                       ),
                     ),
@@ -147,7 +148,10 @@ class _PatientQuestion extends StatelessWidget {
         padding: const EdgeInsetsDirectional.only(start: AppSpacing.md),
         decoration: const BoxDecoration(
           border: BorderDirectional(
-            start: BorderSide(color: AppColors.leafTint, width: 3),
+            start: BorderSide(
+              color: AppSemanticColors.selectedSurface,
+              width: AppSizes.borderStrong,
+            ),
           ),
         ),
         child: Column(

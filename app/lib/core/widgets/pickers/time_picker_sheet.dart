@@ -1,3 +1,4 @@
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -40,7 +41,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
         TimeOfDay(hour: (_hour % 12) + (_isPm ? 12 : 0), minute: _minute),
       ),
       child: SizedBox(
-        height: 216,
+        height: AppSizes.pickerViewport,
         child: Row(
           children: [
             _Wheel(

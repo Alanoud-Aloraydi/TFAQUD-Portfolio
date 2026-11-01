@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,8 +24,8 @@ class AlreadyHasCircleView extends StatelessWidget {
             children: <Widget>[
               const Icon(
                 CupertinoIcons.checkmark_circle,
-                size: 56,
-                color: AppColors.ink,
+                size: AppSizes.iconHero,
+                color: AppSemanticColors.textPrimary,
               ),
               const SizedBox(height: AppSpacing.lg),
               Semantics(
@@ -40,7 +40,9 @@ class AlreadyHasCircleView extends StatelessWidget {
               Text(
                 context.tr('circles.already_has_circle'),
                 textAlign: TextAlign.center,
-                style: text.bodyLarge?.copyWith(color: AppColors.slate),
+                style: text.bodyLarge?.copyWith(
+                  color: AppSemanticColors.textSupporting,
+                ),
               ),
             ],
           ),

@@ -1,7 +1,6 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 
@@ -165,9 +164,9 @@ class EmergencyCardSkeleton extends StatelessWidget {
           child: Column(
             children: <Widget>[
               _SectionSkeleton(valueWidth: 0.3),
-              Divider(height: 1),
+              Divider(height: AppSizes.divider),
               _SectionSkeleton(valueWidth: 0.7),
-              Divider(height: 1),
+              Divider(height: AppSizes.divider),
               _SectionSkeleton(valueWidth: 0.55, lines: 2),
             ],
           ),

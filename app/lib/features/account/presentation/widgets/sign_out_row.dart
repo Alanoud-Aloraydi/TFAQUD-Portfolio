@@ -1,5 +1,5 @@
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
@@ -35,7 +35,7 @@ class SignOutRow extends StatelessWidget {
         return ActionRow(
           label: context.tr('auth.sign_out'),
           // Signing out is a destructive action: the error red.
-          color: AppColors.error,
+          color: AppSemanticColors.statusError,
           busy: state is AuthLoadingState,
           onPressed: () => context.read<AuthCubit>().signOut(),
         );

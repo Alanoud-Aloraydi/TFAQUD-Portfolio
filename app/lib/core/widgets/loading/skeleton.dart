@@ -1,10 +1,11 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -23,7 +24,7 @@ class Shimmer extends StatefulWidget {
 class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1400),
+    duration: AppMotion.shimmer,
   );
 
   @override
@@ -58,9 +59,9 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
             begin: Alignment(x - 0.6, -0.2),
             end: Alignment(x + 0.6, 0.2),
             colors: const <Color>[
-              Color(0x00FFFFFF),
-              Color(0xB3FFFFFF),
-              Color(0x00FFFFFF),
+              AppEffects.shimmerClear,
+              AppEffects.shimmerHighlight,
+              AppEffects.shimmerClear,
             ],
           ).createShader(bounds),
           child: child,
@@ -90,7 +91,7 @@ class SkeletonBox extends StatelessWidget {
       height: height,
       child: DecoratedBox(
         decoration: ShapeDecoration(
-          color: AppColors.line,
+          color: AppSemanticColors.borderSubtle,
           shape: AppRadius.shape(radius),
         ),
       ),
@@ -265,7 +266,11 @@ class SkeletonFormGroup extends StatelessWidget {
           child: Column(
             children: <Widget>[
               for (int i = 0; i < rows; i++) ...<Widget>[
-                if (i > 0) const Divider(height: 1, indent: AppSpacing.lg),
+                if (i > 0)
+                  const Divider(
+                    height: AppSizes.divider,
+                    indent: AppSpacing.lg,
+                  ),
                 SizedBox(
                   height: AppSizes.button,
                   child: Padding(
@@ -312,7 +317,7 @@ class SkeletonDetailsCard extends StatelessWidget {
           for (int i = 0; i < rows; i++) ...<Widget>[
             if (i > 0)
               const Divider(
-                height: 1,
+                height: AppSizes.divider,
                 indent: AppSpacing.lg,
                 endIndent: AppSpacing.lg,
               ),

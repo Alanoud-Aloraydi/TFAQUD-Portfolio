@@ -1,9 +1,8 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/stepper_control.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -72,7 +71,7 @@ class MedicationScheduleEditor extends StatelessWidget {
           : IconButton(
               tooltip: context.tr('medications.remove_schedule'),
               onPressed: remove,
-              color: AppColors.error,
+              color: AppSemanticColors.statusError,
               icon: const Icon(CupertinoIcons.delete),
             ),
       children: <Widget>[

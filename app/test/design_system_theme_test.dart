@@ -1,9 +1,10 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,7 +38,10 @@ void main() {
       }
       // The white label on the primary action, default and pressed.
       for (final Color fill in <Color>[AppColors.ink, AppColors.slate]) {
-        expect(contrast(AppColors.onInk, fill), greaterThanOrEqualTo(7));
+        expect(
+          contrast(AppSemanticColors.onActionPrimary, fill),
+          greaterThanOrEqualTo(7),
+        );
       }
       // Supporting text reaches 4.5:1 on the light grounds (and turns ink
       // with Increased Contrast).
@@ -100,7 +104,10 @@ void main() {
         resolve(style.backgroundColor, <WidgetState>{WidgetState.disabled}),
         AppColors.line,
       );
-      expect(resolve(style.foregroundColor, <WidgetState>{}), AppColors.onInk);
+      expect(
+        resolve(style.foregroundColor, <WidgetState>{}),
+        AppSemanticColors.onActionPrimary,
+      );
     });
 
     test('text, icons and selection marks are ink', () {

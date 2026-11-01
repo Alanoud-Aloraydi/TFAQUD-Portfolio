@@ -1,8 +1,8 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -44,7 +44,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       // No bar behind the controls: content scrolls under them, fading out
       // (a soft scroll edge effect) so the controls stay readable.
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppSemanticColors.transparent,
       flexibleSpace: const IgnorePointer(child: _ScrollEdge()),
       toolbarHeight: kToolbarHeight + AppSpacing.sm,
       leadingWidth: AppSizes.glassButton + AppSpacing.lg,
@@ -82,8 +82,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
           icon: needsReply > 0
               ? Badge(
                   label: Text('$needsReply'),
-                  backgroundColor: AppColors.ink,
-                  textColor: AppColors.surface,
+                  backgroundColor: AppSemanticColors.textPrimary,
+                  textColor: AppSemanticColors.surfaceContent,
                   child: const Icon(CupertinoIcons.bell),
                 )
               : const Icon(CupertinoIcons.bell),
@@ -102,18 +102,7 @@ class _ScrollEdge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: <Color>[
-            AppColors.canvas.withValues(alpha: 0.96),
-            AppColors.canvas.withValues(alpha: 0.75),
-            AppColors.canvas.withValues(alpha: 0),
-          ],
-          stops: const <double>[0, 0.6, 1],
-        ),
-      ),
+      decoration: BoxDecoration(gradient: AppGlass.scrollEdge),
     );
   }
 }

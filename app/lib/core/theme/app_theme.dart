@@ -1,12 +1,13 @@
-import 'package:app/core/theme/components/surface_themes.dart';
-import 'package:app/core/theme/components/selection_themes.dart';
-import 'package:app/core/theme/components/navigation_themes.dart';
-import 'package:app/core/theme/components/field_themes.dart';
-import 'package:app/core/theme/components/feedback_themes.dart';
-import 'package:app/core/theme/components/button_themes.dart';
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/components/button_themes.dart';
+import 'package:app/core/theme/components/feedback_themes.dart';
+import 'package:app/core/theme/components/field_themes.dart';
+import 'package:app/core/theme/components/navigation_themes.dart';
+import 'package:app/core/theme/components/selection_themes.dart';
+import 'package:app/core/theme/components/surface_themes.dart';
+import 'package:app/core/theme/foundations/app_effects.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -21,36 +22,36 @@ abstract class AppTheme {
   static ColorScheme _colorScheme(AppTokens tokens) {
     return ColorScheme(
       brightness: Brightness.light,
-      primary: AppColors.ink,
-      onPrimary: AppColors.surface,
-      primaryContainer: AppColors.leafTint,
-      onPrimaryContainer: AppColors.ink,
-      secondary: AppColors.slate,
-      onSecondary: AppColors.surface,
-      secondaryContainer: AppColors.leafTint,
-      onSecondaryContainer: AppColors.ink,
-      tertiary: AppColors.honey,
-      onTertiary: AppColors.ink,
-      error: AppColors.error,
-      onError: AppColors.surface,
+      primary: AppSemanticColors.actionPrimary,
+      onPrimary: AppSemanticColors.surfaceContent,
+      primaryContainer: AppSemanticColors.selectedSurface,
+      onPrimaryContainer: AppSemanticColors.textPrimary,
+      secondary: AppSemanticColors.textSupporting,
+      onSecondary: AppSemanticColors.surfaceContent,
+      secondaryContainer: AppSemanticColors.selectedSurface,
+      onSecondaryContainer: AppSemanticColors.textPrimary,
+      tertiary: AppSemanticColors.accentWarm,
+      onTertiary: AppSemanticColors.textPrimary,
+      error: AppSemanticColors.statusError,
+      onError: AppSemanticColors.surfaceContent,
       // No tinted status backgrounds: a status is its icon and its word.
-      errorContainer: AppColors.canvas,
+      errorContainer: AppSemanticColors.background,
       onErrorContainer: tokens.errorText,
-      surface: AppColors.surface,
-      onSurface: AppColors.ink,
+      surface: AppSemanticColors.surfaceContent,
+      onSurface: AppSemanticColors.textPrimary,
       onSurfaceVariant: tokens.textSecondary,
-      surfaceContainerLowest: AppColors.surface,
-      surfaceContainerLow: AppColors.canvas,
-      surfaceContainer: AppColors.canvas,
-      surfaceContainerHigh: AppColors.canvas,
-      surfaceContainerHighest: AppColors.canvas,
+      surfaceContainerLowest: AppSemanticColors.surfaceContent,
+      surfaceContainerLow: AppSemanticColors.background,
+      surfaceContainer: AppSemanticColors.background,
+      surfaceContainerHigh: AppSemanticColors.background,
+      surfaceContainerHighest: AppSemanticColors.background,
       outline: tokens.borderControl,
-      outlineVariant: AppColors.line,
-      shadow: AppColors.ink,
-      scrim: AppColors.scrim,
-      inverseSurface: AppColors.ink,
-      onInverseSurface: AppColors.surface,
-      inversePrimary: AppColors.honey,
+      outlineVariant: AppSemanticColors.borderSubtle,
+      shadow: AppSemanticColors.textPrimary,
+      scrim: AppSemanticColors.overlayScrim,
+      inverseSurface: AppSemanticColors.textPrimary,
+      onInverseSurface: AppSemanticColors.surfaceContent,
+      inversePrimary: AppSemanticColors.accentWarm,
       surfaceTint: Colors.transparent,
     );
   }
@@ -60,8 +61,8 @@ abstract class AppTheme {
       useMaterial3: true,
       fontFamily: AppTextTheme.fontFamily,
       colorScheme: _colorScheme(tokens),
-      scaffoldBackgroundColor: AppColors.canvas,
-      canvasColor: AppColors.canvas,
+      scaffoldBackgroundColor: AppSemanticColors.background,
+      canvasColor: AppSemanticColors.background,
       textTheme: AppTextTheme.build(secondary: tokens.textSecondary),
       extensions: <ThemeExtension<dynamic>>[tokens],
       filledButtonTheme: AppButtonThemes.filledButton(tokens),
@@ -97,15 +98,15 @@ abstract class AppTheme {
       // Cupertino widgets (pickers, action sheets, dialogs) use the app font
       // and ink instead of the system blue.
       cupertinoOverrideTheme: const NoDefaultCupertinoThemeData(
-        primaryColor: AppColors.ink,
-        scaffoldBackgroundColor: AppColors.canvas,
+        primaryColor: AppSemanticColors.textPrimary,
+        scaffoldBackgroundColor: AppSemanticColors.background,
         textTheme: CupertinoTextThemeData(
-          primaryColor: AppColors.ink,
+          primaryColor: AppSemanticColors.textPrimary,
           pickerTextStyle: AppTextTheme.picker,
           dateTimePickerTextStyle: AppTextTheme.picker,
         ),
       ),
-      highlightColor: const Color(0x14202734),
+      highlightColor: AppEffects.interactionOverlay,
     );
   }
 

@@ -1,8 +1,7 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +28,9 @@ class SettingsSection extends StatelessWidget {
             header: true,
             child: Text(
               title,
-              style: text.titleSmall?.copyWith(color: AppColors.slate),
+              style: text.titleSmall?.copyWith(
+                color: AppSemanticColors.textSupporting,
+              ),
             ),
           ),
         ),
@@ -53,7 +54,12 @@ class SettingsCard extends StatelessWidget {
       child: Column(
         children: <Widget>[
           for (int i = 0; i < children.length; i++) ...<Widget>[
-            if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16),
+            if (i > 0)
+              const Divider(
+                height: AppSizes.divider,
+                indent: 16,
+                endIndent: 16,
+              ),
             children[i],
           ],
         ],
@@ -96,7 +102,12 @@ class InfoRow extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          Text(label, style: text.bodyMedium?.copyWith(color: AppColors.slate)),
+          Text(
+            label,
+            style: text.bodyMedium?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
@@ -111,7 +122,7 @@ class InfoRow extends StatelessWidget {
             const Icon(
               CupertinoIcons.pencil,
               size: AppSizes.iconSmall,
-              color: AppColors.slate,
+              color: AppSemanticColors.textSupporting,
             ),
           ],
         ],
@@ -135,7 +146,7 @@ class ActionRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
-    this.color = AppColors.ink,
+    this.color = AppSemanticColors.textPrimary,
     this.busy = false,
   });
 

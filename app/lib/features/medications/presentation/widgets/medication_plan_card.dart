@@ -1,9 +1,8 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
@@ -68,7 +67,7 @@ class MedicationPlanCard extends StatelessWidget {
                   const Icon(
                     CupertinoIcons.forward,
                     size: AppSizes.iconSmall,
-                    color: AppColors.stone,
+                    color: AppSemanticColors.borderControlBase,
                   ),
                 ],
               ),
@@ -167,7 +166,7 @@ class _InfoLine extends StatelessWidget {
       children: [
         Icon(
           icon,
-          size: 18,
+          size: AppSizes.iconInline,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: AppSpacing.sm),

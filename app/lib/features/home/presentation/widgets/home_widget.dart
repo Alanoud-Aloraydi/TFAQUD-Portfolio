@@ -1,7 +1,6 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -105,7 +104,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           const Icon(
             CupertinoIcons.chevron_down,
             size: AppSizes.iconSmall,
-            color: AppColors.ink,
+            color: AppSemanticColors.textPrimary,
           ),
         ],
       ),

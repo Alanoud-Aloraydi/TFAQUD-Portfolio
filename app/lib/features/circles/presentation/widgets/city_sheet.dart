@@ -1,6 +1,6 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/circles/domain/saudi_cities.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -86,7 +86,7 @@ class _CitySheetState extends State<CitySheet> {
                       child: Text(
                         context.tr('circles.city_none_found'),
                         style: text.bodyMedium?.copyWith(
-                          color: AppColors.slate,
+                          color: AppSemanticColors.textSupporting,
                         ),
                       ),
                     )
@@ -100,20 +100,22 @@ class _CitySheetState extends State<CitySheet> {
                         return ListTile(
                           leading: Icon(
                             CupertinoIcons.map_pin,
-                            color: chosen ? AppColors.ink : AppColors.slate,
+                            color: chosen
+                                ? AppSemanticColors.textPrimary
+                                : AppSemanticColors.textSupporting,
                           ),
                           title: Text(
                             city,
                             style: text.bodyLarge?.copyWith(
                               fontWeight: chosen
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
+                                  ? AppTextTheme.bold
+                                  : AppTextTheme.regular,
                             ),
                           ),
                           trailing: chosen
                               ? const Icon(
                                   CupertinoIcons.checkmark,
-                                  color: AppColors.ink,
+                                  color: AppSemanticColors.textPrimary,
                                 )
                               : null,
                           onTap: () => setState(() => _selected = city),

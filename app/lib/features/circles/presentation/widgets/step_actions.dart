@@ -1,6 +1,5 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -41,8 +40,10 @@ class StepActions extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(),
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: AppColors.ink,
-              side: const BorderSide(color: AppColors.stone),
+              foregroundColor: AppSemanticColors.textPrimary,
+              side: const BorderSide(
+                color: AppSemanticColors.borderControlBase,
+              ),
             ),
             child: Text(context.tr('circles.skip')),
           ),

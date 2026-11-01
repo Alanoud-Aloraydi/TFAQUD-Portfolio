@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// A small rounded label. The icon, when there is one, keeps the colour from
@@ -40,8 +40,10 @@ class StatusPill extends StatelessWidget {
           ],
           Text(
             text,
-            style: Theme.of(context).textTheme.labelMedium
-                ?.copyWith(color: foreground, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: foreground,
+              fontWeight: AppTextTheme.semibold,
+            ),
           ),
         ],
       ),

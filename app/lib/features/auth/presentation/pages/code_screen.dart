@@ -1,14 +1,13 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
 import 'package:app/features/auth/presentation/widgets/otp_field.dart';
-import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -79,14 +78,14 @@ class CodeScreen extends StatelessWidget {
                           TextButton(
                             onPressed: () => _back(context),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.ink,
+                              foregroundColor: AppSemanticColors.textPrimary,
                               padding: EdgeInsets.zero,
                               alignment: AlignmentDirectional.centerStart,
                             ),
                             child: Text(
                               context.tr('auth.edit_phone'),
                               style: text.labelLarge?.copyWith(
-                                color: AppColors.ink,
+                                color: AppSemanticColors.textPrimary,
                               ),
                             ),
                           ),

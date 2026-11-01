@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:flutter/material.dart';
 
 /// Shared field themes for the current application appearance.
@@ -20,11 +20,11 @@ abstract class AppFieldThemes {
   static InputDecorationThemeData inputDecoration(AppTokens tokens) {
     return InputDecorationThemeData(
       filled: true,
-      fillColor: AppColors.surface,
+      fillColor: AppSemanticColors.surfaceContent,
       contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
       border: _outline(tokens.borderControl),
       enabledBorder: _outline(tokens.borderControl),
-      disabledBorder: _outline(AppColors.line),
+      disabledBorder: _outline(AppSemanticColors.borderSubtle),
       focusedBorder: _outline(tokens.focus, 2),
       errorBorder: _outline(tokens.error, 2),
       focusedErrorBorder: _outline(tokens.error, 2),
@@ -44,7 +44,7 @@ abstract class AppFieldThemes {
       ),
       floatingLabelStyle: const TextStyle(
         fontFamily: AppTextTheme.fontFamily,
-        color: AppColors.ink,
+        color: AppSemanticColors.textPrimary,
         fontSize: 15,
         height: 24 / 15,
       ),

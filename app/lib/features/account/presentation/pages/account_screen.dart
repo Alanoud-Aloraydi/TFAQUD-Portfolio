@@ -1,10 +1,9 @@
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
@@ -19,7 +18,6 @@ import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -182,12 +180,14 @@ class AccountScreen extends StatelessWidget {
                       height: AppSizes.avatarLarge,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
-                        color: AppColors.leafTint,
+                        color: AppSemanticColors.selectedSurface,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         shown.isEmpty ? '؟' : shown.characters.first,
-                        style: text.titleLarge?.copyWith(color: AppColors.ink),
+                        style: text.titleLarge?.copyWith(
+                          color: AppSemanticColors.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -250,7 +250,9 @@ class AccountScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             context.tr('account.medical_note'),
-            style: text.bodySmall?.copyWith(color: AppColors.slate),
+            style: text.bodySmall?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           SettingsCard(
@@ -258,7 +260,7 @@ class AccountScreen extends StatelessWidget {
               const SignOutRow(),
               ActionRow(
                 label: context.tr('account.delete_account'),
-                color: AppColors.error,
+                color: AppSemanticColors.statusError,
                 busy: state.deleting,
                 onPressed: cubit.startDelete,
               ),
@@ -297,14 +299,16 @@ class _SentRequestRow extends StatelessWidget {
               height: AppSizes.avatar,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                color: AppColors.leafTint,
+                color: AppSemanticColors.selectedSurface,
                 shape: BoxShape.circle,
               ),
               child: Text(
                 request.circleLabel.isEmpty
                     ? '؟'
                     : request.circleLabel.characters.first,
-                style: text.titleMedium?.copyWith(color: AppColors.ink),
+                style: text.titleMedium?.copyWith(
+                  color: AppSemanticColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -316,7 +320,9 @@ class _SentRequestRow extends StatelessWidget {
                   if (days != null)
                     Text(
                       _ageText(context, days),
-                      style: text.bodySmall?.copyWith(color: AppColors.slate),
+                      style: text.bodySmall?.copyWith(
+                        color: AppSemanticColors.textSupporting,
+                      ),
                     ),
                 ],
               ),
@@ -329,12 +335,19 @@ class _SentRequestRow extends StatelessWidget {
                     ? 'account.status_accepted_short'
                     : 'circles.request_status_pending',
               ),
-              background: accepted ? AppColors.canvas : AppColors.canvas,
-              foreground: accepted ? AppColors.success : AppColors.slate,
+              background: accepted
+                  ? AppSemanticColors.background
+                  : AppSemanticColors.background,
+              foreground: accepted
+                  ? AppSemanticColors.statusSuccess
+                  : AppSemanticColors.textSupporting,
             ),
             const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.
-            const Icon(CupertinoIcons.forward, color: AppColors.slate),
+            const Icon(
+              CupertinoIcons.forward,
+              color: AppSemanticColors.textSupporting,
+            ),
           ],
         ),
       ),

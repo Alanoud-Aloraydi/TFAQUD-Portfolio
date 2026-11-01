@@ -1,6 +1,5 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +29,7 @@ class MedicationPlanList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[
-      if (header != null) header!,
+      ?header,
       if (title != null) ...[
         Text(title!, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: AppSpacing.md),

@@ -1,14 +1,14 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
@@ -124,7 +124,9 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 Text(
                   context.tr('circles.proposed_mode'),
-                  style: text.titleSmall?.copyWith(color: AppColors.slate),
+                  style: text.titleSmall?.copyWith(
+                    color: AppSemanticColors.textSupporting,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 // In a right-to-left language the first segment is on the
@@ -146,7 +148,9 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                         ? 'circles.mode_simplified_hint'
                         : 'circles.mode_detailed_hint',
                   ),
-                  style: text.bodySmall?.copyWith(color: AppColors.slate),
+                  style: text.bodySmall?.copyWith(
+                    color: AppSemanticColors.textSupporting,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 _Notice(text: context.tr('circles.request_notice')),
@@ -183,7 +187,7 @@ class _Notice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.canvas,
+        color: AppSemanticColors.background,
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Row(
@@ -191,15 +195,15 @@ class _Notice extends StatelessWidget {
         children: <Widget>[
           const Icon(
             CupertinoIcons.info_circle,
-            size: 20,
-            color: AppColors.slate,
+            size: AppSizes.iconSmall,
+            color: AppSemanticColors.textSupporting,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.slate),
+                  ?.copyWith(color: AppSemanticColors.textSupporting),
             ),
           ),
         ],

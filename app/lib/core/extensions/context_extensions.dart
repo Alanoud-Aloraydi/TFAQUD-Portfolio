@@ -1,8 +1,8 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:app/core/widgets/loading/loading_widget.dart';
 
 extension ContextExtensions on BuildContext {
   // Snackbar
@@ -17,7 +17,7 @@ extension ContextExtensions on BuildContext {
               isError
                   ? CupertinoIcons.exclamationmark_circle
                   : CupertinoIcons.checkmark_circle,
-              color: AppColors.surface,
+              color: AppSemanticColors.surfaceContent,
               size: 20,
             ),
             const SizedBox(width: 8),

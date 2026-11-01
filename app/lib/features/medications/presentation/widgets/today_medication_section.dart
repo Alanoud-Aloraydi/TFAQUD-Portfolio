@@ -1,9 +1,8 @@
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
@@ -47,7 +46,7 @@ class TodayMedicationSection extends StatelessWidget {
       itemCount: state.occurrences.length + 1,
       separatorBuilder: (_, index) => index == 0
           ? const SizedBox(height: AppSpacing.md)
-          : const Divider(height: 1),
+          : const Divider(height: AppSizes.divider),
       itemBuilder: (context, index) {
         if (index == 0) return _Header(count: state.occurrences.length);
         return DoseOccurrenceCard(occurrence: state.occurrences[index - 1]);

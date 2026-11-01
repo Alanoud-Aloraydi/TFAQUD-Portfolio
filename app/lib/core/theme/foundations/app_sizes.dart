@@ -31,4 +31,23 @@ abstract class AppSizes {
   /// small grey label sits in it, and values and typed text start after it,
   /// so every row of a form lines up.
   static const double formLabel = 112;
+
+  // Preserve the compact overrides used by existing pill and alert buttons.
+  static const double compactButton = 48;
+  static const double buttonSpinner = 22;
+  static const double loadingIndicator = 50;
+  static const double spinnerStroke = 2.5;
+  static const double phonePrefix = 84;
+  static const double pickerViewport = 216;
+  static const double alertWidth = 320;
+  static const double iconTiny = 14;
+  static const double iconCompact = 16;
+  static const double iconInline = 18;
+  static const double iconAction = 28;
+  static const double iconEmpty = 36;
+  static const double iconHero = 56;
+  static const double divider = 1;
+  static const double border = 1;
+  static const double borderEmphasis = 2;
+  static const double borderStrong = 3;
 }

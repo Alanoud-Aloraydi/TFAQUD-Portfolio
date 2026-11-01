@@ -1,13 +1,12 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
-import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
@@ -99,7 +98,9 @@ class _ContactFormCardState extends State<ContactFormCard> {
           const SizedBox(height: AppSpacing.lg),
           Text(
             context.tr('circles.contact_relation'),
-            style: text.titleSmall?.copyWith(color: AppColors.slate),
+            style: text.titleSmall?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           OptionChips(
@@ -114,7 +115,9 @@ class _ContactFormCardState extends State<ContactFormCard> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               requiredText,
-              style: text.bodySmall?.copyWith(color: AppColors.error),
+              style: text.bodySmall?.copyWith(
+                color: AppSemanticColors.statusError,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.lg),
@@ -157,8 +160,10 @@ class _ContactFormCardState extends State<ContactFormCard> {
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
                     minimumSize: const Size.fromHeight(48),
-                    foregroundColor: AppColors.ink,
-                    side: const BorderSide(color: AppColors.stone),
+                    foregroundColor: AppSemanticColors.textPrimary,
+                    side: const BorderSide(
+                      color: AppSemanticColors.borderControlBase,
+                    ),
                   ),
                   child: Text(context.tr('circles.contact_cancel')),
                 ),
@@ -179,7 +184,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
                 // Deleting is a destructive action: the error red. No start
                 // padding, so the trash sits on the card's content edge.
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.error,
+                  foregroundColor: AppSemanticColors.statusError,
                   padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
                 ),
               ),

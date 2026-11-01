@@ -1,4 +1,4 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:flutter/material.dart';
 
@@ -9,11 +9,16 @@ import 'package:flutter/material.dart';
 abstract class AppSurfaces {
   AppSurfaces._();
 
-  static const BorderSide edge = BorderSide(color: AppColors.line);
+  static const BorderSide edge = BorderSide(
+    color: AppSemanticColors.borderSubtle,
+  );
 
   static ShapeBorder cardShape([double radius = AppRadius.card]) =>
       AppRadius.shape(radius, side: edge);
 
   static ShapeDecoration card([double radius = AppRadius.card]) =>
-      ShapeDecoration(color: AppColors.surface, shape: cardShape(radius));
+      ShapeDecoration(
+        color: AppSemanticColors.surfaceContent,
+        shape: cardShape(radius),
+      );
 }

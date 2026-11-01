@@ -1,18 +1,19 @@
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
-// easy_localization also exports a TextDirection (from intl); hide it so the
-// name means Flutter's TextDirection.
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+// easy_localization also exports a TextDirection (from intl); hide it so the
+// name means Flutter's TextDirection.
 
 /// The waiting state after a request is sent (CREAT-05): the circle does not
 /// exist yet, and the page says who has to answer. The button goes back to the
@@ -46,13 +47,17 @@ class RequestSentView extends StatelessWidget {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: accepted ? AppColors.surface : AppColors.surface,
+                    color: accepted
+                        ? AppSemanticColors.surfaceContent
+                        : AppSemanticColors.surfaceContent,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
-                    size: 36,
-                    color: accepted ? AppColors.success : AppColors.slate,
+                    size: AppSizes.iconEmpty,
+                    color: accepted
+                        ? AppSemanticColors.statusSuccess
+                        : AppSemanticColors.textSupporting,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -76,7 +81,9 @@ class RequestSentView extends StatelessWidget {
                         : 'circles.request_waiting_body',
                   ),
                   textAlign: TextAlign.center,
-                  style: text.bodyMedium?.copyWith(color: AppColors.slate),
+                  style: text.bodyMedium?.copyWith(
+                    color: AppSemanticColors.textSupporting,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 _DetailsCard(request: request, accepted: accepted),
@@ -92,8 +99,10 @@ class RequestSentView extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(),
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: AppColors.ink,
-              side: const BorderSide(color: AppColors.stone),
+              foregroundColor: AppSemanticColors.textPrimary,
+              side: const BorderSide(
+                color: AppSemanticColors.borderControlBase,
+              ),
             ),
             child: Text(context.tr('circles.request_back')),
           ),
@@ -126,7 +135,7 @@ class _DetailsCard extends StatelessWidget {
               style: text.bodyMedium,
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: AppSizes.divider),
           _DetailRow(
             label: context.tr('circles.app_mode'),
             child: StatusPill(
@@ -135,11 +144,11 @@ class _DetailsCard extends StatelessWidget {
                     ? 'circles.mode_detailed'
                     : 'circles.mode_simplified',
               ),
-              background: AppColors.leafTint,
-              foreground: AppColors.ink,
+              background: AppSemanticColors.selectedSurface,
+              foreground: AppSemanticColors.textPrimary,
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: AppSizes.divider),
           _DetailRow(
             label: context.tr('circles.request_status'),
             child: StatusPill(
@@ -149,8 +158,12 @@ class _DetailsCard extends StatelessWidget {
                     ? 'circles.request_status_accepted'
                     : 'circles.request_status_pending',
               ),
-              background: accepted ? AppColors.canvas : AppColors.canvas,
-              foreground: accepted ? AppColors.success : AppColors.slate,
+              background: accepted
+                  ? AppSemanticColors.background
+                  : AppSemanticColors.background,
+              foreground: accepted
+                  ? AppSemanticColors.statusSuccess
+                  : AppSemanticColors.textSupporting,
             ),
           ),
         ],
@@ -175,7 +188,9 @@ class _DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: text.bodyMedium?.copyWith(color: AppColors.slate),
+              style: text.bodyMedium?.copyWith(
+                color: AppSemanticColors.textSupporting,
+              ),
             ),
           ),
           child,

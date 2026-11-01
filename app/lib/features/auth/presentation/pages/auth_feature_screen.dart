@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/auth/presentation/widgets/orbit_painter.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -58,7 +58,7 @@ class _WelcomePanel extends StatelessWidget {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
       child: ColoredBox(
-        color: AppColors.honey,
+        color: AppSemanticColors.accentWarm,
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             // The brand mark sits a little above the middle of the panel.
@@ -78,15 +78,17 @@ class _WelcomePanel extends StatelessWidget {
                       Text(
                         context.tr('auth.app_name'),
                         style: text.displaySmall?.copyWith(
-                          color: AppColors.ink,
-                          fontWeight: FontWeight.w700,
+                          color: AppSemanticColors.textPrimary,
+                          fontWeight: AppTextTheme.bold,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         context.tr('auth.tagline'),
                         textAlign: TextAlign.center,
-                        style: text.bodyLarge?.copyWith(color: AppColors.ink),
+                        style: text.bodyLarge?.copyWith(
+                          color: AppSemanticColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),

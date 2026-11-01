@@ -1,10 +1,9 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -104,7 +103,10 @@ class _SkipDoseSheetState extends State<_SkipDoseSheet> {
       // others.
       selected: selected,
       trailing: selected
-          ? const Icon(CupertinoIcons.checkmark, color: AppColors.ink)
+          ? const Icon(
+              CupertinoIcons.checkmark,
+              color: AppSemanticColors.textPrimary,
+            )
           : null,
     );
   }

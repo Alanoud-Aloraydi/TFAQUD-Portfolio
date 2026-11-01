@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -115,7 +115,9 @@ class _RecordedStatus extends StatelessWidget {
     // Care status map: taken is success; recorded as not taken is neutral,
     // never an error. The icon keeps its color; the word follows the
     // contrast setting.
-    final Color iconColor = taken ? context.tokens.success : AppColors.slate;
+    final Color iconColor = taken
+        ? context.tokens.success
+        : AppSemanticColors.textSupporting;
     final Color ink = taken
         ? context.tokens.successText
         : context.tokens.textSecondary;
@@ -123,7 +125,7 @@ class _RecordedStatus extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.canvas,
+        color: AppSemanticColors.background,
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Row(

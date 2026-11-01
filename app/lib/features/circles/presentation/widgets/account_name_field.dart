@@ -1,4 +1,5 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -20,15 +21,12 @@ class AccountNameField extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final Widget content = switch (state.accountLoad) {
-      AccountLoad.loaded => Text(
-        state.fullName ?? '',
-        style: text.bodyLarge,
-      ),
+      AccountLoad.loaded => Text(state.fullName ?? '', style: text.bodyLarge),
       AccountLoad.loading => const Align(
         alignment: AlignmentDirectional.centerStart,
         child: SizedBox(
-          width: 20,
-          height: 20,
+          width: AppSpacing.space5,
+          height: AppSpacing.space5,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
@@ -37,7 +35,9 @@ class AccountNameField extends StatelessWidget {
           Flexible(
             child: Text(
               context.tr('circles.name_failed'),
-              style: text.bodyMedium?.copyWith(color: AppColors.error),
+              style: text.bodyMedium?.copyWith(
+                color: AppSemanticColors.statusError,
+              ),
             ),
           ),
           TextButton(onPressed: onRetry, child: Text(context.tr('auth.retry'))),
