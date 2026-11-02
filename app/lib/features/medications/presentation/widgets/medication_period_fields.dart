@@ -2,6 +2,7 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
@@ -9,8 +10,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// The treatment period as one iOS grouped section: start, the date a change
-/// applies from (when editing), and the optional end.
+/// The treatment start and optional end in one grouped section.
 class MedicationPeriodFields extends StatelessWidget {
   const MedicationPeriodFields({
     super.key,
@@ -32,6 +32,39 @@ class MedicationPeriodFields extends StatelessWidget {
         InsetGroup(
           header: context.tr('medications.treatment_period'),
           children: <Widget>[
+            InsetBlock(
+              semanticLabel: context.tr('medications.duration'),
+              child: OptionChips(
+                options: <ChipOption>[
+                  ChipOption(
+                    'continuous',
+                    context.tr('medications.continuous'),
+                  ),
+                  ChipOption('dated', context.tr('medications.until_date')),
+                ],
+                isSelected: (String code) => code == 'continuous'
+                    ? data.endsOn == null
+                    : data.endsOn != null,
+                onTap: (String code) async {
+                  if (code == 'continuous') {
+                    data.endsOn = null;
+                    onChanged();
+                    return;
+                  }
+                  final first = data.effectiveFromOn ?? data.startsOn;
+                  final selected = await showTafaqodDateSheet(
+                    context,
+                    title: context.tr('medications.ends'),
+                    initialDate: data.endsOn ?? first,
+                    firstDate: first,
+                    lastDate: first.add(const Duration(days: 3650)),
+                  );
+                  if (selected == null) return;
+                  data.endsOn = selected;
+                  onChanged();
+                },
+              ),
+            ),
             _DateRow(
               label: context.tr('medications.starts'),
               value: data.startsOn,
@@ -41,30 +74,16 @@ class MedicationPeriodFields extends StatelessWidget {
                 onChanged();
               },
             ),
-            if (data.effectiveFromOn != null)
+            if (data.endsOn != null)
               _DateRow(
-                label: context.tr('medications.effective_from'),
-                value: data.effectiveFromOn,
-                firstDate: DateUtils.dateOnly(
-                  DateTime.now().add(const Duration(days: 1)),
-                ),
+                label: context.tr('medications.ends'),
+                value: data.endsOn,
+                focusNode: data.periodFocus,
                 onChanged: (DateTime? value) {
-                  if (value == null) return;
-                  data.effectiveFromOn = value;
+                  data.endsOn = value;
                   onChanged();
                 },
               ),
-            _DateRow(
-              label: context.tr('medications.ends'),
-              value: data.endsOn,
-              placeholder: context.tr('medications.no_end_date'),
-              allowClear: true,
-              focusNode: data.periodFocus,
-              onChanged: (DateTime? value) {
-                data.endsOn = value;
-                onChanged();
-              },
-            ),
           ],
         ),
         if (issue?.field == MedicationFormField.period)
@@ -98,13 +117,85 @@ class MedicationPeriodFields extends StatelessWidget {
   }
 }
 
+/// A revision starts on the next day or a later selected day.
+class MedicationEffectiveDateGroup extends StatelessWidget {
+  const MedicationEffectiveDateGroup({
+    super.key,
+    required this.data,
+    required this.onChanged,
+  });
+
+  final MedicationFormData data;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tomorrow = DateUtils.dateOnly(
+      DateTime.now().add(const Duration(days: 1)),
+    );
+    final selected = data.effectiveFromOn ?? tomorrow;
+    final isTomorrow = DateUtils.isSameDay(selected, tomorrow);
+    return InsetGroup(
+      header: context.tr('medications.effective_question'),
+      footer: context.tr('medications.effective_hint'),
+      children: <Widget>[
+        InsetBlock(
+          semanticLabel: context.tr('medications.effective_question'),
+          child: OptionChips(
+            options: <ChipOption>[
+              ChipOption('tomorrow', context.tr('medications.tomorrow')),
+              ChipOption('date', context.tr('medications.specific_date')),
+            ],
+            isSelected: (String code) =>
+                code == 'tomorrow' ? isTomorrow : !isTomorrow,
+            onTap: (String code) {
+              if (code == 'tomorrow') {
+                data.effectiveFromOn = tomorrow;
+                onChanged();
+              } else {
+                _chooseDate(context, tomorrow, selected);
+              }
+            },
+          ),
+        ),
+        if (!isTomorrow)
+          _DateRow(
+            label: context.tr('medications.effective_from'),
+            value: selected,
+            firstDate: tomorrow,
+            onChanged: (DateTime? date) {
+              if (date == null) return;
+              data.effectiveFromOn = date;
+              onChanged();
+            },
+          ),
+      ],
+    );
+  }
+
+  Future<void> _chooseDate(
+    BuildContext context,
+    DateTime tomorrow,
+    DateTime selected,
+  ) async {
+    final date = await showTafaqodDateSheet(
+      context,
+      title: context.tr('medications.effective_from'),
+      initialDate: selected,
+      firstDate: tomorrow,
+      lastDate: tomorrow.add(const Duration(days: 3650)),
+    );
+    if (date == null) return;
+    data.effectiveFromOn = date;
+    onChanged();
+  }
+}
+
 class _DateRow extends StatelessWidget {
   const _DateRow({
     required this.label,
     required this.value,
     required this.onChanged,
-    this.placeholder,
-    this.allowClear = false,
     this.firstDate,
     this.focusNode,
   });
@@ -112,8 +203,6 @@ class _DateRow extends StatelessWidget {
   final String label;
   final DateTime? value;
   final ValueChanged<DateTime?> onChanged;
-  final String? placeholder;
-  final bool allowClear;
   final DateTime? firstDate;
   final FocusNode? focusNode;
 
@@ -123,20 +212,9 @@ class _DateRow extends StatelessWidget {
     return InsetRow(
       label: label,
       value: date == null ? null : formatMedicationDate(context, date),
-      placeholder: placeholder,
       focusNode: focusNode,
       onTap: () => _select(context),
-      trailing: allowClear && date != null
-          ? IconButton(
-              tooltip: context.tr('medications.no_end_date'),
-              onPressed: () => onChanged(null),
-              icon: const Icon(
-                CupertinoIcons.xmark_circle,
-                size: AppSizes.iconSmall,
-              ),
-            )
-          : null,
-      showChevron: !(allowClear && date != null),
+      showChevron: true,
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
 
@@ -10,6 +11,7 @@ class MedicationVersion extends Equatable {
     required this.dosageForm,
     required this.startsOn,
     required List<MedicationSchedule> schedules,
+    this.missedAfterMinutes = 60,
     this.reason,
     this.instructions,
     this.endsOn,
@@ -29,6 +31,7 @@ class MedicationVersion extends Equatable {
   final DateTime effectiveFromOn;
   final DateTime? effectiveUntilOn;
   final List<MedicationSchedule> schedules;
+  final int missedAfterMinutes;
 
   @override
   List<Object?> get props => [
@@ -44,6 +47,7 @@ class MedicationVersion extends Equatable {
     effectiveFromOn,
     effectiveUntilOn,
     schedules,
+    missedAfterMinutes,
   ];
 }
 
@@ -52,13 +56,17 @@ class MedicationPlan extends Equatable {
     required this.id,
     required this.createdAt,
     required this.version,
+    this.pendingVersion,
     this.discontinuedAt,
+    this.lastRecord,
   });
 
   final String id;
   final DateTime createdAt;
   final DateTime? discontinuedAt;
   final MedicationVersion version;
+  final MedicationVersion? pendingVersion;
+  final MedicationLastRecord? lastRecord;
 
   bool isPreviousOn(DateTime day) =>
       discontinuedAt != null ||
@@ -67,7 +75,31 @@ class MedicationPlan extends Equatable {
   bool isScheduledOn(DateTime day) => version.effectiveFromOn.isAfter(day);
 
   @override
-  List<Object?> get props => [id, createdAt, discontinuedAt, version];
+  List<Object?> get props => [
+    id,
+    createdAt,
+    discontinuedAt,
+    version,
+    pendingVersion,
+    lastRecord,
+  ];
+}
+
+class MedicationLastRecord extends Equatable {
+  const MedicationLastRecord({
+    required this.outcome,
+    required this.scheduledOn,
+    required this.time,
+    this.takenAt,
+  });
+
+  final DoseOutcome outcome;
+  final DateTime scheduledOn;
+  final String time;
+  final DateTime? takenAt;
+
+  @override
+  List<Object?> get props => [outcome, scheduledOn, time, takenAt];
 }
 
 class MedicationPlanDraft extends Equatable {
@@ -78,6 +110,7 @@ class MedicationPlanDraft extends Equatable {
     required this.dosageForm,
     required this.startsOn,
     required List<MedicationScheduleDraft> schedules,
+    this.missedAfterMinutes = 60,
     this.reason,
     this.instructions,
     this.endsOn,
@@ -94,6 +127,7 @@ class MedicationPlanDraft extends Equatable {
   final DateTime? endsOn;
   final DateTime? effectiveFromOn;
   final List<MedicationScheduleDraft> schedules;
+  final int missedAfterMinutes;
 
   Map<String, Object?> toJson({int? expectedVersion}) => {
     'name': name,
@@ -102,6 +136,7 @@ class MedicationPlanDraft extends Equatable {
     'dosage_form': dosageForm.name,
     'reason_for_use': reason,
     'instructions': instructions,
+    'missed_after_minutes': missedAfterMinutes,
     'treatment_starts_on': _date(startsOn),
     'treatment_ends_on': endsOn == null ? null : _date(endsOn!),
     'schedules': schedules.map((item) => item.toJson()).toList(),
@@ -126,5 +161,6 @@ class MedicationPlanDraft extends Equatable {
     endsOn,
     effectiveFromOn,
     schedules,
+    missedAfterMinutes,
   ];
 }

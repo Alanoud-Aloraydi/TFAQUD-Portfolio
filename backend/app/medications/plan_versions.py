@@ -31,6 +31,7 @@ def add_plan_version(
         dosage_form=body.dosage_form,
         reason_for_use=body.reason_for_use,
         instructions=body.instructions,
+        missed_after_minutes=body.missed_after_minutes,
         treatment_starts_on=body.treatment_starts_on,
         treatment_ends_on=body.treatment_ends_on,
         effective_from_on=effective_from_on,
@@ -74,6 +75,7 @@ def same_definition(
         and version.dosage_form == body.dosage_form
         and version.reason_for_use == body.reason_for_use
         and version.instructions == body.instructions
+        and version.missed_after_minutes == body.missed_after_minutes
         and version.treatment_starts_on == body.treatment_starts_on
         and version.treatment_ends_on == body.treatment_ends_on
     )

@@ -23,6 +23,7 @@ class DoseOccurrenceModel {
         dosageForm: DosageForm.values.byName(json['dosage_form'] as String),
         doseValue: double.parse(json['dose_value'] as String),
         doseUnit: unit,
+        missedAfterMinutes: json['missed_after_minutes'] as int? ?? 60,
         instructions: json['instructions'] as String?,
         timingState: json['timing_state'] == null
             ? null

@@ -64,6 +64,20 @@ class MedicationsRepositoryData implements MedicationsRepositoryDomain {
   });
 
   @override
+  Future<Result<MedicationPlan, Failure>> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  ) => _guard(() async {
+    final model = await _remote.cancelPendingPlan(
+      circleId,
+      planId,
+      expectedVersion,
+    );
+    return model.toEntity();
+  });
+
+  @override
   Future<Result<List<DoseOccurrence>, Failure>> getOccurrences(
     String circleId,
     DateTime from,

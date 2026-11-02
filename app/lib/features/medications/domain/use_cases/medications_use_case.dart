@@ -36,6 +36,12 @@ class MedicationsUseCase {
     String planId,
   ) => _repository.discontinuePlan(circleId, planId);
 
+  Future<Result<MedicationPlan, Failure>> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  ) => _repository.cancelPendingPlan(circleId, planId, expectedVersion);
+
   Future<Result<List<DoseOccurrence>, Failure>> getOccurrences(
     String circleId,
     DateTime from,

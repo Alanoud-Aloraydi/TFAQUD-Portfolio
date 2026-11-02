@@ -1,4 +1,6 @@
 import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -12,10 +14,14 @@ class DoseOccurrenceCard extends StatelessWidget {
     super.key,
     required this.occurrence,
     this.showDate = false,
+    this.showControls = true,
+    this.timingState,
   });
 
   final DoseOccurrence occurrence;
   final bool showDate;
+  final bool showControls;
+  final DoseTimingState? timingState;
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +35,19 @@ class DoseOccurrenceCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _TimeBadge(occurrence: occurrence, showDate: showDate),
+                _TimeBadge(
+                  occurrence: occurrence,
+                  showDate: showDate,
+                  timingState: timingState ?? occurrence.timingState,
+                ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(child: _DoseDetails(occurrence: occurrence)),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            DoseRecordControls(occurrence: occurrence),
+            if (showControls || occurrence.record != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              DoseRecordControls(occurrence: occurrence),
+            ],
           ],
         ),
       ),
@@ -44,10 +56,15 @@ class DoseOccurrenceCard extends StatelessWidget {
 }
 
 class _TimeBadge extends StatelessWidget {
-  const _TimeBadge({required this.occurrence, required this.showDate});
+  const _TimeBadge({
+    required this.occurrence,
+    required this.showDate,
+    required this.timingState,
+  });
 
   final DoseOccurrence occurrence;
   final bool showDate;
+  final DoseTimingState? timingState;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +89,7 @@ class _TimeBadge extends StatelessWidget {
               ),
             Text(value, style: Theme.of(context).textTheme.labelMedium),
             const SizedBox(height: AppSpacing.sm),
-            _TimingState(state: occurrence.timingState),
+            _TimingState(state: timingState),
           ],
         ),
       ),
@@ -95,18 +112,28 @@ class _TimingState extends StatelessWidget {
       DoseTimingState.missed => CupertinoIcons.calendar_badge_minus,
     };
     final label = context.tr('medications.timing.${state!.name}');
-    final color = Theme.of(context).colorScheme.primary;
+    final tokens = context.tokens;
+    final (Color icon, Color text) colors = switch (state!) {
+      DoseTimingState.upcoming => (tokens.textSecondary, tokens.textSecondary),
+      DoseTimingState.due => (
+        AppSemanticColors.textPrimary,
+        AppSemanticColors.textPrimary,
+      ),
+      // Timing needs attention, but is not a medical error or proof of omission.
+      DoseTimingState.late ||
+      DoseTimingState.missed => (tokens.warning, tokens.warningText),
+    };
     return Semantics(
       label: label,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: AppSizes.iconSmall, color: color),
+          Icon(icon, size: AppSizes.iconSmall, color: colors.$1),
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: color),
+                ?.copyWith(color: colors.$2),
           ),
         ],
       ),

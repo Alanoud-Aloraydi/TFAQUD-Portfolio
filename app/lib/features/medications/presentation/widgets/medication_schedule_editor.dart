@@ -13,16 +13,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// One dose time as an iOS grouped section. The choices are on the screen,
-/// one tap away, as a booking app shows them instead of empty fields:
-///
-/// * the time as chips of the usual times, and «وقت آخر» for the wheel;
-/// * the dose as a number with its unit and the iOS stepper (− +), and the
-///   number can still be typed;
-/// * the days as chips, with «كل يوم» first;
-/// * the instructions for this dose.
-///
-/// The header names the dose and holds its delete button.
+/// One schedule row inside the medicine's grouped list.
 class MedicationScheduleEditor extends StatelessWidget {
   const MedicationScheduleEditor({
     super.key,
@@ -41,19 +32,9 @@ class MedicationScheduleEditor extends StatelessWidget {
   final VoidCallback? onRemove;
   final MedicationFormIssue? issue;
 
-  /// The usual dose times: morning, afternoon and evening.
-  static const List<TimeOfDay> _usualTimes = <TimeOfDay>[
-    TimeOfDay(hour: 8, minute: 0),
-    TimeOfDay(hour: 14, minute: 0),
-    TimeOfDay(hour: 20, minute: 0),
-  ];
-
-  static const String _otherTime = 'other';
-  static const String _everyDay = 'every';
-
-  /// The week as it is read in Saudi Arabia: Sunday first. The numbers are
+  /// Match the supplied schedule strip: Saturday through Friday. Numbers are
   /// those of [DateTime.weekday] (Monday 1 … Sunday 7).
-  static const List<int> _weekOrder = <int>[7, 1, 2, 3, 4, 5, 6];
+  static const List<int> _weekOrder = <int>[6, 7, 1, 2, 3, 4, 5];
 
   /// The largest dose the stepper reaches.
   static const double _maxDose = 999;
@@ -61,20 +42,35 @@ class MedicationScheduleEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final VoidCallback? remove = onRemove;
-    return InsetGroup(
-      header: context.tr(
-        'medications.schedule_number',
-        args: <String>[(index + 1).toString()],
-      ),
-      headerAction: remove == null
-          ? null
-          : IconButton(
-              tooltip: context.tr('medications.remove_schedule'),
-              onPressed: remove,
-              color: AppSemanticColors.statusError,
-              icon: const Icon(CupertinoIcons.delete),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        Padding(
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSpacing.lg,
+            end: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.tr(
+                    'medications.schedule_number',
+                    args: [(index + 1).toString()],
+                  ),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              if (remove != null)
+                IconButton(
+                  tooltip: context.tr('medications.remove_schedule'),
+                  onPressed: remove,
+                  color: AppSemanticColors.statusError,
+                  icon: const Icon(CupertinoIcons.delete),
+                ),
+            ],
+          ),
+        ),
         _timeChips(context),
         _doseRow(context),
         // The days have a focus node, so a missing day can be scrolled to.
@@ -94,33 +90,10 @@ class MedicationScheduleEditor extends StatelessWidget {
   // Time ---------------------------------------------------------------
 
   Widget _timeChips(BuildContext context) {
-    final bool usual = _usualTimes.contains(data.time);
-    return InsetBlock(
-      semanticLabel: context.tr('medications.time'),
-      child: OptionChips(
-        options: <ChipOption>[
-          for (final TimeOfDay time in _usualTimes)
-            ChipOption(_code(time), formatMedicationTime(context, _code(time))),
-          // Another time shows itself once chosen, so the chosen time is
-          // always on the screen.
-          ChipOption(
-            _otherTime,
-            usual
-                ? context.tr('medications.other_time')
-                : formatMedicationTime(context, _code(data.time)),
-          ),
-        ],
-        isSelected: (String code) =>
-            code == _otherTime ? !usual : code == _code(data.time),
-        onTap: (String code) {
-          if (code == _otherTime) {
-            _selectTime(context);
-            return;
-          }
-          data.time = _usualTimes.firstWhere((TimeOfDay t) => _code(t) == code);
-          onChanged();
-        },
-      ),
+    return InsetRow(
+      label: context.tr('medications.time'),
+      value: formatMedicationTime(context, _code(data.time)),
+      onTap: () => _selectTime(context),
     );
   }
 
@@ -220,7 +193,6 @@ class MedicationScheduleEditor extends StatelessWidget {
   // Days ---------------------------------------------------------------
 
   Widget _dayChips(BuildContext context) {
-    final bool everyDay = data.weekdays.length == _weekOrder.length;
     return InsetBlock(
       semanticLabel: context.tr('medications.repeat'),
       errorText: issue?.field == MedicationFormField.weekdays
@@ -228,25 +200,13 @@ class MedicationScheduleEditor extends StatelessWidget {
           : null,
       child: OptionChips(
         options: <ChipOption>[
-          ChipOption(_everyDay, context.tr('medications.every_day')),
           for (final int day in _weekOrder)
-            ChipOption('$day', context.tr('medications.weekday.$day')),
+            ChipOption('$day', context.tr('medications.weekday_short.$day')),
         ],
-        isSelected: (String code) => code == _everyDay
-            ? everyDay
-            : data.weekdays.contains(int.parse(code)),
+        isSelected: (String code) => data.weekdays.contains(int.parse(code)),
         onTap: (String code) {
-          if (code == _everyDay) {
-            // «كل يوم» chooses the whole week; tapped again, it clears it.
-            if (everyDay) {
-              data.weekdays.clear();
-            } else {
-              data.weekdays.addAll(_weekOrder);
-            }
-          } else {
-            final int day = int.parse(code);
-            if (!data.weekdays.remove(day)) data.weekdays.add(day);
-          }
+          final int day = int.parse(code);
+          if (!data.weekdays.remove(day)) data.weekdays.add(day);
           onChanged();
         },
       ),

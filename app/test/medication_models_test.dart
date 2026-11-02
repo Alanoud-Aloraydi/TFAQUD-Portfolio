@@ -11,6 +11,12 @@ void main() {
       'id': 'plan-1',
       'created_at': '2026-10-01T10:00:00Z',
       'discontinued_at': null,
+      'last_record': {
+        'outcome': 'taken',
+        'scheduled_on': '2026-10-27',
+        'time_of_day': '08:00',
+        'taken_at': '2026-10-27T05:05:00Z',
+      },
       'version': {
         'version_number': 1,
         'name': 'Medicine',
@@ -38,6 +44,8 @@ void main() {
 
     expect(plan.version.schedules.single.doseUnit, DoseUnit.milliliter);
     expect(plan.version.schedules.single.weekdays, [1, 3, 5]);
+    expect(plan.lastRecord!.outcome, DoseOutcome.taken);
+    expect(plan.lastRecord!.scheduledOn.day, 27);
   });
 
   test('dose response maps the explicit outcome timestamps', () {

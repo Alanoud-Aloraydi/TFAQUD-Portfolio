@@ -8,6 +8,7 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
+import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
@@ -96,7 +97,9 @@ class _Content extends StatelessWidget {
         appBar: AppBar(
           title: Text(context.tr('medications.details')),
           actions: [
-            if (canManage && !plan.isPreviousOn(today))
+            if (canManage &&
+                !plan.isPreviousOn(today) &&
+                plan.pendingVersion == null)
               IconButton(
                 tooltip: context.tr('medications.edit_title'),
                 onPressed: () => _edit(context),
@@ -108,6 +111,14 @@ class _Content extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             MedicationDetails(plan: plan),
+            if (plan.pendingVersion != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _PendingRevision(
+                plan: plan,
+                canManage: canManage,
+                onCancel: () => _cancelPending(context),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xl),
             MedicationDoseHistory(earliest: plan.version.startsOn),
             if (canManage && !plan.isPreviousOn(today)) ...[
@@ -162,5 +173,98 @@ class _Content extends StatelessWidget {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.tr(message))));
     }
+  }
+
+  Future<void> _cancelPending(BuildContext context) async {
+    final confirmed = await showAppAlert<bool>(
+      context,
+      title: context.tr('medications.cancel_pending_title'),
+      message: context.tr('medications.cancel_pending_message'),
+      actions: [
+        AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
+        AppAlertAction<bool>(
+          label: context.tr('medications.cancel_pending'),
+          value: true,
+        ),
+      ],
+    );
+    if (confirmed != true || !context.mounted) return;
+    final changed = await context.read<MedicationsCubit>().cancelPending(plan);
+    if (changed && context.mounted) context.pop(true);
+  }
+}
+
+class _PendingRevision extends StatelessWidget {
+  const _PendingRevision({
+    required this.plan,
+    required this.canManage,
+    required this.onCancel,
+  });
+
+  final MedicationPlan plan;
+  final bool canManage;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = plan.pendingVersion!;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: AppSemanticColors.textSupporting, width: 2),
+        borderRadius: BorderRadius.circular(AppSpacing.lg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr(
+                'medications.pending_revision',
+                args: [formatMedicationDate(context, pending.effectiveFromOn)],
+              ),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(context.tr('medications.effective_hint')),
+            const SizedBox(height: AppSpacing.md),
+            Text(pending.name, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              context.tr(
+                'medications.pending_strength',
+                args: [
+                  formatMedicationNumber(pending.strengthValue),
+                  pending.strengthUnit.apiValue,
+                  context.tr('medications.form.${pending.dosageForm.name}'),
+                ],
+              ),
+            ),
+            if (pending.instructions case final instructions?)
+              Text(instructions),
+            Text(
+              context.tr(
+                'medications.missed_option.${pending.missedAfterMinutes}',
+              ),
+            ),
+            for (final schedule in pending.schedules)
+              Text(
+                context.tr(
+                  'medications.pending_schedule',
+                  args: [
+                    formatMedicationTime(context, schedule.time),
+                    formatMedicationNumber(schedule.doseValue),
+                    context.tr('medications.unit.${schedule.doseUnit.name}'),
+                  ],
+                ),
+              ),
+            if (canManage)
+              TextButton(
+                onPressed: onCancel,
+                child: Text(context.tr('medications.cancel_pending')),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

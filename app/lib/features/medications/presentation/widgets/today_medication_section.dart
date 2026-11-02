@@ -1,8 +1,6 @@
-import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
@@ -32,25 +30,36 @@ class TodayMedicationSection extends StatelessWidget {
   }
 
   Widget _content(BuildContext context, MedicationOccurrencesState state) {
-    if (state.status == MedicationOccurrencesStatus.loading) {
-      return const TodaySkeleton();
-    }
-    if (state.status == MedicationOccurrencesStatus.failure) {
-      return MedicationFailureView(
-        messageKey: state.messageKey!,
-        onRetry: context.read<MedicationOccurrencesCubit>().reload,
-      );
-    }
-    return ListView.separated(
-      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
-      itemCount: state.occurrences.length + 1,
-      separatorBuilder: (_, index) => index == 0
-          ? const SizedBox(height: AppSpacing.md)
-          : const Divider(height: AppSizes.divider),
-      itemBuilder: (context, index) {
-        if (index == 0) return _Header(count: state.occurrences.length);
-        return DoseOccurrenceCard(occurrence: state.occurrences[index - 1]);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          context.tr('medications.today'),
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (state.status == MedicationOccurrencesStatus.loading) ...<Widget>[
+          const DoseRowSkeleton(withButtons: true),
+          const Divider(height: AppSizes.divider),
+          const DoseRowSkeleton(),
+        ] else if (state.status == MedicationOccurrencesStatus.failure)
+          MedicationFailureView(
+            messageKey: state.messageKey!,
+            onRetry: context.read<MedicationOccurrencesCubit>().reload,
+          )
+        else if (state.occurrences.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Center(
+              child: Text(context.tr('medications.no_doses_today')),
+            ),
+          )
+        else
+          for (var index = 0; index < state.occurrences.length; index++) ...[
+            if (index > 0) const Divider(height: AppSizes.divider),
+            DoseOccurrenceCard(occurrence: state.occurrences[index]),
+          ],
+      ],
     );
   }
 
@@ -58,37 +67,5 @@ class TodayMedicationSection extends StatelessWidget {
     if (state.messageKey == null) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey!))));
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final DateTime now = DateTime.now();
-    // "السبت 31 أكتوبر": the weekday, then the date with the digits 0 to 9.
-    final String date =
-        '${context.tr('common.weekdays.${now.weekday}')} '
-        '${now.day} ${context.tr('circles.months.${now.month}')}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          LargeTitle(title: context.tr('tab.today'), subtitle: date),
-          Text(
-            context.tr('medications.today'),
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          if (count == 0) ...[
-            const SizedBox(height: AppSpacing.xxl),
-            Center(child: Text(context.tr('medications.no_doses_today'))),
-          ],
-        ],
-      ),
-    );
   }
 }

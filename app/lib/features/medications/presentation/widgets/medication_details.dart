@@ -33,6 +33,12 @@ class MedicationDetails extends StatelessWidget {
         if (version.instructions case final value?)
           _Value(label: 'medications.instructions', value: value),
         _Value(
+          label: 'medications.missed_after',
+          value: context.tr(
+            'medications.missed_option.${version.missedAfterMinutes}',
+          ),
+        ),
+        _Value(
           label: 'medications.treatment_period',
           value: _period(context, version.startsOn, version.endsOn),
         ),

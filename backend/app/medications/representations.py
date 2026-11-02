@@ -59,6 +59,7 @@ def plan_response(plan, version) -> dict:
             "dosage_form": version.dosage_form,
             "reason_for_use": version.reason_for_use,
             "instructions": version.instructions,
+            "missed_after_minutes": version.missed_after_minutes,
             "treatment_starts_on": (
                 version.treatment_starts_on.isoformat()
             ),
@@ -93,6 +94,7 @@ def occurrence_response(
         "dose_value": str(schedule.dose_value.normalize()),
         "dose_unit": schedule.dose_unit,
         "instructions": schedule.instructions,
+        "missed_after_minutes": version.missed_after_minutes,
         "timing_state": timing_state,
         "record": None if record is None else {
             "id": str(record.id),

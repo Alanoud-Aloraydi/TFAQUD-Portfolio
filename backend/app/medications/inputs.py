@@ -82,6 +82,7 @@ class PlanRequest(Dto):
     dosage_form: DosageForm
     reason_for_use: Annotated[str | None, Field(max_length=100)] = None
     instructions: OptionalText250 = None
+    missed_after_minutes: Literal[30, 60, 120] = 60
     treatment_starts_on: date
     treatment_ends_on: date | None = None
     schedules: Annotated[
@@ -123,6 +124,10 @@ class PlanRequest(Dto):
 class RevisePlanRequest(PlanRequest):
     expected_version_number: Annotated[int, Field(ge=1)]
     effective_from_on: date | None = None
+
+
+class CancelPendingRequest(Dto):
+    expected_version_number: Annotated[int, Field(ge=1)]
 
 
 class DoseRecordRequest(Dto):

@@ -42,6 +42,7 @@ def require_available_name(
         .where(
             MedicationPlan.patient_id == patient_id,
             MedicationPlanVersion.normalized_name == normalized_name,
+            MedicationPlanVersion.cancelled_at.is_(None),
         )
     )
     if exclude_plan_id is not None:

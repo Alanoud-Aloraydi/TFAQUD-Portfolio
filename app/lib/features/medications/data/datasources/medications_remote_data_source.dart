@@ -20,6 +20,11 @@ abstract class BaseMedicationsRemoteDataSource {
     MedicationPlanDraft draft,
   );
   Future<MedicationPlanModel> discontinuePlan(String circleId, String planId);
+  Future<MedicationPlanModel> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  );
   Future<List<DoseOccurrenceModel>> getOccurrences(
     String circleId,
     DateTime from,
@@ -92,6 +97,19 @@ class MedicationsRemoteDataSource implements BaseMedicationsRemoteDataSource {
   ) async {
     final response = await _client.post(
       ApiEndpoints.discontinueMedication(circleId, planId),
+    );
+    return _plan(response.data);
+  }
+
+  @override
+  Future<MedicationPlanModel> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  ) async {
+    final response = await _client.post(
+      ApiEndpoints.cancelPendingMedication(circleId, planId),
+      data: {'expected_version_number': expectedVersion},
     );
     return _plan(response.data);
   }

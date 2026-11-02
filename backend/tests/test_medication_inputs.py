@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from app.medications.inputs import DoseRecordRequest, OccurrenceQuery
 from app.medications.inputs import PlanRequest
+from app.medications.occurrence_builder import _timing_state
 from app.medications.plans import normalize_medication_name
 
 
@@ -118,3 +119,31 @@ def test_skip_note_requires_the_other_reason():
             skip_reason_code="forgotten",
             skip_reason_note="Details",
         )
+
+
+def test_missed_threshold_accepts_only_the_three_visible_choices():
+    assert PlanRequest.model_validate(plan()).missed_after_minutes == 60
+    for minutes in (30, 60, 120):
+        assert PlanRequest.model_validate(
+            plan(missed_after_minutes=minutes)
+        ).missed_after_minutes == minutes
+    with pytest.raises(ValidationError):
+        PlanRequest.model_validate(plan(missed_after_minutes=45))
+
+
+def test_dose_status_changes_at_due_and_missed_boundaries():
+    scheduled = datetime(2026, 11, 2, 8, tzinfo=timezone.utc)
+
+    def state(minutes):
+        return _timing_state(
+            scheduled,
+            scheduled.replace(minute=minutes),
+            None,
+            30,
+        )
+
+    assert state(0) == "due"
+    assert state(14) == "due"
+    assert state(15) == "late"
+    assert state(29) == "late"
+    assert state(30) == "missed"

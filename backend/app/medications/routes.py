@@ -11,7 +11,7 @@ from app.database import transaction
 from app.errors import NotFound
 from app.extensions import get_clock
 from app.medications.doses import MedicationDoseService
-from app.medications.inputs import DoseRecordRequest
+from app.medications.inputs import CancelPendingRequest, DoseRecordRequest
 from app.medications.inputs import PlanRequest, RevisePlanRequest
 from app.medications.plans import MedicationPlanService
 from app.medications.queries import MedicationQueries
@@ -103,6 +103,24 @@ def discontinue_plan(circle_id, plan_id):
             uuid_value(circle_id),
             uuid_value(plan_id),
             uuid_value(current_auth().user_id),
+        )
+        result = MedicationQueries(session, get_clock().now()).plan(
+            uuid_value(circle_id), plan.id
+        )
+    return jsonify(medication_plan=result)
+
+
+@bp.post("/medication-plans/<plan_id>/cancel-pending")
+@require_circle_role(CircleRole.MANAGER)
+def cancel_pending_plan(circle_id, plan_id):
+    body = parse_json_body(CancelPendingRequest)
+    with transaction() as session:
+        plan = MedicationPlanService(
+            session, get_clock().now()
+        ).cancel_pending(
+            uuid_value(circle_id),
+            uuid_value(plan_id),
+            body.expected_version_number,
         )
         result = MedicationQueries(session, get_clock().now()).plan(
             uuid_value(circle_id), plan.id

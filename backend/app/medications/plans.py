@@ -5,7 +5,7 @@ from datetime import timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.errors import Conflict, NotFound, ValidationFailed
@@ -80,11 +80,13 @@ class MedicationPlanService:
         current = self._current_version(plan.id)
         if current.version_number != body.expected_version_number:
             raise Conflict(code="medication_version_conflict")
+        today = self.now.astimezone(RIYADH).date()
+        if current.effective_from_on > today:
+            raise Conflict(code="medication_pending_revision")
         normalized_name = normalize_medication_name(body.name)
         effective_from_on = body.effective_from_on or (
-            self.now.astimezone(RIYADH).date() + timedelta(days=1)
+            today + timedelta(days=1)
         )
-        today = self.now.astimezone(RIYADH).date()
         if effective_from_on <= today:
             raise ValidationFailed(
                 "A revision must start after today.",
@@ -116,15 +118,51 @@ class MedicationPlanService:
             effective_from_on=effective_from_on,
         )
         current.effective_until_on = effective_from_on
+        next_number = self.session.scalar(
+            select(func.max(MedicationPlanVersion.version_number)).where(
+                MedicationPlanVersion.medication_plan_id == plan.id
+            )
+        ) + 1
         add_plan_version(
             self.session,
             plan,
             actor_id,
             body,
-            current.version_number + 1,
+            next_number,
             normalized_name,
             effective_from_on,
         )
+        return plan
+
+    def cancel_pending(
+        self,
+        circle_id: UUID,
+        plan_id: UUID,
+        expected_version_number: int,
+    ) -> MedicationPlan:
+        """Cancel a future revision while retaining its audit version."""
+        plan = self._plan(circle_id, plan_id)
+        if plan.discontinued_at is not None:
+            raise Conflict(code="medication_discontinued")
+        pending = self._current_version(plan.id)
+        today = self.now.astimezone(RIYADH).date()
+        if (pending.version_number != expected_version_number
+                or pending.effective_from_on <= today):
+            raise Conflict(code="medication_version_conflict")
+        previous = self.session.scalar(
+            select(MedicationPlanVersion).where(
+                MedicationPlanVersion.medication_plan_id == plan.id,
+                MedicationPlanVersion.effective_until_on
+                == pending.effective_from_on,
+                MedicationPlanVersion.cancelled_at.is_(None),
+            )
+        )
+        if previous is None:
+            raise Conflict(code="medication_version_conflict")
+        pending.cancelled_at = self.now
+        self.session.flush()
+        previous.effective_until_on = None
+        self.session.flush()
         return plan
 
     def discontinue(
@@ -171,6 +209,7 @@ class MedicationPlanService:
             select(MedicationPlanVersion).where(
                 MedicationPlanVersion.medication_plan_id == plan_id,
                 MedicationPlanVersion.effective_until_on.is_(None),
+                MedicationPlanVersion.cancelled_at.is_(None),
             )
         )
         if version is None:

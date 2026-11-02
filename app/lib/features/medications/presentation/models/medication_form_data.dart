@@ -22,6 +22,7 @@ class MedicationFormData {
       reason = TextEditingController(text: plan?.version.reason),
       instructions = TextEditingController(text: plan?.version.instructions),
       form = plan?.version.dosageForm ?? DosageForm.tablet,
+      missedAfterMinutes = plan?.version.missedAfterMinutes ?? 60,
       startsOn = plan?.version.startsOn ?? DateUtils.dateOnly(DateTime.now()),
       endsOn = plan?.version.endsOn,
       effectiveFromOn = plan == null
@@ -40,6 +41,7 @@ class MedicationFormData {
   final FocusNode strengthFocus = FocusNode();
   final FocusNode periodFocus = FocusNode();
   DosageForm form;
+  int missedAfterMinutes;
   DateTime startsOn;
   DateTime? endsOn;
   DateTime? effectiveFromOn;
@@ -111,6 +113,7 @@ class MedicationFormData {
       dosageForm: form,
       reason: _optional(reason.text),
       instructions: _optional(instructions.text),
+      missedAfterMinutes: missedAfterMinutes,
       startsOn: startsOn,
       endsOn: endsOn,
       effectiveFromOn: effectiveFromOn,

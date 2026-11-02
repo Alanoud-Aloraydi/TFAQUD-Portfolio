@@ -107,6 +107,7 @@ class MedicationDoseService:
                 MedicationScheduleDay.weekday
                 == scheduled_on.isoweekday(),
                 MedicationPlanVersion.treatment_starts_on <= scheduled_on,
+                MedicationPlanVersion.cancelled_at.is_(None),
                 (
                     MedicationPlanVersion.treatment_ends_on.is_(None)
                     | (

@@ -124,6 +124,15 @@ def test_recording_a_dose_is_idempotent_and_conflicting_change_is_rejected(
     assert first.status_code == second.status_code == 200
     assert first.json == second.json
 
+    listed = client.get(
+        f"/api/v1/circles/{circle.id}/medication-plans",
+        headers=headers,
+    )
+    last_record = listed.json["medication_plans"][0]["last_record"]
+    assert last_record["outcome"] == "taken"
+    assert last_record["scheduled_on"] == now.date().isoformat()
+    assert last_record["time_of_day"] == "08:00"
+
     conflict = client.put(
         path,
         headers=headers,
@@ -153,7 +162,11 @@ def test_revision_keeps_history_and_requires_the_expected_version(
     revised_body["strength_value"] = "850"
     revised = client.put(path, headers=headers, json=revised_body)
     assert revised.status_code == 200
-    assert revised.json["medication_plan"]["version"]["version_number"] == 2
+    assert revised.json["medication_plan"]["version"]["version_number"] == 1
+    assert (
+        revised.json["medication_plan"]["pending_version"]["version_number"]
+        == 2
+    )
 
     stale = client.put(path, headers=headers, json=revised_body)
     assert stale.status_code == 409
@@ -162,6 +175,22 @@ def test_revision_keeps_history_and_requires_the_expected_version(
             select(func.count()).select_from(MedicationPlanVersion)
         )
     assert versions == 2
+
+    cancelled = client.post(
+        f"{path}/cancel-pending",
+        headers=headers,
+        json={"expected_version_number": 2},
+    )
+    assert cancelled.status_code == 200
+    assert cancelled.json["medication_plan"]["version"]["version_number"] == 1
+    assert "pending_version" not in cancelled.json["medication_plan"]
+
+    replacement = client.put(path, headers=headers, json=revised_body)
+    assert replacement.status_code == 200
+    assert (
+        replacement.json["medication_plan"]["pending_version"]
+        ["version_number"] == 3
+    )
 
 
 def test_future_revision_and_immediate_stop_keep_only_earlier_dose(

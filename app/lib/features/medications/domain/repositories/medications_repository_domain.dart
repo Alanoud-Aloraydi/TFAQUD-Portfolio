@@ -23,6 +23,11 @@ abstract class MedicationsRepositoryDomain {
     String circleId,
     String planId,
   );
+  Future<Result<MedicationPlan, Failure>> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  );
   Future<Result<List<DoseOccurrence>, Failure>> getOccurrences(
     String circleId,
     DateTime from,

@@ -50,7 +50,12 @@ def build_occurrences(
                         schedule,
                         current,
                         record,
-                        _timing_state(scheduled_at, now, record),
+                        _timing_state(
+                            scheduled_at,
+                            now,
+                            record,
+                            version.missed_after_minutes,
+                        ),
                     )
                 )
         current += timedelta(days=1)
@@ -78,15 +83,17 @@ def _version_applies(plan, version, day: date) -> bool:
     return True
 
 
-def _timing_state(scheduled_at, now, record):
+def _timing_state(scheduled_at, now, record, missed_after_minutes):
     """Return timing without persisting calculated occurrences."""
     if record is not None:
         return None
     local_now = now.astimezone(RIYADH)
-    if scheduled_at.date() < local_now.date():
-        return "missed"
     if local_now < scheduled_at:
         return "upcoming"
-    if local_now < scheduled_at + timedelta(hours=1):
+    if local_now < scheduled_at + timedelta(minutes=15):
         return "due"
-    return "late"
+    if local_now < scheduled_at + timedelta(
+        minutes=missed_after_minutes
+    ):
+        return "late"
+    return "missed"

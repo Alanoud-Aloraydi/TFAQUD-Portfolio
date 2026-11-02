@@ -59,6 +59,7 @@ class DoseOccurrence extends Equatable {
     required this.dosageForm,
     required this.doseValue,
     required this.doseUnit,
+    this.missedAfterMinutes = 60,
     this.timingState,
     this.instructions,
     this.record,
@@ -74,9 +75,28 @@ class DoseOccurrence extends Equatable {
   final DosageForm dosageForm;
   final double doseValue;
   final DoseUnit doseUnit;
+  final int missedAfterMinutes;
   final String? instructions;
   final DoseRecord? record;
   final DoseTimingState? timingState;
+
+  bool get takenLate {
+    final takenAt = record?.takenAt;
+    if (record?.outcome != DoseOutcome.taken || takenAt == null) {
+      return false;
+    }
+    final parts = time.split(':');
+    final scheduledUtc = DateTime.utc(
+      scheduledOn.year,
+      scheduledOn.month,
+      scheduledOn.day,
+      int.parse(parts[0]) - 3,
+      int.parse(parts[1]),
+    );
+    return !takenAt.toUtc().isBefore(
+      scheduledUtc.add(Duration(minutes: missedAfterMinutes)),
+    );
+  }
 
   DoseOccurrence withRecord(DoseRecord value) => DoseOccurrence(
     planId: planId,
@@ -89,6 +109,7 @@ class DoseOccurrence extends Equatable {
     dosageForm: dosageForm,
     doseValue: doseValue,
     doseUnit: doseUnit,
+    missedAfterMinutes: missedAfterMinutes,
     instructions: instructions,
     record: value,
     timingState: null,
@@ -106,6 +127,7 @@ class DoseOccurrence extends Equatable {
     dosageForm,
     doseValue,
     doseUnit,
+    missedAfterMinutes,
     instructions,
     record,
     timingState,

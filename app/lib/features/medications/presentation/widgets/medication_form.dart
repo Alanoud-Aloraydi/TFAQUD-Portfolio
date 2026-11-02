@@ -57,6 +57,14 @@ class _MedicationFormState extends State<MedicationForm> {
       },
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: true,
+          leadingWidth: widget.plan == null ? null : 82,
+          leading: widget.plan == null
+              ? null
+              : TextButton(
+                  onPressed: _cancel,
+                  child: Text(context.tr('common.cancel')),
+                ),
           title: Text(
             context.tr(
               widget.plan == null
@@ -64,6 +72,14 @@ class _MedicationFormState extends State<MedicationForm> {
                   : 'medications.edit_title',
             ),
           ),
+          actions: widget.plan == null
+              ? null
+              : [
+                  TextButton(
+                    onPressed: saving ? null : _submit,
+                    child: Text(context.tr('medications.save_changes')),
+                  ),
+                ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -76,35 +92,38 @@ class _MedicationFormState extends State<MedicationForm> {
                 onChanged: _changed,
               ),
               const SizedBox(height: AppSpacing.xl),
-              MedicationDosageFormGroup(data: _data, onChanged: _changed),
-              const SizedBox(height: AppSpacing.xl),
-              MedicationPeriodFields(
-                data: _data,
-                issue: _issue,
-                onChanged: _changed,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              for (var index = 0; index < _data.schedules.length; index++) ...[
-                MedicationScheduleEditor(
-                  index: index,
-                  data: _data.schedules[index],
-                  units: _data.form.doseUnits,
-                  issue: _issue?.scheduleIndex == index ? _issue : null,
-                  onChanged: _changed,
-                  onRemove: _data.schedules.length == 1
-                      ? null
-                      : () => _removeSchedule(index),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
               InsetGroup(
+                header: context.tr('medications.dose_schedules'),
                 children: [
+                  for (var index = 0; index < _data.schedules.length; index++)
+                    MedicationScheduleEditor(
+                      index: index,
+                      data: _data.schedules[index],
+                      units: _data.form.doseUnits,
+                      issue: _issue?.scheduleIndex == index ? _issue : null,
+                      onChanged: _changed,
+                      onRemove: _data.schedules.length == 1
+                          ? null
+                          : () => _removeSchedule(index),
+                    ),
                   InsetRow(
                     label: context.tr('medications.add_schedule'),
                     leading: const Icon(CupertinoIcons.add_circled),
                     onTap: _addSchedule,
                   ),
                 ],
+              ),
+              if (widget.plan != null && _dirty) ...[
+                const SizedBox(height: AppSpacing.xl),
+                MedicationEffectiveDateGroup(data: _data, onChanged: _changed),
+              ],
+              const SizedBox(height: AppSpacing.xl),
+              MedicationInstructionsGroup(data: _data, onChanged: _changed),
+              const SizedBox(height: AppSpacing.xl),
+              MedicationPeriodFields(
+                data: _data,
+                issue: _issue,
+                onChanged: _changed,
               ),
               if (_errorKey case final error?) ...[
                 const SizedBox(height: AppSpacing.lg),
@@ -115,11 +134,12 @@ class _MedicationFormState extends State<MedicationForm> {
                 ),
               ],
               const SizedBox(height: AppSpacing.xl),
-              PillButton(
-                label: context.tr('medications.save'),
-                onPressed: _submit,
-                isLoading: saving,
-              ),
+              if (widget.plan == null)
+                PillButton(
+                  label: context.tr('medications.save'),
+                  onPressed: _submit,
+                  isLoading: saving,
+                ),
               const SizedBox(height: AppSpacing.xl),
             ],
           ),
@@ -203,6 +223,14 @@ class _MedicationFormState extends State<MedicationForm> {
     );
     if (discard == true && mounted) {
       _dirty = false;
+      context.pop();
+    }
+  }
+
+  void _cancel() {
+    if (_dirty) {
+      _confirmDiscard();
+    } else {
       context.pop();
     }
   }

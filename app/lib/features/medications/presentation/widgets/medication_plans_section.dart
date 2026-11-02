@@ -1,5 +1,7 @@
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/home/presentation/widgets/home_category_control.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
@@ -44,9 +46,26 @@ class MedicationPlansSection extends StatelessWidget {
     final current = state.plans
         .where((plan) => !plan.isPreviousOn(today))
         .toList();
+    final activeCount = current
+        .where((plan) => !plan.isScheduledOn(today))
+        .length;
+    final laterCount = current.length - activeCount;
     return MedicationPlanList(
-      header: LargeTitle(title: context.tr('tab.plan')),
-      title: context.tr('medications.current'),
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LargeTitle(
+            title: context.tr('tab.plan'),
+            subtitle: context.tr('medications.plan_subtitle'),
+          ),
+          HomeCategoryControl(medicationCount: current.length),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+      title: context.tr(
+        'medications.plan_summary',
+        args: [activeCount.toString(), laterCount.toString()],
+      ),
       emptyText: context.tr('medications.no_current'),
       plans: current,
       circleId: circleId,

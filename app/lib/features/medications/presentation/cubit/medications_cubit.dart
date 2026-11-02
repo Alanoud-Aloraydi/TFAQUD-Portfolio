@@ -118,6 +118,23 @@ class MedicationsCubit extends Cubit<MedicationsState> {
     return _replace(result);
   }
 
+  Future<bool> cancelPending(MedicationPlan plan) async {
+    final circleId = _circleId;
+    final pending = plan.pendingVersion;
+    if (circleId == null ||
+        pending == null ||
+        state.status == MedicationsStatus.saving) {
+      return false;
+    }
+    emit(state.copyWith(status: MedicationsStatus.saving, clearMessage: true));
+    final result = await _medications.cancelPendingPlan(
+      circleId,
+      plan.id,
+      pending.number,
+    );
+    return _replace(result);
+  }
+
   bool _replace(Result<MedicationPlan, Failure> result) {
     if (isClosed) return false;
     return result.when(
