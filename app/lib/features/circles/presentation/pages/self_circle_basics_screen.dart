@@ -1,5 +1,5 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
@@ -110,7 +110,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           Text(
                             context.tr('circles.circle_name'),
                             style: text.titleSmall?.copyWith(
-                              color: AppSemanticColors.textSupporting,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -147,7 +147,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           Text(
                             context.tr('circles.name_hint'),
                             style: text.bodySmall?.copyWith(
-                              color: AppSemanticColors.textSupporting,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.xl),

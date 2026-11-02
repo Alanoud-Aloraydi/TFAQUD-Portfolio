@@ -1,5 +1,5 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
@@ -208,7 +208,7 @@ class _EditFormState extends State<_EditForm> {
     final MedicalForm form = state.form;
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppSemanticColors.textSupporting,
+      color: context.tokens.textSecondary,
     );
     final String requiredText = context.tr('circles.field_required');
     final bool showErrors = state.showErrors;

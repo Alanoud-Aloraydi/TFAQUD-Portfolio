@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -200,7 +201,7 @@ class MedicalFileScreen extends StatelessWidget {
           Text(
             context.tr('circles.file_contacts_empty'),
             style: text.bodyMedium?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
         for (final EmergencyContact contact in file.contacts) ...<Widget>[
@@ -228,7 +229,7 @@ class MedicalFileScreen extends StatelessWidget {
           Text(
             context.tr('circles.contact_max'),
             style: text.bodyMedium?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
       ],

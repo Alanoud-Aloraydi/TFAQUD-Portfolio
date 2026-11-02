@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -41,7 +42,7 @@ class AlreadyHasCircleView extends StatelessWidget {
                 context.tr('circles.already_has_circle'),
                 textAlign: TextAlign.center,
                 style: text.bodyLarge?.copyWith(
-                  color: AppSemanticColors.textSupporting,
+                  color: context.tokens.textSecondary,
                 ),
               ),
             ],

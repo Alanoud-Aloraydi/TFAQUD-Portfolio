@@ -9,6 +9,7 @@ import 'package:app/features/circles/data/models/new_self_circle_model.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -35,6 +36,69 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   Future<Result<AccountSummary, Failure>> getAccount() async {
     try {
       return Success((await _remote.getAccount()).toEntity());
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<CircleOverview, Failure>> getCircleOverview(
+    String circleId,
+  ) async {
+    try {
+      return Success((await _remote.getCircleOverview(circleId)).overview);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  ) async {
+    try {
+      await _remote.inviteManager(circleId, phoneNumber);
+      return const Success(null);
+    } catch (error) {
+      return Error(_circleFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    try {
+      await _remote.resendManagerInvitation(circleId, invitationId);
+      return const Success(null);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    try {
+      await _remote.cancelManagerInvitation(circleId, invitationId);
+      return const Success(null);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) async {
+    try {
+      await _remote.leaveCircle(circleId, confirmDelete: confirmDelete);
+      return const Success(null);
     } catch (error) {
       return Error(FailureExceptions.getException(error));
     }
@@ -162,14 +226,12 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
       await _remote.deleteAccount(deletion);
       return const Success(null);
     } catch (error) {
-      return Error(
-        switch (apiErrorCodeOf(error)) {
-          ApiErrorCodes.patientChoiceRequired =>
-            const PatientChoiceRequiredFailure(),
-          ApiErrorCodes.lastManager => const LastManagerFailure(),
-          _ => FailureExceptions.getException(error),
-        },
-      );
+      return Error(switch (apiErrorCodeOf(error)) {
+        ApiErrorCodes.patientChoiceRequired =>
+          const PatientChoiceRequiredFailure(),
+        ApiErrorCodes.lastManager => const LastManagerFailure(),
+        _ => FailureExceptions.getException(error),
+      });
     }
   }
 

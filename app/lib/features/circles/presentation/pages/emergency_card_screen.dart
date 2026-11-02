@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
@@ -14,6 +15,9 @@ import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dar
 import 'package:app/features/circles/presentation/cubit/emergency_card_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
+import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
+import 'package:app/features/medications/presentation/cubit/medications_state.dart';
+import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -143,16 +147,16 @@ class _ReadOnlyPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(
+          Icon(
             CupertinoIcons.lock,
             size: AppSizes.iconSmall,
-            color: AppSemanticColors.textSupporting,
+            color: context.tokens.textSecondary,
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             context.tr('circles.card_read_only'),
             style: text.bodySmall?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
         ],
@@ -262,6 +266,8 @@ class _DetailsCard extends StatelessWidget {
             ),
           ),
           const Divider(height: AppSizes.divider),
+          const _CurrentMedications(),
+          const Divider(height: AppSizes.divider),
           _Section(
             label: context.tr('circles.card_contact'),
             child: card.contacts.isEmpty
@@ -285,7 +291,7 @@ class _DetailsCard extends StatelessWidget {
                             MedicalTexts.phone(contact),
                             textDirection: TextDirection.ltr,
                             style: text.bodyLarge?.copyWith(
-                              color: AppSemanticColors.textSupporting,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                         ),
@@ -297,6 +303,62 @@ class _DetailsCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CurrentMedications extends StatelessWidget {
+  const _CurrentMedications();
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) => BlocBuilder<MedicationsCubit, MedicationsState>(
+    builder: (context, state) {
+      final today = DateUtils.dateOnly(DateTime.now());
+      final current = state.plans
+          .where(
+            (plan) => !plan.isPreviousOn(today) && !plan.isScheduledOn(today),
+          )
+          .toList();
+      return _Section(
+        label: context.tr('circles.current_medications'),
+        child:
+            state.status == MedicationsStatus.loading ||
+                state.status == MedicationsStatus.initial
+            ? const CupertinoActivityIndicator()
+            : state.status == MedicationsStatus.failure
+            ? TextButton(
+                onPressed: () => context.read<MedicationsCubit>().load(
+                  context.read<EmergencyCardCubit>().circleId,
+                ),
+                child: Text(context.tr(state.messageKey ?? 'error.unknown')),
+              )
+            : current.isEmpty
+            ? Text(context.tr('circles.no_current_medications'))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final plan in current) ...[
+                    Text(plan.version.name),
+                    Text(
+                      '${formatMedicationNumber(plan.version.strengthValue)} '
+                      '${plan.version.strengthUnit.apiValue} · '
+                      '${context.tr('medications.form.${plan.version.dosageForm.name}')}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    for (final schedule in plan.version.schedules)
+                      Text(
+                        '${schedule.time} · '
+                        '${formatMedicationNumber(schedule.doseValue)} '
+                        '${context.tr('medications.unit.${schedule.doseUnit.name}')}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                ],
+              ),
+      );
+    },
+  );
 }
 
 class _Section extends StatelessWidget {
@@ -316,7 +378,7 @@ class _Section extends StatelessWidget {
           Text(
             label,
             style: text.titleSmall?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),

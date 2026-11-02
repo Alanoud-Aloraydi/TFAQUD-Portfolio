@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -9,7 +10,6 @@ import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_skeleton.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
-import 'package:app/features/account/presentation/widgets/profile_edit_sheet.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
@@ -29,6 +29,11 @@ import 'package:go_router/go_router.dart';
 /// [AccountCubit] and an AuthCubit above it.
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
+
+  Future<void> _edit(BuildContext context, AccountCubit cubit) async {
+    final saved = await context.push<bool>(Routes.accountEdit);
+    if (saved == true && !cubit.isClosed) await cubit.load();
+  }
 
   /// Asks the question of the delete flow that the cubit is waiting on.
   Future<void> _ask(
@@ -169,32 +174,25 @@ class AccountScreen extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: AppSpacing.xl),
         children: <Widget>[
-          SettingsCard(
+          Column(
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: AppSizes.avatarLarge,
-                      height: AppSizes.avatarLarge,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: AppSemanticColors.selectedSurface,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        shown.isEmpty ? '؟' : shown.characters.first,
-                        style: text.titleLarge?.copyWith(
-                          color: AppSemanticColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(account.fullName, style: text.titleLarge),
-                    ),
-                  ],
+              CircleAvatar(
+                radius: AppSizes.avatarLarge / 2,
+                backgroundColor: AppSemanticColors.textPrimary,
+                child: Text(
+                  shown.isEmpty ? '؟' : shown.characters.first,
+                  style: text.titleLarge?.copyWith(
+                    color: AppSemanticColors.surfaceContent,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(account.fullName, style: text.titleLarge),
+              Text(
+                RequestSentView.displayPhone(account.phoneNumber),
+                textDirection: TextDirection.ltr,
+                style: text.bodySmall?.copyWith(
+                  color: context.tokens.textSecondary,
                 ),
               ),
             ],
@@ -207,21 +205,13 @@ class AccountScreen extends StatelessWidget {
                 label: context.tr('account.display_name'),
                 value: account.displayName,
                 editLabel: context.tr('account.edit_display_title'),
-                onEdit: () => showProfileEditSheet(
-                  context,
-                  cubit: cubit,
-                  field: ProfileField.displayName,
-                ),
+                onEdit: () => _edit(context, cubit),
               ),
               InfoRow(
                 label: context.tr('account.full_name'),
                 value: account.fullName,
                 editLabel: context.tr('account.edit_full_title'),
-                onEdit: () => showProfileEditSheet(
-                  context,
-                  cubit: cubit,
-                  field: ProfileField.fullName,
-                ),
+                onEdit: () => _edit(context, cubit),
               ),
               InfoRow(
                 label: context.tr('account.phone'),
@@ -251,7 +241,7 @@ class AccountScreen extends StatelessWidget {
           Text(
             context.tr('account.medical_note'),
             style: text.bodySmall?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -321,7 +311,7 @@ class _SentRequestRow extends StatelessWidget {
                     Text(
                       _ageText(context, days),
                       style: text.bodySmall?.copyWith(
-                        color: AppSemanticColors.textSupporting,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                 ],
@@ -340,14 +330,11 @@ class _SentRequestRow extends StatelessWidget {
                   : AppSemanticColors.background,
               foreground: accepted
                   ? AppSemanticColors.statusSuccess
-                  : AppSemanticColors.textSupporting,
+                  : context.tokens.textSecondary,
             ),
             const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.
-            const Icon(
-              CupertinoIcons.forward,
-              color: AppSemanticColors.textSupporting,
-            ),
+            Icon(CupertinoIcons.forward, color: context.tokens.textSecondary),
           ],
         ),
       ),

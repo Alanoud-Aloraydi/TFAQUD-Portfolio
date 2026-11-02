@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -57,7 +58,7 @@ class RequestSentView extends StatelessWidget {
                     size: AppSizes.iconEmpty,
                     color: accepted
                         ? AppSemanticColors.statusSuccess
-                        : AppSemanticColors.textSupporting,
+                        : context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -82,7 +83,7 @@ class RequestSentView extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                   style: text.bodyMedium?.copyWith(
-                    color: AppSemanticColors.textSupporting,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -163,7 +164,7 @@ class _DetailsCard extends StatelessWidget {
                   : AppSemanticColors.background,
               foreground: accepted
                   ? AppSemanticColors.statusSuccess
-                  : AppSemanticColors.textSupporting,
+                  : context.tokens.textSecondary,
             ),
           ),
         ],
@@ -189,7 +190,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: text.bodyMedium?.copyWith(
-                color: AppSemanticColors.textSupporting,
+                color: context.tokens.textSecondary,
               ),
             ),
           ),

@@ -1,5 +1,5 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
@@ -150,7 +150,7 @@ class NotificationsScreen extends StatelessWidget {
         if (sent.status == CircleRequestStatus.declined) sent,
     ];
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppSemanticColors.textSupporting,
+      color: context.tokens.textSecondary,
     );
     if (inbox.needsReply == 0 && declined.isEmpty) {
       return RefreshIndicator(
@@ -159,17 +159,17 @@ class NotificationsScreen extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           children: <Widget>[
             const SizedBox(height: 96),
-            const Icon(
+            Icon(
               CupertinoIcons.bell,
               size: AppSizes.iconHero,
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.tr('circles.inbox_empty'),
               textAlign: TextAlign.center,
               style: text.bodyLarge?.copyWith(
-                color: AppSemanticColors.textSupporting,
+                color: context.tokens.textSecondary,
               ),
             ),
           ],

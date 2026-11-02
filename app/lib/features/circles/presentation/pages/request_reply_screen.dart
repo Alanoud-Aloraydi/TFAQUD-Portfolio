@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -73,7 +74,7 @@ class RequestReplyScreen extends StatelessWidget {
                           Text(
                             context.tr('circles.reply_decline_note'),
                             style: text.bodyMedium?.copyWith(
-                              color: AppSemanticColors.textSupporting,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                           if (state.errorKey != null) ...<Widget>[
@@ -164,7 +165,7 @@ class _RequestDetails extends StatelessWidget {
                     Text(
                       context.tr('circles.reply_subtitle'),
                       style: text.bodyMedium?.copyWith(
-                        color: AppSemanticColors.textSupporting,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                   ],
@@ -200,7 +201,7 @@ class _RequestDetails extends StatelessWidget {
                   : 'circles.reply_body_simplified',
             ),
             style: text.bodyMedium?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
         ],
@@ -223,7 +224,7 @@ class _Row extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: AppSemanticColors.textSupporting),
+                ?.copyWith(color: context.tokens.textSecondary),
           ),
         ),
         child,

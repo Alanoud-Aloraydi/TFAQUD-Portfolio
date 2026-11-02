@@ -2,6 +2,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/circles/data/models/account_model.dart';
 import 'package:app/features/circles/data/models/circle_model.dart';
+import 'package:app/features/circles/data/models/circle_overview_model.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/data/models/medical_file_model.dart';
@@ -19,6 +20,18 @@ import 'package:injectable/injectable.dart';
 abstract class BaseCirclesRemoteDataSource {
   /// GET /api/v1/accounts/me.
   Future<AccountModel> getAccount();
+
+  /// GET /api/v1/circles/{id}.
+  Future<CircleOverviewModel> getCircleOverview(String circleId);
+
+  /// POST /api/v1/circles/{id}/invitations.
+  Future<void> inviteManager(String circleId, String phoneNumber);
+
+  Future<void> resendManagerInvitation(String circleId, String invitationId);
+
+  Future<void> cancelManagerInvitation(String circleId, String invitationId);
+
+  Future<void> leaveCircle(String circleId, {required bool confirmDelete});
 
   /// POST /api/v1/circles/self.
   Future<CircleModel> createSelfCircle(NewSelfCircleModel body);
@@ -96,6 +109,49 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   Future<AccountModel> getAccount() async {
     final response = await _client.get(ApiEndpoints.account);
     return AccountModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<CircleOverviewModel> getCircleOverview(String circleId) async {
+    final response = await _client.get(ApiEndpoints.circle(circleId));
+    return CircleOverviewModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> inviteManager(String circleId, String phoneNumber) async {
+    await _client.post(
+      ApiEndpoints.circleInvitations(circleId),
+      data: <String, String>{'invitee_phone_number': phoneNumber},
+    );
+  }
+
+  @override
+  Future<void> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    await _client.post(
+      ApiEndpoints.resendCircleInvitation(circleId, invitationId),
+    );
+  }
+
+  @override
+  Future<void> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    await _client.delete(ApiEndpoints.circleInvitation(circleId, invitationId));
+  }
+
+  @override
+  Future<void> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) async {
+    await _client.post(
+      ApiEndpoints.leaveCircle(circleId),
+      data: <String, bool>{'confirm_delete': confirmDelete},
+    );
   }
 
   @override
@@ -191,8 +247,11 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
     final PatientChoice? choice = deletion.patientChoice;
     final Map<String, dynamic> body = <String, dynamic>{
       if (choice != null)
-        'patient_choice': choice == PatientChoice.delete ? 'delete' : 'continue',
-      if (deletion.deleteLastManagedCircles) 'delete_last_managed_circles': true,
+        'patient_choice': choice == PatientChoice.delete
+            ? 'delete'
+            : 'continue',
+      if (deletion.deleteLastManagedCircles)
+        'delete_last_managed_circles': true,
     };
     // An account with no circles sends no body.
     await _client.delete(
@@ -204,9 +263,8 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   @override
   Future<MedicalFile> getMedicalFile(String circleId) async {
     final response = await _client.get(ApiEndpoints.medicalProfile(circleId));
-    return MedicalFileModel.fromJson(
-      response.data as Map<String, dynamic>,
-    ).toEntity();
+    return MedicalFileModel.fromJson(response.data as Map<String, dynamic>)
+        .toEntity();
   }
 
   @override
@@ -268,8 +326,7 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   @override
   Future<EmergencyCard> getEmergencyCard(String circleId) async {
     final response = await _client.get(ApiEndpoints.emergencyCard(circleId));
-    return EmergencyCardModel.fromJson(
-      response.data as Map<String, dynamic>,
-    ).toEntity();
+    return EmergencyCardModel.fromJson(response.data as Map<String, dynamic>)
+        .toEntity();
   }
 }

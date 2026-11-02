@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -75,7 +76,7 @@ class _InboxCard extends StatelessWidget {
                     Text(
                       body,
                       style: text.bodyMedium?.copyWith(
-                        color: AppSemanticColors.textSupporting,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                   ],
@@ -111,7 +112,7 @@ StatusPill _needsReplyPill(BuildContext context) => StatusPill(
   icon: CupertinoIcons.clock,
   text: context.tr('circles.needs_reply_pill'),
   background: AppSemanticColors.background,
-  foreground: AppSemanticColors.textSupporting,
+  foreground: context.tokens.textSecondary,
 );
 
 /// Accept and decline side by side. While [busy] the buttons are off.
@@ -325,7 +326,7 @@ class DeclinedRequestCard extends StatelessWidget {
     return _InboxCard(
       avatarText: '!',
       avatarBackground: AppSemanticColors.borderSubtle,
-      avatarForeground: AppSemanticColors.textSupporting,
+      avatarForeground: context.tokens.textSecondary,
       title: context.tr('circles.declined_title'),
       body: context.tr(
         'circles.declined_body',
@@ -334,9 +335,7 @@ class DeclinedRequestCard extends StatelessWidget {
       extra: Text(
         RequestSentView.displayPhone(request.patientPhoneNumber),
         textDirection: TextDirection.ltr,
-        style: text.bodyMedium?.copyWith(
-          color: AppSemanticColors.textSupporting,
-        ),
+        style: text.bodyMedium?.copyWith(color: context.tokens.textSecondary),
       ),
     );
   }

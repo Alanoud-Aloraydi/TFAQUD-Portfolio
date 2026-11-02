@@ -1,5 +1,5 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
@@ -65,7 +65,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppSemanticColors.textSupporting,
+      color: context.tokens.textSecondary,
     );
     return Scaffold(
       body: SafeArea(

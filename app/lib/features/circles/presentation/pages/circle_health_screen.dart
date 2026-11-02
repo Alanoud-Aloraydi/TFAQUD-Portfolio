@@ -1,4 +1,4 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
@@ -56,7 +56,7 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: AppSemanticColors.textSupporting,
+      color: context.tokens.textSecondary,
     );
     return Scaffold(
       body: SafeArea(

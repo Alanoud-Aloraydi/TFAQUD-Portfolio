@@ -2,6 +2,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -17,6 +18,30 @@ import 'package:multiple_result/multiple_result.dart';
 abstract class CirclesRepositoryDomain {
   /// The signed-in account: GET /api/v1/accounts/me.
   Future<Result<AccountSummary, Failure>> getAccount();
+
+  /// Read the members and pending invitations of one circle.
+  Future<Result<CircleOverview, Failure>> getCircleOverview(String circleId);
+
+  /// Invite a manager by verified account phone number.
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  );
+
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  );
+
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  );
+
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  });
 
   /// Creates the circle of the signed-in person for their own care:
   /// POST /api/v1/circles/self. Returns the new circle.

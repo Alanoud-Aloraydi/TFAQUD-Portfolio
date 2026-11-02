@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
@@ -103,7 +104,7 @@ class _SentRequestSheet extends StatelessWidget {
                     : AppSemanticColors.background,
                 foreground: accepted
                     ? AppSemanticColors.statusSuccess
-                    : AppSemanticColors.textSupporting,
+                    : context.tokens.textSecondary,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -146,7 +147,7 @@ class _Line extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppSemanticColors.textSupporting),
+                  ?.copyWith(color: context.tokens.textSecondary),
             ),
           ),
           child,

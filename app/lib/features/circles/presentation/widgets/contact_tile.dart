@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
@@ -58,14 +59,14 @@ class ContactTile extends StatelessWidget {
                     Text(
                       MedicalTexts.relation(context, contact),
                       style: text.bodyMedium?.copyWith(
-                        color: AppSemanticColors.textSupporting,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                     Text(
                       MedicalTexts.phone(contact),
                       textDirection: TextDirection.ltr,
                       style: text.bodyMedium?.copyWith(
-                        color: AppSemanticColors.textSupporting,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                   ],

@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -125,7 +126,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                 Text(
                   context.tr('circles.proposed_mode'),
                   style: text.titleSmall?.copyWith(
-                    color: AppSemanticColors.textSupporting,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -149,7 +150,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                         : 'circles.mode_detailed_hint',
                   ),
                   style: text.bodySmall?.copyWith(
-                    color: AppSemanticColors.textSupporting,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -193,17 +194,17 @@ class _Notice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(
+          Icon(
             CupertinoIcons.info_circle,
             size: AppSizes.iconSmall,
-            color: AppSemanticColors.textSupporting,
+            color: context.tokens.textSecondary,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppSemanticColors.textSupporting),
+                  ?.copyWith(color: context.tokens.textSecondary),
             ),
           ),
         ],

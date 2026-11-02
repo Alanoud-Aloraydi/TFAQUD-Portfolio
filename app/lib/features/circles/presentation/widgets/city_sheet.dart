@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -86,7 +87,7 @@ class _CitySheetState extends State<CitySheet> {
                       child: Text(
                         context.tr('circles.city_none_found'),
                         style: text.bodyMedium?.copyWith(
-                          color: AppSemanticColors.textSupporting,
+                          color: context.tokens.textSecondary,
                         ),
                       ),
                     )
@@ -102,7 +103,7 @@ class _CitySheetState extends State<CitySheet> {
                             CupertinoIcons.map_pin,
                             color: chosen
                                 ? AppSemanticColors.textPrimary
-                                : AppSemanticColors.textSupporting,
+                                : context.tokens.textSecondary,
                           ),
                           title: Text(
                             city,

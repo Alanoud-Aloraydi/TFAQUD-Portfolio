@@ -2,6 +2,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -24,6 +25,29 @@ class CirclesUseCase {
 
   Future<Result<AccountSummary, Failure>> getAccount() =>
       _repository.getAccount();
+
+  Future<Result<CircleOverview, Failure>> getCircleOverview(String circleId) =>
+      _repository.getCircleOverview(circleId);
+
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  ) => _repository.inviteManager(circleId, phoneNumber);
+
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) => _repository.resendManagerInvitation(circleId, invitationId);
+
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) => _repository.cancelManagerInvitation(circleId, invitationId);
+
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) => _repository.leaveCircle(circleId, confirmDelete: confirmDelete);
 
   Future<Result<CareCircleSummary, Failure>> createSelfCircle(
     NewSelfCircle circle,

@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -99,7 +100,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
           Text(
             context.tr('circles.contact_relation'),
             style: text.titleSmall?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
