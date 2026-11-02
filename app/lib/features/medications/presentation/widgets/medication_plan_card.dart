@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -12,7 +13,6 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -59,9 +59,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     );
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: status == _PlanState.current
-            ? AppSemanticColors.surfacePlan
-            : AppSemanticColors.surfaceContent,
+        color: AppSemanticColors.surfaceContent,
         shape: AppSurfaces.cardShape(),
       ),
       child: Padding(
@@ -76,7 +74,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                 child: Row(
                   children: [
                     Icon(
-                      CupertinoIcons.capsule,
+                      AppIcons.pill,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -90,8 +88,8 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                     const SizedBox(width: AppSpacing.sm),
                     Icon(
                       _expanded
-                          ? CupertinoIcons.chevron_up
-                          : CupertinoIcons.chevron_down,
+                          ? AppIcons.caretUp
+                          : AppIcons.caretDown,
                       size: AppSizes.iconSmall,
                       color: AppSemanticColors.borderControlBase,
                     ),
@@ -106,13 +104,11 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             const SizedBox(height: AppSpacing.md),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: status == _PlanState.current
-                    ? AppSemanticColors.surfaceContent
-                    : AppSemanticColors.surfacePlan,
+                color: AppSemanticColors.surfacePlan,
                 borderRadius: BorderRadius.circular(AppRadius.field),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.inset),
                 child: Column(
                   children: [
                     for (final schedule in version.schedules)
@@ -123,7 +119,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             ),
             const SizedBox(height: AppSpacing.xs),
             _InfoLine(
-              icon: CupertinoIcons.calendar,
+              icon: AppIcons.calendar,
               text: _period(context, version.startsOn, version.endsOn),
             ),
             if (plan.pendingVersion case final pending?) ...[
@@ -137,7 +133,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.inset),
                   child: Text(
                     [
                       context.tr(
@@ -176,7 +172,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             ],
             Row(
               children: [
-                const Icon(CupertinoIcons.clock, size: AppSizes.iconSmall),
+                const Icon(AppIcons.clock, size: AppSizes.iconSmall),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
@@ -409,7 +405,7 @@ class _PlanStatus extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
+          horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,
         ),
         child: Text(

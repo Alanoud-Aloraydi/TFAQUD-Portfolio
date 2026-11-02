@@ -79,6 +79,7 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

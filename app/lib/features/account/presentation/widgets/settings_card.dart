@@ -1,9 +1,9 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// A small grey title above a white card, as the account page groups its rows.
@@ -24,7 +24,10 @@ class SettingsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSpacing.inset,
+            bottom: AppSpacing.labelGap,
+          ),
           child: Semantics(
             header: true,
             child: Text(
@@ -124,7 +127,7 @@ class InfoRow extends StatelessWidget {
           if (onEdit != null) ...<Widget>[
             const SizedBox(width: AppSpacing.sm),
             Icon(
-              CupertinoIcons.pencil,
+              AppIcons.pencil,
               size: AppSizes.iconSmall,
               color: context.tokens.textSecondary,
             ),

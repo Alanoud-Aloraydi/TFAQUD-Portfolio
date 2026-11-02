@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -20,7 +21,6 @@ import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -225,7 +225,7 @@ class _AttentionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(AppSpacing.sm),
+    clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
       color: AppSemanticColors.surfaceAttention,
       border: Border.all(color: AppSemanticColors.borderAttention),
@@ -233,6 +233,13 @@ class _AttentionSection extends StatelessWidget {
     ),
     child: ExpansionTile(
       initiallyExpanded: true,
+      tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.inset),
+      childrenPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.inset,
+        0,
+        AppSpacing.inset,
+        AppSpacing.sm,
+      ),
       title: Text(
         context.tr(
           'today_dashboard.attention_count',
@@ -446,9 +453,7 @@ class _PrayerPeriod extends StatelessWidget {
     final title = context.tr('prayer_times.${prayer.name}');
     final formattedTime = formatMedicationTime(context, time);
     return Material(
-      color: current
-          ? AppSemanticColors.surfaceContent
-          : AppSemanticColors.surfacePlan,
+      color: AppSemanticColors.surfaceContent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.card),
         side: BorderSide(
@@ -461,7 +466,7 @@ class _PrayerPeriod extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: items.isEmpty
           ? ListTile(
-              leading: const Icon(CupertinoIcons.clock),
+              leading: const Icon(AppIcons.clock),
               title: Text(title),
               subtitle: Text(context.tr('today_dashboard.no_period_doses')),
               trailing: Text(formattedTime),
@@ -472,7 +477,7 @@ class _PrayerPeriod extends StatelessWidget {
               ),
               initiallyExpanded: expanded,
               leading: Icon(
-                current ? CupertinoIcons.sun_max_fill : CupertinoIcons.clock,
+                current ? AppIcons.house : AppIcons.clock,
               ),
               title: Text(title),
               subtitle: Text(
@@ -486,7 +491,7 @@ class _PrayerPeriod extends StatelessWidget {
                 children: [
                   Text(formattedTime),
                   const SizedBox(width: AppSpacing.sm),
-                  const Icon(CupertinoIcons.chevron_down),
+                  const Icon(AppIcons.caretDown),
                 ],
               ),
               children: [

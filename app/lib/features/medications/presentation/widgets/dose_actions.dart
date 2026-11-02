@@ -1,10 +1,10 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 Future<DateTime?> selectTakenTime(
@@ -30,6 +30,7 @@ Future<DateTime?> selectTakenTime(
 Future<DoseRecordDraft?> selectSkippedDose(BuildContext context) =>
     showModalBottomSheet<DoseRecordDraft>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) => const _SkipDoseSheet(),
     );
@@ -104,7 +105,7 @@ class _SkipDoseSheetState extends State<_SkipDoseSheet> {
       selected: selected,
       trailing: selected
           ? const Icon(
-              CupertinoIcons.checkmark,
+              AppIcons.check,
               color: AppSemanticColors.textPrimary,
             )
           : null,

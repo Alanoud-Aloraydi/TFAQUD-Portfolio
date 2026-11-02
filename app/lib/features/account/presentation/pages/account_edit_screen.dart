@@ -1,7 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
@@ -113,6 +111,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
               else
                 Expanded(
                   child: SingleChildScrollView(
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -200,8 +199,11 @@ class _NameField extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: Theme.of(context).textTheme.labelSmall),
-      const SizedBox(height: AppSpacing.xs),
+      Padding(
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
+        child: Text(label, style: Theme.of(context).textTheme.labelSmall),
+      ),
+      const SizedBox(height: AppSpacing.labelGap),
       TextField(
         controller: controller,
         maxLength: AccountCubit.maxNameLength,
@@ -209,14 +211,10 @@ class _NameField extends StatelessWidget {
         textDirection: TextDirection.rtl,
         onChanged: onChanged,
         decoration: InputDecoration(
+          // White with a line edge, from the theme, so the field shows on
+          // the page.
           counterText: '',
-          filled: true,
-          fillColor: AppSemanticColors.surfacePlan,
           constraints: const BoxConstraints(minHeight: AppSizes.touch),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.field),
-            borderSide: BorderSide.none,
-          ),
         ),
       ),
     ],

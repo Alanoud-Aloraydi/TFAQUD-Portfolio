@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -13,7 +14,6 @@ import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The card that adds an emergency contact or changes one (CIRCLE-05): the
@@ -178,7 +178,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
               child: TextButton.icon(
                 onPressed: form.saving ? null : widget.onDelete,
                 icon: const Icon(
-                  CupertinoIcons.delete,
+                  AppIcons.trash,
                   size: AppSizes.iconSmall,
                 ),
                 label: Text(context.tr('circles.contact_delete')),

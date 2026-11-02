@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -5,7 +6,6 @@ import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:dio/dio.dart' show Response;
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -25,23 +25,23 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   bool _apiBusy = false;
 
   static const List<IconData> _icons = <IconData>[
-    CupertinoIcons.back,
-    CupertinoIcons.checkmark,
-    CupertinoIcons.add,
-    CupertinoIcons.bell,
-    CupertinoIcons.person,
-    CupertinoIcons.person_2,
-    CupertinoIcons.info_circle,
-    CupertinoIcons.exclamationmark_triangle,
-    CupertinoIcons.clock,
-    CupertinoIcons.calendar,
-    CupertinoIcons.capsule,
-    CupertinoIcons.heart,
-    CupertinoIcons.drop,
-    CupertinoIcons.search,
-    CupertinoIcons.delete,
-    CupertinoIcons.pencil,
-    CupertinoIcons.share,
+    AppIcons.back,
+    AppIcons.check,
+    AppIcons.plus,
+    AppIcons.bell,
+    AppIcons.user,
+    AppIcons.users,
+    AppIcons.info,
+    AppIcons.warning,
+    AppIcons.clock,
+    AppIcons.calendar,
+    AppIcons.pill,
+    AppIcons.heart,
+    AppIcons.drop,
+    AppIcons.search,
+    AppIcons.trash,
+    AppIcons.pencil,
+    AppIcons.export,
   ];
 
   /// Calls GET /health and shows the address used and the result.
@@ -85,7 +85,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
               TextButton(onPressed: () {}, child: const Text('Text link')),
               FilledButton.icon(
                 onPressed: () {},
-                icon: const Icon(CupertinoIcons.add),
+                icon: const Icon(AppIcons.plus),
                 label: const Text('With icon'),
               ),
             ],

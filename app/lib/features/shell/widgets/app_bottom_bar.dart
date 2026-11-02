@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -6,35 +7,28 @@ import 'package:app/core/theme/materials/glass_preferences.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
-// Every tab uses the filled symbol, selected or not, as Apple's tab bars do
-// (Health: heart.fill, person.2.fill …): one style in the bar. The selected
-// tab is told by its color and the glass capsule behind it, not by a
-// different icon.
-typedef _Tab = ({String labelKey, IconData icon, String symbol});
+// The tab icons are the handoff's Phosphor icons (regular), one style for
+// every tab, selected or not; the selected tab is told by its color and the
+// glass capsule behind it. The native bar cannot draw a Flutter font, so
+// the same icons are images in the iPhone app's asset catalog
+// (ios/Runner/Assets.xcassets/tab_*.imageset, drawn as templates so the bar
+// colors them). The native bar looks for an SF Symbol first, then for an
+// image with that name.
+typedef _Tab = ({String labelKey, IconData icon, String image});
 
 const List<_Tab> _tabs = <_Tab>[
-  (
-    labelKey: 'tab.today',
-    icon: CupertinoIcons.sun_max_fill,
-    symbol: 'sun.max.fill',
-  ),
-  (
-    labelKey: 'tab.plan',
-    icon: CupertinoIcons.doc_text_fill,
-    symbol: 'doc.text.fill',
-  ),
-  (labelKey: 'tab.record', icon: CupertinoIcons.book_fill, symbol: 'book.fill'),
-  (
-    labelKey: 'tab.circle',
-    icon: CupertinoIcons.person_2_fill,
-    symbol: 'person.2.fill',
-  ),
+  (labelKey: 'tab.today', icon: AppIcons.house, image: 'tab_today'),
+  (labelKey: 'tab.plan', icon: AppIcons.pill, image: 'tab_plan'),
+  (labelKey: 'tab.record', icon: AppIcons.notebook, image: 'tab_record'),
+  (labelKey: 'tab.circle', icon: AppIcons.users, image: 'tab_circle'),
 ];
+
+/// The image of the round add button beside the native bar (Phosphor plus).
+const String _addImage = 'tab_add';
 
 /// Bottom bar with four tabs. An iPhone on iOS 26 or later gets the native
 /// glass tab bar; every other device gets a frosted Flutter bar styled as the
@@ -74,13 +68,13 @@ class AppBottomBar extends StatelessWidget {
       tintColor: AppSemanticColors.navigationSelected,
       actionButton: add == null
           ? null
-          : TabBarActionButton(symbol: 'plus', onTap: add),
+          : TabBarActionButton(symbol: _addImage, onTap: add),
       tabs: <NativeGlassNavBarItem>[
         for (final _Tab tab in _tabs)
           NativeGlassNavBarItem(
             label: context.tr(tab.labelKey),
-            symbol: tab.symbol,
-            selectedSymbol: tab.symbol,
+            symbol: tab.image,
+            selectedSymbol: tab.image,
           ),
       ],
       fallback: frosted,

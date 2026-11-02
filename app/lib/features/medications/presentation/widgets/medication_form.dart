@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
@@ -12,7 +13,6 @@ import 'package:app/features/medications/presentation/widgets/medication_basic_f
 import 'package:app/features/medications/presentation/widgets/medication_period_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -82,6 +82,7 @@ class _MedicationFormState extends State<MedicationForm> {
                 ],
         ),
         body: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -108,7 +109,7 @@ class _MedicationFormState extends State<MedicationForm> {
                     ),
                   InsetRow(
                     label: context.tr('medications.add_schedule'),
-                    leading: const Icon(CupertinoIcons.add_circled),
+                    leading: const Icon(AppIcons.plusCircle),
                     onTap: _addSchedule,
                   ),
                 ],

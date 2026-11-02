@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -6,7 +7,6 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DoseOccurrenceCard extends StatelessWidget {
@@ -106,10 +106,10 @@ class _TimingState extends StatelessWidget {
   Widget build(BuildContext context) {
     if (state == null) return const SizedBox.shrink();
     final icon = switch (state!) {
-      DoseTimingState.upcoming => CupertinoIcons.clock,
-      DoseTimingState.due => CupertinoIcons.alarm,
-      DoseTimingState.late => CupertinoIcons.exclamationmark_triangle,
-      DoseTimingState.missed => CupertinoIcons.calendar_badge_minus,
+      DoseTimingState.upcoming => AppIcons.clock,
+      DoseTimingState.due => AppIcons.alarm,
+      DoseTimingState.late => AppIcons.warning,
+      DoseTimingState.missed => AppIcons.calendarX,
     };
     final label = context.tr('medications.timing.${state!.name}');
     final tokens = context.tokens;

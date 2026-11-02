@@ -1,7 +1,7 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The iOS stepper: a light grey capsule with − and + divided by a thin
@@ -35,7 +35,7 @@ class StepperControl extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           _Half(
-            icon: CupertinoIcons.minus,
+            icon: AppIcons.minus,
             label: decrementLabel,
             onPressed: onDecrement,
           ),
@@ -48,7 +48,7 @@ class StepperControl extends StatelessWidget {
             ),
           ),
           _Half(
-            icon: CupertinoIcons.add,
+            icon: AppIcons.plus,
             label: incrementLabel,
             onPressed: onIncrement,
           ),

@@ -96,6 +96,7 @@ class _CircleAllergiesScreenState extends State<CircleAllergiesScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

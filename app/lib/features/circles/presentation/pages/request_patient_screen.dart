@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -17,7 +18,6 @@ import 'package:app/features/circles/presentation/cubit/send_circle_request_stat
 import 'package:app/features/circles/presentation/widgets/circle_label_picker.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -90,6 +90,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
       children: <Widget>[
         Expanded(
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -186,7 +187,7 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.inset),
       decoration: BoxDecoration(
         color: AppSemanticColors.background,
         borderRadius: BorderRadius.circular(AppRadius.field),
@@ -195,7 +196,7 @@ class _Notice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
-            CupertinoIcons.info_circle,
+            AppIcons.info,
             size: AppSizes.iconSmall,
             color: context.tokens.textSecondary,
           ),

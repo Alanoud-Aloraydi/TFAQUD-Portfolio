@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -18,7 +19,6 @@ import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -216,6 +216,7 @@ class _EditFormState extends State<_EditForm> {
       children: <Widget>[
         Expanded(
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -253,7 +254,7 @@ class _EditFormState extends State<_EditForm> {
                 PickerField(
                   label: context.tr('circles.birth_date'),
                   hint: context.tr('circles.birth_date_hint'),
-                  icon: CupertinoIcons.calendar,
+                  icon: AppIcons.calendar,
                   value: state.birthDate == null
                       ? null
                       : formatBirthDate(context, state.birthDate!),
@@ -266,7 +267,7 @@ class _EditFormState extends State<_EditForm> {
                 PickerField(
                   label: context.tr('circles.city'),
                   hint: context.tr('circles.patient_city_hint'),
-                  icon: CupertinoIcons.map_pin,
+                  icon: AppIcons.mapPin,
                   value: state.city,
                   onTap: () => _pickCity(context, cubit),
                   errorText: showErrors && state.city == null

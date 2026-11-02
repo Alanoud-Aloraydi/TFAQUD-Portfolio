@@ -70,6 +70,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

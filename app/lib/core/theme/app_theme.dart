@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -92,9 +93,9 @@ abstract class AppTheme {
       // a medicine's pages) use Apple's symbols, as every icon in the app.
       actionIconTheme: ActionIconThemeData(
         backButtonIconBuilder: (BuildContext context) =>
-            const Icon(CupertinoIcons.back),
+            const Icon(AppIcons.back),
         closeButtonIconBuilder: (BuildContext context) =>
-            const Icon(CupertinoIcons.xmark),
+            const Icon(AppIcons.x),
       ),
       // Cupertino widgets (pickers, action sheets, dialogs) use the app font
       // and ink instead of the system blue.

@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -14,7 +15,6 @@ import 'package:app/features/medications/presentation/widgets/medication_dose_hi
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -103,7 +103,7 @@ class _Content extends StatelessWidget {
               IconButton(
                 tooltip: context.tr('medications.edit_title'),
                 onPressed: () => _edit(context),
-                icon: const Icon(CupertinoIcons.pencil),
+                icon: const Icon(AppIcons.pencil),
               ),
           ],
         ),

@@ -168,9 +168,10 @@ class AppAlert<T> extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
+                      // Text 16 from the panel's edge: 12 + 4.
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
+                          horizontal: AppSpacing.xs,
                         ),
                         child: Column(
                           children: <Widget>[

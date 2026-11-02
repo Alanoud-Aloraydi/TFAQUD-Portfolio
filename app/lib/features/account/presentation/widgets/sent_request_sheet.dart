@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -8,7 +9,6 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Opens the details of a request the account sent, with a button that cancels
@@ -20,6 +20,7 @@ Future<void> showSentRequestSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     showDragHandle: true,
     builder: (BuildContext sheetContext) =>
         _SentRequestSheet(cubit: cubit, request: request),
@@ -92,8 +93,8 @@ class _SentRequestSheet extends StatelessWidget {
               label: context.tr('circles.request_status'),
               child: StatusPill(
                 icon: accepted
-                    ? CupertinoIcons.checkmark
-                    : CupertinoIcons.clock,
+                    ? AppIcons.check
+                    : AppIcons.clock,
                 text: context.tr(
                   accepted
                       ? 'account.status_accepted'

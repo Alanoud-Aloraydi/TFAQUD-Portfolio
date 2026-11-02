@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -19,7 +20,6 @@ import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -319,7 +319,7 @@ class _SentRequestRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             StatusPill(
-              icon: accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
+              icon: accepted ? AppIcons.check : AppIcons.clock,
               text: context.tr(
                 accepted
                     ? 'account.status_accepted_short'
@@ -334,7 +334,7 @@ class _SentRequestRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.
-            Icon(CupertinoIcons.forward, color: context.tokens.textSecondary),
+            Icon(AppIcons.forward, color: context.tokens.textSecondary),
           ],
         ),
       ),

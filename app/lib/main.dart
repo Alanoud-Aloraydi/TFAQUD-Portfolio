@@ -8,6 +8,7 @@ import 'core/di/configure_dependencies.dart';
 import 'core/navigation/app_router.dart';
 import 'core/services/app_accessibility.dart';
 import 'core/theme/materials/glass_preferences.dart';
+import 'core/widgets/forms/keyboard_dismiss.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +41,7 @@ class MainApp extends StatelessWidget {
             valueListenable: AppAccessibility.reduceTransparency,
             builder: (context, reduceTransparency, _) => GlassPreferences(
               reduceTransparency: reduceTransparency,
-              child: child!,
+              child: KeyboardDismissOnTap(child: child!),
             ),
           ),
           localizationsDelegates: context.localizationDelegates,

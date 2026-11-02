@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
@@ -5,7 +6,6 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/circles/domain/saudi_cities.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Opens the "اختر مدينتك" sheet (CREAT-01B). Returns the confirmed city, or
@@ -19,6 +19,7 @@ Future<String?> showCitySheet(
 }) {
   return showModalBottomSheet<String>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     builder: (BuildContext context) =>
         CitySheet(selected: selected, titleKey: titleKey),
@@ -76,7 +77,7 @@ class _CitySheetState extends State<CitySheet> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: context.tr('circles.city_search'),
-                prefixIcon: const Icon(CupertinoIcons.search),
+                prefixIcon: const Icon(AppIcons.search),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -100,7 +101,7 @@ class _CitySheetState extends State<CitySheet> {
                         final bool chosen = city == _selected;
                         return ListTile(
                           leading: Icon(
-                            CupertinoIcons.map_pin,
+                            AppIcons.mapPin,
                             color: chosen
                                 ? AppSemanticColors.textPrimary
                                 : context.tokens.textSecondary,
@@ -115,7 +116,7 @@ class _CitySheetState extends State<CitySheet> {
                           ),
                           trailing: chosen
                               ? const Icon(
-                                  CupertinoIcons.checkmark,
+                                  AppIcons.check,
                                   color: AppSemanticColors.textPrimary,
                                 )
                               : null,

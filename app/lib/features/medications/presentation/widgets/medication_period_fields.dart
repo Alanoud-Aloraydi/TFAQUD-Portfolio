@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -7,7 +8,6 @@ import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The treatment start and optional end in one grouped section.
@@ -97,7 +97,7 @@ class MedicationPeriodFields extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Icon(
-                  CupertinoIcons.exclamationmark_circle,
+                  AppIcons.warningCircle,
                   size: AppSizes.iconSmall,
                   color: tokens.error,
                 ),

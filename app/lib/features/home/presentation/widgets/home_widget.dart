@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -6,7 +7,6 @@ import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The circle switcher in the middle of the top bar (design system TopBar):
@@ -54,7 +54,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       return GlassCapsuleButton(
         label: add,
         semanticLabel: add,
-        icon: CupertinoIcons.add,
+        icon: AppIcons.plus,
         onPressed: onAddCircle,
       );
     }
@@ -72,7 +72,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           'topbar.switch_circle',
           args: <String>[selected.name],
         ),
-        icon: CupertinoIcons.chevron_down,
+        icon: AppIcons.caretDown,
         onPressed: () => _choose(context, circles, selectedId, name),
       ),
     );
@@ -102,7 +102,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           ),
           const SizedBox(width: AppSpacing.xs),
           const Icon(
-            CupertinoIcons.chevron_down,
+            AppIcons.caretDown,
             size: AppSizes.iconSmall,
             color: AppSemanticColors.textPrimary,
           ),
@@ -122,7 +122,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             GlassMenuItem<String>(
               value: HomeWidget._addCircle,
               label: context.tr('topbar.add_circle'),
-              icon: CupertinoIcons.add,
+              icon: AppIcons.plus,
             ),
           ],
       ],

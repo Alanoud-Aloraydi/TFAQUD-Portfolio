@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -7,7 +8,6 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,7 +56,7 @@ class _HomeAddSheet extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _QuickAction(
-          icon: CupertinoIcons.waveform_path_ecg,
+          icon: AppIcons.heartbeat,
           title: context.tr('add.reading_now'),
           hint: context.tr('add.reading_now_hint'),
           onTap: onSoon,
@@ -71,21 +71,21 @@ class _HomeAddSheet extends StatelessWidget {
           child: Column(
             children: <Widget>[
               _PlanOption(
-                icon: CupertinoIcons.capsule,
+                icon: AppIcons.pill,
                 title: context.tr('add.medication'),
                 hint: context.tr('add.medication_hint'),
                 onTap: onMedication,
               ),
               const _RowDivider(),
               _PlanOption(
-                icon: CupertinoIcons.text_badge_plus,
+                icon: AppIcons.listPlus,
                 title: context.tr('add.measurement'),
                 hint: context.tr('add.measurement_hint'),
                 onTap: onSoon,
               ),
               const _RowDivider(),
               _PlanOption(
-                icon: CupertinoIcons.calendar_badge_plus,
+                icon: AppIcons.calendarPlus,
                 title: context.tr('add.appointment'),
                 hint: context.tr('add.appointment_hint'),
                 onTap: onSoon,
@@ -165,7 +165,7 @@ class _QuickAction extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 const Icon(
-                  CupertinoIcons.forward,
+                  AppIcons.forward,
                   size: AppSizes.iconSmall,
                   color: AppSemanticColors.borderSubtle,
                 ),
@@ -268,7 +268,7 @@ class _PlanOption extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               const Icon(
-                CupertinoIcons.forward,
+                AppIcons.forward,
                 size: AppSizes.iconSmall,
                 color: AppSemanticColors.borderControlBase,
               ),

@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -9,7 +10,6 @@ import 'package:app/features/circles/domain/entities/received_circle_request.dar
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The white card every item of the notifications page sits in.
@@ -109,7 +109,7 @@ String _initial(String name) {
 }
 
 StatusPill _needsReplyPill(BuildContext context) => StatusPill(
-  icon: CupertinoIcons.clock,
+  icon: AppIcons.clock,
   text: context.tr('circles.needs_reply_pill'),
   background: AppSemanticColors.background,
   foreground: context.tokens.textSecondary,

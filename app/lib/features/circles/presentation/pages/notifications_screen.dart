@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -14,7 +15,6 @@ import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -160,7 +160,7 @@ class NotificationsScreen extends StatelessWidget {
           children: <Widget>[
             const SizedBox(height: 96),
             Icon(
-              CupertinoIcons.bell,
+              AppIcons.bell,
               size: AppSizes.iconHero,
               color: context.tokens.textSecondary,
             ),
@@ -184,7 +184,10 @@ class NotificationsScreen extends StatelessWidget {
         children: <Widget>[
           if (inbox.needsReply > 0) ...<Widget>[
             Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.inset,
+                bottom: AppSpacing.labelGap,
+              ),
               child: Text(
                 context.tr(
                   'circles.needs_reply',
@@ -220,9 +223,10 @@ class NotificationsScreen extends StatelessWidget {
           ],
           if (declined.isNotEmpty) ...<Widget>[
             Padding(
-              padding: const EdgeInsets.only(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.inset,
                 top: AppSpacing.sm,
-                bottom: AppSpacing.sm,
+                bottom: AppSpacing.labelGap,
               ),
               child: Text(
                 context.tr('circles.events_title'),

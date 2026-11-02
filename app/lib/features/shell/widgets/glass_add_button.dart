@@ -1,8 +1,8 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Round glass add button, floated above the bottom bar by the shell.
@@ -35,7 +35,7 @@ class GlassAddButton extends StatelessWidget {
               onTap: onPressed,
               child: Center(
                 child: Icon(
-                  CupertinoIcons.add,
+                  AppIcons.plus,
                   size: AppSizes.iconAction,
                   color: enabled
                       ? AppSemanticColors.textPrimary

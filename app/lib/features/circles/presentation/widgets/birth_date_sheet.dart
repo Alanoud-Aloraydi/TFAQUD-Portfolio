@@ -15,6 +15,7 @@ Future<DateTime?> showBirthDateSheet(
 }) {
   return showModalBottomSheet<DateTime>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     builder: (BuildContext context) =>
         BirthDateSheet(selected: selected, today: today ?? DateTime.now()),

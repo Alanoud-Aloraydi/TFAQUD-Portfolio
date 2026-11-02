@@ -76,11 +76,16 @@ class PhoneField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          label ?? context.tr('auth.phone_label'),
-          style: text.titleSmall?.copyWith(color: context.tokens.textSecondary),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
+          child: Text(
+            label ?? context.tr('auth.phone_label'),
+            style: text.titleSmall?.copyWith(
+              color: context.tokens.textSecondary,
+            ),
+          ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.labelGap),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[

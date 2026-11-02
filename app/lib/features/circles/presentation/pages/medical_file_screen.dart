@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -17,7 +18,6 @@ import 'package:app/features/circles/presentation/widgets/contact_form_card.dart
 import 'package:app/features/circles/presentation/widgets/contact_tile.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -90,7 +90,7 @@ class MedicalFileScreen extends StatelessWidget {
                       if (file != null)
                         ActionChip(
                           avatar: const Icon(
-                            CupertinoIcons.pencil,
+                            AppIcons.pencil,
                             size: AppSizes.iconSmall,
                             color: AppSemanticColors.textPrimary,
                           ),
@@ -158,6 +158,7 @@ class MedicalFileScreen extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final ContactForm? form = state.form;
     return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       children: <Widget>[
         SettingsCard(
@@ -189,14 +190,17 @@ class MedicalFileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
-        Semantics(
-          header: true,
-          child: Text(
-            context.tr('circles.file_contacts_title'),
-            style: text.titleMedium,
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
+          child: Semantics(
+            header: true,
+            child: Text(
+              context.tr('circles.file_contacts_title'),
+              style: text.titleMedium,
+            ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.labelGap),
         if (file.contacts.isEmpty && form == null)
           Text(
             context.tr('circles.file_contacts_empty'),
@@ -221,7 +225,7 @@ class MedicalFileScreen extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
               onPressed: cubit.startAdd,
-              icon: const Icon(CupertinoIcons.add),
+              icon: const Icon(AppIcons.plus),
               label: Text(context.tr('circles.contact_add')),
             ),
           ),

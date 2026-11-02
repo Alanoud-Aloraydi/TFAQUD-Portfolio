@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -12,7 +13,6 @@ import 'package:app/features/medications/presentation/widgets/medication_skeleto
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MedicationHistorySection extends StatelessWidget {
@@ -70,7 +70,7 @@ class MedicationHistorySection extends StatelessWidget {
                 circleId: circleId,
                 plans: state.plans,
               ),
-              icon: const Icon(CupertinoIcons.share),
+              icon: const Icon(AppIcons.export),
               label: Text(context.tr('record_export.share_action')),
             ),
           ],

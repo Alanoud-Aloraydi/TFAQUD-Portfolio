@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, lerpDouble;
 
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_effects.dart';
@@ -9,7 +10,6 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -372,7 +372,7 @@ class _MenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final IconData? icon = entry.selected
-        ? CupertinoIcons.checkmark
+        ? AppIcons.check
         : entry.icon;
     return Semantics(
       button: true,

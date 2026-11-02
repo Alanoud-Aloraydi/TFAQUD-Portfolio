@@ -43,7 +43,7 @@ class TodayDoseWindow extends StatelessWidget {
         '${missed.hour.toString().padLeft(2, '0')}:'
         '${missed.minute.toString().padLeft(2, '0')}';
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.inset),
       decoration: BoxDecoration(
         color: AppSemanticColors.surfacePlan,
         borderRadius: BorderRadius.circular(AppRadius.field),

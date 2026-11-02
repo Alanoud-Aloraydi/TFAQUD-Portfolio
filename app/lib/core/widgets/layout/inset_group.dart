@@ -1,9 +1,11 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -43,9 +45,9 @@ class InsetGroup extends StatelessWidget {
         if (header != null || headerAction != null)
           Padding(
             padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.lg,
+              start: AppSpacing.inset,
               end: AppSpacing.xs,
-              bottom: AppSpacing.xs,
+              bottom: AppSpacing.labelGap,
             ),
             child: Row(
               children: <Widget>[
@@ -88,9 +90,9 @@ class InsetGroup extends StatelessWidget {
         if (footer != null)
           Padding(
             padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.lg,
-              end: AppSpacing.lg,
-              top: AppSpacing.sm,
+              start: AppSpacing.inset,
+              end: AppSpacing.inset,
+              top: AppSpacing.labelGap,
             ),
             child: Text(footer!, style: text.bodySmall),
           ),
@@ -136,7 +138,7 @@ class _RowError extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
-            CupertinoIcons.exclamationmark_circle,
+            AppIcons.warningCircle,
             size: AppSizes.iconSmall,
             color: tokens.error,
           ),
@@ -265,7 +267,7 @@ class InsetRow extends StatelessWidget {
                         // The forward chevron (SF chevron.forward) mirrors in Arabic: it points to the
                         // end (left), where the row leads.
                         const Icon(
-                          CupertinoIcons.forward,
+                          AppIcons.forward,
                           size: AppSizes.iconSmall,
                           color: AppSemanticColors.borderControlBase,
                         ),
@@ -384,6 +386,9 @@ class InsetTextRow extends StatelessWidget {
       textAlign: TextAlign.start,
       style: text.bodyLarge,
       inputFormatters: <TextInputFormatter>[
+        // First: an Arabic keyboard types ٠-٩; they become 0-9 before any
+        // formatter that keeps only English digits.
+        WesternDigitsFormatter(decimal: keyboardType?.decimal ?? false),
         ...?inputFormatters,
         if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
       ],
@@ -483,7 +488,7 @@ class InsetChoiceButton extends StatelessWidget {
             Text(label),
             const SizedBox(width: AppSpacing.xs),
             const Icon(
-              CupertinoIcons.chevron_up_chevron_down,
+              AppIcons.caretUpDown,
               size: AppSizes.iconSmall,
             ),
           ],
@@ -537,6 +542,7 @@ Future<Set<T>?> showChecklistSheet<T>(
 }) {
   return showModalBottomSheet<Set<T>>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     builder: (BuildContext sheetContext) {
       final Set<T> chosen = <T>{...selected};
@@ -558,7 +564,7 @@ Future<Set<T>?> showChecklistSheet<T>(
                       labelOnly: true,
                       trailing: chosen.contains(option)
                           ? const Icon(
-                              CupertinoIcons.checkmark,
+                              AppIcons.check,
                               size: AppSizes.iconSmall,
                               color: AppSemanticColors.textPrimary,
                             )
@@ -615,7 +621,7 @@ class InsetBlock extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Icon(
-                    CupertinoIcons.exclamationmark_circle,
+                    AppIcons.warningCircle,
                     size: AppSizes.iconSmall,
                     color: tokens.error,
                   ),

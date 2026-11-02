@@ -1,13 +1,14 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -34,13 +35,14 @@ class MedicationRecordCard extends StatelessWidget {
         : '${takenLocal.hour.toString().padLeft(2, '0')}:'
               '${takenLocal.minute.toString().padLeft(2, '0')}';
     return Material(
-      color: AppSemanticColors.surfacePlan,
-      borderRadius: BorderRadius.circular(AppRadius.card),
+      color: AppSemanticColors.surfaceContent,
+      shape: AppSurfaces.cardShape(),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: () => context.push(Routes.medicationDetails(circleId, plan.id)),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.inset),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -49,7 +51,7 @@ class MedicationRecordCard extends StatelessWidget {
                   SizedBox(
                     width: AppSizes.touch,
                     height: AppSizes.touch,
-                    child: const Icon(CupertinoIcons.capsule),
+                    child: const Icon(AppIcons.pill),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -90,9 +92,9 @@ class MedicationRecordCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.inset),
                 decoration: BoxDecoration(
-                  color: AppSemanticColors.surfaceContent,
+                  color: AppSemanticColors.surfacePlan,
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
                 child: Text(
@@ -119,7 +121,7 @@ class MedicationRecordCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                   const Icon(
-                    CupertinoIcons.chevron_forward,
+                    AppIcons.forward,
                     size: AppSizes.iconSmall,
                   ),
                 ],

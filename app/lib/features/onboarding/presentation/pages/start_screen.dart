@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -10,7 +11,6 @@ import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:app/features/onboarding/presentation/widgets/choice_card.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -75,7 +75,7 @@ class StartScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           ChoiceCard(
-                            icon: CupertinoIcons.heart,
+                            icon: AppIcons.heart,
                             title: context.tr('onboarding.self_title'),
                             hint: context.tr('onboarding.self_hint'),
                             selected: state.careTarget == CareTarget.self,
@@ -84,7 +84,7 @@ class StartScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSpacing.md),
                           ChoiceCard(
-                            icon: CupertinoIcons.person_2,
+                            icon: AppIcons.users,
                             title: context.tr('onboarding.other_title'),
                             hint: context.tr('onboarding.other_hint'),
                             selected: state.careTarget == CareTarget.other,
@@ -164,7 +164,7 @@ class _PatientQuestion extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             ChoiceCard(
-              icon: CupertinoIcons.person_2,
+              icon: AppIcons.users,
               title: context.tr('onboarding.patient_uses_title'),
               hint: context.tr('onboarding.patient_uses_hint'),
               selected: state.patientUsesApp == true,
@@ -172,7 +172,7 @@ class _PatientQuestion extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             ChoiceCard(
-              icon: CupertinoIcons.person,
+              icon: AppIcons.user,
               title: context.tr('onboarding.patient_no_title'),
               hint: context.tr('onboarding.patient_no_hint'),
               selected: state.patientUsesApp == false,

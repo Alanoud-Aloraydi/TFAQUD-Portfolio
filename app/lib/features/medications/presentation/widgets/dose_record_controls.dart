@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -8,7 +9,6 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -48,7 +48,7 @@ class DoseRecordControls extends StatelessWidget {
             Expanded(
               child: FilledButton.icon(
                 onPressed: () => _takeNow(context),
-                icon: const Icon(CupertinoIcons.checkmark),
+                icon: const Icon(AppIcons.check),
                 label: Text(context.tr('medications.taken_short')),
               ),
             ),
@@ -57,7 +57,7 @@ class DoseRecordControls extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () => _takeAtDifferentTime(context),
-              icon: const Icon(CupertinoIcons.clock),
+              icon: const Icon(AppIcons.clock),
               label: Text(context.tr('medications.different_time_short')),
             ),
           ),
@@ -65,7 +65,7 @@ class DoseRecordControls extends StatelessWidget {
           Expanded(
             child: TextButton.icon(
               onPressed: () => _skip(context),
-              icon: const Icon(CupertinoIcons.minus_circle),
+              icon: const Icon(AppIcons.prohibit),
               label: Text(context.tr('medications.skip_short')),
             ),
           ),
@@ -78,7 +78,7 @@ class DoseRecordControls extends StatelessWidget {
         if (isToday) ...[
           FilledButton.icon(
             onPressed: () => _takeNow(context),
-            icon: const Icon(CupertinoIcons.checkmark),
+            icon: const Icon(AppIcons.check),
             label: Text(context.tr('medications.taken_now_action')),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -168,7 +168,7 @@ class _RecordedStatus extends StatelessWidget {
         : context.tokens.textSecondary;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.inset),
       decoration: BoxDecoration(
         color: AppSemanticColors.background,
         borderRadius: BorderRadius.circular(AppRadius.field),
@@ -177,8 +177,8 @@ class _RecordedStatus extends StatelessWidget {
         children: [
           Icon(
             taken
-                ? CupertinoIcons.checkmark_circle
-                : CupertinoIcons.minus_circle,
+                ? AppIcons.checkCircle
+                : AppIcons.prohibit,
             color: iconColor,
           ),
           const SizedBox(width: AppSpacing.sm),

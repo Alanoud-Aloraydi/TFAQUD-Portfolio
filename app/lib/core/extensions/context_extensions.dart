@@ -1,6 +1,6 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
@@ -15,8 +15,8 @@ extension ContextExtensions on BuildContext {
           children: <Widget>[
             Icon(
               isError
-                  ? CupertinoIcons.exclamationmark_circle
-                  : CupertinoIcons.checkmark_circle,
+                  ? AppIcons.warningCircle
+                  : AppIcons.checkCircle,
               color: AppSemanticColors.surfaceContent,
               size: 20,
             ),
@@ -39,6 +39,7 @@ extension ContextExtensions on BuildContext {
   void showBottomSheet({required Widget widget, double? height, Color? color}) {
     showModalBottomSheet(
       context: this,
+      useRootNavigator: true,
       useSafeArea: true,
       showDragHandle: true,
       isScrollControlled: true,

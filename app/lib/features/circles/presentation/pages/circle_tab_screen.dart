@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -5,6 +6,7 @@ import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
@@ -103,7 +105,7 @@ class _CircleContent extends StatelessWidget {
           children: <Widget>[
             Expanded(
               child: _CircleFeatureTile(
-                icon: CupertinoIcons.doc_text,
+                icon: AppIcons.fileText,
                 iconColor: AppSemanticColors.textSupporting,
                 title: context.tr('circles.file_title'),
                 subtitle: context.tr('circle_overview.file_hint'),
@@ -113,7 +115,7 @@ class _CircleContent extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _CircleFeatureTile(
-                icon: CupertinoIcons.staroflife,
+                icon: AppIcons.firstAid,
                 iconColor: AppSemanticColors.statusError,
                 title: context.tr('circles.card_title'),
                 subtitle: context.tr('circle_overview.card_hint'),
@@ -130,7 +132,7 @@ class _CircleContent extends StatelessWidget {
         FilledButton.icon(
           onPressed: () => _invite(context),
           icon: const Icon(
-            CupertinoIcons.person_badge_plus,
+            AppIcons.userPlus,
             size: AppSizes.iconSmall,
           ),
           label: Text(context.tr('circle_overview.add_member')),
@@ -143,7 +145,7 @@ class _CircleContent extends StatelessWidget {
             minimumSize: const Size.fromHeight(AppSizes.button),
           ),
           icon: const Icon(
-            CupertinoIcons.square_arrow_right,
+            AppIcons.signOut,
             size: AppSizes.iconSmall,
           ),
           label: Text(context.tr('circle_overview.leave')),
@@ -286,7 +288,7 @@ class CircleCard extends StatelessWidget {
                 runSpacing: AppSpacing.sm,
                 children: <Widget>[
                   _Fact(
-                    icon: CupertinoIcons.drop,
+                    icon: AppIcons.drop,
                     label: context.tr('circle_overview.blood_type'),
                     value: MedicalTexts.bloodType(context, profile.bloodType),
                   ),
@@ -331,7 +333,7 @@ class CircleCard extends StatelessWidget {
   Widget _allergyFact(BuildContext context, AllergiesDraft? allergies) {
     final String value = MedicalTexts.allergies(context, allergies);
     return _Fact(
-      icon: CupertinoIcons.exclamationmark_triangle,
+      icon: AppIcons.warning,
       label: allergies?.answer == ListAnswer.none
           ? null
           : context.tr('circle_overview.allergy'),
@@ -344,13 +346,13 @@ class CircleCard extends StatelessWidget {
   Widget _conditionsFact(BuildContext context, ConditionsDraft? conditions) {
     if (conditions == null) {
       return _Fact(
-        icon: CupertinoIcons.waveform_path_ecg,
+        icon: AppIcons.heartbeat,
         label: context.tr('circle_overview.conditions'),
         value: MedicalTexts.conditions(context, conditions),
       );
     }
     return _Fact(
-      icon: CupertinoIcons.waveform_path_ecg,
+      icon: AppIcons.heartbeat,
       value: conditions.answer == ListAnswer.none
           ? context.tr('circle_overview.no_conditions')
           : MedicalTexts.conditions(context, conditions),
@@ -432,7 +434,7 @@ class _AppMode extends StatelessWidget {
         Row(
           children: <Widget>[
             const Icon(
-              CupertinoIcons.person_crop_rectangle,
+              AppIcons.idCard,
               size: AppSizes.iconSmall,
               color: AppSemanticColors.textSupporting,
             ),
@@ -496,8 +498,8 @@ class _CircleFeatureTile extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
-        color: AppSemanticColors.surfacePlan,
-        shape: AppRadius.shape(AppRadius.m),
+        color: AppSemanticColors.surfaceContent,
+        shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -538,7 +540,7 @@ class _MembersHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(
         top: AppSpacing.xl,
-        bottom: AppSpacing.md,
+        bottom: AppSpacing.labelGap,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -598,8 +600,8 @@ class _MembersList extends StatelessWidget {
     ];
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: AppSemanticColors.surfacePlan,
-        shape: AppRadius.shape(AppRadius.m),
+        color: AppSemanticColors.surfaceContent,
+        shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -626,7 +628,7 @@ class _Avatar extends StatelessWidget {
     : letter = name,
       icon = null;
 
-  const _Avatar.waiting() : letter = null, icon = CupertinoIcons.hourglass;
+  const _Avatar.waiting() : letter = null, icon = AppIcons.hourglass;
 
   final String? letter;
   final IconData? icon;
@@ -712,7 +714,7 @@ class _MemberRow extends StatelessWidget {
                 text: context.tr('circle_overview.manager'),
                 background: AppSemanticColors.borderPlan,
                 foreground: AppSemanticColors.textSupporting,
-                icon: CupertinoIcons.checkmark_seal,
+                icon: AppIcons.crown,
               ),
               if (member.isPatient) ...<Widget>[
                 const SizedBox(height: AppSpacing.xs),
@@ -720,7 +722,7 @@ class _MemberRow extends StatelessWidget {
                   text: context.tr('circle_overview.owner'),
                   background: AppSemanticColors.selectedSurface,
                   foreground: AppSemanticColors.statusSuccess,
-                  icon: CupertinoIcons.person,
+                  icon: AppIcons.user,
                 ),
               ],
             ],
@@ -738,7 +740,10 @@ class _YouPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       decoration: const ShapeDecoration(
         color: AppSemanticColors.textPrimary,
         shape: StadiumBorder(),
@@ -939,7 +944,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
             foregroundColor: AppSemanticColors.surfaceContent,
             iconColor: AppSemanticColors.accentLeaf,
           ),
-          icon: const Icon(CupertinoIcons.paperplane, size: AppSizes.iconSmall),
+          icon: const Icon(AppIcons.paperPlane, size: AppSizes.iconSmall),
           label: Text(context.tr('circle_overview.send_invite')),
         ),
       ],

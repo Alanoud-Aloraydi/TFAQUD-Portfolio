@@ -20,8 +20,13 @@ Future<T?> showGlassSheet<T>(
 }) {
   return showModalBottomSheet<T>(
     context: context,
+    // Above the tab bar: a sheet covers the whole screen, as on iOS.
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
+    // The glass draws its own handle; the theme's handle would add a second
+    // one above the sheet.
+    showDragHandle: false,
     backgroundColor: AppSemanticColors.transparent,
     elevation: 0,
     barrierColor: AppSemanticColors.sheetScrim,

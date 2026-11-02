@@ -33,6 +33,9 @@ dependencies:
   native_glass_navbar: 1.2.0
   package_info_plus: ^10.2.2
   pdf: ^3.13.1
+  # The handoff's icons (Phosphor, regular). AppIcons declares the ones the
+  # app uses; this package brings the font.
+  phosphor_flutter: ^2.1.0
   printing: ^5.15.1
   sizer: ^3.1.3
   uuid: ^4.6.0

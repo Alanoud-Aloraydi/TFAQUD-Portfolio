@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -13,7 +14,6 @@ import 'package:app/features/circles/presentation/widgets/circle_step_header.dar
 import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -95,6 +95,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -159,7 +160,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           PickerField(
                             label: context.tr('circles.birth_date'),
                             hint: context.tr('circles.birth_date_hint'),
-                            icon: CupertinoIcons.calendar,
+                            icon: AppIcons.calendar,
                             value: state.birthDate == null
                                 ? null
                                 : formatBirthDate(context, state.birthDate!),
@@ -174,7 +175,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                           PickerField(
                             label: context.tr('circles.city'),
                             hint: context.tr('circles.city_hint'),
-                            icon: CupertinoIcons.map_pin,
+                            icon: AppIcons.mapPin,
                             value: state.city,
                             onTap: () => _pickCity(context, cubit, state.city),
                             errorText: state.showErrors && state.city == null

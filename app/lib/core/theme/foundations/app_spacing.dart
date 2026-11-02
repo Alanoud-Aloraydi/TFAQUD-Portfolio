@@ -23,6 +23,17 @@ abstract class AppSpacing {
   /// Above a screen's first section and around empty states.
   static const double space10 = 40;
 
+  /// The spacing rule of every screen (Apple's inset grouped layout):
+  ///
+  /// * [inset]: text inside any box (card, tile, row, field, sheet) keeps
+  ///   16 from the box's edges. Rows of a list keep 16 at the sides and 12
+  ///   above and below; capsules keep 12 at the sides.
+  /// * [labelGap]: a label or header outside a box sits 8 from it. A small
+  ///   header (13 to 17) starts 16 in, lined up with the text inside the
+  ///   box; a section title (22) starts at the box's edge.
+  static const double inset = lg;
+  static const double labelGap = sm;
+
   /// Centers a 4-point line in a 16-point row: (16 - 4) / 2. Not a gap.
   static const double tight = 6;
 }

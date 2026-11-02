@@ -21,6 +21,7 @@ Future<DateTime?> showTafaqodDateSheet(
   String? confirmLabel,
 }) => showModalBottomSheet<DateTime>(
   context: context,
+  useRootNavigator: true,
   isScrollControlled: true,
   builder: (_) => DateWheelSheet(
     title: title,

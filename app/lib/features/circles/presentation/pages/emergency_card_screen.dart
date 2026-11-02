@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -148,7 +149,7 @@ class _ReadOnlyPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Icon(
-            CupertinoIcons.lock,
+            AppIcons.lock,
             size: AppSizes.iconSmall,
             color: context.tokens.textSecondary,
           ),
@@ -179,7 +180,7 @@ class _NameCard extends StatelessWidget {
     return MergeSemantics(
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.space5),
+        padding: const EdgeInsets.all(AppSpacing.inset),
         decoration: ShapeDecoration(
           color: AppSemanticColors.textPrimary,
           shape: AppRadius.shape(AppRadius.card),

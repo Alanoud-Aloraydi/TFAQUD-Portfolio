@@ -1,5 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -32,15 +33,24 @@ class SplashScreen extends StatelessWidget {
       builder: (context, destination) => Scaffold(
         body: destination == StartDestination.unavailable
             ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(context.tr('auth.session_check_failed')),
-                    FilledButton(
-                      onPressed: context.read<SplashCubit>().decide,
-                      child: Text(context.tr('auth.retry')),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.inset,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        context.tr('auth.session_check_failed'),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.inset),
+                      FilledButton(
+                        onPressed: context.read<SplashCubit>().decide,
+                        child: Text(context.tr('auth.retry')),
+                      ),
+                    ],
+                  ),
                 ),
               )
             : const LoadingWidget(size: AppSizes.loadingIndicator),

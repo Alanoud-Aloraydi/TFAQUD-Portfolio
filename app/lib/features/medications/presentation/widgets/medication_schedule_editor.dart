@@ -1,4 +1,6 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/stepper_control.dart';
@@ -9,7 +11,6 @@ import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -45,30 +46,33 @@ class MedicationScheduleEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: AppSpacing.lg,
-            end: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.tr(
-                    'medications.schedule_number',
-                    args: [(index + 1).toString()],
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSizes.button),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(
+              start: AppSpacing.inset,
+              end: AppSpacing.xs,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    context.tr(
+                      'medications.schedule_number',
+                      args: [(index + 1).toString()],
+                    ),
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-              ),
-              if (remove != null)
-                IconButton(
-                  tooltip: context.tr('medications.remove_schedule'),
-                  onPressed: remove,
-                  color: AppSemanticColors.statusError,
-                  icon: const Icon(CupertinoIcons.delete),
-                ),
-            ],
+                if (remove != null)
+                  IconButton(
+                    tooltip: context.tr('medications.remove_schedule'),
+                    onPressed: remove,
+                    color: AppSemanticColors.statusError,
+                    icon: const Icon(AppIcons.trash),
+                  ),
+              ],
+            ),
           ),
         ),
         _timeChips(context),

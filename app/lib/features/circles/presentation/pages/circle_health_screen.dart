@@ -80,6 +80,7 @@ class _CircleHealthScreenState extends State<CircleHealthScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

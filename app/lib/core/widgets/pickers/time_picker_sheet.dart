@@ -11,6 +11,7 @@ Future<TimeOfDay?> showTafaqodTimeSheet(
   required TimeOfDay initialTime,
 }) => showModalBottomSheet<TimeOfDay>(
   context: context,
+  useRootNavigator: true,
   builder: (_) => _TimePickerSheet(title: title, initialTime: initialTime),
 );
 

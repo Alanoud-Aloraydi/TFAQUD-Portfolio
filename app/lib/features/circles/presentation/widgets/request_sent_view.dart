@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -9,7 +10,6 @@ import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -54,7 +54,7 @@ class RequestSentView extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
+                    accepted ? AppIcons.check : AppIcons.clock,
                     size: AppSizes.iconEmpty,
                     color: accepted
                         ? AppSemanticColors.statusSuccess
@@ -153,7 +153,7 @@ class _DetailsCard extends StatelessWidget {
           _DetailRow(
             label: context.tr('circles.request_status'),
             child: StatusPill(
-              icon: accepted ? CupertinoIcons.checkmark : CupertinoIcons.clock,
+              icon: accepted ? AppIcons.check : AppIcons.clock,
               text: context.tr(
                 accepted
                     ? 'circles.request_status_accepted'
