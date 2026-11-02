@@ -5,6 +5,7 @@ import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
+import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
@@ -48,7 +49,9 @@ import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dar
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
+import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, visibleForTesting;
 import 'package:flutter/cupertino.dart';
@@ -97,10 +100,12 @@ class AppRouter {
     routes: <RouteBase>[
       GoRoute(
         path: Routes.splash,
-        pageBuilder: _iosPage((context, state) => BlocProvider(
-          create: (context) => SplashCubit(GetIt.I<AuthUseCase>())..decide(),
-          child: const SplashScreen(),
-        )),
+        pageBuilder: _iosPage(
+          (context, state) => BlocProvider(
+            create: (context) => SplashCubit(GetIt.I<AuthUseCase>())..decide(),
+            child: const SplashScreen(),
+          ),
+        ),
       ),
       GoRoute(path: Routes.home, redirect: (context, state) => Routes.today),
       StatefulShellRoute(
@@ -113,29 +118,35 @@ class AppRouter {
         // The home cubit loads the circles. The inbox cubit counts what waits
         // for an answer, for the dot on the bell; it loads again whenever the
         // circles change.
-        pageBuilder: _iosShellRootPage((context, state, navigationShell) => MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
-            ),
-            BlocProvider(
-              create: (context) => InboxCubit(
-                GetIt.I<CirclesUseCase>(),
-                GetIt.I<HomeUseCase>(),
-                followCircleChanges: true,
-              )..load(),
-            ),
-            BlocProvider(
-              create: (context) =>
-                  MedicationsCubit(GetIt.I<MedicationsUseCase>()),
-            ),
-            BlocProvider(
-              create: (context) =>
-                  MedicationOccurrencesCubit(GetIt.I<MedicationsUseCase>()),
-            ),
-          ],
-          child: HomeFeatureScreen(navigationShell: navigationShell),
-        )),
+        pageBuilder: _iosShellRootPage(
+          (context, state, navigationShell) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+              ),
+              BlocProvider(
+                create: (context) => InboxCubit(
+                  GetIt.I<CirclesUseCase>(),
+                  GetIt.I<HomeUseCase>(),
+                  followCircleChanges: true,
+                )..load(),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    MedicationsCubit(GetIt.I<MedicationsUseCase>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    MedicationOccurrencesCubit(GetIt.I<MedicationsUseCase>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    PrayerTimesCubit(GetIt.I<PrayerTimesRepository>()),
+              ),
+            ],
+            child: HomeFeatureScreen(navigationShell: navigationShell),
+          ),
+        ),
         branches: <StatefulShellBranch>[
           _branch(Routes.today, builder: (context, state) => const TodayPage()),
           _branch(Routes.plan, builder: (context, state) => const PlanPage()),
@@ -184,7 +195,7 @@ class AppRouter {
       ),
       GoRoute(
         path: Routes.medicationEditPath,
-        pageBuilder: _iosPage((context, state) {
+        pageBuilder: _iosModalPage((context, state) {
           final String circleId = state.pathParameters['circleId']!;
           final String planId = state.pathParameters['planId']!;
           return BlocProvider(
@@ -199,34 +210,54 @@ class AppRouter {
       // patient, sign-out (AuthCubit) and deleting the account.
       GoRoute(
         path: Routes.account,
-        pageBuilder: _iosModalPage((context, state) => MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (context) => AccountCubit(
-                GetIt.I<CirclesUseCase>(),
-                GetIt.I<OnboardingUseCase>(),
-                GetIt.I<AuthUseCase>(),
-                GetIt.I<HomeUseCase>(),
-              )..load(),
-            ),
-            BlocProvider(
-              create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
-            ),
-          ],
-          child: const AccountScreen(),
-        )),
+        pageBuilder: _iosModalPage(
+          (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => AccountCubit(
+                  GetIt.I<CirclesUseCase>(),
+                  GetIt.I<OnboardingUseCase>(),
+                  GetIt.I<AuthUseCase>(),
+                  GetIt.I<HomeUseCase>(),
+                )..load(),
+              ),
+              BlocProvider(
+                create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
+              ),
+            ],
+            child: const AccountScreen(),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.accountEdit,
+        pageBuilder: _iosPage(
+          (context, state) => BlocProvider(
+            create: (context) => AccountCubit(
+              GetIt.I<CirclesUseCase>(),
+              GetIt.I<OnboardingUseCase>(),
+              GetIt.I<AuthUseCase>(),
+              GetIt.I<HomeUseCase>(),
+            )..load(),
+            child: const AccountEditScreen(),
+          ),
+        ),
       ),
       // Welcome, phone number and code share one SignInCubit, so the code page
       // knows the number. The cubit is closed when the user leaves these pages.
       ShellRoute(
-        pageBuilder: _iosShellPage((context, state, child) => BlocProvider(
-          create: (context) => SignInCubit(GetIt.I<AuthUseCase>()),
-          child: child,
-        )),
+        pageBuilder: _iosShellPage(
+          (context, state, child) => BlocProvider(
+            create: (context) => SignInCubit(GetIt.I<AuthUseCase>()),
+            child: child,
+          ),
+        ),
         routes: <RouteBase>[
           GoRoute(
             path: Routes.auth,
-            pageBuilder: _iosPage((context, state) => const AuthFeatureScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const AuthFeatureScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.authPhone,
@@ -241,14 +272,18 @@ class AppRouter {
       // Name page and start page share one OnboardingCubit. The page that adds
       // another circle is the start page again, so it shares the cubit too.
       ShellRoute(
-        pageBuilder: _iosShellPage((context, state, child) => BlocProvider(
-          create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
-          child: child,
-        )),
+        pageBuilder: _iosShellPage(
+          (context, state, child) => BlocProvider(
+            create: (context) => OnboardingCubit(GetIt.I<OnboardingUseCase>()),
+            child: child,
+          ),
+        ),
         routes: <RouteBase>[
           GoRoute(
             path: Routes.onboarding,
-            pageBuilder: _iosPage((context, state) => const OnboardingFeatureScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const OnboardingFeatureScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.onboardingStart,
@@ -256,7 +291,9 @@ class AppRouter {
           ),
           GoRoute(
             path: Routes.addCircle,
-            pageBuilder: _iosPage((context, state) => const StartScreen(addingCircle: true)),
+            pageBuilder: _iosPage(
+              (context, state) => const StartScreen(addingCircle: true),
+            ),
           ),
         ],
       ),
@@ -269,15 +306,21 @@ class AppRouter {
         routes: <RouteBase>[
           GoRoute(
             path: Routes.createSelfCircle,
-            pageBuilder: _iosPage((context, state) => const SelfCircleBasicsScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const SelfCircleBasicsScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.createSelfCircleHealth,
-            pageBuilder: _iosPage((context, state) => const CircleHealthScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const CircleHealthScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.createSelfCircleAllergies,
-            pageBuilder: _iosPage((context, state) => const CircleAllergiesScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const CircleAllergiesScreen(),
+            ),
           ),
         ],
       ),
@@ -288,15 +331,21 @@ class AppRouter {
         routes: <RouteBase>[
           GoRoute(
             path: Routes.createPatientCircle,
-            pageBuilder: _iosPage((context, state) => const PatientCircleBasicsScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const PatientCircleBasicsScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.createPatientCircleHealth,
-            pageBuilder: _iosPage((context, state) => const CircleHealthScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const CircleHealthScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.createPatientCircleAllergies,
-            pageBuilder: _iosPage((context, state) => const CircleAllergiesScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const CircleAllergiesScreen(),
+            ),
           ),
         ],
       ),
@@ -304,33 +353,39 @@ class AppRouter {
       // waiting state on the same page.
       GoRoute(
         path: Routes.requestPatient,
-        pageBuilder: _iosPage((context, state) => BlocProvider(
-          create: (context) =>
-              SendCircleRequestCubit(GetIt.I<CirclesUseCase>()),
-          child: const RequestPatientScreen(),
-        )),
+        pageBuilder: _iosPage(
+          (context, state) => BlocProvider(
+            create: (context) =>
+                SendCircleRequestCubit(GetIt.I<CirclesUseCase>()),
+            child: const RequestPatientScreen(),
+          ),
+        ),
       ),
       // What waits for an answer: invitations and requests. The page of a
       // request takes the patient's answer; "agree" leads to the basic data.
       GoRoute(
         path: Routes.notifications,
-        pageBuilder: _iosModalPage((context, state) => BlocProvider(
-          create: (context) =>
-              InboxCubit(GetIt.I<CirclesUseCase>(), GetIt.I<HomeUseCase>())
-                ..load(),
-          child: const NotificationsScreen(),
-        )),
+        pageBuilder: _iosModalPage(
+          (context, state) => BlocProvider(
+            create: (context) =>
+                InboxCubit(GetIt.I<CirclesUseCase>(), GetIt.I<HomeUseCase>())
+                  ..load(),
+            child: const NotificationsScreen(),
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.replyRequest,
         redirect: _requireRequest,
-        pageBuilder: _iosPage((context, state) => BlocProvider(
-          create: (context) => RequestReplyCubit(
-            GetIt.I<CirclesUseCase>(),
-            state.extra! as ReceivedCircleRequest,
+        pageBuilder: _iosPage(
+          (context, state) => BlocProvider(
+            create: (context) => RequestReplyCubit(
+              GetIt.I<CirclesUseCase>(),
+              state.extra! as ReceivedCircleRequest,
+            ),
+            child: const RequestReplyScreen(),
           ),
-          child: const RequestReplyScreen(),
-        )),
+        ),
       ),
       // The basic data after the patient agreed: the same three steps. The
       // request travels with each step, so a step never loses it.
@@ -340,17 +395,23 @@ class AppRouter {
           GoRoute(
             path: Routes.completeRequest,
             redirect: _requireRequest,
-            pageBuilder: _iosPage((context, state) => const ApprovedCircleBasicsScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const ApprovedCircleBasicsScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.completeRequestHealth,
             redirect: _requireRequest,
-            pageBuilder: _iosPage((context, state) => const CircleHealthScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const CircleHealthScreen(),
+            ),
           ),
           GoRoute(
             path: Routes.completeRequestAllergies,
             redirect: _requireRequest,
-            pageBuilder: _iosPage((context, state) => const CircleAllergiesScreen()),
+            pageBuilder: _iosPage(
+              (context, state) => const CircleAllergiesScreen(),
+            ),
           ),
         ],
       ),
@@ -370,23 +431,36 @@ class AppRouter {
       ),
       GoRoute(
         path: Routes.medicalFileEditPath,
-        pageBuilder: _iosPage((context, state) => BlocProvider(
-          create: (context) => MedicalFileEditCubit(
-            GetIt.I<CirclesUseCase>(),
-            state.pathParameters['circleId']!,
-          )..load(),
-          child: const MedicalFileEditScreen(),
-        )),
+        pageBuilder: _iosPage(
+          (context, state) => BlocProvider(
+            create: (context) => MedicalFileEditCubit(
+              GetIt.I<CirclesUseCase>(),
+              state.pathParameters['circleId']!,
+            )..load(),
+            child: const MedicalFileEditScreen(),
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.emergencyCardPath,
-        pageBuilder: _iosPage((context, state) => BlocProvider(
-          create: (context) => EmergencyCardCubit(
-            GetIt.I<CirclesUseCase>(),
-            state.pathParameters['circleId']!,
-          )..load(),
-          child: const EmergencyCardScreen(),
-        )),
+        pageBuilder: _iosPage(
+          (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => EmergencyCardCubit(
+                  GetIt.I<CirclesUseCase>(),
+                  state.pathParameters['circleId']!,
+                )..load(),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    MedicationsCubit(GetIt.I<MedicationsUseCase>())
+                      ..load(state.pathParameters['circleId']!),
+              ),
+            ],
+            child: const EmergencyCardScreen(),
+          ),
+        ),
       ),
       if (kDebugMode)
         GoRoute(
@@ -418,28 +492,30 @@ class AppRouter {
     required List<RouteBase> routes,
   }) {
     return ShellRoute(
-      pageBuilder: _iosShellPage((context, state, child) => BlocProvider(
-        create: (context) {
-          final Object? extra = state.extra;
-          final CreateCircleCubit cubit = CreateCircleCubit(
-            GetIt.I<CirclesUseCase>(),
-            GetIt.I<HomeUseCase>(),
-            flow: flow,
-            request: extra is ReceivedCircleRequest ? extra : null,
-          );
-          // The name field reads the account, and the account says at once
-          // whether it already has a circle of its own care. The names of a
-          // patient without the app are typed, so nothing is loaded for them.
-          if (flow != CircleFlow.patient) cubit.loadAccount();
-          return cubit;
-        },
-        child: BlocListener<CreateCircleCubit, CreateCircleState>(
-          listenWhen: (before, after) =>
-              after.sessionEnded && !before.sessionEnded,
-          listener: (context, state) => context.go(Routes.auth),
-          child: child,
+      pageBuilder: _iosShellPage(
+        (context, state, child) => BlocProvider(
+          create: (context) {
+            final Object? extra = state.extra;
+            final CreateCircleCubit cubit = CreateCircleCubit(
+              GetIt.I<CirclesUseCase>(),
+              GetIt.I<HomeUseCase>(),
+              flow: flow,
+              request: extra is ReceivedCircleRequest ? extra : null,
+            );
+            // The name field reads the account, and the account says at once
+            // whether it already has a circle of its own care. The names of a
+            // patient without the app are typed, so nothing is loaded for them.
+            if (flow != CircleFlow.patient) cubit.loadAccount();
+            return cubit;
+          },
+          child: BlocListener<CreateCircleCubit, CreateCircleState>(
+            listenWhen: (before, after) =>
+                after.sessionEnded && !before.sessionEnded,
+            listener: (context, state) => context.go(Routes.auth),
+            child: child,
+          ),
         ),
-      )),
+      ),
       routes: routes,
     );
   }
@@ -479,12 +555,8 @@ class AppRouter {
   }
 }
 
-// Every page that is not a tab and not a modal is an iOS page
-// (CupertinoPage): it slides in from the leading edge and back out, with
-// the edge swipe to go back. In Arabic the leading edge is the left: a new
-// page, such as the medical file, comes in from left to right, and «رجوع»
-// takes it back from right to left, as iOS does in Arabic (Apple, Human
-// Interface Guidelines, Right to left).
+// Detail pages enter from the physical right while their content remains RTL.
+// The route keeps Cupertino's interactive back gesture and parallax.
 //
 // The pages are built here on purpose. go_router 18 picks the page type by
 // looking for the MaterialApp of package:material_ui, but this app's
@@ -492,12 +564,50 @@ class AppRouter {
 // would build every page with no transition at all: pages just popped in.
 
 GoRouterPageBuilder _iosPage(GoRouterWidgetBuilder builder) =>
-    (BuildContext context, GoRouterState state) => CupertinoPage<void>(
+    (BuildContext context, GoRouterState state) => _RightEntryPage<void>(
       key: state.pageKey,
       name: state.name ?? state.path,
       restorationId: state.pageKey.value,
       child: builder(context, state),
     );
+
+class _RightEntryPage<T> extends CupertinoPage<T> {
+  const _RightEntryPage({
+    required super.child,
+    super.key,
+    super.name,
+    super.restorationId,
+  });
+
+  @override
+  Route<T> createRoute(BuildContext context) => _RightEntryRoute<T>(page: this);
+}
+
+class _RightEntryRoute<T> extends CupertinoPageRoute<T> {
+  _RightEntryRoute({required _RightEntryPage<T> page})
+    : super(settings: page, builder: (context) => page.child);
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final contentDirection = Directionality.of(context);
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Builder(
+        builder: (transitionContext) => super.buildTransitions(
+          transitionContext,
+          animation,
+          secondaryAnimation,
+          Directionality(textDirection: contentDirection, child: child),
+        ),
+      ),
+    );
+  }
+}
 
 // The notifications (the bell) and the account open as an iOS full-screen
 // modal: the page rises from the bottom and goes back down when closed, and

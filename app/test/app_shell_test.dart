@@ -50,6 +50,10 @@ import 'package:app/features/medications/domain/repositories/medications_reposit
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
+import 'package:app/features/prayer_times/data/prayer_day_model.dart';
+import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.dart';
+import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
+import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:app/features/shell/widgets/glass_add_button.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -148,6 +152,28 @@ class _EmptyMedicationsRepository extends Fake
   }) async => const Success([]);
 }
 
+class _OfflinePrayerTimes extends Fake implements PrayerTimesRemoteDataSource {
+  @override
+  Future<PrayerDayModel> getToday(String circleId) async {
+    final today = DateUtils.dateOnly(
+      DateTime.now().toUtc().add(const Duration(hours: 3)),
+    );
+    return PrayerDayModel(
+      PrayerDay(
+        date: today,
+        city: 'الرياض',
+        times: const {
+          Prayer.fajr: '05:00',
+          Prayer.dhuhr: '12:00',
+          Prayer.asr: '15:00',
+          Prayer.maghrib: '18:00',
+          Prayer.isha: '19:30',
+        },
+      ),
+    );
+  }
+}
+
 /// The start page builds an OnboardingCubit from the OnboardingUseCase, and the
 /// account page saves the names through it. It keeps what it was asked to save.
 class _OfflineOnboardingRepository implements OnboardingRepositoryDomain {
@@ -235,6 +261,9 @@ void main() {
     GetIt.I.registerSingleton<CirclesUseCase>(CirclesUseCase(circles));
     GetIt.I.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(_EmptyMedicationsRepository()),
+    );
+    GetIt.I.registerSingleton<PrayerTimesRepository>(
+      PrayerTimesRepository(_OfflinePrayerTimes()),
     );
   });
 
@@ -375,6 +404,11 @@ void main() {
             .hasFocus,
         isTrue,
       );
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, 1000),
+      );
+      await tester.pumpAndSettle();
       await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     });

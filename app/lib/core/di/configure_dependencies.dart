@@ -4,6 +4,9 @@ import 'package:app/features/circles/di/circles_di.dart';
 import 'package:app/features/home/di/home_di.dart';
 import 'package:app/features/medications/di/medications_di.dart';
 import 'package:app/features/onboarding/di/onboarding_di.dart';
+import 'package:app/core/network/dio_client.dart';
+import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.dart';
+import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 
@@ -21,4 +24,8 @@ Future<void> configureDependencies() async {
   configureHome(getIt);
   configureCircles(getIt);
   configureMedications(getIt);
+  getIt.registerLazySingleton<PrayerTimesRepository>(
+    () =>
+        PrayerTimesRepository(PrayerTimesRemoteDataSource(getIt<DioClient>())),
+  );
 }

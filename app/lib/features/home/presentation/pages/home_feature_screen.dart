@@ -11,6 +11,7 @@ import 'package:app/features/home/presentation/widgets/home_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:app/features/shell/widgets/app_top_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -30,15 +31,40 @@ class HomeFeatureScreen extends StatefulWidget {
 class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     with WidgetsBindingObserver {
   String? _loadedCircleId;
+  Timer? _midnight;
+  late int _lastTabIndex;
 
   @override
   void initState() {
     super.initState();
+    _lastTabIndex = widget.navigationShell.currentIndex;
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
+  void didUpdateWidget(covariant HomeFeatureScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentTabIndex = widget.navigationShell.currentIndex;
+    if (_lastTabIndex != currentTabIndex && currentTabIndex == 2) {
+      final circleId = context.read<HomeCubit>().state.selectedCircleId;
+      if (circleId != null) {
+        unawaited(context.read<MedicationsCubit>().load(circleId));
+      }
+    }
+    if (_lastTabIndex == 3 && currentTabIndex == 0) {
+      final circleId = context.read<HomeCubit>().state.selectedCircleId;
+      if (circleId != null) {
+        unawaited(
+          context.read<PrayerTimesCubit>().load(circleId, refresh: true),
+        );
+      }
+    }
+    _lastTabIndex = currentTabIndex;
+  }
+
+  @override
   void dispose() {
+    _midnight?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -80,11 +106,23 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   }
 
   void _loadClinicalData(String circleId) {
-    final DateTime today = DateUtils.dateOnly(DateTime.now());
+    final riyadhNow = DateTime.now().toUtc().add(const Duration(hours: 3));
+    final DateTime today = DateTime.utc(
+      riyadhNow.year,
+      riyadhNow.month,
+      riyadhNow.day,
+    );
     unawaited(context.read<MedicationsCubit>().load(circleId));
     unawaited(
       context.read<MedicationOccurrencesCubit>().load(circleId, today, today),
     );
+    unawaited(context.read<PrayerTimesCubit>().load(circleId));
+    _midnight?.cancel();
+    final now = riyadhNow;
+    final next = DateTime.utc(now.year, now.month, now.day + 1);
+    _midnight = Timer(next.difference(now), () {
+      if (mounted) _loadClinicalData(circleId);
+    });
   }
 
   @override

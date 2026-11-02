@@ -53,10 +53,16 @@ class ApiEndpoints {
   /// contacts: GET; the health answers: PATCH), the basic data of the patient
   /// (PUT), the emergency contacts and the read-only emergency card.
   static String circle(String circleId) => '/circles/$circleId';
+  static String circleInvitations(String circleId) =>
+      '${circle(circleId)}/invitations';
+  static String circleInvitation(String circleId, String invitationId) =>
+      '${circleInvitations(circleId)}/$invitationId';
+  static String resendCircleInvitation(String circleId, String invitationId) =>
+      '${circleInvitation(circleId, invitationId)}/resend';
+  static String leaveCircle(String circleId) => '${circle(circleId)}/leave';
   static String medicalProfile(String circleId) =>
       '${circle(circleId)}/medical-profile';
-  static String circlePatient(String circleId) =>
-      '${circle(circleId)}/patient';
+  static String circlePatient(String circleId) => '${circle(circleId)}/patient';
   static String emergencyContacts(String circleId) =>
       '${circle(circleId)}/emergency-contacts';
   static String emergencyContact(String circleId, String contactId) =>
@@ -67,11 +73,17 @@ class ApiEndpoints {
   static String medicationPlans(String circleId) =>
       '/circles/$circleId/medication-plans';
 
+  static String prayerTimes(String circleId) =>
+      '/circles/$circleId/prayer-times';
+
   static String medicationPlan(String circleId, String planId) =>
       '${medicationPlans(circleId)}/$planId';
 
   static String discontinueMedication(String circleId, String planId) =>
       '${medicationPlan(circleId, planId)}/discontinue';
+
+  static String cancelPendingMedication(String circleId, String planId) =>
+      '${medicationPlan(circleId, planId)}/cancel-pending';
 
   static String medicationOccurrences(String circleId) =>
       '/circles/$circleId/medication-occurrences';

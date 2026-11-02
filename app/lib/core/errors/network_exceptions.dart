@@ -54,6 +54,9 @@ class FailureExceptions {
       ApiErrorCodes.medicationVersionConflict => const ConflictFailure(
         'medications.version_conflict',
       ),
+      ApiErrorCodes.medicationPendingRevision => const ConflictFailure(
+        'medications.pending_conflict',
+      ),
       ApiErrorCodes.medicationDiscontinued => const ConflictFailure(
         'medications.already_discontinued',
       ),
