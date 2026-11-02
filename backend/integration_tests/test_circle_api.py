@@ -68,7 +68,12 @@ def test_self_care_circle_is_created_and_listed(
         "is_you": True,
     }
     assert circle["members"] == [
-        {"display_name": "Nora", "is_you": True, "role": "manager"}
+        {
+            "display_name": "Nora",
+            "is_you": True,
+            "is_patient": True,
+            "role": "manager",
+        }
     ]
     assert circle["pending_invitations"] == []
     home = api.get("/api/v1/home")
@@ -180,7 +185,12 @@ def test_circle_for_a_patient_without_an_account(
     assert circle["patient"]["app_mode"] is None
     assert circle["patient"]["first_name"] == "Nora"
     assert circle["members"] == [
-        {"display_name": "Nora", "is_you": True, "role": "manager"}
+        {
+            "display_name": "Nora",
+            "is_you": True,
+            "is_patient": False,
+            "role": "manager",
+        }
     ]
     with Session(database) as session:
         patient = session.scalar(select(Patient))

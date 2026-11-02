@@ -1,30 +1,39 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
-import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/home/presentation/cubit/home_cubit.dart';
-import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
+import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
+import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
+import 'package:app/features/home/presentation/cubit/home_cubit.dart';
+import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
-/// The "الدائرة" tab (CIRCLE-01). It shows the card of the selected circle
-/// with the two buttons that open its medical file and its emergency card.
-/// Needs the [HomeCubit] of the home screen above it.
+/// The "الدائرة" tab (CIRCLE-01): who the circle cares for and who shares
+/// it. From the top: the patient card, the two tiles that open the medical
+/// file and the emergency card, the members with the pending invitations,
+/// «إضافة عضو» and «مغادرة الدائرة». Needs the [HomeCubit] of the home
+/// screen above it.
 class CircleTabScreen extends StatelessWidget {
   const CircleTabScreen({super.key});
 
@@ -59,7 +68,7 @@ class _CircleContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CircleOverviewCubit, CircleOverviewState>(
-      builder: (context, state) => ListView(
+      builder: (BuildContext context, CircleOverviewState state) => ListView(
         padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
         children: <Widget>[
           LargeTitle(
@@ -73,60 +82,90 @@ class _CircleContent extends StatelessWidget {
               onPressed: context.read<CircleOverviewCubit>().load,
               child: Text(context.tr(state.errorKey ?? 'error.unknown')),
             )
-          else ...[
-            CircleCard(
-              circle: circle,
-              overview: state.overview!,
-              medicalFile: state.medicalFile!,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: _CircleFeatureTile(
-                    icon: CupertinoIcons.doc_text,
-                    title: context.tr('circles.file_title'),
-                    subtitle: context.tr('circle_overview.file_hint'),
-                    onTap: () => context.push(Routes.medicalFile(circle.id)),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _CircleFeatureTile(
-                    icon: CupertinoIcons.heart,
-                    title: context.tr('circles.card_title'),
-                    subtitle: context.tr('circle_overview.card_hint'),
-                    onTap: () => context.push(Routes.emergencyCard(circle.id)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Text(
-              context.tr('circle_overview.members'),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _MembersCard(overview: state.overview!),
-            if (state.overview!.canManage) ...[
-              const SizedBox(height: AppSpacing.md),
-              TextButton(
-                onPressed: () => _leave(context, state.overview!),
-                child: Text(
-                  context.tr('circle_overview.leave'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ],
+          else
+            ..._ready(context, state.overview!, state.medicalFile),
         ],
       ),
     );
   }
 
+  List<Widget> _ready(
+    BuildContext context,
+    CircleOverview overview,
+    MedicalFile? medicalFile,
+  ) {
+    return <Widget>[
+      CircleCard(circle: circle, overview: overview, medicalFile: medicalFile),
+      const SizedBox(height: AppSpacing.md),
+      IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Expanded(
+              child: _CircleFeatureTile(
+                icon: CupertinoIcons.doc_text,
+                iconColor: AppSemanticColors.textSupporting,
+                title: context.tr('circles.file_title'),
+                subtitle: context.tr('circle_overview.file_hint'),
+                onTap: () => context.push(Routes.medicalFile(circle.id)),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _CircleFeatureTile(
+                icon: CupertinoIcons.staroflife,
+                iconColor: AppSemanticColors.statusError,
+                title: context.tr('circles.card_title'),
+                subtitle: context.tr('circle_overview.card_hint'),
+                onTap: () => context.push(Routes.emergencyCard(circle.id)),
+              ),
+            ),
+          ],
+        ),
+      ),
+      _MembersHeader(overview: overview),
+      _MembersList(overview: overview),
+      if (overview.canManage) ...<Widget>[
+        const SizedBox(height: AppSpacing.md),
+        FilledButton.icon(
+          onPressed: () => _invite(context),
+          icon: const Icon(
+            CupertinoIcons.person_badge_plus,
+            size: AppSizes.iconSmall,
+          ),
+          label: Text(context.tr('circle_overview.add_member')),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextButton.icon(
+          onPressed: () => _leave(context, overview),
+          style: TextButton.styleFrom(
+            foregroundColor: AppSemanticColors.statusError,
+            minimumSize: const Size.fromHeight(AppSizes.button),
+          ),
+          icon: const Icon(
+            CupertinoIcons.square_arrow_right,
+            size: AppSizes.iconSmall,
+          ),
+          label: Text(context.tr('circle_overview.leave')),
+        ),
+      ],
+    ];
+  }
+
+  void _invite(BuildContext context) {
+    final CircleOverviewCubit cubit = context.read<CircleOverviewCubit>();
+    showGlassSheet<void>(
+      context,
+      title: context.tr('circle_overview.add_member'),
+      message: context.tr('circle_overview.invite_hint'),
+      builder: (_) => _InviteMemberSheet(cubit: cubit),
+    );
+  }
+
   Future<void> _leave(BuildContext context, CircleOverview overview) async {
-    final deletesCircle = overview.patientIsYou || overview.members.length == 1;
-    final confirmed = await showAppAlert<bool>(
+    final bool deletesCircle =
+        overview.patientIsYou || overview.members.length == 1;
+    final bool? confirmed = await showAppAlert<bool>(
       context,
       title: context.tr(
         deletesCircle
@@ -138,7 +177,7 @@ class _CircleContent extends StatelessWidget {
             ? 'circle_overview.delete_message'
             : 'circle_overview.leave_message',
       ),
-      actions: [
+      actions: <AppAlertAction<bool>>[
         AppAlertAction<bool>(
           label: context.tr('circle_overview.cancel'),
           value: false,
@@ -155,13 +194,14 @@ class _CircleContent extends StatelessWidget {
       ],
     );
     if (confirmed != true || !context.mounted) return;
-    final error = await context.read<CircleOverviewCubit>().leave(
+    final String? error = await context.read<CircleOverviewCubit>().leave(
       confirmDelete: deletesCircle,
     );
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(error))));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.tr(error))));
       return;
     }
     await context.read<HomeCubit>().refresh();
@@ -169,8 +209,11 @@ class _CircleContent extends StatelessWidget {
   }
 }
 
-/// The card of a circle: its name, and the buttons "الملف الطبي" and
-/// "بطاقة الطوارئ".
+/// The patient card: the circle's name, who it cares for, three facts from
+/// the medical file, and the app mode the patient was given. A 2-point slate
+/// edge, no shadow. The mode is shown only; it is set when the circle is
+/// created. Without a [medicalFile] (it could not be read) the facts are
+/// left out.
 class CircleCard extends StatelessWidget {
   const CircleCard({
     super.key,
@@ -181,117 +224,186 @@ class CircleCard extends StatelessWidget {
 
   final CareCircleSummary circle;
   final CircleOverview overview;
-  final MedicalFile medicalFile;
+  final MedicalFile? medicalFile;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final String name = overview.name.trim();
-    final String initial = name.isEmpty
-        ? ''
-        : String.fromCharCode(name.runes.first);
-    final today = DateTime.now();
-    final birth = overview.patientBirthDate;
-    final age =
-        today.year -
-        birth.year -
-        ((today.month < birth.month ||
-                (today.month == birth.month && today.day < birth.day))
-            ? 1
-            : 0);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
+    final String name = circle.name.trim();
+    final MedicalProfileDraft? profile = medicalFile?.profile;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
         color: AppSemanticColors.surfaceContent,
-        border: Border.all(color: AppSemanticColors.textSupporting),
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        shape: AppRadius.shape(
+          AppRadius.l,
+          side: const BorderSide(
+            color: AppSemanticColors.textSupporting,
+            width: AppSizes.borderEmphasis,
+          ),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              ExcludeSemantics(
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppSemanticColors.selectedSurface,
-                  child: Text(
-                    initial,
-                    style: text.titleLarge?.copyWith(
-                      color: AppSemanticColors.textPrimary,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                ExcludeSemantics(
+                  child: Container(
+                    width: AppSizes.avatarLarge,
+                    height: AppSizes.avatarLarge,
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      color: AppSemanticColors.selectedSurface,
+                      shape: AppRadius.shape(AppRadius.s),
+                    ),
+                    child: Text(
+                      name.isEmpty ? '' : name.characters.first,
+                      style: text.headlineMedium,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Semantics(
-                  header: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(circle.name, style: text.headlineSmall),
-                      Text(
-                        '${overview.patientName} · '
-                        '${context.tr('circle_overview.age', args: ['$age'])} · '
-                        '${overview.city}',
-                        style: text.bodySmall,
-                      ),
-                    ],
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(circle.name, style: text.headlineMedium),
+                        Text(_who(context), style: text.bodySmall),
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+            if (profile != null) ...<Widget>[
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: <Widget>[
+                  _Fact(
+                    icon: CupertinoIcons.drop,
+                    label: context.tr('circle_overview.blood_type'),
+                    value: MedicalTexts.bloodType(context, profile.bloodType),
+                  ),
+                  _allergyFact(context, profile.allergies),
+                  _conditionsFact(context, profile.conditions),
+                ],
               ),
             ],
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: AppSizes.divider),
+            const SizedBox(height: AppSpacing.md),
+            if (overview.patientUsesApp)
+              _AppMode(mode: overview.appMode)
+            else
+              Text(
+                context.tr('circle_overview.profile_summary'),
+                style: text.bodySmall,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// «نورة العتيبي · 72 سنة · بريدة».
+  String _who(BuildContext context) {
+    final DateTime today = DateTime.now();
+    final DateTime birth = overview.patientBirthDate;
+    final bool beforeBirthday =
+        today.month < birth.month ||
+        (today.month == birth.month && today.day < birth.day);
+    final int age = today.year - birth.year - (beforeBirthday ? 1 : 0);
+    return <String>[
+      overview.patientName,
+      context.tr('circle_overview.age', args: <String>['$age']),
+      overview.city,
+    ].join(' · ');
+  }
+
+  /// «حساسية **البنسلين**», or only «لا توجد حساسية» when that was the
+  /// answer.
+  Widget _allergyFact(BuildContext context, AllergiesDraft? allergies) {
+    final String value = MedicalTexts.allergies(context, allergies);
+    return _Fact(
+      icon: CupertinoIcons.exclamationmark_triangle,
+      label: allergies?.answer == ListAnswer.none
+          ? null
+          : context.tr('circle_overview.allergy'),
+      value: value,
+    );
+  }
+
+  /// «**السكري، الضغط**», «**لا أمراض مزمنة**», or
+  /// «الأمراض المزمنة **غير محدد**» when nobody answered.
+  Widget _conditionsFact(BuildContext context, ConditionsDraft? conditions) {
+    if (conditions == null) {
+      return _Fact(
+        icon: CupertinoIcons.waveform_path_ecg,
+        label: context.tr('circle_overview.conditions'),
+        value: MedicalTexts.conditions(context, conditions),
+      );
+    }
+    return _Fact(
+      icon: CupertinoIcons.waveform_path_ecg,
+      value: conditions.answer == ListAnswer.none
+          ? context.tr('circle_overview.no_conditions')
+          : MedicalTexts.conditions(context, conditions),
+    );
+  }
+}
+
+/// One fact on the patient card: a slate capsule with an outline icon, an
+/// optional word and the value in ink.
+class _Fact extends StatelessWidget {
+  const _Fact({required this.icon, this.label, required this.value});
+
+  final IconData icon;
+  final String? label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle? style = Theme.of(context).textTheme.bodySmall;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: const ShapeDecoration(
+        color: AppSemanticColors.surfacePlan,
+        shape: StadiumBorder(),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(
+            icon,
+            size: AppSizes.iconSmall,
+            color: AppSemanticColors.textSupporting,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              Chip(
-                label: Text(
-                  MedicalTexts.bloodType(
-                    context,
-                    medicalFile.profile.bloodType,
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text.rich(
+              TextSpan(
+                children: <InlineSpan>[
+                  if (label != null) TextSpan(text: '$label '),
+                  TextSpan(
+                    text: value,
+                    style: const TextStyle(
+                      color: AppSemanticColors.textPrimary,
+                      fontWeight: AppTextTheme.semibold,
+                    ),
                   ),
-                ),
-                avatar: const Icon(CupertinoIcons.drop),
+                ],
               ),
-              Chip(
-                label: Text(
-                  MedicalTexts.allergies(
-                    context,
-                    medicalFile.profile.allergies,
-                  ),
-                ),
-                avatar: const Icon(CupertinoIcons.exclamationmark_triangle),
-              ),
-              Chip(
-                label: Text(
-                  MedicalTexts.conditions(
-                    context,
-                    medicalFile.profile.conditions,
-                  ),
-                ),
-                avatar: const Icon(CupertinoIcons.heart),
-              ),
-            ],
-          ),
-          const Divider(height: AppSpacing.xl),
-          Text(
-            overview.patientUsesApp
-                ? context.tr(
-                    'circle_overview.app_mode',
-                    args: [
-                      context.tr(
-                        overview.appMode == 'simplified'
-                            ? 'circle_overview.simplified'
-                            : 'circle_overview.detailed',
-                      ),
-                    ],
-                  )
-                : context.tr('circle_overview.profile_summary'),
-            style: text.bodySmall,
+              style: style,
+            ),
           ),
         ],
       ),
@@ -299,139 +411,467 @@ class CircleCard extends StatelessWidget {
   }
 }
 
+/// «وضع تطبيق المريض: **تفصيلي**», and under it why it cannot be changed
+/// here.
+class _AppMode extends StatelessWidget {
+  const _AppMode({required this.mode});
+
+  final String? mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    final String value = context.tr(
+      mode == 'simplified'
+          ? 'circle_overview.simplified'
+          : 'circle_overview.detailed',
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            const Icon(
+              CupertinoIcons.person_crop_rectangle,
+              size: AppSizes.iconSmall,
+              color: AppSemanticColors.textSupporting,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  children: <InlineSpan>[
+                    TextSpan(text: '${context.tr('circle_overview.app_mode')} '),
+                    TextSpan(
+                      text: value,
+                      style: const TextStyle(
+                        color: AppSemanticColors.textPrimary,
+                        fontWeight: AppTextTheme.semibold,
+                      ),
+                    ),
+                  ],
+                ),
+                style: text.bodySmall,
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSizes.iconSmall + AppSpacing.sm,
+          ),
+          child: Text(
+            context.tr('circle_overview.mode_note'),
+            style: text.bodySmall,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A tile under the patient card: an outline icon, its name and one line
+/// on what it holds. Both tiles take the height of the taller one.
 class _CircleFeatureTile extends StatelessWidget {
   const _CircleFeatureTile({
     required this.icon,
+    required this.iconColor,
     required this.title,
     required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
+  final Color iconColor;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: AppSemanticColors.surfacePlan,
-    borderRadius: BorderRadius.circular(AppRadius.card),
-    child: InkWell(
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '$title، $subtitle',
+      excludeSemantics: true,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Icon(icon),
+      child: Material(
+        color: AppSemanticColors.surfacePlan,
+        shape: AppRadius.shape(AppRadius.m),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Icon(icon, size: AppSizes.icon, color: iconColor),
+                const SizedBox(height: AppSpacing.sm),
+                Text(title, style: text.titleSmall),
+                const SizedBox(height: AppSpacing.xs),
+                Text(subtitle, style: text.bodySmall),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(title, textAlign: TextAlign.center),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
-class _MembersCard extends StatelessWidget {
-  const _MembersCard({required this.overview});
+/// «الأعضاء», and at the end how many managers and pending invitations
+/// there are: «3 مديرين · دعوة معلّقة».
+class _MembersHeader extends StatelessWidget {
+  const _MembersHeader({required this.overview});
 
   final CircleOverview overview;
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: AppSemanticColors.surfacePlan,
-      borderRadius: BorderRadius.circular(AppRadius.card),
-    ),
-    child: Column(
-      children: [
-        for (final member in overview.members)
-          ListTile(
-            leading: CircleAvatar(
-              child: Text(member.name.isEmpty ? '؟' : member.name[0]),
-            ),
-            title: Text(member.name),
-            subtitle: Text(context.tr('circle_overview.manager')),
-            trailing: member.isYou
-                ? Text(context.tr('circle_overview.you'))
-                : null,
-          ),
-        for (final invitation in overview.pendingInvitations)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ListTile(
-                leading: const Icon(CupertinoIcons.hourglass),
-                title: Text(
-                  invitation.phoneNumber,
-                  textDirection: TextDirection.ltr,
-                  textAlign: TextAlign.right,
-                ),
-                subtitle: Text(context.tr('circle_overview.pending')),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => _act(
-                      context,
-                      context.read<CircleOverviewCubit>().resendInvitation(
-                        invitation.id,
-                      ),
-                    ),
-                    child: Text(context.tr('circle_overview.resend')),
-                  ),
-                  TextButton(
-                    onPressed: () => _act(
-                      context,
-                      context.read<CircleOverviewCubit>().cancelInvitation(
-                        invitation.id,
-                      ),
-                    ),
-                    child: Text(context.tr('circle_overview.cancel')),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        if (overview.canManage)
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: FilledButton.icon(
-              onPressed: () => showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                showDragHandle: true,
-                builder: (_) => _InviteMemberSheet(
-                  cubit: context.read<CircleOverviewCubit>(),
-                ),
-              ),
-              icon: const Icon(CupertinoIcons.person_add),
-              label: Text(context.tr('circle_overview.add_member')),
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    final int invitations = overview.pendingInvitations.length;
+    final String summary = <String>[
+      _count(context, 'managers', overview.members.length),
+      if (invitations > 0) _count(context, 'invitations', invitations),
+    ].join(' · ');
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.xl,
+        bottom: AppSpacing.md,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: <Widget>[
+          Semantics(
+            header: true,
+            child: Text(
+              context.tr('circle_overview.members'),
+              style: text.headlineMedium,
             ),
           ),
-      ],
-    ),
-  );
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              summary,
+              textAlign: TextAlign.end,
+              style: text.bodySmall,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Future<void> _act(BuildContext context, Future<String?> action) async {
-    final errorKey = await action;
-    if (!context.mounted || errorKey == null) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
+  /// Arabic counting: «مدير واحد», «مديران», «3 مديرين», «11 مديرًا».
+  /// The number is written 0-9.
+  static String _count(BuildContext context, String noun, int count) {
+    final String key = switch (count) {
+      1 => 'one',
+      2 => 'two',
+      <= 10 => 'few',
+      _ => 'many',
+    };
+    return context.tr(
+      'circle_overview.${noun}_$key',
+      args: <String>['$count'],
+    );
   }
 }
 
+/// The members, then the pending invitations, in one slate group with
+/// lines between the rows.
+class _MembersList extends StatelessWidget {
+  const _MembersList({required this.overview});
+
+  final CircleOverview overview;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> rows = <Widget>[
+      for (final CircleMember member in overview.members)
+        _MemberRow(member: member, patientUsesApp: overview.patientUsesApp),
+      for (final CirclePendingInvitation invitation
+          in overview.pendingInvitations)
+        _InvitationRow(invitation: invitation, canManage: overview.canManage),
+    ];
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: AppSemanticColors.surfacePlan,
+        shape: AppRadius.shape(AppRadius.m),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Column(
+          children: <Widget>[
+            for (int i = 0; i < rows.length; i++) ...<Widget>[
+              if (i > 0)
+                const Divider(
+                  height: AppSizes.divider,
+                  color: AppSemanticColors.borderPlan,
+                ),
+              rows[i],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A round 40-point avatar on the members list.
+class _Avatar extends StatelessWidget {
+  const _Avatar.letter(String name)
+    : letter = name,
+      icon = null;
+
+  const _Avatar.waiting() : letter = null, icon = CupertinoIcons.hourglass;
+
+  final String? letter;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final String name = letter?.trim() ?? '';
+    return ExcludeSemantics(
+      child: Container(
+        width: AppSizes.avatar,
+        height: AppSizes.avatar,
+        alignment: Alignment.center,
+        decoration: icon == null
+            ? const ShapeDecoration(
+                color: AppSemanticColors.surfaceContent,
+                shape: CircleBorder(
+                  side: BorderSide(color: AppSemanticColors.borderPlan),
+                ),
+              )
+            : const ShapeDecoration(
+                color: AppSemanticColors.surfaceAttention,
+                shape: CircleBorder(),
+              ),
+        child: icon == null
+            ? Text(
+                name.isEmpty ? '؟' : name.characters.first,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: AppTextTheme.bold,
+                ),
+              )
+            : Icon(
+                icon,
+                size: AppSizes.iconSmall,
+                color: AppSemanticColors.doseDueMarker,
+              ),
+      ),
+    );
+  }
+}
+
+/// A member: the name with «أنت» for the viewer, «المريض · يستخدم التطبيق»
+/// under the patient, and the badges «مدير» and «صاحب الملف» at the end.
+class _MemberRow extends StatelessWidget {
+  const _MemberRow({required this.member, required this.patientUsesApp});
+
+  final CircleMember member;
+  final bool patientUsesApp;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        children: <Widget>[
+          _Avatar.letter(member.name),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    Text(member.name, style: text.titleSmall),
+                    if (member.isYou) const _YouPill(),
+                  ],
+                ),
+                if (member.isPatient && patientUsesApp)
+                  Text(
+                    context.tr('circle_overview.patient_line'),
+                    style: text.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              StatusPill(
+                text: context.tr('circle_overview.manager'),
+                background: AppSemanticColors.borderPlan,
+                foreground: AppSemanticColors.textSupporting,
+                icon: CupertinoIcons.checkmark_seal,
+              ),
+              if (member.isPatient) ...<Widget>[
+                const SizedBox(height: AppSpacing.xs),
+                StatusPill(
+                  text: context.tr('circle_overview.owner'),
+                  background: AppSemanticColors.selectedSurface,
+                  foreground: AppSemanticColors.statusSuccess,
+                  icon: CupertinoIcons.person,
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// «أنت»: a small ink capsule after the viewer's name.
+class _YouPill extends StatelessWidget {
+  const _YouPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      decoration: const ShapeDecoration(
+        color: AppSemanticColors.textPrimary,
+        shape: StadiumBorder(),
+      ),
+      child: Text(
+        context.tr('circle_overview.you'),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: AppSemanticColors.surfaceContent,
+        ),
+      ),
+    );
+  }
+}
+
+/// A pending invitation: the number left to right, how long ago it was
+/// sent, and under them «إعادة الإرسال» and «إلغاء».
+class _InvitationRow extends StatelessWidget {
+  const _InvitationRow({required this.invitation, required this.canManage});
+
+  final CirclePendingInvitation invitation;
+  final bool canManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    final CircleOverviewCubit cubit = context.read<CircleOverviewCubit>();
+    final int days = RequestAge.days(invitation.sentAt, DateTime.now()) ?? 0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const _Avatar.waiting(),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  RequestSentView.displayPhone(invitation.phoneNumber),
+                  textDirection: TextDirection.ltr,
+                  style: text.titleSmall,
+                ),
+                Text(
+                  '${context.tr('circle_overview.pending')} · '
+                  '${_sentText(context, days)}',
+                  style: text.bodySmall,
+                ),
+                if (canManage)
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    children: <Widget>[
+                      _SmallAction(
+                        label: context.tr('circle_overview.resend'),
+                        color: AppSemanticColors.textPrimary,
+                        onPressed: () => _act(
+                          context,
+                          cubit.resendInvitation(invitation.id),
+                        ),
+                      ),
+                      _SmallAction(
+                        label: context.tr('circle_overview.cancel'),
+                        color: AppSemanticColors.statusError,
+                        onPressed: () => _act(
+                          context,
+                          cubit.cancelInvitation(invitation.id),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// «أُرسلت اليوم», «أُرسلت قبل يومين», «أُرسلت قبل 5 أيام».
+  static String _sentText(BuildContext context, int days) {
+    if (days == 0) return context.tr('circle_overview.sent_today');
+    if (days == 1) return context.tr('circle_overview.sent_yesterday');
+    if (days == 2) return context.tr('circle_overview.sent_two_days');
+    return context.tr(
+      days <= 10
+          ? 'circle_overview.sent_days_few'
+          : 'circle_overview.sent_days_many',
+      args: <String>['$days'],
+    );
+  }
+
+  static Future<void> _act(BuildContext context, Future<String?> action) async {
+    final String? errorKey = await action;
+    if (!context.mounted || errorKey == null) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
+  }
+}
+
+/// A small white capsule with a line edge (32 points high); its tap area is
+/// 48 points.
+class _SmallAction extends StatelessWidget {
+  const _SmallAction({
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String label;
+  final Color color;
+  final VoidCallback onPressed;
+
+  static const double _height = 32;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        minimumSize: const Size(0, _height),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        tapTargetSize: MaterialTapTargetSize.padded,
+        side: const BorderSide(color: AppSemanticColors.borderPlan),
+        textStyle: Theme.of(context).textTheme.labelMedium,
+      ),
+      child: Text(label),
+    );
+  }
+}
+
+/// The sheet of «إضافة عضو»: the number and «إرسال الدعوة».
 class _InviteMemberSheet extends StatefulWidget {
   const _InviteMemberSheet({required this.cubit});
 
@@ -455,7 +895,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
   Future<void> _send() async {
     if (_saving) return;
     setState(() => _saving = true);
-    final error = await widget.cubit.invite(
+    final String? error = await widget.cubit.invite(
       ArabicDigits.digitsOnly(_phone.text),
     );
     if (!mounted) return;
@@ -470,47 +910,39 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
   }
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    child: Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            context.tr('circle_overview.add_member'),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            context.tr('circle_overview.invite_hint'),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          PhoneField(
-            controller: _phone,
-            autofocus: false,
-            onChanged: (_) => setState(() => _errorKey = null),
-            showError: _errorKey == 'circle_overview.phone_invalid',
-          ),
-          if (_errorKey != null)
-            Text(
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        PhoneField(
+          controller: _phone,
+          autofocus: false,
+          onChanged: (_) => setState(() => _errorKey = null),
+          showError: _errorKey == 'circle_overview.phone_invalid',
+        ),
+        if (_errorKey != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Text(
               context.tr(_errorKey!),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppSemanticColors.statusError,
+              ),
             ),
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            onPressed: _saving ? null : _send,
-            child: Text(context.tr('circle_overview.send_invite')),
           ),
-        ],
-      ),
-    ),
-  );
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton.icon(
+          onPressed: _saving ? null : _send,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppSemanticColors.textPrimary,
+            foregroundColor: AppSemanticColors.surfaceContent,
+            iconColor: AppSemanticColors.accentLeaf,
+          ),
+          icon: const Icon(CupertinoIcons.paperplane, size: AppSizes.iconSmall),
+          label: Text(context.tr('circle_overview.send_invite')),
+        ),
+      ],
+    );
+  }
 }

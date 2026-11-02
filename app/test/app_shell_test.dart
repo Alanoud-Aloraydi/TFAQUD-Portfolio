@@ -10,6 +10,7 @@ import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
+import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
@@ -18,6 +19,7 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -1669,7 +1671,8 @@ void main() {
       // The full name is on the card above the rows and in its row.
       expect(find.text('Reem Alahmadi'), findsNWidgets(2));
       expect(find.text('account.phone'.tr()), findsOneWidget);
-      expect(find.text('+966 50 123 4567'), findsOneWidget);
+      // The phone number is on the card above the rows and in its row.
+      expect(find.text('+966 50 123 4567'), findsNWidgets(2));
       expect(find.text('account.medical_note'.tr()), findsOneWidget);
       expect(find.text('auth.sign_out'.tr()), findsOneWidget);
       expect(find.text('account.delete_account'.tr()), findsOneWidget);
@@ -1822,40 +1825,54 @@ void main() {
       });
     });
 
+    // Both name rows open one edit page with the three names: the first
+    // name, the last name, then the display name.
     group('changing the names', () {
-      testWidgets('the display name is saved with the other two names', (
+      Finder nameField(int index) => find.byType(TextField).at(index);
+
+      String fieldText(WidgetTester tester, int index) =>
+          tester.widget<TextField>(nameField(index)).controller!.text;
+
+      testWidgets('a name row opens the edit page with the saved names', (
         WidgetTester tester,
       ) async {
         await openAccount(tester);
         await openSheet(tester, 'account.display_name'.tr());
 
-        expect(find.text('account.edit_display_title'.tr()), findsOneWidget);
-        expect(find.byType(TextField), findsOneWidget);
-        await tester.enterText(find.byType(TextField), 'Ree');
-        await tester.tap(find.text('account.save'.tr()));
-        await tester.pumpAndSettle();
-
-        expect(onboarding.saved.single, <String>['Reem', 'Alahmadi', 'Ree']);
-        expect(find.text('account.edit_display_title'.tr()), findsNothing);
-        expect(find.text('Ree'), findsOneWidget);
-        expect(find.text('account.saved'.tr()), findsOneWidget);
+        expect(find.byType(AccountEditScreen), findsOneWidget);
+        expect(find.text('account.edit_title'.tr()), findsOneWidget);
+        expect(find.byType(TextField), findsNWidgets(3));
+        expect(fieldText(tester, 0), 'Reem');
+        expect(fieldText(tester, 1), 'Alahmadi');
+        expect(fieldText(tester, 2), 'Reem');
       });
 
-      testWidgets('the full name is saved with the display name', (
+      testWidgets('the three names are saved and the page shows them', (
         WidgetTester tester,
       ) async {
         await openAccount(tester);
         await openSheet(tester, 'account.full_name'.tr());
 
-        expect(find.text('account.edit_full_title'.tr()), findsOneWidget);
-        expect(find.byType(TextField), findsNWidgets(2));
-        await tester.enterText(find.byType(TextField).at(0), 'Layla');
-        await tester.enterText(find.byType(TextField).at(1), 'Salem');
+        await tester.enterText(nameField(0), 'Layla');
+        await tester.enterText(nameField(1), 'Salem');
+        await tester.enterText(nameField(2), 'Lulu');
+        // The account page reads the account again after the save, and the
+        // server then answers with the new names.
+        circles.account = const Success(
+          AccountSummary(
+            firstName: 'Layla',
+            lastName: 'Salem',
+            displayName: 'Lulu',
+            phoneNumber: '+966501234567',
+          ),
+        );
         await tester.tap(find.text('account.save'.tr()));
         await tester.pumpAndSettle();
 
-        expect(onboarding.saved.single, <String>['Layla', 'Salem', 'Reem']);
+        expect(onboarding.saved.single, <String>['Layla', 'Salem', 'Lulu']);
+        expect(find.byType(AccountEditScreen), findsNothing);
         expect(find.text('Layla Salem'), findsNWidgets(2));
+        expect(find.text('Lulu'), findsOneWidget);
       });
 
       testWidgets('an empty name is marked and nothing is sent', (
@@ -1864,30 +1881,29 @@ void main() {
         await openAccount(tester);
         await openSheet(tester, 'account.display_name'.tr());
 
-        await tester.enterText(find.byType(TextField), '');
+        await tester.enterText(nameField(2), '');
         await tester.tap(find.text('account.save'.tr()));
         await tester.pumpAndSettle();
 
         expect(onboarding.saved, isEmpty);
         expect(find.text('circles.field_required'.tr()), findsOneWidget);
-        expect(find.text('account.edit_display_title'.tr()), findsOneWidget);
+        expect(find.byType(AccountEditScreen), findsOneWidget);
       });
 
-      testWidgets('a refusal shows its text and keeps the sheet', (
+      testWidgets('a refusal shows its text and keeps the edit page', (
         WidgetTester tester,
       ) async {
         onboarding.result = const Error(NetworkFailure());
         await openAccount(tester);
         await openSheet(tester, 'account.display_name'.tr());
 
-        await tester.enterText(find.byType(TextField), 'Ree');
+        await tester.enterText(nameField(2), 'Ree');
         await tester.tap(find.text('account.save'.tr()));
         await tester.pumpAndSettle();
 
         expect(find.text('error.network'.tr()), findsOneWidget);
-        expect(find.text('account.edit_display_title'.tr()), findsOneWidget);
-        // The page still shows the old name.
-        expect(find.text('Reem'), findsOneWidget);
+        expect(find.byType(AccountEditScreen), findsOneWidget);
+        expect(fieldText(tester, 2), 'Ree');
       });
     });
 
@@ -2046,13 +2062,14 @@ void main() {
     Future<void> openCircleTab(WidgetTester tester) async {
       tallPhone(tester);
       await pumpApp(tester);
-      // The router is shared by all tests, so its first frame can still show
-      // the page the last test ended on, and that page reads its data once.
-      // The tests count the reads that come after this point.
-      circles.medicalFileReads = 0;
-      circles.emergencyCardReads = 0;
       await tester.tap(inBar('tab.circle'.tr()).first);
       await tester.pumpAndSettle();
+      // The router is shared by all tests, so its first frame can still show
+      // the page the last test ended on, and that page reads its data once.
+      // The Circle tab also reads the medical file for its patient card. The
+      // tests count the reads that come after this point.
+      circles.medicalFileReads = 0;
+      circles.emergencyCardReads = 0;
     }
 
     Future<void> openFile(WidgetTester tester) async {
@@ -2135,6 +2152,75 @@ void main() {
         await openCircleTab(tester);
 
         expect(find.byType(CircleCard), findsNothing);
+      });
+
+      testWidgets('shows the managers, the patient and a pending invitation', (
+        WidgetTester tester,
+      ) async {
+        circles.circleOverview = Success(
+          CircleOverview(
+            name: 'أمي نورة',
+            patientName: 'نورة العتيبي',
+            patientIsYou: false,
+            patientUsesApp: true,
+            appMode: 'detailed',
+            patientBirthDate: DateTime(1954, 6, 5),
+            city: 'بريدة',
+            canManage: true,
+            members: const <CircleMember>[
+              CircleMember(name: 'Reem', isYou: true),
+              CircleMember(name: 'نورة', isYou: false, isPatient: true),
+            ],
+            pendingInvitations: <CirclePendingInvitation>[
+              CirclePendingInvitation(
+                id: 'invitation-1',
+                phoneNumber: '+966559876543',
+                createdAt: DateTime.now().subtract(const Duration(days: 2)),
+              ),
+            ],
+          ),
+        );
+
+        await openCircleTab(tester);
+
+        expect(
+          find.text(
+            '${'circle_overview.managers_two'.tr()} · '
+            '${'circle_overview.invitations_one'.tr()}',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('circle_overview.you'.tr()), findsOneWidget);
+        expect(find.text('circle_overview.manager'.tr()), findsNWidgets(2));
+        expect(find.text('circle_overview.owner'.tr()), findsOneWidget);
+        expect(find.text('circle_overview.patient_line'.tr()), findsOneWidget);
+        expect(find.text('+966 55 987 6543'), findsOneWidget);
+        expect(find.text('circle_overview.resend'.tr()), findsOneWidget);
+        expect(find.text('circle_overview.cancel'.tr()), findsOneWidget);
+      });
+
+      testWidgets('the circle stays open when its medical file cannot be read', (
+        WidgetTester tester,
+      ) async {
+        circles.medicalFile = const Error(ServerFailure());
+
+        await openCircleTab(tester);
+
+        expect(find.byType(CircleCard), findsOneWidget);
+        expect(find.text('circles.file_title'.tr()), findsOneWidget);
+        expect(find.text('circle_overview.members'.tr()), findsOneWidget);
+      });
+
+      testWidgets('«إضافة عضو» opens the invitation sheet', (
+        WidgetTester tester,
+      ) async {
+        await openCircleTab(tester);
+
+        await tester.tap(find.text('circle_overview.add_member'.tr()));
+        await tester.pumpAndSettle();
+
+        expect(find.text('circle_overview.invite_hint'.tr()), findsOneWidget);
+        expect(find.text('circle_overview.send_invite'.tr()), findsOneWidget);
       });
     });
 

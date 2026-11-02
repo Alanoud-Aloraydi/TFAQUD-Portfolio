@@ -54,10 +54,14 @@ def circle_view(
     patient = session.scalar(
         select(Patient).where(Patient.care_circle_id == circle_id)
     )
+    # `is_patient` marks the manager who is also the patient, so the app
+    # can show who the file belongs to.
+    patient_account = patient.account_id if patient is not None else None
     members = [
         {
             "display_name": name,
             "is_you": account_id == viewer,
+            "is_patient": account_id == patient_account,
             "role": "manager",
         }
         for account_id, name in sorted(

@@ -23,8 +23,6 @@ abstract class AppSpacing {
   /// Above a screen's first section and around empty states.
   static const double space10 = 40;
 
-  static const double hairlineGap = 2;
+  /// Centers a 4-point line in a 16-point row: (16 - 4) / 2. Not a gap.
   static const double tight = 6;
-  static const double compact = 10;
-  static const double intermediate = 18;
 }

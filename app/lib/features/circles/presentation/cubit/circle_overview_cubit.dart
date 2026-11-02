@@ -45,21 +45,16 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
       return;
     }
     final overview = result.tryGetSuccess()!;
+    // The medical file only adds the facts on the patient card. When it
+    // cannot be read, the tab still shows the circle and its members, and
+    // the medical file page says why when it is opened.
     final fileResult = await _circles.getMedicalFile(circleId);
     if (isClosed) return;
-    fileResult.when(
-      (MedicalFile medicalFile) => emit(
-        CircleOverviewState(
-          status: CircleOverviewStatus.ready,
-          overview: overview,
-          medicalFile: medicalFile,
-        ),
-      ),
-      (Failure failure) => emit(
-        CircleOverviewState(
-          status: CircleOverviewStatus.failure,
-          errorKey: failure.messageKey,
-        ),
+    emit(
+      CircleOverviewState(
+        status: CircleOverviewStatus.ready,
+        overview: overview,
+        medicalFile: fileResult.tryGetSuccess(),
       ),
     );
   }

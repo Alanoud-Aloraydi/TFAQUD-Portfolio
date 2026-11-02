@@ -51,7 +51,7 @@ import 'package:app/features/onboarding/presentation/pages/onboarding_feature_sc
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, visibleForTesting;
 import 'package:flutter/cupertino.dart';
@@ -555,59 +555,23 @@ class AppRouter {
   }
 }
 
-// Detail pages enter from the physical right while their content remains RTL.
-// The route keeps Cupertino's interactive back gesture and parallax.
+// Detail pages slide in as iOS does in Arabic: the page enters from the left
+// edge, and «رجوع» or the edge swipe takes it back to the left. The tab pages
+// and the modals follow the same right-to-left layout, so every move in the
+// app goes the same way. The route keeps Cupertino's interactive back
+// gesture and parallax.
 //
 // The pages are built here on purpose. go_router 18 picks the page type by
 // looking for the MaterialApp of package:material_ui, but this app's
 // MaterialApp comes from package:flutter, so go_router does not find it and
 // would build every page with no transition at all: pages just popped in.
-
 GoRouterPageBuilder _iosPage(GoRouterWidgetBuilder builder) =>
-    (BuildContext context, GoRouterState state) => _RightEntryPage<void>(
+    (BuildContext context, GoRouterState state) => CupertinoPage<void>(
       key: state.pageKey,
       name: state.name ?? state.path,
       restorationId: state.pageKey.value,
       child: builder(context, state),
     );
-
-class _RightEntryPage<T> extends CupertinoPage<T> {
-  const _RightEntryPage({
-    required super.child,
-    super.key,
-    super.name,
-    super.restorationId,
-  });
-
-  @override
-  Route<T> createRoute(BuildContext context) => _RightEntryRoute<T>(page: this);
-}
-
-class _RightEntryRoute<T> extends CupertinoPageRoute<T> {
-  _RightEntryRoute({required _RightEntryPage<T> page})
-    : super(settings: page, builder: (context) => page.child);
-
-  @override
-  Widget buildTransitions(
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    final contentDirection = Directionality.of(context);
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Builder(
-        builder: (transitionContext) => super.buildTransitions(
-          transitionContext,
-          animation,
-          secondaryAnimation,
-          Directionality(textDirection: contentDirection, child: child),
-        ),
-      ),
-    );
-  }
-}
 
 // The notifications (the bell) and the account open as an iOS full-screen
 // modal: the page rises from the bottom and goes back down when closed, and

@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -42,7 +43,7 @@ class SplashScreen extends StatelessWidget {
                   ],
                 ),
               )
-            : const LoadingWidget(size: 50),
+            : const LoadingWidget(size: AppSizes.loadingIndicator),
       ),
     );
   }

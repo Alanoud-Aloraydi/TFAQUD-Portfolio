@@ -91,7 +91,7 @@ class MedicalFileScreen extends StatelessWidget {
                         ActionChip(
                           avatar: const Icon(
                             CupertinoIcons.pencil,
-                            size: AppSizes.iconCompact,
+                            size: AppSizes.iconSmall,
                             color: AppSemanticColors.textPrimary,
                           ),
                           label: Text(context.tr('circles.file_edit')),

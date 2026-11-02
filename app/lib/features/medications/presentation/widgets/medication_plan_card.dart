@@ -176,7 +176,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             ],
             Row(
               children: [
-                const Icon(CupertinoIcons.clock, size: AppSizes.iconInline),
+                const Icon(CupertinoIcons.clock, size: AppSizes.iconSmall),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
@@ -433,7 +433,7 @@ class _InfoLine extends StatelessWidget {
       children: [
         Icon(
           icon,
-          size: AppSizes.iconInline,
+          size: AppSizes.iconSmall,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: AppSpacing.sm),

@@ -34,15 +34,11 @@ abstract class AppSizes {
 
   // Preserve the compact overrides used by existing pill and alert buttons.
   static const double compactButton = 48;
-  static const double buttonSpinner = 22;
-  static const double loadingIndicator = 50;
+  static const double loadingIndicator = 48;
   static const double spinnerStroke = 2.5;
   static const double phonePrefix = 84;
   static const double pickerViewport = 216;
   static const double alertWidth = 320;
-  static const double iconTiny = 14;
-  static const double iconCompact = 16;
-  static const double iconInline = 18;
   static const double iconAction = 28;
   static const double iconEmpty = 36;
   static const double iconHero = 56;

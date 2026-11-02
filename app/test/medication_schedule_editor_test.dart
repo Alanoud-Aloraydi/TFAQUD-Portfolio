@@ -86,15 +86,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('every-day chip clears and restores the whole week', (
+  // The week is seven day chips, all on for every day; there is no
+  // separate "every day" chip.
+  testWidgets('a day chip takes its day out of the week and back', (
     tester,
   ) async {
     final data = await openEditor(tester, 1);
-    final everyDay = find.text('medications.every_day'.tr());
-    await tester.tap(everyDay);
+    final sunday = find.text('medications.weekday_short.7'.tr());
+    await tester.tap(sunday);
     await tester.pump();
-    expect(data.weekdays, isEmpty);
-    await tester.tap(everyDay);
+    expect(data.weekdays, {1, 2, 3, 4, 5, 6});
+    await tester.tap(sunday);
     await tester.pump();
     expect(data.weekdays, {1, 2, 3, 4, 5, 6, 7});
     expect(tester.takeException(), isNull);

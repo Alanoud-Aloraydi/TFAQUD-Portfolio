@@ -21,6 +21,10 @@ abstract class AppSemanticColors {
   static const Color accentLeaf = AppColors.leaf;
   static const Color accentWarm = AppColors.honey;
   static const Color surfacePlan = AppColors.slateLight;
+
+  /// Lines inside a slate group, the edge of white avatars and small
+  /// buttons on it, and the neutral badge «مدير».
+  static const Color borderPlan = AppColors.slatePale;
   static const Color surfaceAttention = AppColors.honeyLight;
   static const Color borderAttention = AppColors.honeyBorder;
   static const Color doseTrack = AppColors.slatePale;
@@ -30,5 +34,9 @@ abstract class AppSemanticColors {
   static const Color statusError = AppColors.error;
   static const Color navigationSelected = AppColors.ink;
   static const Color overlayScrim = Color(0x66202734);
+
+  /// The light dim behind a glass sheet: ink at 18%, lighter than an
+  /// alert's, so the page stays readable.
+  static const Color sheetScrim = Color(0x2E202734);
   static const Color transparent = Colors.transparent;
 }

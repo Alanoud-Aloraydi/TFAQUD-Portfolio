@@ -3,6 +3,7 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -114,6 +115,20 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     ),
   );
 
+  /// The circle of [nouraFile] as the Circle tab reads it: the signed-in
+  /// person is its only manager, and nobody is invited.
+  static final CircleOverview nouraOverview = CircleOverview(
+    name: 'أمي نورة',
+    patientName: 'نورة العتيبي',
+    patientIsYou: false,
+    patientUsesApp: false,
+    patientBirthDate: DateTime(1954, 6, 5),
+    city: 'بريدة',
+    canManage: true,
+    members: const <CircleMember>[CircleMember(name: 'Reem', isYou: true)],
+    pendingInvitations: const <CirclePendingInvitation>[],
+  );
+
   static final EmergencyCard nouraCard = EmergencyCard(
     firstName: 'نورة',
     lastName: 'العتيبي',
@@ -139,7 +154,9 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Result<void, Failure> canceled = const Success(null);
   Result<void, Failure> deleted = const Success(null);
 
-  // The medical file, the emergency contacts and the emergency card.
+  // The circle, the medical file, the emergency contacts and the emergency
+  // card.
+  Result<CircleOverview, Failure> circleOverview = Success(nouraOverview);
   Result<MedicalFile, Failure> medicalFile = Success(nouraFile);
   Result<EmergencyCard, Failure> emergencyCard = Success(nouraCard);
   Result<void, Failure> patientUpdated = const Success(null);
@@ -203,6 +220,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     completed = const Success(newCircle);
     canceled = const Success(null);
     deleted = const Success(null);
+    circleOverview = Success(nouraOverview);
     medicalFile = Success(nouraFile);
     emergencyCard = Success(nouraCard);
     patientUpdated = const Success(null);
@@ -304,6 +322,11 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     deletions.add(deletion);
     return deleted;
   }
+
+  @override
+  Future<Result<CircleOverview, Failure>> getCircleOverview(
+    String circleId,
+  ) async => circleOverview;
 
   @override
   Future<Result<MedicalFile, Failure>> getMedicalFile(String circleId) {

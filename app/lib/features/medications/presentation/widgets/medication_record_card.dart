@@ -120,7 +120,7 @@ class MedicationRecordCard extends StatelessWidget {
                   ),
                   const Icon(
                     CupertinoIcons.chevron_forward,
-                    size: AppSizes.iconCompact,
+                    size: AppSizes.iconSmall,
                   ),
                 ],
               ),

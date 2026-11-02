@@ -140,5 +140,10 @@ def test_a_member_leaves_other_circles_untouched(
     assert Api(database_app, owner).get(f"/api/v1/circles/{circle.id}").json[
         "circle"
     ]["members"] == [
-        {"display_name": "Nora", "is_you": True, "role": "manager"}
+        {
+            "display_name": "Nora",
+            "is_you": True,
+            "is_patient": False,
+            "role": "manager",
+        }
     ]

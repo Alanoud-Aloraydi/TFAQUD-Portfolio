@@ -2,22 +2,31 @@ import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+/// The sheet of the + button: «ماذا تريد أن تضيف؟». A quick action on ink
+/// («سجّل قراءة الآن»: a result that happened now), then, under the line
+/// «إنشاء خطة», the three plans: a medicine, a measurement plan and a
+/// medical appointment. Only the medicine exists in the app so far; the
+/// others say they are coming.
 Future<void> showHomeAddSheet(
   BuildContext context, {
   required String circleId,
   required VoidCallback onMedicationSaved,
 }) {
-  return showModalBottomSheet<void>(
-    context: context,
-    builder: (sheetContext) => _HomeAddSheet(
+  final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+  final String soon = context.tr('add.soon');
+  return showGlassSheet<void>(
+    context,
+    title: context.tr('add.title'),
+    builder: (BuildContext sheetContext) => _HomeAddSheet(
       onMedication: () {
         Navigator.of(sheetContext).pop();
         unawaited(
@@ -26,91 +35,259 @@ Future<void> showHomeAddSheet(
           }),
         );
       },
+      onSoon: () {
+        Navigator.of(sheetContext).pop();
+        messenger.showSnackBar(SnackBar(content: Text(soon)));
+      },
     ),
   );
 }
 
 class _HomeAddSheet extends StatelessWidget {
-  const _HomeAddSheet({required this.onMedication});
+  const _HomeAddSheet({required this.onMedication, required this.onSoon});
 
   final VoidCallback onMedication;
+  final VoidCallback onSoon;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.lg,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _QuickAction(
+          icon: CupertinoIcons.waveform_path_ecg,
+          title: context.tr('add.reading_now'),
+          hint: context.tr('add.reading_now_hint'),
+          onTap: onSoon,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.tr('add.title'),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Material(
-              color: AppSemanticColors.surfaceContent,
-              shape: AppSurfaces.cardShape(),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  _AddOption(
-                    icon: CupertinoIcons.capsule,
-                    title: context.tr('add.medication'),
-                    hint: context.tr('add.medication_hint'),
-                    onTap: onMedication,
-                  ),
-                  const Divider(height: AppSizes.divider),
-                  _AddOption(
-                    icon: CupertinoIcons.drop,
-                    title: context.tr('add.measurement'),
-                    hint: context.tr('add.measurement_hint'),
-                  ),
-                  const Divider(height: AppSizes.divider),
-                  _AddOption(
-                    icon: CupertinoIcons.calendar,
-                    title: context.tr('add.appointment'),
-                    hint: context.tr('add.appointment_hint'),
-                  ),
-                ],
+        const SizedBox(height: AppSpacing.lg),
+        _LabelledLine(label: context.tr('add.plans')),
+        const SizedBox(height: AppSpacing.sm),
+        Material(
+          color: AppSemanticColors.surfaceContent.withValues(alpha: 0.75),
+          shape: AppRadius.shape(AppRadius.m),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: <Widget>[
+              _PlanOption(
+                icon: CupertinoIcons.capsule,
+                title: context.tr('add.medication'),
+                hint: context.tr('add.medication_hint'),
+                onTap: onMedication,
               ),
+              const _RowDivider(),
+              _PlanOption(
+                icon: CupertinoIcons.text_badge_plus,
+                title: context.tr('add.measurement'),
+                hint: context.tr('add.measurement_hint'),
+                onTap: onSoon,
+              ),
+              const _RowDivider(),
+              _PlanOption(
+                icon: CupertinoIcons.calendar_badge_plus,
+                title: context.tr('add.appointment'),
+                hint: context.tr('add.appointment_hint'),
+                onTap: onSoon,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// «سجّل قراءة الآن»: the quick action, on ink with a leaf icon tile.
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
+    required this.icon,
+    required this.title,
+    required this.hint,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String hint;
+  final VoidCallback onTap;
+
+  static const double _tile = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '$title، $hint',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: AppSemanticColors.textPrimary,
+        shape: AppRadius.shape(AppRadius.m),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: _tile,
+                  height: _tile,
+                  decoration: ShapeDecoration(
+                    color: AppSemanticColors.accentLeaf,
+                    shape: AppRadius.shape(AppRadius.s),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: AppSizes.icon,
+                    color: AppSemanticColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        title,
+                        style: text.titleLarge?.copyWith(
+                          color: AppSemanticColors.surfaceContent,
+                        ),
+                      ),
+                      Text(
+                        hint,
+                        style: text.bodySmall?.copyWith(color: AppSemanticColors.borderSubtle),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(
+                  CupertinoIcons.forward,
+                  size: AppSizes.iconSmall,
+                  color: AppSemanticColors.borderSubtle,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _AddOption extends StatelessWidget {
-  const _AddOption({
+/// A short line with a word in the middle, such as «إنشاء خطة».
+class _LabelledLine extends StatelessWidget {
+  const _LabelledLine({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color line = AppSemanticColors.textPrimary.withValues(alpha: 0.12);
+    return Row(
+      children: <Widget>[
+        Expanded(child: Divider(height: AppSizes.divider, color: line)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(height: AppSizes.divider, color: line)),
+      ],
+    );
+  }
+}
+
+/// One plan: an icon tile, the name and what it does, and a chevron.
+class _PlanOption extends StatelessWidget {
+  const _PlanOption({
     required this.icon,
     required this.title,
     required this.hint,
-    this.onTap,
+    required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String hint;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
+
+  static const double _tile = AppSizes.avatar;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      enabled: onTap != null,
+    final TextTheme text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '$title، $hint',
+      excludeSemantics: true,
       onTap: onTap,
-      leading: Icon(icon),
-      title: Text(title, textAlign: TextAlign.start),
-      subtitle: Text(hint, textAlign: TextAlign.start),
-      trailing: onTap == null ? null : const Icon(CupertinoIcons.forward),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: _tile,
+                height: _tile,
+                decoration: ShapeDecoration(
+                  color: AppSemanticColors.surfacePlan,
+                  shape: AppRadius.shape(AppRadius.s),
+                ),
+                child: Icon(
+                  icon,
+                  size: AppSizes.iconSmall,
+                  color: AppSemanticColors.textSupporting,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(title, style: text.titleSmall),
+                    Text(
+                      hint,
+                      style: text.bodySmall?.copyWith(
+                        color: AppSemanticColors.textSupporting,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              const Icon(
+                CupertinoIcons.forward,
+                size: AppSizes.iconSmall,
+                color: AppSemanticColors.borderControlBase,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
+}
+
+/// The line between two plans, from the start of their text.
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) => Divider(
+    height: AppSizes.divider,
+    indent: AppSpacing.lg + AppSizes.avatar + AppSpacing.md,
+    color: AppSemanticColors.textPrimary.withValues(alpha: 0.08),
+  );
 }

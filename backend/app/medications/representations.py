@@ -1,11 +1,22 @@
 """JSON-ready medication representations."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import MedicationSchedule, MedicationScheduleDay
+
+
+def plain_number(value: Decimal) -> str:
+    """Write a decimal with English digits and no exponent.
+
+    `str(Decimal("500").normalize())` is "5E+2", which the API's own input
+    rules refuse; this gives "500". Trailing zeros still go: "0.500" is
+    "0.5", and "12.000" is "12".
+    """
+    return format(value.normalize(), "f")
 
 
 def schedule_responses(session: Session, version_id: UUID) -> list[dict]:
@@ -31,7 +42,7 @@ def schedule_responses(session: Session, version_id: UUID) -> list[dict]:
                 "time_of_day": schedule.time_of_day.isoformat(
                     timespec="minutes"
                 ),
-                "dose_value": str(schedule.dose_value.normalize()),
+                "dose_value": plain_number(schedule.dose_value),
                 "dose_unit": schedule.dose_unit,
                 "instructions": schedule.instructions,
                 "weekdays": [],
@@ -54,7 +65,7 @@ def plan_response(plan, version) -> dict:
         "version": {
             "version_number": version.version_number,
             "name": version.name,
-            "strength_value": str(version.strength_value.normalize()),
+            "strength_value": plain_number(version.strength_value),
             "strength_unit": version.strength_unit,
             "dosage_form": version.dosage_form,
             "reason_for_use": version.reason_for_use,
@@ -88,10 +99,10 @@ def occurrence_response(
         "scheduled_on": day.isoformat(),
         "time_of_day": schedule.time_of_day.isoformat(timespec="minutes"),
         "name": version.name,
-        "strength_value": str(version.strength_value.normalize()),
+        "strength_value": plain_number(version.strength_value),
         "strength_unit": version.strength_unit,
         "dosage_form": version.dosage_form,
-        "dose_value": str(schedule.dose_value.normalize()),
+        "dose_value": plain_number(schedule.dose_value),
         "dose_unit": schedule.dose_unit,
         "instructions": schedule.instructions,
         "missed_after_minutes": version.missed_after_minutes,

@@ -512,7 +512,7 @@ for example `Mother Noura`.
       "is_you": true
     },
     "members": [
-      { "display_name": "Leen", "is_you": true, "role": "manager" }
+      { "display_name": "Leen", "is_you": true, "is_patient": true, "role": "manager" }
     ],
     "pending_invitations": []
   }
@@ -532,7 +532,9 @@ Errors: 400, 401, 422 (`validation_error`, `profile_incomplete`, `already_has_ci
 #### The circle page
 
 `GET /api/v1/circles/{circle_id}` returns the same `circle` object. The members are
-listed with you first, then by name. A phone number of a member is never returned.
+listed with you first, then by name. `is_patient` is true for the manager who is
+also the patient (a self-care circle, or a patient who manages their own circle).
+A phone number of a member is never returned.
 `pending_invitations` is present for a manager only; a simplified patient does not
 get the key.
 

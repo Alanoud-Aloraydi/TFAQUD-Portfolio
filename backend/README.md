@@ -87,7 +87,7 @@ endpoints answer 503 `service_unavailable`. To use PostgreSQL, set `DATABASE_URL
 
 ## Database and migrations
 
-The tables are created by migrations (`migrations/versions/0001` to `0005`),
+The tables are created by migrations (`migrations/versions/0001` to `0008`),
 not by hand.
 
 | What | Command |
@@ -112,6 +112,42 @@ docker compose exec api sh -c 'TEST_DATABASE_URL=postgresql+psycopg://$POSTGRES_
 
 The first command is needed once. The second runs all the tests, with the
 PostgreSQL ones included.
+
+## Demo data
+
+To try the app with something in it, fill the local database with demo data:
+
+```
+docker compose exec api flask --app wsgi demo-data
+```
+
+It makes two demo accounts. Sign in on the phone with **0500000001**
+(«لينا»); the code is in the API log (`docker compose logs api`, the line
+`FAKE SMS ... Your code is ...`). The account has:
+
+- «رعايتي», her own care, with two medicines;
+- «رعاية أمي», her mother's care (no account), with every kind of medicine:
+  twice a day, a revised dose, a change that starts in 5 days, an injection in
+  units, a syrup course that ends soon, eye drops on three days a week, an
+  inhaler, one that starts in a week, a finished course and a stopped one, a
+  filled medical file and two emergency contacts;
+- a month of dose records: most taken (some late), some skipped with a
+  reason, some missed, and today's doses of the last 3 hours left open;
+- an invitation she sent 2 days ago to 0559876543 (her sister) to help with
+  «رعاية أمي», still waiting;
+- an invitation from «سارة» (0500000002) to manage «رعاية جدي» in Jeddah;
+- a request she sent to 0500000003 («أبي») that still waits.
+
+| What | Command |
+|---|---|
+| Make it fresh again (today's dates) | `docker compose exec api flask --app wsgi demo-data --reset` |
+
+Everything is made through the app's own services and checked by the
+database rules, as if a family had used the app. It only touches the demo
+accounts; `--reset` deletes them as the app deletes an account. It refuses to
+run in production, and it refuses unless `SMS_BACKEND=fake`: the demo numbers
+are made up, and a real SMS to them could reach a stranger. A phone number gets
+at most 3 codes an hour (`OTP_MAX_SENDS_PER_HOUR`).
 
 ## Documents
 

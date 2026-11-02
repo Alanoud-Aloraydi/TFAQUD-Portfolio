@@ -132,6 +132,12 @@ def create_app(
     app.register_blueprint(invitations_bp)
     app.register_blueprint(medications_bp)
     app.register_blueprint(prayer_times_bp)
+    if database_enabled and env != "production":
+        # `flask --app wsgi demo-data`: demo circles, medicines and doses for
+        # trying the app on a local server (app/demo_data.py).
+        from app.demo_data import demo_data_command
+
+        app.cli.add_command(demo_data_command)
 
     return app
 

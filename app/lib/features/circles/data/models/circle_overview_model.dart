@@ -32,6 +32,7 @@ class CircleOverviewModel {
                   (raw as Map<String, dynamic>)['display_name'] as String? ??
                   '',
               isYou: raw['is_you'] as bool,
+              isPatient: raw['is_patient'] as bool? ?? false,
             ),
         ],
         pendingInvitations: <CirclePendingInvitation>[
@@ -40,6 +41,9 @@ class CircleOverviewModel {
               id: (raw as Map<String, dynamic>)['id'] as String,
               phoneNumber: raw['invitee_phone_number'] as String,
               createdAt: DateTime.parse(raw['created_at'] as String),
+              lastSentAt: DateTime.tryParse(
+                raw['last_sent_at'] as String? ?? '',
+              ),
             ),
         ],
       ),
