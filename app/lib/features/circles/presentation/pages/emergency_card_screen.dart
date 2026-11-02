@@ -734,7 +734,14 @@ class _Medicine extends StatelessWidget {
                       textDirection: TextDirection.ltr,
                       style: small,
                     ),
-                    const SizedBox(width: AppSpacing.xs),
+                    // «08:00 · 1 قرص»: a dot keeps the time and the dose
+                    // apart.
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                      child: Text('·', style: small),
+                    ),
                     Text(
                       '${formatMedicationNumber(schedule.doseValue)} '
                       '${words.unit(schedule.doseUnit.name)}',

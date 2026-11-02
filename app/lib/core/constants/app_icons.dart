@@ -31,6 +31,14 @@ abstract class AppIcons {
     matchTextDirection: true,
   );
 
+  /// Go on to the next page. Points left in Arabic. Phosphor `arrowRight`.
+  static const IconData next = IconData(
+    0xe06c,
+    fontFamily: _family,
+    fontPackage: _package,
+    matchTextDirection: true,
+  );
+
   /// Opens a list or a card. Phosphor `caretDown`.
   static const IconData caretDown = IconData(
     0xe136,

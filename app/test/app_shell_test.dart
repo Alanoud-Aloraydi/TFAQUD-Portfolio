@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/widgets/illustrations/saturn_mascot.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
@@ -1860,6 +1862,13 @@ void main() {
           AppRouter.router.routeInformationProvider.value.uri.path,
           Routes.auth,
         );
+        // The welcome: the first intro page with the character, and the
+        // round button moves on to the second.
+        expect(find.text('intro.p1_line'.tr()), findsOneWidget);
+        expect(find.byType(SaturnMascot), findsOneWidget);
+        await tester.tap(find.byIcon(AppIcons.next));
+        await tester.pumpAndSettle();
+        expect(find.text('intro.p2_line'.tr()), findsOneWidget);
       });
 
       testWidgets('deleting asks first, and "no" deletes nothing', (

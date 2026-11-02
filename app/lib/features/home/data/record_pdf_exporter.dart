@@ -77,6 +77,9 @@ class RecordPdfExporter {
 
   static const double _labelWidth = 110;
 
+  /// The column of a dose time, wide enough for «22:00» and a little air.
+  static const double _timeWidth = 40;
+
   /// The direction marks and isolates (U+200E, U+200F, U+202A to U+202E,
   /// U+2066 to U+2069). The PDF font draws them as boxes.
   static final RegExp _marks = RegExp(
@@ -332,15 +335,24 @@ class RecordPdfExporter {
             for (final RecordPdfRow row in item.rows)
               pw.Padding(
                 padding: const pw.EdgeInsets.only(top: 3),
+                // The time in its own column at the start (the right),
+                // a dot, then the dose: «08:00 · 1 قرص». The time is set
+                // left to right and pushed to the start of its column, so
+                // it never touches the dose.
                 child: pw.Row(
                   children: <pw.Widget>[
-                    pw.SizedBox(
-                      width: 52,
+                    pw.Container(
+                      width: _timeWidth,
+                      alignment: pw.Alignment.centerRight,
                       child: pw.Text(
                         plain(row.label ?? ''),
                         textDirection: pw.TextDirection.ltr,
                         style: pw.TextStyle(font: bold, fontSize: 10.5),
                       ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 8),
+                      child: pw.Text('·', style: pw.TextStyle(color: _slate)),
                     ),
                     pw.Expanded(
                       child: _value(
