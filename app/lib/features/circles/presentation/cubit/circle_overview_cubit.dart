@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -25,15 +27,72 @@ class CircleOverviewState extends Equatable {
 }
 
 /// Loads the selected circle independently of the home shell.
+///
+/// The patient card shows facts from the medical file. When the file is
+/// saved on its own pages (pushed over this tab), the card shows the new
+/// answers at once, without reading the file again.
 class CircleOverviewCubit extends Cubit<CircleOverviewState> {
   CircleOverviewCubit(this._circles, this.circleId)
-    : super(const CircleOverviewState());
+    : super(const CircleOverviewState()) {
+    _saves = _circles.medicalFileSaves(circleId).listen(_saved);
+  }
 
   final CirclesUseCase _circles;
   final String circleId;
 
-  Future<void> load() async {
+  late final StreamSubscription<MedicalFile> _saves;
+
+  /// How many files were saved elsewhere since this tab opened, and the
+  /// last one. A read that was on its way during a save is older than it.
+  int _saveCount = 0;
+  MedicalFile? _lastSaved;
+
+  void _saved(MedicalFile file) {
+    _saveCount++;
+    _lastSaved = file;
+    final CircleOverviewState current = state;
+    if (isClosed || current.status != CircleOverviewStatus.ready) return;
+    emit(
+      CircleOverviewState(
+        status: CircleOverviewStatus.ready,
+        overview: current.overview,
+        medicalFile: file,
+      ),
+    );
+    // A new name, birth date or city is also in the line under the circle's
+    // name, which comes with the circle: read the circle again quietly.
+    if (current.medicalFile?.patient != file.patient) {
+      unawaited(_refreshCircle());
+    }
+  }
+
+  Future<void> _refreshCircle() async {
     final result = await _circles.getCircleOverview(circleId);
+    final CircleOverviewState current = state;
+    if (isClosed ||
+        result.isError() ||
+        current.status != CircleOverviewStatus.ready) {
+      return;
+    }
+    emit(
+      CircleOverviewState(
+        status: CircleOverviewStatus.ready,
+        overview: result.tryGetSuccess()!,
+        medicalFile: current.medicalFile,
+      ),
+    );
+  }
+
+  Future<void> load() async {
+    final int saves = _saveCount;
+    // The circle and its medical file are read at the same time. The file
+    // only adds the facts on the patient card: when it cannot be read, the
+    // tab still shows the circle and its members, and the medical file page
+    // says why when it is opened.
+    final (result, fileResult) = await (
+      _circles.getCircleOverview(circleId),
+      _circles.getMedicalFile(circleId),
+    ).wait;
     if (isClosed) return;
     if (result.isError()) {
       emit(
@@ -44,17 +103,13 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
       );
       return;
     }
-    final overview = result.tryGetSuccess()!;
-    // The medical file only adds the facts on the patient card. When it
-    // cannot be read, the tab still shows the circle and its members, and
-    // the medical file page says why when it is opened.
-    final fileResult = await _circles.getMedicalFile(circleId);
-    if (isClosed) return;
     emit(
       CircleOverviewState(
         status: CircleOverviewStatus.ready,
-        overview: overview,
-        medicalFile: fileResult.tryGetSuccess(),
+        overview: result.tryGetSuccess()!,
+        medicalFile: saves == _saveCount
+            ? fileResult.tryGetSuccess()
+            : _lastSaved,
       ),
     );
   }
@@ -105,5 +160,11 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
     );
     if (isClosed) return null;
     return result.isError() ? result.tryGetError()!.messageKey : null;
+  }
+
+  @override
+  Future<void> close() async {
+    await _saves.cancel();
+    return super.close();
   }
 }

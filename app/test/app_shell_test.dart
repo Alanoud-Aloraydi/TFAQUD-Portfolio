@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/widgets/illustrations/saturn_mascot.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/widgets/illustrations/guide_owl.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
@@ -1862,13 +1862,14 @@ void main() {
           AppRouter.router.routeInformationProvider.value.uri.path,
           Routes.auth,
         );
-        // The welcome: the first intro page with the character, and the
+        // The welcome: the guide owl explains the first step, and the
         // round button moves on to the second.
-        expect(find.text('intro.p1_line'.tr()), findsOneWidget);
-        expect(find.byType(SaturnMascot), findsOneWidget);
+        expect(find.text('intro.p1_title'.tr()), findsOneWidget);
+        expect(find.text('intro.p1_step'.tr()), findsOneWidget);
+        expect(find.byType(GuideOwl), findsOneWidget);
         await tester.tap(find.byIcon(AppIcons.next));
         await tester.pumpAndSettle();
-        expect(find.text('intro.p2_line'.tr()), findsOneWidget);
+        expect(find.text('intro.p2_title'.tr()), findsOneWidget);
       });
 
       testWidgets('deleting asks first, and "no" deletes nothing', (
@@ -2455,12 +2456,44 @@ void main() {
 
         expect(circles.saveCalls, <String>['profile']);
         expect(circles.profileUpdates.single.bloodType, 'A+');
-        // Back on the file page, with the confirmation. The file page reads
-        // the file once more after the save, to show what the server kept.
+        // Back on the file page, with the confirmation and the new blood type
+        // at once: what the server kept comes back from the save, so nothing
+        // is read again. The edit page started from the file page's file, so
+        // it read nothing either.
         expect(find.byType(MedicalFileEditScreen), findsNothing);
         expect(find.byType(MedicalFileScreen), findsOneWidget);
         expect(find.text('circles.file_saved'.tr()), findsOneWidget);
-        expect(circles.medicalFileReads, readsBeforeSave + 1);
+        expect(find.text(MedicalTexts.bloodTypeLabel('A+')), findsOneWidget);
+        expect(circles.medicalFileReads, readsBeforeSave);
+      });
+
+      testWidgets('the circle tab shows a saved answer at once', (
+        WidgetTester tester,
+      ) async {
+        await openEdit(tester);
+        final int readsBeforeSave = circles.medicalFileReads;
+
+        await tester.tap(
+          find.widgetWithText(FilterChip, MedicalTexts.bloodTypeLabel('A+')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('circles.file_save'.tr()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('common.back'.tr()));
+        await tester.pumpAndSettle();
+
+        // The patient card under the tab has the new blood type, without a
+        // new read of the file.
+        expect(find.byType(MedicalFileScreen), findsNothing);
+        expect(
+          find.textContaining(MedicalTexts.bloodTypeLabel('A+')),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining(MedicalTexts.bloodTypeLabel('O+')),
+          findsNothing,
+        );
+        expect(circles.medicalFileReads, readsBeforeSave);
       });
 
       testWidgets('saving without a change closes the page without a call', (

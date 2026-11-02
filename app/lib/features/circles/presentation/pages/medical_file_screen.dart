@@ -32,11 +32,14 @@ class MedicalFileScreen extends StatelessWidget {
 
   final String circleId;
 
-  Future<void> _edit(BuildContext context, MedicalFileCubit cubit) async {
-    final bool? saved = await context.push<bool>(
+  /// Opens the edit page with the file this page shows, so it opens at
+  /// once. What it saves comes back to this page (and the circle tab) at
+  /// once too, through [MedicalFileCubit].
+  void _edit(BuildContext context, MedicalFileCubit cubit) {
+    context.push<bool>(
       Routes.medicalFileEdit(circleId),
+      extra: cubit.state.file,
     );
-    if (saved == true && !cubit.isClosed) cubit.load();
   }
 
   Future<void> _delete(

@@ -6,56 +6,38 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/illustrations/saturn_mascot.dart';
+import 'package:app/core/widgets/illustrations/guide_owl.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-/// One intro page: the color of its panel, the headline with its circled
-/// word, the line under the character, the character's mood and what rides
-/// its ring.
+/// One welcome page: the color behind it, the owl's pose, and what the owl
+/// says: the step (نظّم، شارك، تابع), a title and one line.
 class _Intro {
   const _Intro({
-    required this.panel,
-    required this.ink,
-    required this.circle,
-    required this.lineKey,
-    required this.wordKey,
-    required this.subKey,
-    required this.mood,
-    required this.orbiters,
-    this.beforeKey,
-    this.afterKey,
+    required this.tint,
+    required this.pose,
+    required this.stepKey,
+    required this.titleKey,
+    required this.bodyKey,
   });
 
-  final Color panel;
-
-  /// Text on the panel: ink on light panels, white on the ink panel.
-  final Color ink;
-
-  /// The hand-drawn oval around the circled word.
-  final Color circle;
-
-  final String lineKey;
-  final String? beforeKey;
-  final String wordKey;
-  final String? afterKey;
-  final String subKey;
-  final MascotMood mood;
-  final List<Widget> orbiters;
-
-  bool get dark => ink == AppSemanticColors.surfaceContent;
+  final Color tint;
+  final OwlPose pose;
+  final String stepKey;
+  final String titleKey;
+  final String bodyKey;
 }
 
-/// The welcome: three pages with the app's character, a small Saturn whose
-/// ring goes around the people and things it cares for (the circle of the
-/// app's name). Like the welcome of the apps people know (Arabic ones
-/// included): story bars at the top, a bold color with a soft wave, a big
-/// headline with one word circled by hand, one short line, and one round
-/// button at the thumb that shows how far along you are. The last page has
-/// «ابدأ», which opens the phone number; «تخطي» goes there at once.
+/// The welcome: the app's guide, a wise owl, explains the app in three
+/// steps that belong together: organize, share, follow. Each page has the
+/// owl in a pose and a speech bubble with what it says. Story bars at the
+/// top show how far along you are, the color behind follows your finger
+/// from page to page, and one round button at the thumb moves on. The last
+/// page has «ابدأ», which opens the phone number; «تخطي» goes there at once.
 class AuthFeatureScreen extends StatefulWidget {
   const AuthFeatureScreen({super.key});
 
@@ -66,61 +48,42 @@ class AuthFeatureScreen extends StatefulWidget {
 class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
   static const List<_Intro> _pages = <_Intro>[
     _Intro(
-      panel: AppSemanticColors.accentWarm,
-      ink: AppSemanticColors.textPrimary,
-      circle: AppSemanticColors.textPrimary,
-      lineKey: 'intro.p1_line',
-      beforeKey: 'intro.p1_before',
-      wordKey: 'intro.p1_word',
-      afterKey: 'intro.p1_after',
-      subKey: 'intro.p1_sub',
-      mood: MascotMood.happy,
-      orbiters: <Widget>[
-        MascotBadge(
-          icon: AppIcons.heart,
-          iconColor: AppSemanticColors.statusError,
-        ),
-        MascotBadge(icon: AppIcons.heartbeat),
-        MascotBadge(icon: AppIcons.calendarCheck),
-      ],
+      tint: AppSemanticColors.introWarm,
+      pose: OwlPose.organize,
+      stepKey: 'intro.p1_step',
+      titleKey: 'intro.p1_title',
+      bodyKey: 'intro.p1_body',
     ),
     _Intro(
-      panel: AppSemanticColors.textPrimary,
-      ink: AppSemanticColors.surfaceContent,
-      circle: AppSemanticColors.accentWarm,
-      lineKey: 'intro.p2_line',
-      wordKey: 'intro.p2_word',
-      subKey: 'intro.p2_sub',
-      mood: MascotMood.calm,
-      orbiters: <Widget>[
-        MascotBadge(letter: 'ر', color: AppSemanticColors.selectedSurface),
-        MascotBadge(letter: 'خ', color: AppSemanticColors.surfaceAttention),
-        MascotBadge(letter: 'ن', color: AppSemanticColors.borderPlan),
-      ],
+      tint: AppSemanticColors.introLeaf,
+      pose: OwlPose.share,
+      stepKey: 'intro.p2_step',
+      titleKey: 'intro.p2_title',
+      bodyKey: 'intro.p2_body',
     ),
     _Intro(
-      panel: AppSemanticColors.accentLeaf,
-      ink: AppSemanticColors.textPrimary,
-      circle: AppSemanticColors.surfaceContent,
-      lineKey: 'intro.p3_line',
-      wordKey: 'intro.p3_word',
-      subKey: 'intro.p3_sub',
-      mood: MascotMood.sure,
-      orbiters: <Widget>[
-        MascotBadge(icon: AppIcons.pill),
-        MascotBadge(icon: AppIcons.alarm),
-        MascotBadge(
-          icon: AppIcons.firstAid,
-          iconColor: AppSemanticColors.statusError,
-        ),
-      ],
+      tint: AppSemanticColors.introCalm,
+      pose: OwlPose.follow,
+      stepKey: 'intro.p3_step',
+      titleKey: 'intro.p3_title',
+      bodyKey: 'intro.p3_body',
     ),
   ];
 
   final PageController _controller = PageController();
   int _page = 0;
+  bool _precached = false;
 
   bool get _last => _page == _pages.length - 1;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_precached) {
+      _precached = true;
+      GuideOwl.precache(context);
+    }
+  }
 
   @override
   void dispose() {
@@ -146,51 +109,64 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
     }
   }
 
+  /// The color behind the pages, mixed between two pages while one slides
+  /// over the other.
+  Color _tint() {
+    final double raw = _controller.hasClients
+        ? (_controller.page ?? _page.toDouble())
+        : _page.toDouble();
+    final double page = raw.clamp(0, _pages.length - 1).toDouble();
+    final int from = page.floor();
+    final int to = math.min(from + 1, _pages.length - 1);
+    return Color.lerp(_pages[from].tint, _pages[to].tint, page - from) ??
+        _pages[from].tint;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final _Intro intro = _pages[_page];
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      // Light status bar icons on the ink panel, dark on the others.
-      value: intro.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: AppSemanticColors.surfaceContent,
-        body: Stack(
-          children: <Widget>[
-            PageView.builder(
-              controller: _controller,
-              itemCount: _pages.length,
-              onPageChanged: (int page) => setState(() => _page = page),
-              itemBuilder: (BuildContext context, int index) =>
-                  _IntroPage(intro: _pages[index]),
-            ),
-            // The bars, the name and «تخطي» stay while the pages slide.
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  0,
-                ),
-                child: _TopBar(
-                  count: _pages.length,
-                  current: _page,
-                  ink: intro.ink,
-                  onSkip: _last ? null : _start,
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: SafeArea(
-                top: false,
-                child: Padding(
+      // Every page is light, so the status bar icons are dark.
+      value: SystemUiOverlayStyle.dark,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, Widget? child) =>
+            ColoredBox(color: _tint(), child: child),
+        child: Scaffold(
+          backgroundColor: AppSemanticColors.transparent,
+          body: SafeArea(
+            child: Column(
+              children: <Widget>[
+                // The bars, the name and «تخطي» stay while the pages slide.
+                Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
                     0,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
                   ),
+                  child: _TopBar(
+                    count: _pages.length,
+                    current: _page,
+                    onSkip: _last ? null : _start,
+                  ),
+                ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _controller,
+                    // The bubble's soft shadow shows past the pages' edge.
+                    clipBehavior: Clip.none,
+                    itemCount: _pages.length,
+                    onPageChanged: (int page) => setState(() => _page = page),
+                    itemBuilder: (BuildContext context, int index) =>
+                        _IntroPage(
+                          intro: _pages[index],
+                          step: index + 1,
+                          active: index == _page,
+                        ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: AnimatedSwitcher(
                     duration: AppMotion.contentEnter,
                     child: _last
@@ -217,9 +193,9 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
                           ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -231,13 +207,11 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.count,
     required this.current,
-    required this.ink,
     required this.onSkip,
   });
 
   final int count;
   final int current;
-  final Color ink;
 
   /// Null on the last page, where «ابدأ» is the way on.
   final VoidCallback? onSkip;
@@ -246,6 +220,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final VoidCallback? skip = onSkip;
+    const Color ink = AppSemanticColors.textPrimary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -263,7 +238,7 @@ class _TopBar extends StatelessWidget {
                     duration: AppMotion.contentEnter,
                     height: AppSpacing.xs,
                     decoration: ShapeDecoration(
-                      color: i <= current ? ink : ink.withValues(alpha: 0.25),
+                      color: i <= current ? ink : ink.withValues(alpha: 0.2),
                       shape: const StadiumBorder(),
                     ),
                   ),
@@ -295,222 +270,260 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// A page: the colored panel with a soft wave and the headline, the
-/// character on white below it, and one short line.
-class _IntroPage extends StatelessWidget {
-  const _IntroPage({required this.intro});
+/// A page: the owl in its pose, and under it the speech bubble with what it
+/// says. When the page shows, the owl rises into place and the bubble opens
+/// from its tail; this plays once each time, and not at all with Reduce
+/// Motion. The owl takes the room the bubble leaves.
+class _IntroPage extends StatefulWidget {
+  const _IntroPage({
+    required this.intro,
+    required this.step,
+    required this.active,
+  });
 
   final _Intro intro;
 
+  /// 1, 2 or 3.
+  final int step;
+
+  /// Whether this is the page on show.
+  final bool active;
+
+  @override
+  State<_IntroPage> createState() => _IntroPageState();
+}
+
+class _IntroPageState extends State<_IntroPage>
+    with SingleTickerProviderStateMixin {
+  /// How far the owl rises as it arrives.
+  static const double _rise = 24;
+
+  /// The most of the page the bubble takes. With very large text it stops
+  /// here and scrolls, so the owl keeps the rest.
+  static const double _bubbleShare = 0.62;
+
+  late final AnimationController _enter = AnimationController(
+    vsync: this,
+    duration: AppMotion.guideEnter,
+  );
+
+  // The owl fades in and rises with a soft spring; a moment later the
+  // bubble fades in and grows from its tail.
+  late final CurvedAnimation _owlFade = CurvedAnimation(
+    parent: _enter,
+    curve: const Interval(0, 0.4, curve: AppMotion.easeOut),
+  );
+  late final CurvedAnimation _owlRise = CurvedAnimation(
+    parent: _enter,
+    curve: const Interval(0, 0.7, curve: AppMotion.alertSpring),
+  );
+  late final CurvedAnimation _bubbleFade = CurvedAnimation(
+    parent: _enter,
+    curve: const Interval(0.35, 0.75, curve: AppMotion.easeOut),
+  );
+  late final CurvedAnimation _bubbleGrow = CurvedAnimation(
+    parent: _enter,
+    curve: const Interval(0.35, 1, curve: AppMotion.alertSpring),
+  );
+  late final Animation<double> _bubbleScale = Tween<double>(
+    begin: 0.94,
+    end: 1,
+  ).animate(_bubbleGrow);
+
+  bool _reduceMotion = false;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (_reduceMotion) {
+      _enter.value = 1;
+    } else if (!_started && widget.active) {
+      _play();
+    }
+    _started = true;
+  }
+
+  @override
+  void didUpdateWidget(_IntroPage old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) _play();
+  }
+
+  void _play() {
+    if (_reduceMotion) {
+      _enter.value = 1;
+    } else {
+      _enter.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _owlFade.dispose();
+    _owlRise.dispose();
+    _bubbleFade.dispose();
+    _bubbleGrow.dispose();
+    _enter.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final EdgeInsets safe = MediaQuery.paddingOf(context);
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints box) {
-        final double height = box.maxHeight;
-        final double width = box.maxWidth;
-        final double panel = height * 0.34;
-        final double radius = math.min(width * 0.27, height * 0.13);
-        // The character stands on white, just under the wave.
-        final double mascotTop = panel + radius * 0.05;
-        return Stack(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints box) => Column(
           children: <Widget>[
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: panel + _WaveClipper.depth,
-              child: ClipPath(
-                clipper: _WaveClipper(),
-                child: ColoredBox(color: intro.panel),
-              ),
-            ),
-            Positioned(
-              top: safe.top + AppSpacing.sm + AppSpacing.xs + AppSizes.touch,
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              child: _Headline(intro: intro),
-            ),
-            ..._sparkles(width, panel),
-            Positioned(
-              top: mascotTop,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: SaturnMascot(
-                  radius: radius,
-                  mood: intro.mood,
-                  orbiters: intro.orbiters,
+            Expanded(
+              child: FadeTransition(
+                opacity: _owlFade,
+                child: AnimatedBuilder(
+                  animation: _owlRise,
+                  builder: (BuildContext context, Widget? child) {
+                    final double t = _owlRise.value;
+                    return Transform.translate(
+                      offset: Offset(0, (1 - t) * _rise),
+                      child: Transform.scale(
+                        scale: 0.92 + 0.08 * t,
+                        alignment: Alignment.bottomCenter,
+                        child: child,
+                      ),
+                    );
+                  },
+                  // The owl stands just above its bubble; spare room goes
+                  // above it.
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: GuideOwl(pose: widget.intro.pose),
+                  ),
                 ),
               ),
             ),
-            Positioned(
-              top: mascotTop + radius * 2.5 + AppSpacing.lg,
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              child: Text(
-                context.tr(intro.subKey),
-                textAlign: TextAlign.center,
-                style: text.bodyLarge?.copyWith(
-                  color: AppSemanticColors.textSupporting,
+            FadeTransition(
+              opacity: _bubbleFade,
+              child: ScaleTransition(
+                scale: _bubbleScale,
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: box.maxHeight * _bubbleShare,
+                  ),
+                  child: SingleChildScrollView(
+                    primary: false,
+                    // The bubble's shadow shows past the scroll area.
+                    clipBehavior: Clip.none,
+                    child: _SpeechBubble(
+                      intro: widget.intro,
+                      step: widget.step,
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  /// Small four-point sparkles around the character, in the page's color.
-  List<Widget> _sparkles(double width, double panel) {
-    final Color color = intro.dark
-        ? AppSemanticColors.accentWarm
-        : intro.panel;
-    const List<(double, double, double)> spots = <(double, double, double)>[
-      (0.14, 0.18, 14.0),
-      (0.86, 0.12, 10.0),
-      (0.9, 0.62, 16.0),
-      (0.12, 0.62, 10.0),
-    ];
-    return <Widget>[
-      for (final (double x, double y, double size) in spots)
-        Positioned(
-          left: width * x - size / 2,
-          top: panel + panel * y,
-          width: size,
-          height: size,
-          child: CustomPaint(painter: _SparklePainter(color)),
         ),
-    ];
-  }
-}
-
-/// The headline: a first line, then a line with one word circled by hand
-/// (the word is its own run, so the oval goes around it only).
-class _Headline extends StatelessWidget {
-  const _Headline({required this.intro});
-
-  final _Intro intro;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextStyle? style = Theme.of(
-      context,
-    ).textTheme.displaySmall?.copyWith(color: intro.ink);
-    final String? before = intro.beforeKey;
-    final String? after = intro.afterKey;
-    return Semantics(
-      header: true,
-      label: <String>[
-        context.tr(intro.lineKey),
-        if (before != null) context.tr(before),
-        context.tr(intro.wordKey),
-        if (after != null) context.tr(after),
-      ].join(' '),
-      excludeSemantics: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(context.tr(intro.lineKey), style: style),
-          const SizedBox(height: AppSpacing.xs),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.sm,
-            children: <Widget>[
-              if (before != null) Text(context.tr(before), style: style),
-              CustomPaint(
-                foregroundPainter: _HandOvalPainter(intro.circle),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  child: Text(context.tr(intro.wordKey), style: style),
-                ),
-              ),
-              if (after != null) Text(context.tr(after), style: style),
-            ],
-          ),
-        ],
       ),
     );
   }
 }
 
-/// A hand-drawn oval: one loop around the word and a short overlap where
-/// the pen meets its start.
-class _HandOvalPainter extends CustomPainter {
-  const _HandOvalPainter(this.color);
+/// What the owl says: a white bubble with a small tail up to the owl. In it
+/// the step («01» and نظّم), the title, and one line.
+class _SpeechBubble extends StatelessWidget {
+  const _SpeechBubble({required this.intro, required this.step});
 
-  final Color color;
+  final _Intro intro;
+  final int step;
+
+  /// The tail's height and half its width.
+  static const double _tail = 12;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final Paint pen = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.6
-      ..strokeCap = StrokeCap.round;
-    final Rect oval = Rect.fromLTWH(0, 2, size.width, size.height - 2);
-    canvas.drawArc(oval, 0.95 * math.pi, 2 * math.pi - 0.01, false, pen);
-    canvas.drawArc(
-      oval.inflate(3).translate(0, -2),
-      0.88 * math.pi,
-      0.22 * math.pi,
-      false,
-      pen,
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return Column(
+      children: <Widget>[
+        const CustomPaint(
+          size: Size(_tail * 2, _tail),
+          painter: _TailPainter(),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.inset),
+          decoration: AppSurfaces.floating(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    decoration: const ShapeDecoration(
+                      color: AppSemanticColors.textPrimary,
+                      shape: StadiumBorder(),
+                    ),
+                    child: Text(
+                      step.toString().padLeft(2, '0'),
+                      style: text.labelMedium?.copyWith(
+                        color: AppSemanticColors.surfaceContent,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    context.tr(intro.stepKey),
+                    style: text.titleSmall?.copyWith(
+                      color: AppSemanticColors.textSupporting,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Semantics(
+                header: true,
+                child: Text(
+                  context.tr(intro.titleKey),
+                  style: text.headlineMedium,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                context.tr(intro.bodyKey),
+                style: text.bodyLarge?.copyWith(
+                  color: AppSemanticColors.textSupporting,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
-
-  @override
-  bool shouldRepaint(_HandOvalPainter old) => old.color != color;
 }
 
-/// A four-point sparkle.
-class _SparklePainter extends CustomPainter {
-  const _SparklePainter(this.color);
-
-  final Color color;
+/// The bubble's tail: a small triangle with a round tip, pointing up.
+class _TailPainter extends CustomPainter {
+  const _TailPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double cx = size.width / 2;
-    final double cy = size.height / 2;
-    final double r = size.width / 2;
-    final Path star = Path()
-      ..moveTo(cx, cy - r)
-      ..quadraticBezierTo(cx, cy, cx + r, cy)
-      ..quadraticBezierTo(cx, cy, cx, cy + r)
-      ..quadraticBezierTo(cx, cy, cx - r, cy)
-      ..quadraticBezierTo(cx, cy, cx, cy - r)
+    final double mid = size.width / 2;
+    final Path tail = Path()
+      // One point below the bottom, so it joins the bubble without a seam.
+      ..moveTo(0, size.height + 1)
+      ..lineTo(mid - 3, 2)
+      ..quadraticBezierTo(mid, 0, mid + 3, 2)
+      ..lineTo(size.width, size.height + 1)
       ..close();
-    canvas.drawPath(star, Paint()..color = color);
+    canvas.drawPath(tail, Paint()..color = AppSemanticColors.surfaceContent);
   }
 
   @override
-  bool shouldRepaint(_SparklePainter old) => old.color != color;
-}
-
-/// The soft wave at the bottom of the panel.
-class _WaveClipper extends CustomClipper<Path> {
-  /// How far the wave dips below the panel's line.
-  static const double depth = 40;
-
-  @override
-  Path getClip(Size size) {
-    final double w = size.width;
-    final double y = size.height - depth;
-    return Path()
-      ..lineTo(w, 0)
-      ..lineTo(w, y - 10)
-      ..cubicTo(w * 0.78, y + 34, w * 0.58, y - 46, w * 0.36, y - 6)
-      ..cubicTo(w * 0.18, y + 26, w * 0.08, y + 6, 0, y - 18)
-      ..close();
-  }
-
-  @override
-  bool shouldReclip(_WaveClipper old) => false;
+  bool shouldRepaint(_TailPainter old) => false;
 }
 
 /// The round «التالي»: an ink circle with an arrow, inside a ring that
@@ -579,7 +592,7 @@ class _ProgressRingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
-        ..color = AppSemanticColors.borderPlan,
+        ..color = AppSemanticColors.textPrimary.withValues(alpha: 0.12),
     );
     canvas.drawArc(
       ring,

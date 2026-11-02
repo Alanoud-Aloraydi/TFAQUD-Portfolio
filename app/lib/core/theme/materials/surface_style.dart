@@ -21,4 +21,17 @@ abstract class AppSurfaces {
         color: AppSemanticColors.surfaceContent,
         shape: cardShape(radius),
       );
+
+  /// A white card that floats over a tinted page with no edge, such as the
+  /// guide owl's speech bubble: a soft ink shadow below it (ink at 8%).
+  static const List<BoxShadow> floatShadow = <BoxShadow>[
+    BoxShadow(color: Color(0x14202734), blurRadius: 24, offset: Offset(0, 8)),
+  ];
+
+  static ShapeDecoration floating([double radius = AppRadius.card]) =>
+      ShapeDecoration(
+        color: AppSemanticColors.surfaceContent,
+        shape: AppRadius.shape(radius),
+        shadows: floatShadow,
+      );
 }

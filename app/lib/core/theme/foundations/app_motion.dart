@@ -15,9 +15,9 @@ abstract class AppMotion {
   static const Duration menuExit = Duration(milliseconds: 260);
   static const Duration shimmer = Duration(milliseconds: 1400);
 
-  /// The one slow turn of the things that ride the mascot's ring when it
-  /// appears: calm care, not a spinner.
-  static const Duration mascotOrbit = Duration(milliseconds: 12000);
+  /// The guide owl arriving on a welcome page: it rises into place, then
+  /// its speech bubble opens. It plays once each time the page shows.
+  static const Duration guideEnter = Duration(milliseconds: 760);
   static const int branchEnterMilliseconds = 260;
   static const int branchExitMilliseconds = 140;
   static const Curve easeOut = Curves.easeOut;

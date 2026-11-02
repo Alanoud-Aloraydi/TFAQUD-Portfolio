@@ -196,6 +196,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
 
   int medicalFileReads = 0;
   int emergencyCardReads = 0;
+  int circleOverviewReads = 0;
 
   /// The calls that save the medical file, in order: `patient`, `profile`,
   /// `add`, `change` and `delete`.
@@ -242,6 +243,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     deletions.clear();
     medicalFileReads = 0;
     emergencyCardReads = 0;
+    circleOverviewReads = 0;
     saveCalls.clear();
     patientUpdates.clear();
     profileUpdates.clear();
@@ -326,7 +328,10 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   @override
   Future<Result<CircleOverview, Failure>> getCircleOverview(
     String circleId,
-  ) async => circleOverview;
+  ) async {
+    circleOverviewReads++;
+    return circleOverview;
+  }
 
   @override
   Future<Result<MedicalFile, Failure>> getMedicalFile(String circleId) {

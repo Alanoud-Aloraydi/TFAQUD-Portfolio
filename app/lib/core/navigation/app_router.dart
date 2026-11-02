@@ -12,6 +12,7 @@ import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
 import 'package:app/features/auth/presentation/pages/code_screen.dart';
 import 'package:app/features/auth/presentation/pages/phone_screen.dart';
 import 'package:app/features/auth/presentation/pages/splash_screen.dart';
+import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
@@ -390,14 +391,25 @@ class AppRouter {
           );
         }),
       ),
+      // The edit page starts from the file the medical file page passes
+      // (no second read); opened from its address alone, it reads the file.
       GoRoute(
         path: Routes.medicalFileEditPath,
         pageBuilder: _iosPage(
           (context, state) => BlocProvider(
-            create: (context) => MedicalFileEditCubit(
-              GetIt.I<CirclesUseCase>(),
-              state.pathParameters['circleId']!,
-            )..load(),
+            create: (context) {
+              final MedicalFileEditCubit cubit = MedicalFileEditCubit(
+                GetIt.I<CirclesUseCase>(),
+                state.pathParameters['circleId']!,
+              );
+              final Object? file = state.extra;
+              if (file is MedicalFile) {
+                cubit.start(file);
+              } else {
+                cubit.load();
+              }
+              return cubit;
+            },
             child: const MedicalFileEditScreen(),
           ),
         ),

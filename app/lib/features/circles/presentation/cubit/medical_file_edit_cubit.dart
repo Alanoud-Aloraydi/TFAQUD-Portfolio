@@ -21,23 +21,28 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
   /// The longest first name or last name of a patient the API accepts.
   static const int maxNameLength = 50;
 
-  /// Reads the file and fills the page with it.
+  /// Fills the page with [file], the file the medical file page already
+  /// shows, so the page opens at once without reading it again.
+  void start(MedicalFile file) => emit(
+    MedicalFileEditState(
+      status: MedicalFileEditStatus.ready,
+      file: file,
+      firstName: file.patient.firstName,
+      lastName: file.patient.lastName,
+      birthDate: file.patient.birthDate,
+      city: file.patient.city,
+      form: MedicalForm.fromProfile(file.profile),
+    ),
+  );
+
+  /// Reads the file and fills the page with it (when the page is opened
+  /// from its address, without the file).
   Future<void> load() async {
     emit(const MedicalFileEditState());
     final result = await _circles.getMedicalFile(circleId);
     if (isClosed) return;
     result.when(
-      (MedicalFile file) => emit(
-        MedicalFileEditState(
-          status: MedicalFileEditStatus.ready,
-          file: file,
-          firstName: file.patient.firstName,
-          lastName: file.patient.lastName,
-          birthDate: file.patient.birthDate,
-          city: file.patient.city,
-          form: MedicalForm.fromProfile(file.profile),
-        ),
-      ),
+      start,
       (Failure failure) => emit(
         MedicalFileEditState(
           status: MedicalFileEditStatus.failure,
@@ -152,6 +157,8 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
       if (result.isError()) return _failed(result.tryGetError()!);
       saved = saved.copyWith(patient: updated);
       emit(state.copyWith(file: saved));
+      // Kept even when the health answers fail next.
+      _circles.medicalFileSaved(circleId, saved);
     }
 
     if (profileChanged) {
@@ -159,6 +166,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
       if (isClosed) return false;
       if (result.isError()) return _failed(result.tryGetError()!);
       saved = saved.copyWith(profile: result.tryGetSuccess()!);
+      _circles.medicalFileSaved(circleId, saved);
     }
 
     emit(state.copyWith(file: saved, saving: false));

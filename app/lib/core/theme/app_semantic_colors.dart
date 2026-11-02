@@ -42,6 +42,12 @@ abstract class AppSemanticColors {
 
   /// Small supporting text on ink, such as «فصيلة الدم» in the dark box.
   static const Color onInkSupporting = AppColors.slateSoft;
+
+  /// The backgrounds of the three welcome pages, behind the guide owl:
+  /// warm honey, light leaf and a calm grey blue.
+  static const Color introWarm = AppColors.honeyLight;
+  static const Color introLeaf = AppColors.leafTint;
+  static const Color introCalm = AppColors.slateMist;
   static const Color navigationSelected = AppColors.ink;
   static const Color overlayScrim = Color(0x66202734);
 
