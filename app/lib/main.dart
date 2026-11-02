@@ -1,10 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+
 import 'core/setup.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/configure_dependencies.dart';
 import 'core/navigation/app_router.dart';
+import 'core/services/app_accessibility.dart';
+import 'core/theme/materials/glass_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +36,13 @@ class MainApp extends StatelessWidget {
       builder: (context, orientation, screenType) {
         return MaterialApp.router(
           routerConfig: AppRouter.router,
+          builder: (context, child) => ValueListenableBuilder<bool>(
+            valueListenable: AppAccessibility.reduceTransparency,
+            builder: (context, reduceTransparency, _) => GlassPreferences(
+              reduceTransparency: reduceTransparency,
+              child: child!,
+            ),
+          ),
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
@@ -46,4 +56,3 @@ class MainApp extends StatelessWidget {
     );
   }
 }
-

@@ -25,13 +25,21 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
     super.key,
     required this.segments,
     required this.selected,
-    required this.onChanged,
+    this.onChanged,
+    this.enabledValues,
+    this.counts,
   });
 
   /// The segments in reading order: value and label.
   final Map<T, String> segments;
   final T selected;
-  final ValueChanged<T> onChanged;
+  final ValueChanged<T>? onChanged;
+
+  /// Null enables every segment. Unavailable sections remain visible but inert.
+  final Set<T>? enabledValues;
+
+  /// Optional live count displayed beside each segment label.
+  final Map<T, int>? counts;
 
   @override
   Widget build(BuildContext context) {
@@ -76,13 +84,19 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
                           child: Semantics(
                             button: true,
                             selected: i == index,
+                            enabled: enabledValues?.contains(values[i]) ?? true,
                             inMutuallyExclusiveGroup: true,
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap: () {
-                                if (i == index) return;
+                                if (onChanged == null ||
+                                    i == index ||
+                                    !(enabledValues?.contains(values[i]) ??
+                                        true)) {
+                                  return;
+                                }
                                 HapticFeedback.selectionClick();
-                                onChanged(values[i]);
+                                onChanged?.call(values[i]);
                               },
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
@@ -96,17 +110,40 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
                                     vertical: AppSpacing.xs,
                                   ),
                                   child: Center(
-                                    child: Text(
-                                      segments[values[i]]!,
-                                      textAlign: TextAlign.center,
-                                      style: text.titleSmall?.copyWith(
-                                        color: i == index
-                                            ? AppSemanticColors.textPrimary
-                                            : tokens.textSecondary,
-                                        fontWeight: i == index
-                                            ? AppTextTheme.bold
-                                            : AppTextTheme.medium,
-                                      ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            segments[values[i]]!,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: text.titleSmall?.copyWith(
+                                              color:
+                                                  !(enabledValues?.contains(
+                                                        values[i],
+                                                      ) ??
+                                                      true)
+                                                  ? tokens.textSecondary
+                                                  : i == index
+                                                  ? AppSemanticColors
+                                                        .textPrimary
+                                                  : tokens.textSecondary,
+                                              fontWeight: i == index
+                                                  ? AppTextTheme.bold
+                                                  : AppTextTheme.medium,
+                                            ),
+                                          ),
+                                        ),
+                                        if (counts?[values[i]]
+                                            case final count?) ...[
+                                          const SizedBox(width: AppSpacing.xs),
+                                          Text(
+                                            '$count',
+                                            style: text.labelSmall,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                 ),

@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -30,7 +31,7 @@ class InlineError extends StatelessWidget {
             child: Text(
               context.tr(messageKey),
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppSemanticColors.statusError),
+                  ?.copyWith(color: context.tokens.errorText),
             ),
           ),
         ],

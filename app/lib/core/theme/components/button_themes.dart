@@ -16,7 +16,7 @@ abstract class AppButtonThemes {
     fontWeight: FontWeight.w600,
   );
 
-  /// Primary: ink fill, white label, capsule, 48 high.
+  /// Primary: leaf fill, ink label, capsule, 48 high.
   static FilledButtonThemeData filledButton(AppTokens tokens) {
     return FilledButtonThemeData(
       style: ButtonStyle(
@@ -35,13 +35,11 @@ abstract class AppButtonThemes {
           if (states.contains(WidgetState.disabled)) {
             return AppSemanticColors.disabledSurface;
           }
-          // Pressed (and pointer hover) lightens to slate, the next navy of
-          // the palette; the white label stays 10.19:1.
           if (states.contains(WidgetState.pressed)) {
             return AppSemanticColors.actionPressed;
           }
           if (states.contains(WidgetState.hovered)) {
-            return AppSemanticColors.actionPressed;
+            return AppSemanticColors.actionHover;
           }
           return AppSemanticColors.actionPrimary;
         }),
@@ -56,7 +54,7 @@ abstract class AppButtonThemes {
         // The pressed shade already shows the state.
         overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         side: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-          // Slate is only 1.47:1 on ink; the focus ring on ink is honey.
+          // Ink remains distinct against both the green fill and canvas.
           if (states.contains(WidgetState.focused)) {
             return const BorderSide(
               color: AppSemanticColors.focusOnAction,

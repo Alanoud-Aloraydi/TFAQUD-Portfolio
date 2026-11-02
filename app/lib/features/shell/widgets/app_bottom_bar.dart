@@ -2,6 +2,8 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/glass_style.dart';
+import 'package:app/core/theme/materials/glass_preferences.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -113,9 +115,15 @@ class _FrostedTabBar extends StatelessWidget {
           marginR: EdgeInsets.zero,
           paddingR: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
           borderRadius: AppSizes.tabBar / 2,
-          blurSigma: AppGlass.blurSigma,
-          backgroundColor: AppGlass.frostedSurface(scheme.surface),
-          outlineBorderColor: scheme.surface,
+          blurSigma: GlassPreferences.opaqueOf(context)
+              ? 0
+              : AppGlass.blurSigma,
+          backgroundColor: GlassPreferences.opaqueOf(context)
+              ? scheme.surface
+              : AppGlass.frostedSurface(scheme.surface),
+          outlineBorderColor: GlassPreferences.opaqueOf(context)
+              ? context.tokens.borderControl
+              : scheme.surface,
           borderWidth: 1,
           selectedItemColor: AppSemanticColors.navigationSelected,
           unselectedItemColor: scheme.onSurfaceVariant,

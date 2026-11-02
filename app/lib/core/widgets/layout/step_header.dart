@@ -1,4 +1,4 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
@@ -66,7 +66,7 @@ class StepHeader extends StatelessWidget {
               args: <String>['$step', '$totalSteps'],
             ),
             style: text.bodySmall?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
         ],
@@ -77,7 +77,7 @@ class StepHeader extends StatelessWidget {
           Text(
             subtitle!,
             style: text.bodyMedium?.copyWith(
-              color: AppSemanticColors.textSupporting,
+              color: context.tokens.textSecondary,
             ),
           ),
         ],

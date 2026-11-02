@@ -1,6 +1,7 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_effects.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -239,7 +240,7 @@ class _AlertButton<T> extends StatelessWidget {
             minimumSize: size,
             backgroundColor: AppSemanticColors.borderSubtle,
             foregroundColor: action.destructive
-                ? AppSemanticColors.statusError
+                ? context.tokens.errorText
                 : AppSemanticColors.textPrimary,
           ).copyWith(
             overlayColor: const WidgetStatePropertyAll<Color>(

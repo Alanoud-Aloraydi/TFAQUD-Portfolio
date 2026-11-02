@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
@@ -114,7 +115,7 @@ class StartScreen extends StatelessWidget {
                       child: Text(
                         context.tr('onboarding.skip'),
                         style: text.labelLarge?.copyWith(
-                          color: AppSemanticColors.textSupporting,
+                          color: context.tokens.textSecondary,
                         ),
                       ),
                     ),

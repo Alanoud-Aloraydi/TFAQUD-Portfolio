@@ -36,12 +36,9 @@ void main() {
       ]) {
         expect(contrast(AppColors.ink, ground), greaterThanOrEqualTo(7));
       }
-      // The white label on the primary action, default and pressed.
+      // White remains readable on inverse surfaces and navy containers.
       for (final Color fill in <Color>[AppColors.ink, AppColors.slate]) {
-        expect(
-          contrast(AppSemanticColors.onActionPrimary, fill),
-          greaterThanOrEqualTo(7),
-        );
+        expect(contrast(AppColors.surface, fill), greaterThanOrEqualTo(7));
       }
       // Supporting text reaches 4.5:1 on the light grounds (and turns ink
       // with Increased Contrast).
@@ -77,12 +74,15 @@ void main() {
         contrast(AppColors.stone, AppColors.canvas),
         greaterThanOrEqualTo(3),
       );
-      // Focus: slate around controls on canvas, honey on an ink fill.
+      // Focus stays distinct on the page and on the green action fill.
       expect(
         contrast(AppColors.slate, AppColors.canvas),
         greaterThanOrEqualTo(3),
       );
-      expect(contrast(AppColors.honey, AppColors.ink), greaterThanOrEqualTo(3));
+      expect(
+        contrast(AppSemanticColors.focusOnAction, AppColors.leaf),
+        greaterThanOrEqualTo(3),
+      );
     });
 
     test('honey and the greens are accents, not text colors', () {
@@ -93,12 +93,12 @@ void main() {
   });
 
   group('theme', () {
-    test('the primary action is ink with a white label in every state', () {
+    test('primary actions use green interaction shades with readable ink', () {
       final ButtonStyle style = AppTheme.lightTheme.filledButtonTheme.style!;
-      expect(resolve(style.backgroundColor, <WidgetState>{}), AppColors.ink);
+      expect(resolve(style.backgroundColor, <WidgetState>{}), AppColors.leaf);
       expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.pressed}),
-        AppColors.slate,
+        AppColors.leafPressed,
       );
       expect(
         resolve(style.backgroundColor, <WidgetState>{WidgetState.disabled}),
@@ -107,6 +107,26 @@ void main() {
       expect(
         resolve(style.foregroundColor, <WidgetState>{}),
         AppSemanticColors.onActionPrimary,
+      );
+      expect(
+        resolve(style.backgroundColor, {WidgetState.hovered}),
+        AppColors.leafHover,
+      );
+      for (final fill in [
+        AppColors.leaf,
+        AppColors.leafHover,
+        AppColors.leafPressed,
+      ]) {
+        expect(contrast(AppColors.ink, fill), greaterThanOrEqualTo(4.5));
+        expect(
+          contrast(AppSemanticColors.focusOnAction, fill),
+          greaterThanOrEqualTo(3),
+        );
+      }
+      expect(AppSemanticColors.navigationSelected, AppColors.ink);
+      expect(
+        AppSemanticColors.navigationSelected,
+        isNot(AppSemanticColors.statusSuccess),
       );
     });
 

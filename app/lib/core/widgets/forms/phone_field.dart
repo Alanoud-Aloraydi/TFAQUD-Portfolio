@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -77,9 +78,7 @@ class PhoneField extends StatelessWidget {
       children: <Widget>[
         Text(
           label ?? context.tr('auth.phone_label'),
-          style: text.titleSmall?.copyWith(
-            color: AppSemanticColors.textSupporting,
-          ),
+          style: text.titleSmall?.copyWith(color: context.tokens.textSecondary),
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(

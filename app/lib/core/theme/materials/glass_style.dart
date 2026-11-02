@@ -1,15 +1,12 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
 
-/// Starting values of the custom glass (blur, white tint). They are values to
-/// test on a device, not approved colors.
+/// Navigation glass with a readable white tint and an opaque accessible mode.
 abstract class AppGlass {
   AppGlass._();
 
-  static const Color contrastTop = Color(0xF2FFFFFF);
-  static const Color contrastBottom = Color(0xE6FFFFFF);
-  static const Color normalTop = Color(0xB8FFFFFF);
-  static const Color normalBottom = Color(0x73FFFFFF);
+  static const Color normalTop = Color(0xE0FFFFFF);
+  static const Color normalBottom = Color(0xCCFFFFFF);
   static const Color innerRim = Color(0xD9FFFFFF);
   static const Color clear = Color(0x00FFFFFF);
   static const Color highlight = Color(0x66FFFFFF);
@@ -44,7 +41,7 @@ abstract class AppGlass {
   ];
 
   static const double blurSigma = 14;
-  static const double tintAlpha = 0.72;
+  static const double tintAlpha = 0.88;
 
   /// A light, soft shadow under floating glass: ink at 8% and 5%. Cards
   /// have no shadow; they have a 1px line edge (AppSurfaces.card).

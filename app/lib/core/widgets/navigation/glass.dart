@@ -6,6 +6,7 @@ import 'package:app/core/theme/foundations/app_effects.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/glass_style.dart';
+import 'package:app/core/theme/materials/glass_preferences.dart';
 import 'package:flutter/material.dart';
 
 /// Custom Liquid Glass for the navigation layer (design system "TFAQUD",
@@ -17,7 +18,6 @@ import 'package:flutter/material.dart';
 ///   4. a hairline outer edge that keeps the shape visible on a plain
 ///      background, and a bright inner rim, concentric with it;
 ///   5. a specular highlight near the top start corner.
-/// The values are starting points to test on a device, not approved colors.
 ///
 /// Use it only for navigation controls: the tab bar, the add button and the
 /// top controls. Cards and forms stay on opaque surfaces. Never put glass on
@@ -37,6 +37,27 @@ class GlassSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
     final bool highContrast = MediaQuery.highContrastOf(context);
+    final bool opaque = GlassPreferences.opaqueOf(context);
+    if (opaque) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          color: AppSemanticColors.surfaceContent,
+          border: Border.all(
+            color: highContrast ? tokens.glassBorder : tokens.borderControl,
+            width: highContrast
+                ? AppGlass.contrastEdgeWidth
+                : AppGlass.edgeWidth,
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(
+            highContrast ? AppGlass.contrastEdgeWidth : AppGlass.edgeWidth,
+          ),
+          child: ClipRRect(borderRadius: borderRadius, child: child),
+        ),
+      );
+    }
     // The inner rim sits inside the hairline edge: its radius is the outer
     // radius minus the edge width, so the two stay concentric.
     final BorderRadius inner =
@@ -56,40 +77,31 @@ class GlassSurface extends StatelessWidget {
             sigmaY: AppGlass.blurSigma,
           ),
           child: DecoratedBox(
-            // Fill and hairline edge. With Increased Contrast the fill is
-            // frostier and the edge is a solid slate line, as Apple does.
+            // Accessible opaque surfaces return above; this is the glass path.
             decoration: BoxDecoration(
               borderRadius: borderRadius,
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: highContrast
-                    ? const <Color>[
-                        AppGlass.contrastTop,
-                        AppGlass.contrastBottom,
-                      ]
-                    : const <Color>[AppGlass.normalTop, AppGlass.normalBottom],
+                colors: const <Color>[
+                  AppGlass.normalTop,
+                  AppGlass.normalBottom,
+                ],
               ),
               border: Border.all(
-                color: highContrast
-                    ? tokens.glassBorder
-                    : AppEffects.subtleEdge,
-                width: highContrast
-                    ? AppGlass.contrastEdgeWidth
-                    : AppGlass.edgeWidth,
+                color: AppEffects.subtleEdge,
+                width: AppGlass.edgeWidth,
               ),
             ),
             child: Padding(
-              padding: EdgeInsets.all(
-                highContrast ? AppGlass.contrastEdgeWidth : AppGlass.edgeWidth,
-              ),
+              padding: const EdgeInsets.all(AppGlass.edgeWidth),
               child: DecoratedBox(
                 position: DecorationPosition.foreground,
                 // Bright inner rim and the specular highlight.
                 decoration: BoxDecoration(
                   borderRadius: inner,
                   border: Border.all(
-                    color: highContrast ? AppGlass.clear : AppGlass.innerRim,
+                    color: AppGlass.innerRim,
                     width: AppGlass.rimWidth,
                   ),
                   gradient: const RadialGradient(

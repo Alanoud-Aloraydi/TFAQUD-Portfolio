@@ -29,9 +29,9 @@ abstract class AppSelectionThemes {
     );
   }
 
-  static final CheckboxThemeData checkbox = CheckboxThemeData(
+  static CheckboxThemeData checkbox(AppTokens tokens) => CheckboxThemeData(
     checkColor: WidgetStatePropertyAll<Color>(AppSemanticColors.surfaceContent),
-    side: BorderSide(color: AppSemanticColors.borderControlBase, width: 1.5),
+    side: BorderSide(color: tokens.borderControl, width: 1.5),
   );
 
   static final RadioThemeData radio = RadioThemeData(

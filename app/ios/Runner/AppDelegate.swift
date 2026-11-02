@@ -3,6 +3,7 @@ import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var accessibilityChannel: FlutterMethodChannel?
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -17,5 +18,30 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let channel = FlutterMethodChannel(
+      name: "tafaqod/accessibility",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    accessibilityChannel = channel
+    channel.setMethodCallHandler { call, result in
+      if call.method == "reduceTransparency" {
+        result(UIAccessibility.isReduceTransparencyEnabled)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(transparencyPreferenceChanged),
+      name: UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+      object: nil
+    )
+  }
+
+  @objc private func transparencyPreferenceChanged() {
+    accessibilityChannel?.invokeMethod(
+      "reduceTransparencyChanged",
+      arguments: UIAccessibility.isReduceTransparencyEnabled
+    )
   }
 }

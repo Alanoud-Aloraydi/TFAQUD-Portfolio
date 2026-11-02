@@ -15,14 +15,15 @@ import 'package:flutter/material.dart';
 /// app uses when iOS Increase Contrast is on.
 ///
 /// [ColorScheme.primary] is ink: Material paints text, icons, selection marks
-/// and the primary action in it, with white on top.
+/// in it. Filled actions have their own green brand roles so inline text
+/// and small selection marks retain readable contrast.
 abstract class AppTheme {
   AppTheme._();
 
   static ColorScheme _colorScheme(AppTokens tokens) {
     return ColorScheme(
       brightness: Brightness.light,
-      primary: AppSemanticColors.actionPrimary,
+      primary: AppSemanticColors.textPrimary,
       onPrimary: AppSemanticColors.surfaceContent,
       primaryContainer: AppSemanticColors.selectedSurface,
       onPrimaryContainer: AppSemanticColors.textPrimary,
@@ -80,7 +81,7 @@ abstract class AppTheme {
       progressIndicatorTheme: AppFeedbackThemes.progress,
       snackBarTheme: AppFeedbackThemes.snackBar,
       listTileTheme: AppSurfaceThemes.listTile(tokens),
-      checkboxTheme: AppSelectionThemes.checkbox,
+      checkboxTheme: AppSelectionThemes.checkbox(tokens),
       radioTheme: AppSelectionThemes.radio,
       // iOS shows a press as a short dim, not a ripple.
       splashFactory: NoSplash.splashFactory,

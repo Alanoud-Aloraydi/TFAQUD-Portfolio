@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -162,9 +163,7 @@ class _OtpBox extends StatelessWidget {
     // box shows the focus color.
     final Color border = hasError
         ? AppSemanticColors.statusError
-        : (isActive
-              ? AppSemanticColors.textSupporting
-              : AppSemanticColors.borderControlBase);
+        : (isActive ? context.tokens.focus : context.tokens.borderControl);
     return AnimatedContainer(
       duration: AppMotion.fieldFeedback,
       alignment: Alignment.center,
