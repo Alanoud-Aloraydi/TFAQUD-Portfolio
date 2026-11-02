@@ -87,7 +87,7 @@ endpoints answer 503 `service_unavailable`. To use PostgreSQL, set `DATABASE_URL
 
 ## Database and migrations
 
-The tables are created by migrations (`migrations/versions/0001` to `0008`),
+The tables are created by migrations (`migrations/versions/0001` to `0009`),
 not by hand.
 
 | What | Command |

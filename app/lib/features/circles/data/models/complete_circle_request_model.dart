@@ -12,9 +12,13 @@ class CompleteCircleRequestModel {
 
   Map<String, dynamic> toJson() {
     final MedicalProfileDraft? medical = _request.medicalProfile;
+    final DateTime? birthDate = _request.birthDate;
+    final String? city = _request.city;
     return <String, dynamic>{
-      'birth_date': NewSelfCircleModel.isoDate(_request.birthDate),
-      'city': _request.city,
+      // Left out: the server reads them from the account.
+      if (birthDate != null)
+        'birth_date': NewSelfCircleModel.isoDate(birthDate),
+      'city': ?city,
       if (medical != null && !medical.isEmpty)
         'medical_profile': NewSelfCircleModel.medicalJson(medical),
     };

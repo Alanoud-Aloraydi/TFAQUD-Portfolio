@@ -91,7 +91,9 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     final String name = state.namePreset == NamePreset.other
         ? state.customName.trim()
         : presetName;
-    if (name.isEmpty || state.birthDate == null || state.city == null) {
+    final bool basicsMissing =
+        state.asksBasics && (state.birthDate == null || state.city == null);
+    if (name.isEmpty || basicsMissing) {
       emit(state.copyWith(showErrors: true));
       return false;
     }
@@ -143,14 +145,14 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
 
   // ---- step 1 for a patient who agreed to a request -----------------------
 
-  /// Checks the first step of a circle the patient agreed to: only the birth
-  /// date and the city are typed. Returns true when the page may go to the next
-  /// step.
+  /// Checks the page of a circle the patient agreed to: only the birth date
+  /// and the city can be asked, and only when onboarding did not save them.
+  /// Returns true when the circle may be created.
   bool continueFromApprovedBasics() {
     if (state.alreadyHasCircle) return false;
-    if (state.circleName.isEmpty ||
-        state.birthDate == null ||
-        state.city == null) {
+    final bool basicsMissing =
+        state.asksBasics && (state.birthDate == null || state.city == null);
+    if (state.circleName.isEmpty || basicsMissing) {
       emit(state.copyWith(showErrors: true));
       return false;
     }
@@ -292,16 +294,18 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
       emit(state.copyWith(showErrors: true));
       return false;
     }
-    final DateTime? birthDate = state.birthDate;
-    final String? city = state.city;
+    // Null when the account holds them: the server reads them from there.
+    final DateTime? birthDate = state.ownBasicsSaved ? null : state.birthDate;
+    final String? city = state.ownBasicsSaved ? null : state.city;
     final bool namesMissing =
         flow == CircleFlow.patient && !state.patientNamesComplete;
     final bool requestMissing = flow == CircleFlow.approved && request == null;
+    final bool patientBasicsMissing =
+        flow == CircleFlow.patient && (birthDate == null || city == null);
     if (!state.basicsComplete ||
         namesMissing ||
         requestMissing ||
-        birthDate == null ||
-        city == null) {
+        patientBasicsMissing) {
       emit(state.copyWith(errorKey: 'error.invalid_data'));
       return false;
     }
@@ -329,8 +333,8 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
             name: state.circleName,
             patientFirstName: state.patientFirstName.trim(),
             patientLastName: state.patientLastName.trim(),
-            birthDate: birthDate,
-            city: city,
+            birthDate: birthDate!,
+            city: city!,
             medicalProfile: _medicalProfile(),
           ),
         );

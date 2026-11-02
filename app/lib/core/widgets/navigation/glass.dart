@@ -17,7 +17,7 @@ import 'package:flutter/material.dart';
 ///   3. a translucent fill, lighter at the top, so content shows through;
 ///   4. a hairline outer edge that keeps the shape visible on a plain
 ///      background, and a bright inner rim, concentric with it;
-///   5. a specular highlight near the top start corner.
+///   5. a specular highlight near the top start corner, under the content.
 ///
 /// Use it only for navigation controls: the tab bar, the add button and the
 /// top controls. Cards and forms stay on opaque surfaces. Never put glass on
@@ -97,20 +97,28 @@ class GlassSurface extends StatelessWidget {
               padding: const EdgeInsets.all(AppGlass.edgeWidth),
               child: DecoratedBox(
                 position: DecorationPosition.foreground,
-                // Bright inner rim and the specular highlight.
+                // Bright inner rim, over the content like a lens edge.
                 decoration: BoxDecoration(
                   borderRadius: inner,
                   border: Border.all(
                     color: AppGlass.innerRim,
                     width: AppGlass.rimWidth,
                   ),
-                  gradient: const RadialGradient(
-                    center: AlignmentDirectional(-0.55, -0.85),
-                    radius: 0.9,
-                    colors: <Color>[AppGlass.highlight, AppGlass.clear],
-                  ),
                 ),
-                child: child,
+                // The specular highlight lies in the glass, under the
+                // content: a dark card in a glass sheet (the + sheet's
+                // «سجّل قراءة الآن») keeps its flat color, as in the handoff.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: inner,
+                    gradient: const RadialGradient(
+                      center: AlignmentDirectional(-0.55, -0.85),
+                      radius: 0.9,
+                      colors: <Color>[AppGlass.highlight, AppGlass.clear],
+                    ),
+                  ),
+                  child: child,
+                ),
               ),
             ),
           ),

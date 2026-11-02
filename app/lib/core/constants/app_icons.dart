@@ -325,6 +325,20 @@ abstract class AppIcons {
     fontPackage: _package,
   );
 
+  /// Call a person from the emergency card. Phosphor `phoneCall`.
+  static const IconData phoneCall = IconData(
+    0xe3ba,
+    fontFamily: _family,
+    fontPackage: _package,
+  );
+
+  /// Call the ambulance. Phosphor `siren`.
+  static const IconData siren = IconData(
+    0xe9b8,
+    fontFamily: _family,
+    fontPackage: _package,
+  );
+
   /// Read only. Phosphor `lockSimple`.
   static const IconData lock = IconData(
     0xe308,

@@ -18,6 +18,21 @@ class EmergencyCardCubit extends Cubit<EmergencyCardState> {
     emit(const EmergencyCardState());
     final result = await _circles.getEmergencyCard(circleId);
     if (isClosed) return;
+    final EmergencyCard? card = result.tryGetSuccess();
+    if (card != null) {
+      // The age line needs the birth date, which only the medical file has.
+      // The card shows without it when the file cannot be read.
+      final file = await _circles.getMedicalFile(circleId);
+      if (isClosed) return;
+      emit(
+        EmergencyCardState(
+          status: EmergencyCardStatus.ready,
+          card: card,
+          birthDate: file.tryGetSuccess()?.patient.birthDate,
+        ),
+      );
+      return;
+    }
     result.when(
       (EmergencyCard card) => emit(
         EmergencyCardState(status: EmergencyCardStatus.ready, card: card),

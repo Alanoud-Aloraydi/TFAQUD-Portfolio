@@ -338,3 +338,29 @@ def test_a_finished_request_cannot_be_answered_the_other_way(
     )
 
     assert error_code(response, 422) == "request_not_pending"
+
+
+def test_a_patient_who_finished_onboarding_completes_without_basics(
+    database_app, database, account
+):
+    requester = account(name="Reem")
+    patient = account(name="Noura")
+    sender, receiver = Api(database_app, requester), Api(database_app, patient)
+    receiver.put(
+        "/api/v1/accounts/me/profile",
+        {
+            "first_name": "Noura",
+            "last_name": "Family",
+            "display_name": "Noura",
+            "birth_date": "1950-01-02",
+            "city": "Buraydah",
+        },
+    )
+    request_id = send(sender, patient).json["request"]["id"]
+    receiver.post(f"{BASE}/{request_id}/respond", {"accept": True})
+
+    done = receiver.post(f"{BASE}/{request_id}/complete", {})
+
+    assert done.status_code == 201
+    assert done.json["circle"]["patient"]["city"] == "Buraydah"
+    assert done.json["circle"]["patient"]["birth_date"] == "1950-01-02"

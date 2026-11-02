@@ -32,6 +32,21 @@ void main() {
     expect(circles.emergencyCardReads, 1);
   });
 
+  test('the age line reads the birth date from the medical file', () async {
+    await cubit.load();
+
+    expect(cubit.state.birthDate, DateTime(1954, 6, 5));
+  });
+
+  test('the card shows without the age when the file cannot be read', () async {
+    circles.medicalFile = const Error(NetworkFailure());
+
+    await cubit.load();
+
+    expect(cubit.state.status, EmergencyCardStatus.ready);
+    expect(cubit.state.birthDate, isNull);
+  });
+
   test('every visit reads the card again', () async {
     await cubit.load();
     await cubit.load();

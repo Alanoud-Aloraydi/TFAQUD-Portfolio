@@ -24,7 +24,16 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     emit(state.copyWith(displayName: value, clearError: true));
   }
 
-  /// Saves the name. Returns true when it was saved, so the page can move on.
+  void birthDateChanged(DateTime value) {
+    emit(state.copyWith(birthDate: value, clearError: true));
+  }
+
+  void cityChanged(String value) {
+    emit(state.copyWith(city: value, clearError: true));
+  }
+
+  /// Saves the names, birth date and city. Returns true when they were saved,
+  /// so the page can move on.
   Future<bool> saveProfile() async {
     if (state.status == OnboardingStatus.saving) return false;
     if (!state.isProfileValid) {
@@ -36,6 +45,8 @@ class OnboardingCubit extends Cubit<OnboardingState> {
       firstName: state.firstName.trim(),
       lastName: state.lastName.trim(),
       displayName: state.displayName.trim(),
+      birthDate: state.birthDate!,
+      city: state.city!,
     );
     if (isClosed) return false;
     return result.when(

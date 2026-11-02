@@ -125,6 +125,39 @@ def test_a_second_self_care_circle_is_refused(database_app, database, account):
     assert count(database, CareCircle) == 1
 
 
+def test_a_self_care_circle_needs_only_its_name_after_onboarding(
+    database_app, database, account
+):
+    api = Api(database_app, account())
+    api.put(
+        "/api/v1/accounts/me/profile",
+        {
+            "first_name": "Nora",
+            "last_name": "Family",
+            "display_name": "Nora",
+            "birth_date": "1960-07-08",
+            "city": "Jeddah",
+        },
+    )
+
+    response = api.post("/api/v1/circles/self", {"name": "My care"})
+
+    assert response.status_code == 201
+    patient = response.json["circle"]["patient"]
+    assert (patient["birth_date"], patient["city"]) == ("1960-07-08", "Jeddah")
+
+
+def test_a_self_care_circle_without_a_saved_birth_date_asks_for_it(
+    database_app, database, account
+):
+    api = Api(database_app, account())
+
+    response = api.post("/api/v1/circles/self", {"name": "My care"})
+
+    assert error_code(response, 422) == "birth_date_required"
+    assert count(database, CareCircle) == 0
+
+
 def test_an_account_without_a_profile_cannot_create_a_circle(
     database_app, database, account
 ):

@@ -16,12 +16,16 @@ class OnboardingRepositoryData implements OnboardingRepositoryDomain {
     required String firstName,
     required String lastName,
     required String displayName,
+    DateTime? birthDate,
+    String? city,
   }) async {
     try {
       await _remote.saveProfile(
         firstName: firstName,
         lastName: lastName,
         displayName: displayName,
+        birthDate: birthDate,
+        city: city,
       );
       return Success(true);
     } catch (error) {

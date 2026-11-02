@@ -13,11 +13,15 @@ class OnboardingUseCase {
     required String firstName,
     required String lastName,
     required String displayName,
+    DateTime? birthDate,
+    String? city,
   }) {
     return _repository.saveProfile(
       firstName: firstName,
       lastName: lastName,
       displayName: displayName,
+      birthDate: birthDate,
+      city: city,
     );
   }
 }

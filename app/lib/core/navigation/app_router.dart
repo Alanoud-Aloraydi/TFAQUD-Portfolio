@@ -23,8 +23,6 @@ import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.
 import 'package:app/features/circles/presentation/cubit/request_reply_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/pages/approved_circle_basics_screen.dart';
-import 'package:app/features/circles/presentation/pages/circle_allergies_screen.dart';
-import 'package:app/features/circles/presentation/pages/circle_health_screen.dart';
 import 'package:app/features/circles/presentation/pages/circle_tab_screen.dart';
 import 'package:app/features/circles/presentation/pages/emergency_card_screen.dart';
 import 'package:app/features/circles/presentation/pages/medical_file_edit_screen.dart';
@@ -297,10 +295,11 @@ class AppRouter {
           ),
         ],
       ),
-      // The three steps of a circle share one CreateCircleCubit, so going back
-      // keeps the answers. The circle for your own care loads the account at
-      // the start, to learn whether it already has a circle. When the server
-      // says the sign-in ended, any of the steps sends the user to sign-in.
+      // A circle is created on one page with its own CreateCircleCubit. The
+      // circle for your own care loads the account at the start, to learn
+      // whether it already has a circle and holds the birth date and city.
+      // When the server says the sign-in ended, the page sends the user to
+      // sign-in.
       _createCircleShell(
         flow: CircleFlow.self,
         routes: <RouteBase>[
@@ -310,21 +309,9 @@ class AppRouter {
               (context, state) => const SelfCircleBasicsScreen(),
             ),
           ),
-          GoRoute(
-            path: Routes.createSelfCircleHealth,
-            pageBuilder: _iosPage(
-              (context, state) => const CircleHealthScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.createSelfCircleAllergies,
-            pageBuilder: _iosPage(
-              (context, state) => const CircleAllergiesScreen(),
-            ),
-          ),
         ],
       ),
-      // The same three steps for a patient who does not use the app. The names
+      // The same for a patient who does not use the app. The names
       // of the patient are typed, so no account is loaded.
       _createCircleShell(
         flow: CircleFlow.patient,
@@ -333,18 +320,6 @@ class AppRouter {
             path: Routes.createPatientCircle,
             pageBuilder: _iosPage(
               (context, state) => const PatientCircleBasicsScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.createPatientCircleHealth,
-            pageBuilder: _iosPage(
-              (context, state) => const CircleHealthScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.createPatientCircleAllergies,
-            pageBuilder: _iosPage(
-              (context, state) => const CircleAllergiesScreen(),
             ),
           ),
         ],
@@ -387,8 +362,8 @@ class AppRouter {
           ),
         ),
       ),
-      // The basic data after the patient agreed: the same three steps. The
-      // request travels with each step, so a step never loses it.
+      // The page after the patient agreed: it creates the circle. The request
+      // travels with the page.
       _createCircleShell(
         flow: CircleFlow.approved,
         routes: <RouteBase>[
@@ -397,20 +372,6 @@ class AppRouter {
             redirect: _requireRequest,
             pageBuilder: _iosPage(
               (context, state) => const ApprovedCircleBasicsScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.completeRequestHealth,
-            redirect: _requireRequest,
-            pageBuilder: _iosPage(
-              (context, state) => const CircleHealthScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.completeRequestAllergies,
-            redirect: _requireRequest,
-            pageBuilder: _iosPage(
-              (context, state) => const CircleAllergiesScreen(),
             ),
           ),
         ],

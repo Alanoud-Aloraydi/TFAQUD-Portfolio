@@ -32,6 +32,16 @@ abstract class AppSemanticColors {
   static const Color statusSuccess = AppColors.success;
   static const Color statusWarning = AppColors.warning;
   static const Color statusError = AppColors.error;
+
+  /// The allergy box of the emergency card: a light red with a red edge.
+  static const Color surfaceDanger = AppColors.errorLight;
+  static const Color borderDanger = AppColors.errorBorder;
+
+  /// The track of an opaque segmented switch (the card's «عربي / English»).
+  static const Color segmentTrack = AppColors.slateMist;
+
+  /// Small supporting text on ink, such as «فصيلة الدم» in the dark box.
+  static const Color onInkSupporting = AppColors.slateSoft;
   static const Color navigationSelected = AppColors.ink;
   static const Color overlayScrim = Color(0x66202734);
 

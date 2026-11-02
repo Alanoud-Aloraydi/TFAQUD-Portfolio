@@ -1,4 +1,4 @@
-"""Save the authenticated account's first, last, and display names."""
+"""Save the authenticated account's names, birth date and city."""
 
 import unicodedata
 from typing import Annotated
@@ -10,11 +10,11 @@ from pydantic_core import PydanticCustomError
 from sqlalchemy import select
 
 from app.auth.decorators import current_auth, require_auth
-from app.circles.inputs import DeleteAccountInput
+from app.circles.inputs import City, DeleteAccountInput, IsoDate
 from app.circles.support import care_work
 from app.database import transaction
-from app.errors import NotFound
-from app.extensions import get_user_store
+from app.errors import NotFound, ValidationFailed
+from app.extensions import get_clock, get_user_store
 from app.models import Patient
 from app.validation import Dto, parse_json_body, parse_optional_json_body
 
@@ -44,17 +44,28 @@ class ProfileRequest(Dto):
     first_name: _name(50)
     last_name: _name(50)
     display_name: _name(30)
+    # Onboarding sends both; the account page sends neither, and then the
+    # saved values stay.
+    birth_date: IsoDate | None = None
+    city: City | None = None
 
 
 @bp.put("/me/profile")
 @require_auth
 def save_profile():
     body = parse_json_body(ProfileRequest)
+    if body.birth_date and body.birth_date > get_clock().now().date():
+        raise ValidationFailed(
+            "The birth date cannot be in the future.",
+            code="invalid_birth_date",
+        )
     user = get_user_store().update_profile(
         current_auth().user_id,
         body.first_name,
         body.last_name,
         body.display_name,
+        birth_date=body.birth_date,
+        city=body.city,
     )
     if user is None:
         raise NotFound("This user does not exist.", code="user_not_found")

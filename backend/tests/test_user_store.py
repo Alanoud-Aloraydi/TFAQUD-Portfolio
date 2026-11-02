@@ -80,6 +80,8 @@ def test_the_public_form_of_a_user_has_no_secret_fields(store):
         "display_name",
         "profile_complete",
         "app_mode",
+        "birth_date",
+        "city",
     }
 
 

@@ -1,7 +1,8 @@
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 
 /// Reads the answer of GET /api/v1/accounts/me: `{"account": {...}}`. The
-/// names, the phone number and the circle of the account's own care are kept.
+/// names, the phone number, the birth date and city from onboarding and the
+/// circle of the account's own care are kept.
 class AccountModel {
   const AccountModel(this._entity);
 
@@ -17,6 +18,10 @@ class AccountModel {
         displayName: (account['display_name'] as String?) ?? '',
         phoneNumber: (account['phone_number'] as String?) ?? '',
         patientCircleId: account['patient_circle_id'] as String?,
+        birthDate: DateTime.tryParse(
+          (account['birth_date'] as String?) ?? '',
+        ),
+        city: account['city'] as String?,
       ),
     );
   }

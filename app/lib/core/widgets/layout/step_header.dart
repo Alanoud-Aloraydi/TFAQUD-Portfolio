@@ -22,6 +22,7 @@ class StepHeader extends StatelessWidget {
     this.onClose,
     this.step,
     this.totalSteps,
+    this.trailing,
   }) : assert(onBack == null || onClose == null),
        assert((step == null) == (totalSteps == null));
 
@@ -40,22 +41,34 @@ class StepHeader extends StatelessWidget {
   final int? step;
   final int? totalSteps;
 
+  /// A button at the end of the top row, across from back or close (the
+  /// left in Arabic), such as «تعديل» on the account page.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (onClose != null)
-          GlassIconButton(
-            tooltip: context.tr('common.close'),
-            icon: const Icon(AppIcons.x),
-            onPressed: onClose,
-          )
-        else if (onBack != null)
-          BackLink(onPressed: onBack!)
-        else
-          const SizedBox(height: AppSizes.touch),
+        Row(
+          children: <Widget>[
+            if (onClose != null)
+              GlassIconButton(
+                tooltip: context.tr('common.close'),
+                icon: const Icon(AppIcons.x),
+                onPressed: onClose,
+              )
+            else if (onBack != null)
+              BackLink(onPressed: onBack!)
+            else
+              const SizedBox(height: AppSizes.touch),
+            if (trailing case final Widget end) ...<Widget>[
+              const Spacer(),
+              end,
+            ],
+          ],
+        ),
         if (step != null) ...<Widget>[
           const SizedBox(height: AppSpacing.sm),
           StepProgress(step: step!, total: totalSteps!),

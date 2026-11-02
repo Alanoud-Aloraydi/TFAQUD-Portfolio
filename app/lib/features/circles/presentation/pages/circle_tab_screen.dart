@@ -3,6 +3,7 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -19,6 +20,7 @@ import 'package:app/features/circles/domain/entities/medical_profile_draft.dart'
 import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -108,7 +110,11 @@ class _CircleContent extends StatelessWidget {
                 icon: AppIcons.fileText,
                 iconColor: AppSemanticColors.textSupporting,
                 title: context.tr('circles.file_title'),
-                subtitle: context.tr('circle_overview.file_hint'),
+                // A file with unknown answers says so, with the yellow «!».
+                subtitle: (medicalFile?.needsFilling ?? false)
+                    ? context.tr('medical_alert.tile')
+                    : context.tr('circle_overview.file_hint'),
+                attention: medicalFile?.needsFilling ?? false,
                 onTap: () => context.push(Routes.medicalFile(circle.id)),
               ),
             ),
@@ -481,6 +487,7 @@ class _CircleFeatureTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.attention = false,
   });
 
   final IconData icon;
@@ -488,6 +495,9 @@ class _CircleFeatureTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+
+  /// Something here waits to be filled: a honey tile with the yellow «!».
+  final bool attention;
 
   @override
   Widget build(BuildContext context) {
@@ -498,8 +508,15 @@ class _CircleFeatureTile extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
-        color: AppSemanticColors.surfaceContent,
-        shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
+        color: attention
+            ? AppSemanticColors.surfaceAttention
+            : AppSemanticColors.surfaceContent,
+        shape: AppRadius.shape(
+          AppRadius.m,
+          side: attention
+              ? const BorderSide(color: AppSemanticColors.borderAttention)
+              : AppSurfaces.edge,
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -508,11 +525,26 @@ class _CircleFeatureTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Icon(icon, size: AppSizes.icon, color: iconColor),
+                Row(
+                  children: <Widget>[
+                    Icon(icon, size: AppSizes.icon, color: iconColor),
+                    if (attention) ...<Widget>[
+                      const Spacer(),
+                      const AttentionMark(),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(title, style: text.titleSmall),
                 const SizedBox(height: AppSpacing.xs),
-                Text(subtitle, style: text.bodySmall),
+                Text(
+                  subtitle,
+                  style: attention
+                      ? text.bodySmall?.copyWith(
+                          color: context.tokens.warningText,
+                        )
+                      : text.bodySmall,
+                ),
               ],
             ),
           ),

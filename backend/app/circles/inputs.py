@@ -136,10 +136,9 @@ class EmergencyContactInput(Dto):
 # ---- circles and patients ----------------------------------------------
 
 
-class _Place(Dto):
-    """City plus the optional point the app got from the phone's location."""
+class _Point(Dto):
+    """The optional point the app got from the phone's location."""
 
-    city: City
     latitude: Latitude | None = None
     longitude: Longitude | None = None
 
@@ -153,12 +152,27 @@ class _Place(Dto):
         return self
 
 
+class _Place(_Point):
+    """City plus the optional point."""
+
+    city: City
+
+
 class _PatientBasics(_Place):
     birth_date: IsoDate
     medical_profile: MedicalProfileInput | None = None
 
 
-class CreateSelfCircleInput(_PatientBasics):
+class _OwnBasics(_Point):
+    """The patient is the caller: a birth date or city left out is read
+    from the account, where onboarding saved it."""
+
+    birth_date: IsoDate | None = None
+    city: City | None = None
+    medical_profile: MedicalProfileInput | None = None
+
+
+class CreateSelfCircleInput(_OwnBasics):
     name: CircleName
 
 
@@ -168,7 +182,7 @@ class CreateOfflineCircleInput(_PatientBasics):
     patient_last_name: Name50
 
 
-class CompleteRequestInput(_PatientBasics):
+class CompleteRequestInput(_OwnBasics):
     pass
 
 

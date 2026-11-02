@@ -181,6 +181,10 @@ class _OfflinePrayerTimes extends Fake implements PrayerTimesRemoteDataSource {
 class _OfflineOnboardingRepository implements OnboardingRepositoryDomain {
   /// The names that were saved, in order: first name, last name, display name.
   final List<List<String>> saved = <List<String>>[];
+
+  /// The birth date and city sent with each save (null from the account page).
+  final List<({DateTime? birthDate, String? city})> savedBasics =
+      <({DateTime? birthDate, String? city})>[];
   Result<bool, Failure> result = const Success(true);
 
   @override
@@ -188,8 +192,11 @@ class _OfflineOnboardingRepository implements OnboardingRepositoryDomain {
     required String firstName,
     required String lastName,
     required String displayName,
+    DateTime? birthDate,
+    String? city,
   }) async {
     saved.add(<String>[firstName, lastName, displayName]);
+    savedBasics.add((birthDate: birthDate, city: city));
     return result;
   }
 }
@@ -492,8 +499,8 @@ void main() {
           .read<CreateCircleCubit>();
     }
 
-    /// Fills what the date picker and the city sheet would fill, then goes to
-    /// the second step.
+    /// Fills what the date picker and the city sheet would fill (an account
+    /// from before onboarding asked for them), then creates the circle.
     Future<void> finishFirstStep(
       WidgetTester tester,
       CreateCircleCubit cubit,
@@ -501,7 +508,7 @@ void main() {
       cubit.birthDateChanged(DateTime(1964, 3, 12));
       cubit.cityChanged('الرياض');
       await tester.pump();
-      await tester.tap(find.text('circles.next'.tr()));
+      await tester.tap(find.text('circles.create'.tr()));
       await tester.pumpAndSettle();
     }
 
@@ -530,19 +537,51 @@ void main() {
       expect(find.text('onboarding.start_title'.tr()), findsOneWidget);
     });
 
-    testWidgets('the first step shows the account name and asks for the rest', (
+    testWidgets('after onboarding only the name is asked and creates it', (
+      WidgetTester tester,
+    ) async {
+      circles.account = Success(
+        AccountSummary(
+          firstName: 'Reem',
+          lastName: 'Alahmadi',
+          birthDate: DateTime(1990, 3, 4),
+          city: 'الرياض',
+        ),
+      );
+      await openFirstStep(tester);
+
+      expect(find.text('circles.self_title'.tr()), findsOneWidget);
+      // The birth date and city come from the account.
+      expect(find.text('circles.birth_date'.tr()), findsNothing);
+      expect(find.text('circles.city'.tr()), findsNothing);
+
+      await tester.tap(find.text('circles.create'.tr()));
+      await tester.pumpAndSettle();
+
+      final request = circles.requests.single;
+      expect(request.name, 'circles.preset.care'.tr());
+      // Left out: the server reads them from the account.
+      expect(request.birthDate, isNull);
+      expect(request.city, isNull);
+      expect(request.medicalProfile, isNull);
+      expect(find.byType(AppBottomBar), findsOneWidget);
+      expect(find.text('circles.created_notice'.tr()), findsOneWidget);
+    });
+
+    testWidgets('an account from before onboarding is asked for the rest', (
       WidgetTester tester,
     ) async {
       await openFirstStep(tester);
 
       expect(find.text('circles.self_title'.tr()), findsOneWidget);
-      expect(find.text('Reem Alahmadi'), findsOneWidget);
+      expect(find.text('circles.birth_date'.tr()), findsOneWidget);
 
-      await tester.tap(find.text('circles.next'.tr()));
+      await tester.tap(find.text('circles.create'.tr()));
       await tester.pumpAndSettle();
-      // The birth date and the city are missing; the step stays.
+      // The birth date and the city are missing; the page stays.
       expect(find.text('circles.field_required'.tr()), findsNWidgets(2));
       expect(find.text('circles.self_title'.tr()), findsOneWidget);
+      expect(circles.requests, isEmpty);
     });
 
     testWidgets('a name of your own asks for the typed name', (
@@ -556,7 +595,7 @@ void main() {
       cubit.birthDateChanged(DateTime(1964, 3, 12));
       cubit.cityChanged('الرياض');
       await tester.pump();
-      await tester.tap(find.text('circles.next'.tr()));
+      await tester.tap(find.text('circles.create'.tr()));
       await tester.pumpAndSettle();
       expect(find.text('circles.field_required'.tr()), findsOneWidget);
       expect(find.text('circles.self_title'.tr()), findsOneWidget);
@@ -667,107 +706,41 @@ void main() {
 
       expect(find.text('circles.already_title'.tr()), findsOneWidget);
       expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
-      // Nothing to fill in: no form and no next button.
+      // Nothing to fill in: no form and no create button.
       expect(find.text('circles.birth_date'.tr()), findsNothing);
-      expect(find.text('circles.next'.tr()), findsNothing);
+      expect(find.text('circles.create'.tr()), findsNothing);
 
       await tester.tap(find.text('circles.back_home'.tr()));
       await tester.pumpAndSettle();
       expect(find.byType(AppBottomBar), findsOneWidget);
     });
 
-    testWidgets('three steps create the circle and open the home page', (
+    testWidgets('one page creates the circle and opens the Circle tab', (
       WidgetTester tester,
     ) async {
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await finishFirstStep(tester, cubit);
-
-      // Step 2: blood type and a condition.
-      expect(find.text('circles.health_hint'.tr()), findsOneWidget);
-      await tester.tap(find.text('\u200EO+\u200E'));
-      await tester.tap(find.text('medical.condition.diabetes'.tr()));
-      await tester.pump();
-      await tester.tap(find.text('circles.next'.tr()));
-      await tester.pumpAndSettle();
-
-      // Step 3: an allergy, then the circle is created.
-      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-      await tester.tap(find.text('medical.medication.penicillin'.tr()));
-      await tester.pump();
-      await tester.tap(find.text('circles.create'.tr()));
-      await tester.pumpAndSettle();
 
       final request = circles.requests.single;
       expect(request.name, 'circles.preset.care'.tr());
       expect(request.birthDate, DateTime(1964, 3, 12));
       expect(request.city, 'الرياض');
-      expect(
-        request.medicalProfile,
-        const MedicalProfileDraft(
-          bloodType: 'O+',
-          conditions: ConditionsDraft.listed(codes: <String>['diabetes']),
-          allergies: AllergiesDraft.listed(medication: <String>['penicillin']),
-        ),
-      );
+      // The health answers are filled later in the medical file.
+      expect(request.medicalProfile, isNull);
       expect(find.byType(AppBottomBar), findsOneWidget);
     });
 
-    testWidgets('skipping the two health steps sends no medical profile', (
+    testWidgets('a refusal shows its text and keeps the user on the page', (
       WidgetTester tester,
     ) async {
+      circles.created = const Error(AlreadyHasCircleFailure());
       final CreateCircleCubit cubit = await openFirstStep(tester);
       await finishFirstStep(tester, cubit);
 
-      await tester.tap(find.text('circles.skip'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-
-      await tester.tap(find.text('circles.skip'.tr()));
-      await tester.pumpAndSettle();
-
-      expect(circles.requests.single.medicalProfile, isNull);
-      expect(find.byType(AppBottomBar), findsOneWidget);
+      expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
+      expect(find.text('circles.self_title'.tr()), findsOneWidget);
+      expect(find.byType(AppBottomBar), findsNothing);
     });
-
-    testWidgets('"other" in the health step asks for its text', (
-      WidgetTester tester,
-    ) async {
-      final CreateCircleCubit cubit = await openFirstStep(tester);
-      await finishFirstStep(tester, cubit);
-
-      await tester.tap(find.text('medical.condition.other'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.text('circles.other_hint'.tr()), findsOneWidget);
-
-      await tester.tap(find.text('circles.next'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.text('circles.field_required'.tr()), findsOneWidget);
-      expect(find.text('circles.health_hint'.tr()), findsOneWidget);
-
-      await tester.enterText(find.byType(TextField), 'Gout');
-      await tester.pump();
-      await tester.tap(find.text('circles.next'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-    });
-
-    testWidgets(
-      'a refusal shows its text and keeps the user on the last step',
-      (WidgetTester tester) async {
-        circles.created = const Error(AlreadyHasCircleFailure());
-        final CreateCircleCubit cubit = await openFirstStep(tester);
-        await finishFirstStep(tester, cubit);
-        await tester.tap(find.text('circles.skip'.tr()));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('circles.create'.tr()));
-        await tester.pumpAndSettle();
-
-        expect(find.text('circles.already_has_circle'.tr()), findsOneWidget);
-        expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-        expect(find.byType(AppBottomBar), findsNothing);
-      },
-    );
   });
 
   group('Circle creation for another person', () {
@@ -979,7 +952,7 @@ void main() {
         WidgetTester tester,
       ) async {
         await openPatientBasics(tester);
-        await tester.tap(find.text('circles.next'.tr()));
+        await tester.tap(find.text('circles.create'.tr()));
         await tester.pumpAndSettle();
 
         // The two names, the birth date and the city.
@@ -1031,7 +1004,7 @@ void main() {
         cubit.birthDateChanged(DateTime(1954, 6, 5));
         cubit.cityChanged('بريدة');
         await tester.pump();
-        await tester.tap(find.text('circles.next'.tr()));
+        await tester.tap(find.text('circles.create'.tr()));
         await tester.pumpAndSettle();
 
         expect(find.text('circles.field_required'.tr()), findsOneWidget);
@@ -1054,7 +1027,7 @@ void main() {
         );
       });
 
-      testWidgets('three steps create the circle and open the home page', (
+      testWidgets('one page creates the circle and opens the Circle tab', (
         WidgetTester tester,
       ) async {
         final CreateCircleCubit cubit = await openPatientBasics(tester);
@@ -1063,18 +1036,6 @@ void main() {
         cubit.birthDateChanged(DateTime(1954, 6, 5));
         cubit.cityChanged('بريدة');
         await tester.pump();
-        await tester.tap(find.text('circles.next'.tr()));
-        await tester.pumpAndSettle();
-
-        // Step 2: the same page as for your own circle.
-        expect(find.text('circles.health_hint'.tr()), findsOneWidget);
-        await tester.tap(find.text('\u200EO+\u200E'));
-        await tester.pump();
-        await tester.tap(find.text('circles.next'.tr()));
-        await tester.pumpAndSettle();
-
-        // Step 3: the circle is created.
-        expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
         await tester.tap(find.text('circles.create'.tr()));
         await tester.pumpAndSettle();
 
@@ -1084,37 +1045,29 @@ void main() {
         expect(created.patientLastName, 'العتيبي');
         expect(created.birthDate, DateTime(1954, 6, 5));
         expect(created.city, 'بريدة');
-        expect(
-          created.medicalProfile,
-          const MedicalProfileDraft(bloodType: 'O+'),
-        );
+        expect(created.medicalProfile, isNull);
         expect(circles.requests, isEmpty);
         expect(find.byType(AppBottomBar), findsOneWidget);
       });
 
-      testWidgets(
-        'a refusal shows its text and keeps the user on the last step',
-        (WidgetTester tester) async {
-          circles.createdPatient = const Error(ModeConflictFailure());
-          final CreateCircleCubit cubit = await openPatientBasics(tester);
-          await tester.enterText(find.byType(TextField).at(0), 'نورة');
-          await tester.enterText(find.byType(TextField).at(1), 'العتيبي');
-          cubit.birthDateChanged(DateTime(1954, 6, 5));
-          cubit.cityChanged('بريدة');
-          await tester.pump();
-          await tester.tap(find.text('circles.next'.tr()));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('circles.skip'.tr()));
-          await tester.pumpAndSettle();
+      testWidgets('a refusal shows its text and keeps the user on the page', (
+        WidgetTester tester,
+      ) async {
+        circles.createdPatient = const Error(ModeConflictFailure());
+        final CreateCircleCubit cubit = await openPatientBasics(tester);
+        await tester.enterText(find.byType(TextField).at(0), 'نورة');
+        await tester.enterText(find.byType(TextField).at(1), 'العتيبي');
+        cubit.birthDateChanged(DateTime(1954, 6, 5));
+        cubit.cityChanged('بريدة');
+        await tester.pump();
 
-          await tester.tap(find.text('circles.create'.tr()));
-          await tester.pumpAndSettle();
+        await tester.tap(find.text('circles.create'.tr()));
+        await tester.pumpAndSettle();
 
-          expect(find.text('circles.mode_conflict'.tr()), findsOneWidget);
-          expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-          expect(find.byType(AppBottomBar), findsNothing);
-        },
-      );
+        expect(find.text('circles.mode_conflict'.tr()), findsOneWidget);
+        expect(find.text('circles.patient_title'.tr()), findsOneWidget);
+        expect(find.byType(AppBottomBar), findsNothing);
+      });
     });
   });
 
@@ -1514,7 +1467,7 @@ void main() {
         expect(find.text('أمي نورة'), findsOneWidget);
       });
 
-      testWidgets('three steps create the circle from the request', (
+      testWidgets('one tap creates the circle from the request', (
         WidgetTester tester,
       ) async {
         circles.inbox = Success(agreed);
@@ -1522,24 +1475,13 @@ void main() {
         await tester.tap(find.text('common.continue'.tr()));
         await tester.pumpAndSettle();
 
-        // The date and the city sheets are covered by the first flow's tests.
+        // An account from before onboarding gives its birth date and city
+        // here. The date and the city sheets are covered by the first flow.
         final CreateCircleCubit cubit = tester
             .element(find.byType(ApprovedCircleBasicsScreen))
             .read<CreateCircleCubit>();
         cubit.birthDateChanged(DateTime(1954, 6, 5));
         cubit.cityChanged('بريدة');
-        await tester.pump();
-        await tester.tap(find.text('circles.next'.tr()));
-        await tester.pumpAndSettle();
-
-        expect(find.text('circles.health_hint'.tr()), findsOneWidget);
-        await tester.tap(find.text('‎O+‎'));
-        await tester.pump();
-        await tester.tap(find.text('circles.next'.tr()));
-        await tester.pumpAndSettle();
-
-        expect(find.text('circles.allergies_hint'.tr()), findsOneWidget);
-        await tester.tap(find.text('medical.medication.penicillin'.tr()));
         await tester.pump();
         await tester.tap(find.text('circles.create'.tr()));
         await tester.pumpAndSettle();
@@ -1548,15 +1490,7 @@ void main() {
         final completion = circles.completions.single;
         expect(completion.birthDate, DateTime(1954, 6, 5));
         expect(completion.city, 'بريدة');
-        expect(
-          completion.medicalProfile,
-          const MedicalProfileDraft(
-            bloodType: 'O+',
-            allergies: AllergiesDraft.listed(
-              medication: <String>['penicillin'],
-            ),
-          ),
-        );
+        expect(completion.medicalProfile, isNull);
         // The patient's circle was made from the request, not by a new one.
         expect(circles.requests, isEmpty);
         expect(circles.patientCircles, isEmpty);
@@ -1616,11 +1550,7 @@ void main() {
         },
       );
 
-      for (final String route in <String>[
-        Routes.completeRequest,
-        Routes.completeRequestHealth,
-        Routes.completeRequestAllergies,
-      ]) {
+      for (final String route in <String>[Routes.completeRequest]) {
         testWidgets('$route opened without a request goes to the list', (
           WidgetTester tester,
         ) async {
@@ -1652,6 +1582,12 @@ void main() {
 
     Future<void> openSheet(WidgetTester tester, String rowLabel) async {
       await tester.tap(find.text(rowLabel));
+      await tester.pumpAndSettle();
+    }
+
+    /// The one «تعديل» button at the top of the page.
+    Future<void> openEdit(WidgetTester tester) async {
+      await tester.tap(find.text('account.edit'.tr()));
       await tester.pumpAndSettle();
     }
 
@@ -1825,19 +1761,19 @@ void main() {
       });
     });
 
-    // Both name rows open one edit page with the three names: the first
-    // name, the last name, then the display name.
+    // One «تعديل» button at the top opens the edit page with the three
+    // names: the first name, the last name, then the display name.
     group('changing the names', () {
       Finder nameField(int index) => find.byType(TextField).at(index);
 
       String fieldText(WidgetTester tester, int index) =>
           tester.widget<TextField>(nameField(index)).controller!.text;
 
-      testWidgets('a name row opens the edit page with the saved names', (
+      testWidgets('the edit button opens the edit page with the saved names', (
         WidgetTester tester,
       ) async {
         await openAccount(tester);
-        await openSheet(tester, 'account.display_name'.tr());
+        await openEdit(tester);
 
         expect(find.byType(AccountEditScreen), findsOneWidget);
         expect(find.text('account.edit_title'.tr()), findsOneWidget);
@@ -1851,7 +1787,7 @@ void main() {
         WidgetTester tester,
       ) async {
         await openAccount(tester);
-        await openSheet(tester, 'account.full_name'.tr());
+        await openEdit(tester);
 
         await tester.enterText(nameField(0), 'Layla');
         await tester.enterText(nameField(1), 'Salem');
@@ -1879,7 +1815,7 @@ void main() {
         WidgetTester tester,
       ) async {
         await openAccount(tester);
-        await openSheet(tester, 'account.display_name'.tr());
+        await openEdit(tester);
 
         await tester.enterText(nameField(2), '');
         await tester.tap(find.text('account.save'.tr()));
@@ -1895,7 +1831,7 @@ void main() {
       ) async {
         onboarding.result = const Error(NetworkFailure());
         await openAccount(tester);
-        await openSheet(tester, 'account.display_name'.tr());
+        await openEdit(tester);
 
         await tester.enterText(nameField(2), 'Ree');
         await tester.tap(find.text('account.save'.tr()));
@@ -2086,6 +2022,10 @@ void main() {
 
     Future<void> openCard(WidgetTester tester) async {
       await openCircleTab(tester);
+      // Taller still: the whole card, the ambulance button and the note are
+      // built at once.
+      tester.view.physicalSize = const Size(900, 2600);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('circles.card_title'.tr()));
       await tester.pumpAndSettle();
     }
@@ -2142,6 +2082,32 @@ void main() {
         );
         expect(find.text('circles.file_title'.tr()), findsOneWidget);
         expect(find.text('circles.card_title'.tr()), findsOneWidget);
+      });
+
+      testWidgets('a file without medical answers shows the yellow «!»', (
+        WidgetTester tester,
+      ) async {
+        circles.medicalFile = Success(
+          CirclesFakeRepository.nouraFile.copyWith(
+            profile: const MedicalProfileDraft(),
+          ),
+        );
+
+        await openCircleTab(tester);
+        expect(find.text('medical_alert.tile'.tr()), findsOneWidget);
+        expect(find.text('circle_overview.file_hint'.tr()), findsNothing);
+
+        await tester.tap(find.text('circles.file_title'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.text('medical_alert.title'.tr()), findsOneWidget);
+        expect(find.text('medical_alert.fill'.tr()), findsOneWidget);
+      });
+
+      testWidgets('a complete file has no «!»', (WidgetTester tester) async {
+        await openCircleTab(tester);
+
+        expect(find.text('medical_alert.tile'.tr()), findsNothing);
+        expect(find.text('circle_overview.file_hint'.tr()), findsOneWidget);
       });
 
       testWidgets('shows no card when the account has no circle', (
@@ -2563,13 +2529,13 @@ void main() {
         expect(find.byType(EmergencyCardScreen), findsOneWidget);
         expect(find.byType(AppBottomBar), findsNothing);
         expect(circles.emergencyCardReads, 1);
-        expect(find.text('circles.card_read_only'.tr()), findsOneWidget);
+        expect(find.text('emergency_card.read_only'.tr()), findsOneWidget);
         expect(find.text('نورة العتيبي'), findsOneWidget);
         expect(find.text('O+'), findsOneWidget);
-        expect(find.text('circles.no_allergies'.tr()), findsOneWidget);
+        expect(find.text('emergency_card.no_allergies'.tr()), findsOneWidget);
         expect(find.text('medical.condition.diabetes'.tr()), findsOneWidget);
         expect(
-          find.text('خالد (${'medical.relation.son'.tr()})'),
+          find.text('خالد · ${'medical.relation.son'.tr()}'),
           findsOneWidget,
         );
         expect(
@@ -2577,9 +2543,28 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text('هدى (${'medical.relation.daughter'.tr()})'),
+          find.text('هدى · ${'medical.relation.daughter'.tr()}'),
           findsOneWidget,
         );
+        // The ambulance button sits under the card.
+        expect(find.text('emergency_card.ambulance'.tr()), findsOneWidget);
+      });
+
+      testWidgets('«English» switches the card and keeps the typed names', (
+        WidgetTester tester,
+      ) async {
+        await openCard(tester);
+
+        await tester.tap(find.text('English'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('card_en.read_only'.tr()), findsOneWidget);
+        expect(find.text('card_en.condition.diabetes'.tr()), findsOneWidget);
+        expect(find.text('نورة العتيبي'), findsOneWidget);
+
+        await tester.tap(find.text('emergency_card.lang_ar'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.text('emergency_card.read_only'.tr()), findsOneWidget);
       });
 
       testWidgets('a card with nothing answered still opens', (
@@ -2598,8 +2583,8 @@ void main() {
 
         expect(find.text('—'), findsOneWidget);
         // The allergies and the conditions.
-        expect(find.text('circles.file_unknown'.tr()), findsNWidgets(2));
-        expect(find.text('circles.card_no_contacts'.tr()), findsOneWidget);
+        expect(find.text('emergency_card.unknown'.tr()), findsNWidgets(2));
+        expect(find.text('emergency_card.no_contacts'.tr()), findsOneWidget);
       });
 
       testWidgets('a person who left the circle is refused and can try again', (

@@ -1,9 +1,10 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
-import 'package:app/features/circles/presentation/circle_flow_routes.dart';
+import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
@@ -16,9 +17,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 1 of 3 of the circle for a patient who does not use the app
-/// (PROFILE-01B): the names of the patient, the birth date, the word the circle
-/// is named with, and the city. Needs a [CreateCircleCubit] of the patient flow
+/// The circle for a patient who does not use the app (PROFILE-01B) on one
+/// page: the names of the patient, the birth date, the word the circle is
+/// named with, and the city. The health condition and allergies are filled
+/// later in the medical file. Needs a [CreateCircleCubit] of the patient flow
 /// above it.
 class PatientCircleBasicsScreen extends StatefulWidget {
   const PatientCircleBasicsScreen({super.key});
@@ -75,12 +77,12 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     if (picked != null) cubit.cityChanged(picked);
   }
 
-  void _next(BuildContext context, CreateCircleCubit cubit) {
+  Future<void> _create(BuildContext context, CreateCircleCubit cubit) async {
     final CircleLabel label = cubit.state.label;
     final bool ok = cubit.continueFromPatientBasics(
       labelName: context.tr('circles.label.${label.name}'),
     );
-    if (ok) context.push(cubit.flow.healthRoute);
+    if (ok) await createCircleAndOpen(context, cubit);
   }
 
   @override
@@ -107,9 +109,8 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           CircleStepHeader(
-                            step: 1,
-                            stepTitle: context.tr('circles.step_basics'),
                             title: context.tr('circles.patient_title'),
+                            subtitle: context.tr('circles.patient_subtitle'),
                             onBack: context.canPop()
                                 ? () => context.pop()
                                 : null,
@@ -183,14 +184,19 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
+                          if (state.errorKey != null) ...<Widget>[
+                            const SizedBox(height: AppSpacing.lg),
+                            InlineError(messageKey: state.errorKey!),
+                          ],
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   PillButton(
-                    label: context.tr('circles.next'),
-                    onPressed: () => _next(context, cubit),
+                    label: context.tr('circles.create'),
+                    isLoading: state.status == CreateStatus.saving,
+                    onPressed: () => _create(context, cubit),
                   ),
                 ],
               );

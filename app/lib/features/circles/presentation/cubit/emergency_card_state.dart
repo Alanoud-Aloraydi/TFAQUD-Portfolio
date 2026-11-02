@@ -10,6 +10,7 @@ class EmergencyCardState extends Equatable {
     this.card,
     this.messageKey,
     this.sessionEnded = false,
+    this.birthDate,
   });
 
   final EmergencyCardStatus status;
@@ -21,6 +22,16 @@ class EmergencyCardState extends Equatable {
   /// True when the server said the sign-in ended; the page goes to sign-in.
   final bool sessionEnded;
 
+  /// From the medical file, for the age line under the name. The card itself
+  /// leaves out the birth date; null when the file could not be read.
+  final DateTime? birthDate;
+
   @override
-  List<Object?> get props => [status, card, messageKey, sessionEnded];
+  List<Object?> get props => [
+    status,
+    card,
+    messageKey,
+    sessionEnded,
+    birthDate,
+  ];
 }

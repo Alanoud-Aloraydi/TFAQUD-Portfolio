@@ -114,6 +114,18 @@ class AccountScreen extends StatelessWidget {
                     onClose: context.canPop()
                         ? () => context.pop()
                         : () => context.go(Routes.today),
+                    // One button edits the names, as in the handoff: both
+                    // name rows open the same page.
+                    trailing: state.status == AccountStatus.ready
+                        ? TextButton.icon(
+                            onPressed: () => _edit(context, cubit),
+                            icon: const Icon(
+                              AppIcons.pencil,
+                              size: AppSizes.iconSmall,
+                            ),
+                            label: Text(context.tr('account.edit')),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Expanded(
@@ -204,14 +216,10 @@ class AccountScreen extends StatelessWidget {
               InfoRow(
                 label: context.tr('account.display_name'),
                 value: account.displayName,
-                editLabel: context.tr('account.edit_display_title'),
-                onEdit: () => _edit(context, cubit),
               ),
               InfoRow(
                 label: context.tr('account.full_name'),
                 value: account.fullName,
-                editLabel: context.tr('account.edit_full_title'),
-                onEdit: () => _edit(context, cubit),
               ),
               InfoRow(
                 label: context.tr('account.phone'),

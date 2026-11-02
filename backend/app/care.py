@@ -160,6 +160,28 @@ class CareService:
                 code="invalid_birth_date",
             )
 
+    @staticmethod
+    def _own_basics(
+        account: Account, birth_date: date | None, city: str | None
+    ) -> tuple[date, str]:
+        """The patient's birth date and city when the patient is the caller.
+
+        What the request sends wins; what it leaves out comes from the
+        account (onboarding saves both). An account made before onboarding
+        asked for them has neither, and then the request must send them.
+        """
+        birth_date = birth_date or account.birth_date
+        city = city or account.city
+        if birth_date is None:
+            raise ValidationFailed(
+                "Add your birth date first.", code="birth_date_required"
+            )
+        if city is None:
+            raise ValidationFailed(
+                "Add your city first.", code="city_required"
+            )
+        return birth_date, city
+
     def _create_circle(
         self,
         name: str,
@@ -218,13 +240,14 @@ class CareService:
         self,
         actor_id: UUID,
         name: str,
-        birth_date: date,
-        city: str,
+        birth_date: date | None,
+        city: str | None,
         latitude: float | None = None,
         longitude: float | None = None,
     ) -> CareCircle:
         """Create self-care with both patient identity and management."""
         account = self._lock_accounts(actor_id)[actor_id]
+        birth_date, city = self._own_basics(account, birth_date, city)
         self._assign_app_mode(account, "detailed")
         self._require_no_patient(actor_id)
         return self._create_circle(
@@ -349,8 +372,8 @@ class CareService:
         self,
         actor_id: UUID,
         request_id: UUID,
-        birth_date: date,
-        city: str,
+        birth_date: date | None,
+        city: str | None,
         latitude: float | None = None,
         longitude: float | None = None,
     ) -> CareCircle:
@@ -376,6 +399,7 @@ class CareService:
                 "Patient consent is required.", code="consent_required"
             )
         self._require_no_patient(actor_id)
+        birth_date, city = self._own_basics(account, birth_date, city)
         self._assign_app_mode(account, request.proposed_app_mode)
         requester = accounts[request.requested_by_account_id]
         self._assign_app_mode(requester, "detailed")

@@ -1,6 +1,6 @@
 """Phone-verified accounts, including incomplete onboarding profiles."""
 
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, DateTime, Text, text
@@ -32,6 +32,14 @@ class Account(db.Model):
             "AND length(btrim(display_name)) BETWEEN 1 AND 30)",
             name="profile_names",
         ),
+        CheckConstraint(
+            "birth_date IS NULL OR birth_date >= DATE '1900-01-01'",
+            name="birth_date",
+        ),
+        CheckConstraint(
+            "city IS NULL OR length(btrim(city)) BETWEEN 1 AND 60",
+            name="city",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -43,6 +51,10 @@ class Account(db.Model):
     last_name: Mapped[str | None] = mapped_column(Text)
     display_name: Mapped[str | None] = mapped_column(Text)
     app_mode: Mapped[str | None] = mapped_column(Text)
+    # Asked once at onboarding, so a circle for your own care needs only its
+    # name. A circle copies them into its patient when it is created.
+    birth_date: Mapped[date | None]
+    city: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

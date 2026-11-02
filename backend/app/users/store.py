@@ -8,7 +8,7 @@ import threading
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import date, datetime
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,8 @@ class User:
     last_name: str | None = None
     display_name: str | None = None
     app_mode: str | None = None
+    birth_date: date | None = None
+    city: str | None = None
 
     @property
     def profile_complete(self) -> bool:
@@ -35,6 +37,10 @@ class User:
             "display_name": self.display_name,
             "profile_complete": self.profile_complete,
             "app_mode": self.app_mode,
+            "birth_date": (
+                self.birth_date.isoformat() if self.birth_date else None
+            ),
+            "city": self.city,
         }
 
 
@@ -54,9 +60,19 @@ class UserStore(ABC):
 
     @abstractmethod
     def update_profile(
-        self, user_id: str, first_name: str, last_name: str, display_name: str
+        self,
+        user_id: str,
+        first_name: str,
+        last_name: str,
+        display_name: str,
+        birth_date: date | None = None,
+        city: str | None = None,
     ) -> User | None:
-        """Replace all three names, or return None for an unknown account."""
+        """Replace all three names, or return None for an unknown account.
+
+        A birth date or city that is None keeps the saved one: the account
+        page sends only the names.
+        """
 
 
 class InMemoryUserStore(UserStore):
@@ -82,7 +98,13 @@ class InMemoryUserStore(UserStore):
             return self._by_id.get(user_id)
 
     def update_profile(
-        self, user_id: str, first_name: str, last_name: str, display_name: str
+        self,
+        user_id: str,
+        first_name: str,
+        last_name: str,
+        display_name: str,
+        birth_date: date | None = None,
+        city: str | None = None,
     ) -> User | None:
         with self._lock:
             user = self._by_id.get(user_id)
@@ -93,6 +115,8 @@ class InMemoryUserStore(UserStore):
                 first_name=first_name,
                 last_name=last_name,
                 display_name=display_name,
+                birth_date=birth_date or user.birth_date,
+                city=city or user.city,
             )
             self._by_id[user_id] = user
             return user

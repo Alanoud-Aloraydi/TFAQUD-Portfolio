@@ -1,9 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
@@ -129,8 +127,8 @@ class StartScreen extends StatelessWidget {
   }
 }
 
-/// The follow-up question, shown under "another person", with a thin rail on
-/// the start side that ties it to the option above.
+/// The follow-up question, shown under "another person": a small header and
+/// two choices, the same width as the cards above.
 class _PatientQuestion extends StatelessWidget {
   const _PatientQuestion({required this.state});
 
@@ -141,45 +139,38 @@ class _PatientQuestion extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final OnboardingCubit cubit = context.read<OnboardingCubit>();
     return Padding(
-      padding: const EdgeInsetsDirectional.only(
-        start: AppSpacing.lg,
-        top: AppSpacing.lg,
-      ),
-      child: Container(
-        padding: const EdgeInsetsDirectional.only(start: AppSpacing.md),
-        decoration: const BoxDecoration(
-          border: BorderDirectional(
-            start: BorderSide(
-              color: AppSemanticColors.selectedSurface,
-              width: AppSizes.borderStrong,
+      padding: const EdgeInsets.only(top: AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              start: AppSpacing.inset,
+            ),
+            child: Text(
+              context.tr('onboarding.patient_question'),
+              style: text.titleSmall?.copyWith(
+                color: context.tokens.textSecondary,
+              ),
             ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              context.tr('onboarding.patient_question'),
-              style: text.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ChoiceCard(
-              icon: AppIcons.users,
-              title: context.tr('onboarding.patient_uses_title'),
-              hint: context.tr('onboarding.patient_uses_hint'),
-              selected: state.patientUsesApp == true,
-              onTap: () => cubit.selectPatientUsesApp(usesApp: true),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ChoiceCard(
-              icon: AppIcons.user,
-              title: context.tr('onboarding.patient_no_title'),
-              hint: context.tr('onboarding.patient_no_hint'),
-              selected: state.patientUsesApp == false,
-              onTap: () => cubit.selectPatientUsesApp(usesApp: false),
-            ),
-          ],
-        ),
+          const SizedBox(height: AppSpacing.labelGap),
+          ChoiceCard(
+            icon: AppIcons.users,
+            title: context.tr('onboarding.patient_uses_title'),
+            hint: context.tr('onboarding.patient_uses_hint'),
+            selected: state.patientUsesApp == true,
+            onTap: () => cubit.selectPatientUsesApp(usesApp: true),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ChoiceCard(
+            icon: AppIcons.user,
+            title: context.tr('onboarding.patient_no_title'),
+            hint: context.tr('onboarding.patient_no_hint'),
+            selected: state.patientUsesApp == false,
+            onTap: () => cubit.selectPatientUsesApp(usesApp: false),
+          ),
+        ],
       ),
     );
   }

@@ -49,13 +49,20 @@ class _Onboarding implements OnboardingRepositoryDomain {
   Result<bool, Failure> result = const Success(true);
   final List<List<String>> saved = <List<String>>[];
 
+  /// The birth date and city sent with each save (null from the account page).
+  final List<({DateTime? birthDate, String? city})> savedBasics =
+      <({DateTime? birthDate, String? city})>[];
+
   @override
   Future<Result<bool, Failure>> saveProfile({
     required String firstName,
     required String lastName,
     required String displayName,
+    DateTime? birthDate,
+    String? city,
   }) async {
     saved.add(<String>[firstName, lastName, displayName]);
+    savedBasics.add((birthDate: birthDate, city: city));
     return result;
   }
 }

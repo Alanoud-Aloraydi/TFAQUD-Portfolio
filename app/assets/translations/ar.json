@@ -70,7 +70,10 @@
     "share": "مشاركة الملف",
     "share_action": "تصدير",
     "select_one": "اختر قسمًا واحدًا على الأقل.",
-    "failed": "تعذّر إنشاء الملف أو مشاركته. حاول مرة أخرى."
+    "failed": "تعذّر إنشاء الملف أو مشاركته. حاول مرة أخرى.",
+    "pdf_title": "سجل الرعاية",
+    "exported_on": "صُدّر في {}",
+    "page": "صفحة {} من {}"
   },
   "today_dashboard": {
     "next": "التالية",
@@ -175,7 +178,7 @@
     "step_of": "الخطوة {} من {}",
     "continue": "\u0645\u062a\u0627\u0628\u0639\u0629",
     "cancel": "إلغاء",
-    "confirm": "تأكيد",
+    "confirm": "\u062a\u0623\u0643\u064a\u062f",
     "am": "ص",
     "pm": "م",
     "weekdays": {
@@ -294,7 +297,7 @@
     "time": "الوقت",
     "add_schedule": "إضافة موعد جرعة",
     "form_invalid": "تحقق من الحقول ومواعيد الجرعات.",
-    "field_required": "هذا الحقل مطلوب",
+    "field_required": "\u0647\u0630\u0627 \u0627\u0644\u062d\u0642\u0644 \u0645\u0637\u0644\u0648\u0628",
     "positive_number": "أدخل رقمًا أكبر من صفر بالأرقام الإنجليزية",
     "invalid_period": "يجب ألا يسبق تاريخ النهاية بداية العلاج أو سريان التعديل",
     "weekday_required": "اختر يومًا واحدًا على الأقل",
@@ -375,8 +378,8 @@
     }
   },
   "onboarding": {
-    "name_title": "\u0645\u0627 \u0627\u0633\u0645\u0643\u061f",
-    "name_subtitle": "\u0646\u062d\u062a\u0627\u062c \u0627\u0633\u0645\u0643 \u0627\u0644\u0643\u0627\u0645\u0644\u060c \u0648\u0627\u0633\u0645\u064b\u0627 \u0645\u062e\u062a\u0635\u0631\u064b\u0627 \u0644\u0644\u0639\u0631\u0636.",
+    "name_title": "عرّفنا بنفسك",
+    "name_subtitle": "اسمك، وتاريخ ميلادك ومدينتك. نطلبها مرة واحدة.",
     "first_name": "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u0648\u0644",
     "last_name": "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u062e\u064a\u0631",
     "display_name": "\u0627\u0633\u0645 \u0627\u0644\u0639\u0631\u0636",
@@ -401,7 +404,7 @@
     "step_basics": "بيانات أساسية",
     "step_health": "الحالة الصحية",
     "step_allergies": "الحساسية",
-    "self_title": "عرّفنا بنفسك",
+    "self_title": "سمِّ دائرتك",
     "circle_name": "اسم الدائرة (للعرض)",
     "preset": {
       "care": "رعايتي",
@@ -456,7 +459,7 @@
     "city_search": "ابحث عن مدينة",
     "city_none_found": "لا توجد مدينة بهذا الاسم",
     "city_confirm": "تأكيد المدينة",
-    "field_required": "هذا الحقل مطلوب",
+    "field_required": "\u0647\u0630\u0627 \u0627\u0644\u062d\u0642\u0644 \u0645\u0637\u0644\u0648\u0628",
     "next": "التالي",
     "skip": "تخطي",
     "create": "إنشاء الدائرة",
@@ -531,7 +534,7 @@
     "reply_body_detailed": "بعد موافقتك، تستخدم التطبيق بالوضع التفصيلي، ويشاركك صاحب الطلب إدارة دائرتك.",
     "reply_decline_note": "إذا رفضت، فلن يصل صاحب الطلب إلى أي من بياناتك.",
     "accept_request": "موافقة",
-    "approved_title": "أكمل بياناتك",
+    "approved_title": "أنشئ دائرتك",
     "set_by_requester": "حدده صاحب الطلب",
     "request_unavailable": "لم يعد هذا الطلب متاحًا. ربما أُلغي أو تمت الإجابة عنه.",
     "accepted_request_exists": "لديك طلب وافقت عليه ولم تكمل بياناته. أكمله أو ألغه أولًا.",
@@ -567,16 +570,17 @@
     "card_title": "بطاقة الطوارئ",
     "card_read_only": "للقراءة فقط",
     "card_contact": "يُتصل بـ",
-    "card_no_contacts": "لم تُضف جهة اتصال بعد."
+    "card_no_contacts": "لم تُضف جهة اتصال بعد.",
+    "self_subtitle": "اختر اسمًا يظهر في قائمة دوائرك. تكمل الملف الطبي لاحقًا من الدائرة.",
+    "patient_subtitle": "بيانات من ترعاه واسم الدائرة. تكمل الملف الطبي لاحقًا من الدائرة.",
+    "created_notice": "أُنشئت الدائرة. أكمل ملفها الطبي متى ما تيسّر."
   },
   "account": {
     "title": "حسابي",
     "my_data": "بياناتي",
-    "display_name": "اسم العرض",
+    "display_name": "\u0627\u0633\u0645 \u0627\u0644\u0639\u0631\u0636",
     "full_name": "الاسم الكامل",
     "phone": "رقم الجوال",
-    "edit_display_title": "تعديل اسم العرض",
-    "edit_full_title": "تعديل الاسم الكامل",
     "edit_title": "تعديل بياناتي",
     "display_name_help": "يظهر لأعضاء دوائرك بدلًا من اسمك الكامل.",
     "save": "حفظ",
@@ -603,7 +607,8 @@
     "patient_choice_keep": "إبقاء الدائرة",
     "last_manager_title": "دوائر ليس لها مدير غيرك",
     "last_manager_body": "أنت المدير الوحيد لدائرة أو أكثر. إن حذفت حسابك فستُحذف هذه الدوائر أيضًا.",
-    "last_manager_confirm": "حذف الحساب والدوائر"
+    "last_manager_confirm": "حذف الحساب والدوائر",
+    "edit": "تعديل"
   },
   "medical": {
     "condition": {
@@ -644,5 +649,122 @@
       "wife": "زوجة",
       "other": "أخرى"
     }
+  },
+  "medical_alert": {
+    "title": "أكمل الملف الطبي",
+    "missing": "لم تُضف بعد: {}",
+    "tile": "أكمل البيانات الطبية",
+    "fill": "أكمل الآن",
+    "separator": "، ",
+    "gap": {
+      "bloodType": "فصيلة الدم",
+      "conditions": "الأمراض المزمنة",
+      "allergies": "الحساسية"
+    }
+  },
+  "emergency_card": {
+    "title": "بطاقة الطوارئ",
+    "read_only": "للقراءة فقط",
+    "blood_type": "فصيلة الدم",
+    "allergy": "حساسية",
+    "allergies": "الحساسية",
+    "no_allergies": "لا توجد حساسية معروفة",
+    "unknown": "غير محدد",
+    "conditions": "أمراض مزمنة",
+    "no_conditions": "لا توجد",
+    "current_medications": "الأدوية الحالية",
+    "no_current_medications": "لا توجد أدوية حالية",
+    "call": "اتصل بـ",
+    "no_contacts": "لم تُضف جهة اتصال بعد.",
+    "updated": "يتحدّث تلقائيًا من الملف الطبي وخطة الأدوية.",
+    "age_few": "{} سنوات · مواليد {}",
+    "age_many": "{} سنة · مواليد {}",
+    "separator": "، ",
+    "export": "تصدير",
+    "lang_ar": "عربي",
+    "ambulance": "اتصال بالإسعاف 997",
+    "why_title": "لماذا بطاقة منفصلة؟",
+    "why_text": "الملف الطبي للعائلة: كامل وقابل للتعديل. بطاقة الطوارئ لشخص غريب في لحظة حرجة، كمسعف أو مدرسة أو جار: ما يُنقذ فقط، بخط كبير وباللغتين."
+  },
+  "card_en": {
+    "title": "Emergency card",
+    "read_only": "Read only",
+    "blood_type": "Blood type",
+    "allergy": "Allergy",
+    "allergies": "Allergies",
+    "no_allergies": "No known allergies",
+    "unknown": "Not recorded",
+    "conditions": "Chronic conditions",
+    "no_conditions": "None",
+    "current_medications": "Current medications",
+    "no_current_medications": "No current medications",
+    "call": "Call",
+    "no_contacts": "No contact added yet.",
+    "updated": "Updates automatically from the medical file and the medication plan.",
+    "age_few": "{} years · born {}",
+    "age_many": "{} years · born {}",
+    "separator": ", ",
+    "condition": {
+      "diabetes": "Diabetes",
+      "hypertension": "High blood pressure",
+      "heart": "Heart disease",
+      "asthma": "Asthma",
+      "kidney": "Kidney disease",
+      "thyroid": "Thyroid disease",
+      "none": "None",
+      "other": "Other"
+    },
+    "medication": {
+      "penicillin": "Penicillin",
+      "sulfa": "Sulfa drugs",
+      "cephalosporins": "Cephalosporins",
+      "aspirin_nsaids": "Aspirin and NSAIDs",
+      "contrast_media": "Contrast media",
+      "anesthesia": "Anesthesia",
+      "other": "Other"
+    },
+    "food": {
+      "milk": "Milk",
+      "eggs": "Eggs",
+      "fish": "Fish",
+      "shellfish": "Shellfish",
+      "tree_nuts": "Tree nuts",
+      "peanuts": "Peanuts",
+      "wheat": "Wheat",
+      "soy": "Soy",
+      "sesame": "Sesame",
+      "other": "Other"
+    },
+    "relation": {
+      "son": "Son",
+      "daughter": "Daughter",
+      "husband": "Husband",
+      "wife": "Wife",
+      "other": "Other"
+    },
+    "form": {
+      "tablet": "Tablets",
+      "capsule": "Capsules",
+      "liquid": "Liquid",
+      "drops": "Drops",
+      "inhaler": "Inhaler",
+      "injection": "Injection"
+    },
+    "unit": {
+      "tablet": "tablet",
+      "capsule": "capsule",
+      "milliliter": "mL",
+      "drop": "drop",
+      "puff": "puff",
+      "unit": "unit"
+    }
+  },
+  "intro": {
+    "next": "التالي",
+    "skip": "تخطي",
+    "circle_title": "دائرة واحدة للعائلة",
+    "circle_text": "أنشئ دائرة لمن ترعاه، وادعُ من يشاركك. يرى الجميع الخطة نفسها ويعرفون ما تم.",
+    "plan_title": "ولا جرعة تفوتك",
+    "plan_text": "الأدوية والقياسات والمواعيد في مكان واحد، مع تذكير في وقتها، وبطاقة طوارئ جاهزة."
   }
 }

@@ -207,3 +207,44 @@ def test_a_token_of_a_user_that_does_not_exist_gets_a_clear_answer(client, sessi
     response = save(client, ghost.access_token, NAMES)
 
     error_of(response, 404, "user_not_found")
+
+
+def test_onboarding_sends_the_birth_date_and_city(client, sms):
+    session = sign_in(client, sms)
+
+    response = save(
+        client,
+        session["access_token"],
+        {**NAMES, "birth_date": "1990-03-04", "city": "Riyadh"},
+    )
+
+    assert response.status_code == 200
+    user = response.get_json()["account"]
+    assert (user["birth_date"], user["city"]) == ("1990-03-04", "Riyadh")
+
+
+def test_the_names_alone_keep_the_saved_birth_date_and_city(client, sms):
+    session = sign_in(client, sms)
+    token = session["access_token"]
+    save(client, token, {**NAMES, "birth_date": "1990-03-04", "city": "Riyadh"})
+
+    response = save(client, token, NAMES)
+
+    user = response.get_json()["account"]
+    assert (user["birth_date"], user["city"]) == ("1990-03-04", "Riyadh")
+
+
+@pytest.mark.parametrize(
+    "change, code",
+    [
+        ({"birth_date": "2999-01-01"}, "invalid_birth_date"),
+        ({"birth_date": "04/03/1990"}, "validation_error"),
+        ({"city": "   "}, "validation_error"),
+    ],
+)
+def test_a_wrong_birth_date_or_city_is_refused(client, sms, change, code):
+    session = sign_in(client, sms)
+
+    response = save(client, session["access_token"], {**NAMES, **change})
+
+    error_of(response, 422, code)

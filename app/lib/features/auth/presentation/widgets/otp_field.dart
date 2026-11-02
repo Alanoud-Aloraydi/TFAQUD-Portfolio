@@ -9,13 +9,15 @@ import 'package:flutter/services.dart';
 
 /// Code entry: [length] boxes drawn left to right, filled from the left.
 /// One invisible text field on top receives the keyboard, so typing, delete,
-/// and paste all work.
+/// and paste all work. iOS offers the code from the SMS above the keyboard
+/// (one-time code autofill), and the last digit sends it: [onCompleted].
 class OtpField extends StatefulWidget {
   const OtpField({
     super.key,
     required this.length,
     required this.value,
     required this.onChanged,
+    this.onCompleted,
     this.hasError = false,
   });
 
@@ -24,6 +26,11 @@ class OtpField extends StatefulWidget {
   /// The digits typed so far, written 0-9.
   final String value;
   final ValueChanged<String> onChanged;
+
+  /// Called once the last digit is in (typed, pasted or filled from the
+  /// SMS), so the user does not have to press «تأكيد».
+  final ValueChanged<String>? onCompleted;
+
   final bool hasError;
 
   @override
@@ -64,6 +71,11 @@ class _OtpFieldState extends State<OtpField> {
     super.dispose();
   }
 
+  void _changed(String digits) {
+    widget.onChanged(digits);
+    if (digits.length == widget.length) widget.onCompleted?.call(digits);
+  }
+
   @override
   Widget build(BuildContext context) {
     final TextStyle? digitStyle = Theme.of(context).textTheme.headlineMedium;
@@ -97,6 +109,9 @@ class _OtpFieldState extends State<OtpField> {
                 autofocus: true,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
+                // iOS reads the code from the SMS and offers it above the
+                // keyboard; one tap fills every box.
+                autofillHints: const <String>[AutofillHints.oneTimeCode],
                 showCursor: false,
                 enableInteractiveSelection: false,
                 style: const TextStyle(color: AppSemanticColors.transparent),
@@ -104,7 +119,7 @@ class _OtpFieldState extends State<OtpField> {
                 inputFormatters: <TextInputFormatter>[
                   _DigitsFormatter(widget.length),
                 ],
-                onChanged: widget.onChanged,
+                onChanged: _changed,
                 decoration: const InputDecoration(
                   filled: false,
                   border: InputBorder.none,

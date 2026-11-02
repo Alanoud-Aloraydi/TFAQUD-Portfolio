@@ -96,6 +96,8 @@ class CodeScreen extends StatelessWidget {
                             value: state.code,
                             hasError: state.errorKey != null,
                             onChanged: context.read<SignInCubit>().codeChanged,
+                            // The last digit sends the code at once.
+                            onCompleted: (_) => _confirm(context),
                           ),
                           if (state.errorKey != null) ...<Widget>[
                             const SizedBox(height: AppSpacing.lg),

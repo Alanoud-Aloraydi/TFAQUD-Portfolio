@@ -112,6 +112,8 @@ class AccountCubit extends Cubit<AccountState> {
               displayName: display,
               phoneNumber: current.phoneNumber,
               patientCircleId: current.patientCircleId,
+              birthDate: current.birthDate,
+              city: current.city,
             ),
             noticeKey: 'account.saved',
           ),

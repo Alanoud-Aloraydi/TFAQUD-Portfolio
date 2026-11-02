@@ -112,9 +112,19 @@ class CreateCircleState extends Equatable {
   bool get patientNamesComplete =>
       patientFirstName.trim().isNotEmpty && patientLastName.trim().isNotEmpty;
 
+  /// The account already holds the birth date and city from onboarding, so
+  /// a circle for its own care does not ask for them.
+  bool get ownBasicsSaved => account?.hasBasics ?? false;
+
+  /// The page asks for the birth date and city: always for a patient without
+  /// the app (no account is loaded), and for your own care only when the
+  /// account has not saved them.
+  bool get asksBasics => !ownBasicsSaved;
+
   /// The first step is complete and the circle name is set.
   bool get basicsComplete =>
-      circleName.isNotEmpty && birthDate != null && city != null;
+      circleName.isNotEmpty &&
+      (ownBasicsSaved || (birthDate != null && city != null));
 
   /// "Other" needs its text, here and in the two lists of step 3.
   bool get conditionsValid =>

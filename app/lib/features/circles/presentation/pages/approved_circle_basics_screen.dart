@@ -1,53 +1,31 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/features/circles/presentation/circle_flow_routes.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/account_name_field.dart';
 import 'package:app/features/circles/presentation/widgets/already_has_circle_view.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
+import 'package:app/features/circles/presentation/widgets/birth_date_city_fields.dart';
 import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
-import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 1 of 3 after the patient agreed to a request (PROFILE-01C): the name
-/// comes from the account, the circle name was set by the sender, and the
-/// patient gives the birth date and the city. Needs a [CreateCircleCubit] of the
-/// approved flow above it.
+/// The page after the patient agreed to a request (PROFILE-01C): the name
+/// comes from the account and the circle name was set by the sender, so the
+/// patient only creates the circle. The birth date and city come from the
+/// account; an account made before onboarding asked for them is asked here.
+/// Needs a [CreateCircleCubit] of the approved flow above it.
 class ApprovedCircleBasicsScreen extends StatelessWidget {
   const ApprovedCircleBasicsScreen({super.key});
 
-  Future<void> _pickBirthDate(
-    BuildContext context,
-    CreateCircleCubit cubit,
-    DateTime? current,
-  ) async {
-    final DateTime? picked = await showBirthDateSheet(
-      context,
-      selected: current,
-    );
-    if (picked != null) cubit.birthDateChanged(picked);
-  }
-
-  Future<void> _pickCity(
-    BuildContext context,
-    CreateCircleCubit cubit,
-    String? current,
-  ) async {
-    final String? picked = await showCitySheet(context, selected: current);
-    if (picked != null) cubit.cityChanged(picked);
-  }
-
-  void _next(BuildContext context, CreateCircleCubit cubit) {
+  Future<void> _create(BuildContext context, CreateCircleCubit cubit) async {
     if (cubit.continueFromApprovedBasics()) {
-      context.push(cubit.flow.healthRoute, extra: cubit.request);
+      await createCircleAndOpen(context, cubit);
     }
   }
 
@@ -66,7 +44,6 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
-              final String requiredText = context.tr('circles.field_required');
               return Column(
                 children: <Widget>[
                   Expanded(
@@ -75,8 +52,6 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           CircleStepHeader(
-                            step: 1,
-                            stepTitle: context.tr('circles.step_basics'),
                             title: context.tr('circles.approved_title'),
                             onBack: context.canPop()
                                 ? () => context.pop()
@@ -96,40 +71,31 @@ class ApprovedCircleBasicsScreen extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                          PickerField(
-                            label: context.tr('circles.birth_date'),
-                            hint: context.tr('circles.birth_date_hint'),
-                            icon: AppIcons.calendar,
-                            value: state.birthDate == null
-                                ? null
-                                : formatBirthDate(context, state.birthDate!),
-                            onTap: () =>
-                                _pickBirthDate(context, cubit, state.birthDate),
-                            errorText:
-                                state.showErrors && state.birthDate == null
-                                ? requiredText
-                                : null,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          PickerField(
-                            label: context.tr('circles.city'),
-                            hint: context.tr('circles.city_hint'),
-                            icon: AppIcons.mapPin,
-                            value: state.city,
-                            onTap: () => _pickCity(context, cubit, state.city),
-                            errorText: state.showErrors && state.city == null
-                                ? requiredText
-                                : null,
-                          ),
+                          if (state.asksBasics &&
+                              state.accountLoad !=
+                                  AccountLoad.loading) ...<Widget>[
+                            const SizedBox(height: AppSpacing.lg),
+                            BirthDateCityFields(
+                              birthDate: state.birthDate,
+                              city: state.city,
+                              onBirthDate: cubit.birthDateChanged,
+                              onCity: cubit.cityChanged,
+                              showErrors: state.showErrors,
+                            ),
+                          ],
+                          if (state.errorKey != null) ...<Widget>[
+                            const SizedBox(height: AppSpacing.lg),
+                            InlineError(messageKey: state.errorKey!),
+                          ],
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   PillButton(
-                    label: context.tr('circles.next'),
-                    onPressed: () => _next(context, cubit),
+                    label: context.tr('circles.create'),
+                    isLoading: state.status == CreateStatus.saving,
+                    onPressed: () => _create(context, cubit),
                   ),
                 ],
               );

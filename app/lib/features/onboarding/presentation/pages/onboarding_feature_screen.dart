@@ -4,6 +4,7 @@ import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/features/circles/presentation/widgets/birth_date_city_fields.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -11,7 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Name page of the account setup. Needs an [OnboardingCubit] above it.
+/// "About you" page of the account setup: the names, the birth date and the
+/// city. They are asked once here, so a circle for your own care needs only
+/// its name. Needs an [OnboardingCubit] above it.
 class OnboardingFeatureScreen extends StatefulWidget {
   const OnboardingFeatureScreen({super.key});
 
@@ -138,6 +141,16 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                                     state.displayName.trim().isEmpty
                                 ? requiredText
                                 : null,
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+                          BirthDateCityFields(
+                            birthDate: state.birthDate,
+                            city: state.city,
+                            onBirthDate: context
+                                .read<OnboardingCubit>()
+                                .birthDateChanged,
+                            onCity: context.read<OnboardingCubit>().cityChanged,
+                            showErrors: state.showErrors,
                           ),
                           if (state.errorKey != null) ...<Widget>[
                             const SizedBox(height: AppSpacing.lg),

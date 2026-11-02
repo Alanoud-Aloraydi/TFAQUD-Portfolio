@@ -47,9 +47,10 @@ EVERY_DAY = [1, 2, 3, 4, 5, 6, 7]
 
 # (phone, first name, last name, display name). The first one is the
 # account to sign in with; the second invites it to her circle.
+# Phone, names, and the birth date and city that onboarding asks for.
 DEMO_ACCOUNTS = (
-    ("+966500000001", "لينا", "العتيبي", "لينا"),
-    ("+966500000002", "سارة", "القحطاني", "سارة"),
+    ("+966500000001", "لينا", "العتيبي", "لينا", date(1994, 3, 12), "الرياض"),
+    ("+966500000002", "سارة", "القحطاني", "سارة", date(1990, 9, 2), "جدة"),
 )
 DEMO_PHONES = tuple(phone for phone, *_ in DEMO_ACCOUNTS)
 # A number with no account: the main demo account asks it for a circle.
@@ -139,8 +140,10 @@ class DemoBuilder:
                 first_name=first,
                 last_name=last,
                 display_name=display,
+                birth_date=birth_date,
+                city=city,
             )
-            for phone, first, last, display in DEMO_ACCOUNTS
+            for phone, first, last, display, birth_date, city in DEMO_ACCOUNTS
         ]
         self.session.add_all(rows)
         self.session.flush()

@@ -9,10 +9,13 @@ class NewSelfCircleModel {
 
   Map<String, dynamic> toJson() {
     final MedicalProfileDraft? medical = _circle.medicalProfile;
+    final DateTime? birthDate = _circle.birthDate;
+    final String? city = _circle.city;
     return <String, dynamic>{
       'name': _circle.name,
-      'birth_date': isoDate(_circle.birthDate),
-      'city': _circle.city,
+      // Left out: the server reads them from the account.
+      if (birthDate != null) 'birth_date': isoDate(birthDate),
+      'city': ?city,
       if (medical != null && !medical.isEmpty)
         'medical_profile': medicalJson(medical),
     };

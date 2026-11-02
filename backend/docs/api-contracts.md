@@ -242,7 +242,9 @@ Needs a valid access token. Tells the app who the token belongs to.
     "last_name": null,
     "display_name": null,
     "profile_complete": false,
-    "app_mode": null
+    "app_mode": null,
+    "birth_date": null,
+    "city": null
   }
 }
 ```
@@ -326,7 +328,9 @@ Body:
     "last_name": null,
     "display_name": null,
     "profile_complete": false,
-    "app_mode": null
+    "app_mode": null,
+    "birth_date": null,
+    "city": null
   }
 }
 ```
@@ -362,10 +366,21 @@ Feature F01, the page after the first sign-in. Needs a valid access token. Saves
 the three names of the account that the token belongs to and replaces the earlier
 values. It is `PUT` because the app sends all three names every time.
 
+Onboarding also sends the person's birth date and city (Built, 2 November 2026).
+They are kept on the account, so a circle for your own care needs only its name
+(see "Creating a circle"). The account page sends only the names; a birth date or
+city that is left out keeps the saved one.
+
 Body:
 
 ```json
-{ "first_name": "Leen", "last_name": "Algraawi", "display_name": "Leen" }
+{
+  "first_name": "Leen",
+  "last_name": "Algraawi",
+  "display_name": "Leen",
+  "birth_date": "1990-03-04",
+  "city": "Riyadh"
+}
 ```
 
 200:
@@ -379,7 +394,9 @@ Body:
     "last_name": "Algraawi",
     "display_name": "Leen",
     "profile_complete": true,
-    "app_mode": null
+    "app_mode": null,
+    "birth_date": "1990-03-04",
+    "city": "Riyadh"
   }
 }
 ```
@@ -390,6 +407,8 @@ Body:
 | `first_name`, `last_name` | 1 to 50 characters after the spaces at both ends are removed. | To confirm |
 | `display_name` | 1 to 30 characters, the same way. | To confirm |
 | One line | A name cannot contain a line break or another control character (detail code `invalid_name`). | To confirm |
+| `birth_date` | Optional. `YYYY-MM-DD`, not before 1900 and not in the future (`invalid_birth_date`). | Built |
+| `city` | Optional. 1 to 60 characters, one line. | Built |
 
 Errors: 400 `invalid_json`, 401 (`missing_token`, `invalid_token`,
 `access_token_expired`, `session_revoked`), 404 `user_not_found`, 422
@@ -472,7 +491,12 @@ manages nothing.
 #### Creating a circle
 
 Self-care (PROFILE-01). The account is the patient and the manager. The name of the
-patient is read from the account.
+patient is read from the account. Since 2 November 2026 the app sends only `name`:
+`birth_date` and `city` are optional and, when left out, are read from the account
+(onboarding saves them). An account that has neither saved nor sent them gets 422
+`birth_date_required` or `city_required`. The same holds for
+`POST /api/v1/circle-requests/{request_id}/complete`, whose body can now be `{}`.
+The health condition and allergies are filled later in the medical file.
 
 ```json
 POST /api/v1/circles/self
@@ -526,8 +550,8 @@ for example `Mother Noura`.
 | Profile first | The account needs its three names (422 `profile_incomplete`). |
 
 Errors: 400, 401, 422 (`validation_error`, `profile_incomplete`, `already_has_circle`,
-`mode_conflict`, `patient_name_required`, `invalid_birth_date`, the medical codes),
-503.
+`mode_conflict`, `patient_name_required`, `invalid_birth_date`, `birth_date_required`,
+`city_required`, the medical codes), 503.
 
 #### The circle page
 
@@ -758,7 +782,7 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 
 | Table | What it holds | Rules the database enforces |
 |---|---|---|
-| `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. |
+| `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `birth_date`, `city`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. `birth_date` (not before 1900) and `city` (1 to 60 characters) are optional; onboarding fills them (migration 0009). |
 | `account_session` | One row per sign-in: the hash of the refresh token, the times, `revoked_at`. | Deleted with the account. The hash is unique. No device and no IP address are stored. |
 | `otp_challenge`, `otp_send_attempt` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
 | `care_circle` | A circle: `name`. | A circle always has exactly one patient and at least one manager (checked when the transaction commits). |

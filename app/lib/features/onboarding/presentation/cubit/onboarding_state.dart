@@ -5,12 +5,14 @@ enum OnboardingStatus { idle, saving, saved }
 /// Who the care circle is for (page "كيف تريد أن تبدأ؟").
 enum CareTarget { self, other }
 
-/// State of the account setup pages (name, then how to start).
+/// State of the account setup pages (about you, then how to start).
 class OnboardingState extends Equatable {
   const OnboardingState({
     this.firstName = '',
     this.lastName = '',
     this.displayName = '',
+    this.birthDate,
+    this.city,
     this.showErrors = false,
     this.status = OnboardingStatus.idle,
     this.errorKey,
@@ -21,6 +23,11 @@ class OnboardingState extends Equatable {
   final String firstName;
   final String lastName;
   final String displayName;
+
+  /// Your own birth date and city: asked once here, so a circle for your own
+  /// care needs only its name.
+  final DateTime? birthDate;
+  final String? city;
 
   /// True after a tap on continue with an empty field.
   final bool showErrors;
@@ -39,7 +46,9 @@ class OnboardingState extends Equatable {
   bool get isProfileValid =>
       firstName.trim().isNotEmpty &&
       lastName.trim().isNotEmpty &&
-      displayName.trim().isNotEmpty;
+      displayName.trim().isNotEmpty &&
+      birthDate != null &&
+      city != null;
 
   /// The start page may continue once the choice is complete.
   bool get canContinueStart =>
@@ -50,6 +59,8 @@ class OnboardingState extends Equatable {
     String? firstName,
     String? lastName,
     String? displayName,
+    DateTime? birthDate,
+    String? city,
     bool? showErrors,
     OnboardingStatus? status,
     String? errorKey,
@@ -62,6 +73,8 @@ class OnboardingState extends Equatable {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       displayName: displayName ?? this.displayName,
+      birthDate: birthDate ?? this.birthDate,
+      city: city ?? this.city,
       showErrors: showErrors ?? this.showErrors,
       status: status ?? this.status,
       errorKey: clearError ? null : (errorKey ?? this.errorKey),
@@ -77,6 +90,8 @@ class OnboardingState extends Equatable {
     firstName,
     lastName,
     displayName,
+    birthDate,
+    city,
     showErrors,
     status,
     errorKey,

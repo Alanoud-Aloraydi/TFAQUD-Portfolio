@@ -52,8 +52,21 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
       if (_medical && file != null) _medicalSection(file),
       if (_medications) _medicationSection(widget.plans),
     ];
+    final String exportedOn = context.tr(
+      'record_export.exported_on',
+      args: <String>[formatBirthDate(context, DateTime.now())],
+    );
+    // Read now: the footer is written after the page has awaited.
+    final String pageTemplate = context.tr('record_export.page');
     final error = await context.read<RecordExportCubit>().share(
-      title: context.tr('record_export.title'),
+      title: context.tr('record_export.pdf_title'),
+      subtitle: file == null
+          ? exportedOn
+          : '${file.patient.fullName} · $exportedOn',
+      appName: context.tr('auth.app_name'),
+      pageLabel: (int page, int pages) => pageTemplate
+          .replaceFirst('{}', '$page')
+          .replaceFirst('{}', '$pages'),
       sections: sections,
     );
     if (!mounted) return;
@@ -64,44 +77,84 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     }
   }
 
+  /// The patient's data as label-value lines. The blood type and the phone
+  /// numbers are set left to right on their own, so the page never reverses
+  /// them.
   RecordPdfSection _medicalSection(MedicalFile file) => RecordPdfSection(
     title: context.tr('record_export.medical_file'),
-    lines: [
-      '${context.tr('circles.name')}: ${file.patient.fullName}',
-      '${context.tr('circles.birth_date')}: '
-          '${formatBirthDate(context, file.patient.birthDate)}',
-      '${context.tr('circles.city')}: ${file.patient.city}',
-      '${context.tr('circles.blood_type')}: '
-          '${MedicalTexts.bloodType(context, file.profile.bloodType)}',
-      '${context.tr('circles.allergies_title')}: '
-          '${MedicalTexts.allergies(context, file.profile.allergies)}',
-      '${context.tr('circles.conditions')}: '
-          '${MedicalTexts.conditions(context, file.profile.conditions)}',
+    rows: <RecordPdfRow>[
+      RecordPdfRow(
+        label: context.tr('circles.name'),
+        value: file.patient.fullName,
+      ),
+      RecordPdfRow(
+        label: context.tr('circles.birth_date'),
+        value: formatBirthDate(context, file.patient.birthDate),
+      ),
+      RecordPdfRow(label: context.tr('circles.city'), value: file.patient.city),
+      RecordPdfRow(
+        label: context.tr('circles.blood_type'),
+        value: MedicalTexts.bloodType(context, file.profile.bloodType),
+        ltr: file.profile.bloodType != null,
+      ),
+      RecordPdfRow(
+        label: context.tr('circles.allergies_title'),
+        value: MedicalTexts.allergies(context, file.profile.allergies),
+      ),
+      RecordPdfRow(
+        label: context.tr('circles.conditions'),
+        value: MedicalTexts.conditions(context, file.profile.conditions),
+      ),
       for (final contact in file.contacts)
-        '${MedicalTexts.relation(context, contact)}: '
-            '${contact.name} · ${MedicalTexts.phone(contact)}',
+        RecordPdfRow(
+          label: MedicalTexts.relation(context, contact),
+          value: contact.name,
+          extra: MedicalTexts.phone(contact),
+        ),
     ],
   );
 
+  /// One block per medicine: its name and whether it is current, the
+  /// strength (left to right) and the form, and one line per dose time.
   RecordPdfSection _medicationSection(List<MedicationPlan> plans) {
     final today = DateUtils.dateOnly(DateTime.now());
     return RecordPdfSection(
       title: context.tr('record_export.medications'),
-      lines: plans.isEmpty
-          ? [context.tr('medications.no_records')]
-          : [
-              for (final plan in plans) ...[
-                '${plan.version.name} · '
+      empty: plans.isEmpty ? context.tr('medications.no_records') : null,
+      items: <RecordPdfItem>[
+        for (final plan in plans)
+          RecordPdfItem(
+            title: plan.version.name,
+            badge: context.tr(
+              plan.isPreviousOn(today)
+                  ? 'record_export.previous'
+                  : 'record_export.current',
+            ),
+            badgeMuted: plan.isPreviousOn(today),
+            detail: <RecordPdfRow>[
+              RecordPdfRow(
+                value:
                     '${formatMedicationNumber(plan.version.strengthValue)} '
-                    '${plan.version.strengthUnit.apiValue} · '
-                    '${context.tr('medications.form.${plan.version.dosageForm.name}')} '
-                    '(${context.tr(plan.isPreviousOn(today) ? 'record_export.previous' : 'record_export.current')})',
-                for (final schedule in plan.version.schedules)
-                  '${schedule.time} · '
+                    '${plan.version.strengthUnit.apiValue}',
+                ltr: true,
+              ),
+              RecordPdfRow(
+                value: context.tr(
+                  'medications.form.${plan.version.dosageForm.name}',
+                ),
+              ),
+            ],
+            rows: <RecordPdfRow>[
+              for (final schedule in plan.version.schedules)
+                RecordPdfRow(
+                  label: schedule.time,
+                  value:
                       '${formatMedicationNumber(schedule.doseValue)} '
                       '${context.tr('medications.unit.${schedule.doseUnit.name}')}',
-              ],
+                ),
             ],
+          ),
+      ],
     );
   }
 

@@ -49,8 +49,12 @@ class RecordExportCubit extends Cubit<RecordExportState> {
     );
   }
 
+  /// [pageLabel] writes «صفحة 1 من 2» for the footer of each page.
   Future<String?> share({
     required String title,
+    required String subtitle,
+    required String appName,
+    required String Function(int page, int pages) pageLabel,
     required List<RecordPdfSection> sections,
   }) async {
     if (state.sharing || sections.isEmpty) return 'record_export.select_one';
@@ -62,7 +66,13 @@ class RecordExportCubit extends Cubit<RecordExportState> {
       ),
     );
     try {
-      await _exporter.share(title: title, sections: sections);
+      await _exporter.share(
+        title: title,
+        subtitle: subtitle,
+        appName: appName,
+        pageLabel: pageLabel,
+        sections: sections,
+      );
       return null;
     } on Exception {
       return 'record_export.failed';

@@ -26,8 +26,50 @@ def test_the_account_page_reads_the_real_account(
         "display_name": "Reem",
         "profile_complete": True,
         "app_mode": "detailed",
+        "birth_date": None,
+        "city": None,
         "patient_circle_id": None,
     }
+
+
+def test_onboarding_saves_the_birth_date_and_city(
+    database_app, database, account
+):
+    api = Api(database_app, account(name="Reem"))
+    names = {"first_name": "Reem", "last_name": "Family", "display_name": "Reem"}
+
+    saved = api.put(
+        f"{URL}/profile",
+        {**names, "birth_date": "1990-03-04", "city": "Riyadh"},
+    )
+    assert saved.status_code == 200
+    assert saved.json["account"]["birth_date"] == "1990-03-04"
+    assert saved.json["account"]["city"] == "Riyadh"
+
+    # The account page sends only the names: the birth date and city stay.
+    renamed = api.put(f"{URL}/profile", {**names, "display_name": "R"})
+    assert renamed.json["account"]["birth_date"] == "1990-03-04"
+    assert renamed.json["account"]["city"] == "Riyadh"
+    assert api.get(URL).json["account"]["city"] == "Riyadh"
+
+
+def test_a_birth_date_in_the_future_is_not_saved(
+    database_app, database, account
+):
+    api = Api(database_app, account())
+
+    response = api.put(
+        f"{URL}/profile",
+        {
+            "first_name": "Nora",
+            "last_name": "Family",
+            "display_name": "Nora",
+            "birth_date": "2999-01-01",
+            "city": "Riyadh",
+        },
+    )
+
+    assert error_code(response, 422) == "invalid_birth_date"
 
 
 def test_deleting_an_account_without_circles_ends_its_sign_in(

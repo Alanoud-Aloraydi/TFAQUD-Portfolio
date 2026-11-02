@@ -17,6 +17,7 @@ import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_tile.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -161,6 +162,15 @@ class MedicalFileScreen extends StatelessWidget {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       children: <Widget>[
+        // A new circle has no medical answers yet: the yellow «!» says what
+        // is missing and opens the edit page.
+        if (file.needsFilling) ...<Widget>[
+          MedicalFileAlert(
+            gaps: file.gaps,
+            onFill: () => _edit(context, cubit),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
         SettingsCard(
           children: <Widget>[
             InfoRow(

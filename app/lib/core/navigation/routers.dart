@@ -25,29 +25,23 @@ class Routes {
   static const String addCircle = '/circles/new';
   static const String home = '/home';
 
-  // The circle of the signed-in person, created for themselves in three steps:
-  // basic details, health condition, allergies.
+  // The circle of the signed-in person, created for themselves on one page:
+  // its name. The medical file is filled later.
   static const String createSelfCircle = '/circles/new/self';
-  static const String createSelfCircleHealth = '/circles/new/self/health';
-  static const String createSelfCircleAllergies = '/circles/new/self/allergies';
 
-  // The circle of a patient who does not use the app, in the same three steps.
+  // The circle of a patient who does not use the app, on one page.
   static const String createPatientCircle = '/circles/new/patient';
-  static const String createPatientCircleHealth = '/circles/new/patient/health';
-  static const String createPatientCircleAllergies =
-      '/circles/new/patient/allergies';
 
   // A request to a patient who uses the app: the phone number page. The page
   // shows the waiting state itself once the request is sent.
   static const String requestPatient = '/circles/new/request';
 
   // The patient's side of a request, opened from the notifications. The page of
-  // the request takes the answer; after "agree" the three steps of the basic
-  // data (name from the account, health condition, allergies) create the circle.
+  // the request takes the answer; after "agree" one page creates the circle
+  // (the name and, since onboarding, the birth date and city come from the
+  // account).
   static const String replyRequest = '/notifications/request';
   static const String completeRequest = '/circles/complete';
-  static const String completeRequestHealth = '/circles/complete/health';
-  static const String completeRequestAllergies = '/circles/complete/allergies';
 
   // Inside a circle: its medical file (read, then edit) and its emergency
   // card. The id of the circle is part of the address, so the pages work after

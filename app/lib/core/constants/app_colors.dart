@@ -23,4 +23,10 @@ class AppColors {
   static const Color success = Color(0xFF286344);
   static const Color warning = Color(0xFF795713);
   static const Color error = Color(0xFFA53636);
+  // The emergency card's allergy box and the segmented switch (handoff
+  // red-100, red-300, navy-100 and navy-300).
+  static const Color errorLight = Color(0xFFFDECEA);
+  static const Color errorBorder = Color(0xFFF3B4AE);
+  static const Color slateMist = Color(0xFFEEF0F4);
+  static const Color slateSoft = Color(0xFFC3C8D5);
 }
