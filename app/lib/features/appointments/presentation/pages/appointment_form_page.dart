@@ -1,0 +1,322 @@
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
+import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+class AppointmentFormPage extends StatefulWidget {
+  const AppointmentFormPage({
+    super.key,
+    required this.circleId,
+    this.appointmentId,
+  });
+
+  final String circleId;
+  final String? appointmentId;
+
+  @override
+  State<AppointmentFormPage> createState() => _AppointmentFormPageState();
+}
+
+class _AppointmentFormPageState extends State<AppointmentFormPage> {
+  static const _specialties = [
+    'internal',
+    'diabetes',
+    'cardiology',
+    'eyes',
+    'dental',
+    'neurology',
+  ];
+  AppointmentKind _kind = AppointmentKind.followUp;
+  String _specialty = 'diabetes';
+  DateTime _date = DateUtils.dateOnly(DateTime.now());
+  TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
+  String _remoteMethod = 'video';
+  String? _companionId;
+  final _place = TextEditingController();
+  bool _initialized = false;
+  bool _saving = false;
+  String? _errorKey;
+
+  @override
+  void dispose() {
+    _place.dispose();
+    super.dispose();
+  }
+
+  void _fill(CareAppointment value) {
+    if (_initialized) return;
+    _initialized = true;
+    _specialty = value.specialty;
+    _kind = value.kind;
+    _date = value.scheduledOn;
+    final parts = value.time.split(':');
+    _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    _place.text = value.place ?? '';
+    _remoteMethod = value.remoteMethod ?? 'video';
+    _companionId = value.companionAccountId;
+  }
+
+  String _dateText(DateTime date) =>
+      '${context.tr('common.weekdays.${date.weekday}')} '
+      '${date.day} ${context.tr('circles.months.${date.month}')}';
+
+  String _timeText(TimeOfDay time) =>
+      '${time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod}:'
+      '${time.minute.toString().padLeft(2, '0')} '
+      '${context.tr(time.period == DayPeriod.am ? 'common.am' : 'common.pm')}';
+
+  Future<void> _save(CareAppointment? value) async {
+    if (_companionId == null) {
+      setState(() => _errorKey = 'appointments.companion_required');
+      return;
+    }
+    if (_kind != AppointmentKind.remote && _place.text.trim().isEmpty) {
+      setState(() => _errorKey = 'appointments.place_required');
+      return;
+    }
+    final draft = AppointmentDraft(
+      specialty: _specialty,
+      kind: _kind,
+      scheduledOn: _date,
+      time:
+          '${_time.hour.toString().padLeft(2, '0')}:'
+          '${_time.minute.toString().padLeft(2, '0')}',
+      place: _kind == AppointmentKind.remote ? null : _place.text.trim(),
+      remoteMethod: _kind == AppointmentKind.remote ? _remoteMethod : null,
+      companionAccountId: _companionId!,
+    );
+    setState(() {
+      _saving = true;
+      _errorKey = null;
+    });
+    final cubit = context.read<AppointmentsCubit>();
+    final saved = value == null
+        ? await cubit.create(draft)
+        : await cubit.revise(value, draft);
+    if (!mounted) return;
+    if (saved) {
+      context.pop(true);
+    } else {
+      setState(() {
+        _saving = false;
+        _errorKey = cubit.state.errorKey ?? 'error.unknown';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppointmentsCubit>().state;
+    final companions = context.watch<AppointmentCompanionsCubit>().state;
+    CareAppointment? appointment;
+    if (widget.appointmentId != null) {
+      for (final item in state.appointments) {
+        if (item.id == widget.appointmentId) appointment = item;
+      }
+      if (appointment != null) _fill(appointment);
+      if (appointment == null) {
+        return Scaffold(
+          body: Center(
+            child: state.status == AppointmentsLoadStatus.loading
+                ? const CircularProgressIndicator()
+                : Text(
+                    context.tr(state.errorKey ?? 'error.resource_not_found'),
+                  ),
+          ),
+        );
+      }
+    }
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        titleSpacing: AppSpacing.lg,
+        title: GlassSurface(
+          borderRadius: BorderRadius.circular(AppRadius.capsule),
+          child: SizedBox(
+            height: 52,
+            child: Row(
+              children: [
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: Text(context.tr('common.cancel')),
+                ),
+                Expanded(
+                  child: Text(
+                    context.tr(
+                      appointment == null
+                          ? 'appointments.new'
+                          : 'appointments.edit',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
+                  child: FilledButton(
+                    onPressed: _saving ? null : () => _save(appointment),
+                    child: Text(context.tr('appointments.save')),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          InsetGroup(
+            header: context.tr('appointments.appointment_group'),
+            children: [
+              InsetBlock(
+                semanticLabel: context.tr('appointments.specialty'),
+                child: _choices(
+                  _specialties,
+                  _specialty,
+                  (value) => setState(() => _specialty = value),
+                  (value) => context.tr('appointments.specialties.$value'),
+                ),
+              ),
+              InsetBlock(
+                semanticLabel: context.tr('appointments.type'),
+                child: _choices(
+                  AppointmentKind.values.map((kind) => kind.name).toList(),
+                  _kind.name,
+                  (value) => setState(
+                    () => _kind = AppointmentKind.values.byName(value),
+                  ),
+                  (value) => context.tr('appointments.kinds.$value'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          InsetGroup(
+            header: context.tr('appointments.time_place_group'),
+            children: [
+              InsetRow(
+                label: context.tr('appointments.date'),
+                value: _dateText(_date),
+                showChevron: true,
+                onTap: () async {
+                  final today = DateUtils.dateOnly(DateTime.now());
+                  final selected = await showTafaqodDateSheet(
+                    context,
+                    title: context.tr('appointments.date'),
+                    initialDate: _date.isBefore(today) ? today : _date,
+                    firstDate: today,
+                    lastDate: DateTime(today.year + 5, 12, 31),
+                  );
+                  if (selected != null) setState(() => _date = selected);
+                },
+              ),
+              InsetRow(
+                label: context.tr('appointments.time'),
+                value: _timeText(_time),
+                showChevron: true,
+                onTap: () async {
+                  final selected = await showTafaqodTimeSheet(
+                    context,
+                    title: context.tr('appointments.time'),
+                    initialTime: _time,
+                  );
+                  if (selected != null) setState(() => _time = selected);
+                },
+              ),
+              if (_kind == AppointmentKind.remote)
+                InsetBlock(
+                  semanticLabel: context.tr('appointments.remote_method'),
+                  child: GlassSegmentedControl<String>(
+                    segments: {
+                      'video': context.tr('appointments.video'),
+                      'phone': context.tr('appointments.phone'),
+                    },
+                    selected: _remoteMethod,
+                    onChanged: (value) => setState(() => _remoteMethod = value),
+                  ),
+                )
+              else
+                InsetBlock(
+                  semanticLabel: context.tr('appointments.place'),
+                  child: TextField(
+                    controller: _place,
+                    textAlign: TextAlign.start,
+                    maxLength: 160,
+                    decoration: InputDecoration(
+                      labelText: context.tr('appointments.place'),
+                      hintText: context.tr('appointments.place_hint'),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          InsetGroup(
+            header: context.tr('appointments.companion'),
+            footer: context.tr('appointments.companion_hint'),
+            children: [
+              InsetBlock(
+                child: companions.loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : companions.errorKey != null
+                    ? TextButton(
+                        onPressed: () => context
+                            .read<AppointmentCompanionsCubit>()
+                            .load(widget.circleId),
+                        child: Text(context.tr(companions.errorKey!)),
+                      )
+                    : companions.companions.isEmpty
+                    ? Text(context.tr('appointments.no_companions'))
+                    : _choices(
+                        companions.companions.map((item) => item.id).toList(),
+                        _companionId,
+                        (value) => setState(() => _companionId = value),
+                        (value) => companions.companions
+                            .firstWhere((item) => item.id == value)
+                            .name,
+                      ),
+              ),
+            ],
+          ),
+          if (_errorKey != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              context.tr(_errorKey!),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _choices(
+    List<String> options,
+    String? selected,
+    ValueChanged<String> onSelected,
+    String Function(String) label,
+  ) => Wrap(
+    spacing: AppSpacing.sm,
+    runSpacing: AppSpacing.sm,
+    children: [
+      for (final value in options)
+        ChoiceChip(
+          label: Text(label(value)),
+          selected: selected == value,
+          onSelected: (_) => onSelected(value),
+        ),
+    ],
+  );
+}

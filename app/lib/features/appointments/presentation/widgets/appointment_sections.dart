@@ -1,0 +1,385 @@
+import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+String appointmentTitle(BuildContext context, CareAppointment value) =>
+    '${context.tr('appointments.clinic')} '
+    '${context.tr('appointments.specialties.${value.specialty}')}';
+
+String appointmentDate(BuildContext context, DateTime date) =>
+    '${context.tr('common.weekdays.${date.weekday}')} '
+    '${date.day} ${context.tr('circles.months.${date.month}')}';
+
+String appointmentTime(BuildContext context, String value) {
+  final parts = value.split(':');
+  final hour = int.parse(parts[0]);
+  final minute = int.parse(parts[1]);
+  return '${hour % 12 == 0 ? 12 : hour % 12}:'
+      '${minute.toString().padLeft(2, '0')} '
+      '${context.tr(hour < 12 ? 'common.am' : 'common.pm')}';
+}
+
+class AppointmentPlanSection extends StatelessWidget {
+  const AppointmentPlanSection({
+    super.key,
+    required this.circleId,
+    required this.canManage,
+    required this.header,
+  });
+
+  final String circleId;
+  final bool canManage;
+  final Widget header;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppointmentsCubit>().state;
+    final now = DateTime.now();
+    final values =
+        state.appointments
+            .where(
+              (item) =>
+                  item.status == AppointmentStatus.scheduled &&
+                  !item.scheduledAt.isBefore(now),
+            )
+            .toList()
+          ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+    return ListView(
+      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+      children: [
+        header,
+        const SizedBox(height: AppSpacing.lg),
+        if (state.errorKey != null &&
+            state.status != AppointmentsLoadStatus.failure)
+          Text(context.tr(state.errorKey!)),
+        if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
+          const Center(child: CircularProgressIndicator())
+        else if (state.status == AppointmentsLoadStatus.failure)
+          TextButton(
+            onPressed: () => context.read<AppointmentsCubit>().load(circleId),
+            child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+          )
+        else if (values.isEmpty)
+          Center(child: Text(context.tr('appointments.no_upcoming')))
+        else
+          for (final value in values) ...[
+            AppointmentCard(
+              value: value,
+              circleId: circleId,
+              canManage: canManage,
+              showRelativeDate: true,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+      ],
+    );
+  }
+}
+
+class AppointmentCard extends StatelessWidget {
+  const AppointmentCard({
+    super.key,
+    required this.value,
+    required this.circleId,
+    required this.canManage,
+    this.showRelativeDate = false,
+  });
+
+  final CareAppointment value;
+  final String circleId;
+  final bool canManage;
+  final bool showRelativeDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final remote = value.kind == AppointmentKind.remote;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppSemanticColors.surfaceContent,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: AppSemanticColors.surfacePlan,
+                  child: Icon(
+                    remote ? CupertinoIcons.videocam : CupertinoIcons.calendar,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        appointmentTitle(context, value),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(context.tr('appointments.kinds.${value.kind.name}')),
+                    ],
+                  ),
+                ),
+                CompactStatusBadge(
+                  text: context.tr(
+                    showRelativeDate
+                        ? _relativeDateKey(value.scheduledOn)
+                        : value.status == AppointmentStatus.scheduled &&
+                              value.scheduledAt.isBefore(DateTime.now())
+                        ? 'appointments.status.unconfirmed'
+                        : 'appointments.status.${value.status.name}',
+                    args: showRelativeDate
+                        ? [
+                            '${DateUtils.dateOnly(value.scheduledOn).difference(DateUtils.dateOnly(DateTime.now())).inDays}',
+                          ]
+                        : null,
+                  ),
+                  background: AppSemanticColors.surfaceContent,
+                  foreground: AppSemanticColors.textPrimary,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppSemanticColors.surfacePlan,
+                borderRadius: BorderRadius.circular(AppRadius.field),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '${appointmentDate(context, value.scheduledOn)} · '
+                      '${appointmentTime(context, value.time)}',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    Text(
+                      remote
+                          ? context.tr('appointments.${value.remoteMethod}')
+                          : value.place ?? '',
+                    ),
+                    Text(
+                      context.tr(
+                        'appointments.companion_name',
+                        args: [value.companionName],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (value.status == AppointmentStatus.scheduled &&
+                !value.scheduledAt.isBefore(DateTime.now())) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                context.tr('appointments.appears_today'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            if (value.status == AppointmentStatus.completed)
+              TextButton.icon(
+                onPressed: () => context.push(
+                  Routes.appointmentVisit(circleId, value.id),
+                  extra: canManage,
+                ),
+                icon: const Icon(CupertinoIcons.doc_text),
+                label: Text(context.tr('appointments.visit_title')),
+              ),
+            if (canManage && value.status == AppointmentStatus.scheduled)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Wrap(
+                  spacing: AppSpacing.sm,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        final changed = await context.push<bool>(
+                          Routes.editAppointment(circleId, value.id),
+                        );
+                        if (changed == true && context.mounted) {
+                          context.read<AppointmentsCubit>().load(circleId);
+                        }
+                      },
+                      icon: const Icon(CupertinoIcons.pencil),
+                      label: Text(context.tr('appointments.edit')),
+                    ),
+                    if (!value.scheduledAt.isAfter(DateTime.now()))
+                      TextButton(
+                        onPressed: () =>
+                            _status(context, AppointmentStatus.completed),
+                        child: Text(context.tr('appointments.mark_completed')),
+                      ),
+                    TextButton(
+                      onPressed: () =>
+                          _status(context, AppointmentStatus.cancelled),
+                      child: Text(
+                        context.tr('appointments.cancel_appointment'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _status(BuildContext context, AppointmentStatus status) async {
+    final confirmed = await showAppAlert<bool>(
+      context,
+      title: context.tr(
+        status == AppointmentStatus.completed
+            ? 'appointments.confirm_completed'
+            : 'appointments.confirm_cancelled',
+      ),
+      actions: [
+        AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
+        AppAlertAction<bool>(
+          label: context.tr('appointments.confirm'),
+          value: true,
+          primary: true,
+        ),
+      ],
+    );
+    if (confirmed == true && context.mounted) {
+      context.read<AppointmentsCubit>().setStatus(value, status);
+    }
+  }
+
+  String _relativeDateKey(DateTime date) {
+    final days = DateUtils.dateOnly(date)
+        .difference(DateUtils.dateOnly(DateTime.now()))
+        .inDays;
+    if (days == 0) return 'appointments.today';
+    if (days == 1) return 'appointments.tomorrow';
+    if (days == 2) return 'appointments.in_two_days';
+    return 'appointments.after_days';
+  }
+}
+
+class AppointmentRecordSection extends StatefulWidget {
+  const AppointmentRecordSection({
+    super.key,
+    required this.circleId,
+    required this.canManage,
+    required this.header,
+  });
+
+  final String circleId;
+  final bool canManage;
+  final Widget header;
+
+  @override
+  State<AppointmentRecordSection> createState() =>
+      _AppointmentRecordSectionState();
+}
+
+class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
+  String _filter = 'all';
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppointmentsCubit>().state;
+    final now = DateTime.now();
+    final values = state.appointments.where((item) {
+      final upcoming =
+          item.status == AppointmentStatus.scheduled &&
+          !item.scheduledAt.isBefore(now);
+      return _filter == 'all' || (_filter == 'upcoming') == upcoming;
+    }).toList()..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+    return ListView(
+      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+      children: [
+        widget.header,
+        const SizedBox(height: AppSpacing.md),
+        if (state.errorKey != null &&
+            state.status != AppointmentsLoadStatus.failure)
+          Text(context.tr(state.errorKey!)),
+        GlassSegmentedControl<String>(
+          segments: {
+            for (final key in const ['all', 'upcoming', 'previous'])
+              key: context.tr('appointments.filters.$key'),
+          },
+          selected: _filter,
+          onChanged: (value) => setState(() => _filter = value),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
+          const Center(child: CircularProgressIndicator())
+        else if (state.status == AppointmentsLoadStatus.failure)
+          TextButton(
+            onPressed: () =>
+                context.read<AppointmentsCubit>().load(widget.circleId),
+            child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+          )
+        else if (values.isEmpty)
+          Center(child: Text(context.tr('appointments.no_records')))
+        else
+          for (final value in values) ...[
+            AppointmentCard(
+              value: value,
+              circleId: widget.circleId,
+              canManage: widget.canManage,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+      ],
+    );
+  }
+}
+
+class AppointmentTodayRow extends StatelessWidget {
+  const AppointmentTodayRow({super.key, required this.value});
+  final CareAppointment value;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: AppSemanticColors.surfaceContent,
+      borderRadius: BorderRadius.circular(AppRadius.field),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          const Icon(CupertinoIcons.calendar),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(appointmentTitle(context, value)),
+                Text(
+                  context.tr(
+                    'appointments.companion_name',
+                    args: [value.companionName],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(appointmentTime(context, value.time)),
+        ],
+      ),
+    ),
+  );
+}
