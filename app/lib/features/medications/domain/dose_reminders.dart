@@ -30,7 +30,7 @@ class DoseReminderTexts {
   /// «حان موعد دواء أمي نورة».
   final String Function(ReminderCircle circle) title;
 
-  /// «ميتفورمين 500 mg · 1 قرص · بعد الأكل».
+  /// The medicine's name, «ميتفورمين».
   final String Function(DoseOccurrence dose) body;
 
   /// The last note: open the app so the reminders go on.

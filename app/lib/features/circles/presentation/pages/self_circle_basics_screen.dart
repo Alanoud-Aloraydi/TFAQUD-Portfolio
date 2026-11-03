@@ -1,9 +1,9 @@
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
@@ -55,7 +55,6 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
   @override
   Widget build(BuildContext context) {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
-    final TextTheme text = Theme.of(context).textTheme;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -85,12 +84,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                                 : null,
                           ),
                           const SizedBox(height: AppSpacing.xl),
-                          Text(
-                            context.tr('circles.circle_name'),
-                            style: text.titleSmall?.copyWith(
-                              color: context.tokens.textSecondary,
-                            ),
-                          ),
+                          InsetText.header(context.tr('circles.circle_name')),
                           const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: <ChipOption>[
@@ -122,12 +116,7 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                             ),
                           ],
                           const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            context.tr('circles.name_hint'),
-                            style: text.bodySmall?.copyWith(
-                              color: context.tokens.textSecondary,
-                            ),
-                          ),
+                          InsetText.note(context.tr('circles.name_hint')),
                           // Only an account that has not saved them yet:
                           // onboarding asks for both now.
                           if (state.asksBasics &&

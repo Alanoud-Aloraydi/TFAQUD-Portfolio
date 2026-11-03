@@ -1,7 +1,7 @@
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -37,14 +37,10 @@ class CircleLabelPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          context.tr('circles.label_title'),
-          style: text.titleSmall?.copyWith(color: context.tokens.textSecondary),
-        ),
+        InsetText.header(context.tr('circles.label_title')),
         const SizedBox(height: AppSpacing.sm),
         OptionChips(
           options: <ChipOption>[
@@ -66,10 +62,7 @@ class CircleLabelPicker extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          hint,
-          style: text.bodySmall?.copyWith(color: context.tokens.textSecondary),
-        ),
+        InsetText.note(hint),
       ],
     );
   }

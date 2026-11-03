@@ -1,8 +1,8 @@
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
@@ -143,12 +143,8 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                           maxLength: AccountCubit.maxDisplayNameLength,
                           onChanged: (_) => setState(() => _errorKey = null),
                         ),
-                        Text(
-                          context.tr('account.display_name_help'),
-                          textAlign: TextAlign.start,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: context.tokens.textSecondary),
-                        ),
+                        const SizedBox(height: AppSpacing.labelGap),
+                        InsetText.note(context.tr('account.display_name_help')),
                         const SizedBox(height: AppSpacing.lg),
                         SettingsSection(
                           title: context.tr('account.phone'),
@@ -164,9 +160,8 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                         ),
                         if (_errorKey != null) ...[
                           const SizedBox(height: AppSpacing.md),
-                          Text(
+                          InsetText(
                             context.tr(_errorKey!),
-                            textAlign: TextAlign.start,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
                             ),

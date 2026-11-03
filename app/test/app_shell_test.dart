@@ -2475,35 +2475,15 @@ void main() {
 
         expect(circles.saveCalls, <String>['profile']);
         expect(circles.profileUpdates.single.bloodType, 'A+');
-        // Back on the file page, with the confirmation and the new blood type
-        // at once: what the server kept comes back from the save, so nothing
-        // is read again. The edit page started from the file page's file, so
-        // it read nothing either.
+        // «حفظ» goes back to the circle tab, past the medical file page,
+        // with the confirmation. Its patient card has the new blood type at
+        // once: what the server kept comes back from the save, so nothing is
+        // read again. The edit page started from the file page's file, so it
+        // read nothing either.
         expect(find.byType(MedicalFileEditScreen), findsNothing);
-        expect(find.byType(MedicalFileScreen), findsOneWidget);
-        expect(find.text('circles.file_saved'.tr()), findsOneWidget);
-        expect(find.text(MedicalTexts.bloodTypeLabel('A+')), findsOneWidget);
-        expect(circles.medicalFileReads, readsBeforeSave);
-      });
-
-      testWidgets('the circle tab shows a saved answer at once', (
-        WidgetTester tester,
-      ) async {
-        await openEdit(tester);
-        final int readsBeforeSave = circles.medicalFileReads;
-
-        await tester.tap(
-          find.widgetWithText(FilterChip, MedicalTexts.bloodTypeLabel('A+')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('circles.file_save'.tr()));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('common.back'.tr()));
-        await tester.pumpAndSettle();
-
-        // The patient card under the tab has the new blood type, without a
-        // new read of the file.
         expect(find.byType(MedicalFileScreen), findsNothing);
+        expect(find.byType(CircleTabScreen), findsOneWidget);
+        expect(find.text('circles.file_saved'.tr()), findsOneWidget);
         expect(
           find.textContaining(MedicalTexts.bloodTypeLabel('A+')),
           findsOneWidget,
@@ -2525,6 +2505,7 @@ void main() {
 
         expect(circles.saveCalls, isEmpty);
         expect(find.byType(MedicalFileEditScreen), findsNothing);
+        expect(find.byType(CircleTabScreen), findsOneWidget);
       });
 
       testWidgets('the names of a patient with an account are not editable', (

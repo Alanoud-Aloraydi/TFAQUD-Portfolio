@@ -1,5 +1,4 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
@@ -7,6 +6,7 @@ import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
@@ -26,7 +26,8 @@ import 'package:go_router/go_router.dart';
 /// The edit page of the medical file (CIRCLE-05, "تعديل"): the names of a
 /// patient without an account, the birth date, the city, the blood type, the
 /// chronic conditions and the allergies. Needs a [MedicalFileEditCubit] above
-/// it. It closes with `true` when something was saved.
+/// it. After «حفظ» it goes back to the circle tab, where the patient card
+/// already shows what was saved.
 class MedicalFileEditScreen extends StatelessWidget {
   const MedicalFileEditScreen({super.key});
 
@@ -187,11 +188,8 @@ class _EditFormState extends State<_EditForm> {
     final bool ok = await cubit.save();
     if (!ok || !mounted) return;
     messenger.showSnackBar(SnackBar(content: Text(saved)));
-    if (router.canPop()) {
-      router.pop(true);
-    } else {
-      router.go(Routes.medicalFile(cubit.circleId));
-    }
+    // Back to the circle tab, past the medical file page.
+    router.go(Routes.circle);
   }
 
   List<ChipOption> _options(String group, List<String> codes) {
@@ -207,9 +205,6 @@ class _EditFormState extends State<_EditForm> {
     final MedicalFileEditState state = widget.state;
     final MedicalForm form = state.form;
     final TextTheme text = Theme.of(context).textTheme;
-    final TextStyle? sectionStyle = text.titleSmall?.copyWith(
-      color: context.tokens.textSecondary,
-    );
     final String requiredText = context.tr('circles.field_required');
     final bool showErrors = state.showErrors;
     return Column(
@@ -275,7 +270,7 @@ class _EditFormState extends State<_EditForm> {
                       : null,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(context.tr('circles.blood_type'), style: sectionStyle),
+                InsetText.header(context.tr('circles.blood_type')),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
@@ -286,7 +281,7 @@ class _EditFormState extends State<_EditForm> {
                   onTap: cubit.chooseBloodType,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(context.tr('circles.conditions'), style: sectionStyle),
+                InsetText.header(context.tr('circles.conditions')),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
@@ -314,10 +309,7 @@ class _EditFormState extends State<_EditForm> {
                   ),
                 ],
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  context.tr('circles.allergies_title'),
-                  style: sectionStyle,
-                ),
+                InsetText.header(context.tr('circles.allergies_title')),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: <ChipOption>[
@@ -330,10 +322,7 @@ class _EditFormState extends State<_EditForm> {
                   onTap: (String code) => cubit.toggleNoAllergies(),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Text(
-                  context.tr('circles.allergy_medication'),
-                  style: sectionStyle,
-                ),
+                InsetText.header(context.tr('circles.allergy_medication')),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: _options('medication', MedicalOptions.medications),
@@ -354,7 +343,7 @@ class _EditFormState extends State<_EditForm> {
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),
-                Text(context.tr('circles.allergy_food'), style: sectionStyle),
+                InsetText.header(context.tr('circles.allergy_food')),
                 const SizedBox(height: AppSpacing.sm),
                 OptionChips(
                   options: _options('food', MedicalOptions.foods),

@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -34,20 +35,19 @@ class MedicationDoseHistory extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              context.tr('medications.dose_history'),
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.md),
+            // A small header and the notes start 16 in, lined up with the
+            // text inside the cards.
+            InsetText.header(context.tr('medications.dose_history')),
+            const SizedBox(height: AppSpacing.labelGap),
             if (items.isEmpty && earliest.isAfter(_today()))
-              Text(
+              InsetText(
                 context.tr(
                   'medications.dose_history_not_started',
                   args: <String>[formatMedicationDate(context, earliest)],
                 ),
               )
             else if (items.isEmpty)
-              Text(context.tr('medications.no_dose_history'))
+              InsetText(context.tr('medications.no_dose_history'))
             else
               for (final item in items) ...[
                 DoseOccurrenceCard(occurrence: item, showDate: true),

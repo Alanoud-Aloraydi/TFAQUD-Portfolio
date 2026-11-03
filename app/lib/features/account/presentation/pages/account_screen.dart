@@ -6,6 +6,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
@@ -246,12 +247,7 @@ class AccountScreen extends StatelessWidget {
             ),
           ],
           const SizedBox(height: AppSpacing.md),
-          Text(
-            context.tr('account.medical_note'),
-            style: text.bodySmall?.copyWith(
-              color: context.tokens.textSecondary,
-            ),
-          ),
+          InsetText.note(context.tr('account.medical_note')),
           const SizedBox(height: AppSpacing.xl),
           SettingsCard(
             children: <Widget>[
