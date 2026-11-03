@@ -1,0 +1,160 @@
+import 'dart:async';
+
+import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+
+/// One notification the phone shows at [at], even when the app is closed.
+///
+/// [payload] says what it is about (the app reads it when the person taps
+/// it), and [thread] stacks the notifications of one person together.
+class ScheduledNotification extends Equatable {
+  const ScheduledNotification({
+    required this.id,
+    required this.at,
+    required this.title,
+    required this.body,
+    required this.payload,
+    this.thread,
+  });
+
+  final int id;
+  final DateTime at;
+  final String title;
+  final String body;
+  final String payload;
+  final String? thread;
+
+  @override
+  List<Object?> get props => [id, at, title, body, payload, thread];
+}
+
+/// The notifications the app sets on the phone itself (no server and no
+/// Apple push needed). Behind an interface, so the tests run without the
+/// iOS plugin.
+abstract interface class PhoneNotifications {
+  /// Prepares the plugin without asking for permission, and keeps the tap
+  /// that opened the app, if any.
+  Future<void> initialize();
+
+  /// Asks whether the app may show notifications. iOS shows its question
+  /// only the first time; later calls answer at once. True when allowed.
+  Future<bool> requestPermission();
+
+  /// The scheduled notifications that have not shown yet: id to payload.
+  Future<Map<int, String>> pending();
+
+  /// Sets [notification]; one with the same id is replaced.
+  Future<void> schedule(ScheduledNotification notification);
+
+  Future<void> cancel(int id);
+
+  /// Removes every notification of the app, scheduled and shown.
+  Future<void> cancelAll();
+
+  /// The payload of each notification the person taps while the app runs.
+  Stream<String> get taps;
+
+  /// The payload of the notification that opened the app, once.
+  String? takeLaunchTap();
+}
+
+/// [PhoneNotifications] with the flutter_local_notifications plugin. The app
+/// is for iPhone, so on other platforms nothing is shown.
+class PluginPhoneNotifications implements PhoneNotifications {
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+  final StreamController<String> _taps = StreamController<String>.broadcast();
+  String? _launchTap;
+  bool _ready = false;
+
+  @override
+  Future<void> initialize() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+    await _plugin.initialize(
+      // Permission is asked later, when there is something to remind.
+      settings: const InitializationSettings(
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      ),
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        final String? payload = response.payload;
+        if (payload != null && payload.isNotEmpty) _taps.add(payload);
+      },
+    );
+    final NotificationAppLaunchDetails? launch = await _plugin
+        .getNotificationAppLaunchDetails();
+    final String? payload = launch?.notificationResponse?.payload;
+    if ((launch?.didNotificationLaunchApp ?? false) &&
+        payload != null &&
+        payload.isNotEmpty) {
+      _launchTap = payload;
+    }
+    _ready = true;
+  }
+
+  @override
+  Future<bool> requestPermission() async {
+    if (!_ready) return false;
+    final IOSFlutterLocalNotificationsPlugin? ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    return await ios?.requestPermissions(alert: true, sound: true) ?? false;
+  }
+
+  @override
+  Future<Map<int, String>> pending() async {
+    if (!_ready) return const <int, String>{};
+    final List<PendingNotificationRequest> requests = await _plugin
+        .pendingNotificationRequests();
+    return <int, String>{
+      for (final PendingNotificationRequest request in requests)
+        request.id: request.payload ?? '',
+    };
+  }
+
+  @override
+  Future<void> schedule(ScheduledNotification notification) async {
+    if (!_ready) return;
+    await _plugin.zonedSchedule(
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      // An exact moment: given in UTC, it fires at the right time whatever
+      // the phone's time zone is.
+      scheduledDate: tz.TZDateTime.from(notification.at.toUtc(), tz.UTC),
+      notificationDetails: NotificationDetails(
+        iOS: DarwinNotificationDetails(threadIdentifier: notification.thread),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: notification.payload,
+    );
+  }
+
+  @override
+  Future<void> cancel(int id) async {
+    if (!_ready) return;
+    await _plugin.cancel(id: id);
+  }
+
+  @override
+  Future<void> cancelAll() async {
+    if (!_ready) return;
+    await _plugin.cancelAll();
+  }
+
+  @override
+  Stream<String> get taps => _taps.stream;
+
+  @override
+  String? takeLaunchTap() {
+    final String? tap = _launchTap;
+    _launchTap = null;
+    return tap;
+  }
+}

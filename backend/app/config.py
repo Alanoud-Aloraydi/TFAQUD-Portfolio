@@ -93,6 +93,14 @@ def load_config(
         ),
         # Only the fake sender uses development OTP logging.
         "FAKE_SMS_LOG_BODY": env_name == "development",
+        # Push notifications: "none" (nothing is sent) or "apns" (Apple,
+        # needs a paid Apple Developer account and its .p8 key).
+        "PUSH_BACKEND": os.environ.get("PUSH_BACKEND", "none"),
+        "APNS_KEY_ID": os.environ.get("APNS_KEY_ID"),
+        "APNS_TEAM_ID": os.environ.get("APNS_TEAM_ID"),
+        "APNS_BUNDLE_ID": os.environ.get("APNS_BUNDLE_ID"),
+        "APNS_PRIVATE_KEY_PATH": os.environ.get("APNS_PRIVATE_KEY_PATH"),
+        "APNS_ENVIRONMENT": os.environ.get("APNS_ENVIRONMENT", "sandbox"),
         "SQLALCHEMY_DATABASE_URI": None,
         "SQLALCHEMY_ENGINE_OPTIONS": {
             "pool_pre_ping": True,
@@ -121,6 +129,8 @@ def load_config(
         config["SECRET_KEY"] = _TEST_SECRET_KEY
         config["SMS_BACKEND"] = "fake"
         config["AUTHENTICA_API_KEY"] = None
+        # Tests hand the app a recording sender when they need one.
+        config["PUSH_BACKEND"] = "none"
     elif env_name == "development" and not config["SECRET_KEY"]:
         config["SECRET_KEY"] = _DEV_SECRET_KEY
 

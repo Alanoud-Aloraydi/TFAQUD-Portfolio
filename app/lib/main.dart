@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:sizer/sizer.dart';
 
+import 'core/services/phone_notifications.dart';
 import 'core/setup.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/configure_dependencies.dart';
@@ -16,6 +18,8 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   await setup();
   await configureDependencies();
+  // Early, so the tap on a reminder that opened the app is not lost.
+  await GetIt.I<PhoneNotifications>().initialize();
 
   runApp(
     EasyLocalization(

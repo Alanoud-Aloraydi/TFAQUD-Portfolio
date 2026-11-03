@@ -23,6 +23,8 @@ from app.circles.inputs import (
     RenameCircleInput,
 )
 from app.circles.support import answer, care_work, parse_id, save_medical
+from app.push.messages import invitation_push
+from app.push.notify import notify
 from app.validation import parse_json_body, parse_optional_json_body
 
 bp = Blueprint("circles", __name__, url_prefix="/api/v1/circles")
@@ -166,6 +168,9 @@ def invite_manager(circle_id):
             body.invitee_phone_number,
         )
         view = views.invitation_view(invitation)
+        push = invitation_push(work.session, invitation)
+    # After the commit: the invited person's phone, if they have the app.
+    notify(push)
     return answer({"invitation": view}, 201)
 
 
@@ -179,6 +184,8 @@ def resend_invitation(circle_id, invitation_id):
             parse_id(invitation_id, "invitation"),
         )
         view = views.invitation_view(invitation)
+        push = invitation_push(work.session, invitation)
+    notify(push)
     return answer({"invitation": view})
 
 

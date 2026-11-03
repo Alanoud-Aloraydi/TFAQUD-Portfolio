@@ -29,3 +29,7 @@ def get_sign_in_service():
 
 def get_user_store():
     return current_app.extensions["user_store"]
+
+
+def get_push_sender():
+    return current_app.extensions["push_sender"]

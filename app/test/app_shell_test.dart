@@ -6,6 +6,8 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/widgets/illustrations/guide_owl.dart';
@@ -48,10 +50,12 @@ import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
+import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/presentation/dose_reminder_texts.dart';
 import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/prayer_times/data/prayer_day_model.dart';
@@ -70,6 +74,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/circles_fakes.dart';
 import 'support/home_fakes.dart';
+import 'support/phone_fakes.dart';
 
 /// Reads the real translation file synchronously, so loading finishes inside
 /// the test clock.
@@ -261,6 +266,8 @@ void main() {
   final circles = CirclesFakeRepository();
   final auth = _OfflineAuthRepository();
   final onboarding = _OfflineOnboardingRepository();
+  final phone = FakePhoneNotifications();
+  final pushTokens = <String>[];
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -272,6 +279,18 @@ void main() {
     GetIt.I.registerSingleton<CirclesUseCase>(CirclesUseCase(circles));
     GetIt.I.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(_EmptyMedicationsRepository()),
+    );
+    // The phone's notifications in memory, and the dose reminders on them.
+    GetIt.I.registerSingleton<PhoneNotifications>(phone);
+    GetIt.I.registerSingleton<DoseReminders>(
+      DoseReminders(
+        GetIt.I<MedicationsUseCase>(),
+        phone,
+        texts: doseReminderTexts,
+      ),
+    );
+    GetIt.I.registerSingleton<PushRegistration>(
+      PushRegistration(phone, (String token) async => pushTokens.add(token)),
     );
     GetIt.I.registerSingleton<PrayerTimesRepository>(
       PrayerTimesRepository(_OfflinePrayerTimes()),

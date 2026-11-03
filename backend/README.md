@@ -87,7 +87,7 @@ endpoints answer 503 `service_unavailable`. To use PostgreSQL, set `DATABASE_URL
 
 ## Database and migrations
 
-The tables are created by migrations (`migrations/versions/0001` to `0009`),
+The tables are created by migrations (`migrations/versions/0001` to `0010`),
 not by hand.
 
 | What | Command |
@@ -166,6 +166,8 @@ at most 3 codes an hour (`OTP_MAX_SENDS_PER_HOUR`).
   endpoints and the rules are in `docs/api-contracts.md` (section 5).
 - The medical tables (blood type, conditions, allergies, emergency contacts) are a
   design that the team has not approved yet (`docs/api-contracts.md`, section 10).
+- Push notifications are built and wait for a paid Apple Developer account
+  (see "Push notifications").
 - Not built: the notifications endpoint, the care plan and the records. The
   emergency card is built without the current medicines (they come with F06).
 - This Docker setup is for development. Staging and production are TFQD-10.
@@ -173,6 +175,48 @@ at most 3 codes an hour (`OTP_MAX_SENDS_PER_HOUR`).
   sender is tested without a network only (`SMS_BACKEND=authentica` with
   `AUTHENTICA_API_KEY`). `scripts/try_authentica_sender.py` tries it once with the
   real service.
+
+## Push notifications
+
+The server tells a person's phone about a new invitation, a request to care
+for them, the answer to their request, and a circle that is ready (the same
+things as the app's notifications page). Dose reminders do not come from the
+server: the app sets them on the phone itself.
+
+Apple sends a push only to an app signed with a **paid** Apple Developer
+account that has the Push Notifications capability. Until the team has one,
+`PUSH_BACKEND=none` (the default): the app still sends its phone's token
+(`PUT /api/v1/accounts/me/push-device`), and the server sends nothing.
+
+To switch it on with the paid account:
+
+1. In the Apple Developer website: Certificates, Identifiers & Profiles, then
+   Keys, then make a key with **Apple Push Notifications service (APNs)**.
+   Download the `.p8` file (Apple gives it only once) and note its Key ID and
+   the Team ID (top right of the website).
+2. Put the file in `backend/secrets/` (git ignores `*.p8`; never commit it).
+3. In your `.env`:
+   ```
+   PUSH_BACKEND=apns
+   APNS_KEY_ID=<the key id>
+   APNS_TEAM_ID=<the team id>
+   APNS_BUNDLE_ID=<the app's bundle id>
+   APNS_PRIVATE_KEY_PATH=/app/secrets/AuthKey_<key id>.p8
+   APNS_ENVIRONMENT=sandbox
+   ```
+   `production` is for TestFlight and the App Store (the way the team installs
+   the app); `sandbox` is only for builds signed for development.
+4. The app already asks for push (`app/ios/Runner/Runner.entitlements` and
+   `RunnerRelease.entitlements`). Build it with `[testflight]` in the commit
+   message (`.github/workflows/testflight.yml`, which lists the secrets it
+   needs) and install it from TestFlight. The unsigned Sideloadly build
+   (`[ios]`) gets no push.
+5. `docker compose up -d --force-recreate api`, then open the TestFlight app
+   on the phone and sign in.
+
+The code is in `app/push/`. A push that cannot be sent never fails the
+request; a token Apple no longer knows is deleted. A signed-out phone gets
+nothing, because the token belongs to the sign-in that sent it.
 
 ## Flutter in Chrome
 

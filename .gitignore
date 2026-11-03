@@ -4,6 +4,8 @@
 !.env.example
 *-firebase-adminsdk-*.json
 service-account*.json
+# Apple push key (APNs .p8): keep it out of git
+*.p8
 
 # Python
 __pycache__/

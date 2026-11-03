@@ -15,6 +15,7 @@ from app.models.medication_schedule import (
     MedicationSchedule,
     MedicationScheduleDay,
 )
+from app.models.push import PushDevice
 
 __all__ = [
     "Account",
@@ -34,4 +35,5 @@ __all__ = [
     "MedicationSchedule",
     "MedicationScheduleDay",
     "MedicationDoseRecord",
+    "PushDevice",
 ]

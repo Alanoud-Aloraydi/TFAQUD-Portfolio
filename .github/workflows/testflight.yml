@@ -1,0 +1,204 @@
+# Builds the TFAQUD iPhone app on a GitHub-hosted Mac, signs it with the
+# team's paid Apple Developer account, and uploads it to TestFlight. Install
+# it from the TestFlight app on the iPhone. This build has the Push
+# Notifications capability, so the server can send circle updates.
+#
+# When it runs:
+#   - on a push whose commit message contains [testflight], on any branch.
+#     Add the server address to the same message to build for it:
+#     [testflight api=http://192.168.1.20:5000]
+#   - from the Actions tab ("Run workflow"), once this file is on the
+#     default branch; there the address is a field
+#
+# The unsigned build for Sideloadly stays in ios-build.yml ([ios]).
+#
+# Secrets it needs (repository Settings, Secrets and variables, Actions):
+#   BUILD_CERTIFICATE_BASE64        the Apple Distribution certificate (.p12),
+#                                   in base64
+#   P12_PASSWORD                    the password of that .p12
+#   BUILD_PROVISION_PROFILE_BASE64  the App Store profile of com.tfaqud.tfaqud
+#                                   (.mobileprovision), in base64
+#   KEYCHAIN_PASSWORD               any long random text (a temporary keychain)
+#   ASC_KEY_ID, ASC_ISSUER_ID       the App Store Connect API key's ids
+#   ASC_API_KEY                     the text of that key's .p8 file
+# The certificate and profile steps follow GitHub's guide "Installing an Apple
+# certificate on macOS runners for Xcode development".
+
+name: TestFlight
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "API address the app calls, without /api/v1 (for example http://192.168.1.20:5000)"
+        required: false
+        default: "http://localhost:5000"
+
+jobs:
+  testflight:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[testflight')
+    # The same Mac as ios-build.yml (Xcode 27 for the glass tab bar).
+    runs-on: xcode-27
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Show the tool versions
+        run: |
+          flutter --version
+          xcodebuild -version
+
+      # The same .env as ios-build.yml: the Run workflow field, else
+      # api=... in the commit message, else localhost.
+      - name: Create .env
+        env:
+          INPUT_API: ${{ inputs.api_base_url }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          API_BASE_URL="$INPUT_API"
+          if [ -z "$API_BASE_URL" ]; then
+            API_BASE_URL=$(printf '%s' "$COMMIT_MESSAGE" | grep -oE 'api=https?://[^] [:space:]]+' | head -n 1 | cut -d= -f2- || true)
+          fi
+          API_BASE_URL="${API_BASE_URL:-http://localhost:5000}"
+          echo "The app will call: $API_BASE_URL"
+          cp .env.example .env
+          sed -i '' "s#^API_BASE_URL=.*#API_BASE_URL=${API_BASE_URL}#" .env
+
+      - name: Get packages
+        run: flutter pub get
+
+      # TestFlight needs a new build number for every upload: the run
+      # number of this workflow always goes up.
+      - name: Prepare the Xcode project
+        run: flutter build ios --release --config-only --no-codesign --build-number=${{ github.run_number }}
+
+      - name: Install the Apple certificate and provisioning profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          if [ -z "$BUILD_CERTIFICATE_BASE64" ] || [ -z "$BUILD_PROVISION_PROFILE_BASE64" ]; then
+            echo "::error::The signing secrets are missing. See the top of .github/workflows/testflight.yml."
+            exit 1
+          fi
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$PP_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Xcode 16 and later read profiles from the second folder.
+          for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$dir"
+            cp "$PP_PATH" "$dir/"
+          done
+
+          # The profile's name and team, for the signing settings.
+          security cms -D -i "$PP_PATH" > "$RUNNER_TEMP/profile.plist"
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" "$RUNNER_TEMP/profile.plist")
+          TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$RUNNER_TEMP/profile.plist")
+          echo "Profile: $PROFILE_NAME (team $TEAM_ID)"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
+
+      # Manual signing for the app target only: Flutter's Release.xcconfig is
+      # used by the Runner target and not by the Swift packages, which must
+      # not get a provisioning profile. This change is not committed.
+      - name: Sign the app with the distribution certificate
+        run: |
+          cat >> ios/Flutter/Release.xcconfig <<EOF
+
+          CODE_SIGN_STYLE = Manual
+          DEVELOPMENT_TEAM = $TEAM_ID
+          CODE_SIGN_IDENTITY = Apple Distribution
+          CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER = $PROFILE_NAME
+          EOF
+          cat ios/Flutter/Release.xcconfig
+
+      - name: Archive
+        run: |
+          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/tfaqud.xcarchive" \
+            archive > build.log 2>&1 || {
+              echo "::group::Xcode errors"
+              grep -nE "error:|\*\* ARCHIVE FAILED \*\*|The following build commands failed" build.log | head -n 150 || true
+              echo "::endgroup::"
+              tail -n 150 build.log
+              exit 1
+            }
+          tail -n 5 build.log
+
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          KEY_PATH=$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8
+          printf '%s\n' "$ASC_API_KEY" > "$KEY_PATH"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.tfaqud.tfaqud</key><string>$PROFILE_NAME</string>
+            </dict>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/tfaqud.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -allowProvisioningUpdates
+          echo "Uploaded build ${{ github.run_number }}. App Store Connect needs a few minutes to process it before it shows in TestFlight."
+
+      - name: Keep the build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testflight-build-log
+          path: app/build.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Remove the keychain and the key
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP"/AuthKey_*.p8 "$RUNNER_TEMP/build_certificate.p12"
