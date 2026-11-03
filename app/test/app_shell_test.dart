@@ -14,6 +14,8 @@ import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
+import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
@@ -52,6 +54,8 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/prayer_times/data/prayer_day_model.dart';
@@ -154,6 +158,36 @@ class _EmptyMedicationsRepository extends Fake
     DateTime to, {
     String? planId,
   }) async => const Success([]);
+}
+
+class _EmptyMeasurementsRepository extends Fake
+    implements MeasurementRepository {
+  @override
+  Future<List<MeasurementReading>> allReadings(String circleId) async =>
+      const [];
+
+  @override
+  Future<List<MeasurementPlan>> plans(String circleId) async => const [];
+
+  @override
+  Future<List<MeasurementOccurrence>> occurrences(
+    String circleId,
+    DateTime from,
+    DateTime to,
+  ) async => const [];
+
+  @override
+  Future<List<MeasurementReading>> readings(
+    String circleId,
+    DateTime from,
+    DateTime to,
+  ) async => const [];
+}
+
+class _EmptyAppointmentsRepository extends Fake
+    implements AppointmentRepository {
+  @override
+  Future<List<CareAppointment>> appointments(String circleId) async => const [];
 }
 
 class _OfflinePrayerTimes extends Fake implements PrayerTimesRemoteDataSource {
@@ -272,6 +306,12 @@ void main() {
     GetIt.I.registerSingleton<CirclesUseCase>(CirclesUseCase(circles));
     GetIt.I.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(_EmptyMedicationsRepository()),
+    );
+    GetIt.I.registerSingleton<MeasurementRepository>(
+      _EmptyMeasurementsRepository(),
+    );
+    GetIt.I.registerSingleton<AppointmentRepository>(
+      _EmptyAppointmentsRepository(),
     );
     GetIt.I.registerSingleton<PrayerTimesRepository>(
       PrayerTimesRepository(_OfflinePrayerTimes()),
@@ -394,17 +434,7 @@ void main() {
       await tester.tap(find.text('add.medication'.tr()));
       await tester.pumpAndSettle();
       expect(find.text('medications.add_title'.tr()), findsOneWidget);
-      final save = find.text('medications.save'.tr());
-      await tester.dragUntilVisible(
-        save,
-        find.byType(SingleChildScrollView),
-        const Offset(0, -400),
-      );
-      await tester.drag(
-        find.byType(SingleChildScrollView),
-        const Offset(0, -100),
-      );
-      await tester.pumpAndSettle();
+      final save = find.text('medications.save_changes'.tr());
       await tester.tap(save);
       await tester.pump();
       expect(find.text('medications.field_required'.tr()), findsOneWidget);

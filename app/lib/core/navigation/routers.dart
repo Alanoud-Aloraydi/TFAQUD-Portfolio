@@ -71,4 +71,24 @@ class Routes {
       '/circles/$circleId/medications/$planId';
   static String editMedication(String circleId, String planId) =>
       '/circles/$circleId/medications/$planId/edit';
+  static const String measurementNewPath =
+      '/circles/:circleId/measurements/new';
+  static const String measurementEditPath =
+      '/circles/:circleId/measurements/:planId/edit';
+  static String newMeasurement(String circleId) =>
+      '/circles/$circleId/measurements/new';
+  static String editMeasurement(String circleId, String planId) =>
+      '/circles/$circleId/measurements/$planId/edit';
+  static const String appointmentNewPath =
+      '/circles/:circleId/appointments/new';
+  static const String appointmentEditPath =
+      '/circles/:circleId/appointments/:appointmentId/edit';
+  static String newAppointment(String circleId) =>
+      '/circles/$circleId/appointments/new';
+  static String editAppointment(String circleId, String appointmentId) =>
+      '/circles/$circleId/appointments/$appointmentId/edit';
+  static const String appointmentVisitPath =
+      '/circles/:circleId/appointments/:appointmentId/visit';
+  static String appointmentVisit(String circleId, String appointmentId) =>
+      '/circles/$circleId/appointments/$appointmentId/visit';
 }

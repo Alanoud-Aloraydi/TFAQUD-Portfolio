@@ -2,6 +2,14 @@ import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/data/visit_audio_service.dart';
+import 'package:app/features/appointments/data/visit_repository.dart';
+import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
+import 'package:app/features/appointments/presentation/pages/appointment_form_page.dart';
+import 'package:app/features/appointments/presentation/pages/visit_page.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
@@ -44,6 +52,11 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/pages/medication_details_page.dart';
 import 'package:app/features/medications/presentation/pages/medication_form_page.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/pages/measurement_plan_form_page.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
@@ -140,6 +153,22 @@ class AppRouter {
               ),
               BlocProvider(
                 create: (context) =>
+                    MeasurementPlansCubit(GetIt.I<MeasurementRepository>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    MeasurementTasksCubit(GetIt.I<MeasurementRepository>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    MeasurementReadingsCubit(GetIt.I<MeasurementRepository>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    AppointmentsCubit(GetIt.I<AppointmentRepository>()),
+              ),
+              BlocProvider(
+                create: (context) =>
                     PrayerTimesCubit(GetIt.I<PrayerTimesRepository>()),
               ),
             ],
@@ -169,6 +198,106 @@ class AppRouter {
             create: (context) =>
                 MedicationsCubit(GetIt.I<MedicationsUseCase>())..bind(circleId),
             child: MedicationFormPage(circleId: circleId),
+          );
+        }),
+      ),
+      GoRoute(
+        path: Routes.measurementNewPath,
+        pageBuilder: _iosPage((context, state) {
+          final circleId = state.pathParameters['circleId']!;
+          return BlocProvider(
+            create: (_) =>
+                MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
+                  ..load(circleId),
+            child: MeasurementPlanFormPage(circleId: circleId),
+          );
+        }),
+      ),
+      GoRoute(
+        path: Routes.measurementEditPath,
+        pageBuilder: _iosPage((context, state) {
+          final circleId = state.pathParameters['circleId']!;
+          return BlocProvider(
+            create: (_) =>
+                MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
+                  ..load(circleId),
+            child: MeasurementPlanFormPage(
+              circleId: circleId,
+              planId: state.pathParameters['planId']!,
+            ),
+          );
+        }),
+      ),
+      GoRoute(
+        path: Routes.appointmentNewPath,
+        pageBuilder: _iosPage((context, state) {
+          final circleId = state.pathParameters['circleId']!;
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) =>
+                    AppointmentsCubit(GetIt.I<AppointmentRepository>())
+                      ..load(circleId),
+              ),
+              BlocProvider(
+                create: (_) =>
+                    AppointmentCompanionsCubit(GetIt.I<AppointmentRepository>())
+                      ..load(circleId),
+              ),
+            ],
+            child: AppointmentFormPage(circleId: circleId),
+          );
+        }),
+      ),
+      GoRoute(
+        path: Routes.appointmentEditPath,
+        pageBuilder: _iosPage((context, state) {
+          final circleId = state.pathParameters['circleId']!;
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) =>
+                    AppointmentsCubit(GetIt.I<AppointmentRepository>())
+                      ..load(circleId),
+              ),
+              BlocProvider(
+                create: (_) =>
+                    AppointmentCompanionsCubit(GetIt.I<AppointmentRepository>())
+                      ..load(circleId),
+              ),
+            ],
+            child: AppointmentFormPage(
+              circleId: circleId,
+              appointmentId: state.pathParameters['appointmentId'],
+            ),
+          );
+        }),
+      ),
+      GoRoute(
+        path: Routes.appointmentVisitPath,
+        pageBuilder: _iosPage((context, state) {
+          final circleId = state.pathParameters['circleId']!;
+          final appointmentId = state.pathParameters['appointmentId']!;
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) =>
+                    AppointmentsCubit(GetIt.I<AppointmentRepository>())
+                      ..load(circleId),
+              ),
+              BlocProvider(
+                create: (_) => VisitCubit(
+                  GetIt.I<VisitRepository>(),
+                  VisitAudioService(),
+                  circleId,
+                  appointmentId,
+                )..load(),
+              ),
+            ],
+            child: VisitPage(
+              appointmentId: appointmentId,
+              canManage: state.extra == true,
+            ),
           );
         }),
       ),
@@ -528,18 +657,9 @@ class AppRouter {
   }
 }
 
-// Detail pages slide in as iOS does in Arabic: the page enters from the left
-// edge, and «رجوع» or the edge swipe takes it back to the left. The tab pages
-// and the modals follow the same right-to-left layout, so every move in the
-// app goes the same way. The route keeps Cupertino's interactive back
-// gesture and parallax.
-//
-// The pages are built here on purpose. go_router 18 picks the page type by
-// looking for the MaterialApp of package:material_ui, but this app's
-// MaterialApp comes from package:flutter, so go_router does not find it and
-// would build every page with no transition at all: pages just popped in.
+// Detail pages change without a horizontal push animation.
 GoRouterPageBuilder _iosPage(GoRouterWidgetBuilder builder) =>
-    (BuildContext context, GoRouterState state) => CupertinoPage<void>(
+    (BuildContext context, GoRouterState state) => NoTransitionPage<void>(
       key: state.pageKey,
       name: state.name ?? state.path,
       restorationId: state.pageKey.value,

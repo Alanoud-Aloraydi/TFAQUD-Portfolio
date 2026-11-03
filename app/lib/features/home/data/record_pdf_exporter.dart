@@ -33,6 +33,7 @@ class RecordPdfItem {
     this.badge,
     this.badgeMuted = false,
     this.rows = const <RecordPdfRow>[],
+    this.fields = const <RecordPdfRow>[],
   });
 
   final String title;
@@ -42,6 +43,7 @@ class RecordPdfItem {
   /// A grey badge (a medicine that ended) instead of the green one.
   final bool badgeMuted;
   final List<RecordPdfRow> rows;
+  final List<RecordPdfRow> fields;
 }
 
 /// A section of the record: a heading, then label-value [rows] in a box,
@@ -105,6 +107,7 @@ class RecordPdfExporter {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        maxPages: 200,
         textDirection: pw.TextDirection.rtl,
         theme: pw.ThemeData.withFont(base: regular, bold: bold).copyWith(
           defaultTextStyle: pw.TextStyle(
@@ -317,8 +320,7 @@ class RecordPdfExporter {
               spacing: 6,
               children: <pw.Widget>[
                 for (int i = 0; i < item.detail.length; i++) ...<pw.Widget>[
-                  if (i > 0)
-                    pw.Text('·', style: pw.TextStyle(color: _slate)),
+                  if (i > 0) pw.Text('·', style: pw.TextStyle(color: _slate)),
                   pw.Text(
                     plain(item.detail[i].value),
                     textDirection: item.detail[i].ltr
@@ -364,6 +366,10 @@ class RecordPdfExporter {
                   ],
                 ),
               ),
+          ],
+          if (item.fields.isNotEmpty) ...<pw.Widget>[
+            pw.SizedBox(height: 8),
+            _box(item.fields),
           ],
         ],
       ),

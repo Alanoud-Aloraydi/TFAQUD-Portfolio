@@ -1,10 +1,17 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/data/visit_repository.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/visit_paper.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/home/data/record_pdf_exporter.dart';
 import 'package:app/features/home/presentation/cubit/record_export_cubit.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -25,6 +32,9 @@ Future<void> showRecordExportSheet(
     create: (_) => RecordExportCubit(
       GetIt.I<CirclesUseCase>(),
       RecordPdfExporter(),
+      GetIt.I<MeasurementRepository>(),
+      GetIt.I<AppointmentRepository>(),
+      GetIt.I<VisitRepository>(),
       circleId,
     )..load(),
     child: _RecordExportSheet(plans: List.unmodifiable(plans)),
@@ -43,14 +53,39 @@ class _RecordExportSheet extends StatefulWidget {
 class _RecordExportSheetState extends State<_RecordExportSheet> {
   bool _medical = true;
   bool _medications = true;
+  bool _measurements = true;
+  bool _appointments = true;
   String? _errorKey;
 
   Future<void> _share(RecordExportState state) async {
+    final exporter = context.read<RecordExportCubit>();
     final file = state.medicalFile;
-    if (_medical && file == null && !_medications) return;
+    if (_medical &&
+        file == null &&
+        !_medications &&
+        !_measurements &&
+        !_appointments) {
+      return;
+    }
+    List<MeasurementReading> readings = const [];
+    List<CareAppointment> appointments = const [];
+    Map<String, VisitPaper> visits = const {};
+    try {
+      if (_measurements) readings = await exporter.allMeasurements();
+      if (_appointments) {
+        appointments = await exporter.allAppointments();
+        visits = await exporter.allVisits(appointments);
+      }
+    } on Exception {
+      if (mounted) setState(() => _errorKey = 'record_export.failed');
+      return;
+    }
+    if (!mounted) return;
     final sections = <RecordPdfSection>[
       if (_medical && file != null) _medicalSection(file),
       if (_medications) _medicationSection(widget.plans),
+      if (_measurements) _measurementSection(readings),
+      if (_appointments) _appointmentSection(appointments, visits),
     ];
     final String exportedOn = context.tr(
       'record_export.exported_on',
@@ -58,15 +93,14 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     );
     // Read now: the footer is written after the page has awaited.
     final String pageTemplate = context.tr('record_export.page');
-    final error = await context.read<RecordExportCubit>().share(
+    final error = await exporter.share(
       title: context.tr('record_export.pdf_title'),
       subtitle: file == null
           ? exportedOn
           : '${file.patient.fullName} · $exportedOn',
       appName: context.tr('auth.app_name'),
-      pageLabel: (int page, int pages) => pageTemplate
-          .replaceFirst('{}', '$page')
-          .replaceFirst('{}', '$pages'),
+      pageLabel: (int page, int pages) =>
+          pageTemplate.replaceFirst('{}', '$page').replaceFirst('{}', '$pages'),
       sections: sections,
     );
     if (!mounted) return;
@@ -158,6 +192,110 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     );
   }
 
+  RecordPdfSection _measurementSection(
+    List<MeasurementReading> readings,
+  ) => RecordPdfSection(
+    title: context.tr('record_export.measurements'),
+    empty: readings.isEmpty ? context.tr('measurements.no_readings') : null,
+    items: [
+      for (final reading in readings)
+        RecordPdfItem(
+          title: context.tr(
+            reading.kind == MeasurementKind.bp
+                ? 'measurements.bp'
+                : 'measurements.glucose',
+          ),
+          badge: context.tr(
+            reading.outcome == 'skipped'
+                ? 'measurements.skipped'
+                : reading.outsideTarget == true
+                ? 'measurements.outside_target'
+                : 'measurements.read',
+          ),
+          badgeMuted: reading.outcome == 'skipped',
+          detail: [RecordPdfRow(value: _readingDate(reading))],
+          fields: [
+            if (reading.outcome != 'skipped')
+              RecordPdfRow(
+                label: context.tr('measurements.value'),
+                value:
+                    '${reading.valueText} '
+                    '${context.tr(reading.kind == MeasurementKind.bp ? 'measurements.bp_unit' : 'measurements.glucose_unit')}',
+                ltr: true,
+              ),
+            if (reading.note?.isNotEmpty == true)
+              RecordPdfRow(
+                label: context.tr('measurements.note'),
+                value: reading.note!,
+              ),
+          ],
+        ),
+    ],
+  );
+
+  String _readingDate(MeasurementReading reading) {
+    final date = reading.measuredAt?.toLocal() ?? reading.scheduledOn;
+    if (date == null) return '';
+    final day = date.toIso8601String().split('T').first;
+    if (reading.outcome == 'skipped') return day;
+    return '$day ${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  RecordPdfSection _appointmentSection(
+    List<CareAppointment> appointments,
+    Map<String, VisitPaper> visits,
+  ) => RecordPdfSection(
+    title: context.tr('record_export.appointments'),
+    empty: appointments.isEmpty ? context.tr('appointments.no_records') : null,
+    items: [
+      for (final item in appointments)
+        RecordPdfItem(
+          title: appointmentTitle(context, item),
+          badge: context.tr('appointments.status.${item.status.name}'),
+          badgeMuted: item.status != AppointmentStatus.completed,
+          detail: [
+            RecordPdfRow(value: appointmentDate(context, item.scheduledOn)),
+            RecordPdfRow(value: appointmentTime(context, item.time)),
+            RecordPdfRow(
+              value: context.tr('appointments.kinds.${item.kind.name}'),
+            ),
+          ],
+          fields: [
+            RecordPdfRow(
+              label: context.tr('appointments.place'),
+              value: item.kind == AppointmentKind.remote
+                  ? context.tr('appointments.${item.remoteMethod}')
+                  : item.place ?? '',
+            ),
+            RecordPdfRow(
+              label: context.tr('appointments.companion'),
+              value: item.companionName,
+            ),
+            if (visits[item.id] case final visit?) ...[
+              if (visit.summary?.isNotEmpty == true)
+                RecordPdfRow(
+                  label: context.tr('appointments.visit_summary'),
+                  value: visit.summary!,
+                ),
+              if (visit.recommendations?.isNotEmpty == true)
+                RecordPdfRow(
+                  label: context.tr('appointments.visit_recommendations'),
+                  value: visit.recommendations!,
+                ),
+              if (visit.followUp?.isNotEmpty == true)
+                RecordPdfRow(
+                  label: context.tr('appointments.visit_follow_up'),
+                  value: visit.followUp!,
+                ),
+              if (visit.hasAudio)
+                RecordPdfRow(value: context.tr('record_export.audio_separate')),
+            ],
+          ],
+        ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) => SafeArea(
     child: Padding(
@@ -197,13 +335,15 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
             ),
             CheckboxListTile(
               title: Text(context.tr('record_export.measurements')),
-              value: false,
-              onChanged: null,
+              value: _measurements,
+              onChanged: (value) =>
+                  setState(() => _measurements = value ?? false),
             ),
             CheckboxListTile(
               title: Text(context.tr('record_export.appointments')),
-              value: false,
-              onChanged: null,
+              value: _appointments,
+              onChanged: (value) =>
+                  setState(() => _appointments = value ?? false),
             ),
             if (_errorKey != null || state.errorKey != null) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -217,7 +357,10 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
               onPressed:
                   state.status == RecordExportStatus.ready &&
                       !state.sharing &&
-                      ((_medical && state.medicalFile != null) || _medications)
+                      ((_medical && state.medicalFile != null) ||
+                          _medications ||
+                          _measurements ||
+                          _appointments)
                   ? () => _share(state)
                   : null,
               child: Text(context.tr('record_export.share')),

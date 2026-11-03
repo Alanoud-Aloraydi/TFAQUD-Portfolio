@@ -15,6 +15,12 @@ from app.models.medication_schedule import (
     MedicationSchedule,
     MedicationScheduleDay,
 )
+from app.models.measurement import (
+    MeasurementPlan,
+    MeasurementPlanVersion,
+    MeasurementRecord,
+)
+from app.models.appointment import Appointment, AppointmentVisit
 
 __all__ = [
     "Account",
@@ -34,4 +40,9 @@ __all__ = [
     "MedicationSchedule",
     "MedicationScheduleDay",
     "MedicationDoseRecord",
+    "MeasurementPlan",
+    "MeasurementPlanVersion",
+    "MeasurementRecord",
+    "Appointment",
+    "AppointmentVisit",
 ]

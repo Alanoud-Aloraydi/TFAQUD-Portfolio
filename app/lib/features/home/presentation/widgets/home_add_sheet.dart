@@ -7,22 +7,20 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// The sheet of the + button: «ماذا تريد أن تضيف؟». A quick action on ink
-/// («سجّل قراءة الآن»: a result that happened now), then, under the line
-/// «إنشاء خطة», the three plans: a medicine, a measurement plan and a
-/// medical appointment. Only the medicine exists in the app so far; the
-/// others say they are coming.
+/// A quick reading and three real creation flows in the shared add sheet.
 Future<void> showHomeAddSheet(
   BuildContext context, {
   required String circleId,
   required VoidCallback onMedicationSaved,
+  required VoidCallback onMeasurementSaved,
+  required VoidCallback onAppointmentSaved,
+  required VoidCallback onReadingSaved,
 }) {
-  final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-  final String soon = context.tr('add.soon');
   return showGlassSheet<void>(
     context,
     title: context.tr('add.title'),
@@ -35,19 +33,46 @@ Future<void> showHomeAddSheet(
           }),
         );
       },
-      onSoon: () {
+      onMeasurement: () {
         Navigator.of(sheetContext).pop();
-        messenger.showSnackBar(SnackBar(content: Text(soon)));
+        unawaited(
+          context.push<bool>(Routes.newMeasurement(circleId)).then((saved) {
+            if (saved == true) onMeasurementSaved();
+          }),
+        );
+      },
+      onAppointment: () {
+        Navigator.of(sheetContext).pop();
+        unawaited(
+          context.push<bool>(Routes.newAppointment(circleId)).then((saved) {
+            if (saved == true) onAppointmentSaved();
+          }),
+        );
+      },
+      onReading: () {
+        Navigator.of(sheetContext).pop();
+        unawaited(
+          showMeasurementReadingSheet(context).then((saved) {
+            if (saved) onReadingSaved();
+          }),
+        );
       },
     ),
   );
 }
 
 class _HomeAddSheet extends StatelessWidget {
-  const _HomeAddSheet({required this.onMedication, required this.onSoon});
+  const _HomeAddSheet({
+    required this.onMedication,
+    required this.onMeasurement,
+    required this.onAppointment,
+    required this.onReading,
+  });
 
   final VoidCallback onMedication;
-  final VoidCallback onSoon;
+  final VoidCallback onMeasurement;
+  final VoidCallback onAppointment;
+  final VoidCallback onReading;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +84,7 @@ class _HomeAddSheet extends StatelessWidget {
           icon: AppIcons.heartbeat,
           title: context.tr('add.reading_now'),
           hint: context.tr('add.reading_now_hint'),
-          onTap: onSoon,
+          onTap: onReading,
         ),
         const SizedBox(height: AppSpacing.lg),
         _LabelledLine(label: context.tr('add.plans')),
@@ -81,14 +106,14 @@ class _HomeAddSheet extends StatelessWidget {
                 icon: AppIcons.listPlus,
                 title: context.tr('add.measurement'),
                 hint: context.tr('add.measurement_hint'),
-                onTap: onSoon,
+                onTap: onMeasurement,
               ),
               const _RowDivider(),
               _PlanOption(
                 icon: AppIcons.calendarPlus,
                 title: context.tr('add.appointment'),
                 hint: context.tr('add.appointment_hint'),
-                onTap: onSoon,
+                onTap: onAppointment,
               ),
             ],
           ),
@@ -158,7 +183,9 @@ class _QuickAction extends StatelessWidget {
                       ),
                       Text(
                         hint,
-                        style: text.bodySmall?.copyWith(color: AppSemanticColors.borderSubtle),
+                        style: text.bodySmall?.copyWith(
+                          color: AppSemanticColors.borderSubtle,
+                        ),
                       ),
                     ],
                   ),
@@ -189,17 +216,20 @@ class _LabelledLine extends StatelessWidget {
     final Color line = AppSemanticColors.textPrimary.withValues(alpha: 0.12);
     return Row(
       children: <Widget>[
-        Expanded(child: Divider(height: AppSizes.divider, color: line)),
+        Expanded(
+          child: Divider(height: AppSizes.divider, color: line),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppSemanticColors.textSupporting,
-            ),
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: AppSemanticColors.textSupporting),
           ),
         ),
-        Expanded(child: Divider(height: AppSizes.divider, color: line)),
+        Expanded(
+          child: Divider(height: AppSizes.divider, color: line),
+        ),
       ],
     );
   }

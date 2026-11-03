@@ -31,6 +31,9 @@ abstract class ArabicDigits {
   static String digitsOnly(String input) {
     return toWestern(input).replaceAll(RegExp(r'[^0-9]'), '');
   }
+
+  static String toWesternDecimal(String input) =>
+      toWestern(input).replaceAll(RegExp(r'[\u066B,\u060C]'), '.');
 }
 
 /// Turns Arabic-Indic and Persian digits into 0-9 while the user types, so

@@ -12,6 +12,8 @@ from datetime import timedelta
 from flask import Flask
 
 from app.auth.otp_store import InMemoryOtpStore, OtpStore
+from app.appointments.routes import bp as appointments_bp
+from app.appointments.visit_routes import bp as appointment_visits_bp
 from app.auth.routes import bp as auth_bp
 from app.auth.service import SessionService
 from app.auth.sign_in import SignInService
@@ -28,6 +30,7 @@ from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.home import bp as home_bp
 from app.medications.routes import bp as medications_bp
+from app.measurements.routes import bp as measurements_bp
 from app.prayer_times.routes import bp as prayer_times_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
@@ -131,6 +134,9 @@ def create_app(
     app.register_blueprint(creation_requests_bp)
     app.register_blueprint(invitations_bp)
     app.register_blueprint(medications_bp)
+    app.register_blueprint(measurements_bp)
+    app.register_blueprint(appointments_bp)
+    app.register_blueprint(appointment_visits_bp)
     app.register_blueprint(prayer_times_bp)
     if database_enabled and env != "production":
         # `flask --app wsgi demo-data`: demo circles, medicines and doses for

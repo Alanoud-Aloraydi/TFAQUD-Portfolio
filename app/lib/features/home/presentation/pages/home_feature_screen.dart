@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
@@ -11,6 +12,9 @@ import 'package:app/features/home/presentation/widgets/home_widget.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/shell/app_shell.dart';
 import 'package:app/features/shell/widgets/app_top_bar.dart';
@@ -113,8 +117,18 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       riyadhNow.day,
     );
     unawaited(context.read<MedicationsCubit>().load(circleId));
+    unawaited(context.read<MeasurementPlansCubit>().load(circleId));
+    unawaited(context.read<AppointmentsCubit>().load(circleId));
+    unawaited(context.read<MeasurementTasksCubit>().load(circleId, today));
     unawaited(
-      context.read<MedicationOccurrencesCubit>().load(circleId, today, today),
+      context.read<MeasurementReadingsCubit>().load(circleId, today, today),
+    );
+    unawaited(
+      context.read<MedicationOccurrencesCubit>().load(
+        circleId,
+        today.subtract(const Duration(days: 1)),
+        today,
+      ),
     );
     unawaited(context.read<PrayerTimesCubit>().load(circleId));
     _midnight?.cancel();
@@ -158,6 +172,15 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
                 context,
                 circleId: state.selectedCircleId!,
                 onMedicationSaved: () {
+                  if (mounted) _loadClinicalData(state.selectedCircleId!);
+                },
+                onMeasurementSaved: () {
+                  if (mounted) _loadClinicalData(state.selectedCircleId!);
+                },
+                onAppointmentSaved: () {
+                  if (mounted) _loadClinicalData(state.selectedCircleId!);
+                },
+                onReadingSaved: () {
                   if (mounted) _loadClinicalData(state.selectedCircleId!);
                 },
               )

@@ -1,4 +1,3 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -7,32 +6,53 @@ import 'package:app/core/theme/materials/glass_preferences.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
-// The tab icons are the handoff's Phosphor icons (regular), one style for
-// every tab, selected or not; the selected tab is told by its color and the
-// glass capsule behind it. The native bar cannot draw a Flutter font, so
-// the same icons are images in the iPhone app's asset catalog
-// (ios/Runner/Assets.xcassets/tab_*.imageset, drawn as templates so the bar
-// colors them). The native bar looks for an SF Symbol first, then for an
-// image with that name.
-typedef _Tab = ({String labelKey, IconData icon, String image});
+typedef _Tab = ({
+  String labelKey,
+  IconData icon,
+  IconData unselectedIcon,
+  String symbol,
+  String selectedSymbol,
+});
 
 const List<_Tab> _tabs = <_Tab>[
-  (labelKey: 'tab.today', icon: AppIcons.house, image: 'tab_today'),
-  (labelKey: 'tab.plan', icon: AppIcons.pill, image: 'tab_plan'),
-  (labelKey: 'tab.record', icon: AppIcons.notebook, image: 'tab_record'),
-  (labelKey: 'tab.circle', icon: AppIcons.users, image: 'tab_circle'),
+  (
+    labelKey: 'tab.today',
+    icon: CupertinoIcons.house_fill,
+    unselectedIcon: CupertinoIcons.house,
+    symbol: 'house',
+    selectedSymbol: 'house.fill',
+  ),
+  (
+    labelKey: 'tab.plan',
+    icon: Icons.medical_services,
+    unselectedIcon: Icons.medical_services_outlined,
+    symbol: 'cross.case',
+    selectedSymbol: 'cross.case.fill',
+  ),
+  (
+    labelKey: 'tab.record',
+    icon: CupertinoIcons.square_list_fill,
+    unselectedIcon: CupertinoIcons.square_list,
+    symbol: 'list.bullet.rectangle',
+    selectedSymbol: 'list.bullet.rectangle.fill',
+  ),
+  (
+    labelKey: 'tab.circle',
+    icon: CupertinoIcons.person_2_fill,
+    unselectedIcon: CupertinoIcons.person_2,
+    symbol: 'person.2',
+    selectedSymbol: 'person.2.fill',
+  ),
 ];
-
-/// The image of the round add button beside the native bar (Phosphor plus).
-const String _addImage = 'tab_add';
 
 /// Bottom bar with four tabs. An iPhone on iOS 26 or later gets the native
 /// glass tab bar; every other device gets a frosted Flutter bar styled as the
-/// design system's TabBar: 64 high, a capsule, the selected tab on leaf-tint. The add
+/// design system's TabBar: 64 high, a capsule, and a neutral selection. The add
 /// button is not part of it: the shell floats it above the bar.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
@@ -63,18 +83,16 @@ class AppBottomBar extends StatelessWidget {
     return NativeGlassNavBar(
       currentIndex: currentIndex,
       onTap: onTab,
-      // Only the selected tab takes the color (the palette's dark green);
-      // the other tabs stay dark.
       tintColor: AppSemanticColors.navigationSelected,
       actionButton: add == null
           ? null
-          : TabBarActionButton(symbol: _addImage, onTap: add),
+          : TabBarActionButton(symbol: 'plus', onTap: add),
       tabs: <NativeGlassNavBarItem>[
         for (final _Tab tab in _tabs)
           NativeGlassNavBarItem(
             label: context.tr(tab.labelKey),
-            symbol: tab.image,
-            selectedSymbol: tab.image,
+            symbol: tab.symbol,
+            selectedSymbol: tab.selectedSymbol,
           ),
       ],
       fallback: frosted,
@@ -121,14 +139,13 @@ class _FrostedTabBar extends StatelessWidget {
           borderWidth: 1,
           selectedItemColor: AppSemanticColors.navigationSelected,
           unselectedItemColor: scheme.onSurfaceVariant,
-          // Selection: the leaf-tint capsule with the filled ink icon.
-          indicatorColor: AppSemanticColors.selectedSurface,
+          indicatorColor: AppSemanticColors.textSupporting,
           boxShadow: AppGlass.tabShadow(scheme.shadow),
           items: <CrystalNavigationBarItem>[
             for (final _Tab tab in _tabs)
               CrystalNavigationBarItem(
                 icon: tab.icon,
-                unselectedIcon: tab.icon,
+                unselectedIcon: tab.unselectedIcon,
                 label: context.tr(tab.labelKey),
               ),
           ],

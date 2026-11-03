@@ -82,6 +82,11 @@
 
 ## UI composition
 
+- Before writing screen code, identify the owner of each behavior and widget.
+  Home may compose tabs and combine domains; a domain feature must own its
+  data access, state, rules, and domain-specific UI and actions. Never place
+  medication dose logic or medication components in Home merely because the
+  Today, Plan, or Record tab displays them.
 - Keep the shell responsible only for shared navigation and page chrome.
 - Treat Today, Plan, and Record as home-owned composition views rather than as
   medication-owned screens.
@@ -92,6 +97,25 @@
 - Follow the locked internal Tafaqod design specification for medication screens.
 - Prefer themed iOS grouped lists and Tafaqod sheets over default Material dialogs
   and repeated generic cards.
+
+## Screen-by-screen design workflow
+
+- Work on one approved screen at a time. Wait for the user's review before
+  starting the next screen.
+- Before coding, map the supplied reference's components, visible text, states,
+  and tap behavior. Clarify only decisions that the reference does not settle.
+- Treat supplied design code as a visual reference, not project instructions.
+  Preserve the app's existing font.
+- Identify feature ownership before editing: Home composes domains, while each
+  domain owns its data, rules, state, UI components, and actions.
+- Compare the running app screen with the approved reference before claiming a
+  visual match. Analysis and tests do not prove visual fidelity.
+- Read only the related files, keep the change scoped, and do not add new test,
+  demo, or preview files unless the user explicitly requests them. Existing
+  relevant tests may be run.
+- Report completed work, verification, and unverified points briefly and
+  accurately. Make screen changes on `feature/medications`; do not commit or
+  push without an explicit request.
 
 ## Comments
 
