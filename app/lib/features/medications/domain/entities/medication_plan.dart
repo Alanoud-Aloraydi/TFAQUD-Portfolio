@@ -59,6 +59,7 @@ class MedicationPlan extends Equatable {
     this.pendingVersion,
     this.discontinuedAt,
     this.lastRecord,
+    this.history = const [],
   });
 
   final String id;
@@ -67,6 +68,7 @@ class MedicationPlan extends Equatable {
   final MedicationVersion version;
   final MedicationVersion? pendingVersion;
   final MedicationLastRecord? lastRecord;
+  final List<MedicationVersion> history;
 
   bool isPreviousOn(DateTime day) =>
       discontinuedAt != null ||
@@ -82,6 +84,7 @@ class MedicationPlan extends Equatable {
     version,
     pendingVersion,
     lastRecord,
+    history,
   ];
 }
 

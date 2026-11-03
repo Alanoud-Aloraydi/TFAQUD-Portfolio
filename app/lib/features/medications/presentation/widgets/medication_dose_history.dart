@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -31,6 +32,11 @@ class MedicationDoseHistory extends StatelessWidget {
           );
         }
         final items = state.occurrences.reversed.toList();
+        final groups = <DateTime, List<DoseOccurrence>>{};
+        for (final item in items) {
+          final day = DateUtils.dateOnly(item.scheduledOn);
+          groups.putIfAbsent(day, () => []).add(item);
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -49,8 +55,16 @@ class MedicationDoseHistory extends StatelessWidget {
             else if (items.isEmpty)
               Text(context.tr('medications.no_dose_history'))
             else
-              for (final item in items) ...[
-                DoseOccurrenceCard(occurrence: item, showDate: true),
+              for (final group in groups.entries) ...[
+                Text(
+                  formatMedicationDate(context, group.key),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                for (final item in group.value) ...[
+                  DoseOccurrenceCard(occurrence: item),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
                 const SizedBox(height: AppSpacing.md),
               ],
             if (context.read<MedicationOccurrencesCubit>().canLoadEarlier(

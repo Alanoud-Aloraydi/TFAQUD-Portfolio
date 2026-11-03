@@ -11,6 +11,7 @@ class MedicationPlanModel {
     final versionJson = json['version'] as Map<String, dynamic>;
     final pendingJson = json['pending_version'] as Map<String, dynamic>?;
     final lastJson = json['last_record'] as Map<String, dynamic>?;
+    final historyJson = json['history'] as List<dynamic>? ?? const [];
     final version = _version(versionJson);
     return MedicationPlanModel(
       MedicationPlan(
@@ -29,6 +30,9 @@ class MedicationPlanModel {
                 time: lastJson['time_of_day'] as String,
                 takenAt: _optionalDateTime(lastJson['taken_at']),
               ),
+        history: List.unmodifiable(
+          historyJson.map((item) => _version(item as Map<String, dynamic>)),
+        ),
       ),
     );
   }

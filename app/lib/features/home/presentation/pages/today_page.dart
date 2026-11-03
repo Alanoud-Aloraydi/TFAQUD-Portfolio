@@ -1,22 +1,32 @@
 import 'dart:async';
 
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
-import 'package:app/features/home/presentation/widgets/today_dose_window.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
+import 'package:app/features/medications/domain/dose_timing.dart';
+import 'package:app/features/medications/presentation/today_medication_view.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_components.dart';
+import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
-import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
@@ -76,6 +86,7 @@ class _TodayPageState extends State<TodayPage> {
                       const SizedBox(height: AppSpacing.xl),
                       _content(
                         context,
+                        circle.id,
                         doses,
                         prayers.day != null &&
                                 DateUtils.isSameDay(prayers.day!.date, now)
@@ -99,67 +110,97 @@ class _TodayPageState extends State<TodayPage> {
 
   Widget _content(
     BuildContext context,
+    String circleId,
     MedicationOccurrencesState state,
     PrayerDay? day,
     DateTime now,
   ) {
-    if (state.status == MedicationOccurrencesStatus.loading) {
-      return const DoseRowSkeleton(withButtons: true);
-    }
-    if (state.status == MedicationOccurrencesStatus.failure) {
-      return MedicationFailureView(
-        messageKey: state.messageKey!,
-        onRetry: context.read<MedicationOccurrencesCubit>().reload,
-      );
-    }
-    final occurrences = [...state.occurrences]
-      ..sort((a, b) => a.time.compareTo(b.time));
-    final next = occurrences.where((item) {
-      final status = _status(item, now);
-      return status == DoseTimingState.upcoming ||
-          status == DoseTimingState.due ||
-          status == DoseTimingState.late;
-    }).firstOrNull;
-    final attention = occurrences.where((item) {
-      final status = _status(item, now);
-      return item != next &&
-          item.record == null &&
-          (status == DoseTimingState.late || status == DoseTimingState.missed);
-    }).toList();
-    final takenToday =
-        occurrences
-            .where(
-              (item) =>
-                  item.record?.outcome == DoseOutcome.taken &&
-                  item.record?.takenAt != null,
-            )
-            .toList()
-          ..sort((a, b) => a.record!.takenAt!.compareTo(b.record!.takenAt!));
+    final medications = TodayMedicationView(
+      state.status == MedicationOccurrencesStatus.loading ||
+              state.status == MedicationOccurrencesStatus.failure
+          ? const []
+          : state.occurrences,
+      now,
+    );
+    final taskState = context.watch<MeasurementTasksCubit>().state;
+    final readingState = context.watch<MeasurementReadingsCubit>().state;
+    final measurementTasks = taskState.tasks;
+    final measurementReadings = readingState.readings;
+    final appointmentState = context.watch<AppointmentsCubit>().state;
+    final todayAppointments = appointmentState.appointments
+        .where(
+          (item) =>
+              item.status == AppointmentStatus.scheduled &&
+              DateUtils.isSameDay(item.scheduledOn, now),
+        )
+        .toList();
+    final todayOccurrences = medications.todayOccurrences;
+    final next = medications.next;
+    final attention = medications.attention;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (occurrences.isEmpty) ...[
+        if (state.status == MedicationOccurrencesStatus.loading)
+          const DoseRowSkeleton(withButtons: true),
+        if (state.status == MedicationOccurrencesStatus.failure)
+          MedicationFailureView(
+            messageKey: state.messageKey!,
+            onRetry: context.read<MedicationOccurrencesCubit>().reload,
+          ),
+        if (taskState.status == MeasurementLoadStatus.failure)
+          TextButton(
+            onPressed: context.read<MeasurementTasksCubit>().reload,
+            child: Text(context.tr(taskState.errorKey ?? 'error.unknown')),
+          ),
+        if (readingState.status == MeasurementLoadStatus.failure)
+          TextButton(
+            onPressed: context.read<MeasurementReadingsCubit>().reload,
+            child: Text(context.tr(readingState.errorKey ?? 'error.unknown')),
+          ),
+        if (appointmentState.status == AppointmentsLoadStatus.failure)
+          TextButton(
+            onPressed: () => context.read<AppointmentsCubit>().load(circleId),
+            child: Text(
+              context.tr(appointmentState.errorKey ?? 'error.unknown'),
+            ),
+          ),
+        if (state.status == MedicationOccurrencesStatus.ready &&
+            todayOccurrences.isEmpty &&
+            measurementTasks.isEmpty &&
+            todayAppointments.isEmpty) ...[
           Text(context.tr('today_dashboard.no_tasks_today')),
           const SizedBox(height: AppSpacing.xl),
         ],
         if (next != null) ...[
-          _ActionDose(
-            occurrence: next,
-            prominent: true,
-            day: day,
-            lastTaken: takenToday
-                .where((item) => item.planId == next.planId)
-                .lastOrNull,
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-        ] else if (attention.isEmpty) ...[
+          TodayMedicationActionDose(occurrence: next, circleId: circleId),
+          const SizedBox(height: AppSpacing.md),
+        ] else if (state.status == MedicationOccurrencesStatus.ready &&
+            todayOccurrences.isNotEmpty &&
+            attention.isEmpty &&
+            measurementTasks.isEmpty &&
+            todayAppointments.isEmpty) ...[
           Text(context.tr('today_dashboard.no_remaining_tasks')),
           const SizedBox(height: AppSpacing.xl),
         ],
         if (attention.isNotEmpty) ...[
-          _AttentionSection(occurrences: attention),
+          TodayMedicationAttentionSection(
+            occurrences: attention,
+            circleId: circleId,
+          ),
           const SizedBox(height: AppSpacing.xl),
         ],
+        MeasurementAttentionSection(
+          tasks: measurementTasks,
+          readings: measurementReadings,
+        ),
+        if (measurementTasks.any(
+              (task) => task.status == MeasurementStatus.missed,
+            ) ||
+            measurementReadings.any(
+              (reading) =>
+                  reading.outsideTarget == true && reading.followedUpAt == null,
+            ))
+          const SizedBox(height: AppSpacing.xl),
         _SectionTitle(context.tr('today_dashboard.schedule')),
         const SizedBox(height: AppSpacing.md),
         if (day != null) ...[
@@ -176,38 +217,29 @@ class _TodayPageState extends State<TodayPage> {
               nextTime: index + 1 < Prayer.values.length
                   ? day.times[Prayer.values[index + 1]]
                   : null,
-              occurrences: occurrences,
+              occurrences: todayOccurrences,
+              measurementTasks: measurementTasks,
+              appointments: todayAppointments,
+              circleId: circleId,
               now: now,
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
-        ] else if (occurrences.isNotEmpty)
-          for (final item in occurrences)
+        ] else if (todayOccurrences.isNotEmpty)
+          for (final item in todayOccurrences)
             DoseOccurrenceCard(
               occurrence: item,
               showControls: false,
-              timingState: _status(item, now),
+              timingState: medicationTimingState(item, now),
             ),
+        if (day == null)
+          for (final task in measurementTasks) MeasurementTaskRow(task: task),
+        if (day == null)
+          for (final item in todayAppointments)
+            AppointmentTodayRow(value: item),
       ],
     );
   }
-}
-
-DoseTimingState? _status(DoseOccurrence item, DateTime now) {
-  if (item.record != null) return null;
-  final parts = item.time.split(':');
-  final scheduled = DateTime.utc(
-    item.scheduledOn.year,
-    item.scheduledOn.month,
-    item.scheduledOn.day,
-    int.parse(parts[0]),
-    int.parse(parts[1]),
-  );
-  if (now.isBefore(scheduled)) return DoseTimingState.upcoming;
-  final minutes = now.difference(scheduled).inMinutes;
-  if (minutes < 15) return DoseTimingState.due;
-  if (minutes < item.missedAfterMinutes) return DoseTimingState.late;
-  return DoseTimingState.missed;
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -219,197 +251,6 @@ class _SectionTitle extends StatelessWidget {
       Text(text, style: Theme.of(context).textTheme.headlineSmall);
 }
 
-class _AttentionSection extends StatelessWidget {
-  const _AttentionSection({required this.occurrences});
-  final List<DoseOccurrence> occurrences;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      color: AppSemanticColors.surfaceAttention,
-      border: Border.all(color: AppSemanticColors.borderAttention),
-      borderRadius: BorderRadius.circular(AppRadius.card),
-    ),
-    child: ExpansionTile(
-      initiallyExpanded: true,
-      tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.inset),
-      childrenPadding: const EdgeInsets.fromLTRB(
-        AppSpacing.inset,
-        0,
-        AppSpacing.inset,
-        AppSpacing.sm,
-      ),
-      title: Text(
-        context.tr(
-          'today_dashboard.attention_count',
-          args: [occurrences.length.toString()],
-        ),
-        style: Theme.of(context).textTheme.titleMedium
-            ?.copyWith(color: AppSemanticColors.statusWarning),
-      ),
-      children: [
-        for (final item in occurrences) ...[
-          _ActionDose(occurrence: item),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-      ],
-    ),
-  );
-}
-
-class _ActionDose extends StatelessWidget {
-  const _ActionDose({
-    required this.occurrence,
-    this.prominent = false,
-    this.day,
-    this.lastTaken,
-  });
-  final DoseOccurrence occurrence;
-  final bool prominent;
-  final PrayerDay? day;
-  final DoseOccurrence? lastTaken;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final now = DateTime.now().toUtc().add(const Duration(hours: 3));
-    final status = _status(occurrence, now);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: prominent
-          ? BoxDecoration(
-              color: colors.surface,
-              border: Border.all(
-                color: AppSemanticColors.textSupporting,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(AppRadius.card),
-            )
-          : AppSurfaces.card(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (prominent) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.tr(switch (status) {
-                      DoseTimingState.due => 'today_dashboard.due_title',
-                      DoseTimingState.late => 'today_dashboard.late_title',
-                      _ => 'today_dashboard.next',
-                    }),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                if (day != null) Text(_period(context, day!)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-          if (prominent)
-            _NextDoseInfo(occurrence: occurrence)
-          else
-            DoseOccurrenceCard(
-              occurrence: occurrence,
-              showControls: false,
-              timingState: status,
-            ),
-          if (prominent && lastTaken != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              _lastTakenText(context, lastTaken!),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-          if (prominent) ...[
-            const SizedBox(height: AppSpacing.sm),
-            TodayDoseWindow(occurrence: occurrence, now: now),
-            const SizedBox(height: AppSpacing.md),
-          ],
-          DoseRecordControls(occurrence: occurrence, compact: true),
-        ],
-      ),
-    );
-  }
-
-  String _period(BuildContext context, PrayerDay prayerDay) {
-    final prayer =
-        Prayer.values
-            .where(
-              (item) => prayerDay.times[item]!.compareTo(occurrence.time) <= 0,
-            )
-            .lastOrNull ??
-        Prayer.fajr;
-    return context.tr(
-      'today_dashboard.prayer_period',
-      args: [context.tr('prayer_times.${prayer.name}')],
-    );
-  }
-
-  String _lastTakenText(BuildContext context, DoseOccurrence item) {
-    final taken = item.record!.takenAt!.toUtc().add(const Duration(hours: 3));
-    final time =
-        '${taken.hour.toString().padLeft(2, '0')}:'
-        '${taken.minute.toString().padLeft(2, '0')}';
-    return context.tr(
-      'today_dashboard.last_taken',
-      args: [
-        formatMedicationTime(context, time),
-        formatMedicationNumber(item.doseValue),
-        context.tr('medications.unit.${item.doseUnit.name}'),
-      ],
-    );
-  }
-}
-
-class _NextDoseInfo extends StatelessWidget {
-  const _NextDoseInfo({required this.occurrence});
-
-  final DoseOccurrence occurrence;
-
-  @override
-  Widget build(BuildContext context) {
-    final strength =
-        '${formatMedicationNumber(occurrence.strengthValue)} '
-        '${occurrence.strengthUnit.apiValue}';
-    final dose = context.tr(
-      'medications.dose',
-      args: [
-        formatMedicationNumber(occurrence.doseValue),
-        context.tr('medications.unit.${occurrence.doseUnit.name}'),
-      ],
-    );
-    return Row(
-      children: [
-        Text(
-          formatMedicationTime(context, occurrence.time),
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(width: AppSpacing.lg),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${occurrence.name} $strength',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              Text(
-                occurrence.instructions == null
-                    ? dose
-                    : '$dose · ${occurrence.instructions}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _PrayerPeriod extends StatelessWidget {
   const _PrayerPeriod({
     required this.prayer,
@@ -417,6 +258,9 @@ class _PrayerPeriod extends StatelessWidget {
     required this.isFirst,
     required this.nextTime,
     required this.occurrences,
+    required this.measurementTasks,
+    required this.appointments,
+    required this.circleId,
     required this.now,
   });
   final Prayer prayer;
@@ -424,6 +268,9 @@ class _PrayerPeriod extends StatelessWidget {
   final bool isFirst;
   final String? nextTime;
   final List<DoseOccurrence> occurrences;
+  final List<MeasurementOccurrence> measurementTasks;
+  final List<CareAppointment> appointments;
+  final String circleId;
   final DateTime now;
 
   @override
@@ -435,6 +282,52 @@ class _PrayerPeriod extends StatelessWidget {
               (nextTime == null || item.time.compareTo(nextTime!) < 0),
         )
         .toList();
+    final measures = measurementTasks
+        .where(
+          (item) =>
+              (isFirst || item.time.compareTo(time) >= 0) &&
+              (nextTime == null || item.time.compareTo(nextTime!) < 0),
+        )
+        .toList();
+    final visits = appointments
+        .where(
+          (item) =>
+              (isFirst || item.time.compareTo(time) >= 0) &&
+              (nextTime == null || item.time.compareTo(nextTime!) < 0),
+        )
+        .toList();
+    final entries =
+        <
+            ({
+              String time,
+              DoseOccurrence? medication,
+              MeasurementOccurrence? measurement,
+              CareAppointment? appointment,
+            })
+          >[
+            for (final item in items)
+              (
+                time: item.time,
+                medication: item,
+                measurement: null,
+                appointment: null,
+              ),
+            for (final item in measures)
+              (
+                time: item.time,
+                medication: null,
+                measurement: item,
+                appointment: null,
+              ),
+            for (final item in visits)
+              (
+                time: item.time,
+                medication: null,
+                measurement: null,
+                appointment: item,
+              ),
+          ]
+          ..sort((first, second) => first.time.compareTo(second.time));
     final minute = now.hour * 60 + now.minute;
     final parts = time.split(':');
     final start = int.parse(parts[0]) * 60 + int.parse(parts[1]);
@@ -443,71 +336,105 @@ class _PrayerPeriod extends StatelessWidget {
         ? 1440
         : int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
     final current = minute >= start && minute < end;
-    final attention = items.any((item) {
-      final status = _status(item, now);
-      return status == DoseTimingState.late ||
-          status == DoseTimingState.missed ||
-          item.record?.outcome == DoseOutcome.skipped;
-    });
-    final expanded = current || attention;
+    final summary = MedicationPeriodSummary(items, now);
+    final missedMeasurements = measures
+        .where((item) => item.status == MeasurementStatus.missed)
+        .length;
+    final expanded =
+        current || summary.attentionCount > 0 || missedMeasurements > 0;
     final title = context.tr('prayer_times.${prayer.name}');
     final formattedTime = formatMedicationTime(context, time);
     return Material(
-      color: AppSemanticColors.surfaceContent,
+      color: current
+          ? AppSemanticColors.surfaceContent
+          : AppSemanticColors.surfacePlan,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         side: BorderSide(
           color: current
               ? AppSemanticColors.accentWarm
-              : AppSemanticColors.borderSubtle,
+              : AppSemanticColors.transparent,
           width: current ? 2 : 1,
         ),
       ),
       clipBehavior: Clip.antiAlias,
-      child: items.isEmpty
-          ? ListTile(
-              leading: const Icon(AppIcons.clock),
-              title: Text(title),
-              subtitle: Text(context.tr('today_dashboard.no_period_doses')),
-              trailing: Text(formattedTime),
-            )
-          : ExpansionTile(
-              key: ValueKey(
-                '${now.year}-${now.month}-${now.day}:${prayer.name}',
+      child: ExpansionTile(
+        key: ValueKey(
+          '${now.year}-${now.month}-${now.day}:${prayer.name}:$expanded',
+        ),
+        initiallyExpanded: expanded && entries.isNotEmpty,
+        shape: const Border(),
+        collapsedShape: const Border(),
+        iconColor: AppSemanticColors.textSupporting,
+        collapsedIconColor: AppSemanticColors.textSupporting,
+        tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        childrenPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.sm,
+          0,
+          AppSpacing.sm,
+          AppSpacing.sm,
+        ),
+        leading: Icon(
+          _prayerIcon(prayer),
+          color: current
+              ? AppSemanticColors.doseDueMarker
+              : AppSemanticColors.textSupporting,
+        ),
+        title: Row(
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                formattedTime,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              initiallyExpanded: expanded,
-              leading: Icon(
-                current ? AppIcons.house : AppIcons.clock,
-              ),
-              title: Text(title),
-              subtitle: Text(
-                context.tr(
-                  'today_dashboard.dose_count',
-                  args: [items.length.toString()],
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(formattedTime),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(AppIcons.caretDown),
-                ],
-              ),
-              children: [
-                for (final item in items)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                    ),
-                    child: DoseOccurrenceCard(
-                      occurrence: item,
-                      showControls: false,
-                      timingState: _status(item, now),
-                    ),
-                  ),
-              ],
             ),
+            const Spacer(),
+            if (current)
+              CompactStatusBadge(
+                text: context.tr('today_dashboard.current_period'),
+                background: AppSemanticColors.surfaceAttention,
+                foreground: AppSemanticColors.statusWarning,
+              )
+            else if (summary.attentionCount + missedMeasurements > 0)
+              CompactStatusBadge(
+                text: (summary.attentionCount + missedMeasurements).toString(),
+                background: summary.hasMissed || missedMeasurements > 0
+                    ? Theme.of(context).colorScheme.errorContainer
+                    : AppSemanticColors.surfaceAttention,
+                foreground: summary.hasMissed || missedMeasurements > 0
+                    ? context.tokens.errorText
+                    : context.tokens.warningText,
+              )
+            else if (summary.allResolved && measures.isEmpty)
+              MedicationPeriodMarks(occurrences: items, now: now),
+          ],
+        ),
+        children: [
+          for (final entry in entries) ...[
+            if (entry.medication case final item?)
+              TodayMedicationPrayerDoseRow(
+                occurrence: item,
+                circleId: circleId,
+                now: now,
+              )
+            else if (entry.measurement case final task?)
+              MeasurementTaskRow(task: task)
+            else if (entry.appointment case final visit?)
+              AppointmentTodayRow(value: visit),
+            if (entry != entries.last) const SizedBox(height: AppSpacing.sm),
+          ],
+        ],
+      ),
     );
   }
 }
+
+IconData _prayerIcon(Prayer prayer) => switch (prayer) {
+  Prayer.fajr => TafaqodPhosphorIcons.sunHorizon,
+  Prayer.dhuhr => TafaqodPhosphorIcons.sun,
+  Prayer.asr => TafaqodPhosphorIcons.sunDim,
+  Prayer.maghrib => TafaqodPhosphorIcons.cloudMoon,
+  Prayer.isha => TafaqodPhosphorIcons.moonStars,
+};

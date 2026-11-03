@@ -1,8 +1,10 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -58,28 +60,51 @@ class _MedicationFormState extends State<MedicationForm> {
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          leadingWidth: widget.plan == null ? null : 82,
-          leading: widget.plan == null
-              ? null
-              : TextButton(
-                  onPressed: _cancel,
-                  child: Text(context.tr('common.cancel')),
-                ),
-          title: Text(
-            context.tr(
-              widget.plan == null
-                  ? 'medications.add_title'
-                  : 'medications.edit_title',
-            ),
-          ),
-          actions: widget.plan == null
-              ? null
-              : [
+          automaticallyImplyLeading: false,
+          titleSpacing: AppSpacing.lg,
+          title: GlassSurface(
+            borderRadius: BorderRadius.circular(AppRadius.capsule),
+            child: SizedBox(
+              height: 52,
+              child: Row(
+                children: [
                   TextButton(
-                    onPressed: saving ? null : _submit,
-                    child: Text(context.tr('medications.save_changes')),
+                    onPressed: _cancel,
+                    child: Text(context.tr('common.cancel')),
+                  ),
+                  Expanded(
+                    child: Text(
+                      context.tr(
+                        widget.plan == null
+                            ? 'medications.add_title'
+                            : 'medications.edit_title',
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      end: AppSpacing.xs,
+                    ),
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppSemanticColors.actionPrimary,
+                        foregroundColor: AppSemanticColors.onActionPrimary,
+                        minimumSize: const Size(58, 40),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                      ),
+                      onPressed: saving ? null : _submit,
+                      child: Text(context.tr('medications.save_changes')),
+                    ),
                   ),
                 ],
+              ),
+            ),
+          ),
         ),
         body: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -134,13 +159,6 @@ class _MedicationFormState extends State<MedicationForm> {
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ],
-              const SizedBox(height: AppSpacing.xl),
-              if (widget.plan == null)
-                PillButton(
-                  label: context.tr('medications.save'),
-                  onPressed: _submit,
-                  isLoading: saving,
-                ),
               const SizedBox(height: AppSpacing.xl),
             ],
           ),

@@ -1,8 +1,12 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MedicationPlanList extends StatelessWidget {
   const MedicationPlanList({
@@ -37,7 +41,27 @@ class MedicationPlanList extends StatelessWidget {
       if (plans.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-          child: Center(child: Text(emptyText)),
+          child: Column(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppSemanticColors.surfacePlan,
+                  borderRadius: BorderRadius.circular(AppRadius.field),
+                ),
+                child: const Icon(TafaqodPhosphorIcons.pill),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(emptyText, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                context.tr('medications.add_from_plus'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         )
       else
         for (final plan in plans) ...[

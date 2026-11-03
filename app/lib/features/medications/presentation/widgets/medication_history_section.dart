@@ -1,11 +1,7 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/features/home/presentation/widgets/home_category_control.dart';
-import 'package:app/features/home/presentation/widgets/record_export_sheet.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_record_card.dart';
@@ -16,9 +12,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MedicationHistorySection extends StatelessWidget {
-  const MedicationHistorySection({super.key, required this.circleId});
+  const MedicationHistorySection({
+    super.key,
+    required this.circleId,
+    required this.header,
+  });
 
   final String circleId;
+  final Widget header;
 
   @override
   Widget build(BuildContext context) {
@@ -61,40 +62,15 @@ class MedicationHistorySection extends StatelessWidget {
     return ListView(
       padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
       children: [
-        Row(
-          children: [
-            Expanded(child: LargeTitle(title: context.tr('tab.record'))),
-            TextButton.icon(
-              onPressed: () => showRecordExportSheet(
-                context,
-                circleId: circleId,
-                plans: state.plans,
-              ),
-              icon: const Icon(AppIcons.export),
-              label: Text(context.tr('record_export.share_action')),
-            ),
-          ],
-        ),
-        HomeCategoryControl(medicationCount: state.plans.length),
+        header,
         const SizedBox(height: AppSpacing.md),
-        Wrap(
-          spacing: AppSpacing.xs,
-          children: [
+        GlassSegmentedControl<MedicationRecordFilter>(
+          segments: {
             for (final filter in MedicationRecordFilter.values)
-              ChoiceChip(
-                label: Text(context.tr('medications.filter.${filter.name}')),
-                selected: state.recordFilter == filter,
-                selectedColor: AppSemanticColors.textPrimary,
-                backgroundColor: AppSemanticColors.surfaceContent,
-                labelStyle: TextStyle(
-                  color: state.recordFilter == filter
-                      ? AppSemanticColors.surfaceContent
-                      : AppSemanticColors.textPrimary,
-                ),
-                onSelected: (_) =>
-                    context.read<MedicationsCubit>().setRecordFilter(filter),
-              ),
-          ],
+              filter: context.tr('medications.filter.${filter.name}'),
+          },
+          selected: state.recordFilter,
+          onChanged: context.read<MedicationsCubit>().setRecordFilter,
         ),
         const SizedBox(height: AppSpacing.xl),
         if (visible.isEmpty)

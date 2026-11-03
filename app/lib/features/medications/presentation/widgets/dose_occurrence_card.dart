@@ -161,7 +161,7 @@ class _DoseDetails extends StatelessWidget {
         Text(occurrence.name, style: Theme.of(context).textTheme.titleLarge),
         Text(
           '${formatMedicationNumber(occurrence.strengthValue)} '
-          '${occurrence.strengthUnit.apiValue}',
+          '${context.tr('medications.strength_display.${occurrence.strengthUnit.name}')}',
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(dose, style: Theme.of(context).textTheme.bodySmall),

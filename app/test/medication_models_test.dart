@@ -1,9 +1,11 @@
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/features/medications/data/models/dose_occurrence_model.dart';
 import 'package:app/features/medications/data/models/medication_plan_model.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   test('plan response maps its schedules and milliliter unit', () {
@@ -11,6 +13,18 @@ void main() {
       'id': 'plan-1',
       'created_at': '2026-10-01T10:00:00Z',
       'discontinued_at': null,
+      'history': [
+        {
+          'version_number': 1,
+          'name': 'Medicine',
+          'strength_value': '5',
+          'strength_unit': 'mg',
+          'dosage_form': 'liquid',
+          'treatment_starts_on': '2026-10-01',
+          'effective_from_on': '2026-10-01',
+          'schedules': [],
+        },
+      ],
       'last_record': {
         'outcome': 'taken',
         'scheduled_on': '2026-10-27',
@@ -43,6 +57,7 @@ void main() {
     }).toEntity();
 
     expect(plan.version.schedules.single.doseUnit, DoseUnit.milliliter);
+    expect(plan.history.single.number, 1);
     expect(plan.version.schedules.single.weekdays, [1, 3, 5]);
     expect(plan.lastRecord!.outcome, DoseOutcome.taken);
     expect(plan.lastRecord!.scheduledOn.day, 27);
@@ -92,5 +107,27 @@ void main() {
     data.schedules.single.doseController.text = '0.5';
     data.schedules.single.weekdays.clear();
     expect(data.firstIssue()!.field, MedicationFormField.weekdays);
+  });
+
+  test('Arabic and Persian numeric input is stored as Western digits', () {
+    const formatter = WesternDigitsFormatter(decimal: true);
+    final formatted = formatter.formatEditUpdate(
+      TextEditingValue.empty,
+      const TextEditingValue(
+        text: '\u0665\u0660\u066B\u06F5',
+        selection: TextSelection.collapsed(offset: 4),
+      ),
+    );
+    expect(formatted.text, '50.5');
+    expect(formatted.selection.baseOffset, 4);
+
+    final data = MedicationFormData(null);
+    addTearDown(data.dispose);
+    data.name.text = 'Medicine';
+    data.strength.text = '\u0665\u0660\u066B\u06F5';
+    data.schedules.single.doseController.text = '\u06F2\u066B\u0665';
+    expect(data.firstIssue(), isNull);
+    expect(data.toDraft()!.strengthValue, 50.5);
+    expect(data.toDraft()!.schedules.single.doseValue, 2.5);
   });
 }

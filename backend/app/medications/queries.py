@@ -131,7 +131,7 @@ class MedicationQueries:
         return self._plan_response(rows[0][0], [row[1] for row in rows])
 
     def _plan_response(self, plan, versions) -> dict:
-        """Show the active version and one later revision separately."""
+        """Show the active, pending, and completed versions separately."""
         today = self.now.astimezone(RIYADH).date()
         active = [v for v in versions if v.effective_from_on <= today]
         version = (
@@ -146,6 +146,13 @@ class MedicationQueries:
         result["version"]["schedules"] = schedule_responses(
             self.session, version.id
         )
+        result["history"] = []
+        for earlier in sorted(versions, key=lambda item: item.version_number):
+            if earlier.effective_from_on > today:
+                continue
+            item = plan_response(plan, earlier)["version"]
+            item["schedules"] = schedule_responses(self.session, earlier.id)
+            result["history"].append(item)
         if pending:
             future = max(pending, key=lambda item: item.version_number)
             result["pending_version"] = plan_response(

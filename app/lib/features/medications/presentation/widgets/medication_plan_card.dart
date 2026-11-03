@@ -1,10 +1,9 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -13,6 +12,7 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -38,11 +38,9 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
   Widget build(BuildContext context) {
     final plan = widget.plan;
     final version = plan.version;
-    final subtitle = [
-      '${formatMedicationNumber(version.strengthValue)} '
-          '${version.strengthUnit.apiValue}',
-      context.tr('medications.form.${version.dosageForm.name}'),
-    ].whereType<String>().where((value) => value.isNotEmpty).join(' · ');
+    final strength =
+        '${formatMedicationNumber(version.strengthValue)} '
+        '${context.tr('medications.strength_display.${version.strengthUnit.name}')}';
     final today = DateUtils.dateOnly(DateTime.now());
     final status = plan.isPreviousOn(today)
         ? _PlanState.previous
@@ -59,8 +57,15 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     );
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: AppSemanticColors.surfaceContent,
-        shape: AppSurfaces.cardShape(),
+        color: status == _PlanState.current
+            ? AppSemanticColors.surfacePlan
+            : AppSemanticColors.surfaceContent,
+        shape: AppRadius.shape(
+          AppRadius.m,
+          side: status == _PlanState.scheduled
+              ? const BorderSide(color: AppSemanticColors.borderSubtle)
+              : BorderSide.none,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -73,23 +78,63 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                 constraints: const BoxConstraints(minHeight: AppSizes.touch),
                 child: Row(
                   children: [
-                    Icon(
-                      AppIcons.pill,
-                      color: Theme.of(context).colorScheme.primary,
+                    Container(
+                      width: AppSizes.touch,
+                      height: AppSizes.touch,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: status == _PlanState.current
+                            ? AppSemanticColors.surfaceContent
+                            : AppSemanticColors.surfacePlan,
+                        borderRadius: BorderRadius.circular(AppRadius.field),
+                      ),
+                      child: const Icon(
+                        TafaqodPhosphorIcons.pill,
+                        color: AppSemanticColors.textSupporting,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: Text(
-                        version.name,
-                        style: Theme.of(context).textTheme.titleLarge,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: AppSpacing.xs,
+                            children: [
+                              Text(
+                                version.name,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(
+                                strength,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ],
+                          ),
+                          Text(
+                            context.tr(
+                              'medications.form.${version.dosageForm.name}',
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ),
                     ),
+                    if (canManage &&
+                        status == _PlanState.current &&
+                        plan.pendingVersion == null)
+                      IconButton(
+                        onPressed: () => _edit(context),
+                        icon: const Icon(CupertinoIcons.pencil),
+                        tooltip: context.tr('medications.edit_title'),
+                      ),
                     _PlanStatus(state: status),
                     const SizedBox(width: AppSpacing.sm),
                     Icon(
                       _expanded
-                          ? AppIcons.caretUp
-                          : AppIcons.caretDown,
+                          ? CupertinoIcons.chevron_up
+                          : CupertinoIcons.chevron_down,
                       size: AppSizes.iconSmall,
                       color: AppSemanticColors.borderControlBase,
                     ),
@@ -97,18 +142,16 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                 ),
               ),
             ),
-            if (subtitle.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(subtitle),
-            ],
             const SizedBox(height: AppSpacing.md),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: AppSemanticColors.surfacePlan,
+                color: status == _PlanState.current
+                    ? AppSemanticColors.surfaceContent
+                    : AppSemanticColors.surfacePlan,
                 borderRadius: BorderRadius.circular(AppRadius.field),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.inset),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Column(
                   children: [
                     for (final schedule in version.schedules)
@@ -116,11 +159,6 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            _InfoLine(
-              icon: AppIcons.calendar,
-              text: _period(context, version.startsOn, version.endsOn),
             ),
             if (plan.pendingVersion case final pending?) ...[
               const SizedBox(height: AppSpacing.md),
@@ -133,57 +171,49 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.inset),
-                  child: Text(
-                    [
-                      context.tr(
-                        'medications.pending_revision',
-                        args: [
-                          formatMedicationDate(
-                            context,
-                            pending.effectiveFromOn,
-                          ),
-                        ],
-                      ),
-                      if (version.schedules.length == 1 &&
-                          pending.schedules.length == 1 &&
-                          version.schedules.first.doseUnit ==
-                              pending.schedules.first.doseUnit &&
-                          version.schedules.first.doseValue !=
-                              pending.schedules.first.doseValue)
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
                         context.tr(
-                          'medications.pending_dose_change',
+                          'medications.pending_revision',
                           args: [
-                            formatMedicationNumber(
-                              version.schedules.first.doseValue,
-                            ),
-                            formatMedicationNumber(
-                              pending.schedules.first.doseValue,
-                            ),
-                            context.tr(
-                              'medications.unit.${pending.schedules.first.doseUnit.name}',
+                            formatMedicationDate(
+                              context,
+                              pending.effectiveFromOn,
                             ),
                           ],
                         ),
-                    ].join('\n'),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        _scheduleSummary(context, version.schedules),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(decoration: TextDecoration.lineThrough),
+                      ),
+                      Text(
+                        _scheduleSummary(context, pending.schedules),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        context.tr('medications.effective_hint'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
             Row(
               children: [
-                const Icon(AppIcons.clock, size: AppSizes.iconSmall),
+                const Icon(CupertinoIcons.calendar, size: AppSizes.iconSmall),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
-                    context.tr(
-                      'medications.missed_footer',
-                      args: [
-                        context.tr(
-                          'medications.missed_option.${version.missedAfterMinutes}',
-                        ),
-                      ],
-                    ),
+                    _period(context, version.startsOn, version.endsOn),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
@@ -195,6 +225,12 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             ),
             if (_expanded) ...[
               const Divider(),
+              _DetailValue(
+                label: context.tr('medications.missed_after'),
+                value: context.tr(
+                  'medications.missed_option.${version.missedAfterMinutes}',
+                ),
+              ),
               if (version.reason case final reason?)
                 _DetailValue(
                   label: context.tr('medications.reason'),
@@ -212,13 +248,6 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                     onPressed: () => _openDetails(context),
                     child: Text(context.tr('medications.dose_history')),
                   ),
-                  if (canManage &&
-                      status == _PlanState.current &&
-                      plan.pendingVersion == null)
-                    TextButton(
-                      onPressed: () => _edit(context),
-                      child: Text(context.tr('medications.edit_title')),
-                    ),
                   if (canManage && status != _PlanState.previous)
                     TextButton(
                       onPressed: () => _discontinue(context),
@@ -306,6 +335,22 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
       ],
     );
   }
+
+  String _scheduleSummary(
+    BuildContext context,
+    List<MedicationSchedule> schedules,
+  ) => schedules
+      .map((schedule) {
+        final dose = context.tr(
+          'medications.dose',
+          args: [
+            formatMedicationNumber(schedule.doseValue),
+            context.tr('medications.unit.${schedule.doseUnit.name}'),
+          ],
+        );
+        return '${formatMedicationTime(context, schedule.time)} · $dose';
+      })
+      .join('، ');
 }
 
 class _DetailValue extends StatelessWidget {
@@ -342,48 +387,67 @@ class _ScheduleLine extends StatelessWidget {
         context.tr('medications.unit.${schedule.doseUnit.name}'),
       ],
     );
+    final days = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final day in const [6, 7, 1, 2, 3, 4, 5]) ...[
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: schedule.weekdays.contains(day)
+                  ? AppSemanticColors.selectedSurface
+                  : AppSemanticColors.surfaceContent,
+              border: schedule.weekdays.contains(day)
+                  ? null
+                  : Border.all(color: AppSemanticColors.borderSubtle),
+              shape: BoxShape.circle,
+            ),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: Center(
+                child: Text(
+                  context.tr('medications.weekday_short.$day'),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ),
+            ),
+          ),
+          if (day != 5) const SizedBox(width: AppSpacing.xs),
+        ],
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Text(time, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(dose)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            children: [
-              for (final day in const [6, 7, 1, 2, 3, 4, 5]) ...[
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: schedule.weekdays.contains(day)
-                        ? AppSemanticColors.selectedSurface
-                        : AppSemanticColors.surfaceContent,
-                    border: schedule.weekdays.contains(day)
-                        ? null
-                        : Border.all(color: AppSemanticColors.borderSubtle),
-                    shape: BoxShape.circle,
-                  ),
-                  child: SizedBox(
-                    width: AppSizes.iconSmall,
-                    height: AppSizes.iconSmall,
-                    child: Center(
-                      child: Text(
-                        context.tr('medications.weekday_short.$day'),
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) => constraints.maxWidth >= 290
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      time,
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-              ],
-            ],
-          ),
-        ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: Text(dose)),
+                  days,
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(time, style: Theme.of(context).textTheme.titleSmall),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(child: Text(dose)),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  days,
+                ],
+              ),
       ),
     );
   }
@@ -400,43 +464,30 @@ class _PlanStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: state == _PlanState.current
+            ? AppSemanticColors.selectedSurface
+            : AppSemanticColors.surfaceContent,
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: AppSpacing.sm,
           vertical: AppSpacing.xs,
         ),
-        child: Text(
-          context.tr('medications.${state.name}_label'),
-          style: Theme.of(context).textTheme.labelSmall,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (state == _PlanState.current) ...[
+              const Icon(TafaqodPhosphorIcons.check, size: 12),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+            Text(
+              context.tr('medications.${state.name}_label'),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: AppSizes.iconSmall,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(text, style: Theme.of(context).textTheme.bodySmall),
-        ),
-      ],
     );
   }
 }

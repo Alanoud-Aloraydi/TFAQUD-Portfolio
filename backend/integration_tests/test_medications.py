@@ -147,11 +147,13 @@ def test_recording_a_dose_is_idempotent_and_conflicting_change_is_rejected(
 
 
 def test_revision_keeps_history_and_requires_the_expected_version(
-    database_app, database, account
+    database_app, database, account, monkeypatch
 ):
+    clock = ManualClock(datetime(2026, 10, 28, 9, tzinfo=timezone.utc))
+    monkeypatch.setitem(database_app.extensions, "clock", clock)
     owner = account()
     circle = offline_circle(database, owner)
-    now = datetime.now(timezone.utc)
+    now = clock.now()
     client = database_app.test_client()
     headers = signed_in(database_app, owner)
     plan = create_plan(client, circle, headers, plan_body(now)).json[
@@ -163,6 +165,7 @@ def test_revision_keeps_history_and_requires_the_expected_version(
     revised = client.put(path, headers=headers, json=revised_body)
     assert revised.status_code == 200
     assert revised.json["medication_plan"]["version"]["version_number"] == 1
+    assert len(revised.json["medication_plan"]["history"]) == 1
     assert (
         revised.json["medication_plan"]["pending_version"]["version_number"]
         == 2
@@ -191,6 +194,15 @@ def test_revision_keeps_history_and_requires_the_expected_version(
         replacement.json["medication_plan"]["pending_version"]
         ["version_number"] == 3
     )
+    clock.advance(days=2)
+    current = client.get(
+        path, headers=signed_in(database_app, owner)
+    )
+    assert current.status_code == 200
+    assert [
+        version["version_number"]
+        for version in current.json["medication_plan"]["history"]
+    ] == [1, 3]
 
 
 def test_future_revision_and_immediate_stop_keep_only_earlier_dose(

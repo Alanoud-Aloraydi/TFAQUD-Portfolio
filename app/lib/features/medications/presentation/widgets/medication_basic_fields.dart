@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -46,13 +47,17 @@ class MedicationBasicFields extends StatelessWidget {
               : null,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: <TextInputFormatter>[
+            const WesternDigitsFormatter(decimal: true),
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
           ],
           onChanged: (_) => onChanged(),
           trailing: InsetChoiceButton(
-            label: data.strengthUnit.apiValue,
+            label: context.tr(
+              'medications.strength_display.${data.strengthUnit.name}',
+            ),
             semanticLabel:
-                '${context.tr('medications.strength_unit')}: ${data.strengthUnit.apiValue}',
+                '${context.tr('medications.strength_unit')}: '
+                '${context.tr('medications.strength_display.${data.strengthUnit.name}')}',
             onPressed: () => _chooseStrengthUnit(context),
           ),
         ),
@@ -96,7 +101,8 @@ class MedicationBasicFields extends StatelessWidget {
       context,
       title: context.tr('medications.strength_unit'),
       options: StrengthUnit.values,
-      labelOf: (StrengthUnit unit) => unit.apiValue,
+      labelOf: (StrengthUnit unit) =>
+          context.tr('medications.strength_display.${unit.name}'),
       selected: data.strengthUnit,
     );
     if (unit == null) return;

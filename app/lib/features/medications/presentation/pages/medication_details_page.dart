@@ -111,6 +111,8 @@ class _Content extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             MedicationDetails(plan: plan),
+            const SizedBox(height: AppSpacing.xl),
+            MedicationRevisionHistory(plan: plan),
             if (plan.pendingVersion != null) ...[
               const SizedBox(height: AppSpacing.lg),
               _PendingRevision(
@@ -234,7 +236,9 @@ class _PendingRevision extends StatelessWidget {
                 'medications.pending_strength',
                 args: [
                   formatMedicationNumber(pending.strengthValue),
-                  pending.strengthUnit.apiValue,
+                  context.tr(
+                    'medications.strength_display.${pending.strengthUnit.name}',
+                  ),
                   context.tr('medications.form.${pending.dosageForm.name}'),
                 ],
               ),

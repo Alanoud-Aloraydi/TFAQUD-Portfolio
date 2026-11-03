@@ -1,6 +1,5 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/stepper_control.dart';
@@ -11,6 +10,7 @@ import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -46,33 +46,30 @@ class MedicationScheduleEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: AppSizes.button),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.inset,
-              end: AppSpacing.xs,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.tr(
-                      'medications.schedule_number',
-                      args: [(index + 1).toString()],
-                    ),
-                    style: Theme.of(context).textTheme.titleSmall,
+        Padding(
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSpacing.lg,
+            end: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.tr(
+                    'medications.schedule_number',
+                    args: [(index + 1).toString()],
                   ),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-                if (remove != null)
-                  IconButton(
-                    tooltip: context.tr('medications.remove_schedule'),
-                    onPressed: remove,
-                    color: AppSemanticColors.statusError,
-                    icon: const Icon(AppIcons.trash),
-                  ),
-              ],
-            ),
+              ),
+              if (remove != null)
+                IconButton(
+                  tooltip: context.tr('medications.remove_schedule'),
+                  onPressed: remove,
+                  color: AppSemanticColors.statusError,
+                  icon: const Icon(CupertinoIcons.delete),
+                ),
+            ],
           ),
         ),
         _timeChips(context),
@@ -125,7 +122,9 @@ class MedicationScheduleEditor extends StatelessWidget {
     _ => 1,
   };
 
-  double? get _dose => double.tryParse(data.doseController.text.trim());
+  double? get _dose => double.tryParse(
+    ArabicDigits.toWesternDecimal(data.doseController.text.trim()),
+  );
 
   Widget _doseRow(BuildContext context) {
     final double? dose = _dose;
@@ -137,6 +136,7 @@ class MedicationScheduleEditor extends StatelessWidget {
       focusNode: data.doseFocus,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: <TextInputFormatter>[
+        const WesternDigitsFormatter(decimal: true),
         FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
       ],
       errorText: issue?.field == MedicationFormField.dose

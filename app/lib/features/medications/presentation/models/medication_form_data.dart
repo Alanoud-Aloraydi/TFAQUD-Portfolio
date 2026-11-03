@@ -1,3 +1,4 @@
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
@@ -55,7 +56,7 @@ class MedicationFormData {
     if (name.text.trim().isEmpty) {
       return const MedicationFormIssue(MedicationFormField.name);
     }
-    final strengthText = strength.text.trim();
+    final strengthText = ArabicDigits.toWesternDecimal(strength.text.trim());
     final strengthValue = _decimal(strengthText)
         ? double.tryParse(strengthText)
         : null;
@@ -70,7 +71,9 @@ class MedicationFormData {
     }
     for (var index = 0; index < schedules.length; index++) {
       final schedule = schedules[index];
-      final doseText = schedule.doseController.text.trim();
+      final doseText = ArabicDigits.toWesternDecimal(
+        schedule.doseController.text.trim(),
+      );
       final dose = _decimal(doseText) ? double.tryParse(doseText) : null;
       if (dose == null || dose <= 0) {
         return MedicationFormIssue(
@@ -90,11 +93,13 @@ class MedicationFormData {
 
   MedicationPlanDraft? toDraft() {
     if (firstIssue() != null) return null;
-    final strengthText = strength.text.trim();
+    final strengthText = ArabicDigits.toWesternDecimal(strength.text.trim());
     final strengthValue = double.parse(strengthText);
     final scheduleDrafts = <MedicationScheduleDraft>[];
     for (final item in schedules) {
-      final doseText = item.doseController.text.trim();
+      final doseText = ArabicDigits.toWesternDecimal(
+        item.doseController.text.trim(),
+      );
       final dose = double.parse(doseText);
       scheduleDrafts.add(
         MedicationScheduleDraft(

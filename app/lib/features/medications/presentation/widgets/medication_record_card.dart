@@ -1,10 +1,10 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -26,7 +26,9 @@ class MedicationRecordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final version = plan.version;
-    final previous = plan.isPreviousOn(DateUtils.dateOnly(DateTime.now()));
+    final today = DateUtils.dateOnly(DateTime.now());
+    final previous = plan.isPreviousOn(today);
+    final scheduled = plan.isScheduledOn(today);
     final last = plan.lastRecord;
     final takenLocal = last?.takenAt?.toUtc().add(const Duration(hours: 3));
     final lastDate = takenLocal ?? last?.scheduledOn;
@@ -34,33 +36,55 @@ class MedicationRecordCard extends StatelessWidget {
         ? last?.time
         : '${takenLocal.hour.toString().padLeft(2, '0')}:'
               '${takenLocal.minute.toString().padLeft(2, '0')}';
+    final statusText = context.tr(
+      previous
+          ? 'medications.previous_label'
+          : scheduled
+          ? 'medications.scheduled_label'
+          : 'medications.current_label',
+    );
     return Material(
-      color: AppSemanticColors.surfaceContent,
-      shape: AppSurfaces.cardShape(),
-      clipBehavior: Clip.antiAlias,
+      color: AppSemanticColors.surfacePlan,
+      borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: () => context.push(Routes.medicationDetails(circleId, plan.id)),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.inset),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
-                  SizedBox(
+                  Container(
                     width: AppSizes.touch,
                     height: AppSizes.touch,
-                    child: const Icon(AppIcons.pill),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppSemanticColors.surfaceContent,
+                      borderRadius: BorderRadius.circular(AppRadius.field),
+                    ),
+                    child: const Icon(TafaqodPhosphorIcons.pill),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          version.name,
-                          style: Theme.of(context).textTheme.titleMedium,
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: AppSpacing.xs,
+                          children: [
+                            Text(
+                              version.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              '${formatMedicationNumber(version.strengthValue)} '
+                              '${context.tr('medications.strength_display.${version.strengthUnit.name}')}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
                         ),
                         Text(
                           context.tr(
@@ -74,27 +98,42 @@ class MedicationRecordCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Text(
-                    '${formatMedicationNumber(version.strengthValue)} '
-                    '${version.strengthUnit.apiValue}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    context.tr(
-                      previous
-                          ? 'medications.previous_label'
-                          : 'medications.current_label',
-                    ),
-                    style: Theme.of(context).textTheme.labelSmall,
+                  CompactStatusBadge(
+                    text: statusText,
+                    background: previous || scheduled
+                        ? AppSemanticColors.surfaceContent
+                        : AppSemanticColors.selectedSurface,
+                    foreground: AppSemanticColors.textPrimary,
                   ),
                 ],
               ),
+              if (plan.history.length > 1) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppSemanticColors.surfaceContent,
+                    borderRadius: BorderRadius.circular(AppRadius.field),
+                  ),
+                  child: Text(
+                    context.tr(
+                      'medications.revised_on',
+                      args: [
+                        formatMedicationDate(
+                          context,
+                          plan.history.last.effectiveFromOn,
+                        ),
+                      ],
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               Container(
-                padding: const EdgeInsets.all(AppSpacing.inset),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: AppSemanticColors.surfacePlan,
+                  color: AppSemanticColors.surfaceContent,
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
                 child: Text(
@@ -121,7 +160,7 @@ class MedicationRecordCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                   const Icon(
-                    AppIcons.forward,
+                    TafaqodPhosphorIcons.caretDown,
                     size: AppSizes.iconSmall,
                   ),
                 ],
