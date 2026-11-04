@@ -1669,7 +1669,7 @@ void main() {
 
     /// The one «تعديل» button at the top of the page.
     Future<void> openEdit(WidgetTester tester) async {
-      await tester.tap(find.text('account.edit'.tr()));
+      await tester.tap(find.byTooltip('account.edit'.tr()));
       await tester.pumpAndSettle();
     }
 

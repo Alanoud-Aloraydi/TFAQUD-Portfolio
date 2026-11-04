@@ -17,15 +17,23 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Displays the today medication attention section UI.
+/// The one «يحتاج انتباهك» box of «اليوم»: the doses that need attention,
+/// then [extra] (the measurements that need attention), under one title
+/// whose number counts both.
 class TodayMedicationAttentionSection extends StatefulWidget {
   const TodayMedicationAttentionSection({
     super.key,
     required this.occurrences,
     required this.circleId,
+    this.extra,
+    this.extraCount = 0,
   });
   final List<DoseOccurrence> occurrences;
   final String circleId;
+
+  /// More cards after the doses, and how many they are.
+  final Widget? extra;
+  final int extraCount;
 
   @override
   State<TodayMedicationAttentionSection> createState() =>
@@ -69,7 +77,7 @@ class _TodayMedicationAttentionSectionState
                   radius: 11,
                   backgroundColor: AppSemanticColors.accentWarm,
                   child: Text(
-                    widget.occurrences.length.toString(),
+                    (widget.occurrences.length + widget.extraCount).toString(),
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ),
@@ -108,6 +116,11 @@ class _TodayMedicationAttentionSectionState
                 ),
                 if (item != widget.occurrences.last)
                   const SizedBox(height: AppSpacing.sm),
+              ],
+              if (widget.extra case final Widget extra) ...[
+                if (widget.occurrences.isNotEmpty)
+                  const SizedBox(height: AppSpacing.sm),
+                extra,
               ],
             ],
           ),

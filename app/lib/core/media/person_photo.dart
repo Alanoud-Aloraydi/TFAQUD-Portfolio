@@ -4,6 +4,7 @@ import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
@@ -35,19 +36,19 @@ class PersonPhoto extends StatelessWidget {
     required this.photoPath,
     required this.size,
     this.avatarCode,
-    this.width,
   });
 
   final String name;
   final String photoPath;
   final String? avatarCode;
+
+  /// The width and the height: the photo is always a circle.
   final double size;
-  final double? width;
 
   @override
   Widget build(BuildContext context) {
     final code = avatarCode;
-    final photoWidth = width ?? size;
+    final photoWidth = size;
     final fallback = ClipOval(
       child: code != null && avatarCodes.contains(code)
           ? Image.asset(
@@ -288,30 +289,35 @@ class _PersonPhotoEditorState extends State<_PersonPhotoEditor> {
           ),
           itemBuilder: (context, index) {
             final code = avatarCodes[index];
-            return GestureDetector(
-              onTap: () => setState(() {
-                _code = code;
-                _selected = null;
-                _removed = false;
-              }),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: _code == code && _selected == null
-                      ? Border.all(
-                          color: AppSemanticColors.actionPrimary,
-                          width: 2,
-                        )
-                      : null,
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/avatars/$code.png',
-                    width: 64,
-                    height: 64,
-                    fit: BoxFit.cover,
+            // A square in the middle of the cell, so the picture stays a
+            // circle whatever the cell's width is.
+            return Center(
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  _code = code;
+                  _selected = null;
+                  _removed = false;
+                }),
+                child: AnimatedContainer(
+                  duration: AppMotion.fieldFeedback,
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: _code == code && _selected == null
+                        ? Border.all(
+                            color: AppSemanticColors.actionPrimary,
+                            width: 2,
+                          )
+                        : null,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/avatars/$code.png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),

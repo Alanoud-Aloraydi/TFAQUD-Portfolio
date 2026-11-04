@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:app/core/media/png_encoder.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -8,6 +9,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -213,12 +215,29 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       if (frame is! RenderRepaintBoundary) return;
       final width = widget.circle ? 480.0 : 960.0;
       final image = await frame.toImage(pixelRatio: width / frame.size.width);
+      RgbaPixels? pixels;
       try {
-        final data = await image.toByteData(format: ui.ImageByteFormat.png);
-        if (mounted) Navigator.pop(context, data?.buffer.asUint8List());
+        // 8-bit sRGB pixels, then the app's own PNG: the engine's PNG of a
+        // wide-colour iPhone image may not be one the server accepts.
+        final data = await image.toByteData(
+          format: ui.ImageByteFormat.rawStraightRgba,
+        );
+        if (data != null) {
+          pixels = (
+            rgba: data.buffer.asUint8List(
+              data.offsetInBytes,
+              data.lengthInBytes,
+            ),
+            width: image.width,
+            height: image.height,
+          );
+        }
       } finally {
         image.dispose();
       }
+      if (pixels == null) return;
+      final png = await compute(encodeRgbaPng, pixels);
+      if (mounted) Navigator.pop(context, png);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

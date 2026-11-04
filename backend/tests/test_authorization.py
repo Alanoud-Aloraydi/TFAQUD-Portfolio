@@ -161,12 +161,12 @@ def test_default_circle_access_refuses_everyone():
 
 @pytest.mark.parametrize(
     "mode, allowed",
-    [(None, True), ("simplified", True), ("detailed", False)],
+    [(None, True), ("simplified", False), ("detailed", False)],
 )
-def test_manager_edits_only_offline_or_simplified_patient_photo(
+def test_manager_edits_only_an_offline_patient_photo(
     monkeypatch, mode, allowed
 ):
-    """A manager cannot replace a detailed patient's portrait."""
+    """A patient with an account chooses their own picture, in any mode."""
     viewer = uuid4()
     patient = SimpleNamespace(
         account_id=None if mode is None else uuid4()

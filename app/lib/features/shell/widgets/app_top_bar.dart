@@ -67,7 +67,6 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                     photoPath: ApiEndpoints.accountPhoto,
                     avatarCode: avatarCode,
                     size: AppSizes.avatarPortrait,
-                    width: AppSizes.avatarPortrait * .8,
                   ),
             onPressed: () async {
               await context.push<void>(Routes.account);

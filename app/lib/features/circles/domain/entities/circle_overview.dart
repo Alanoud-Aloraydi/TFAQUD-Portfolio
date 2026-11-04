@@ -29,9 +29,10 @@ class CircleOverview extends Equatable {
   final List<CircleMember> members;
   final List<CirclePendingInvitation> pendingInvitations;
 
+  /// The patient themself; or a manager, when the patient has no account.
+  /// A patient with an account in the circle chooses their own picture.
   bool get canEditPatientPhoto =>
-      patientIsYou ||
-      (canManage && (!patientUsesApp || appMode == 'simplified'));
+      patientIsYou || (canManage && !patientUsesApp);
 
   @override
   List<Object?> get props => [

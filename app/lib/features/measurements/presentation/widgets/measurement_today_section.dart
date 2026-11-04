@@ -12,32 +12,56 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Displays the measurement attention section UI.
+/// The measurements that need attention: a missed measurement, and a reading
+/// of today outside its target that nobody followed up yet.
+///
+/// On «اليوم» they sit inside the one «يحتاج انتباهك» box with the doses
+/// ([boxed] false: the cards only). On its own ([boxed] true) it has its own
+/// yellow box and title.
 class MeasurementAttentionSection extends StatelessWidget {
   const MeasurementAttentionSection({
     super.key,
     required this.tasks,
     required this.readings,
+    this.boxed = true,
   });
 
   final List<MeasurementOccurrence> tasks;
   final List<MeasurementReading> readings;
+  final bool boxed;
+
+  /// How many cards it shows.
+  static int count(
+    List<MeasurementOccurrence> tasks,
+    List<MeasurementReading> readings,
+  ) => _missed(tasks).length + _outside(readings).length;
+
+  static List<MeasurementOccurrence> _missed(
+    List<MeasurementOccurrence> tasks,
+  ) => tasks.where((item) => item.status == MeasurementStatus.missed).toList();
+
+  static List<MeasurementReading> _outside(List<MeasurementReading> readings) =>
+      readings
+          .where(
+            (item) =>
+                item.outsideTarget == true &&
+                item.followedUpAt == null &&
+                item.measuredAt != null &&
+                DateUtils.isSameDay(riyadhNow(item.measuredAt), riyadhNow()),
+          )
+          .toList();
 
   @override
   Widget build(BuildContext context) {
-    final missed = tasks
-        .where((item) => item.status == MeasurementStatus.missed)
-        .toList();
-    final outside = readings
-        .where(
-          (item) =>
-              item.outsideTarget == true &&
-              item.followedUpAt == null &&
-              item.measuredAt != null &&
-              DateUtils.isSameDay(riyadhNow(item.measuredAt), riyadhNow()),
-        )
-        .toList();
+    final missed = _missed(tasks);
+    final outside = _outside(readings);
     if (missed.isEmpty && outside.isEmpty) return const SizedBox.shrink();
+    if (!boxed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _cards(context, missed, outside),
+      );
+    }
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppSemanticColors.surfaceAttention,
@@ -63,50 +87,58 @@ class MeasurementAttentionSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            for (final task in missed) ...[
-              _attentionCard(
-                context,
-                title:
-                    '${_title(context, task.kind)} · '
-                    '${_time(context, task.time)}',
-                subtitle: context.tr('measurements.not_recorded'),
-                actions: [
-                  FilledButton(
-                    onPressed: () => _record(context, task),
-                    child: Text(context.tr('measurements.record_reading')),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        context.read<MeasurementTasksCubit>().skip(task),
-                    child: Text(context.tr('measurements.skip')),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-            ],
-            for (final reading in outside) ...[
-              _attentionCard(
-                context,
-                title:
-                    '${_title(context, reading.kind)} '
-                    '${reading.valueText}',
-                subtitle: context.tr('measurements.outside_target'),
-                actions: [
-                  TextButton(
-                    onPressed: () => context
-                        .read<MeasurementReadingsCubit>()
-                        .followUp(reading),
-                    child: Text(context.tr('measurements.follow_up')),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-            ],
+            ..._cards(context, missed, outside),
           ],
         ),
       ),
     );
   }
+
+  List<Widget> _cards(
+    BuildContext context,
+    List<MeasurementOccurrence> missed,
+    List<MeasurementReading> outside,
+  ) => [
+      for (final task in missed) ...[
+        _attentionCard(
+          context,
+          title:
+              '${_title(context, task.kind)} · '
+              '${_time(context, task.time)}',
+          subtitle: context.tr('measurements.not_recorded'),
+          actions: [
+            FilledButton(
+              onPressed: () => _record(context, task),
+              child: Text(context.tr('measurements.record_reading')),
+            ),
+            TextButton(
+              onPressed: () =>
+                  context.read<MeasurementTasksCubit>().skip(task),
+              child: Text(context.tr('measurements.skip')),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+      ],
+      for (final reading in outside) ...[
+        _attentionCard(
+          context,
+          title:
+              '${_title(context, reading.kind)} '
+              '${reading.valueText}',
+          subtitle: context.tr('measurements.outside_target'),
+          actions: [
+            TextButton(
+              onPressed: () => context
+                  .read<MeasurementReadingsCubit>()
+                  .followUp(reading),
+              child: Text(context.tr('measurements.follow_up')),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+      ],
+  ];
 
   Widget _attentionCard(
     BuildContext context, {

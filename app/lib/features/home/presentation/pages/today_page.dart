@@ -139,6 +139,10 @@ class _TodayPageState extends State<TodayPage> {
       appointmentState.appointments,
     );
     final attention = medications.attention;
+    final measurementAttention = MeasurementAttentionSection.count(
+      measurementTasks,
+      measurementReadings,
+    );
     final failureKeys = <String>[
       if (state.status == MedicationOccurrencesStatus.failure)
         state.messageKey ?? 'error.unknown',
@@ -214,25 +218,22 @@ class _TodayPageState extends State<TodayPage> {
           InsetText(context.tr('today_dashboard.no_remaining_tasks')),
           const SizedBox(height: AppSpacing.xl),
         ],
-        if (attention.isNotEmpty) ...[
+        // One «يحتاج انتباهك» box: the doses, then the measurements.
+        if (attention.isNotEmpty || measurementAttention > 0) ...[
           TodayMedicationAttentionSection(
             occurrences: attention,
             circleId: circleId,
+            extraCount: measurementAttention,
+            extra: measurementAttention > 0
+                ? MeasurementAttentionSection(
+                    tasks: measurementTasks,
+                    readings: measurementReadings,
+                    boxed: false,
+                  )
+                : null,
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
-        MeasurementAttentionSection(
-          tasks: measurementTasks,
-          readings: measurementReadings,
-        ),
-        if (measurementTasks.any(
-              (task) => task.status == MeasurementStatus.missed,
-            ) ||
-            measurementReadings.any(
-              (reading) =>
-                  reading.outsideTarget == true && reading.followedUpAt == null,
-            ))
-          const SizedBox(height: AppSpacing.xl),
         _SectionTitle(context.tr('today_dashboard.schedule')),
         const SizedBox(height: AppSpacing.md),
         if (day != null) ...[

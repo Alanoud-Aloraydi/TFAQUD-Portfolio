@@ -7,14 +7,16 @@ import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Opens a record filter menu with an optional anchored glass presentation.
+/// A record filter: a glass capsule that opens an anchored glass menu, the
+/// same on «الأدوية», «المواعيد» and «القياسات». [glass] false keeps the old
+/// white button and sheet.
 class WhiteFilterMenu<T extends Object> extends StatefulWidget {
   const WhiteFilterMenu({
     super.key,
     required this.options,
     required this.selected,
     required this.onChanged,
-    this.glass = false,
+    this.glass = true,
   });
 
   final Map<T, String> options;

@@ -10,6 +10,7 @@ import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_skeleton.dart';
@@ -117,16 +118,13 @@ class AccountScreen extends StatelessWidget {
                     onClose: context.canPop()
                         ? () => context.pop()
                         : () => context.go(Routes.today),
-                    // One button edits the names, as in the handoff: both
-                    // name rows open the same page.
+                    // One edit button, in the corner: a pencil without a word,
+                    // like the close button. VoiceOver reads «تعديل».
                     trailing: state.status == AccountStatus.ready
-                        ? TextButton.icon(
+                        ? GlassIconButton(
+                            tooltip: context.tr('account.edit'),
+                            icon: const Icon(AppIcons.pencil),
                             onPressed: () => _edit(context, cubit),
-                            icon: const Icon(
-                              AppIcons.pencil,
-                              size: AppSizes.iconSmall,
-                            ),
-                            label: Text(context.tr('account.edit')),
                           )
                         : null,
                   ),
@@ -206,34 +204,13 @@ class AccountScreen extends StatelessWidget {
                     frontCamera: true,
                     onSaved: cubit.load,
                   ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      PersonPhoto(
-                        name: shown,
-                        photoPath: ApiEndpoints.accountPhoto,
-                        avatarCode: account.avatarCode,
-                        size: AppSizes.avatarLarge,
-                      ),
-                      const PositionedDirectional(
-                        end: 0,
-                        bottom: 0,
-                        child: DecoratedBox(
-                          decoration: ShapeDecoration(
-                            color: AppSemanticColors.surfaceContent,
-                            shape: CircleBorder(
-                              side: BorderSide(
-                                color: AppSemanticColors.borderSubtle,
-                              ),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(AppSpacing.xs),
-                            child: Icon(AppIcons.pencil, size: 16),
-                          ),
-                        ),
-                      ),
-                    ],
+                  // No pencil on the photo: the edit button is in the
+                  // corner. A tap on the photo still changes it.
+                  child: PersonPhoto(
+                    name: shown,
+                    photoPath: ApiEndpoints.accountPhoto,
+                    avatarCode: account.avatarCode,
+                    size: AppSizes.avatarLarge,
                   ),
                 ),
               ),

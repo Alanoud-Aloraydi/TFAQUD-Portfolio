@@ -72,16 +72,16 @@ def _patient(session, circle_id: UUID) -> Patient:
 
 
 def _patient_write(session, circle_id: UUID) -> Patient:
-    """Allow the owner or a manager of an offline or simplified patient."""
+    """Allow the patient themself, or a manager of a patient without an
+    account. A patient with an account in the circle (any app mode) chooses
+    their own picture: nobody else can change it."""
     patient = _patient(session, circle_id)
     viewer = _uuid(current_auth().user_id)
     if patient.account_id == viewer:
         return patient
-    if current_circle_role() == CircleRole.MANAGER:
-        if patient.account_id is None:
-            return patient
-        if _account(session, patient.account_id).app_mode == "simplified":
-            return patient
+    if (current_circle_role() == CircleRole.MANAGER
+            and patient.account_id is None):
+        return patient
     raise NotFound()
 
 
@@ -171,7 +171,8 @@ def patient_photo(circle_id):
 @bp.put("/circles/<circle_id>/patient/photo")
 @require_circle_role(*MEMBERS)
 def save_patient_photo(circle_id):
-    """Let the linked patient or offline patient's manager save a photo."""
+    """Let the patient, or the manager of a patient without an account,
+    save a photo."""
     data = _png()
     with transaction() as session:
         patient = _patient_write(session, _uuid(circle_id))
