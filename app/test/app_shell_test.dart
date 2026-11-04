@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/token_storage.dart';
@@ -91,6 +93,31 @@ class _FileAssetLoader extends AssetLoader {
         .readAsStringSync();
     return jsonDecode(text) as Map<String, dynamic>;
   }
+}
+
+class _OfflinePhotoRepository implements PrivatePhotoRepository {
+  final ValueNotifier<int> _changes = ValueNotifier<int>(0);
+
+  @override
+  Listenable get changes => _changes;
+
+  @override
+  Future<Uint8List?> load(String path) async => null;
+
+  @override
+  Future<void> save(String path, Uint8List bytes) async {}
+
+  @override
+  Future<void> remove(String path) async {}
+
+  @override
+  Future<void> chooseAvatar(String path, String code) async {}
+
+  @override
+  void clear() {}
+
+  @override
+  void dispose() => _changes.dispose();
 }
 
 /// A phone that is signed in. The router reads the tokens before it opens any
@@ -244,6 +271,7 @@ class _OfflineOnboardingRepository implements OnboardingRepositoryDomain {
 
 Future<void> pumpApp(WidgetTester tester) async {
   AppRouter.router.go(Routes.today);
+  final photoRepository = _OfflinePhotoRepository();
   await tester.pumpWidget(
     EasyLocalization(
       supportedLocales: const <Locale>[Locale('ar')],
@@ -255,6 +283,11 @@ Future<void> pumpApp(WidgetTester tester) async {
       child: Builder(
         builder: (BuildContext context) => MaterialApp.router(
           routerConfig: AppRouter.router,
+          builder: (context, child) =>
+              RepositoryProvider<PrivatePhotoRepository>.value(
+                value: photoRepository,
+                child: child!,
+              ),
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
@@ -508,6 +541,8 @@ void main() {
         await pumpApp(tester);
 
         await tester.tap(find.byTooltip('topbar.account'.tr()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('account.title'.tr()));
         await tester.pumpAndSettle();
         expect(find.byType(AccountScreen), findsOneWidget);
         expect(find.text('account.title'.tr()), findsOneWidget);
@@ -1629,6 +1664,8 @@ void main() {
       await pumpApp(tester);
       await tester.tap(find.byTooltip('topbar.account'.tr()));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('account.title'.tr()));
+      await tester.pumpAndSettle();
     }
 
     Future<void> openSheet(WidgetTester tester, String rowLabel) async {
@@ -2224,17 +2261,18 @@ void main() {
         expect(find.text('circle_overview.cancel'.tr()), findsOneWidget);
       });
 
-      testWidgets('the circle stays open when its medical file cannot be read', (
-        WidgetTester tester,
-      ) async {
-        circles.medicalFile = const Error(ServerFailure());
+      testWidgets(
+        'the circle stays open when its medical file cannot be read',
+        (WidgetTester tester) async {
+          circles.medicalFile = const Error(ServerFailure());
 
-        await openCircleTab(tester);
+          await openCircleTab(tester);
 
-        expect(find.byType(CircleCard), findsOneWidget);
-        expect(find.text('circles.file_title'.tr()), findsOneWidget);
-        expect(find.text('circle_overview.members'.tr()), findsOneWidget);
-      });
+          expect(find.byType(CircleCard), findsOneWidget);
+          expect(find.text('circles.file_title'.tr()), findsOneWidget);
+          expect(find.text('circle_overview.members'.tr()), findsOneWidget);
+        },
+      );
 
       testWidgets('«إضافة عضو» opens the invitation sheet', (
         WidgetTester tester,

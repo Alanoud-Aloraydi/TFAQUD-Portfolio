@@ -52,6 +52,7 @@ class MainApp extends StatelessWidget {
                   GetIt.I<DioClient>(),
                   GetIt.I<TokenStorage>(),
                 ),
+                dispose: (repository) => repository.dispose(),
                 child: ValueListenableBuilder<bool>(
                   valueListenable: AppAccessibility.reduceTransparency,
                   builder: (context, reduceTransparency, _) => GlassPreferences(

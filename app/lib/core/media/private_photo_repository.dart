@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 /// Loads and updates photos scoped to the active account session.
-class PrivatePhotoRepository extends ChangeNotifier {
+class PrivatePhotoRepository {
   PrivatePhotoRepository(this._client, this._tokens)
     : _sessionRevision = _tokens.revision;
 
@@ -12,6 +12,9 @@ class PrivatePhotoRepository extends ChangeNotifier {
   final TokenStorage _tokens;
   int _sessionRevision;
   final Map<String, Future<Uint8List?>> _photos = {};
+  final ValueNotifier<int> _changes = ValueNotifier<int>(0);
+
+  Listenable get changes => _changes;
 
   Future<Uint8List?> load(String path) {
     if (_sessionRevision != _tokens.revision) {
@@ -42,23 +45,25 @@ class PrivatePhotoRepository extends ChangeNotifier {
       options: Options(contentType: 'image/png'),
     );
     _photos.remove(path);
-    notifyListeners();
+    _changes.value++;
   }
 
   Future<void> remove(String path) async {
     await _client.delete(path);
     _photos.remove(path);
-    notifyListeners();
+    _changes.value++;
   }
 
   Future<void> chooseAvatar(String path, String code) async {
     await _client.put(path, data: {'avatar_code': code});
     _photos.clear();
-    notifyListeners();
+    _changes.value++;
   }
 
   void clear() {
     _photos.clear();
-    notifyListeners();
+    _changes.value++;
   }
+
+  void dispose() => _changes.dispose();
 }

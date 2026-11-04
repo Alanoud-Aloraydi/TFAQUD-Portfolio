@@ -125,7 +125,7 @@ class MedicationPhotoBuilder extends StatelessWidget {
     final repository = RepositoryProvider.of<PrivatePhotoRepository>(context);
     final path = ApiEndpoints.medicationPhoto(circleId, planId);
     return ListenableBuilder(
-      listenable: repository,
+      listenable: repository.changes,
       builder: (context, _) => FutureBuilder<Uint8List?>(
         future: repository.load(path),
         builder: (context, snapshot) => builder(context, snapshot.data),

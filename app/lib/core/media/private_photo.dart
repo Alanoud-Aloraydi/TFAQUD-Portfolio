@@ -40,7 +40,7 @@ class PrivatePhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     final repository = RepositoryProvider.of<PrivatePhotoRepository>(context);
     return ListenableBuilder(
-      listenable: repository,
+      listenable: repository.changes,
       builder: (context, _) => FutureBuilder<Uint8List?>(
         future: repository.load(path),
         builder: (context, snapshot) {
