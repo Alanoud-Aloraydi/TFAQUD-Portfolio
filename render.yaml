@@ -24,9 +24,13 @@ services:
     name: tfaqud-api
     plan: free
     region: frankfurt
-    rootDir: backend
+    # The paths are from the top of the repository (no rootDir, so they mean
+    # the same in every Render setting). Only changes to the server deploy it.
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
+    buildFilter:
+      paths:
+        - backend/**
     healthCheckPath: /api/v1/health
     autoDeployTrigger: commit
     envVars:
