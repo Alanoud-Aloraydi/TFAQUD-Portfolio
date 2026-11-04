@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 
 import 'failure.dart';
 
+/// Maps network failures to app error types.
 class FailureExceptions {
   static Failure getException(Object error) {
     return switch (error) {
@@ -62,6 +63,18 @@ class FailureExceptions {
       ),
       ApiErrorCodes.medicationRevisionDate => const ValidationFailure(
         'medications.revision_date',
+      ),
+      ApiErrorCodes.medicationStartInPast => const ValidationFailure(
+        'medications.start_in_past',
+      ),
+      'measurement_active_plan_exists' => const ConflictFailure(
+        'measurements.active_plan_exists',
+      ),
+      'measurement_target_required' => const ValidationFailure(
+        'measurements.target_required',
+      ),
+      'measurement_target_from_plan' => const ConflictFailure(
+        'measurements.target_from_plan',
       ),
       ApiErrorCodes.doseRecordConflict => const ConflictFailure(
         'medications.dose_record_conflict',
