@@ -2,6 +2,9 @@
 
     flask --app wsgi demo-data            make the demo data
     flask --app wsgi demo-data --reset    delete it and make it fresh
+    flask --app wsgi demo-data --if-missing   make it only when it is not
+                                              there (the server's start on
+                                              Render, with DEMO_DATA=true)
 
 It makes two demo accounts and fills the first one with care circles,
 medicines of every kind and a month of dose records. Everything goes through
@@ -9,7 +12,7 @@ the app's own services (care, medical file, medication plans, dose records),
 with the clock set back where the story needs it, so every row is one the
 app could have made itself and the database rules check all of it.
 
-Development only. It refuses to run in production, and it refuses unless the
+Not for production: it refuses to run there, and it refuses unless the
 fake SMS sender is on: the demo numbers are made up, so a real SMS to them
 could reach a stranger. A demo account signs in with the code that the fake
 sender writes in the server log.
@@ -602,8 +605,13 @@ def remove_demo_accounts(session: Session, now: datetime) -> int:
     is_flag=True,
     help="Delete the demo accounts and their circles first.",
 )
+@click.option(
+    "--if-missing",
+    is_flag=True,
+    help="Do nothing when the demo data is already there.",
+)
 @with_appcontext
-def demo_data_command(reset: bool) -> None:
+def demo_data_command(reset: bool, if_missing: bool) -> None:
     """Fill the local database with demo circles, medicines and doses."""
     config = current_app.config
     if config["APP_ENV"] == "production":
@@ -619,6 +627,9 @@ def demo_data_command(reset: bool) -> None:
         exists = session.scalar(
             select(Account.id).where(Account.phone_number.in_(DEMO_PHONES))
         )
+        if exists and if_missing and not reset:
+            click.echo("The demo data is already there.")
+            return
         if exists and not reset:
             raise click.ClickException(
                 "The demo data is already there. Run with --reset to make "

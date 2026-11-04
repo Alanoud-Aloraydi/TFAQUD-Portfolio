@@ -9,3 +9,5 @@ psycopg[binary]>=3.2,<4
 python-dotenv>=1,<2
 # Apple's push service speaks HTTP/2 only.
 httpx[http2]>=0.27,<1
+# The production web server (Render).
+gunicorn>=23,<27

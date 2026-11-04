@@ -111,6 +111,19 @@ def test_it_runs_once_and_resets_on_request(database_app, database):
     assert _count(database, CareCircle) == 3
 
 
+def test_if_missing_makes_it_once_then_nothing(database_app, database):
+    # The server's start on Render (DEMO_DATA=true) runs this at every start.
+    first = _run(database_app, "--if-missing")
+    assert first.exit_code == 0, first.output
+    assert "Demo data is ready." in first.output
+
+    again = _run(database_app, "--if-missing")
+    assert again.exit_code == 0, again.output
+    assert "The demo data is already there." in again.output
+    assert _count(database, Account) == 2
+    assert _count(database, CareCircle) == 3
+
+
 def test_a_reset_works_after_lina_joined_saras_circle(database_app, database):
     # On the phone, Lina accepts Sara's invitation, so «رعاية جدي» has two
     # demo managers. A reset deleted one account first and then failed at

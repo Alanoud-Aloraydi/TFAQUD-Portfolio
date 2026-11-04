@@ -6,7 +6,9 @@ tests can change the environment before creating the app.
 Environments:
   development - local work. Configurable SMS, a default development secret.
   testing     - automated tests. Fake SMS only, a fixed secret key.
-  staging     - the shared test server (TFQD-10). Needs a real SECRET_KEY.
+  staging     - the shared test server (TFQD-10, Render). Needs a real
+                SECRET_KEY; logs the fake sender's codes when
+                FAKE_SMS_LOG_CODES=true.
   production  - the real server. Needs a real SECRET_KEY, refuses the fake SMS
                 sender and the in-memory session store.
 """
@@ -91,8 +93,16 @@ def load_config(
         "AUTHENTICA_TEMPLATE_ID": _int_from_env(
             "AUTHENTICA_TEMPLATE_ID", DEFAULT_AUTHENTICA_TEMPLATE_ID
         ),
-        # Only the fake sender uses development OTP logging.
-        "FAKE_SMS_LOG_BODY": env_name == "development",
+        # Only the fake sender logs its codes: always in development, and in
+        # staging when FAKE_SMS_LOG_CODES=true (a shared test server whose log
+        # only the team can read, such as Render). Never in production, which
+        # refuses the fake sender anyway.
+        "FAKE_SMS_LOG_BODY": env_name == "development"
+        or (
+            env_name == "staging"
+            and os.environ.get("FAKE_SMS_LOG_CODES", "").strip().lower()
+            in ("1", "true", "yes")
+        ),
         # Push notifications: "none" (nothing is sent) or "apns" (Apple,
         # needs a paid Apple Developer account and its .p8 key).
         "PUSH_BACKEND": os.environ.get("PUSH_BACKEND", "none"),

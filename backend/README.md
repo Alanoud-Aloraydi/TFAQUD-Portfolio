@@ -218,6 +218,50 @@ The code is in `app/push/`. A push that cannot be sent never fails the
 request; a token Apple no longer knows is deleted. A signed-out phone gets
 nothing, because the token belongs to the sign-in that sent it.
 
+## Deploy to Render
+
+`render.yaml` (at the top of the repository) describes the team's shared test
+server on [Render](https://render.com): the API and its PostgreSQL database.
+It runs with `APP_ENV=staging`, the fake SMS sender and the demo data. The
+image is the same `Dockerfile`; on Render its start command runs
+`flask --app wsgi db upgrade`, then `demo-data --if-missing` (with
+`DEMO_DATA=true`), then the production server (gunicorn). Photos and voice
+notes are kept in the database, so the API needs no disk.
+
+The first time:
+
+1. Make a Render account. The owner of the GitHub repository connects GitHub
+   to Render and gives it this repository.
+2. In Render: **New**, then **Blueprint**, pick the repository and the branch
+   to deploy.
+3. Render asks for the values that are not in git: `PUSH_BACKEND` (`none` for
+   now), `APNS_KEY_ID` and `APNS_TEAM_ID`.
+4. **Apply**. The first build takes a few minutes. The API's address is at the
+   top of its page, such as `https://tfaqud-api.onrender.com`;
+   `https://<address>/api/v1/health` answers when it is ready.
+5. Push: on the API's page, **Environment**, **Secret Files**, add a file named
+   `apns_key.p8` with the text of the `.p8` key. Then set `PUSH_BACKEND` to
+   `apns` and **Save and deploy**.
+6. Build the app for it: `[testflight api=https://<address>]` in a commit
+   message.
+
+Signing in: no SMS is sent. Ask for a code in the app, then open the API's
+**Logs** in Render and search for `FAKE SMS`: the line ends with
+`Your code is 123456`. Only the people in the Render workspace see the log, so
+nobody else can sign in. The demo account is `0500000001`. For real SMS, set
+`SMS_BACKEND` to `authentica` and add `AUTHENTICA_API_KEY` in **Environment**;
+the demo data then stays as it is, and `DEMO_DATA` must be removed (the demo
+numbers are made up and must not get a real SMS).
+
+After that, every push to the chosen branch deploys again by itself, with the
+new migrations, and the old version answers until the new one is ready.
+`[skip render]` in a commit message skips one deploy. Settings change in
+**Environment**, without a new commit.
+
+On the free plan the API sleeps after 15 minutes without requests and takes
+about a minute to wake, so the first request after a pause can fail once; the
+free database is deleted 30 days after it is made unless it is upgraded.
+
 ## Flutter in Chrome
 
 A web page cannot call an API on another address unless the API allows it (CORS).

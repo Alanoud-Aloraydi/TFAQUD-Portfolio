@@ -183,3 +183,15 @@ def test_staging_warns_about_every_in_memory_store(monkeypatch, caplog):
 
     assert "in-memory sign-in code store" in caplog.text
     assert "in-memory user store" in caplog.text
+
+
+def test_staging_logs_the_fake_codes_only_when_asked(monkeypatch):
+    # Render runs the team's test server in staging: the fake sender writes
+    # its codes in the log only with FAKE_SMS_LOG_CODES=true.
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    monkeypatch.delenv("FAKE_SMS_LOG_CODES", raising=False)
+    assert load_config("staging")["FAKE_SMS_LOG_BODY"] is False
+
+    monkeypatch.setenv("FAKE_SMS_LOG_CODES", "true")
+    assert load_config("staging")["FAKE_SMS_LOG_BODY"] is True
+    assert load_config("production")["FAKE_SMS_LOG_BODY"] is False
