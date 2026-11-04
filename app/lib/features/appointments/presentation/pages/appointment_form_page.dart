@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
@@ -42,7 +43,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   ];
   AppointmentKind _kind = AppointmentKind.followUp;
   String _specialty = 'diabetes';
-  DateTime _date = DateUtils.dateOnly(DateTime.now());
+  DateTime _date = riyadhToday();
   TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
   String _remoteMethod = 'video';
   String? _companionId;
@@ -270,7 +271,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                 value: _dateText(_date),
                 showChevron: true,
                 onTap: () async {
-                  final today = DateUtils.dateOnly(DateTime.now());
+                  final today = riyadhToday();
                   final selected = await showTafaqodDateSheet(
                     context,
                     title: context.tr('appointments.date'),

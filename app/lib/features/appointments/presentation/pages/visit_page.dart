@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -210,7 +211,7 @@ class VisitPage extends StatelessWidget {
                   onPressed: state.saving || state.recording
                       ? null
                       : () => _edit(context, paper),
-                  icon: const Icon(CupertinoIcons.pencil),
+                  icon: const Icon(AppIcons.pencil),
                   label: Text(context.tr('appointments.edit_visit')),
                 ),
               ),

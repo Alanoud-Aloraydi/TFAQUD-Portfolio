@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 
 /// Defines the supported appointment kind values.
 enum AppointmentKind { followUp, test, imaging, remote, other }
@@ -39,14 +40,7 @@ class CareAppointment extends Equatable {
   final DateTime updatedAt;
 
   DateTime get scheduledAt {
-    final parts = time.split(':');
-    return DateTime(
-      scheduledOn.year,
-      scheduledOn.month,
-      scheduledOn.day,
-      int.parse(parts[0]),
-      int.parse(parts[1]),
-    );
+    return riyadhScheduledAt(scheduledOn, time);
   }
 
   @override

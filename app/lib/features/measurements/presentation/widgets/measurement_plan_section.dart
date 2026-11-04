@@ -1,5 +1,7 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -87,9 +89,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
   Widget build(BuildContext context) {
     final plan = widget.plan;
     final version = plan.version;
-    final today = DateUtils.dateOnly(
-      DateTime.now().toUtc().add(const Duration(hours: 3)),
-    );
+    final today = riyadhToday();
     final startsLater = version.effectiveFromOn.isAfter(today);
     final kind = plan.kind == MeasurementKind.glucose
         ? 'measurements.glucose'
@@ -179,7 +179,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                               radius: 10,
                               backgroundColor: version.weekdays.contains(day)
                                   ? AppSemanticColors.selectedSurface
-                                  : AppSemanticColors.surfacePlan,
+                                  : AppSemanticColors.surfaceContent,
                               child: Text(
                                 context.tr('medications.weekday_short.$day'),
                                 style: Theme.of(context).textTheme.labelSmall,
@@ -259,7 +259,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                                 context.read<MeasurementTasksCubit>().reload();
                               }
                             },
-                      icon: const Icon(CupertinoIcons.pencil),
+                      icon: const Icon(AppIcons.pencil),
                       label: Text(context.tr('measurements.edit_plan')),
                     ),
                     const SizedBox(width: AppSpacing.sm),

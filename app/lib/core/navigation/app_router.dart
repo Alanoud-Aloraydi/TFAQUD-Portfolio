@@ -308,18 +308,36 @@ class AppRouter {
         pageBuilder: _iosPage((context, state) {
           final String circleId = state.pathParameters['circleId']!;
           final String planId = state.pathParameters['planId']!;
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    MedicationsCubit(GetIt.I<MedicationsUseCase>())
-                      ..loadPlan(circleId, planId),
-              ),
-            ],
-            child: MedicationDetailsPage(circleId: circleId, planId: planId),
+          Widget details(bool canManage) => BlocProvider(
+            create: (context) =>
+                MedicationsCubit(GetIt.I<MedicationsUseCase>())
+                  ..loadPlan(circleId, planId),
+            child: MedicationDetailsPage(
+              circleId: circleId,
+              planId: planId,
+              canManage: canManage,
+            ),
+          );
+          if (state.extra case final bool canManage) {
+            return details(canManage);
+          }
+          // A direct link has no tab context, so it resolves permission here.
+          return BlocProvider(
+            create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+            child: Builder(
+              builder: (context) {
+                final canManage = context.select<HomeCubit, bool>(
+                  (cubit) =>
+                      cubit.state.data?.circles.any(
+                        (circle) =>
+                            circle.id == circleId &&
+                            circle.canManageMedications,
+                      ) ??
+                      false,
+                );
+                return details(canManage);
+              },
+            ),
           );
         }),
       ),

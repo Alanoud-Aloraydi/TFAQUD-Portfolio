@@ -1,9 +1,9 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
-import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -27,20 +27,15 @@ class MedicationDetailsPage extends StatelessWidget {
     super.key,
     required this.circleId,
     required this.planId,
+    required this.canManage,
   });
 
   final String circleId;
   final String planId;
+  final bool canManage;
 
   @override
   Widget build(BuildContext context) {
-    final canManage = context.select<HomeCubit, bool>(
-      (cubit) =>
-          cubit.state.data?.circles.any(
-            (circle) => circle.id == circleId && circle.canManageMedications,
-          ) ??
-          false,
-    );
     return BlocBuilder<MedicationsCubit, MedicationsState>(
       builder: (context, state) {
         if (state.status == MedicationsStatus.loading) {
@@ -87,7 +82,7 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = riyadhToday();
     final from = today.subtract(const Duration(days: 31));
     final start = plan.version.startsOn.isAfter(from)
         ? plan.version.startsOn

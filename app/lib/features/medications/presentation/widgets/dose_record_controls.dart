@@ -1,3 +1,4 @@
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -36,13 +37,8 @@ class DoseRecordControls extends StatelessWidget {
       (cubit) => cubit.state.recordingOccurrence == occurrence,
     );
     if (isRecording) return const _RecordingStatus();
-    final riyadhNow = DateTime.now().toUtc().add(const Duration(hours: 3));
-    final today = DateTime.utc(riyadhNow.year, riyadhNow.month, riyadhNow.day);
-    final scheduledOn = DateTime.utc(
-      occurrence.scheduledOn.year,
-      occurrence.scheduledOn.month,
-      occurrence.scheduledOn.day,
-    );
+    final today = riyadhToday();
+    final scheduledOn = scheduleDay(occurrence.scheduledOn);
     if (scheduledOn.isAfter(today)) return const SizedBox.shrink();
     final isToday = scheduledOn == today;
     if (layout != DoseControlsLayout.regular) {
@@ -68,7 +64,7 @@ class DoseRecordControls extends StatelessWidget {
           Expanded(
             child: FilledButton.tonalIcon(
               style: FilledButton.styleFrom(
-                backgroundColor: AppSemanticColors.surfacePlan,
+                backgroundColor: AppSemanticColors.surfaceContent,
                 foregroundColor: AppSemanticColors.textPrimary,
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 minimumSize: Size(0, height),
@@ -234,7 +230,7 @@ class _RecordedStatus extends StatelessWidget {
   }
 
   String _takenTime(BuildContext context, DateTime takenAt) {
-    final local = takenAt.toUtc().add(const Duration(hours: 3));
+    final local = riyadhNow(takenAt);
     final time =
         '${local.hour.toString().padLeft(2, '0')}:'
         '${local.minute.toString().padLeft(2, '0')}';

@@ -29,7 +29,6 @@ abstract class AppSemanticColors {
 
   /// Accent for prayer periods and attention notices.
   static const Color accentWarm = AppColors.honey;
-  static const Color surfacePlan = AppColors.slateLight;
 
   /// Lines inside a slate group, the edge of white avatars and small
   /// buttons on it, and the neutral badge «مدير».

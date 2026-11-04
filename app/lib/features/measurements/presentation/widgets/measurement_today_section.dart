@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
@@ -33,7 +34,7 @@ class MeasurementAttentionSection extends StatelessWidget {
               item.outsideTarget == true &&
               item.followedUpAt == null &&
               item.measuredAt != null &&
-              DateUtils.isSameDay(item.measuredAt!.toLocal(), DateTime.now()),
+              DateUtils.isSameDay(riyadhNow(item.measuredAt), riyadhNow()),
         )
         .toList();
     if (missed.isEmpty && outside.isEmpty) return const SizedBox.shrink();
@@ -203,7 +204,7 @@ class MeasurementTaskRow extends StatelessWidget {
                   text: context.tr(status),
                   background: task.status == MeasurementStatus.missed
                       ? Theme.of(context).colorScheme.errorContainer
-                      : AppSemanticColors.surfacePlan,
+                      : AppSemanticColors.surfaceContent,
                   foreground: task.status == MeasurementStatus.missed
                       ? AppSemanticColors.statusError
                       : AppSemanticColors.textSupporting,

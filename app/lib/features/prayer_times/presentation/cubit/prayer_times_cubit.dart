@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +16,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   String? _loadingKey;
 
   Future<void> load(String circleId, {bool refresh = false}) async {
-    final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+    final now = riyadhNow();
     final key = '$circleId:${now.year}-${now.month}-${now.day}';
     if (!refresh && _loadingKey == key) return;
     final current = state.day;
@@ -56,7 +57,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
   void _scheduleMidnight() {
     _midnight?.cancel();
-    final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+    final now = riyadhNow();
     final next = DateTime.utc(now.year, now.month, now.day + 1);
     _midnight = Timer(next.difference(now), () => unawaited(reload()));
   }

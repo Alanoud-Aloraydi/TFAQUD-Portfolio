@@ -1,5 +1,6 @@
 import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/navigation/fading_branches.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
@@ -24,26 +25,11 @@ class PlanPage extends StatefulWidget {
 
 class _PlanPageState extends State<PlanPage> {
   static const _categories = ['medications', 'measurements', 'appointments'];
-  final PageController _pages = PageController();
   String _selected = 'medications';
 
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
-
   void _select(String value) {
-    final index = _categories.indexOf(value);
-    if (index < 0 || !_pages.hasClients) return;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _pages.jumpToPage(index);
-    } else {
-      _pages.animateToPage(
-        index,
-        duration: AppMotion.segmentSlide,
-        curve: AppMotion.easeOutCubic,
-      );
+    if (_categories.contains(value) && value != _selected) {
+      setState(() => _selected = value);
     }
   }
 
@@ -53,7 +39,7 @@ class _PlanPageState extends State<PlanPage> {
       builder: (context, circle) =>
           BlocBuilder<MedicationsCubit, MedicationsState>(
             builder: (context, state) {
-              final today = DateUtils.dateOnly(DateTime.now());
+              final today = riyadhToday();
               final count = state.plans
                   .where((plan) => !plan.isPreviousOn(today))
                   .length;
@@ -70,7 +56,7 @@ class _PlanPageState extends State<PlanPage> {
                   .where(
                     (item) =>
                         item.status == AppointmentStatus.scheduled &&
-                        !item.scheduledAt.isBefore(DateTime.now()),
+                        !item.scheduledAt.isBefore(riyadhNow()),
                   )
                   .length;
               final header = Column(
@@ -89,12 +75,14 @@ class _PlanPageState extends State<PlanPage> {
                   ),
                 ],
               );
-              return PageView(
-                controller: _pages,
-                onPageChanged: (index) =>
-                    setState(() => _selected = _categories[index]),
+              return FadingBranches(
+                currentIndex: _categories.indexOf(_selected),
                 children: [
-                  MedicationPlansSection(circleId: circle.id, header: header),
+                  MedicationPlansSection(
+                    circleId: circle.id,
+                    canManage: circle.canManageMedications,
+                    header: header,
+                  ),
                   MeasurementPlanSection(
                     circleId: circle.id,
                     canManage: circle.canManageMedications,

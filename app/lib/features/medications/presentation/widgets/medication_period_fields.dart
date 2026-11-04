@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
@@ -68,9 +69,7 @@ class MedicationPeriodFields extends StatelessWidget {
             _DateRow(
               label: context.tr('medications.starts'),
               value: data.startsOn,
-              firstDate: data.effectiveFromOn == null
-                  ? DateUtils.dateOnly(DateTime.now())
-                  : null,
+              firstDate: data.effectiveFromOn == null ? riyadhToday() : null,
               onChanged: (DateTime? value) {
                 if (value == null) return;
                 data.startsOn = value;
@@ -133,9 +132,7 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tomorrow = DateUtils.dateOnly(
-      DateTime.now().add(const Duration(days: 1)),
-    );
+    final tomorrow = riyadhToday().add(const Duration(days: 1));
     final selected = data.effectiveFromOn ?? tomorrow;
     final isTomorrow = DateUtils.isSameDay(selected, tomorrow);
     return InsetGroup(
@@ -223,14 +220,14 @@ class _DateRow extends StatelessWidget {
   }
 
   Future<void> _select(BuildContext context) async {
-    final DateTime now = DateUtils.dateOnly(DateTime.now());
+    final DateTime now = riyadhToday();
     final DateTime? selected = await showTafaqodDateSheet(
       context,
       title: label,
       initialDate:
           value != null && firstDate != null && value!.isBefore(firstDate!)
           ? firstDate!
-          : value ?? DateTime.now(),
+          : value ?? now,
       firstDate: firstDate ?? DateTime(1900),
       lastDate: now.add(const Duration(days: 3650)),
     );

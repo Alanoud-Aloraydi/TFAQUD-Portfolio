@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -54,8 +55,7 @@ const int reminderIdBase = 7000;
 
 /// Whether a scheduled notification is one of the reminders.
 bool isReminderPayload(String payload) =>
-    payload.startsWith(doseReminderPayload) ||
-    payload == keepRemindersPayload;
+    payload.startsWith(doseReminderPayload) || payload == keepRemindersPayload;
 
 /// The moment a dose is due. The server keeps the day and the time in Riyadh
 /// (UTC+3, no daylight saving), so this is the same moment on any phone.
@@ -140,6 +140,7 @@ class DoseReminders {
 
   final MedicationsUseCase _medications;
   final PhoneNotifications _phone;
+
   /// The words of the reminders.
   final DoseReminderTexts texts;
   final DateTime Function() _now;
@@ -199,7 +200,7 @@ class DoseReminders {
       return;
     }
     final DateTime now = _now();
-    final DateTime riyadh = now.toUtc().add(const Duration(hours: 3));
+    final DateTime riyadh = riyadhNow(now);
     final DateTime from = DateTime.utc(riyadh.year, riyadh.month, riyadh.day);
     final DateTime to = from.add(const Duration(days: days - 1));
     final List<(ReminderCircle, DoseOccurrence)> doses =
@@ -232,10 +233,12 @@ class DoseReminders {
 
   /// Takes off the reminders that are no longer planned and sets the
   /// planned ones (a reminder with the same id is replaced).
-  Future<void> _replace(List<ScheduledNotification> planned, int session) async {
+  Future<void> _replace(
+    List<ScheduledNotification> planned,
+    int session,
+  ) async {
     final Set<int> keep = <int>{
-      for (final ScheduledNotification notification in planned)
-        notification.id,
+      for (final ScheduledNotification notification in planned) notification.id,
     };
     final Map<int, String> pending = await _phone.pending();
     for (final MapEntry<int, String> entry in pending.entries) {

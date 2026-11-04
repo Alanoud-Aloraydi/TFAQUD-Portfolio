@@ -1,9 +1,11 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
-import 'package:app/core/widgets/navigation/swipe_selection_area.dart';
+import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
@@ -38,7 +40,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   late final MeasurementReadingsCubit _readings = MeasurementReadingsCubit(
     GetIt.I<MeasurementRepository>(),
   );
-  DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime _month = DateTime(riyadhToday().year, riyadhToday().month);
   String _filter = 'all';
   bool _calendarGlucose = false;
   bool _calendarBp = false;
@@ -69,9 +71,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
 
   void _changeMonth(int offset) {
     final candidate = DateTime(_month.year, _month.month + offset);
-    if (candidate.isAfter(
-      DateTime(DateTime.now().year, DateTime.now().month),
-    )) {
+    if (candidate.isAfter(DateTime(riyadhToday().year, riyadhToday().month))) {
       return;
     }
     setState(() => _month = candidate);
@@ -110,8 +110,8 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                 ),
                 IconButton(
                   onPressed:
-                      _month.year == DateTime.now().year &&
-                          _month.month == DateTime.now().month
+                      _month.year == riyadhToday().year &&
+                          _month.month == riyadhToday().month
                       ? null
                       : () => _changeMonth(1),
                   icon: const Icon(CupertinoIcons.chevron_left),
@@ -147,8 +147,8 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                   ),
                 ],
               ),
-              GlassSegmentedControl<String>(
-                segments: {
+              WhiteFilterMenu<String>(
+                options: {
                   'all': context.tr('measurements.all'),
                   'glucose': context.tr('measurements.glucose'),
                   'bp': context.tr('measurements.bp'),
@@ -157,38 +157,19 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                 onChanged: (value) => setState(() => _filter = value),
               ),
               const SizedBox(height: AppSpacing.md),
-              SwipeSelectionArea(
-                onPrevious: () => _changeFilter(-1),
-                onNext: () => _changeFilter(1),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (filtered.isEmpty)
-                      Center(
-                        child: Text(context.tr('measurements.no_readings')),
-                      )
-                    else
-                      for (final reading in filtered) ...[
-                        _readingRow(context, reading),
-                        const SizedBox(height: AppSpacing.xs),
-                      ],
-                  ],
-                ),
-              ),
+              if (filtered.isEmpty)
+                Center(child: Text(context.tr('measurements.no_readings')))
+              else
+                for (final reading in filtered) ...[
+                  _readingRow(context, reading),
+                  const SizedBox(height: AppSpacing.xs),
+                ],
             ],
           ],
         );
       },
     ),
   );
-
-  void _changeFilter(int offset) {
-    const filters = ['all', 'glucose', 'bp'];
-    final next = filters.indexOf(_filter) + offset;
-    if (next >= 0 && next < filters.length) {
-      setState(() => _filter = filters[next]);
-    }
-  }
 
   Widget _chartCard(
     BuildContext context,
@@ -278,15 +259,28 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
               }),
             ),
             const SizedBox(height: AppSpacing.sm),
-            calendar
-                ? MeasurementCalendar(readings: readings, month: _month)
-                : MeasurementChart(
-                    kind: kind,
-                    readings: readings,
-                    month: _month,
-                    targetLow: low,
-                    targetHigh: high,
-                  ),
+            AnimatedSwitcher(
+              duration: const Duration(
+                milliseconds: AppMotion.branchEnterMilliseconds,
+              ),
+              reverseDuration: const Duration(
+                milliseconds: AppMotion.branchExitMilliseconds,
+              ),
+              switchInCurve: AppMotion.branchEnter,
+              switchOutCurve: AppMotion.easeIn,
+              child: KeyedSubtree(
+                key: ValueKey(calendar),
+                child: calendar
+                    ? MeasurementCalendar(readings: readings, month: _month)
+                    : MeasurementChart(
+                        kind: kind,
+                        readings: readings,
+                        month: _month,
+                        targetLow: low,
+                        targetHigh: high,
+                      ),
+              ),
+            ),
           ],
         ),
       ),

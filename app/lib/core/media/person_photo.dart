@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -246,19 +247,7 @@ class _PersonPhotoEditorState extends State<_PersonPhotoEditor> {
                   DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        const BoxShadow(
-                          color: AppSemanticColors.surfaceContent,
-                          spreadRadius: 4,
-                        ),
-                        BoxShadow(
-                          color: AppSemanticColors.textPrimary.withValues(
-                            alpha: .12,
-                          ),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+                      border: Border.all(color: AppSemanticColors.borderSubtle),
                     ),
                     child: preview,
                   ),
@@ -311,17 +300,11 @@ class _PersonPhotoEditorState extends State<_PersonPhotoEditor> {
                 margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  boxShadow: _code == code && _selected == null
-                      ? [
-                          const BoxShadow(
-                            color: AppSemanticColors.textPrimary,
-                            spreadRadius: 5,
-                          ),
-                          const BoxShadow(
-                            color: AppSemanticColors.surfaceContent,
-                            spreadRadius: 3,
-                          ),
-                        ]
+                  border: _code == code && _selected == null
+                      ? Border.all(
+                          color: AppSemanticColors.actionPrimary,
+                          width: 2,
+                        )
                       : null,
                 ),
                 child: ClipOval(

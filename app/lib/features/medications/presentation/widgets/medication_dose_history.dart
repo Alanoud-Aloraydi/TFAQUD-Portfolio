@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -61,7 +62,7 @@ class MedicationDoseHistory extends StatelessWidget {
               for (final group in groups.entries) ...[
                 Text(
                   formatMedicationDate(context, group.key),
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 for (final item in group.value) ...[
@@ -102,7 +103,7 @@ class MedicationDoseHistory extends StatelessWidget {
     );
   }
 
-  static DateTime _today() => DateUtils.dateOnly(DateTime.now());
+  static DateTime _today() => riyadhToday();
 
   void _showError(BuildContext context, MedicationOccurrencesState state) {
     if (state.messageKey == null) return;

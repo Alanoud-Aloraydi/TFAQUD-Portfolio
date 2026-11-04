@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
@@ -14,10 +15,12 @@ class MedicationPlansSection extends StatelessWidget {
   const MedicationPlansSection({
     super.key,
     required this.circleId,
+    required this.canManage,
     required this.header,
   });
 
   final String circleId;
+  final bool canManage;
   final Widget header;
 
   @override
@@ -46,7 +49,7 @@ class MedicationPlansSection extends StatelessWidget {
         onRetry: () => context.read<MedicationsCubit>().load(circleId),
       );
     }
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = riyadhToday();
     final current = state.plans
         .where((plan) => !plan.isPreviousOn(today))
         .toList();
@@ -71,6 +74,7 @@ class MedicationPlansSection extends StatelessWidget {
       emptyText: context.tr('medications.no_current'),
       plans: current,
       circleId: circleId,
+      canManage: canManage,
     );
   }
 }

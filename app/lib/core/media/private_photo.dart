@@ -1,13 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:app/core/network/dio_client.dart';
-import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
-import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,66 +16,6 @@ import 'package:image_picker/image_picker.dart';
 
 /// Defines the supported photo source values.
 enum PhotoSource { camera, library, remove }
-
-/// Provides private photo data operations.
-class PrivatePhotoRepository extends ChangeNotifier {
-  PrivatePhotoRepository(this._client, this._tokens)
-    : _sessionRevision = _tokens.revision;
-
-  final DioClient _client;
-  final TokenStorage _tokens;
-  int _sessionRevision;
-  final Map<String, Future<Uint8List?>> _photos = {};
-
-  Future<Uint8List?> load(String path) {
-    if (_sessionRevision != _tokens.revision) {
-      _photos.clear();
-      _sessionRevision = _tokens.revision;
-    }
-    return _photos.putIfAbsent(path, () => _fetch(path));
-  }
-
-  Future<Uint8List?> _fetch(String path) async {
-    try {
-      final response = await _client.dio.get<List<int>>(
-        path,
-        options: Options(responseType: ResponseType.bytes),
-      );
-      return Uint8List.fromList(response.data ?? const []);
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 404) return null;
-      _photos.remove(path);
-      rethrow;
-    }
-  }
-
-  Future<void> save(String path, Uint8List bytes) async {
-    await _client.dio.put<void>(
-      path,
-      data: bytes,
-      options: Options(contentType: 'image/png'),
-    );
-    _photos.remove(path);
-    notifyListeners();
-  }
-
-  Future<void> remove(String path) async {
-    await _client.delete(path);
-    _photos.remove(path);
-    notifyListeners();
-  }
-
-  Future<void> chooseAvatar(String path, String code) async {
-    await _client.put(path, data: {'avatar_code': code});
-    _photos.clear();
-    notifyListeners();
-  }
-
-  void clear() {
-    _photos.clear();
-    notifyListeners();
-  }
-}
 
 /// Displays the private photo UI.
 class PrivatePhoto extends StatelessWidget {
@@ -270,13 +208,20 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
   Future<void> _use() async {
     if (_busy) return;
     setState(() => _busy = true);
-    final frame = _frame.currentContext?.findRenderObject();
-    if (frame is! RenderRepaintBoundary) return;
-    final width = widget.circle ? 480.0 : 960.0;
-    final image = await frame.toImage(pixelRatio: width / frame.size.width);
-    final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    if (mounted) Navigator.pop(context, data?.buffer.asUint8List());
+    try {
+      final frame = _frame.currentContext?.findRenderObject();
+      if (frame is! RenderRepaintBoundary) return;
+      final width = widget.circle ? 480.0 : 960.0;
+      final image = await frame.toImage(pixelRatio: width / frame.size.width);
+      try {
+        final data = await image.toByteData(format: ui.ImageByteFormat.png);
+        if (mounted) Navigator.pop(context, data?.buffer.asUint8List());
+      } finally {
+        image.dispose();
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override

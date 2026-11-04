@@ -1,5 +1,5 @@
 import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:app/features/home/presentation/widgets/home_category_control.dart';
 import 'package:app/features/home/presentation/widgets/record_export_sheet.dart';
@@ -24,26 +24,11 @@ class RecordPage extends StatefulWidget {
 
 class _RecordPageState extends State<RecordPage> {
   static const _categories = ['medications', 'measurements', 'appointments'];
-  final PageController _pages = PageController();
   String _selected = 'medications';
 
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
-
   void _select(String value) {
-    final index = _categories.indexOf(value);
-    if (index < 0 || !_pages.hasClients) return;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _pages.jumpToPage(index);
-    } else {
-      _pages.animateToPage(
-        index,
-        duration: AppMotion.segmentSlide,
-        curve: AppMotion.easeOutCubic,
-      );
+    if (_categories.contains(value) && value != _selected) {
+      setState(() => _selected = value);
     }
   }
 
@@ -88,12 +73,14 @@ class _RecordPageState extends State<RecordPage> {
                   ),
                 ],
               );
-              return PageView(
-                controller: _pages,
-                onPageChanged: (index) =>
-                    setState(() => _selected = _categories[index]),
+              return FadingBranches(
+                currentIndex: _categories.indexOf(_selected),
                 children: [
-                  MedicationHistorySection(circleId: circle.id, header: header),
+                  MedicationHistorySection(
+                    circleId: circle.id,
+                    canManage: circle.canManageMedications,
+                    header: header,
+                  ),
                   MeasurementRecordSection(
                     circleId: circle.id,
                     header: header,

@@ -1,4 +1,5 @@
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
@@ -27,11 +28,11 @@ class MedicationFormData {
       instructions = TextEditingController(text: plan?.version.instructions),
       form = plan?.version.dosageForm ?? DosageForm.tablet,
       missedAfterMinutes = plan?.version.missedAfterMinutes ?? 60,
-      startsOn = plan?.version.startsOn ?? DateUtils.dateOnly(DateTime.now()),
+      startsOn = plan?.version.startsOn ?? riyadhToday(),
       endsOn = plan?.version.endsOn,
       effectiveFromOn = plan == null
           ? null
-          : DateUtils.dateOnly(DateTime.now().add(const Duration(days: 1))),
+          : riyadhToday().add(const Duration(days: 1)),
       schedules = plan == null
           ? [_newSchedule()]
           : plan.version.schedules.map(_fromSchedule).toList();

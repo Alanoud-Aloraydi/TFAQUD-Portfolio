@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/data/visit_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -153,7 +154,7 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
   /// One block per medicine: its name and whether it is current, the
   /// strength (left to right) and the form, and one line per dose time.
   RecordPdfSection _medicationSection(List<MedicationPlan> plans) {
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = riyadhToday();
     return RecordPdfSection(
       title: context.tr('record_export.medications'),
       empty: plans.isEmpty ? context.tr('medications.no_records') : null,

@@ -6,7 +6,7 @@ import 'package:sizer/sizer.dart';
 
 import 'core/services/phone_notifications.dart';
 import 'core/setup.dart';
-import 'core/media/private_photo.dart';
+import 'core/media/private_photo_repository.dart';
 import 'core/network/dio_client.dart';
 import 'core/services/token_storage.dart';
 import 'core/theme/app_theme.dart';

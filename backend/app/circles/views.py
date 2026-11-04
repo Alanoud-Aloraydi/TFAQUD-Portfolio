@@ -81,7 +81,7 @@ def circle_view(
                              row[0] != viewer, row[1] or "", str(row[0])),
         )
     ]
-    if patient_account is None or not any(
+    if patient_account is not None and not any(
         member["is_patient"] for member in members
     ):
         linked = (

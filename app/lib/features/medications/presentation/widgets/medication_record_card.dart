@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -19,19 +20,21 @@ class MedicationRecordCard extends StatelessWidget {
     super.key,
     required this.circleId,
     required this.plan,
+    required this.canManage,
   });
 
   final String circleId;
   final MedicationPlan plan;
+  final bool canManage;
 
   @override
   Widget build(BuildContext context) {
     final version = plan.version;
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = riyadhToday();
     final previous = plan.isPreviousOn(today);
     final scheduled = plan.isScheduledOn(today);
     final last = plan.lastRecord;
-    final takenLocal = last?.takenAt?.toUtc().add(const Duration(hours: 3));
+    final takenLocal = last?.takenAt == null ? null : riyadhNow(last!.takenAt);
     final lastDate = takenLocal ?? last?.scheduledOn;
     final lastTime = takenLocal == null
         ? last?.time
@@ -52,7 +55,10 @@ class MedicationRecordCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: () => context.push(Routes.medicationDetails(circleId, plan.id)),
+        onTap: () => context.push(
+          Routes.medicationDetails(circleId, plan.id),
+          extra: canManage,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(

@@ -253,12 +253,58 @@ class CircleCard extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                ExcludeSemantics(
-                  child: PersonPhoto(
-                    name: overview.patientName,
-                    photoPath: ApiEndpoints.patientPhoto(circle.id),
-                    avatarCode: overview.patientAvatarCode,
-                    size: AppSizes.avatarLarge,
+                Semantics(
+                  button: overview.canManage || overview.patientIsYou,
+                  label: context.tr(
+                    'photos.patient_photo',
+                    args: [overview.patientName],
+                  ),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: overview.canManage || overview.patientIsYou
+                        ? () => showPersonPhotoSheet(
+                            context,
+                            title: context.tr(
+                              'photos.patient_photo',
+                              args: [overview.patientName],
+                            ),
+                            name: overview.patientName,
+                            photoPath: ApiEndpoints.patientPhoto(circle.id),
+                            avatarPath: ApiEndpoints.patientAvatar(circle.id),
+                            avatarCode: overview.patientAvatarCode,
+                            onSaved: context.read<CircleOverviewCubit>().load,
+                          )
+                        : null,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        PersonPhoto(
+                          name: overview.patientName,
+                          photoPath: ApiEndpoints.patientPhoto(circle.id),
+                          avatarCode: overview.patientAvatarCode,
+                          size: AppSizes.avatarLarge,
+                        ),
+                        if (overview.canManage || overview.patientIsYou)
+                          const PositionedDirectional(
+                            end: 0,
+                            bottom: 0,
+                            child: DecoratedBox(
+                              decoration: ShapeDecoration(
+                                color: AppSemanticColors.surfaceContent,
+                                shape: CircleBorder(
+                                  side: BorderSide(
+                                    color: AppSemanticColors.borderSubtle,
+                                  ),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(AppSpacing.xs),
+                                child: Icon(AppIcons.pencil, size: 16),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -373,7 +419,7 @@ class _Fact extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: const ShapeDecoration(
-        color: AppSemanticColors.surfacePlan,
+        color: AppSemanticColors.surfaceContent,
         shape: StadiumBorder(),
       ),
       child: Row(

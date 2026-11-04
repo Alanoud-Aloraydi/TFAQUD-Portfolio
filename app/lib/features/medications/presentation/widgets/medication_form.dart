@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
@@ -214,8 +215,7 @@ class _MedicationFormState extends State<MedicationForm> {
       await _savePhoto(_savedPlanId!);
       return;
     }
-    if (widget.plan == null &&
-        _data.startsOn.isBefore(DateUtils.dateOnly(DateTime.now()))) {
+    if (widget.plan == null && _data.startsOn.isBefore(riyadhToday())) {
       setState(() => _errorKey = 'medications.start_in_past');
       return;
     }

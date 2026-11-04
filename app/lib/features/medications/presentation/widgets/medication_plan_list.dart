@@ -16,6 +16,7 @@ class MedicationPlanList extends StatelessWidget {
     required this.emptyText,
     required this.plans,
     required this.circleId,
+    required this.canManage,
     this.shrinkWrap = false,
     this.header,
   });
@@ -26,6 +27,7 @@ class MedicationPlanList extends StatelessWidget {
   final String emptyText;
   final List<MedicationPlan> plans;
   final String circleId;
+  final bool canManage;
   final bool shrinkWrap;
 
   /// Shown above the title, such as the tab's large title.
@@ -49,7 +51,7 @@ class MedicationPlanList extends StatelessWidget {
                 height: 56,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppSemanticColors.surfacePlan,
+                  color: AppSemanticColors.surfaceContent,
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
                 child: const Icon(TafaqodPhosphorIcons.pill),
@@ -66,7 +68,11 @@ class MedicationPlanList extends StatelessWidget {
         )
       else
         for (final plan in plans) ...[
-          MedicationPlanCard(circleId: circleId, plan: plan),
+          MedicationPlanCard(
+            circleId: circleId,
+            plan: plan,
+            canManage: canManage,
+          ),
           const SizedBox(height: AppSpacing.md),
         ],
     ];

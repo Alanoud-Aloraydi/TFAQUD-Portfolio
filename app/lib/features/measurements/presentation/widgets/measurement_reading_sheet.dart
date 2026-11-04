@@ -200,251 +200,291 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
             bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: size.height * .9),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(AppSpacing.lg),
+            constraints: BoxConstraints(maxHeight: size.height * .84),
+            child: Column(
               children: [
-                Text(
-                  context.tr('measurements.record_reading'),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                GlassSegmentedControl<MeasurementKind>(
-                  segments: {
-                    MeasurementKind.bp: context.tr('measurements.bp'),
-                    MeasurementKind.glucose: context.tr('measurements.glucose'),
-                  },
-                  selected: _kind,
-                  onChanged: widget.occurrence == null
-                      ? (value) => setState(() {
-                          _kind = value;
-                          _showTarget(value);
-                        })
-                      : null,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _numberField(
-                        _kind == MeasurementKind.bp
-                            ? 'measurements.systolic'
-                            : 'measurements.value',
-                        _kind == MeasurementKind.bp ? _systolic : _glucose,
-                      ),
-                    ),
-                    if (_kind == MeasurementKind.bp) ...[
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        child: Text(
-                          '/',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                      ),
-                      Expanded(
-                        child: _numberField(
-                          'measurements.diastolic',
-                          _diastolic,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                Text(
-                  context.tr(
-                    _kind == MeasurementKind.bp
-                        ? 'measurements.bp_unit'
-                        : 'measurements.glucose_unit',
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
                   ),
-                  textAlign: TextAlign.center,
+                  child: Text(
+                    context.tr('measurements.record_reading'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                if (_kind == MeasurementKind.glucose) ...[
-                  InsetGroup(
-                    header: context.tr('measurements.glucose_context'),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
-                      InsetBlock(
-                        semanticLabel: context.tr(
-                          'measurements.glucose_context',
-                        ),
-                        child: Wrap(
-                          spacing: AppSpacing.sm,
-                          children: [
-                            for (final value in _contexts)
-                              ChoiceChip(
-                                label: Text(
-                                  context.tr('measurements.context.$value'),
-                                ),
-                                selected: _context == value,
-                                onSelected: (_) =>
-                                    setState(() => _context = value),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-                InsetGroup(
-                  header: context.tr('measurements.condition_optional'),
-                  children: [
-                    InsetBlock(
-                      semanticLabel: context.tr(
-                        'measurements.condition_optional',
-                      ),
-                      child: Wrap(
-                        spacing: AppSpacing.sm,
-                        children: [
-                          for (final value in _conditions)
-                            ChoiceChip(
-                              label: Text(
-                                context.tr('measurements.condition.$value'),
-                              ),
-                              selected: _condition == value,
-                              onSelected: (_) => setState(() {
-                                _condition = _condition == value ? null : value;
-                              }),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                InsetGroup(
-                  children: [
-                    InsetRow(
-                      label: context.tr('measurements.actual_time'),
-                      value: _formatTime(_time),
-                      onTap: () async {
-                        final selected = await showTafaqodTimeSheet(
-                          context,
-                          title: context.tr('measurements.actual_time'),
-                          initialTime: _time,
-                        );
-                        if (selected != null) setState(() => _time = selected);
-                      },
-                    ),
-                  ],
-                ),
-                if (widget.occurrence != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  CheckboxListTile(
-                    value: _link,
-                    onChanged: (value) =>
-                        setState(() => _link = value ?? false),
-                    title: Text(context.tr('measurements.link_task')),
-                    subtitle: Text(context.tr('measurements.link_task_hint')),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    activeColor: AppSemanticColors.actionPrimary,
-                  ),
-                ],
-                if (widget.occurrence == null || !_link) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  if (context.watch<MeasurementTargetsCubit>().state.loading)
-                    const Center(child: CircularProgressIndicator())
-                  else if (context
-                          .watch<MeasurementTargetsCubit>()
-                          .state
-                          .errorKey
-                      case final error?)
-                    Text(context.tr(error))
-                  else ...[
-                    if (_targetFor(_kind)?.planId case final planId?)
-                      TextButton(
-                        onPressed: () {
-                          final router = GoRouter.of(context);
-                          final path = Routes.editMeasurement(
-                            context.read<MeasurementReadingsCubit>().circleId!,
-                            planId,
-                          );
-                          Navigator.of(context).pop(false);
-                          router.push(path);
+                      GlassSegmentedControl<MeasurementKind>(
+                        segments: {
+                          MeasurementKind.bp: context.tr('measurements.bp'),
+                          MeasurementKind.glucose: context.tr(
+                            'measurements.glucose',
+                          ),
                         },
-                        child: Text(
-                          context.tr('measurements.edit_plan_target'),
-                        ),
+                        selected: _kind,
+                        onChanged: widget.occurrence == null
+                            ? (value) => setState(() {
+                                _kind = value;
+                                _showTarget(value);
+                              })
+                            : null,
                       ),
-                    InsetGroup(
-                      header: context.tr('measurements.target'),
-                      footer: _targetFor(_kind)?.planId == null
-                          ? context.tr('measurements.free_target_hint')
-                          : null,
-                      children: [
-                        InsetBlock(
-                          child: Row(
+                      const SizedBox(height: AppSpacing.lg),
+                      if (widget.occurrence == null || !_link) ...[
+                        if (context
+                            .watch<MeasurementTargetsCubit>()
+                            .state
+                            .loading)
+                          const Center(child: CircularProgressIndicator())
+                        else if (context
+                                .watch<MeasurementTargetsCubit>()
+                                .state
+                                .errorKey
+                            case final error?)
+                          Text(context.tr(error))
+                        else ...[
+                          InsetGroup(
+                            header: context.tr('measurements.target'),
+                            footer: _targetFor(_kind)?.planId == null
+                                ? context.tr('measurements.free_target_hint')
+                                : null,
                             children: [
-                              Expanded(
-                                child: _numberField(
-                                  _kind == MeasurementKind.bp
-                                      ? 'measurements.systolic_limit'
-                                      : 'measurements.glucose_low',
-                                  _kind == MeasurementKind.bp
-                                      ? _targetHigh
-                                      : _targetLow,
-                                  enabled: _targetFor(_kind)?.planId == null,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: _numberField(
-                                  _kind == MeasurementKind.bp
-                                      ? 'measurements.diastolic_limit'
-                                      : 'measurements.glucose_high',
-                                  _kind == MeasurementKind.bp
-                                      ? _targetLow
-                                      : _targetHigh,
-                                  enabled: _targetFor(_kind)?.planId == null,
+                              InsetBlock(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: _numberField(
+                                        _kind == MeasurementKind.bp
+                                            ? 'measurements.systolic_limit'
+                                            : 'measurements.glucose_low',
+                                        _kind == MeasurementKind.bp
+                                            ? _targetHigh
+                                            : _targetLow,
+                                        enabled:
+                                            _targetFor(_kind)?.planId == null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: _numberField(
+                                        _kind == MeasurementKind.bp
+                                            ? 'measurements.diastolic_limit'
+                                            : 'measurements.glucose_high',
+                                        _kind == MeasurementKind.bp
+                                            ? _targetLow
+                                            : _targetHigh,
+                                        enabled:
+                                            _targetFor(_kind)?.planId == null,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
+                          if (_targetFor(_kind)?.planId case final planId?)
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton(
+                                onPressed: () {
+                                  final router = GoRouter.of(context);
+                                  final path = Routes.editMeasurement(
+                                    context
+                                        .read<MeasurementReadingsCubit>()
+                                        .circleId!,
+                                    planId,
+                                  );
+                                  Navigator.of(context).pop(false);
+                                  router.push(path);
+                                },
+                                child: Text(
+                                  context.tr('measurements.edit_plan_target'),
+                                ),
+                              ),
+                            ),
+                        ],
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _numberField(
+                              _kind == MeasurementKind.bp
+                                  ? 'measurements.systolic'
+                                  : 'measurements.value',
+                              _kind == MeasurementKind.bp
+                                  ? _systolic
+                                  : _glucose,
+                            ),
+                          ),
+                          if (_kind == MeasurementKind.bp) ...[
+                            Padding(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              child: Text(
+                                '/',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium,
+                              ),
+                            ),
+                            Expanded(
+                              child: _numberField(
+                                'measurements.diastolic',
+                                _diastolic,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      Text(
+                        context.tr(
+                          _kind == MeasurementKind.bp
+                              ? 'measurements.bp_unit'
+                              : 'measurements.glucose_unit',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      if (_kind == MeasurementKind.glucose) ...[
+                        InsetGroup(
+                          header: context.tr('measurements.glucose_context'),
+                          children: [
+                            InsetBlock(
+                              semanticLabel: context.tr(
+                                'measurements.glucose_context',
+                              ),
+                              child: Wrap(
+                                spacing: AppSpacing.sm,
+                                children: [
+                                  for (final value in _contexts)
+                                    ChoiceChip(
+                                      label: Text(
+                                        context.tr(
+                                          'measurements.context.$value',
+                                        ),
+                                      ),
+                                      selected: _context == value,
+                                      onSelected: (_) =>
+                                          setState(() => _context = value),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+                      InsetGroup(
+                        header: context.tr('measurements.condition_optional'),
+                        children: [
+                          InsetBlock(
+                            semanticLabel: context.tr(
+                              'measurements.condition_optional',
+                            ),
+                            child: Wrap(
+                              spacing: AppSpacing.sm,
+                              children: [
+                                for (final value in _conditions)
+                                  ChoiceChip(
+                                    label: Text(
+                                      context.tr(
+                                        'measurements.condition.$value',
+                                      ),
+                                    ),
+                                    selected: _condition == value,
+                                    onSelected: (_) => setState(() {
+                                      _condition = _condition == value
+                                          ? null
+                                          : value;
+                                    }),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      InsetGroup(
+                        children: [
+                          InsetRow(
+                            label: context.tr('measurements.actual_time'),
+                            value: _formatTime(_time),
+                            onTap: () async {
+                              final selected = await showTafaqodTimeSheet(
+                                context,
+                                title: context.tr('measurements.actual_time'),
+                                initialTime: _time,
+                              );
+                              if (selected != null) {
+                                setState(() => _time = selected);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      if (widget.occurrence != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        CheckboxListTile(
+                          value: _link,
+                          onChanged: (value) =>
+                              setState(() => _link = value ?? false),
+                          title: Text(context.tr('measurements.link_task')),
+                          subtitle: Text(
+                            context.tr('measurements.link_task_hint'),
+                          ),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppSemanticColors.actionPrimary,
                         ),
                       ],
-                    ),
-                  ],
-                ],
-                const SizedBox(height: AppSpacing.lg),
-                InsetGroup(
-                  children: [
-                    InsetTextRow(
-                      label: context.tr('measurements.note'),
-                      controller: _note,
-                      onChanged: (_) {},
-                      maxLength: 250,
-                    ),
-                  ],
-                ),
-                if (_errorKey != null)
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    child: Text(
-                      context.tr(_errorKey!),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                      const SizedBox(height: AppSpacing.lg),
+                      InsetGroup(
+                        children: [
+                          InsetTextRow(
+                            label: context.tr('measurements.note'),
+                            controller: _note,
+                            onChanged: (_) {},
+                            maxLength: 250,
+                          ),
+                        ],
                       ),
-                    ),
+                      if (_errorKey != null)
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          child: Text(
+                            context.tr(_errorKey!),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                const SizedBox(height: AppSpacing.lg),
-                FilledButton(
-                  onPressed:
-                      _saving ||
-                          (widget.occurrence == null || !_link) &&
-                              (context
-                                      .watch<MeasurementTargetsCubit>()
-                                      .state
-                                      .loading ||
-                                  context
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed:
+                          _saving ||
+                              (widget.occurrence == null || !_link) &&
+                                  (context
                                           .watch<MeasurementTargetsCubit>()
                                           .state
-                                          .errorKey !=
-                                      null)
-                      ? null
-                      : _save,
-                  child: Text(context.tr('measurements.save_reading')),
+                                          .loading ||
+                                      context
+                                              .watch<MeasurementTargetsCubit>()
+                                              .state
+                                              .errorKey !=
+                                          null)
+                          ? null
+                          : _save,
+                      child: Text(context.tr('measurements.save_reading')),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -1,10 +1,11 @@
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 
 /// Selects medication occurrences for the Today view.
 class TodayMedicationView {
   TodayMedicationView(List<DoseOccurrence> occurrences, DateTime now) {
-    final today = DateTime.utc(now.year, now.month, now.day);
+    final today = scheduleDay(now);
     todayOccurrences =
         occurrences
             .where(
@@ -24,11 +25,7 @@ class TodayMedicationView {
     attention =
         occurrences.where((item) {
           final status = medicationTimingState(item, now);
-          final scheduledOn = DateTime.utc(
-            item.scheduledOn.year,
-            item.scheduledOn.month,
-            item.scheduledOn.day,
-          );
+          final scheduledOn = scheduleDay(item.scheduledOn);
           return item != next &&
               !scheduledOn.isAfter(today) &&
               item.record == null &&

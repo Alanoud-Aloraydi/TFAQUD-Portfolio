@@ -1,18 +1,23 @@
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 
 DoseTimingState? medicationTimingState(DoseOccurrence item, DateTime now) {
   if (item.record != null) return null;
-  final parts = item.time.split(':');
-  final scheduled = DateTime.utc(
-    item.scheduledOn.year,
-    item.scheduledOn.month,
-    item.scheduledOn.day,
-    int.parse(parts[0]),
-    int.parse(parts[1]),
-  );
+  final scheduled = riyadhScheduledAt(item.scheduledOn, item.time);
   if (now.isBefore(scheduled)) return DoseTimingState.upcoming;
   final minutes = now.difference(scheduled).inMinutes;
   if (minutes < 15) return DoseTimingState.due;
   if (minutes < item.missedAfterMinutes) return DoseTimingState.late;
   return DoseTimingState.missed;
+}
+
+/// Identifies an unresolved dose eligible for the next-task card.
+bool medicationIsNextTaskCandidate(DoseOccurrence item, DateTime now) {
+  final status = medicationTimingState(item, now);
+  if (status == DoseTimingState.due || status == DoseTimingState.late) {
+    return item.scheduledOn.year == now.year &&
+        item.scheduledOn.month == now.month &&
+        item.scheduledOn.day == now.day;
+  }
+  return status == DoseTimingState.upcoming;
 }

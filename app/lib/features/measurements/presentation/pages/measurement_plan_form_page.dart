@@ -3,6 +3,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
@@ -37,9 +38,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   MeasurementKind _kind = MeasurementKind.glucose;
   String _context = 'fasting';
   TimeOfDay _time = const TimeOfDay(hour: 7, minute: 30);
-  DateTime _start = DateUtils.dateOnly(
-    DateTime.now().toUtc().add(const Duration(hours: 3)),
-  );
+  DateTime _start = riyadhToday();
   final Set<int> _days = {1, 2, 3, 4, 5, 6, 7};
   final _low = TextEditingController();
   final _high = TextEditingController();
@@ -76,9 +75,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     _context = version.glucoseContext ?? 'fasting';
     final parts = version.time.split(':');
     _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-    final earliest = DateUtils.dateOnly(
-      DateTime.now().toUtc().add(const Duration(hours: 3)),
-    ).add(const Duration(days: 1));
+    final earliest = riyadhToday().add(const Duration(days: 1));
     _start = version.effectiveFromOn.isAfter(earliest)
         ? version.effectiveFromOn
         : earliest;
@@ -312,7 +309,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                                   decoration: BoxDecoration(
                                     color: _days.contains(day)
                                         ? AppSemanticColors.selectedSurface
-                                        : AppSemanticColors.surfacePlan,
+                                        : AppSemanticColors.surfaceContent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
@@ -354,9 +351,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 ),
                 value: '${_start.day}/${_start.month}/${_start.year}',
                 onTap: () async {
-                  final today = DateUtils.dateOnly(
-                    DateTime.now().toUtc().add(const Duration(hours: 3)),
-                  );
+                  final today = riyadhToday();
                   final earliest = plan == null
                       ? today
                       : today.add(const Duration(days: 1));

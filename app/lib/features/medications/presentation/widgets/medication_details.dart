@@ -4,6 +4,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -56,7 +57,7 @@ class MedicationDetails extends StatelessWidget {
               'medications.treatment_period',
               _period(context, version.startsOn, version.endsOn),
             ),
-            if (plan.isScheduledOn(DateUtils.dateOnly(DateTime.now())))
+            if (plan.isScheduledOn(riyadhToday()))
               _value(
                 context,
                 'medications.effective_from',
@@ -140,7 +141,8 @@ class _RevisionEntry extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppSemanticColors.surfacePlan,
+        color: AppSemanticColors.surfaceContent,
+        border: Border.all(color: AppSemanticColors.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

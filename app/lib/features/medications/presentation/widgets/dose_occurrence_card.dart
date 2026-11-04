@@ -89,7 +89,13 @@ class _TimeBadge extends StatelessWidget {
                 formatMedicationDate(context, occurrence.scheduledOn),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
-            Text(value, style: Theme.of(context).textTheme.labelMedium),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppSemanticColors.textPrimary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             _TimingState(state: timingState),
           ],

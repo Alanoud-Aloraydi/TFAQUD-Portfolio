@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 
 /// Defines the supported prayer values.
 enum Prayer { fajr, dhuhr, asr, maghrib, isha }
@@ -16,7 +17,7 @@ class PrayerDay extends Equatable {
   final Map<Prayer, String> times;
 
   Prayer? nextPrayer(DateTime now) {
-    final saudiNow = now.toUtc().add(const Duration(hours: 3));
+    final saudiNow = riyadhNow(now);
     if (saudiNow.year != date.year ||
         saudiNow.month != date.month ||
         saudiNow.day != date.day) {

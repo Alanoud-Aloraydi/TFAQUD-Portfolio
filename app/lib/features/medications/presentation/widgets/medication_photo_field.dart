@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -75,7 +77,7 @@ class MedicationPhotoField extends StatelessWidget {
                               child: CircleAvatar(
                                 backgroundColor:
                                     AppSemanticColors.surfaceContent,
-                                child: const Icon(CupertinoIcons.pencil),
+                                child: const Icon(AppIcons.pencil),
                               ),
                             ),
                           ],

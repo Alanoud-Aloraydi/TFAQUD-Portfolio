@@ -1,13 +1,14 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
-import 'package:app/core/widgets/navigation/swipe_selection_area.dart';
+import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
@@ -65,7 +66,7 @@ class AppointmentPlanSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppointmentsCubit>().state;
-    final now = DateTime.now();
+    final now = riyadhNow();
     final values =
         state.appointments
             .where(
@@ -139,7 +140,7 @@ class AppointmentCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppSemanticColors.surfacePlan,
+                  backgroundColor: AppSemanticColors.surfaceContent,
                   child: Icon(
                     remote ? CupertinoIcons.videocam : CupertinoIcons.calendar,
                   ),
@@ -162,13 +163,11 @@ class AppointmentCard extends StatelessWidget {
                     showRelativeDate
                         ? _relativeDateKey(value.scheduledOn)
                         : value.status == AppointmentStatus.scheduled &&
-                              value.scheduledAt.isBefore(DateTime.now())
+                              value.scheduledAt.isBefore(riyadhNow())
                         ? 'appointments.status.unconfirmed'
                         : 'appointments.status.${value.status.name}',
                     args: showRelativeDate
-                        ? [
-                            '${DateUtils.dateOnly(value.scheduledOn).difference(DateUtils.dateOnly(DateTime.now())).inDays}',
-                          ]
+                        ? ['${scheduleDay(value.scheduledOn).difference(riyadhToday()).inDays}']
                         : null,
                   ),
                   background: AppSemanticColors.surfaceContent,
@@ -225,7 +224,7 @@ class AppointmentCard extends StatelessWidget {
               ),
             ),
             if (value.status == AppointmentStatus.scheduled &&
-                !value.scheduledAt.isBefore(DateTime.now())) ...[
+                !value.scheduledAt.isBefore(riyadhNow())) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
                 context.tr('appointments.appears_today'),
@@ -261,10 +260,10 @@ class AppointmentCard extends StatelessWidget {
                           context.read<AppointmentsCubit>().load(circleId);
                         }
                       },
-                      icon: const Icon(CupertinoIcons.pencil),
+                      icon: const Icon(AppIcons.pencil),
                       label: Text(context.tr('appointments.edit')),
                     ),
-                    if (!value.scheduledAt.isAfter(DateTime.now()))
+                    if (!value.scheduledAt.isAfter(riyadhNow()))
                       TextButton(
                         onPressed: () =>
                             _status(context, AppointmentStatus.completed),
@@ -309,9 +308,7 @@ class AppointmentCard extends StatelessWidget {
   }
 
   String _relativeDateKey(DateTime date) {
-    final days = DateUtils.dateOnly(date)
-        .difference(DateUtils.dateOnly(DateTime.now()))
-        .inDays;
+    final days = scheduleDay(date).difference(riyadhToday()).inDays;
     if (days == 0) return 'appointments.today';
     if (days == 1) return 'appointments.tomorrow';
     if (days == 2) return 'appointments.in_two_days';
@@ -341,17 +338,10 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
   static const _filters = ['all', 'upcoming', 'previous'];
   String _filter = 'all';
 
-  void _changeFilter(int offset) {
-    final next = _filters.indexOf(_filter) + offset;
-    if (next >= 0 && next < _filters.length) {
-      setState(() => _filter = _filters[next]);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppointmentsCubit>().state;
-    final now = DateTime.now();
+    final now = riyadhNow();
     final values = state.appointments.where((item) {
       final upcoming =
           item.status == AppointmentStatus.scheduled &&
@@ -366,8 +356,8 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
         if (state.errorKey != null &&
             state.status != AppointmentsLoadStatus.failure)
           Text(context.tr(state.errorKey!)),
-        GlassSegmentedControl<String>(
-          segments: {
+        WhiteFilterMenu<String>(
+          options: {
             for (final key in _filters)
               key: context.tr('appointments.filters.$key'),
           },
@@ -375,35 +365,25 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
           onChanged: (value) => setState(() => _filter = value),
         ),
         const SizedBox(height: AppSpacing.md),
-        SwipeSelectionArea(
-          onPrevious: () => _changeFilter(-1),
-          onNext: () => _changeFilter(1),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (state.status == AppointmentsLoadStatus.loading &&
-                  values.isEmpty)
-                const Center(child: CircularProgressIndicator())
-              else if (state.status == AppointmentsLoadStatus.failure)
-                TextButton(
-                  onPressed: () =>
-                      context.read<AppointmentsCubit>().load(widget.circleId),
-                  child: Text(context.tr(state.errorKey ?? 'error.unknown')),
-                )
-              else if (values.isEmpty)
-                Center(child: Text(context.tr('appointments.no_records')))
-              else
-                for (final value in values) ...[
-                  AppointmentCard(
-                    value: value,
-                    circleId: widget.circleId,
-                    canManage: widget.canManage,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-            ],
-          ),
-        ),
+        if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
+          const Center(child: CircularProgressIndicator())
+        else if (state.status == AppointmentsLoadStatus.failure)
+          TextButton(
+            onPressed: () =>
+                context.read<AppointmentsCubit>().load(widget.circleId),
+            child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+          )
+        else if (values.isEmpty)
+          Center(child: Text(context.tr('appointments.no_records')))
+        else
+          for (final value in values) ...[
+            AppointmentCard(
+              value: value,
+              circleId: widget.circleId,
+              canManage: widget.canManage,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
       ],
     );
   }

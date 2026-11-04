@@ -4,6 +4,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
@@ -186,12 +187,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   }
 
   void _loadClinicalData(String circleId) {
-    final riyadhNow = DateTime.now().toUtc().add(const Duration(hours: 3));
-    final DateTime today = DateTime.utc(
-      riyadhNow.year,
-      riyadhNow.month,
-      riyadhNow.day,
-    );
+    final now = riyadhNow();
+    final today = scheduleDay(now);
     unawaited(context.read<MedicationsCubit>().load(circleId));
     unawaited(context.read<MeasurementPlansCubit>().load(circleId));
     unawaited(context.read<AppointmentsCubit>().load(circleId));
@@ -208,7 +205,6 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     );
     unawaited(context.read<PrayerTimesCubit>().load(circleId));
     _midnight?.cancel();
-    final now = riyadhNow;
     final next = DateTime.utc(now.year, now.month, now.day + 1);
     _midnight = Timer(next.difference(now), () {
       if (mounted) _loadClinicalData(circleId);

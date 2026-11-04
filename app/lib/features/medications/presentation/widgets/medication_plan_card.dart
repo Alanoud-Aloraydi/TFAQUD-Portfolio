@@ -1,11 +1,12 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
-import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -24,10 +25,12 @@ class MedicationPlanCard extends StatefulWidget {
     super.key,
     required this.circleId,
     required this.plan,
+    required this.canManage,
   });
 
   final String circleId;
   final MedicationPlan plan;
+  final bool canManage;
 
   @override
   State<MedicationPlanCard> createState() => _MedicationPlanCardState();
@@ -43,20 +46,13 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     final strength =
         '${formatMedicationNumber(version.strengthValue)} '
         '${context.tr('medications.strength_display.${version.strengthUnit.name}')}';
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = riyadhToday();
     final status = plan.isPreviousOn(today)
         ? _PlanState.previous
         : plan.isScheduledOn(today)
         ? _PlanState.scheduled
         : _PlanState.current;
-    final canManage = context.select<HomeCubit, bool>(
-      (cubit) =>
-          cubit.state.data?.circles.any(
-            (circle) =>
-                circle.id == widget.circleId && circle.canManageMedications,
-          ) ??
-          false,
-    );
+    final canManage = widget.canManage;
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: AppSemanticColors.surfaceContent,
@@ -96,7 +92,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                               height: AppSizes.touch,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: AppSemanticColors.surfacePlan,
+                                color: AppSemanticColors.surfaceContent,
                                 borderRadius: BorderRadius.circular(
                                   AppRadius.field,
                                 ),
@@ -140,7 +136,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                         plan.pendingVersion == null)
                       IconButton(
                         onPressed: () => _edit(context),
-                        icon: const Icon(CupertinoIcons.pencil),
+                        icon: const Icon(AppIcons.pencil),
                         tooltip: context.tr('medications.edit_title'),
                       ),
                     _PlanStatus(state: status),
@@ -278,6 +274,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
   Future<void> _openDetails(BuildContext context) async {
     final changed = await context.push<bool>(
       Routes.medicationDetails(widget.circleId, widget.plan.id),
+      extra: widget.canManage,
     );
     if (!context.mounted) return;
     final updates = <Future<void>>[

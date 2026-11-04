@@ -1,5 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -210,7 +211,7 @@ class TodayMedicationActionDose extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+    final now = riyadhNow();
     final status = medicationTimingState(occurrence, now);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -374,7 +375,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
         ? AppSemanticColors.selectedSurface
         : isWaiting
         ? AppSemanticColors.surfaceAttention
-        : AppSemanticColors.surfacePlan;
+        : AppSemanticColors.surfaceContent;
     final dose = context.tr(
       'medications.dose',
       args: [
@@ -412,7 +413,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                       height: 56,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: AppSemanticColors.surfacePlan,
+                        color: AppSemanticColors.surfaceContent,
                         borderRadius: BorderRadius.circular(AppRadius.field),
                       ),
                       child: const Icon(TafaqodPhosphorIcons.pill),
@@ -520,7 +521,7 @@ class _PeriodMark extends StatelessWidget {
         ? AppSemanticColors.selectedSurface
         : missed
         ? context.tokens.error.withValues(alpha: .08)
-        : AppSemanticColors.surfacePlan;
+        : AppSemanticColors.surfaceContent;
     final icon = outcome == DoseOutcome.taken
         ? TafaqodPhosphorIcons.check
         : missed

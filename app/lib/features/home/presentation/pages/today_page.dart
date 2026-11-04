@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
@@ -66,7 +67,7 @@ class _TodayPageState extends State<TodayPage> {
   Widget build(BuildContext context) {
     return SelectedCircleBuilder(
       builder: (context, circle) {
-        final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+        final now = riyadhNow();
         final date =
             "${context.tr('common.weekdays.${now.weekday}')} "
             "${now.day} ${context.tr('circles.months.${now.month}')}";
@@ -287,46 +288,31 @@ _NextTask? _nearestTask(
   List<MeasurementOccurrence> measurements,
   List<CareAppointment> appointments,
 ) {
-  DateTime at(DateTime date, String time) {
-    final parts = time.split(':');
-    return DateTime.utc(
-      date.year,
-      date.month,
-      date.day,
-      int.parse(parts[0]),
-      int.parse(parts[1]),
-    );
-  }
-
   final candidates = <_NextTask>[
     for (final item in medications)
-      if (item.record == null &&
-          (!at(item.scheduledOn, item.time).isBefore(now) ||
-              DateUtils.isSameDay(item.scheduledOn, now) &&
-                  (medicationTimingState(item, now) == DoseTimingState.due ||
-                      medicationTimingState(item, now) ==
-                          DoseTimingState.late)))
+      if (medicationIsNextTaskCandidate(item, now))
         (
-          at: at(item.scheduledOn, item.time).isBefore(now)
+          at: riyadhScheduledAt(item.scheduledOn, item.time).isBefore(now)
               ? now
-              : at(item.scheduledOn, item.time),
+              : riyadhScheduledAt(item.scheduledOn, item.time),
           medication: item,
           measurement: null,
           appointment: null,
         ),
     for (final item in measurements)
-      if (item.record == null && !at(item.scheduledOn, item.time).isBefore(now))
+      if (item.record == null &&
+          !riyadhScheduledAt(item.scheduledOn, item.time).isBefore(now))
         (
-          at: at(item.scheduledOn, item.time),
+          at: riyadhScheduledAt(item.scheduledOn, item.time),
           medication: null,
           measurement: item,
           appointment: null,
         ),
     for (final item in appointments)
       if (item.status == AppointmentStatus.scheduled &&
-          !at(item.scheduledOn, item.time).isBefore(now))
+          !riyadhScheduledAt(item.scheduledOn, item.time).isBefore(now))
         (
-          at: at(item.scheduledOn, item.time),
+          at: riyadhScheduledAt(item.scheduledOn, item.time),
           medication: null,
           measurement: null,
           appointment: item,
@@ -600,7 +586,7 @@ class _PrayerPeriod extends StatelessWidget {
               else if (entries.isNotEmpty)
                 CompactStatusBadge(
                   text: '${entries.length}',
-                  background: AppSemanticColors.surfacePlan,
+                  background: AppSemanticColors.surfaceContent,
                   foreground: AppSemanticColors.textPrimary,
                 ),
             ],

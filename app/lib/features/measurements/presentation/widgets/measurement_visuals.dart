@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -224,7 +225,7 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
       widget.month.month,
     );
     final lead = (widget.month.weekday + 1) % 7;
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = riyadhToday();
     final rows = ((lead + days) / 7).ceil();
     final selected = _selectedDay;
     final selectedReadings = selected == null

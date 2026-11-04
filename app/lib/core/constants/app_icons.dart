@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/widgets.dart';
 
-/// Every icon of the app: Phosphor, regular weight, as in the handoff
+/// App icons use Phosphor regular except the shared iOS edit pencil.
+/// Phosphor icons follow the handoff
 /// (package `phosphor_flutter`, which brings the font).
 ///
 /// The handoff draws them as they are, not mirrored, on its Arabic pages.
@@ -109,12 +111,8 @@ abstract class AppIcons {
     fontPackage: _package,
   );
 
-  /// Edit. Phosphor `pencilSimple`.
-  static const IconData pencil = IconData(
-    0xe3b4,
-    fontFamily: _family,
-    fontPackage: _package,
-  );
+  /// The edit pencil used throughout the app.
+  static const IconData pencil = CupertinoIcons.pencil;
 
   /// Information. Phosphor `info`.
   static const IconData info = IconData(

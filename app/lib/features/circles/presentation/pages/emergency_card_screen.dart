@@ -778,7 +778,7 @@ class _Contacts extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.sm),
             child: Material(
-              color: AppSemanticColors.surfacePlan,
+              color: AppSemanticColors.surfaceContent,
               shape: AppRadius.shape(AppRadius.s),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
@@ -848,7 +848,7 @@ class _WhySeparate extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.inset),
       decoration: ShapeDecoration(
-        color: AppSemanticColors.surfacePlan,
+        color: AppSemanticColors.surfaceContent,
         shape: AppRadius.shape(AppRadius.m),
       ),
       child: Column(

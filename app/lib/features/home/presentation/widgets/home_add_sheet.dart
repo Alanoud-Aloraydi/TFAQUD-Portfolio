@@ -273,7 +273,7 @@ class _PlanOption extends StatelessWidget {
                 width: _tile,
                 height: _tile,
                 decoration: ShapeDecoration(
-                  color: AppSemanticColors.surfacePlan,
+                  color: AppSemanticColors.surfaceContent,
                   shape: AppRadius.shape(AppRadius.s),
                 ),
                 child: Icon(
