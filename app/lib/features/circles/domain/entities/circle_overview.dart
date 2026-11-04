@@ -29,6 +29,10 @@ class CircleOverview extends Equatable {
   final List<CircleMember> members;
   final List<CirclePendingInvitation> pendingInvitations;
 
+  bool get canEditPatientPhoto =>
+      patientIsYou ||
+      (canManage && (!patientUsesApp || appMode == 'simplified'));
+
   @override
   List<Object?> get props => [
     name,

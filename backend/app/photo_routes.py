@@ -72,11 +72,17 @@ def _patient(session, circle_id: UUID) -> Patient:
 
 
 def _patient_write(session, circle_id: UUID) -> Patient:
+    """Allow the owner or a manager of an offline or simplified patient."""
     patient = _patient(session, circle_id)
-    if (current_circle_role() != CircleRole.MANAGER
-            and patient.account_id != _uuid(current_auth().user_id)):
-        raise NotFound()
-    return patient
+    viewer = _uuid(current_auth().user_id)
+    if patient.account_id == viewer:
+        return patient
+    if current_circle_role() == CircleRole.MANAGER:
+        if patient.account_id is None:
+            return patient
+        if _account(session, patient.account_id).app_mode == "simplified":
+            return patient
+    raise NotFound()
 
 
 @bp.get("/accounts/me/photo")

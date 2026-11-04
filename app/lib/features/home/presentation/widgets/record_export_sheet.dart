@@ -286,7 +286,7 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
             ),
             RecordPdfRow(
               label: context.tr('appointments.companion'),
-              value: item.companionName,
+              value: appointmentCompanionNames(context, item),
             ),
             if (visits[item.id] case final visit?) ...[
               if (visit.summary?.isNotEmpty == true)

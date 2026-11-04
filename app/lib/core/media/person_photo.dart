@@ -35,26 +35,29 @@ class PersonPhoto extends StatelessWidget {
     required this.photoPath,
     required this.size,
     this.avatarCode,
+    this.width,
   });
 
   final String name;
   final String photoPath;
   final String? avatarCode;
   final double size;
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
     final code = avatarCode;
+    final photoWidth = width ?? size;
     final fallback = ClipOval(
       child: code != null && avatarCodes.contains(code)
           ? Image.asset(
               'assets/avatars/$code.png',
-              width: size,
+              width: photoWidth,
               height: size,
               fit: BoxFit.cover,
             )
           : Container(
-              width: size,
+              width: photoWidth,
               height: size,
               alignment: Alignment.center,
               color: AppSemanticColors.selectedSurface,
@@ -69,7 +72,7 @@ class PersonPhoto extends StatelessWidget {
       child: PrivatePhoto(
         path: photoPath,
         height: size,
-        width: size,
+        width: photoWidth,
         radius: size / 2,
         openViewer: false,
         fallback: fallback,
@@ -87,7 +90,6 @@ Future<void> showPersonPhotoSheet(
   String? avatarCode,
   bool frontCamera = false,
   VoidCallback? onSaved,
-  VoidCallback? onOpenAccount,
 }) => showGlassSheet<void>(
   context,
   title: title,
@@ -99,7 +101,6 @@ Future<void> showPersonPhotoSheet(
     avatarCode: avatarCode,
     frontCamera: frontCamera,
     onSaved: onSaved,
-    onOpenAccount: onOpenAccount,
   ),
 );
 
@@ -113,7 +114,6 @@ class _PersonPhotoEditor extends StatefulWidget {
     required this.avatarCode,
     required this.frontCamera,
     required this.onSaved,
-    required this.onOpenAccount,
   });
 
   final String title;
@@ -123,7 +123,6 @@ class _PersonPhotoEditor extends StatefulWidget {
   final String? avatarCode;
   final bool frontCamera;
   final VoidCallback? onSaved;
-  final VoidCallback? onOpenAccount;
 
   @override
   State<_PersonPhotoEditor> createState() => _PersonPhotoEditorState();
@@ -328,14 +327,6 @@ class _PersonPhotoEditorState extends State<_PersonPhotoEditor> {
           ),
           child: Text(context.tr('account.save')),
         ),
-        if (widget.onOpenAccount != null)
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onOpenAccount!();
-            },
-            child: Text(context.tr('account.title')),
-          ),
       ],
     );
   }

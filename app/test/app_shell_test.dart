@@ -540,8 +540,6 @@ void main() {
 
         await tester.tap(find.byTooltip('topbar.account'.tr()));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('account.title'.tr()));
-        await tester.pumpAndSettle();
         expect(find.byType(AccountScreen), findsOneWidget);
         expect(find.text('account.title'.tr()), findsOneWidget);
         expect(find.byType(AppBottomBar), findsNothing);
@@ -1661,8 +1659,6 @@ void main() {
       tallPhone(tester);
       await pumpApp(tester);
       await tester.tap(find.byTooltip('topbar.account'.tr()));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('account.title'.tr()));
       await tester.pumpAndSettle();
     }
 

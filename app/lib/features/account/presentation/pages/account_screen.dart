@@ -191,22 +191,50 @@ class AccountScreen extends StatelessWidget {
         children: <Widget>[
           Column(
             children: <Widget>[
-              GestureDetector(
-                onTap: () => showPersonPhotoSheet(
-                  context,
-                  title: context.tr('photos.your_photo'),
-                  name: shown,
-                  photoPath: ApiEndpoints.accountPhoto,
-                  avatarPath: ApiEndpoints.accountAvatar,
-                  avatarCode: account.avatarCode,
-                  frontCamera: true,
-                  onSaved: cubit.load,
-                ),
-                child: PersonPhoto(
-                  name: shown,
-                  photoPath: ApiEndpoints.accountPhoto,
-                  avatarCode: account.avatarCode,
-                  size: AppSizes.avatarLarge,
+              Semantics(
+                button: true,
+                label: context.tr('photos.edit_your_photo'),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => showPersonPhotoSheet(
+                    context,
+                    title: context.tr('photos.your_photo'),
+                    name: shown,
+                    photoPath: ApiEndpoints.accountPhoto,
+                    avatarPath: ApiEndpoints.accountAvatar,
+                    avatarCode: account.avatarCode,
+                    frontCamera: true,
+                    onSaved: cubit.load,
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      PersonPhoto(
+                        name: shown,
+                        photoPath: ApiEndpoints.accountPhoto,
+                        avatarCode: account.avatarCode,
+                        size: AppSizes.avatarLarge,
+                      ),
+                      const PositionedDirectional(
+                        end: 0,
+                        bottom: 0,
+                        child: DecoratedBox(
+                          decoration: ShapeDecoration(
+                            color: AppSemanticColors.surfaceContent,
+                            shape: CircleBorder(
+                              side: BorderSide(
+                                color: AppSemanticColors.borderSubtle,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(AppSpacing.xs),
+                            child: Icon(AppIcons.pencil, size: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -261,10 +289,6 @@ class AccountScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
           SettingsCard(
             children: <Widget>[
-              ActionRow(
-                label: context.tr('photos.licenses'),
-                onPressed: () => context.push(Routes.licenses),
-              ),
               const SignOutRow(),
               ActionRow(
                 label: context.tr('account.delete_account'),

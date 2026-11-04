@@ -100,7 +100,7 @@ class VisitPage extends StatelessWidget {
         ),
         Text(
           '${appointment.kind == AppointmentKind.remote ? context.tr('appointments.${appointment.remoteMethod}') : appointment.place ?? ''} · '
-          '${context.tr('appointments.companion_name', args: [appointment.companionName])}',
+          '${context.tr('appointments.companion_name', args: [appointmentCompanionNames(context, appointment)])}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: AppSpacing.lg),

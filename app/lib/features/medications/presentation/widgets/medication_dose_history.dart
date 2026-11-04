@@ -76,7 +76,10 @@ class MedicationDoseHistory extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
                       ),
-                      child: DoseOccurrenceCard(occurrence: item),
+                      child: DoseOccurrenceCard(
+                        occurrence: item,
+                        historyLayout: true,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),

@@ -4,8 +4,8 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// The iOS stepper: a light grey capsule with − and + divided by a thin
-/// line, at the end of a row (design system FormGroup). Each half is 44 by
+/// The iOS stepper: a white outlined capsule with − and + divided by a thin
+/// line, at the end of a row. Each half is 44 by
 /// 44, so it is easy to tap. Null [onDecrement] or [onIncrement] turns that
 /// half off, for example − at the smallest dose.
 class StepperControl extends StatelessWidget {
@@ -27,9 +27,11 @@ class StepperControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const ShapeDecoration(
-        color: AppSemanticColors.borderSubtle,
-        shape: StadiumBorder(),
+      decoration: ShapeDecoration(
+        color: AppSemanticColors.surfaceContent,
+        shape: StadiumBorder(
+          side: BorderSide(color: AppSemanticColors.borderControlBase),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

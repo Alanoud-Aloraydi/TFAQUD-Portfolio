@@ -22,9 +22,9 @@ class AppointmentModel {
     time: json['time_of_day'] as String,
     place: json['place'] as String?,
     remoteMethod: json['remote_method'] as String?,
-    companionAccountId: json['companion_account_id'] as String,
-    companionName: json['companion_name'] as String,
-    companionAvatarCode: json['companion_avatar_code'] as String?,
+    companions: (json['companions'] as List<dynamic>)
+        .map((item) => companionFromJson(item as Map<String, dynamic>))
+        .toList(),
     status: AppointmentStatus.values.byName(json['status'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
   );
@@ -45,7 +45,7 @@ class AppointmentModel {
     'time_of_day': draft.time,
     'place': draft.place,
     'remote_method': draft.remoteMethod,
-    'companion_account_id': draft.companionAccountId,
+    'companion_account_ids': draft.companionAccountIds,
     if (expectedUpdatedAt != null)
       'expected_updated_at': expectedUpdatedAt.toUtc().toIso8601String(),
   };

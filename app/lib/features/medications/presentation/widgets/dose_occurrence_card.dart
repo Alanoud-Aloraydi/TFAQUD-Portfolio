@@ -17,12 +17,14 @@ class DoseOccurrenceCard extends StatelessWidget {
     required this.occurrence,
     this.showDate = false,
     this.showControls = true,
+    this.historyLayout = false,
     this.timingState,
   });
 
   final DoseOccurrence occurrence;
   final bool showDate;
   final bool showControls;
+  final bool historyLayout;
   final DoseTimingState? timingState;
 
   @override
@@ -34,18 +36,35 @@ class DoseOccurrenceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _TimeBadge(
-                  occurrence: occurrence,
-                  showDate: showDate,
-                  timingState: timingState ?? occurrence.timingState,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: _DoseDetails(occurrence: occurrence)),
-              ],
-            ),
+            if (historyLayout) ...[
+              Row(
+                children: [
+                  Text(
+                    formatMedicationTime(context, occurrence.time),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppSemanticColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  _TimingState(state: timingState ?? occurrence.timingState),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _DoseDetails(occurrence: occurrence, compact: true),
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TimeBadge(
+                    occurrence: occurrence,
+                    showDate: showDate,
+                    timingState: timingState ?? occurrence.timingState,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _DoseDetails(occurrence: occurrence)),
+                ],
+              ),
             if (showControls || occurrence.record != null) ...[
               const SizedBox(height: AppSpacing.md),
               DoseRecordControls(occurrence: occurrence),
@@ -152,9 +171,10 @@ class _TimingState extends StatelessWidget {
 
 /// Renders the dose details element of dose occurrence card.
 class _DoseDetails extends StatelessWidget {
-  const _DoseDetails({required this.occurrence});
+  const _DoseDetails({required this.occurrence, this.compact = false});
 
   final DoseOccurrence occurrence;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +188,12 @@ class _DoseDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(occurrence.name, style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          occurrence.name,
+          style: compact
+              ? Theme.of(context).textTheme.titleMedium
+              : Theme.of(context).textTheme.titleLarge,
+        ),
         Text(
           '${formatMedicationNumber(occurrence.strengthValue)} '
           '${context.tr('medications.strength_display.${occurrence.strengthUnit.name}')}',

@@ -4,9 +4,15 @@ The test app gets a small route that needs a role in the circle named in the
 URL. Real circle routes will use the same decorator.
 """
 
+from types import SimpleNamespace
+from unittest.mock import Mock
+from uuid import uuid4
+
 import pytest
 
+from app import photo_routes
 from app.authz import CircleRole, current_circle_role, require_circle_role
+from app.errors import NotFound
 from tests.conftest import bearer
 
 
@@ -151,3 +157,54 @@ def test_default_circle_access_refuses_everyone():
     )
 
     assert response.status_code == 403
+
+
+@pytest.mark.parametrize(
+    "mode, allowed",
+    [(None, True), ("simplified", True), ("detailed", False)],
+)
+def test_manager_edits_only_offline_or_simplified_patient_photo(
+    monkeypatch, mode, allowed
+):
+    """A manager cannot replace a detailed patient's portrait."""
+    viewer = uuid4()
+    patient = SimpleNamespace(
+        account_id=None if mode is None else uuid4()
+    )
+    session = Mock()
+    session.get.return_value = SimpleNamespace(app_mode=mode)
+    monkeypatch.setattr(photo_routes, "_patient", lambda *_: patient)
+    monkeypatch.setattr(
+        photo_routes, "current_auth",
+        lambda: SimpleNamespace(user_id=str(viewer)),
+    )
+    monkeypatch.setattr(
+        photo_routes, "current_circle_role",
+        lambda: CircleRole.MANAGER,
+    )
+
+    if allowed:
+        assert photo_routes._patient_write(session, uuid4()) is patient
+    else:
+        with pytest.raises(NotFound):
+            photo_routes._patient_write(session, uuid4())
+
+
+@pytest.mark.parametrize(
+    "role", [CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT]
+)
+def test_linked_patient_can_edit_own_portrait(monkeypatch, role):
+    """Patient ownership is enough, regardless of their circle role."""
+    viewer = uuid4()
+    patient = SimpleNamespace(account_id=viewer)
+    monkeypatch.setattr(photo_routes, "_patient", lambda *_: patient)
+    monkeypatch.setattr(
+        photo_routes, "current_auth",
+        lambda: SimpleNamespace(user_id=str(viewer)),
+    )
+    monkeypatch.setattr(
+        photo_routes, "current_circle_role",
+        lambda: role,
+    )
+
+    assert photo_routes._patient_write(Mock(), uuid4()) is patient

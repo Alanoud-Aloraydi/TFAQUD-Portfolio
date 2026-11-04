@@ -391,7 +391,7 @@ class _NextTaskCard extends StatelessWidget {
               Text(
                 context.tr(
                   'appointments.companion_name',
-                  args: [appointment.companionName],
+                  args: [appointmentCompanionNames(context, appointment)],
                 ),
               ),
             if (measurement != null && sameDay) ...[
