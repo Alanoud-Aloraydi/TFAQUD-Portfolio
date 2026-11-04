@@ -2,6 +2,7 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
+/// Defines the supported inset kind values.
 enum _InsetKind { plain, header, note }
 
 /// Text that stands outside a card: a small section label above a group of

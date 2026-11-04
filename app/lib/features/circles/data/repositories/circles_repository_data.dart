@@ -27,6 +27,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: CirclesRepositoryDomain)
+/// Provides circles repository operations.
 class CirclesRepositoryData implements CirclesRepositoryDomain {
   CirclesRepositoryData(this._remote);
 

@@ -5,12 +5,19 @@ import 'package:flutter/material.dart';
 abstract class AppSemanticColors {
   AppSemanticColors._();
 
+  /// High-contrast text and icon color.
   static const Color textPrimary = AppColors.ink;
   static const Color textSupporting = AppColors.slate;
+
+  /// Foreground surface used by content containers.
   static const Color surfaceContent = AppColors.surface;
+
+  /// Default background behind app screens.
   static const Color background = AppColors.canvas;
   static const Color borderSubtle = AppColors.line;
   static const Color borderControlBase = AppColors.stone;
+
+  /// Primary action fill across the app.
   static const Color actionPrimary = AppColors.leaf;
   static const Color actionHover = AppColors.leafHover;
   static const Color actionPressed = AppColors.leafPressed;
@@ -19,6 +26,8 @@ abstract class AppSemanticColors {
   static const Color selectedSurface = AppColors.leafTint;
   static const Color focusOnAction = AppColors.ink;
   static const Color accentLeaf = AppColors.leaf;
+
+  /// Accent for prayer periods and attention notices.
   static const Color accentWarm = AppColors.honey;
   static const Color surfacePlan = AppColors.slateLight;
 

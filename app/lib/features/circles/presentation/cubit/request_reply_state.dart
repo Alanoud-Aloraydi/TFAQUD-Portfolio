@@ -12,6 +12,7 @@ enum ReplyOutcome {
   declined,
 }
 
+/// Holds the request reply presentation state.
 class RequestReplyState extends Equatable {
   const RequestReplyState({
     this.sending = false,

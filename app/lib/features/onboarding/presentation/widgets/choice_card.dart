@@ -82,6 +82,7 @@ class ChoiceCard extends StatelessWidget {
   }
 }
 
+/// Renders the radio mark element of choice card.
 class _RadioMark extends StatelessWidget {
   const _RadioMark({required this.selected});
 

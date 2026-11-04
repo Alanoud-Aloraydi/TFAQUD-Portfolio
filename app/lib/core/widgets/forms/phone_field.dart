@@ -117,6 +117,7 @@ class PhoneField extends StatelessWidget {
   }
 }
 
+/// Renders the country code box element of phone field.
 class _CountryCodeBox extends StatelessWidget {
   const _CountryCodeBox();
 

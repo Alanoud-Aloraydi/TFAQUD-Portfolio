@@ -4,6 +4,7 @@ import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates prayer times actions and UI state.
 class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   PrayerTimesCubit(this._repository) : super(const PrayerTimesState());
 

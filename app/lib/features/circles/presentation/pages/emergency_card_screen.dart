@@ -176,9 +176,7 @@ class _EmergencyCardScreenState extends State<EmergencyCardScreen> {
             RepaintBoundary(
               key: _cardKey,
               child: Directionality(
-                textDirection: _english
-                    ? TextDirection.ltr
-                    : TextDirection.rtl,
+                textDirection: _english ? TextDirection.ltr : TextDirection.rtl,
                 child: _Card(
                   card: state.card!,
                   birthDate: state.birthDate,
@@ -208,25 +206,21 @@ class _CardText {
   String t(String key, {List<String>? args}) =>
       context.tr(english ? 'card_en.$key' : 'emergency_card.$key', args: args);
 
-  String _code(String group, String code) => context.tr(
-    english ? 'card_en.$group.$code' : 'medical.$group.$code',
-  );
+  String _code(String group, String code) =>
+      context.tr(english ? 'card_en.$group.$code' : 'medical.$group.$code');
 
-  String form(String name) => context.tr(
-    english ? 'card_en.form.$name' : 'medications.form.$name',
-  );
+  String form(String name) =>
+      context.tr(english ? 'card_en.form.$name' : 'medications.form.$name');
 
-  String unit(String name) => context.tr(
-    english ? 'card_en.unit.$name' : 'medications.unit.$name',
-  );
+  String unit(String name) =>
+      context.tr(english ? 'card_en.unit.$name' : 'medications.unit.$name');
 
   String relation(EmergencyContact contact) => english
       ? _code('relation', contact.relation)
       : MedicalTexts.relation(context, contact);
 
-  String _join(List<String> items) => items
-      .where((String item) => item.trim().isNotEmpty)
-      .join(t('separator'));
+  String _join(List<String> items) =>
+      items.where((String item) => item.trim().isNotEmpty).join(t('separator'));
 
   /// «72 سنة · مواليد 1954» or «72 years · born 1954».
   String age(DateTime birthDate) {
@@ -313,6 +307,7 @@ class _LanguageSwitch extends StatelessWidget {
   }
 }
 
+/// Renders the segment element of emergency card screen.
 class _Segment extends StatelessWidget {
   const _Segment({
     required this.label,
@@ -480,9 +475,8 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppSemanticColors.surfaceContent,
-            ),
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: AppSemanticColors.surfaceContent),
           ),
         ],
       ),
@@ -678,6 +672,7 @@ class _Medicines extends StatelessWidget {
   }
 }
 
+/// Renders the medicine element of emergency card screen.
 class _Medicine extends StatelessWidget {
   const _Medicine({required this.plan, required this.words});
 

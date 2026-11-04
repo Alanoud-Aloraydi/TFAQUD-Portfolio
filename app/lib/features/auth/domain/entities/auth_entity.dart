@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+/// Represents auth domain data.
 class AuthEntity extends Equatable {
   final int id;
   final String firstName;

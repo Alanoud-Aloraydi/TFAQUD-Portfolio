@@ -112,6 +112,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   }
 }
 
+/// Adds app tokens context helpers to its target type.
 extension AppTokensContext on BuildContext {
   AppTokens get tokens => Theme.of(this).extension<AppTokens>()!;
 }

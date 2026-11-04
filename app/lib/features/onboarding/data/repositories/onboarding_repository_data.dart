@@ -6,6 +6,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: OnboardingRepositoryDomain)
+/// Provides onboarding repository operations.
 class OnboardingRepositoryData implements OnboardingRepositoryDomain {
   OnboardingRepositoryData(this._remote);
 

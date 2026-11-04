@@ -4,6 +4,7 @@ import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:injectable/injectable.dart';
 
+/// Sends base auth requests to the API.
 abstract class BaseAuthRemoteDataSource {
   /// Requests an OTP for [phone] and returns its verification identifier.
   /// An existing [verificationId] resends within the same request.
@@ -23,6 +24,7 @@ abstract class BaseAuthRemoteDataSource {
 }
 
 @LazySingleton(as: BaseAuthRemoteDataSource)
+/// Sends auth requests to the API.
 class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
   AuthRemoteDataSource(this._client);
 

@@ -1,6 +1,7 @@
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported inbox status values.
 enum InboxStatus { loading, ready, failure }
 
 /// What the notifications page and the bell show: the requests and invitations

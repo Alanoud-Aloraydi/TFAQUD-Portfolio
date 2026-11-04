@@ -589,6 +589,7 @@ class _NextButton extends StatelessWidget {
   }
 }
 
+/// Draws the onboarding progress ring.
 class _ProgressRingPainter extends CustomPainter {
   const _ProgressRingPainter(this.progress);
 

@@ -14,6 +14,7 @@ import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// Coordinates create circle actions and UI state.
 class CreateCircleCubit extends Cubit<CreateCircleState> {
   /// [request] is the request the patient agreed to, and is needed for the
   /// [CircleFlow.approved] flow only. Its circle name is the name of the circle.

@@ -2,6 +2,7 @@ import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported medical file edit status values.
 enum MedicalFileEditStatus { loading, ready, failure }
 
 /// What the edit page of the medical file shows: the answers as the user is

@@ -2,6 +2,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// Provides auth domain operations.
 abstract class AuthRepositoryDomain {
   /// Sends the SMS code to [phone] (international form, +9665XXXXXXXX) and
   /// returns the verification id of the request.

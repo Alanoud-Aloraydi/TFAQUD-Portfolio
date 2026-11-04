@@ -111,7 +111,8 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
               else
                 Expanded(
                   child: SingleChildScrollView(
-                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -179,6 +180,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
   );
 }
 
+/// Renders the name field element of account edit screen.
 class _NameField extends StatelessWidget {
   const _NameField({
     required this.label,

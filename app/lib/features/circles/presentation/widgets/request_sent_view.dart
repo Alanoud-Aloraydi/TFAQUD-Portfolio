@@ -113,6 +113,7 @@ class RequestSentView extends StatelessWidget {
   }
 }
 
+/// Renders the details card element of request sent view.
 class _DetailsCard extends StatelessWidget {
   const _DetailsCard({required this.request, required this.accepted});
 
@@ -173,6 +174,7 @@ class _DetailsCard extends StatelessWidget {
   }
 }
 
+/// Renders the detail row element of request sent view.
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.child});
 

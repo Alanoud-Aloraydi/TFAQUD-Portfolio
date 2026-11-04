@@ -211,6 +211,7 @@ class _RequestDetails extends StatelessWidget {
   }
 }
 
+/// Renders the row element of request reply screen.
 class _Row extends StatelessWidget {
   const _Row({required this.label, required this.child});
 

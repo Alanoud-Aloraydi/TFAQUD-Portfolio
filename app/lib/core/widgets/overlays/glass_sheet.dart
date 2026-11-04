@@ -38,6 +38,7 @@ Future<T?> showGlassSheet<T>(
   );
 }
 
+/// Renders the glass sheet element of glass sheet.
 class _GlassSheet extends StatelessWidget {
   const _GlassSheet({required this.title, this.message, required this.child});
 

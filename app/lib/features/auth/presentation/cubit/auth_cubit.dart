@@ -3,6 +3,7 @@ import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates auth actions and UI state.
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._useCase) : super(AuthInitialState());
 

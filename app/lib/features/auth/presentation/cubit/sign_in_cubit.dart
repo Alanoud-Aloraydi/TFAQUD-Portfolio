@@ -6,6 +6,7 @@ import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates sign in actions and UI state.
 class SignInCubit extends Cubit<SignInState> {
   SignInCubit(this._useCase) : super(const SignInState());
 

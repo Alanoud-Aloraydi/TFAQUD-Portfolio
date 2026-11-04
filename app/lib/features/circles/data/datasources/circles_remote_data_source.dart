@@ -17,6 +17,7 @@ import 'package:app/features/circles/domain/entities/patient_update.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:injectable/injectable.dart';
 
+/// Sends base circles requests to the API.
 abstract class BaseCirclesRemoteDataSource {
   /// GET /api/v1/accounts/me.
   Future<AccountModel> getAccount();
@@ -100,6 +101,7 @@ abstract class BaseCirclesRemoteDataSource {
 }
 
 @LazySingleton(as: BaseCirclesRemoteDataSource)
+/// Sends circles requests to the API.
 class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   CirclesRemoteDataSource(this._client);
 

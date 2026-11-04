@@ -2,6 +2,7 @@ import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dar
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates onboarding actions and UI state.
 class OnboardingCubit extends Cubit<OnboardingState> {
   OnboardingCubit(this._useCase) : super(const OnboardingState());
 

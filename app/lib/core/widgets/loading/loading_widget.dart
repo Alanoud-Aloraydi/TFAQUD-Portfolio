@@ -5,6 +5,7 @@ import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+/// Displays the loading widget overlay UI.
 class LoadingWidgetOverlay {
   OverlayEntry? _overlayEntry;
 

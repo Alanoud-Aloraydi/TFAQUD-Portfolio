@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported sign in status values.
 enum SignInStatus { idle, sendingCode, codeSent, verifying, verified }
 
 /// State of the sign-in pages (phone number, then code). One cubit serves both

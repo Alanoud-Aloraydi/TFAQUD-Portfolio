@@ -3,16 +3,15 @@ import 'package:get_storage/get_storage.dart';
 import 'package:injectable/injectable.dart';
 
 @module
+/// Registers external dependencies with the app container.
 abstract class ThirdPartyConfig {
   //----------------------------------------------------------------------------
   @lazySingleton
   GetStorage get storage => GetStorage();
   //----------------------------------------------------------------------------
-  AndroidOptions _getAndroidOptions() =>
-      const AndroidOptions();
+  AndroidOptions _getAndroidOptions() => const AndroidOptions();
   @lazySingleton
   FlutterSecureStorage get flutterSecureStorage =>
       FlutterSecureStorage(aOptions: _getAndroidOptions());
   //----------------------------------------------------------------------------
 }
-

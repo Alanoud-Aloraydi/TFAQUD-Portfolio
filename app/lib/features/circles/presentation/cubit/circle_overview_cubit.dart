@@ -7,8 +7,10 @@ import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Defines the supported circle overview status values.
 enum CircleOverviewStatus { loading, ready, failure }
 
+/// Holds the circle overview presentation state.
 class CircleOverviewState extends Equatable {
   const CircleOverviewState({
     this.status = CircleOverviewStatus.loading,

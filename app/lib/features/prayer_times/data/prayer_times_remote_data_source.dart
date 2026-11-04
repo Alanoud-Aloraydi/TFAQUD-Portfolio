@@ -2,6 +2,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/prayer_times/data/prayer_day_model.dart';
 
+/// Sends prayer times requests to the API.
 class PrayerTimesRemoteDataSource {
   const PrayerTimesRemoteDataSource(this._client);
 

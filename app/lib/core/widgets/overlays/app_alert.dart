@@ -217,6 +217,7 @@ class AppAlert<T> extends StatelessWidget {
   }
 }
 
+/// Renders the alert button element of app alert.
 class _AlertButton<T> extends StatelessWidget {
   const _AlertButton({required this.action});
 

@@ -3,6 +3,7 @@ import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/circles/data/models/new_self_circle_model.dart';
 import 'package:injectable/injectable.dart';
 
+/// Sends base onboarding requests to the API.
 abstract class BaseOnboardingRemoteDataSource {
   /// Saves the account names through PUT /api/v1/accounts/me/profile, with
   /// the birth date and city when onboarding sends them.
@@ -16,6 +17,7 @@ abstract class BaseOnboardingRemoteDataSource {
 }
 
 @LazySingleton(as: BaseOnboardingRemoteDataSource)
+/// Sends onboarding requests to the API.
 class OnboardingRemoteDataSource implements BaseOnboardingRemoteDataSource {
   OnboardingRemoteDataSource(this._client);
 

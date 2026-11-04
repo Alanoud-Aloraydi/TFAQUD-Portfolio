@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 
+/// Formats values shown across the app.
 class Formatters {
   Formatters._();
 

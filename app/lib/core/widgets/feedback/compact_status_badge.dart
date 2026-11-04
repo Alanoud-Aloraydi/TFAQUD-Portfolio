@@ -2,6 +2,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
+/// Displays the compact status badge UI.
 class CompactStatusBadge extends StatelessWidget {
   const CompactStatusBadge({
     super.key,

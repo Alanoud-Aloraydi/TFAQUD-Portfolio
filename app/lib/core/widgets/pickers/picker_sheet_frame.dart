@@ -2,6 +2,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:flutter/material.dart';
 
+/// Displays the picker sheet frame UI.
 class PickerSheetFrame extends StatelessWidget {
   const PickerSheetFrame({
     super.key,

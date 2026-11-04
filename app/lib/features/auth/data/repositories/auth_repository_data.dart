@@ -13,6 +13,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: AuthRepositoryDomain)
+/// Provides auth repository operations.
 class AuthRepositoryData implements AuthRepositoryDomain {
   AuthRepositoryData(this._remote, this._tokens);
 

@@ -4,6 +4,7 @@ import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.d
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// Provides prayer times data operations.
 class PrayerTimesRepository {
   const PrayerTimesRepository(this._remote);
 

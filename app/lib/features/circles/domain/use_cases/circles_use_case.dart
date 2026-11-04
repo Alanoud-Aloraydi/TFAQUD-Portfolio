@@ -20,6 +20,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @lazySingleton
+/// Exposes circles domain operations.
 class CirclesUseCase {
   CirclesUseCase(this._repository);
 

@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported prayer values.
 enum Prayer { fajr, dhuhr, asr, maghrib, isha }
 
+/// Holds prayer times for one calendar day.
 class PrayerDay extends Equatable {
   PrayerDay({
     required this.date,

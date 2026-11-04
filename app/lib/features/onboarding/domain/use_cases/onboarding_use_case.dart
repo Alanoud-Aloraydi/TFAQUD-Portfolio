@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @lazySingleton
+/// Exposes onboarding domain operations.
 class OnboardingUseCase {
   OnboardingUseCase(this._repository);
 

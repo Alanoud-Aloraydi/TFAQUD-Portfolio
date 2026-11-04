@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported onboarding status values.
 enum OnboardingStatus { idle, saving, saved }
 
 /// Who the care circle is for (page "كيف تريد أن تبدأ؟").

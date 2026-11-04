@@ -9,6 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the prayer times section UI.
 class PrayerTimesSection extends StatefulWidget {
   const PrayerTimesSection({super.key});
 
@@ -62,6 +63,7 @@ class _PrayerTimesSectionState extends State<PrayerTimesSection> {
   }
 }
 
+/// Renders the failure element of prayer times section.
 class _Failure extends StatelessWidget {
   const _Failure({required this.onRetry});
 
@@ -81,6 +83,7 @@ class _Failure extends StatelessWidget {
   }
 }
 
+/// Renders the prayer list element of prayer times section.
 class _PrayerList extends StatelessWidget {
   const _PrayerList({required this.day});
 
@@ -128,6 +131,7 @@ class _PrayerList extends StatelessWidget {
   }
 }
 
+/// Renders the prayer row element of prayer times section.
 class _PrayerRow extends StatelessWidget {
   const _PrayerRow({
     required this.prayer,

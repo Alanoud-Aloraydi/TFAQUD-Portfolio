@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @lazySingleton
+/// Exposes auth domain operations.
 class AuthUseCase {
   AuthUseCase(this._repository);
 

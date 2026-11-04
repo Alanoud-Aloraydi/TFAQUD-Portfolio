@@ -25,6 +25,7 @@ enum CircleFlow {
 /// Loading of the account names shown in the read-only "Name" field.
 enum AccountLoad { loading, loaded, failed }
 
+/// Defines the supported create status values.
 enum CreateStatus { idle, saving, created }
 
 /// State of the three pages that create a circle: basic details, health

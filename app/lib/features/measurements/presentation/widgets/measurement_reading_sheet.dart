@@ -103,7 +103,8 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   Future<void> _save() async {
     final freeReading = widget.occurrence == null || !_link;
     final targetsState = context.read<MeasurementTargetsCubit>().state;
-    if (freeReading && (targetsState.loading || targetsState.errorKey != null)) {
+    if (freeReading &&
+        (targetsState.loading || targetsState.errorKey != null)) {
       return;
     }
     final useTarget = freeReading && _targetFor(_kind)?.planId == null;

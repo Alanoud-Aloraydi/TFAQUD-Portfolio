@@ -27,6 +27,7 @@ Future<void> showSentRequestSheet(
   );
 }
 
+/// Renders the sent request sheet element of sent request sheet.
 class _SentRequestSheet extends StatelessWidget {
   const _SentRequestSheet({required this.cubit, required this.request});
 
@@ -92,9 +93,7 @@ class _SentRequestSheet extends StatelessWidget {
             _Line(
               label: context.tr('circles.request_status'),
               child: StatusPill(
-                icon: accepted
-                    ? AppIcons.check
-                    : AppIcons.clock,
+                icon: accepted ? AppIcons.check : AppIcons.clock,
                 text: context.tr(
                   accepted
                       ? 'account.status_accepted'
@@ -132,6 +131,7 @@ class _SentRequestSheet extends StatelessWidget {
   }
 }
 
+/// Renders the line element of sent request sheet.
 class _Line extends StatelessWidget {
   const _Line({required this.label, required this.child});
 

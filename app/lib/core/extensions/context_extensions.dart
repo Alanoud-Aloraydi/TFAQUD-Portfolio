@@ -4,6 +4,7 @@ import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+/// Adds context extensions helpers to its target type.
 extension ContextExtensions on BuildContext {
   // Snackbar
   void showSnackBar(String message, {bool isError = false}) {
@@ -14,9 +15,7 @@ extension ContextExtensions on BuildContext {
         content: Row(
           children: <Widget>[
             Icon(
-              isError
-                  ? AppIcons.warningCircle
-                  : AppIcons.checkCircle,
+              isError ? AppIcons.warningCircle : AppIcons.checkCircle,
               color: AppSemanticColors.surfaceContent,
               size: 20,
             ),

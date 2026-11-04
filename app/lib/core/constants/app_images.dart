@@ -1,3 +1,4 @@
+/// Centralizes image asset paths.
 abstract class AppImages {
   // Base path
   static const String _basePath = 'assets/images';
@@ -18,4 +19,3 @@ abstract class AppImages {
   static const String owlShare = '$_basePath/owl_share.png';
   static const String owlFollow = '$_basePath/owl_follow.png';
 }
-

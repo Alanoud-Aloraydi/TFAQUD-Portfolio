@@ -159,6 +159,7 @@ class _DigitsFormatter extends TextInputFormatter {
   }
 }
 
+/// Renders the otp box element of otp field.
 class _OtpBox extends StatelessWidget {
   const _OtpBox({
     required this.digit,

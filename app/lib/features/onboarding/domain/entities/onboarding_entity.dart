@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+/// Represents onboarding domain data.
 class OnboardingEntity extends Equatable {
   final int id;
   final String firstName;

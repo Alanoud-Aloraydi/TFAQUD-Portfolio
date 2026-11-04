@@ -3,6 +3,7 @@ import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported account status values.
 enum AccountStatus { loading, ready, failure }
 
 /// The question the page asks while the account is being deleted. The server
@@ -20,6 +21,7 @@ enum DeletePrompt {
   lastManager,
 }
 
+/// Holds the account presentation state.
 class AccountState extends Equatable {
   const AccountState({
     this.status = AccountStatus.loading,

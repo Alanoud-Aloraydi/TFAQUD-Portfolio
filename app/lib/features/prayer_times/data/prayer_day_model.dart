@@ -1,5 +1,6 @@
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 
+/// Maps prayer day data between the API and app.
 class PrayerDayModel {
   const PrayerDayModel(this.day);
 

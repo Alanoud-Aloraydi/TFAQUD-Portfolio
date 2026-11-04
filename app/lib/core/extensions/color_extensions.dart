@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Adds color extensions helpers to its target type.
 extension ColorExtensions on Color {
   Color darken([double amount = 0.1]) {
     assert(amount >= 0 && amount <= 1);
@@ -17,4 +18,3 @@ extension ColorExtensions on Color {
     return hslLight.toColor();
   }
 }
-

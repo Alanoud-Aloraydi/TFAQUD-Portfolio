@@ -97,6 +97,7 @@ class GlassMenuEntry {
   final bool selected;
 }
 
+/// Positions the glass menu above the current route.
 class _GlassMenuRoute extends PopupRoute<Object?> {
   _GlassMenuRoute({
     required this.anchor,
@@ -362,6 +363,7 @@ class _MenuRows extends StatelessWidget {
   }
 }
 
+/// Renders the menu row element of glass menu.
 class _MenuRow extends StatelessWidget {
   const _MenuRow({required this.entry, required this.height});
 
@@ -371,9 +373,7 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final IconData? icon = entry.selected
-        ? AppIcons.check
-        : entry.icon;
+    final IconData? icon = entry.selected ? AppIcons.check : entry.icon;
     return Semantics(
       button: true,
       selected: entry.selected,

@@ -1,6 +1,7 @@
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported medical file status values.
 enum MedicalFileStatus { loading, ready, failure }
 
 /// The form of one emergency contact, open below the list while the user adds

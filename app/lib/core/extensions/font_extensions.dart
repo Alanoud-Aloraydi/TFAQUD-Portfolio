@@ -1,5 +1,6 @@
 import 'package:sizer/sizer.dart';
 
+/// Adds responsive font sizer helpers to its target type.
 extension ResponsiveFontSizer on num {
   double font({double baseWidth = 375, double min = 10, double? max}) {
     final screenWidth = 100.w;
@@ -50,5 +51,3 @@ extension ResponsiveFontSizer on num {
     return scaled;
   }
 }
-
-

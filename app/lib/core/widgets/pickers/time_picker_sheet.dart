@@ -15,6 +15,7 @@ Future<TimeOfDay?> showTafaqodTimeSheet(
   builder: (_) => _TimePickerSheet(title: title, initialTime: initialTime),
 );
 
+/// Renders the time picker sheet element of time picker sheet.
 class _TimePickerSheet extends StatefulWidget {
   const _TimePickerSheet({required this.title, required this.initialTime});
 
@@ -74,6 +75,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
   }
 }
 
+/// Renders the wheel element of time picker sheet.
 class _Wheel extends StatelessWidget {
   const _Wheel({
     required this.count,

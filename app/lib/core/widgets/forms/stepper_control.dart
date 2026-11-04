@@ -58,6 +58,7 @@ class StepperControl extends StatelessWidget {
   }
 }
 
+/// Renders the half element of stepper control.
 class _Half extends StatelessWidget {
   const _Half({
     required this.icon,
