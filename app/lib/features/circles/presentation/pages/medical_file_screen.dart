@@ -6,6 +6,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -33,13 +34,10 @@ class MedicalFileScreen extends StatelessWidget {
   final String circleId;
 
   /// Opens the edit page with the file this page shows, so it opens at
-  /// once. What it saves comes back to this page (and the circle tab) at
-  /// once too, through [MedicalFileCubit].
+  /// once. «حفظ» there goes on to the circle tab, which shows the saved
+  /// answers at once.
   void _edit(BuildContext context, MedicalFileCubit cubit) {
-    context.push<bool>(
-      Routes.medicalFileEdit(circleId),
-      extra: cubit.state.file,
-    );
+    context.push(Routes.medicalFileEdit(circleId), extra: cubit.state.file);
   }
 
   Future<void> _delete(
@@ -214,13 +212,17 @@ class MedicalFileScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.labelGap),
-        if (file.contacts.isEmpty && form == null)
-          Text(
+        // Notes outside the cards start 16 in, lined up with the header and
+        // the text inside the cards; the cards and the button reach the edge.
+        if (file.contacts.isEmpty && form == null) ...<Widget>[
+          InsetText(
             context.tr('circles.file_contacts_empty'),
             style: text.bodyMedium?.copyWith(
               color: context.tokens.textSecondary,
             ),
           ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         for (final EmergencyContact contact in file.contacts) ...<Widget>[
           if (form != null && form.contactId == contact.id)
             _form(context, cubit, form, contact.name)
@@ -243,7 +245,7 @@ class MedicalFileScreen extends StatelessWidget {
             ),
           ),
         if (form == null && !file.canAddContact)
-          Text(
+          InsetText(
             context.tr('circles.contact_max'),
             style: text.bodyMedium?.copyWith(
               color: context.tokens.textSecondary,

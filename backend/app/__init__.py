@@ -32,6 +32,8 @@ from app.home import bp as home_bp
 from app.medications.routes import bp as medications_bp
 from app.measurements.routes import bp as measurements_bp
 from app.prayer_times.routes import bp as prayer_times_bp
+from app.push import PushSender, create_push_sender
+from app.push.routes import bp as push_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
 from app.users.routes import bp as users_bp
@@ -48,6 +50,7 @@ def create_app(
     otp_store: OtpStore | None = None,
     user_store: UserStore | None = None,
     circle_access: CircleAccess | None = None,
+    push_sender: PushSender | None = None,
 ) -> Flask:
     app = Flask(__name__, static_folder=None)
     app.config.update(load_config(env_name, overrides))
@@ -100,6 +103,10 @@ def create_app(
 
     app.extensions["clock"] = clock
     app.extensions["sms_sender"] = sms_sender
+    # Push notifications to signed-in phones; "none" unless set up.
+    app.extensions["push_sender"] = push_sender or create_push_sender(
+        app.config
+    )
     app.extensions["circle_access"] = circle_access or DenyAllCircleAccess()
     session_service = SessionService(
         store=session_store,
@@ -138,6 +145,7 @@ def create_app(
     app.register_blueprint(appointments_bp)
     app.register_blueprint(appointment_visits_bp)
     app.register_blueprint(prayer_times_bp)
+    app.register_blueprint(push_bp)
     if database_enabled and env != "production":
         # `flask --app wsgi demo-data`: demo circles, medicines and doses for
         # trying the app on a local server (app/demo_data.py).

@@ -7,6 +7,7 @@ import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
@@ -71,7 +72,7 @@ class RequestReplyScreen extends StatelessWidget {
                           const SizedBox(height: AppSpacing.xl),
                           _RequestDetails(request: request),
                           const SizedBox(height: AppSpacing.lg),
-                          Text(
+                          InsetText(
                             context.tr('circles.reply_decline_note'),
                             style: text.bodyMedium?.copyWith(
                               color: context.tokens.textSecondary,

@@ -21,6 +21,7 @@ from app.models.measurement import (
     MeasurementRecord,
 )
 from app.models.appointment import Appointment, AppointmentVisit
+from app.models.push import PushDevice
 
 __all__ = [
     "Account",
@@ -45,4 +46,5 @@ __all__ = [
     "MeasurementRecord",
     "Appointment",
     "AppointmentVisit",
+    "PushDevice",
 ]

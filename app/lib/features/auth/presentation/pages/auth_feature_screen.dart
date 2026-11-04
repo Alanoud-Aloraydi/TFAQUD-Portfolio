@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:app/core/constants/app_icons.dart';
@@ -9,9 +10,11 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/illustrations/guide_owl.dart';
+import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 /// One welcome page: the color behind it, the owl's pose, and what the owl
@@ -75,6 +78,14 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
   bool _precached = false;
 
   bool get _last => _page == _pages.length - 1;
+
+  @override
+  void initState() {
+    super.initState();
+    // Nobody is signed in on the welcome (after a sign-out, an ended sign-in
+    // or a deleted account): the dose reminders of the last person go.
+    unawaited(GetIt.I<DoseReminders>().clear());
+  }
 
   @override
   void didChangeDependencies() {

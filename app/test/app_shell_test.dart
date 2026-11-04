@@ -6,6 +6,8 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/widgets/illustrations/guide_owl.dart';
@@ -50,12 +52,14 @@ import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
+import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/medications/presentation/dose_reminder_texts.dart';
 import 'package:app/features/onboarding/domain/repositories/onboarding_repository_domain.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/prayer_times/data/prayer_day_model.dart';
@@ -74,6 +78,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/circles_fakes.dart';
 import 'support/home_fakes.dart';
+import 'support/phone_fakes.dart';
 
 /// Reads the real translation file synchronously, so loading finishes inside
 /// the test clock.
@@ -295,6 +300,8 @@ void main() {
   final circles = CirclesFakeRepository();
   final auth = _OfflineAuthRepository();
   final onboarding = _OfflineOnboardingRepository();
+  final phone = FakePhoneNotifications();
+  final pushTokens = <String>[];
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -312,6 +319,18 @@ void main() {
     );
     GetIt.I.registerSingleton<AppointmentRepository>(
       _EmptyAppointmentsRepository(),
+    );
+    // The phone's notifications in memory, and the dose reminders on them.
+    GetIt.I.registerSingleton<PhoneNotifications>(phone);
+    GetIt.I.registerSingleton<DoseReminders>(
+      DoseReminders(
+        GetIt.I<MedicationsUseCase>(),
+        phone,
+        texts: doseReminderTexts,
+      ),
+    );
+    GetIt.I.registerSingleton<PushRegistration>(
+      PushRegistration(phone, (String token) async => pushTokens.add(token)),
     );
     GetIt.I.registerSingleton<PrayerTimesRepository>(
       PrayerTimesRepository(_OfflinePrayerTimes()),
@@ -2486,35 +2505,15 @@ void main() {
 
         expect(circles.saveCalls, <String>['profile']);
         expect(circles.profileUpdates.single.bloodType, 'A+');
-        // Back on the file page, with the confirmation and the new blood type
-        // at once: what the server kept comes back from the save, so nothing
-        // is read again. The edit page started from the file page's file, so
-        // it read nothing either.
+        // «حفظ» goes back to the circle tab, past the medical file page,
+        // with the confirmation. Its patient card has the new blood type at
+        // once: what the server kept comes back from the save, so nothing is
+        // read again. The edit page started from the file page's file, so it
+        // read nothing either.
         expect(find.byType(MedicalFileEditScreen), findsNothing);
-        expect(find.byType(MedicalFileScreen), findsOneWidget);
-        expect(find.text('circles.file_saved'.tr()), findsOneWidget);
-        expect(find.text(MedicalTexts.bloodTypeLabel('A+')), findsOneWidget);
-        expect(circles.medicalFileReads, readsBeforeSave);
-      });
-
-      testWidgets('the circle tab shows a saved answer at once', (
-        WidgetTester tester,
-      ) async {
-        await openEdit(tester);
-        final int readsBeforeSave = circles.medicalFileReads;
-
-        await tester.tap(
-          find.widgetWithText(FilterChip, MedicalTexts.bloodTypeLabel('A+')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('circles.file_save'.tr()));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('common.back'.tr()));
-        await tester.pumpAndSettle();
-
-        // The patient card under the tab has the new blood type, without a
-        // new read of the file.
         expect(find.byType(MedicalFileScreen), findsNothing);
+        expect(find.byType(CircleTabScreen), findsOneWidget);
+        expect(find.text('circles.file_saved'.tr()), findsOneWidget);
         expect(
           find.textContaining(MedicalTexts.bloodTypeLabel('A+')),
           findsOneWidget,
@@ -2536,6 +2535,7 @@ void main() {
 
         expect(circles.saveCalls, isEmpty);
         expect(find.byType(MedicalFileEditScreen), findsNothing);
+        expect(find.byType(CircleTabScreen), findsOneWidget);
       });
 
       testWidgets('the names of a patient with an account are not editable', (

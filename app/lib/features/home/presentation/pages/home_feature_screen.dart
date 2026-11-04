@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
+import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
@@ -19,8 +23,10 @@ import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.
 import 'package:app/features/shell/app_shell.dart';
 import 'package:app/features/shell/widgets/app_top_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeFeatureScreen extends StatefulWidget {
@@ -38,11 +44,28 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   Timer? _midnight;
   late int _lastTabIndex;
 
+  /// The reminders at the dose times of every circle, set on the phone.
+  final DoseReminders _reminders = GetIt.I<DoseReminders>();
+  final PhoneNotifications _phone = GetIt.I<PhoneNotifications>();
+  StreamSubscription<String>? _taps;
+
+  /// The circles the reminders were last set for, so choosing another
+  /// circle does not read them all again.
+  List<CareCircleSummary>? _remindedCircles;
+
+  /// A reminder tapped before the home data was ready.
+  String? _pendingTap;
+
+  /// Whether this phone's push token was asked for in this sign-in.
+  bool _pushStarted = false;
+
   @override
   void initState() {
     super.initState();
     _lastTabIndex = widget.navigationShell.currentIndex;
     WidgetsBinding.instance.addObserver(this);
+    _pendingTap = _phone.takeLaunchTap();
+    _taps = _phone.taps.listen(_onTap);
   }
 
   @override
@@ -69,8 +92,44 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   @override
   void dispose() {
     _midnight?.cancel();
+    unawaited(_taps?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onTap(String payload) {
+    if (!mounted) return;
+    if (context.read<HomeCubit>().state.status == HomeStatus.ready) {
+      _openTap(payload);
+    } else {
+      _pendingTap = payload;
+    }
+  }
+
+  /// A dose reminder opens «اليوم» of its circle, where the dose is marked;
+  /// the note to open the app opens «اليوم» as it is.
+  void _openTap(String payload) {
+    _pendingTap = null;
+    if (payload.startsWith(doseReminderPayload)) {
+      unawaited(
+        context.read<HomeCubit>().selectCircle(
+          payload.substring(doseReminderPayload.length),
+        ),
+      );
+    }
+    context.go(Routes.today);
+  }
+
+  /// Sets the dose reminders for the person's circles when the list changes.
+  void _remind(HomeEntity data) {
+    if (listEquals(_remindedCircles, data.circles)) return;
+    _remindedCircles = data.circles;
+    unawaited(
+      _reminders.sync(<ReminderCircle>[
+        for (final CareCircleSummary circle in data.circles)
+          ReminderCircle(id: circle.id, name: circle.name),
+      ]),
+    );
   }
 
   @override
@@ -79,6 +138,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     if (state == AppLifecycleState.resumed) {
       unawaited(context.read<HomeCubit>().refresh());
       unawaited(context.read<InboxCubit>().load());
+      // The next week of reminders, and none for a dose marked meanwhile.
+      unawaited(_reminders.refresh());
       final String? circleId = context.read<HomeCubit>().state.selectedCircleId;
       if (circleId != null) _loadClinicalData(circleId);
     }
@@ -93,7 +154,21 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   }
 
   void _onState(BuildContext context, HomeState state) {
+    final HomeEntity? data = state.data;
+    if (state.status == HomeStatus.ready && data != null) {
+      _remind(data);
+      if (!_pushStarted) {
+        // Circle updates from the server need the phone's push token. With
+        // the free Apple account iOS gives none, and nothing happens.
+        _pushStarted = true;
+        unawaited(GetIt.I<PushRegistration>().start());
+      }
+      final String? tap = _pendingTap;
+      if (tap != null) _openTap(tap);
+    }
     if (state.status == HomeStatus.signIn) {
+      // The sign-in ended: no reminders for a person who is not signed in.
+      unawaited(_reminders.clear());
       context.go(Routes.auth);
     } else if (state.status == HomeStatus.onboarding) {
       context.go(Routes.onboarding);

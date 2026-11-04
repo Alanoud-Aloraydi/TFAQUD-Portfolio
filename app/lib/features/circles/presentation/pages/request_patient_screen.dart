@@ -9,6 +9,7 @@ import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
@@ -84,7 +85,6 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
     SendCircleRequestCubit cubit,
     SendCircleRequestState state,
   ) {
-    final TextTheme text = Theme.of(context).textTheme;
     final String requiredText = context.tr('circles.field_required');
     return Column(
       children: <Widget>[
@@ -124,12 +124,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                       : null,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  context.tr('circles.proposed_mode'),
-                  style: text.titleSmall?.copyWith(
-                    color: context.tokens.textSecondary,
-                  ),
-                ),
+                InsetText.header(context.tr('circles.proposed_mode')),
                 const SizedBox(height: AppSpacing.sm),
                 // In a right-to-left language the first segment is on the
                 // right: detailed, then simplified, as in the design.
@@ -144,14 +139,11 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   onChanged: cubit.chooseMode,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
+                InsetText.note(
                   context.tr(
                     state.mode == CircleAppMode.simplified
                         ? 'circles.mode_simplified_hint'
                         : 'circles.mode_detailed_hint',
-                  ),
-                  style: text.bodySmall?.copyWith(
-                    color: context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),

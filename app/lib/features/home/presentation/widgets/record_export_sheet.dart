@@ -4,6 +4,7 @@ import 'package:app/features/appointments/data/visit_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
@@ -347,7 +348,8 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
             ),
             if (_errorKey != null || state.errorKey != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(
+              // Lined up with the text of the rows above.
+              InsetText(
                 context.tr(_errorKey ?? state.errorKey!),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),

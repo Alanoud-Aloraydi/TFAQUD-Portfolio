@@ -1,14 +1,21 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+/// The details of a medicine, laid out like the medical file: the name and
+/// the strength as the title, then the facts in a white card, then the dose
+/// times in a grouped card under a small header. The cards reach the edges
+/// and the text inside them starts 16 in.
 class MedicationDetails extends StatelessWidget {
   const MedicationDetails({super.key, required this.plan});
 
@@ -18,7 +25,7 @@ class MedicationDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final version = plan.version;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(version.name, style: Theme.of(context).textTheme.headlineSmall),
         Text(
@@ -26,40 +33,51 @@ class MedicationDetails extends StatelessWidget {
           '${context.tr('medications.strength_display.${version.strengthUnit.name}')}',
         ),
         const SizedBox(height: AppSpacing.lg),
-        _Value(
-          label: 'medications.dosage_form',
-          value: context.tr('medications.form.${version.dosageForm.name}'),
+        SettingsCard(
+          children: [
+            _value(
+              context,
+              'medications.dosage_form',
+              context.tr('medications.form.${version.dosageForm.name}'),
+            ),
+            if (version.reason case final value?)
+              _value(context, 'medications.reason', value),
+            if (version.instructions case final value?)
+              _value(context, 'medications.instructions', value),
+            _value(
+              context,
+              'medications.missed_after',
+              context.tr(
+                'medications.missed_option.${version.missedAfterMinutes}',
+              ),
+            ),
+            _value(
+              context,
+              'medications.treatment_period',
+              _period(context, version.startsOn, version.endsOn),
+            ),
+            if (plan.isScheduledOn(DateUtils.dateOnly(DateTime.now())))
+              _value(
+                context,
+                'medications.effective_from',
+                formatMedicationDate(context, version.effectiveFromOn),
+              ),
+          ],
         ),
-        if (version.reason case final value?)
-          _Value(label: 'medications.reason', value: value),
-        if (version.instructions case final value?)
-          _Value(label: 'medications.instructions', value: value),
-        _Value(
-          label: 'medications.missed_after',
-          value: context.tr(
-            'medications.missed_option.${version.missedAfterMinutes}',
-          ),
+        const SizedBox(height: AppSpacing.xl),
+        InsetGroup(
+          header: context.tr('medications.dose_schedules'),
+          children: [
+            for (final schedule in version.schedules)
+              _ScheduleRow(schedule: schedule),
+          ],
         ),
-        _Value(
-          label: 'medications.treatment_period',
-          value: _period(context, version.startsOn, version.endsOn),
-        ),
-        if (plan.isScheduledOn(DateUtils.dateOnly(DateTime.now())))
-          _Value(
-            label: 'medications.effective_from',
-            value: formatMedicationDate(context, version.effectiveFromOn),
-          ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          context.tr('medications.dose_schedules'),
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        for (final schedule in version.schedules)
-          _ScheduleRow(schedule: schedule),
       ],
     );
   }
+
+  Widget _value(BuildContext context, String label, String value) =>
+      InfoRow(label: context.tr(label), value: value);
 
   String _period(BuildContext context, DateTime start, DateTime? end) {
     if (end == null) {
@@ -183,31 +201,8 @@ class _RevisionEntry extends StatelessWidget {
       .join('، ');
 }
 
-class _Value extends StatelessWidget {
-  const _Value({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.tr(label),
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(value),
-        ],
-      ),
-    );
-  }
-}
-
+/// One dose time in the card: the clock, «8:00 ص · 1 قرص», and under it
+/// the days and the note, with the rows' 16 side padding.
 class _ScheduleRow extends StatelessWidget {
   const _ScheduleRow({required this.schedule});
 
@@ -215,6 +210,7 @@ class _ScheduleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
     final time = formatMedicationTime(context, schedule.time);
     final days = schedule.weekdays
         .map((day) => context.tr('medications.weekday.$day'))
@@ -226,20 +222,45 @@ class _ScheduleRow extends StatelessWidget {
         context.tr('medications.unit.${schedule.doseUnit.name}'),
       ],
     );
-    return Column(
-      children: [
-        ListTile(
-          leading: const Icon(CupertinoIcons.clock),
-          title: Text('$time · $dose'),
-          subtitle: Text(
-            [
-              days,
-              schedule.instructions,
-            ].whereType<String>().where((value) => value.isNotEmpty).join('\n'),
-          ),
+    final details = [
+      days,
+      schedule.instructions,
+    ].whereType<String>().where((value) => value.isNotEmpty).join('\n');
+    return MergeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.inset,
+          vertical: AppSpacing.md,
         ),
-        const Divider(height: AppSizes.divider),
-      ],
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              AppIcons.clock,
+              size: AppSizes.iconSmall,
+              color: context.tokens.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$time · $dose', style: text.bodyLarge),
+                  if (details.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      details,
+                      style: text.bodySmall?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

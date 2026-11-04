@@ -9,6 +9,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -168,7 +169,7 @@ class _TodayPageState extends State<TodayPage> {
             todayOccurrences.isEmpty &&
             measurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
-          Text(context.tr('today_dashboard.no_tasks_today')),
+          InsetText(context.tr('today_dashboard.no_tasks_today')),
           const SizedBox(height: AppSpacing.xl),
         ],
         if (next != null) ...[
@@ -179,7 +180,7 @@ class _TodayPageState extends State<TodayPage> {
             attention.isEmpty &&
             measurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
-          Text(context.tr('today_dashboard.no_remaining_tasks')),
+          InsetText(context.tr('today_dashboard.no_remaining_tasks')),
           const SizedBox(height: AppSpacing.xl),
         ],
         if (attention.isNotEmpty) ...[
@@ -204,7 +205,7 @@ class _TodayPageState extends State<TodayPage> {
         _SectionTitle(context.tr('today_dashboard.schedule')),
         const SizedBox(height: AppSpacing.md),
         if (day != null) ...[
-          Text(
+          InsetText(
             context.tr('prayer_times.city', args: [day.city]),
             style: Theme.of(context).textTheme.bodySmall,
           ),

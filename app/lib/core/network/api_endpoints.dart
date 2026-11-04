@@ -32,6 +32,9 @@ class ApiEndpoints {
   static const String verifyCode = '/auth/verify-code';
   static const String profile = '/accounts/me/profile';
   static const String account = '/accounts/me';
+
+  /// The phone's Apple push token, kept with the sign-in.
+  static const String pushDevice = '/accounts/me/push-device';
   static const String selfCircle = '/circles/self';
   static const String patientCircle = '/circles/patient-without-account';
   static const String circleRequests = '/circle-requests';
