@@ -19,6 +19,7 @@ Future<String?> showCitySheet(
 }) {
   return showModalBottomSheet<String>(
     context: context,
+    useSafeArea: true,
     useRootNavigator: true,
     isScrollControlled: true,
     builder: (BuildContext context) =>

@@ -20,6 +20,7 @@ Future<void> showSentRequestSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    useSafeArea: true,
     useRootNavigator: true,
     showDragHandle: true,
     builder: (BuildContext sheetContext) =>

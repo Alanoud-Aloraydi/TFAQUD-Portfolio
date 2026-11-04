@@ -543,6 +543,7 @@ Future<Set<T>?> showChecklistSheet<T>(
   return showModalBottomSheet<Set<T>>(
     context: context,
     useRootNavigator: true,
+    useSafeArea: true,
     isScrollControlled: true,
     builder: (BuildContext sheetContext) {
       final Set<T> chosen = <T>{...selected};

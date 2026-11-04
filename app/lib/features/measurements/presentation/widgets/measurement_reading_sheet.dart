@@ -22,6 +22,14 @@ Future<bool> showMeasurementReadingSheet(
 }) async =>
     await showModalBottomSheet<bool>(
       context: context,
+      // Above the top bar and the tab bar, below the status bar and the
+      // Dynamic Island, with a gap above it to see it is a sheet; the grip
+      // stays in reach to pull it down.
+      useRootNavigator: true,
+      useSafeArea: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+      ),
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => MultiBlocProvider(

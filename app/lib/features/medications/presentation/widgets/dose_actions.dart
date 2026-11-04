@@ -30,6 +30,7 @@ Future<DateTime?> selectTakenTime(
 Future<DoseRecordDraft?> selectSkippedDose(BuildContext context) =>
     showModalBottomSheet<DoseRecordDraft>(
       context: context,
+      useSafeArea: true,
       useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) => const _SkipDoseSheet(),

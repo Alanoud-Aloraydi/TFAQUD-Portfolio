@@ -275,6 +275,12 @@ class VisitPage extends StatelessWidget {
   Future<void> _edit(BuildContext context, VisitPaper? paper) =>
       showModalBottomSheet<void>(
         context: context,
+        // Above the top bar and the tab bar, below the Dynamic Island.
+        useRootNavigator: true,
+        useSafeArea: true,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+        ),
         isScrollControlled: true,
         showDragHandle: true,
         builder: (_) => BlocProvider.value(

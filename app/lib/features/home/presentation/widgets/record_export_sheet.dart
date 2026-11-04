@@ -27,6 +27,7 @@ Future<void> showRecordExportSheet(
   required List<MedicationPlan> plans,
 }) => showModalBottomSheet<void>(
   context: context,
+  useSafeArea: true,
   useRootNavigator: true,
   isScrollControlled: true,
   showDragHandle: true,
