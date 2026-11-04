@@ -1,9 +1,12 @@
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported dosage form values.
 enum DosageForm { tablet, capsule, liquid, drops, inhaler, injection }
 
+/// Defines the supported dose unit values.
 enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }
 
+/// Defines the supported strength unit values.
 enum StrengthUnit {
   milligram('mg'),
   microgram('mcg'),
@@ -21,6 +24,7 @@ enum StrengthUnit {
       values.firstWhere((unit) => unit.apiValue == value);
 }
 
+/// Adds dosage form unit helpers to its target type.
 extension DosageFormUnit on DosageForm {
   List<DoseUnit> get doseUnits => switch (this) {
     DosageForm.tablet => const [DoseUnit.tablet],
@@ -34,10 +38,12 @@ extension DosageFormUnit on DosageForm {
   DoseUnit get defaultDoseUnit => doseUnits.first;
 }
 
+/// Adds dose unit value helpers to its target type.
 extension DoseUnitValue on DoseUnit {
   String get apiValue => this == DoseUnit.milliliter ? 'mL' : name;
 }
 
+/// Defines when and how much medication is due.
 class MedicationSchedule extends Equatable {
   MedicationSchedule({
     required this.id,
@@ -66,6 +72,7 @@ class MedicationSchedule extends Equatable {
   ];
 }
 
+/// Holds editable medication schedule values before saving.
 class MedicationScheduleDraft extends Equatable {
   MedicationScheduleDraft({
     required this.time,

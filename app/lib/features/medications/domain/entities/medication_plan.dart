@@ -2,6 +2,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
 
+/// Preserves one effective version of a medication plan.
 class MedicationVersion extends Equatable {
   MedicationVersion({
     required this.number,
@@ -51,6 +52,7 @@ class MedicationVersion extends Equatable {
   ];
 }
 
+/// Holds a medication treatment and its revisions.
 class MedicationPlan extends Equatable {
   const MedicationPlan({
     required this.id,
@@ -88,6 +90,7 @@ class MedicationPlan extends Equatable {
   ];
 }
 
+/// Summarizes the most recent recorded dose.
 class MedicationLastRecord extends Equatable {
   const MedicationLastRecord({
     required this.outcome,
@@ -105,6 +108,7 @@ class MedicationLastRecord extends Equatable {
   List<Object?> get props => [outcome, scheduledOn, time, takenAt];
 }
 
+/// Holds editable medication plan values before saving.
 class MedicationPlanDraft extends Equatable {
   MedicationPlanDraft({
     required this.name,

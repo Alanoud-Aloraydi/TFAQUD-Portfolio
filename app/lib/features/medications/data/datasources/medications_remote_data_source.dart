@@ -6,6 +6,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:injectable/injectable.dart';
 
+/// Sends base medications requests to the API.
 abstract class BaseMedicationsRemoteDataSource {
   Future<List<MedicationPlanModel>> getPlans(String circleId);
   Future<MedicationPlanModel> getPlan(String circleId, String planId);
@@ -39,6 +40,7 @@ abstract class BaseMedicationsRemoteDataSource {
 }
 
 @LazySingleton(as: BaseMedicationsRemoteDataSource)
+/// Sends medications requests to the API.
 class MedicationsRemoteDataSource implements BaseMedicationsRemoteDataSource {
   MedicationsRemoteDataSource(this._client);
 

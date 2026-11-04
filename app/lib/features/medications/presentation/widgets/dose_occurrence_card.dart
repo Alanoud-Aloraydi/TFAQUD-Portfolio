@@ -9,6 +9,7 @@ import 'package:app/features/medications/presentation/widgets/dose_record_contro
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+/// Displays the dose occurrence card UI.
 class DoseOccurrenceCard extends StatelessWidget {
   const DoseOccurrenceCard({
     super.key,
@@ -55,6 +56,7 @@ class DoseOccurrenceCard extends StatelessWidget {
   }
 }
 
+/// Renders the time badge element of dose occurrence card.
 class _TimeBadge extends StatelessWidget {
   const _TimeBadge({
     required this.occurrence,
@@ -141,6 +143,7 @@ class _TimingState extends StatelessWidget {
   }
 }
 
+/// Renders the dose details element of dose occurrence card.
 class _DoseDetails extends StatelessWidget {
   const _DoseDetails({required this.occurrence});
 

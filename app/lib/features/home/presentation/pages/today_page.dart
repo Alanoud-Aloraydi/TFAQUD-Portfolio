@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
@@ -22,12 +24,12 @@ import 'package:app/features/medications/presentation/widgets/today_medication_c
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
-import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
@@ -35,6 +37,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the today page UI.
 class TodayPage extends StatefulWidget {
   const TodayPage({super.key});
 
@@ -85,21 +88,7 @@ class _TodayPageState extends State<TodayPage> {
                         subtitle: date,
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      _content(
-                        context,
-                        circle.id,
-                        doses,
-                        prayers.day != null &&
-                                DateUtils.isSameDay(prayers.day!.date, now)
-                            ? prayers.day
-                            : null,
-                        now,
-                      ),
-                      if (prayers.status == PrayerTimesStatus.failure)
-                        TextButton(
-                          onPressed: context.read<PrayerTimesCubit>().reload,
-                          child: Text(context.tr('prayer_times.unavailable')),
-                        ),
+                      _content(context, circle.id, doses, prayers, now),
                     ],
                   ),
                 ),
@@ -113,9 +102,13 @@ class _TodayPageState extends State<TodayPage> {
     BuildContext context,
     String circleId,
     MedicationOccurrencesState state,
-    PrayerDay? day,
+    PrayerTimesState prayers,
     DateTime now,
   ) {
+    final PrayerDay? day =
+        prayers.day != null && DateUtils.isSameDay(prayers.day!.date, now)
+        ? prayers.day
+        : null;
     final medications = TodayMedicationView(
       state.status == MedicationOccurrencesStatus.loading ||
               state.status == MedicationOccurrencesStatus.failure
@@ -125,7 +118,9 @@ class _TodayPageState extends State<TodayPage> {
     );
     final taskState = context.watch<MeasurementTasksCubit>().state;
     final readingState = context.watch<MeasurementReadingsCubit>().state;
-    final measurementTasks = taskState.tasks;
+    final measurementTasks = taskState.tasks
+        .where((task) => DateUtils.isSameDay(task.scheduledOn, now))
+        .toList();
     final measurementReadings = readingState.readings;
     final appointmentState = context.watch<AppointmentsCubit>().state;
     final todayAppointments = appointmentState.appointments
@@ -136,36 +131,70 @@ class _TodayPageState extends State<TodayPage> {
         )
         .toList();
     final todayOccurrences = medications.todayOccurrences;
-    final next = medications.next;
+    final next = _nearestTask(
+      now,
+      state.occurrences,
+      taskState.tasks,
+      appointmentState.appointments,
+    );
     final attention = medications.attention;
+    final failureKeys = <String>[
+      if (state.status == MedicationOccurrencesStatus.failure)
+        state.messageKey ?? 'error.unknown',
+      if (taskState.status == MeasurementLoadStatus.failure)
+        taskState.errorKey ?? 'error.unknown',
+      if (readingState.status == MeasurementLoadStatus.failure)
+        readingState.errorKey ?? 'error.unknown',
+      if (appointmentState.status == AppointmentsLoadStatus.failure)
+        appointmentState.errorKey ?? 'error.unknown',
+      if (prayers.status == PrayerTimesStatus.failure)
+        'prayer_times.unavailable',
+    ];
+    final String? loadErrorKey = failureKeys.isEmpty ? null : failureKeys.first;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (state.status == MedicationOccurrencesStatus.loading)
           const DoseRowSkeleton(withButtons: true),
-        if (state.status == MedicationOccurrencesStatus.failure)
-          MedicationFailureView(
-            messageKey: state.messageKey!,
-            onRetry: context.read<MedicationOccurrencesCubit>().reload,
-          ),
-        if (taskState.status == MeasurementLoadStatus.failure)
-          TextButton(
-            onPressed: context.read<MeasurementTasksCubit>().reload,
-            child: Text(context.tr(taskState.errorKey ?? 'error.unknown')),
-          ),
-        if (readingState.status == MeasurementLoadStatus.failure)
-          TextButton(
-            onPressed: context.read<MeasurementReadingsCubit>().reload,
-            child: Text(context.tr(readingState.errorKey ?? 'error.unknown')),
-          ),
-        if (appointmentState.status == AppointmentsLoadStatus.failure)
-          TextButton(
-            onPressed: () => context.read<AppointmentsCubit>().load(circleId),
-            child: Text(
-              context.tr(appointmentState.errorKey ?? 'error.unknown'),
+        if (loadErrorKey != null)
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(context.tr(loadErrorKey), textAlign: TextAlign.center),
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton(
+                  onPressed: () {
+                    if (state.status == MedicationOccurrencesStatus.failure) {
+                      unawaited(
+                        context.read<MedicationOccurrencesCubit>().reload(),
+                      );
+                    }
+                    if (taskState.status == MeasurementLoadStatus.failure) {
+                      unawaited(context.read<MeasurementTasksCubit>().reload());
+                    }
+                    if (readingState.status == MeasurementLoadStatus.failure) {
+                      unawaited(
+                        context.read<MeasurementReadingsCubit>().reload(),
+                      );
+                    }
+                    if (appointmentState.status ==
+                        AppointmentsLoadStatus.failure) {
+                      unawaited(
+                        context.read<AppointmentsCubit>().load(circleId),
+                      );
+                    }
+                    if (prayers.status == PrayerTimesStatus.failure) {
+                      unawaited(context.read<PrayerTimesCubit>().reload());
+                    }
+                  },
+                  child: Text(context.tr('auth.retry')),
+                ),
+              ],
             ),
           ),
         if (state.status == MedicationOccurrencesStatus.ready &&
+            loadErrorKey == null &&
             todayOccurrences.isEmpty &&
             measurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
@@ -173,9 +202,10 @@ class _TodayPageState extends State<TodayPage> {
           const SizedBox(height: AppSpacing.xl),
         ],
         if (next != null) ...[
-          TodayMedicationActionDose(occurrence: next, circleId: circleId),
+          _NextTaskCard(task: next, circleId: circleId, now: now),
           const SizedBox(height: AppSpacing.md),
         ] else if (state.status == MedicationOccurrencesStatus.ready &&
+            loadErrorKey == null &&
             todayOccurrences.isNotEmpty &&
             attention.isEmpty &&
             measurementTasks.isEmpty &&
@@ -214,10 +244,10 @@ class _TodayPageState extends State<TodayPage> {
             _PrayerPeriod(
               prayer: Prayer.values[index],
               time: day.times[Prayer.values[index]]!,
-              isFirst: index == 0,
               nextTime: index + 1 < Prayer.values.length
                   ? day.times[Prayer.values[index + 1]]
                   : null,
+              prayerTimes: day.times,
               occurrences: todayOccurrences,
               measurementTasks: measurementTasks,
               appointments: todayAppointments,
@@ -243,6 +273,164 @@ class _TodayPageState extends State<TodayPage> {
   }
 }
 
+typedef _NextTask = ({
+  DateTime at,
+  DoseOccurrence? medication,
+  MeasurementOccurrence? measurement,
+  CareAppointment? appointment,
+});
+
+/// Selects the earliest open task from today's and future schedules.
+_NextTask? _nearestTask(
+  DateTime now,
+  List<DoseOccurrence> medications,
+  List<MeasurementOccurrence> measurements,
+  List<CareAppointment> appointments,
+) {
+  DateTime at(DateTime date, String time) {
+    final parts = time.split(':');
+    return DateTime.utc(
+      date.year,
+      date.month,
+      date.day,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
+  }
+
+  final candidates = <_NextTask>[
+    for (final item in medications)
+      if (item.record == null &&
+          (!at(item.scheduledOn, item.time).isBefore(now) ||
+              DateUtils.isSameDay(item.scheduledOn, now) &&
+                  (medicationTimingState(item, now) == DoseTimingState.due ||
+                      medicationTimingState(item, now) ==
+                          DoseTimingState.late)))
+        (
+          at: at(item.scheduledOn, item.time).isBefore(now)
+              ? now
+              : at(item.scheduledOn, item.time),
+          medication: item,
+          measurement: null,
+          appointment: null,
+        ),
+    for (final item in measurements)
+      if (item.record == null && !at(item.scheduledOn, item.time).isBefore(now))
+        (
+          at: at(item.scheduledOn, item.time),
+          medication: null,
+          measurement: item,
+          appointment: null,
+        ),
+    for (final item in appointments)
+      if (item.status == AppointmentStatus.scheduled &&
+          !at(item.scheduledOn, item.time).isBefore(now))
+        (
+          at: at(item.scheduledOn, item.time),
+          medication: null,
+          measurement: null,
+          appointment: item,
+        ),
+  ]..sort((a, b) => a.at.compareTo(b.at));
+  return candidates.firstOrNull;
+}
+
+/// Renders the next task card element of today page.
+class _NextTaskCard extends StatelessWidget {
+  const _NextTaskCard({
+    required this.task,
+    required this.circleId,
+    required this.now,
+  });
+  final _NextTask task;
+  final String circleId;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context) {
+    final medication = task.medication;
+    final measurement = task.measurement;
+    final appointment = task.appointment;
+    final sameDay = DateUtils.isSameDay(task.at, now);
+    if (medication != null && sameDay) {
+      return TodayMedicationActionDose(
+        occurrence: medication,
+        circleId: circleId,
+      );
+    }
+    final minutes = (task.at.difference(now).inSeconds + 59) ~/ 60;
+    final relative = minutes < 60
+        ? context.tr('today_dashboard.after_minutes', args: ['$minutes'])
+        : minutes % 60 == 0
+        ? context.tr('today_dashboard.after_hours', args: ['${minutes ~/ 60}'])
+        : context.tr(
+            'today_dashboard.after_hours_minutes',
+            args: ['${minutes ~/ 60}', '${minutes % 60}'],
+          );
+    final title =
+        medication?.name ??
+        (measurement == null
+            ? appointmentTitle(context, appointment!)
+            : context.tr(
+                measurement.kind == MeasurementKind.bp
+                    ? 'measurements.bp'
+                    : 'measurements.glucose',
+              ));
+    final time = medication?.time ?? measurement?.time ?? appointment!.time;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppSemanticColors.surfaceContent,
+        border: Border.all(color: AppSemanticColors.textSupporting),
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.tr('today_dashboard.next_task'),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              '${context.tr('common.weekdays.${task.at.weekday}')} '
+              '${formatMedicationDate(context, task.at)} · '
+              '${formatMedicationTime(context, time)}',
+            ),
+            if (minutes < 2880)
+              Text(relative, style: Theme.of(context).textTheme.titleMedium),
+            if (appointment != null)
+              Text(
+                context.tr(
+                  'appointments.companion_name',
+                  args: [appointment.companionName],
+                ),
+              ),
+            if (measurement != null && sameDay) ...[
+              const SizedBox(height: AppSpacing.sm),
+              FilledButton(
+                onPressed: () async {
+                  final saved = await showMeasurementReadingSheet(
+                    context,
+                    occurrence: measurement,
+                  );
+                  if (saved && context.mounted) {
+                    context.read<MeasurementTasksCubit>().reload();
+                  }
+                },
+                child: Text(context.tr('measurements.record_reading')),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Renders the section title element of today page.
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
   final String text;
@@ -252,12 +440,13 @@ class _SectionTitle extends StatelessWidget {
       Text(text, style: Theme.of(context).textTheme.headlineSmall);
 }
 
+/// Renders the prayer period element of today page.
 class _PrayerPeriod extends StatelessWidget {
   const _PrayerPeriod({
     required this.prayer,
     required this.time,
-    required this.isFirst,
     required this.nextTime,
+    required this.prayerTimes,
     required this.occurrences,
     required this.measurementTasks,
     required this.appointments,
@@ -266,8 +455,8 @@ class _PrayerPeriod extends StatelessWidget {
   });
   final Prayer prayer;
   final String time;
-  final bool isFirst;
   final String? nextTime;
+  final Map<Prayer, String> prayerTimes;
   final List<DoseOccurrence> occurrences;
   final List<MeasurementOccurrence> measurementTasks;
   final List<CareAppointment> appointments;
@@ -277,25 +466,13 @@ class _PrayerPeriod extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = occurrences
-        .where(
-          (item) =>
-              (isFirst || item.time.compareTo(time) >= 0) &&
-              (nextTime == null || item.time.compareTo(nextTime!) < 0),
-        )
+        .where((item) => _nearestPrayer(item.time, prayerTimes) == prayer)
         .toList();
     final measures = measurementTasks
-        .where(
-          (item) =>
-              (isFirst || item.time.compareTo(time) >= 0) &&
-              (nextTime == null || item.time.compareTo(nextTime!) < 0),
-        )
+        .where((item) => _nearestPrayer(item.time, prayerTimes) == prayer)
         .toList();
     final visits = appointments
-        .where(
-          (item) =>
-              (isFirst || item.time.compareTo(time) >= 0) &&
-              (nextTime == null || item.time.compareTo(nextTime!) < 0),
-        )
+        .where((item) => _nearestPrayer(item.time, prayerTimes) == prayer)
         .toList();
     final entries =
         <
@@ -342,94 +519,128 @@ class _PrayerPeriod extends StatelessWidget {
         .where((item) => item.status == MeasurementStatus.missed)
         .length;
     final expanded =
-        current || summary.attentionCount > 0 || missedMeasurements > 0;
+        current ||
+        summary.attentionCount > 0 ||
+        missedMeasurements > 0 ||
+        visits.isNotEmpty;
     final title = context.tr('prayer_times.${prayer.name}');
     final formattedTime = formatMedicationTime(context, time);
-    return Material(
-      color: current
-          ? AppSemanticColors.surfaceContent
-          : AppSemanticColors.surfacePlan,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        side: BorderSide(
-          color: current
-              ? AppSemanticColors.accentWarm
-              : AppSemanticColors.transparent,
-          width: current ? 2 : 1,
+    final photos = RepositoryProvider.of<PrivatePhotoRepository>(context);
+    return FutureBuilder<bool>(
+      future: Future.wait([
+        for (final item in items)
+          photos.load(ApiEndpoints.medicationPhoto(circleId, item.planId)),
+      ]).then((values) => values.any((value) => value != null)),
+      builder: (context, photoState) => Material(
+        color: AppSemanticColors.surfaceContent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          side: BorderSide(
+            color: current
+                ? AppSemanticColors.accentWarm
+                : AppSemanticColors.transparent,
+            width: current ? 2 : 1,
+          ),
         ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        key: ValueKey(
-          '${now.year}-${now.month}-${now.day}:${prayer.name}:$expanded',
-        ),
-        initiallyExpanded: expanded && entries.isNotEmpty,
-        shape: const Border(),
-        collapsedShape: const Border(),
-        iconColor: AppSemanticColors.textSupporting,
-        collapsedIconColor: AppSemanticColors.textSupporting,
-        tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        childrenPadding: const EdgeInsets.fromLTRB(
-          AppSpacing.sm,
-          0,
-          AppSpacing.sm,
-          AppSpacing.sm,
-        ),
-        leading: Icon(
-          _prayerIcon(prayer),
-          color: current
-              ? AppSemanticColors.doseDueMarker
-              : AppSemanticColors.textSupporting,
-        ),
-        title: Row(
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: Text(
-                formattedTime,
-                style: Theme.of(context).textTheme.bodySmall,
+        clipBehavior: Clip.antiAlias,
+        child: ExpansionTile(
+          key: ValueKey(
+            '${now.year}-${now.month}-${now.day}:${prayer.name}:$expanded',
+          ),
+          initiallyExpanded: expanded && entries.isNotEmpty,
+          shape: const Border(),
+          collapsedShape: const Border(),
+          iconColor: AppSemanticColors.textSupporting,
+          collapsedIconColor: AppSemanticColors.textSupporting,
+          tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm,
+            0,
+            AppSpacing.sm,
+            AppSpacing.sm,
+          ),
+          leading: Icon(
+            _prayerIcon(prayer),
+            color: current
+                ? AppSemanticColors.doseDueMarker
+                : AppSemanticColors.textSupporting,
+          ),
+          title: Row(
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
+                child: Text(
+                  formattedTime,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-            ),
-            const Spacer(),
-            if (current)
-              CompactStatusBadge(
-                text: context.tr('today_dashboard.current_period'),
-                background: AppSemanticColors.surfaceAttention,
-                foreground: AppSemanticColors.statusWarning,
-              )
-            else if (summary.attentionCount + missedMeasurements > 0)
-              CompactStatusBadge(
-                text: (summary.attentionCount + missedMeasurements).toString(),
-                background: summary.hasMissed || missedMeasurements > 0
-                    ? Theme.of(context).colorScheme.errorContainer
-                    : AppSemanticColors.surfaceAttention,
-                foreground: summary.hasMissed || missedMeasurements > 0
-                    ? context.tokens.errorText
-                    : context.tokens.warningText,
-              )
-            else if (summary.allResolved && measures.isEmpty)
-              MedicationPeriodMarks(occurrences: items, now: now),
+              const Spacer(),
+              if (current)
+                CompactStatusBadge(
+                  text: context.tr('today_dashboard.current_period'),
+                  background: AppSemanticColors.surfaceAttention,
+                  foreground: AppSemanticColors.statusWarning,
+                )
+              else if (summary.attentionCount + missedMeasurements > 0)
+                CompactStatusBadge(
+                  text: (summary.attentionCount + missedMeasurements)
+                      .toString(),
+                  background: summary.hasMissed || missedMeasurements > 0
+                      ? Theme.of(context).colorScheme.errorContainer
+                      : AppSemanticColors.surfaceAttention,
+                  foreground: summary.hasMissed || missedMeasurements > 0
+                      ? context.tokens.errorText
+                      : context.tokens.warningText,
+                )
+              else if (summary.allResolved &&
+                  measures.isEmpty &&
+                  visits.isEmpty)
+                MedicationPeriodMarks(occurrences: items, now: now)
+              else if (entries.isNotEmpty)
+                CompactStatusBadge(
+                  text: '${entries.length}',
+                  background: AppSemanticColors.surfacePlan,
+                  foreground: AppSemanticColors.textPrimary,
+                ),
+            ],
+          ),
+          children: [
+            for (final entry in entries) ...[
+              if (entry.medication case final item?)
+                TodayMedicationPrayerDoseRow(
+                  occurrence: item,
+                  circleId: circleId,
+                  now: now,
+                  showThumbnail: photoState.data ?? false,
+                )
+              else if (entry.measurement case final task?)
+                MeasurementTaskRow(task: task)
+              else if (entry.appointment case final visit?)
+                AppointmentTodayRow(value: visit),
+              if (entry != entries.last) const SizedBox(height: AppSpacing.sm),
+            ],
           ],
         ),
-        children: [
-          for (final entry in entries) ...[
-            if (entry.medication case final item?)
-              TodayMedicationPrayerDoseRow(
-                occurrence: item,
-                circleId: circleId,
-                now: now,
-              )
-            else if (entry.measurement case final task?)
-              MeasurementTaskRow(task: task)
-            else if (entry.appointment case final visit?)
-              AppointmentTodayRow(value: visit),
-            if (entry != entries.last) const SizedBox(height: AppSpacing.sm),
-          ],
-        ],
       ),
     );
   }
+}
+
+Prayer _nearestPrayer(String time, Map<Prayer, String> prayerTimes) {
+  int minutes(String value) {
+    final parts = value.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  final target = minutes(time);
+  return Prayer.values.reduce(
+    (best, item) =>
+        (minutes(prayerTimes[item]!) - target).abs() <
+            (minutes(prayerTimes[best]!) - target).abs()
+        ? item
+        : best,
+  );
 }
 
 IconData _prayerIcon(Prayer prayer) => switch (prayer) {

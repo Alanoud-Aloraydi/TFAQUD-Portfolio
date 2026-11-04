@@ -2,6 +2,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 
+/// Maps medication plan data between the API and app.
 class MedicationPlanModel {
   const MedicationPlanModel(this._entity);
 

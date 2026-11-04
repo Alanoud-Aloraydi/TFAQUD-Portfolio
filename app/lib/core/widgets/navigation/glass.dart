@@ -178,11 +178,15 @@ class GlassCapsuleButton extends StatelessWidget {
     required this.semanticLabel,
     required this.icon,
     required this.onPressed,
+    this.leading,
+    this.onLeadingPressed,
   });
 
   final String label;
   final String semanticLabel;
   final IconData icon;
+  final Widget? leading;
+  final VoidCallback? onLeadingPressed;
 
   /// Null keeps the capsule visible but inert.
   final VoidCallback? onPressed;
@@ -218,6 +222,10 @@ class GlassCapsuleButton extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
+                    if (leading != null) ...<Widget>[
+                      GestureDetector(onTap: onLeadingPressed, child: leading),
+                      const SizedBox(width: AppSpacing.xs),
+                    ],
                     Flexible(
                       child: Text(
                         label,

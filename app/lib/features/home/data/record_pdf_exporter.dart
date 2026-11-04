@@ -14,12 +14,14 @@ class RecordPdfRow {
     required this.value,
     this.ltr = false,
     this.extra,
+    this.unit,
   });
 
   final String? label;
   final String value;
   final bool ltr;
   final String? extra;
+  final String? unit;
 }
 
 /// A block in a section, such as one medicine: its [title], a short
@@ -248,7 +250,23 @@ class RecordPdfExporter {
               style: pw.TextStyle(fontSize: 10, color: _slate),
             ),
           ),
-        pw.Expanded(child: _value(row.value, ltr: row.ltr)),
+        pw.Expanded(
+          child: row.unit == null
+              ? _value(row.value, ltr: row.ltr)
+              : pw.Row(
+                  children: [
+                    pw.Text(
+                      plain(row.value),
+                      textDirection: pw.TextDirection.ltr,
+                    ),
+                    pw.SizedBox(width: 4),
+                    pw.Text(
+                      plain(row.unit!),
+                      textDirection: pw.TextDirection.rtl,
+                    ),
+                  ],
+                ),
+        ),
         if (extra != null)
           pw.Text(
             plain(extra),

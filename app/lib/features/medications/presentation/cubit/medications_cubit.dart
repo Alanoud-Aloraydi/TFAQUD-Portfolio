@@ -5,6 +5,7 @@ import 'package:app/features/medications/presentation/cubit/medications_state.da
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// Coordinates medications actions and UI state.
 class MedicationsCubit extends Cubit<MedicationsState> {
   MedicationsCubit(this._medications) : super(MedicationsState());
 

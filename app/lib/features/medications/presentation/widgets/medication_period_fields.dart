@@ -68,6 +68,9 @@ class MedicationPeriodFields extends StatelessWidget {
             _DateRow(
               label: context.tr('medications.starts'),
               value: data.startsOn,
+              firstDate: data.effectiveFromOn == null
+                  ? DateUtils.dateOnly(DateTime.now())
+                  : null,
               onChanged: (DateTime? value) {
                 if (value == null) return;
                 data.startsOn = value;
@@ -191,6 +194,7 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
   }
 }
 
+/// Renders the date row element of medication period fields.
 class _DateRow extends StatelessWidget {
   const _DateRow({
     required this.label,
@@ -223,7 +227,10 @@ class _DateRow extends StatelessWidget {
     final DateTime? selected = await showTafaqodDateSheet(
       context,
       title: label,
-      initialDate: value ?? DateTime.now(),
+      initialDate:
+          value != null && firstDate != null && value!.isBefore(firstDate!)
+          ? firstDate!
+          : value ?? DateTime.now(),
       firstDate: firstDate ?? DateTime(1900),
       lastDate: now.add(const Duration(days: 3650)),
     );

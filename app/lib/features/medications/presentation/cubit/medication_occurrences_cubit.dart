@@ -3,6 +3,7 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates medication occurrences actions and UI state.
 class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState> {
   MedicationOccurrencesCubit(this._medications)
     : super(MedicationOccurrencesState());

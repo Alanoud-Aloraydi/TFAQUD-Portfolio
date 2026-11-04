@@ -1,6 +1,7 @@
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 
+/// Selects medication occurrences for the Today view.
 class TodayMedicationView {
   TodayMedicationView(List<DoseOccurrence> occurrences, DateTime now) {
     final today = DateTime.utc(now.year, now.month, now.day);
@@ -44,6 +45,7 @@ class TodayMedicationView {
   late final List<DoseOccurrence> attention;
 }
 
+/// Groups medication occurrences by prayer period.
 class MedicationPeriodSummary {
   MedicationPeriodSummary(List<DoseOccurrence> occurrences, DateTime now) {
     attentionCount = occurrences.where((item) {

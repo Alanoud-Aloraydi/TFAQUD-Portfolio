@@ -14,12 +14,11 @@ import 'package:flutter/services.dart';
 
 /// iOS segmented control on Liquid Glass (design system "TFAQUD",
 /// SegmentedControl): a glass capsule, at least 44 high, with the chosen
-/// segment on a pale green capsule that slides to it.
+/// segment on a neutral translucent capsule that slides to it.
 ///
 /// The thumb sits 4 inside the track and is a capsule too, so the two are
-/// concentric. The chosen segment is also bolder and in ink, so the green is
-/// never the only sign. In a right-to-left language the first segment is on
-/// the right.
+/// concentric. The chosen segment is also bolder and in ink. In a
+/// right-to-left language the first segment is on the right.
 class GlassSegmentedControl<T extends Object> extends StatelessWidget {
   const GlassSegmentedControl({
     super.key,
@@ -60,100 +59,124 @@ class GlassSegmentedControl<T extends Object> extends StatelessWidget {
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               final double width = constraints.maxWidth / values.length;
-              return Stack(
-                children: <Widget>[
-                  AnimatedPositionedDirectional(
-                    duration: still ? Duration.zero : AppMotion.segmentSlide,
-                    curve: AppMotion.easeOutCubic,
-                    start: index * width,
-                    width: width,
-                    top: 0,
-                    bottom: 0,
-                    child: const DecoratedBox(
-                      decoration: ShapeDecoration(
-                        shape: StadiumBorder(),
-                        color: AppSemanticColors.selectedSurface,
-                        shadows: AppEffects.segmentShadow,
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragUpdate: onChanged == null
+                    ? null
+                    : (details) {
+                        final position =
+                            Directionality.of(context) == TextDirection.rtl
+                            ? constraints.maxWidth - details.localPosition.dx
+                            : details.localPosition.dx;
+                        final int next = math.min(
+                          math.max((position / width).floor(), 0),
+                          values.length - 1,
+                        );
+                        if (next == index ||
+                            !(enabledValues?.contains(values[next]) ?? true)) {
+                          return;
+                        }
+                        HapticFeedback.selectionClick();
+                        onChanged?.call(values[next]);
+                      },
+                child: Stack(
+                  children: <Widget>[
+                    AnimatedPositionedDirectional(
+                      duration: still ? Duration.zero : AppMotion.segmentSlide,
+                      curve: AppMotion.easeOutCubic,
+                      start: index * width,
+                      width: width,
+                      top: 0,
+                      bottom: 0,
+                      child: const DecoratedBox(
+                        decoration: ShapeDecoration(
+                          shape: StadiumBorder(),
+                          color: AppGlass.normalBottom,
+                          shadows: AppEffects.segmentShadow,
+                        ),
                       ),
                     ),
-                  ),
-                  Row(
-                    children: <Widget>[
-                      for (int i = 0; i < values.length; i++)
-                        Expanded(
-                          child: Semantics(
-                            button: true,
-                            selected: i == index,
-                            enabled: enabledValues?.contains(values[i]) ?? true,
-                            inMutuallyExclusiveGroup: true,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                if (onChanged == null ||
-                                    i == index ||
-                                    !(enabledValues?.contains(values[i]) ??
-                                        true)) {
-                                  return;
-                                }
-                                HapticFeedback.selectionClick();
-                                onChanged?.call(values[i]);
-                              },
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  minHeight:
-                                      AppSizes.touch -
-                                      2 * AppGlass.segmentInset,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.sm,
-                                    vertical: AppSpacing.xs,
+                    Row(
+                      children: <Widget>[
+                        for (int i = 0; i < values.length; i++)
+                          Expanded(
+                            child: Semantics(
+                              button: true,
+                              selected: i == index,
+                              enabled:
+                                  enabledValues?.contains(values[i]) ?? true,
+                              inMutuallyExclusiveGroup: true,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  if (onChanged == null ||
+                                      i == index ||
+                                      !(enabledValues?.contains(values[i]) ??
+                                          true)) {
+                                    return;
+                                  }
+                                  HapticFeedback.selectionClick();
+                                  onChanged?.call(values[i]);
+                                },
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minHeight:
+                                        AppSizes.touch -
+                                        2 * AppGlass.segmentInset,
                                   ),
-                                  child: Center(
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            segments[values[i]]!,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: text.titleSmall?.copyWith(
-                                              color:
-                                                  !(enabledValues?.contains(
-                                                        values[i],
-                                                      ) ??
-                                                      true)
-                                                  ? tokens.textSecondary
-                                                  : i == index
-                                                  ? AppSemanticColors
-                                                        .textPrimary
-                                                  : tokens.textSecondary,
-                                              fontWeight: i == index
-                                                  ? AppTextTheme.bold
-                                                  : AppTextTheme.medium,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.sm,
+                                      vertical: AppSpacing.xs,
+                                    ),
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              segments[values[i]]!,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: text.titleSmall?.copyWith(
+                                                color:
+                                                    !(enabledValues?.contains(
+                                                          values[i],
+                                                        ) ??
+                                                        true)
+                                                    ? tokens.textSecondary
+                                                    : i == index
+                                                    ? AppSemanticColors
+                                                          .textPrimary
+                                                    : tokens.textSecondary,
+                                                fontWeight: i == index
+                                                    ? AppTextTheme.bold
+                                                    : AppTextTheme.medium,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        if (counts?[values[i]]
-                                            case final count?) ...[
-                                          const SizedBox(width: AppSpacing.xs),
-                                          Text(
-                                            '$count',
-                                            style: text.labelSmall,
-                                          ),
+                                          if (counts?[values[i]]
+                                              case final count?) ...[
+                                            const SizedBox(
+                                              width: AppSpacing.xs,
+                                            ),
+                                            Text(
+                                              '$count',
+                                              style: text.labelSmall,
+                                            ),
+                                          ],
                                         ],
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               );
             },
           ),

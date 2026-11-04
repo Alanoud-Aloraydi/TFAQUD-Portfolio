@@ -14,11 +14,13 @@ class MedicationBasicFields extends StatelessWidget {
     super.key,
     required this.data,
     required this.onChanged,
+    this.photoField,
     this.issue,
   });
 
   final MedicationFormData data;
   final VoidCallback onChanged;
+  final Widget? photoField;
   final MedicationFormIssue? issue;
 
   @override
@@ -26,6 +28,13 @@ class MedicationBasicFields extends StatelessWidget {
     return InsetGroup(
       header: context.tr('medications.basic_details'),
       children: <Widget>[
+        if (photoField != null)
+          InsetBlock(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: photoField,
+            ),
+          ),
         InsetTextRow(
           label: context.tr('medications.name'),
           hint: context.tr('medications.name_hint'),

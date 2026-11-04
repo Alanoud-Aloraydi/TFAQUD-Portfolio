@@ -96,6 +96,7 @@ class MedicationDetails extends StatelessWidget {
   }
 }
 
+/// Displays the medication revision history UI.
 class MedicationRevisionHistory extends StatelessWidget {
   const MedicationRevisionHistory({super.key, required this.plan});
 
@@ -124,6 +125,7 @@ class MedicationRevisionHistory extends StatelessWidget {
   }
 }
 
+/// Renders the revision entry element of medication details.
 class _RevisionEntry extends StatelessWidget {
   const _RevisionEntry({required this.version, required this.previous});
 

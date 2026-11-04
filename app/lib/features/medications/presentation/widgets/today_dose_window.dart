@@ -39,8 +39,16 @@ class TodayDoseWindow extends StatelessWidget {
     final status = medicationTimingState(occurrence, now);
     final label = minutesUntilDue > 0
         ? context.tr(
-            'today_dashboard.after_minutes',
-            args: [minutesUntilDue.toString()],
+            minutesUntilDue < 60
+                ? 'today_dashboard.after_minutes'
+                : minutesUntilDue % 60 == 0
+                ? 'today_dashboard.after_hours'
+                : 'today_dashboard.after_hours_minutes',
+            args: minutesUntilDue < 60
+                ? [minutesUntilDue.toString()]
+                : minutesUntilDue % 60 == 0
+                ? ['${minutesUntilDue ~/ 60}']
+                : ['${minutesUntilDue ~/ 60}', '${minutesUntilDue % 60}'],
           )
         : context.tr('today_dashboard.status.${status!.name}');
     final missedTime =

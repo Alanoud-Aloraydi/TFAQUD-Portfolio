@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: MedicationsRepositoryDomain)
+/// Provides medications repository operations.
 class MedicationsRepositoryData implements MedicationsRepositoryDomain {
   MedicationsRepositoryData(this._remote);
 

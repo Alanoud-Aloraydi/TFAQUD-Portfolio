@@ -11,8 +11,10 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Defines the supported record export status values.
 enum RecordExportStatus { loading, ready }
 
+/// Holds the record export presentation state.
 class RecordExportState extends Equatable {
   const RecordExportState({
     this.status = RecordExportStatus.loading,

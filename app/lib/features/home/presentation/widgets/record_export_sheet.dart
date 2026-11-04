@@ -42,6 +42,7 @@ Future<void> showRecordExportSheet(
   ),
 );
 
+/// Renders the record export sheet element of record export sheet.
 class _RecordExportSheet extends StatefulWidget {
   const _RecordExportSheet({required this.plans});
 
@@ -193,46 +194,61 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     );
   }
 
-  RecordPdfSection _measurementSection(
-    List<MeasurementReading> readings,
-  ) => RecordPdfSection(
-    title: context.tr('record_export.measurements'),
-    empty: readings.isEmpty ? context.tr('measurements.no_readings') : null,
-    items: [
-      for (final reading in readings)
-        RecordPdfItem(
-          title: context.tr(
-            reading.kind == MeasurementKind.bp
-                ? 'measurements.bp'
-                : 'measurements.glucose',
-          ),
-          badge: context.tr(
-            reading.outcome == 'skipped'
-                ? 'measurements.skipped'
-                : reading.outsideTarget == true
-                ? 'measurements.outside_target'
-                : 'measurements.read',
-          ),
-          badgeMuted: reading.outcome == 'skipped',
-          detail: [RecordPdfRow(value: _readingDate(reading))],
-          fields: [
-            if (reading.outcome != 'skipped')
-              RecordPdfRow(
-                label: context.tr('measurements.value'),
-                value:
-                    '${reading.valueText} '
-                    '${context.tr(reading.kind == MeasurementKind.bp ? 'measurements.bp_unit' : 'measurements.glucose_unit')}',
-                ltr: true,
+  RecordPdfSection _measurementSection(List<MeasurementReading> readings) =>
+      RecordPdfSection(
+        title: context.tr('record_export.measurements'),
+        empty: readings.isEmpty ? context.tr('measurements.no_readings') : null,
+        items: [
+          for (final reading in readings)
+            RecordPdfItem(
+              title: context.tr(
+                reading.kind == MeasurementKind.bp
+                    ? 'measurements.bp'
+                    : 'measurements.glucose',
               ),
-            if (reading.note?.isNotEmpty == true)
-              RecordPdfRow(
-                label: context.tr('measurements.note'),
-                value: reading.note!,
+              badge: context.tr(
+                reading.outcome == 'skipped'
+                    ? 'measurements.skipped'
+                    : reading.outsideTarget == true
+                    ? 'measurements.outside_target'
+                    : reading.outsideTarget == null
+                    ? 'measurements.without_target'
+                    : 'measurements.read',
               ),
-          ],
-        ),
-    ],
-  );
+              badgeMuted: reading.outcome == 'skipped',
+              detail: [RecordPdfRow(value: _readingDate(reading))],
+              fields: [
+                if (reading.outcome != 'skipped')
+                  RecordPdfRow(
+                    label: context.tr('measurements.value'),
+                    value: reading.valueText,
+                    unit: context.tr(
+                      reading.kind == MeasurementKind.bp
+                          ? 'measurements.bp_unit'
+                          : 'measurements.glucose_unit',
+                    ),
+                    ltr: true,
+                  ),
+                if (reading.planVersionId == null &&
+                    reading.outcome != 'skipped')
+                  RecordPdfRow(
+                    label: context.tr('measurements.target'),
+                    value: reading.outsideTarget == null
+                        ? context.tr('measurements.without_target')
+                        : reading.kind == MeasurementKind.glucose
+                        ? '${reading.glucoseLow}–${reading.glucoseHigh}'
+                        : '${reading.systolicLimit}/${reading.diastolicLimit}',
+                    ltr: reading.outsideTarget != null,
+                  ),
+                if (reading.note?.isNotEmpty == true)
+                  RecordPdfRow(
+                    label: context.tr('measurements.note'),
+                    value: reading.note!,
+                  ),
+              ],
+            ),
+        ],
+      );
 
   String _readingDate(MeasurementReading reading) {
     final date = reading.measuredAt?.toLocal() ?? reading.scheduledOn;
@@ -258,9 +274,7 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
           detail: [
             RecordPdfRow(value: appointmentDate(context, item.scheduledOn)),
             RecordPdfRow(value: appointmentTime(context, item.time)),
-            RecordPdfRow(
-              value: context.tr('appointments.kinds.${item.kind.name}'),
-            ),
+            RecordPdfRow(value: appointmentKindTitle(context, item)),
           ],
           fields: [
             RecordPdfRow(

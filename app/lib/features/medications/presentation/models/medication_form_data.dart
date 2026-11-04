@@ -4,8 +4,10 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:flutter/material.dart';
 
+/// Defines the supported medication form field values.
 enum MedicationFormField { name, strength, period, dose, weekdays }
 
+/// Describes one medication form validation issue.
 class MedicationFormIssue {
   const MedicationFormIssue(this.field, {this.scheduleIndex});
 
@@ -13,6 +15,7 @@ class MedicationFormIssue {
   final int? scheduleIndex;
 }
 
+/// Holds medication form values for this workflow.
 class MedicationFormData {
   MedicationFormData(MedicationPlan? plan)
     : name = TextEditingController(text: plan?.version.name),

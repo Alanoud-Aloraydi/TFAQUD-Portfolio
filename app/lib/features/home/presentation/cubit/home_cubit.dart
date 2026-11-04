@@ -6,6 +6,7 @@ import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates home actions and UI state.
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit(this._home) : super(const HomeState()) {
     _changes = _home.changes.listen((select) => refresh(select: select));
@@ -29,19 +30,18 @@ class HomeCubit extends Cubit<HomeState> {
     emit(const HomeState());
     final result = await _home.getHome();
     if (isClosed || revision != _revision) return;
-    await result.when(
-      (data) => _loaded(data, revision, select),
-      (failure) async {
-        final ended =
-            failure is UnauthorizedFailure || failure is SessionExpiredFailure;
-        emit(
-          HomeState(
-            status: ended ? HomeStatus.signIn : HomeStatus.failure,
-            messageKey: failure.messageKey,
-          ),
-        );
-      },
-    );
+    await result.when((data) => _loaded(data, revision, select), (
+      failure,
+    ) async {
+      final ended =
+          failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+      emit(
+        HomeState(
+          status: ended ? HomeStatus.signIn : HomeStatus.failure,
+          messageKey: failure.messageKey,
+        ),
+      );
+    });
   }
 
   /// Loads the home data again without leaving the screen the user is on.
@@ -60,28 +60,20 @@ class HomeCubit extends Cubit<HomeState> {
     final revision = ++_revision;
     final result = await _home.getHome();
     if (isClosed || revision != _revision) return;
-    await result.when(
-      (data) => _loaded(data, revision, select),
-      (failure) async {
-        final ended =
-            failure is UnauthorizedFailure || failure is SessionExpiredFailure;
-        if (ended) {
-          emit(
-            HomeState(
-              status: HomeStatus.signIn,
-              messageKey: failure.messageKey,
-            ),
-          );
-        }
-      },
-    );
+    await result.when((data) => _loaded(data, revision, select), (
+      failure,
+    ) async {
+      final ended =
+          failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+      if (ended) {
+        emit(
+          HomeState(status: HomeStatus.signIn, messageKey: failure.messageKey),
+        );
+      }
+    });
   }
 
-  Future<void> _loaded(
-    HomeEntity data,
-    int revision,
-    String? preferred,
-  ) async {
+  Future<void> _loaded(HomeEntity data, int revision, String? preferred) async {
     if (!data.profileComplete) {
       emit(const HomeState(status: HomeStatus.onboarding));
       return;

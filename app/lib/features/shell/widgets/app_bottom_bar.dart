@@ -100,6 +100,7 @@ class AppBottomBar extends StatelessWidget {
   }
 }
 
+/// Renders the frosted tab bar element of app bottom bar.
 class _FrostedTabBar extends StatelessWidget {
   const _FrostedTabBar({required this.currentIndex, required this.onTab});
 

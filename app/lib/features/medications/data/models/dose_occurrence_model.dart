@@ -1,6 +1,7 @@
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 
+/// Maps dose occurrence data between the API and app.
 class DoseOccurrenceModel {
   const DoseOccurrenceModel(this._entity);
 
@@ -38,6 +39,7 @@ class DoseOccurrenceModel {
   DoseOccurrence toEntity() => _entity;
 }
 
+/// Maps dose record data between the API and app.
 class DoseRecordModel {
   const DoseRecordModel(this._entity);
 

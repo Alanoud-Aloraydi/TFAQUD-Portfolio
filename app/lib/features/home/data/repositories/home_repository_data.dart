@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: HomeRepositoryDomain)
+/// Provides home repository operations.
 class HomeRepositoryData implements HomeRepositoryDomain {
   HomeRepositoryData(this._remote, this._local);
 

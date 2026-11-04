@@ -50,6 +50,8 @@ class MedicationScheduleEditor extends StatelessWidget {
           padding: const EdgeInsetsDirectional.only(
             start: AppSpacing.lg,
             end: AppSpacing.sm,
+            top: AppSpacing.md,
+            bottom: AppSpacing.sm,
           ),
           child: Row(
             children: [

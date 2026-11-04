@@ -35,6 +35,7 @@ Future<DoseRecordDraft?> selectSkippedDose(BuildContext context) =>
       builder: (_) => const _SkipDoseSheet(),
     );
 
+/// Renders the skip dose sheet element of dose actions.
 class _SkipDoseSheet extends StatefulWidget {
   const _SkipDoseSheet();
 
@@ -104,10 +105,7 @@ class _SkipDoseSheetState extends State<_SkipDoseSheet> {
       // others.
       selected: selected,
       trailing: selected
-          ? const Icon(
-              AppIcons.check,
-              color: AppSemanticColors.textPrimary,
-            )
+          ? const Icon(AppIcons.check, color: AppSemanticColors.textPrimary)
           : null,
     );
   }

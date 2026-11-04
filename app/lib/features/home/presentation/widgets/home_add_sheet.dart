@@ -61,6 +61,7 @@ Future<void> showHomeAddSheet(
   );
 }
 
+/// Renders the home add sheet element of home add sheet.
 class _HomeAddSheet extends StatelessWidget {
   const _HomeAddSheet({
     required this.onMedication,

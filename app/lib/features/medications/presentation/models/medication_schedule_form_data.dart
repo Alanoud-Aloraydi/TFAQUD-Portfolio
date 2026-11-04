@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 
+/// Holds schedule form values for this workflow.
 class ScheduleFormData {
   ScheduleFormData({
     required this.time,

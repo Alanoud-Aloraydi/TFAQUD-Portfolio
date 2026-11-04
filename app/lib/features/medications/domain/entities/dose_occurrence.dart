@@ -1,10 +1,13 @@
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported dose outcome values.
 enum DoseOutcome { taken, skipped }
 
+/// Defines the supported dose timing state values.
 enum DoseTimingState { upcoming, due, late, missed }
 
+/// Defines the supported dose skip reason values.
 enum DoseSkipReason {
   forgotten,
   unavailable,
@@ -19,6 +22,7 @@ enum DoseSkipReason {
   };
 }
 
+/// Stores an explicitly taken or skipped dose.
 class DoseRecord extends Equatable {
   const DoseRecord({
     required this.id,
@@ -47,6 +51,7 @@ class DoseRecord extends Equatable {
   ];
 }
 
+/// Describes an expected dose and its current timing state.
 class DoseOccurrence extends Equatable {
   const DoseOccurrence({
     required this.planId,
@@ -134,6 +139,7 @@ class DoseOccurrence extends Equatable {
   ];
 }
 
+/// Holds editable dose record values before saving.
 class DoseRecordDraft extends Equatable {
   const DoseRecordDraft({
     required this.outcome,

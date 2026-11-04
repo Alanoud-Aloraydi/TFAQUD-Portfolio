@@ -1,10 +1,13 @@
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported medications status values.
 enum MedicationsStatus { initial, loading, ready, saving, failure }
 
+/// Defines the supported medication record filter values.
 enum MedicationRecordFilter { all, current, previous }
 
+/// Holds the medications presentation state.
 class MedicationsState extends Equatable {
   MedicationsState({
     this.status = MedicationsStatus.initial,

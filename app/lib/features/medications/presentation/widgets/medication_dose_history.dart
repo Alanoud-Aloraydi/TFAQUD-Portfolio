@@ -1,4 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -11,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the medication dose history UI.
 class MedicationDoseHistory extends StatelessWidget {
   const MedicationDoseHistory({super.key, required this.earliest});
 
@@ -62,7 +65,19 @@ class MedicationDoseHistory extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 for (final item in group.value) ...[
-                  DoseOccurrenceCard(occurrence: item),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppSemanticColors.surfaceContent,
+                      border: Border.all(color: AppSemanticColors.borderSubtle),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      child: DoseOccurrenceCard(occurrence: item),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                 ],
                 const SizedBox(height: AppSpacing.md),

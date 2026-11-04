@@ -12,8 +12,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Defines the supported dose controls layout values.
 enum DoseControlsLayout { regular, today, attention }
 
+/// Displays the dose record controls UI.
 class DoseRecordControls extends StatelessWidget {
   const DoseRecordControls({
     super.key,
@@ -140,6 +142,7 @@ class DoseRecordControls extends StatelessWidget {
   }
 }
 
+/// Renders the recording status element of dose record controls.
 class _RecordingStatus extends StatelessWidget {
   const _RecordingStatus();
 
@@ -164,6 +167,7 @@ class _RecordingStatus extends StatelessWidget {
   }
 }
 
+/// Renders the recorded status element of dose record controls.
 class _RecordedStatus extends StatelessWidget {
   const _RecordedStatus({required this.occurrence});
 

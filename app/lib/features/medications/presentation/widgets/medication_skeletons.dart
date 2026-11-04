@@ -156,6 +156,7 @@ class PlanCardSkeleton extends StatelessWidget {
   }
 }
 
+/// Renders the icon line element of medication skeletons.
 class _IconLine extends StatelessWidget {
   const _IconLine({required this.widthFactor});
 
@@ -209,6 +210,7 @@ class MedicationDetailsSkeleton extends StatelessWidget {
   }
 }
 
+/// Renders the label value element of medication skeletons.
 class _LabelValue extends StatelessWidget {
   const _LabelValue({required this.valueWidth});
 

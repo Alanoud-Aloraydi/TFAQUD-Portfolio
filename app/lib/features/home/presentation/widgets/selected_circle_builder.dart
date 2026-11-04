@@ -4,6 +4,7 @@ import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the selected circle builder UI.
 class SelectedCircleBuilder extends StatelessWidget {
   const SelectedCircleBuilder({super.key, required this.builder});
 

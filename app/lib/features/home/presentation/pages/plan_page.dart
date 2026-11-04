@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
@@ -13,6 +14,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the plan page UI.
 class PlanPage extends StatefulWidget {
   const PlanPage({super.key});
 
@@ -21,7 +23,29 @@ class PlanPage extends StatefulWidget {
 }
 
 class _PlanPageState extends State<PlanPage> {
+  static const _categories = ['medications', 'measurements', 'appointments'];
+  final PageController _pages = PageController();
   String _selected = 'medications';
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _select(String value) {
+    final index = _categories.indexOf(value);
+    if (index < 0 || !_pages.hasClients) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pages.jumpToPage(index);
+    } else {
+      _pages.animateToPage(
+        index,
+        duration: AppMotion.segmentSlide,
+        curve: AppMotion.easeOutCubic,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,27 +85,27 @@ class _PlanPageState extends State<PlanPage> {
                     measurementCount: measurements,
                     appointmentCount: appointments,
                     selected: _selected,
-                    onChanged: (value) => setState(() => _selected = value),
+                    onChanged: _select,
                   ),
                 ],
               );
-              if (_selected == 'measurements') {
-                return MeasurementPlanSection(
-                  circleId: circle.id,
-                  canManage: circle.canManageMedications,
-                  header: header,
-                );
-              }
-              if (_selected == 'appointments') {
-                return AppointmentPlanSection(
-                  circleId: circle.id,
-                  canManage: circle.canManageMedications,
-                  header: header,
-                );
-              }
-              return MedicationPlansSection(
-                circleId: circle.id,
-                header: header,
+              return PageView(
+                controller: _pages,
+                onPageChanged: (index) =>
+                    setState(() => _selected = _categories[index]),
+                children: [
+                  MedicationPlansSection(circleId: circle.id, header: header),
+                  MeasurementPlanSection(
+                    circleId: circle.id,
+                    canManage: circle.canManageMedications,
+                    header: header,
+                  ),
+                  AppointmentPlanSection(
+                    circleId: circle.id,
+                    canManage: circle.canManageMedications,
+                    header: header,
+                  ),
+                ],
               );
             },
           ),

@@ -2,6 +2,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+/// Displays the medication failure view UI.
 class MedicationFailureView extends StatelessWidget {
   const MedicationFailureView({
     super.key,

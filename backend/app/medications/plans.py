@@ -38,6 +38,8 @@ class MedicationPlanService:
         actor_id: UUID,
         body: PlanRequest,
     ) -> MedicationPlan:
+        if body.treatment_starts_on < self.now.astimezone(RIYADH).date():
+            raise ValidationFailed(code="medication_start_in_past")
         patient = self._patient(circle_id, lock=True)
         normalized_name = normalize_medication_name(body.name)
         require_available_name(

@@ -8,6 +8,7 @@ import 'package:app/features/medications/presentation/widgets/medication_plan_ca
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+/// Displays the medication plan list UI.
 class MedicationPlanList extends StatelessWidget {
   const MedicationPlanList({
     super.key,

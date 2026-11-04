@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:app/features/home/presentation/widgets/home_category_control.dart';
 import 'package:app/features/home/presentation/widgets/record_export_sheet.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the record page UI.
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
 
@@ -21,7 +23,29 @@ class RecordPage extends StatefulWidget {
 }
 
 class _RecordPageState extends State<RecordPage> {
+  static const _categories = ['medications', 'measurements', 'appointments'];
+  final PageController _pages = PageController();
   String _selected = 'medications';
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _select(String value) {
+    final index = _categories.indexOf(value);
+    if (index < 0 || !_pages.hasClients) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pages.jumpToPage(index);
+    } else {
+      _pages.animateToPage(
+        index,
+        duration: AppMotion.segmentSlide,
+        curve: AppMotion.easeOutCubic,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,27 +84,27 @@ class _RecordPageState extends State<RecordPage> {
                     measurementCount: measurementPlans.length,
                     showCounts: false,
                     selected: _selected,
-                    onChanged: (value) => setState(() => _selected = value),
+                    onChanged: _select,
                   ),
                 ],
               );
-              if (_selected == 'measurements') {
-                return MeasurementRecordSection(
-                  circleId: circle.id,
-                  header: header,
-                  plans: measurementPlans,
-                );
-              }
-              if (_selected == 'appointments') {
-                return AppointmentRecordSection(
-                  circleId: circle.id,
-                  canManage: circle.canManageMedications,
-                  header: header,
-                );
-              }
-              return MedicationHistorySection(
-                circleId: circle.id,
-                header: header,
+              return PageView(
+                controller: _pages,
+                onPageChanged: (index) =>
+                    setState(() => _selected = _categories[index]),
+                children: [
+                  MedicationHistorySection(circleId: circle.id, header: header),
+                  MeasurementRecordSection(
+                    circleId: circle.id,
+                    header: header,
+                    plans: measurementPlans,
+                  ),
+                  AppointmentRecordSection(
+                    circleId: circle.id,
+                    canManage: circle.canManageMedications,
+                    header: header,
+                  ),
+                ],
               );
             },
           ),
