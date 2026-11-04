@@ -9,7 +9,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/illustrations/guide_owl.dart';
+import 'package:app/features/auth/presentation/widgets/intro_previews.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -17,30 +17,31 @@ import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-/// One welcome page: the color behind it, the owl's pose, and what the owl
-/// says: the step (نظّم، شارك، تابع), a title and one line.
+/// One welcome page: the two soft glows behind it, and its words: the step
+/// (نظّم، شارك، تابع), a title and one line.
 class _Intro {
   const _Intro({
-    required this.tint,
-    required this.pose,
+    required this.glowHigh,
+    required this.glowLow,
     required this.stepKey,
     required this.titleKey,
     required this.bodyKey,
   });
 
-  final Color tint;
-  final OwlPose pose;
+  /// The glow at the top corner, and the one lower on the other side.
+  final Color glowHigh;
+  final Color glowLow;
   final String stepKey;
   final String titleKey;
   final String bodyKey;
 }
 
-/// The welcome: the app's guide, a wise owl, explains the app in three
-/// steps that belong together: organize, share, follow. Each page has the
-/// owl in a pose and a speech bubble with what it says. Story bars at the
-/// top show how far along you are, the color behind follows your finger
-/// from page to page, and one round button at the thumb moves on. The last
-/// page has «ابدأ», which opens the phone number; «تخطي» goes there at once.
+/// The welcome: three pages that show the app itself. Each has a picture
+/// of real parts of the app with example data (the next dose, the circle,
+/// the person switcher) over soft glows, then the step, a title and one
+/// line. At the bottom, in reach of the thumb: «تخطي», the dots of the
+/// pages, and «التالي». The last page has «ابدأ», which opens the phone
+/// number; «تخطي» goes there at once.
 class AuthFeatureScreen extends StatefulWidget {
   const AuthFeatureScreen({super.key});
 
@@ -51,22 +52,22 @@ class AuthFeatureScreen extends StatefulWidget {
 class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
   static const List<_Intro> _pages = <_Intro>[
     _Intro(
-      tint: AppSemanticColors.introWarm,
-      pose: OwlPose.organize,
+      glowHigh: AppSemanticColors.introGlowWarm,
+      glowLow: AppSemanticColors.introGlowLeaf,
       stepKey: 'intro.p1_step',
       titleKey: 'intro.p1_title',
       bodyKey: 'intro.p1_body',
     ),
     _Intro(
-      tint: AppSemanticColors.introLeaf,
-      pose: OwlPose.share,
+      glowHigh: AppSemanticColors.introGlowLeaf,
+      glowLow: AppSemanticColors.introGlowWarm,
       stepKey: 'intro.p2_step',
       titleKey: 'intro.p2_title',
       bodyKey: 'intro.p2_body',
     ),
     _Intro(
-      tint: AppSemanticColors.introCalm,
-      pose: OwlPose.follow,
+      glowHigh: AppSemanticColors.introGlowMist,
+      glowLow: AppSemanticColors.introGlowCalm,
       stepKey: 'intro.p3_step',
       titleKey: 'intro.p3_title',
       bodyKey: 'intro.p3_body',
@@ -75,7 +76,6 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
 
   final PageController _controller = PageController();
   int _page = 0;
-  bool _precached = false;
 
   bool get _last => _page == _pages.length - 1;
 
@@ -85,15 +85,6 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
     // Nobody is signed in on the welcome (after a sign-out, an ended sign-in
     // or a deleted account): the dose reminders of the last person go.
     unawaited(GetIt.I<DoseReminders>().clear());
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_precached) {
-      _precached = true;
-      GuideOwl.precache(context);
-    }
   }
 
   @override
@@ -120,17 +111,22 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
     }
   }
 
-  /// The color behind the pages, mixed between two pages while one slides
+  /// The glows behind the pages, mixed between two pages while one slides
   /// over the other.
-  Color _tint() {
+  (Color, Color) _glows() {
     final double raw = _controller.hasClients
         ? (_controller.page ?? _page.toDouble())
         : _page.toDouble();
     final double page = raw.clamp(0, _pages.length - 1).toDouble();
     final int from = page.floor();
     final int to = math.min(from + 1, _pages.length - 1);
-    return Color.lerp(_pages[from].tint, _pages[to].tint, page - from) ??
-        _pages[from].tint;
+    final double t = page - from;
+    final _Intro a = _pages[from];
+    final _Intro b = _pages[to];
+    return (
+      Color.lerp(a.glowHigh, b.glowHigh, t) ?? a.glowHigh,
+      Color.lerp(a.glowLow, b.glowLow, t) ?? a.glowLow,
+    );
   }
 
   @override
@@ -138,74 +134,125 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // Every page is light, so the status bar icons are dark.
       value: SystemUiOverlayStyle.dark,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (BuildContext context, Widget? child) =>
-            ColoredBox(color: _tint(), child: child),
-        child: Scaffold(
-          backgroundColor: AppSemanticColors.transparent,
-          body: SafeArea(
-            child: Column(
-              children: <Widget>[
-                // The bars, the name and «تخطي» stay while the pages slide.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                    AppSpacing.lg,
-                    0,
-                  ),
-                  child: _TopBar(
-                    count: _pages.length,
-                    current: _page,
-                    onSkip: _last ? null : _start,
-                  ),
-                ),
-                Expanded(
-                  child: PageView.builder(
-                    controller: _controller,
-                    // The bubble's soft shadow shows past the pages' edge.
-                    clipBehavior: Clip.none,
-                    itemCount: _pages.length,
-                    onPageChanged: (int page) => setState(() => _page = page),
-                    itemBuilder: (BuildContext context, int index) =>
-                        _IntroPage(
-                          intro: _pages[index],
-                          step: index + 1,
-                          active: index == _page,
-                        ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: AnimatedSwitcher(
-                    duration: AppMotion.contentEnter,
-                    child: _last
-                        ? Column(
-                            key: const ValueKey<String>('start'),
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              PillButton(
-                                label: context.tr('auth.start'),
-                                onPressed: _start,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                context.tr('auth.terms_note'),
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          )
-                        : _NextButton(
-                            key: const ValueKey<String>('next'),
-                            progress: (_page + 1) / _pages.length,
-                            onPressed: _next,
-                          ),
-                  ),
-                ),
-              ],
+      child: Scaffold(
+        backgroundColor: AppSemanticColors.introCanvas,
+        body: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (BuildContext context, Widget? child) {
+                  final (Color high, Color low) = _glows();
+                  return _Glows(high: high, low: low);
+                },
+              ),
             ),
+            SafeArea(
+              child: Column(
+                children: <Widget>[
+                  // The app's name stays while the pages slide.
+                  SizedBox(
+                    height: AppSizes.touch,
+                    child: Center(
+                      child: Text(
+                        context.tr('auth.app_name'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _controller,
+                      // The cards' soft shadows show past the pages' edge.
+                      clipBehavior: Clip.none,
+                      itemCount: _pages.length,
+                      onPageChanged: (int page) =>
+                          setState(() => _page = page),
+                      itemBuilder: (BuildContext context, int index) =>
+                          _IntroPage(
+                            intro: _pages[index],
+                            step: index + 1,
+                            active: index == _page,
+                          ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: AnimatedSwitcher(
+                      duration: AppMotion.contentEnter,
+                      child: _last
+                          ? Column(
+                              key: const ValueKey<String>('start'),
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                PillButton(
+                                  label: context.tr('auth.start'),
+                                  onPressed: _start,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  context.tr('auth.terms_note'),
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            )
+                          : _Controls(
+                              key: const ValueKey<String>('controls'),
+                              count: _pages.length,
+                              current: _page,
+                              onSkip: _start,
+                              onNext: _next,
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Two soft round glows on the page: one at the top corner and one lower on
+/// the other side, as on the pictures of the welcome.
+class _Glows extends StatelessWidget {
+  const _Glows({required this.high, required this.low});
+
+  final Color high;
+  final Color low;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        Positioned(top: 90, right: -60, child: _Glow(color: high, size: 300)),
+        Positioned(top: 300, left: -70, child: _Glow(color: low, size: 240)),
+      ],
+    );
+  }
+}
+
+class _Glow extends StatelessWidget {
+  const _Glow({required this.color, required this.size});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: <Color>[color, color.withValues(alpha: 0)],
+            stops: const <double>[0.4, 1],
           ),
         ),
       ),
@@ -213,66 +260,53 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
   }
 }
 
-/// Story bars, the app's name and «تخطي».
-class _TopBar extends StatelessWidget {
-  const _TopBar({
+/// The bottom of the first pages: «تخطي», the dots, and «التالي».
+class _Controls extends StatelessWidget {
+  const _Controls({
+    super.key,
     required this.count,
     required this.current,
     required this.onSkip,
+    required this.onNext,
   });
 
   final int count;
   final int current;
-
-  /// Null on the last page, where «ابدأ» is the way on.
-  final VoidCallback? onSkip;
+  final VoidCallback onSkip;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final VoidCallback? skip = onSkip;
-    const Color ink = AppSemanticColors.textPrimary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: <Widget>[
-        Semantics(
-          label: context.tr(
-            'common.step_of',
-            args: <String>['${current + 1}', '$count'],
+        TextButton(
+          onPressed: onSkip,
+          style: TextButton.styleFrom(
+            foregroundColor: AppSemanticColors.textSupporting,
+            minimumSize: const Size(AppSizes.touch, AppSizes.touch),
           ),
-          child: Row(
-            children: <Widget>[
-              for (int i = 0; i < count; i++) ...<Widget>[
-                if (i > 0) const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: AnimatedContainer(
-                    duration: AppMotion.contentEnter,
-                    height: AppSpacing.xs,
-                    decoration: ShapeDecoration(
-                      color: i <= current ? ink : ink.withValues(alpha: 0.2),
-                      shape: const StadiumBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+          child: Text(context.tr('intro.skip')),
+        ),
+        Expanded(
+          child: Center(
+            child: _Dots(count: count, current: current),
           ),
         ),
-        SizedBox(
-          height: AppSizes.touch,
+        FilledButton(
+          onPressed: onNext,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppSemanticColors.textPrimary,
+            foregroundColor: AppSemanticColors.surfaceContent,
+            shape: const StadiumBorder(),
+            minimumSize: const Size(AppSizes.button, AppSizes.button),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                context.tr('auth.app_name'),
-                style: text.titleMedium?.copyWith(color: ink),
-              ),
-              const Spacer(),
-              if (skip != null)
-                TextButton(
-                  onPressed: skip,
-                  style: TextButton.styleFrom(foregroundColor: ink),
-                  child: Text(context.tr('intro.skip')),
-                ),
+              Text(context.tr('intro.next')),
+              const SizedBox(width: AppSpacing.sm),
+              const Icon(AppIcons.next, size: AppSizes.iconSmall),
             ],
           ),
         ),
@@ -281,10 +315,55 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// A page: the owl in its pose, and under it the speech bubble with what it
-/// says. When the page shows, the owl rises into place and the bubble opens
-/// from its tail; this plays once each time, and not at all with Reduce
-/// Motion. The owl takes the room the bubble leaves.
+/// The dots of the pages: the page on show is a longer ink bar. VoiceOver
+/// reads «الخطوة 1 من 3».
+class _Dots extends StatelessWidget {
+  const _Dots({required this.count, required this.current});
+
+  final int count;
+  final int current;
+
+  static const double _dot = 7;
+  static const double _on = 24;
+
+  @override
+  Widget build(BuildContext context) {
+    final Duration duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : AppMotion.contentEnter;
+    return Semantics(
+      label: context.tr(
+        'common.step_of',
+        args: <String>['${current + 1}', '$count'],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          for (int i = 0; i < count; i++) ...<Widget>[
+            if (i > 0) const SizedBox(width: AppSpacing.tight),
+            AnimatedContainer(
+              duration: duration,
+              curve: AppMotion.easeOutCubic,
+              width: i == current ? _on : _dot,
+              height: _dot,
+              decoration: ShapeDecoration(
+                color: i == current
+                    ? AppSemanticColors.textPrimary
+                    : AppSemanticColors.introDotIdle,
+                shape: const StadiumBorder(),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A page: the picture, and under it the step, the title and one line. When
+/// the page shows, the picture's cards rise into place one after another;
+/// this plays once each time, and not at all with Reduce Motion. The
+/// picture takes the room the words leave.
 class _IntroPage extends StatefulWidget {
   const _IntroPage({
     required this.intro,
@@ -306,40 +385,14 @@ class _IntroPage extends StatefulWidget {
 
 class _IntroPageState extends State<_IntroPage>
     with SingleTickerProviderStateMixin {
-  /// How far the owl rises as it arrives.
-  static const double _rise = 24;
-
-  /// The most of the page the bubble takes. With very large text it stops
-  /// here and scrolls, so the owl keeps the rest.
-  static const double _bubbleShare = 0.62;
+  /// The most of the page the words take. With very large text they stop
+  /// here and scroll, so the picture keeps the rest.
+  static const double _wordsShare = 0.6;
 
   late final AnimationController _enter = AnimationController(
     vsync: this,
-    duration: AppMotion.guideEnter,
+    duration: AppMotion.introEnter,
   );
-
-  // The owl fades in and rises with a soft spring; a moment later the
-  // bubble fades in and grows from its tail.
-  late final CurvedAnimation _owlFade = CurvedAnimation(
-    parent: _enter,
-    curve: const Interval(0, 0.4, curve: AppMotion.easeOut),
-  );
-  late final CurvedAnimation _owlRise = CurvedAnimation(
-    parent: _enter,
-    curve: const Interval(0, 0.7, curve: AppMotion.alertSpring),
-  );
-  late final CurvedAnimation _bubbleFade = CurvedAnimation(
-    parent: _enter,
-    curve: const Interval(0.35, 0.75, curve: AppMotion.easeOut),
-  );
-  late final CurvedAnimation _bubbleGrow = CurvedAnimation(
-    parent: _enter,
-    curve: const Interval(0.35, 1, curve: AppMotion.alertSpring),
-  );
-  late final Animation<double> _bubbleScale = Tween<double>(
-    begin: 0.94,
-    end: 1,
-  ).animate(_bubbleGrow);
 
   bool _reduceMotion = false;
   bool _started = false;
@@ -372,253 +425,81 @@ class _IntroPageState extends State<_IntroPage>
 
   @override
   void dispose() {
-    _owlFade.dispose();
-    _owlRise.dispose();
-    _bubbleFade.dispose();
-    _bubbleGrow.dispose();
     _enter.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints box) => Column(
-          children: <Widget>[
-            Expanded(
-              child: FadeTransition(
-                opacity: _owlFade,
-                child: AnimatedBuilder(
-                  animation: _owlRise,
-                  builder: (BuildContext context, Widget? child) {
-                    final double t = _owlRise.value;
-                    return Transform.translate(
-                      offset: Offset(0, (1 - t) * _rise),
-                      child: Transform.scale(
-                        scale: 0.92 + 0.08 * t,
-                        alignment: Alignment.bottomCenter,
-                        child: child,
-                      ),
-                    );
-                  },
-                  // The owl stands just above its bubble; spare room goes
-                  // above it.
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: GuideOwl(pose: widget.intro.pose),
-                  ),
-                ),
-              ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints box) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: IntroPreview(step: widget.step, enter: _enter),
             ),
-            FadeTransition(
-              opacity: _bubbleFade,
-              child: ScaleTransition(
-                scale: _bubbleScale,
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: box.maxHeight * _bubbleShare,
-                  ),
-                  child: SingleChildScrollView(
-                    primary: false,
-                    // The bubble's shadow shows past the scroll area.
-                    clipBehavior: Clip.none,
-                    child: _SpeechBubble(
-                      intro: widget.intro,
-                      step: widget.step,
-                    ),
-                  ),
-                ),
-              ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: box.maxHeight * _wordsShare),
+            child: SingleChildScrollView(
+              primary: false,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: _Words(intro: widget.intro, step: widget.step),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// What the owl says: a white bubble with a small tail up to the owl. In it
-/// the step («01» and نظّم), the title, and one line.
-class _SpeechBubble extends StatelessWidget {
-  const _SpeechBubble({required this.intro, required this.step});
+/// The words of a page: a small white pill with the step («01 · نظّم»),
+/// the title and one line.
+class _Words extends StatelessWidget {
+  const _Words({required this.intro, required this.step});
 
   final _Intro intro;
   final int step;
-
-  /// The tail's height and half its width.
-  static const double _tail = 12;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const CustomPaint(
-          size: Size(_tail * 2, _tail),
-          painter: _TailPainter(),
-        ),
         Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.inset),
-          decoration: AppSurfaces.floating(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    decoration: const ShapeDecoration(
-                      color: AppSemanticColors.textPrimary,
-                      shape: StadiumBorder(),
-                    ),
-                    child: Text(
-                      step.toString().padLeft(2, '0'),
-                      style: text.labelMedium?.copyWith(
-                        color: AppSemanticColors.surfaceContent,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    context.tr(intro.stepKey),
-                    style: text.titleSmall?.copyWith(
-                      color: AppSemanticColors.textSupporting,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Semantics(
-                header: true,
-                child: Text(
-                  context.tr(intro.titleKey),
-                  style: text.headlineMedium,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                context.tr(intro.bodyKey),
-                style: text.bodyLarge?.copyWith(
-                  color: AppSemanticColors.textSupporting,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: const ShapeDecoration(
+            color: AppSemanticColors.surfaceContent,
+            shape: StadiumBorder(),
+            shadows: AppSurfaces.floatShadow,
+          ),
+          child: Text(
+            '${step.toString().padLeft(2, '0')} · ${context.tr(intro.stepKey)}',
+            style: text.labelMedium?.copyWith(
+              color: AppSemanticColors.textPrimary,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Semantics(
+          header: true,
+          child: Text(context.tr(intro.titleKey), style: text.displaySmall),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          context.tr(intro.bodyKey),
+          style: text.bodyLarge?.copyWith(
+            color: AppSemanticColors.textSupporting,
           ),
         ),
       ],
     );
   }
-}
-
-/// The bubble's tail: a small triangle with a round tip, pointing up.
-class _TailPainter extends CustomPainter {
-  const _TailPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double mid = size.width / 2;
-    final Path tail = Path()
-      // One point below the bottom, so it joins the bubble without a seam.
-      ..moveTo(0, size.height + 1)
-      ..lineTo(mid - 3, 2)
-      ..quadraticBezierTo(mid, 0, mid + 3, 2)
-      ..lineTo(size.width, size.height + 1)
-      ..close();
-    canvas.drawPath(tail, Paint()..color = AppSemanticColors.surfaceContent);
-  }
-
-  @override
-  bool shouldRepaint(_TailPainter old) => false;
-}
-
-/// The round «التالي»: an ink circle with an arrow, inside a ring that
-/// fills as the pages go by.
-class _NextButton extends StatelessWidget {
-  const _NextButton({
-    super.key,
-    required this.progress,
-    required this.onPressed,
-  });
-
-  /// From 0 to 1.
-  final double progress;
-  final VoidCallback onPressed;
-
-  static const double _outer = 76;
-  static const double _inner = 60;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: context.tr('intro.next'),
-      excludeSemantics: true,
-      onTap: onPressed,
-      child: SizedBox(
-        width: _outer,
-        height: _outer,
-        child: CustomPaint(
-          painter: _ProgressRingPainter(progress),
-          child: Center(
-            child: Material(
-              color: AppSemanticColors.textPrimary,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onPressed,
-                child: const SizedBox(
-                  width: _inner,
-                  height: _inner,
-                  child: Icon(
-                    AppIcons.next,
-                    color: AppSemanticColors.surfaceContent,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Draws the onboarding progress ring.
-class _ProgressRingPainter extends CustomPainter {
-  const _ProgressRingPainter(this.progress);
-
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Rect circle = Offset.zero & size;
-    final Rect ring = circle.deflate(2);
-    canvas.drawOval(
-      ring,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..color = AppSemanticColors.textPrimary.withValues(alpha: 0.12),
-    );
-    canvas.drawArc(
-      ring,
-      -math.pi / 2,
-      2 * math.pi * progress,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round
-        ..color = AppSemanticColors.textPrimary,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_ProgressRingPainter old) => old.progress != progress;
 }

@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -94,7 +95,7 @@ class _TodayMedicationAttentionSectionState
           ),
         ),
         AnimatedCrossFade(
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.disclosure,
           crossFadeState: _expanded
               ? CrossFadeState.showFirst
               : CrossFadeState.showSecond,

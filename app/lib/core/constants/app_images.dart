@@ -13,9 +13,4 @@ abstract class AppImages {
   static const String success = '$_basePath/success.png';
   static const String error = '$_basePath/error.png';
   static const String noInternet = '$_basePath/no_internet.png';
-
-  // The guide owl of the welcome pages, one picture per pose.
-  static const String owlOrganize = '$_basePath/owl_organize.png';
-  static const String owlShare = '$_basePath/owl_share.png';
-  static const String owlFollow = '$_basePath/owl_follow.png';
 }

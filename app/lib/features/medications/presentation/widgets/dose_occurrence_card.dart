@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -92,7 +93,7 @@ class _TimeBadge extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTextTheme.bold,
                 color: AppSemanticColors.textPrimary,
               ),
             ),

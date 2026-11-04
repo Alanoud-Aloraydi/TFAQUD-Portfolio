@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
@@ -12,7 +11,6 @@ import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/core/widgets/illustrations/guide_owl.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
@@ -1948,14 +1946,17 @@ void main() {
           AppRouter.router.routeInformationProvider.value.uri.path,
           Routes.auth,
         );
-        // The welcome: the guide owl explains the first step, and the
-        // round button moves on to the second.
+        // The welcome: the first page shows the next dose as on «اليوم»,
+        // with the step and its title; «التالي» at the bottom moves on to
+        // the second, and «تخطي» is next to it.
         expect(find.text('intro.p1_title'.tr()), findsOneWidget);
-        expect(find.text('intro.p1_step'.tr()), findsOneWidget);
-        expect(find.byType(GuideOwl), findsOneWidget);
-        await tester.tap(find.byIcon(AppIcons.next));
+        expect(find.text('01 · ${'intro.p1_step'.tr()}'), findsOneWidget);
+        expect(find.text('intro.demo.next_dose'.tr()), findsOneWidget);
+        expect(find.text('intro.skip'.tr()), findsOneWidget);
+        await tester.tap(find.text('intro.next'.tr()));
         await tester.pumpAndSettle();
         expect(find.text('intro.p2_title'.tr()), findsOneWidget);
+        expect(find.text('intro.demo.circle'.tr()), findsOneWidget);
       });
 
       testWidgets('deleting asks first, and "no" deletes nothing', (

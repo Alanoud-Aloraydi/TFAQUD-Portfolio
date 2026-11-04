@@ -7,6 +7,11 @@ abstract class AppMotion {
 
   static const Duration fieldFeedback = Duration(milliseconds: 120);
   static const Duration formScroll = Duration(milliseconds: 200);
+
+  /// A group that opens or closes in place, such as the doses that need
+  /// attention on «اليوم».
+  static const Duration disclosure = Duration(milliseconds: 200);
+
   static const Duration segmentSlide = Duration(milliseconds: 260);
   static const Duration contentEnter = Duration(milliseconds: 280);
   static const Duration contentExit = Duration(milliseconds: 160);
@@ -15,9 +20,9 @@ abstract class AppMotion {
   static const Duration menuExit = Duration(milliseconds: 260);
   static const Duration shimmer = Duration(milliseconds: 1400);
 
-  /// The guide owl arriving on a welcome page: it rises into place, then
-  /// its speech bubble opens. It plays once each time the page shows.
-  static const Duration guideEnter = Duration(milliseconds: 760);
+  /// The pictures arriving on a welcome page: the cards rise into place one
+  /// after another. It plays once each time the page shows.
+  static const Duration introEnter = Duration(milliseconds: 760);
   static const int branchEnterMilliseconds = 260;
   static const int branchExitMilliseconds = 140;
   static const Curve easeOut = Curves.easeOut;
