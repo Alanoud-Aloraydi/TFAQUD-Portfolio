@@ -25,11 +25,13 @@ class MeasurementRecordSection extends StatefulWidget {
     required this.circleId,
     required this.header,
     required this.plans,
+    required this.refreshRevision,
   });
 
   final String circleId;
   final Widget header;
   final List<MeasurementPlan> plans;
+  final int refreshRevision;
 
   @override
   State<MeasurementRecordSection> createState() =>
@@ -54,7 +56,10 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   @override
   void didUpdateWidget(MeasurementRecordSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.circleId != oldWidget.circleId) _loadMonth();
+    if (widget.circleId != oldWidget.circleId ||
+        widget.refreshRevision != oldWidget.refreshRevision) {
+      _loadMonth();
+    }
   }
 
   @override
@@ -182,16 +187,29 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
         .firstOrNull;
     final version = plan?.version;
     final monthEnd = DateTime(_month.year, _month.month + 1, 0);
-    final showTarget =
-        version != null &&
-        !version.effectiveFromOn.isAfter(monthEnd) &&
-        readings.every((reading) => reading.planVersionId == version.id);
+    final firstReading = readings.firstOrNull;
+    final sharedReadingTarget =
+        firstReading != null &&
+        readings.every(
+          (reading) =>
+              reading.glucoseLow == firstReading.glucoseLow &&
+              reading.glucoseHigh == firstReading.glucoseHigh &&
+              reading.systolicLimit == firstReading.systolicLimit &&
+              reading.diastolicLimit == firstReading.diastolicLimit,
+        );
+    final readingTarget = sharedReadingTarget ? firstReading : null;
+    final planTarget =
+        readings.isEmpty &&
+            version != null &&
+            !version.effectiveFromOn.isAfter(monthEnd)
+        ? version
+        : null;
     final low = kind == MeasurementKind.glucose
-        ? (showTarget ? version.glucoseLow : null)
-        : (showTarget ? version.diastolicLimit : null);
+        ? readingTarget?.glucoseLow ?? planTarget?.glucoseLow
+        : readingTarget?.diastolicLimit ?? planTarget?.diastolicLimit;
     final high = kind == MeasurementKind.glucose
-        ? (showTarget ? version.glucoseHigh : null)
-        : (showTarget ? version.systolicLimit : null);
+        ? readingTarget?.glucoseHigh ?? planTarget?.glucoseHigh
+        : readingTarget?.systolicLimit ?? planTarget?.systolicLimit;
     final calendar = kind == MeasurementKind.glucose
         ? _calendarGlucose
         : _calendarBp;
@@ -289,7 +307,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
 
   Widget _readingRow(BuildContext context, MeasurementReading reading) {
     final skipped = reading.outcome == 'skipped';
-    final at = skipped ? reading.scheduledOn! : reading.measuredAt!.toLocal();
+    final at = skipped ? reading.scheduledOn! : riyadhNow(reading.measuredAt!);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppSemanticColors.surfaceContent,

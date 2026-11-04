@@ -63,9 +63,6 @@ class Appointment(db.Model):
     time_of_day: Mapped[time] = mapped_column(Time)
     place: Mapped[str | None] = mapped_column(Text)
     remote_method: Mapped[str | None] = mapped_column(Text)
-    companion_account_id: Mapped[UUID] = mapped_column(
-        ForeignKey("account.id", ondelete="RESTRICT")
-    )
     status: Mapped[str] = mapped_column(Text, default="scheduled")
     created_by_account_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("account.id", ondelete="SET NULL")
@@ -75,6 +72,22 @@ class Appointment(db.Model):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
+    )
+
+
+class AppointmentCompanion(db.Model):
+    """One circle member selected for an appointment."""
+
+    __tablename__ = "appointment_companion"
+
+    appointment_id: Mapped[UUID] = mapped_column(
+        ForeignKey("appointment.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    account_id: Mapped[UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="RESTRICT"),
+        primary_key=True,
+        index=True,
     )
 
 

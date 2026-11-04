@@ -4,14 +4,14 @@ from datetime import datetime, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.appointments.inputs import AppointmentRequest
 from app.appointments.inputs import ReviseAppointmentRequest
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.models import Account, CareCircleManager, Patient
-from app.models.appointment import Appointment
+from app.models.appointment import Appointment, AppointmentCompanion
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
@@ -29,7 +29,7 @@ class AppointmentService:
         """Create a visit for the circle patient."""
         patient = self._patient(circle_id)
         self._future(body)
-        self._companion(circle_id, body.companion_account_id)
+        self._companions(circle_id, body.companion_account_ids)
         appointment = Appointment(
             patient_id=patient.id,
             created_by_account_id=actor_id,
@@ -40,6 +40,7 @@ class AppointmentService:
         self._fill(appointment, body)
         self.session.add(appointment)
         self.session.flush()
+        self._replace_companions(appointment.id, body.companion_account_ids)
         return appointment
 
     def revise(
@@ -53,8 +54,9 @@ class AppointmentService:
         if appointment.updated_at != body.expected_updated_at:
             raise Conflict(code="appointment_changed")
         self._future(body)
-        self._companion(circle_id, body.companion_account_id)
+        self._companions(circle_id, body.companion_account_ids)
         self._fill(appointment, body)
+        self._replace_companions(appointment.id, body.companion_account_ids)
         appointment.updated_at = max(
             self.now, appointment.updated_at + timedelta(microseconds=1)
         )
@@ -108,29 +110,46 @@ class AppointmentService:
             raise NotFound()
         return appointment
 
-    def _companion(self, circle_id: UUID, account_id: UUID) -> None:
-        member = self.session.scalar(
-            select(CareCircleManager.id)
+    def _companions(self, circle_id: UUID, account_ids: list[UUID]) -> None:
+        members = set(self.session.scalars(
+            select(CareCircleManager.account_id)
             .join(Account, Account.id == CareCircleManager.account_id)
             .where(
                 CareCircleManager.care_circle_id == circle_id,
-                CareCircleManager.account_id == account_id,
+                CareCircleManager.account_id.in_(account_ids),
             )
             .with_for_update()
-        )
-        if member is None:
+        ))
+        if not account_ids or members != set(account_ids):
             raise ValidationFailed(code="appointment_invalid_companion")
+
+    def _replace_companions(
+        self, appointment_id: UUID, account_ids: list[UUID]
+    ) -> None:
+        self.session.execute(
+            delete(AppointmentCompanion).where(
+                AppointmentCompanion.appointment_id == appointment_id
+            )
+        )
+        self.session.add_all(
+            AppointmentCompanion(
+                appointment_id=appointment_id, account_id=account_id
+            )
+            for account_id in account_ids
+        )
+        self.session.flush()
 
     @staticmethod
     def _fill(appointment: Appointment, body: AppointmentRequest) -> None:
         appointment.specialty = body.specialty.strip()
         appointment.kind = body.kind
-        appointment.other_kind = body.other_kind.strip() if body.other_kind else None
+        appointment.other_kind = (
+            body.other_kind.strip() if body.other_kind else None
+        )
         appointment.scheduled_on = body.scheduled_on
         appointment.time_of_day = body.time_of_day
         appointment.place = body.place.strip() if body.place else None
         appointment.remote_method = body.remote_method
-        appointment.companion_account_id = body.companion_account_id
 
     def _future(self, body: AppointmentRequest) -> None:
         """Reject newly scheduled visits that have already passed."""

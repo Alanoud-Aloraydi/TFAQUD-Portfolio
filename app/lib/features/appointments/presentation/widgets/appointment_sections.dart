@@ -37,6 +37,11 @@ String appointmentKindTitle(BuildContext context, CareAppointment value) =>
     ? value.otherKind ?? context.tr('appointments.kinds.other')
     : context.tr('appointments.kinds.${value.kind.name}');
 
+String appointmentCompanionNames(BuildContext context, CareAppointment value) =>
+    value.companions
+        .map((companion) => companion.name)
+        .join(context.tr('appointments.companion_separator'));
+
 String appointmentDate(BuildContext context, DateTime date) =>
     '${context.tr('common.weekdays.${date.weekday}')} '
     '${date.day} ${context.tr('circles.months.${date.month}')}';
@@ -197,24 +202,25 @@ class AppointmentCard extends StatelessWidget {
                           ? context.tr('appointments.${value.remoteMethod}')
                           : value.place ?? '',
                     ),
-                    Row(
+                    Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        PersonPhoto(
-                          name: value.companionName,
-                          photoPath: ApiEndpoints.memberPhoto(
-                            circleId,
-                            value.companionAccountId,
-                          ),
-                          avatarCode: value.companionAvatarCode,
-                          size: 20,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Flexible(
-                          child: Text(
-                            context.tr(
-                              'appointments.companion_name',
-                              args: [value.companionName],
+                        for (final companion in value.companions)
+                          PersonPhoto(
+                            name: companion.name,
+                            photoPath: ApiEndpoints.memberPhoto(
+                              circleId,
+                              companion.id,
                             ),
+                            avatarCode: companion.avatarCode,
+                            size: 20,
+                          ),
+                        Text(
+                          context.tr(
+                            'appointments.companion_name',
+                            args: [appointmentCompanionNames(context, value)],
                           ),
                         ),
                       ],
@@ -357,6 +363,7 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
             state.status != AppointmentsLoadStatus.failure)
           Text(context.tr(state.errorKey!)),
         WhiteFilterMenu<String>(
+          glass: true,
           options: {
             for (final key in _filters)
               key: context.tr('appointments.filters.$key'),
@@ -414,7 +421,7 @@ class AppointmentTodayRow extends StatelessWidget {
                 Text(
                   context.tr(
                     'appointments.companion_name',
-                    args: [value.companionName],
+                    args: [appointmentCompanionNames(context, value)],
                   ),
                 ),
               ],

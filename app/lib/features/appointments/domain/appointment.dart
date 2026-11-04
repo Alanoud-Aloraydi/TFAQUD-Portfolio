@@ -18,9 +18,7 @@ class CareAppointment extends Equatable {
     required this.time,
     required this.place,
     required this.remoteMethod,
-    required this.companionAccountId,
-    required this.companionName,
-    this.companionAvatarCode,
+    required this.companions,
     required this.status,
     required this.updatedAt,
   });
@@ -33,9 +31,7 @@ class CareAppointment extends Equatable {
   final String time;
   final String? place;
   final String? remoteMethod;
-  final String companionAccountId;
-  final String companionName;
-  final String? companionAvatarCode;
+  final List<AppointmentCompanion> companions;
   final AppointmentStatus status;
   final DateTime updatedAt;
 
@@ -53,9 +49,7 @@ class CareAppointment extends Equatable {
     time,
     place,
     remoteMethod,
-    companionAccountId,
-    companionName,
-    companionAvatarCode,
+    companions,
     status,
     updatedAt,
   ];
@@ -87,7 +81,7 @@ class AppointmentDraft extends Equatable {
     required this.time,
     required this.place,
     required this.remoteMethod,
-    required this.companionAccountId,
+    required this.companionAccountIds,
   });
 
   final String specialty;
@@ -97,7 +91,7 @@ class AppointmentDraft extends Equatable {
   final String time;
   final String? place;
   final String? remoteMethod;
-  final String companionAccountId;
+  final List<String> companionAccountIds;
 
   @override
   List<Object?> get props => [
@@ -108,6 +102,6 @@ class AppointmentDraft extends Equatable {
     time,
     place,
     remoteMethod,
-    companionAccountId,
+    companionAccountIds,
   ];
 }

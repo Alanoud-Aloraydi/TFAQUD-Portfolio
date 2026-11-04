@@ -6,26 +6,28 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Account, CareCircleManager, Patient
-from app.models.appointment import Appointment
+from app.models.appointment import Appointment, AppointmentCompanion
 
 
 def appointments_for_circle(session: Session, circle_id: UUID) -> list[dict]:
     """Return scheduled and historical visits for one patient."""
-    rows = session.execute(
-        select(Appointment, Account.display_name, Account.avatar_code)
+    appointments = list(session.scalars(
+        select(Appointment)
         .join(Patient, Patient.id == Appointment.patient_id)
-        .join(Account, Account.id == Appointment.companion_account_id)
         .where(Patient.care_circle_id == circle_id)
         .order_by(Appointment.scheduled_on, Appointment.time_of_day)
-    ).all()
+    ))
+    companions = companions_for_appointments(
+        session, [item.id for item in appointments]
+    )
     return [
-        {**appointment_view(row, name or ""), "companion_avatar_code": code}
-        for row, name, code in rows
+        appointment_view(item, companions[item.id])
+        for item in appointments
     ]
 
 
 def appointment_view(
-    appointment: Appointment, name: str, avatar_code: str | None = None
+    appointment: Appointment, companions: list[dict]
 ) -> dict:
     """Expose only data needed by the appointment screens."""
     return {
@@ -37,32 +39,39 @@ def appointment_view(
         "time_of_day": appointment.time_of_day.isoformat(timespec="minutes"),
         "place": appointment.place,
         "remote_method": appointment.remote_method,
-        "companion_account_id": str(appointment.companion_account_id),
-        "companion_name": name,
-        "companion_avatar_code": avatar_code,
+        "companions": companions,
         "status": appointment.status,
         "updated_at": appointment.updated_at.isoformat(),
     }
 
 
-def companion_name(session: Session, appointment: Appointment) -> str:
-    """Resolve the selected member's current display name."""
-    return session.scalar(
-        select(Account.display_name).where(
-            Account.id == appointment.companion_account_id
+def companions_for_appointments(
+    session: Session, appointment_ids: list[UUID]
+) -> dict[UUID, list[dict]]:
+    """Resolve selected members in one query, including past companions."""
+    result: dict[UUID, list[dict]] = {
+        appointment_id: [] for appointment_id in appointment_ids
+    }
+    if not appointment_ids:
+        return result
+    rows = session.execute(
+        select(
+            AppointmentCompanion.appointment_id,
+            Account.id,
+            Account.display_name,
+            Account.avatar_code,
         )
-    ) or ""
-
-
-def companion_avatar_code(
-    session: Session, appointment: Appointment
-) -> str | None:
-    """Return the selected companion's current character code."""
-    return session.scalar(
-        select(Account.avatar_code).where(
-            Account.id == appointment.companion_account_id
-        )
+        .join(Account, Account.id == AppointmentCompanion.account_id)
+        .where(AppointmentCompanion.appointment_id.in_(appointment_ids))
+        .order_by(Account.display_name, Account.id)
     )
+    for appointment_id, account_id, name, avatar_code in rows:
+        result[appointment_id].append({
+            "account_id": str(account_id),
+            "name": name or "",
+            "avatar_code": avatar_code,
+        })
+    return result
 
 
 def companions_for_circle(session: Session, circle_id: UUID) -> list[dict]:

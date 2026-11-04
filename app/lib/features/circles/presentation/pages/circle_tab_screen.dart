@@ -254,14 +254,14 @@ class CircleCard extends StatelessWidget {
             Row(
               children: <Widget>[
                 Semantics(
-                  button: overview.canManage || overview.patientIsYou,
+                  button: overview.canEditPatientPhoto,
                   label: context.tr(
                     'photos.patient_photo',
                     args: [overview.patientName],
                   ),
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: overview.canManage || overview.patientIsYou
+                    onTap: overview.canEditPatientPhoto
                         ? () => showPersonPhotoSheet(
                             context,
                             title: context.tr(
@@ -284,7 +284,7 @@ class CircleCard extends StatelessWidget {
                           avatarCode: overview.patientAvatarCode,
                           size: AppSizes.avatarLarge,
                         ),
-                        if (overview.canManage || overview.patientIsYou)
+                        if (overview.canEditPatientPhoto)
                           const PositionedDirectional(
                             end: 0,
                             bottom: 0,
@@ -668,6 +668,7 @@ class _MembersList extends StatelessWidget {
           member: member,
           circleId: circleId,
           patientUsesApp: overview.patientUsesApp,
+          canEditPatientPhoto: overview.canEditPatientPhoto,
         ),
       for (final CirclePendingInvitation invitation
           in overview.pendingInvitations)
@@ -729,31 +730,28 @@ class _MemberRow extends StatelessWidget {
     required this.member,
     required this.circleId,
     required this.patientUsesApp,
+    required this.canEditPatientPhoto,
   });
 
   final CircleMember member;
   final String circleId;
   final bool patientUsesApp;
+  final bool canEditPatientPhoto;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     return InkWell(
-      onTap: member.isPatient || member.isYou
+      onTap: member.isYou && !member.isPatient
+          ? () => context.push(Routes.account)
+          : member.isPatient && canEditPatientPhoto
           ? () => showPersonPhotoSheet(
               context,
-              title: member.isPatient
-                  ? context.tr('photos.patient_photo', args: [member.name])
-                  : context.tr('photos.your_photo'),
+              title: context.tr('photos.patient_photo', args: [member.name]),
               name: member.name,
-              photoPath: member.isPatient
-                  ? ApiEndpoints.patientPhoto(circleId)
-                  : ApiEndpoints.accountPhoto,
-              avatarPath: member.isPatient
-                  ? ApiEndpoints.patientAvatar(circleId)
-                  : ApiEndpoints.accountAvatar,
+              photoPath: ApiEndpoints.patientPhoto(circleId),
+              avatarPath: ApiEndpoints.patientAvatar(circleId),
               avatarCode: member.avatarCode,
-              frontCamera: member.isYou && !member.isPatient,
               onSaved: context.read<CircleOverviewCubit>().load,
             )
           : null,

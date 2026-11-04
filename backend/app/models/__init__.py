@@ -21,7 +21,11 @@ from app.models.measurement import (
     MeasurementRecord,
     MeasurementTarget,
 )
-from app.models.appointment import Appointment, AppointmentVisit
+from app.models.appointment import (
+    Appointment,
+    AppointmentCompanion,
+    AppointmentVisit,
+)
 from app.models.push import PushDevice
 from app.models.photo import Photo
 
@@ -48,6 +52,7 @@ __all__ = [
     "MeasurementRecord",
     "MeasurementTarget",
     "Appointment",
+    "AppointmentCompanion",
     "AppointmentVisit",
     "PushDevice",
     "Photo",

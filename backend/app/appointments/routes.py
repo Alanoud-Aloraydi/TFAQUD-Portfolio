@@ -8,8 +8,8 @@ from app.appointments.inputs import AppointmentRequest
 from app.appointments.inputs import AppointmentStatusRequest
 from app.appointments.inputs import ReviseAppointmentRequest
 from app.appointments.queries import appointment_view, appointments_for_circle
-from app.appointments.queries import companion_name, companions_for_circle
-from app.appointments.queries import companion_avatar_code
+from app.appointments.queries import companions_for_appointments
+from app.appointments.queries import companions_for_circle
 from app.appointments.service import AppointmentService
 from app.auth.decorators import current_auth
 from app.authz.decorators import require_circle_role
@@ -69,8 +69,10 @@ def create_appointment(circle_id):
             session, get_clock().now()
         ).create(_uuid(circle_id), _uuid(current_auth().user_id), body)
         value = appointment_view(
-            appointment, companion_name(session, appointment),
-            companion_avatar_code(session, appointment),
+            appointment,
+            companions_for_appointments(session, [appointment.id])[
+                appointment.id
+            ],
         )
     return jsonify(appointment=value), 201
 
@@ -85,8 +87,10 @@ def revise_appointment(circle_id, appointment_id):
             session, get_clock().now()
         ).revise(_uuid(circle_id), _uuid(appointment_id), body)
         value = appointment_view(
-            appointment, companion_name(session, appointment),
-            companion_avatar_code(session, appointment),
+            appointment,
+            companions_for_appointments(session, [appointment.id])[
+                appointment.id
+            ],
         )
     return jsonify(appointment=value)
 
@@ -104,7 +108,9 @@ def set_appointment_status(circle_id, appointment_id):
             body.expected_updated_at,
         )
         value = appointment_view(
-            appointment, companion_name(session, appointment),
-            companion_avatar_code(session, appointment),
+            appointment,
+            companions_for_appointments(session, [appointment.id])[
+                appointment.id
+            ],
         )
     return jsonify(appointment=value)

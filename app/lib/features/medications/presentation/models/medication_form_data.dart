@@ -52,7 +52,13 @@ class MedicationFormData {
   DateTime? effectiveFromOn;
   final List<ScheduleFormData> schedules;
 
-  void addSchedule() => schedules.add(_newSchedule());
+  void addSchedule() {
+    final previousUnit = schedules.isEmpty ? null : schedules.last.doseUnit;
+    final unit = form.doseUnits.contains(previousUnit)
+        ? previousUnit!
+        : form.defaultDoseUnit;
+    schedules.add(_newSchedule(doseUnit: unit));
+  }
 
   void removeSchedule(int index) => schedules.removeAt(index).dispose();
 
@@ -145,12 +151,13 @@ class MedicationFormData {
 
   // A new dose starts on the most common answer (one tablet at 8:00, every
   // day), so most people only check it.
-  static ScheduleFormData _newSchedule() => ScheduleFormData(
-    time: const TimeOfDay(hour: 8, minute: 0),
-    dose: 1,
-    doseUnit: DoseUnit.tablet,
-    weekdays: {1, 2, 3, 4, 5, 6, 7},
-  );
+  static ScheduleFormData _newSchedule({DoseUnit doseUnit = DoseUnit.tablet}) =>
+      ScheduleFormData(
+        time: const TimeOfDay(hour: 8, minute: 0),
+        dose: 1,
+        doseUnit: doseUnit,
+        weekdays: {1, 2, 3, 4, 5, 6, 7},
+      );
 
   static ScheduleFormData _fromSchedule(MedicationSchedule value) {
     final parts = value.time.split(':');

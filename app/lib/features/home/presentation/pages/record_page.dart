@@ -8,6 +8,7 @@ import 'package:app/features/medications/presentation/cubit/medications_cubit.da
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_history_section.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_section.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -42,6 +43,9 @@ class _RecordPageState extends State<RecordPage> {
                   .watch<MeasurementPlansCubit>()
                   .state
                   .plans;
+              final readingRevision = context
+                  .watch<MeasurementReadingsCubit>()
+                  .recordRevision;
               final header = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -85,6 +89,7 @@ class _RecordPageState extends State<RecordPage> {
                     circleId: circle.id,
                     header: header,
                     plans: measurementPlans,
+                    refreshRevision: readingRevision,
                   ),
                   AppointmentRecordSection(
                     circleId: circle.id,

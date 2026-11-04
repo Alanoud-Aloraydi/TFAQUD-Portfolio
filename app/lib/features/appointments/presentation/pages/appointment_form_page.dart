@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -46,7 +47,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   DateTime _date = riyadhToday();
   TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
   String _remoteMethod = 'video';
-  String? _companionId;
+  final Set<String> _companionIds = <String>{};
   final _place = TextEditingController();
   final _otherSpecialty = TextEditingController();
   final _otherKind = TextEditingController();
@@ -76,7 +77,9 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
     _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
     _place.text = value.place ?? '';
     _remoteMethod = value.remoteMethod ?? 'video';
-    _companionId = value.companionAccountId;
+    _companionIds
+      ..clear()
+      ..addAll(value.companions.map((item) => item.id));
   }
 
   String _dateText(DateTime date) =>
@@ -97,7 +100,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       setState(() => _errorKey = 'appointments.kind_required');
       return;
     }
-    if (_companionId == null) {
+    if (_companionIds.isEmpty) {
       setState(() => _errorKey = 'appointments.companion_required');
       return;
     }
@@ -117,7 +120,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
           '${_time.minute.toString().padLeft(2, '0')}',
       place: _kind == AppointmentKind.remote ? null : _place.text.trim(),
       remoteMethod: _kind == AppointmentKind.remote ? _remoteMethod : null,
-      companionAccountId: _companionId!,
+      companionAccountIds: _companionIds.toList(),
     );
     setState(() {
       _saving = true;
@@ -344,7 +347,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                         runSpacing: AppSpacing.sm,
                         children: [
                           for (final item in companions.companions)
-                            ChoiceChip(
+                            FilterChip(
                               avatar: PersonPhoto(
                                 name: item.name,
                                 photoPath: ApiEndpoints.memberPhoto(
@@ -354,10 +357,25 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                                 avatarCode: item.avatarCode,
                                 size: 20,
                               ),
-                              label: Text(item.name),
-                              selected: _companionId == item.id,
-                              onSelected: (_) =>
-                                  setState(() => _companionId = item.id),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(item.name),
+                                  if (_companionIds.contains(item.id)) ...[
+                                    const SizedBox(width: AppSpacing.xs),
+                                    const Icon(AppIcons.check, size: 16),
+                                  ],
+                                ],
+                              ),
+                              showCheckmark: false,
+                              selected: _companionIds.contains(item.id),
+                              onSelected: (selected) => setState(() {
+                                if (selected) {
+                                  _companionIds.add(item.id);
+                                } else if (_companionIds.length > 1) {
+                                  _companionIds.remove(item.id);
+                                }
+                              }),
                             ),
                         ],
                       ),

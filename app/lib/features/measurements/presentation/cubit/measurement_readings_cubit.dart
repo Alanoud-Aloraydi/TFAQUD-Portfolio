@@ -1,4 +1,8 @@
 import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/utils/riyadh_time.dart';
+
+import 'dart:async';
+
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
@@ -15,6 +19,8 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
   DateTime? _from;
   DateTime? _to;
   int _revision = 0;
+  int _recordRevision = 0;
+  int get recordRevision => _recordRevision;
 
   Future<void> load(String circleId, DateTime from, DateTime to) async {
     final changedQuery = _circleId != circleId || _from != from || _to != to;
@@ -62,8 +68,29 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
     final circleId = _circleId;
     if (circleId == null) return false;
     try {
-      await _repository.record(circleId, draft, occurrence: occurrence);
-      await reload();
+      final reading = await _repository.record(
+        circleId,
+        draft,
+        occurrence: occurrence,
+      );
+      if (isClosed) return true;
+      _recordRevision++;
+      final day = reading.measuredAt == null
+          ? reading.scheduledOn
+          : scheduleDay(riyadhNow(reading.measuredAt!));
+      final visible =
+          day != null &&
+          _from != null &&
+          _to != null &&
+          !day.isBefore(_from!) &&
+          !day.isAfter(_to!);
+      emit(
+        MeasurementReadingsState(
+          status: MeasurementLoadStatus.ready,
+          readings: visible ? [reading, ...state.readings] : state.readings,
+        ),
+      );
+      unawaited(reload());
       return true;
     } catch (error) {
       if (!isClosed) {

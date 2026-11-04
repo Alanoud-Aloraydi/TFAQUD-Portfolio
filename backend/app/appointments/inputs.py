@@ -19,7 +19,7 @@ class AppointmentRequest(Dto):
     time_of_day: time
     place: Annotated[str | None, Field(max_length=160)] = None
     remote_method: Literal["video", "phone"] | None = None
-    companion_account_id: UUID
+    companion_account_ids: Annotated[list[UUID], Field(min_length=1)]
 
     @model_validator(mode="after")
     def valid_location(self):
@@ -33,6 +33,10 @@ class AppointmentRequest(Dto):
             raise ValueError("A custom type is only valid for other visits.")
         if self.time_of_day.tzinfo is not None:
             raise ValueError("The appointment time must be local time.")
+        if len(self.companion_account_ids) != len(
+            set(self.companion_account_ids)
+        ):
+            raise ValueError("Appointment companions must be unique.")
         if self.kind == "remote":
             if self.remote_method is None or self.place is not None:
                 raise ValueError("A remote method is required.")

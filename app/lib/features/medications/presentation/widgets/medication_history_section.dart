@@ -69,6 +69,7 @@ class MedicationHistorySection extends StatelessWidget {
         header,
         const SizedBox(height: AppSpacing.md),
         WhiteFilterMenu<MedicationRecordFilter>(
+          glass: true,
           options: {
             for (final filter in MedicationRecordFilter.values)
               filter: context.tr('medications.filter.${filter.name}'),
