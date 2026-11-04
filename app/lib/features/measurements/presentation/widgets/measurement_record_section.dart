@@ -3,6 +3,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/navigation/swipe_selection_area.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
@@ -15,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
+/// Displays the measurement record section UI.
 class MeasurementRecordSection extends StatefulWidget {
   const MeasurementRecordSection({
     super.key,
@@ -155,19 +157,38 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                 onChanged: (value) => setState(() => _filter = value),
               ),
               const SizedBox(height: AppSpacing.md),
-              if (filtered.isEmpty)
-                Center(child: Text(context.tr('measurements.no_readings')))
-              else
-                for (final reading in filtered) ...[
-                  _readingRow(context, reading),
-                  const SizedBox(height: AppSpacing.xs),
-                ],
+              SwipeSelectionArea(
+                onPrevious: () => _changeFilter(-1),
+                onNext: () => _changeFilter(1),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (filtered.isEmpty)
+                      Center(
+                        child: Text(context.tr('measurements.no_readings')),
+                      )
+                    else
+                      for (final reading in filtered) ...[
+                        _readingRow(context, reading),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
+                  ],
+                ),
+              ),
             ],
           ],
         );
       },
     ),
   );
+
+  void _changeFilter(int offset) {
+    const filters = ['all', 'glucose', 'bp'];
+    final next = filters.indexOf(_filter) + offset;
+    if (next >= 0 && next < filters.length) {
+      setState(() => _filter = filters[next]);
+    }
+  }
 
   Widget _chartCard(
     BuildContext context,
@@ -308,6 +329,16 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                               '${at.hour.toString().padLeft(2, '0')}:'
                               '${at.minute.toString().padLeft(2, '0')}',
                   ),
+                  if (!skipped && reading.planVersionId == null)
+                    Text(
+                      reading.outsideTarget == null
+                          ? context.tr('measurements.without_target')
+                          : reading.kind == MeasurementKind.glucose
+                          ? '${context.tr('measurements.target')}: '
+                                '${reading.glucoseLow}–${reading.glucoseHigh}'
+                          : '${context.tr('measurements.target')}: '
+                                '${reading.systolicLimit}/${reading.diastolicLimit}',
+                    ),
                   if (reading.note != null) Text(reading.note!),
                 ],
               ),

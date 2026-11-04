@@ -4,12 +4,14 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates measurement readings actions and UI state.
 class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
   MeasurementReadingsCubit(this._repository)
     : super(const MeasurementReadingsState());
 
   final MeasurementRepository _repository;
   String? _circleId;
+  String? get circleId => _circleId;
   DateTime? _from;
   DateTime? _to;
   int _revision = 0;

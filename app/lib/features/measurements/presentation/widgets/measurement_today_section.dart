@@ -11,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Displays the measurement attention section UI.
 class MeasurementAttentionSection extends StatelessWidget {
   const MeasurementAttentionSection({
     super.key,
@@ -138,6 +139,7 @@ class MeasurementAttentionSection extends StatelessWidget {
   }
 }
 
+/// Displays the measurement task row UI.
 class MeasurementTaskRow extends StatelessWidget {
   const MeasurementTaskRow({super.key, required this.task});
 

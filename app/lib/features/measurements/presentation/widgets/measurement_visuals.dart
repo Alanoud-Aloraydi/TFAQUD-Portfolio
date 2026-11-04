@@ -1,10 +1,9 @@
 import 'dart:math' as math;
-
-import 'package:app/core/theme/app_semantic_colors.dart';
-
 import 'dart:ui' as ui;
 
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -43,6 +42,7 @@ class MeasurementChart extends StatelessWidget {
   );
 }
 
+/// Draws measurement trends and target ranges.
 class _MeasurementPainter extends CustomPainter {
   _MeasurementPainter(
     this.kind,
@@ -190,8 +190,8 @@ class _MeasurementPainter extends CustomPainter {
       oldDelegate.targetHigh != targetHigh;
 }
 
-/// A Saturday-first calendar with one cell per day and a count for repeats.
-class MeasurementCalendar extends StatelessWidget {
+/// Compact Saturday-first calendar with readings shown below the selected day.
+class MeasurementCalendar extends StatefulWidget {
   const MeasurementCalendar({
     super.key,
     required this.readings,
@@ -202,64 +202,154 @@ class MeasurementCalendar extends StatelessWidget {
   final DateTime month;
 
   @override
+  State<MeasurementCalendar> createState() => _MeasurementCalendarState();
+}
+
+class _MeasurementCalendarState extends State<MeasurementCalendar> {
+  int? _selectedDay;
+
+  @override
+  void didUpdateWidget(MeasurementCalendar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.month.year != widget.month.year ||
+        oldWidget.month.month != widget.month.month) {
+      _selectedDay = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final days = DateUtils.getDaysInMonth(month.year, month.month);
-    final lead = (month.weekday + 1) % 7;
+    final days = DateUtils.getDaysInMonth(
+      widget.month.year,
+      widget.month.month,
+    );
+    final lead = (widget.month.weekday + 1) % 7;
     final today = DateUtils.dateOnly(DateTime.now());
-    return GridView.count(
-      crossAxisCount: 7,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.xs,
-      crossAxisSpacing: AppSpacing.xs,
-      childAspectRatio: .9,
+    final rows = ((lead + days) / 7).ceil();
+    final selected = _selectedDay;
+    final selectedReadings = selected == null
+        ? <MeasurementReading>[]
+        : _readingsOn(selected);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final day in const [6, 7, 1, 2, 3, 4, 5])
-          Center(child: Text(context.tr('medications.weekday_short.$day'))),
-        for (var index = 0; index < lead; index++) const SizedBox.shrink(),
-        for (var day = 1; day <= days; day++) _cell(context, day, today),
+        Row(
+          children: [
+            for (final day in const [6, 7, 1, 2, 3, 4, 5])
+              Expanded(
+                child: Center(
+                  child: Text(
+                    context.tr('medications.weekday_short.$day'),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        for (var row = 0; row < rows; row++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: Row(
+              children: [
+                for (var column = 0; column < 7; column++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: _dayCell(
+                        context,
+                        row * 7 + column - lead + 1,
+                        today,
+                        days,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (selected != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            '$selected ${context.tr('circles.months.${widget.month.month}')}',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          if (selectedReadings.isEmpty)
+            Text(context.tr('measurements.no_readings'))
+          else
+            for (final reading in selectedReadings)
+              Text(
+                '${reading.valueText} · '
+                '${_readingTime(reading.measuredAt!.toLocal())}',
+              ),
+        ],
       ],
     );
   }
 
+  List<MeasurementReading> _readingsOn(int day) =>
+      widget.readings.where((reading) {
+        final at = reading.measuredAt?.toLocal();
+        return at != null &&
+            at.year == widget.month.year &&
+            at.month == widget.month.month &&
+            at.day == day;
+      }).toList();
+
+  String _readingTime(DateTime at) =>
+      '${at.hour.toString().padLeft(2, '0')}:'
+      '${at.minute.toString().padLeft(2, '0')}';
+
+  Widget _dayCell(BuildContext context, int day, DateTime today, int days) =>
+      day < 1 || day > days
+      ? const SizedBox(height: AppSizes.touch)
+      : _cell(context, day, today);
+
   Widget _cell(BuildContext context, int day, DateTime today) {
-    final date = DateTime(month.year, month.month, day);
-    final values = readings.where((reading) {
-      final at = reading.measuredAt?.toLocal();
-      return at != null &&
-          at.year == date.year &&
-          at.month == date.month &&
-          at.day == day;
-    }).toList();
+    final date = DateTime(widget.month.year, widget.month.month, day);
+    final values = _readingsOn(day);
     final bad = values.any((reading) => reading.outsideTarget == true);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: values.isEmpty
-            ? AppSemanticColors.surfacePlan
-            : bad
-            ? AppSemanticColors.surfaceAttention
-            : AppSemanticColors.selectedSurface,
+    final selected = _selectedDay == day;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$day · ${values.length}',
+      child: InkWell(
+        onTap: () => setState(() => _selectedDay = day),
         borderRadius: BorderRadius.circular(AppRadius.s),
-        border: DateUtils.isSameDay(date, today)
-            ? Border.all(color: AppSemanticColors.textPrimary, width: 2)
-            : null,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('$day', style: Theme.of(context).textTheme.labelSmall),
-          Text(
-            values.isEmpty ? '—' : values.first.valueText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-          if (values.length > 1)
-            Text(
-              '${values.length}',
-              style: Theme.of(context).textTheme.labelSmall,
+        child: Container(
+          height: AppSizes.touch,
+          decoration: BoxDecoration(
+            color: selected
+                ? AppSemanticColors.selectedSurface
+                : bad
+                ? AppSemanticColors.surfaceAttention
+                : AppSemanticColors.surfaceContent,
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            border: Border.all(
+              color: selected || DateUtils.isSameDay(date, today)
+                  ? AppSemanticColors.textPrimary
+                  : AppSemanticColors.borderSubtle,
+              width: selected ? 1.5 : 1,
             ),
-        ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('$day', style: Theme.of(context).textTheme.labelSmall),
+              if (values.isNotEmpty)
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: bad
+                        ? AppSemanticColors.statusWarning
+                        : AppSemanticColors.statusSuccess,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

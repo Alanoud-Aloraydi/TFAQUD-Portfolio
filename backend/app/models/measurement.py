@@ -3,7 +3,7 @@
 from datetime import date, datetime, time
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index
 from sqlalchemy import (
     Integer,
     SmallInteger,
@@ -23,6 +23,11 @@ class MeasurementPlan(db.Model):
     __tablename__ = "measurement_plan"
     __table_args__ = (
         CheckConstraint("kind IN ('glucose', 'bp')", name="kind"),
+        Index(
+            "uq_measurement_plan_active_kind",
+            "patient_id", "kind", unique=True,
+            postgresql_where=text("stopped_at IS NULL"),
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -41,6 +46,42 @@ class MeasurementPlan(db.Model):
     stopped_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
+
+
+class MeasurementTarget(db.Model):
+    """The saved standalone target for one patient and measurement kind."""
+
+    __tablename__ = "measurement_target"
+    __table_args__ = (
+        UniqueConstraint("patient_id", "kind"),
+        CheckConstraint("kind IN ('glucose', 'bp')", name="kind"),
+        CheckConstraint(
+            "(kind = 'glucose' AND glucose_low IS NOT NULL "
+            "AND glucose_high IS NOT NULL AND glucose_low BETWEEN 1 AND 999 "
+            "AND glucose_high BETWEEN 1 AND 999 "
+            "AND glucose_low < glucose_high AND systolic_limit IS NULL "
+            "AND diastolic_limit IS NULL) OR "
+            "(kind = 'bp' AND systolic_limit IS NOT NULL "
+            "AND diastolic_limit IS NOT NULL "
+            "AND systolic_limit BETWEEN 1 AND 999 "
+            "AND diastolic_limit BETWEEN 1 AND 999 "
+            "AND systolic_limit > diastolic_limit AND glucose_low IS NULL "
+            "AND glucose_high IS NULL)",
+            name="target_shape",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    patient_id: Mapped[UUID] = mapped_column(
+        ForeignKey("patient.id", ondelete="CASCADE")
+    )
+    kind: Mapped[str] = mapped_column(Text)
+    glucose_low: Mapped[int | None] = mapped_column(SmallInteger)
+    glucose_high: Mapped[int | None] = mapped_column(SmallInteger)
+    systolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
+    diastolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class MeasurementPlanVersion(db.Model):
@@ -152,6 +193,23 @@ class MeasurementRecord(db.Model):
             "AND value_one > value_two)))",
             name="value_shape",
         ),
+        CheckConstraint(
+            "(glucose_low IS NULL AND glucose_high IS NULL AND "
+            "systolic_limit IS NULL AND diastolic_limit IS NULL) OR "
+            "(plan_version_id IS NULL AND outcome = 'read' AND "
+            "((kind = 'glucose' AND glucose_low IS NOT NULL AND "
+            "glucose_high IS NOT NULL AND glucose_low BETWEEN 1 AND 999 "
+            "AND glucose_high BETWEEN 1 AND 999 AND "
+            "glucose_low < glucose_high AND systolic_limit IS NULL AND "
+            "diastolic_limit IS NULL) OR "
+            "(kind = 'bp' AND systolic_limit IS NOT NULL AND "
+            "diastolic_limit IS NOT NULL AND "
+            "systolic_limit BETWEEN 1 AND 999 AND "
+            "diastolic_limit BETWEEN 1 AND 999 AND "
+            "systolic_limit > diastolic_limit AND glucose_low IS NULL "
+            "AND glucose_high IS NULL)))",
+            name="free_target_shape",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -174,6 +232,10 @@ class MeasurementRecord(db.Model):
     glucose_context: Mapped[str | None] = mapped_column(Text)
     condition: Mapped[str | None] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text)
+    glucose_low: Mapped[int | None] = mapped_column(SmallInteger)
+    glucose_high: Mapped[int | None] = mapped_column(SmallInteger)
+    systolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
+    diastolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
     followed_up_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )

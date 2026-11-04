@@ -4,6 +4,7 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates measurement tasks actions and UI state.
 class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
   MeasurementTasksCubit(this._repository)
     : super(const MeasurementTasksState());
@@ -25,7 +26,11 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
       ),
     );
     try {
-      final tasks = await _repository.occurrences(circleId, day, day);
+      final tasks = await _repository.occurrences(
+        circleId,
+        day,
+        day.add(const Duration(days: 30)),
+      );
       if (isClosed || revision != _revision) return;
       emit(
         MeasurementTasksState(

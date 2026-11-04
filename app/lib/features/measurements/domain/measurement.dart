@@ -1,9 +1,51 @@
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported measurement kind values.
 enum MeasurementKind { glucose, bp }
 
+/// Defines the supported measurement status values.
 enum MeasurementStatus { upcoming, due, missed, read, readLate, skipped }
 
+/// Defines the target range for a measurement type.
+class MeasurementTarget extends Equatable {
+  const MeasurementTarget({
+    required this.kind,
+    this.glucoseLow,
+    this.glucoseHigh,
+    this.systolicLimit,
+    this.diastolicLimit,
+    this.planId,
+  });
+
+  final MeasurementKind kind;
+  final int? glucoseLow;
+  final int? glucoseHigh;
+  final int? systolicLimit;
+  final int? diastolicLimit;
+  final String? planId;
+
+  factory MeasurementTarget.fromJson(Map<String, dynamic> json) =>
+      MeasurementTarget(
+        kind: MeasurementKind.values.byName(json['kind'] as String),
+        glucoseLow: json['glucose_low'] as int?,
+        glucoseHigh: json['glucose_high'] as int?,
+        systolicLimit: json['systolic_limit'] as int?,
+        diastolicLimit: json['diastolic_limit'] as int?,
+        planId: json['plan_id'] as String?,
+      );
+
+  @override
+  List<Object?> get props => [
+    kind,
+    glucoseLow,
+    glucoseHigh,
+    systolicLimit,
+    diastolicLimit,
+    planId,
+  ];
+}
+
+/// Preserves one effective measurement schedule.
 class MeasurementVersion extends Equatable {
   const MeasurementVersion({
     required this.id,
@@ -62,6 +104,7 @@ class MeasurementVersion extends Equatable {
   ];
 }
 
+/// Holds a recurring measurement schedule and target.
 class MeasurementPlan extends Equatable {
   const MeasurementPlan({
     required this.id,
@@ -113,6 +156,7 @@ class MeasurementPlan extends Equatable {
   ];
 }
 
+/// Stores an actual blood pressure or glucose reading.
 class MeasurementReading extends Equatable {
   const MeasurementReading({
     required this.id,
@@ -126,6 +170,10 @@ class MeasurementReading extends Equatable {
     this.condition,
     this.note,
     this.outsideTarget,
+    this.glucoseLow,
+    this.glucoseHigh,
+    this.systolicLimit,
+    this.diastolicLimit,
     this.followedUpAt,
     this.scheduledOn,
     this.planVersionId,
@@ -142,6 +190,10 @@ class MeasurementReading extends Equatable {
   final String? condition;
   final String? note;
   final bool? outsideTarget;
+  final int? glucoseLow;
+  final int? glucoseHigh;
+  final int? systolicLimit;
+  final int? diastolicLimit;
   final DateTime? followedUpAt;
   final DateTime? scheduledOn;
   final String? planVersionId;
@@ -164,6 +216,10 @@ class MeasurementReading extends Equatable {
         condition: json['condition'] as String?,
         note: json['note'] as String?,
         outsideTarget: json['outside_target'] as bool?,
+        glucoseLow: json['glucose_low'] as int?,
+        glucoseHigh: json['glucose_high'] as int?,
+        systolicLimit: json['systolic_limit'] as int?,
+        diastolicLimit: json['diastolic_limit'] as int?,
         followedUpAt: json['followed_up_at'] == null
             ? null
             : DateTime.parse(json['followed_up_at'] as String),
@@ -186,12 +242,17 @@ class MeasurementReading extends Equatable {
     condition,
     note,
     outsideTarget,
+    glucoseLow,
+    glucoseHigh,
+    systolicLimit,
+    diastolicLimit,
     followedUpAt,
     scheduledOn,
     planVersionId,
   ];
 }
 
+/// Describes one expected measurement task.
 class MeasurementOccurrence extends Equatable {
   const MeasurementOccurrence({
     required this.planId,
@@ -251,6 +312,7 @@ class MeasurementOccurrence extends Equatable {
   ];
 }
 
+/// Holds editable measurement plan values before saving.
 class MeasurementPlanDraft {
   const MeasurementPlanDraft({
     required this.kind,
@@ -292,6 +354,7 @@ class MeasurementPlanDraft {
   };
 }
 
+/// Holds editable measurement reading values before saving.
 class MeasurementReadingDraft {
   const MeasurementReadingDraft({
     required this.kind,
@@ -302,6 +365,10 @@ class MeasurementReadingDraft {
     this.glucoseContext,
     this.condition,
     this.note,
+    this.glucoseLow,
+    this.glucoseHigh,
+    this.systolicLimit,
+    this.diastolicLimit,
   });
 
   final MeasurementKind kind;
@@ -312,6 +379,10 @@ class MeasurementReadingDraft {
   final String? glucoseContext;
   final String? condition;
   final String? note;
+  final int? glucoseLow;
+  final int? glucoseHigh;
+  final int? systolicLimit;
+  final int? diastolicLimit;
 
   Map<String, dynamic> toJson() => {
     'kind': kind.name,
@@ -322,6 +393,10 @@ class MeasurementReadingDraft {
     'glucose_context': glucoseContext,
     'condition': condition,
     'note': note,
+    'glucose_low': glucoseLow,
+    'glucose_high': glucoseHigh,
+    'systolic_limit': systolicLimit,
+    'diastolic_limit': diastolicLimit,
   };
 }
 

@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the measurement plan section UI.
 class MeasurementPlanSection extends StatelessWidget {
   const MeasurementPlanSection({
     super.key,
@@ -62,6 +63,7 @@ class MeasurementPlanSection extends StatelessWidget {
   }
 }
 
+/// Displays the measurement plan card UI.
 class MeasurementPlanCard extends StatefulWidget {
   const MeasurementPlanCard({
     super.key,
@@ -101,7 +103,8 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
           );
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppSemanticColors.surfacePlan,
+        color: AppSemanticColors.surfaceContent,
+        border: Border.all(color: AppSemanticColors.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Padding(
@@ -152,6 +155,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
             DecoratedBox(
               decoration: BoxDecoration(
                 color: AppSemanticColors.surfaceContent,
+                border: Border.all(color: AppSemanticColors.borderSubtle),
                 borderRadius: BorderRadius.circular(AppRadius.field),
               ),
               child: Padding(
@@ -192,6 +196,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
             DecoratedBox(
               decoration: BoxDecoration(
                 color: AppSemanticColors.surfaceContent,
+                border: Border.all(color: AppSemanticColors.borderSubtle),
                 borderRadius: BorderRadius.circular(AppRadius.field),
               ),
               child: Padding(

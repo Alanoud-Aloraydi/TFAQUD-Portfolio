@@ -8,6 +8,18 @@ class MeasurementRepository {
 
   final DioClient _client;
 
+  Future<List<MeasurementTarget>> targets(String circleId) async {
+    final response = await _client.get(
+      ApiEndpoints.measurementTargets(circleId),
+    );
+    final values =
+        (response.data as Map<String, dynamic>)['measurement_targets']
+            as List<dynamic>;
+    return values
+        .map((item) => MeasurementTarget.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<MeasurementPlan>> plans(String circleId) async {
     final response = await _client.get(ApiEndpoints.measurementPlans(circleId));
     final values =

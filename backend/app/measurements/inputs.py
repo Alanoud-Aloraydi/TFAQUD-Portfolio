@@ -73,6 +73,10 @@ class ReadingRequest(Dto):
     glucose_context: Context | None = None
     condition: Condition | None = None
     note: Annotated[str | None, Field(max_length=250)] = None
+    glucose_low: Value | None = None
+    glucose_high: Value | None = None
+    systolic_limit: Value | None = None
+    diastolic_limit: Value | None = None
 
     @model_validator(mode="after")
     def valid_values(self):
@@ -98,6 +102,29 @@ class ReadingRequest(Dto):
             and self.value_one <= self.value_two
         ):
             raise ValueError("Systolic must exceed diastolic.")
+        target = (
+            self.glucose_low, self.glucose_high,
+            self.systolic_limit, self.diastolic_limit,
+        )
+        if any(value is not None for value in target):
+            if self.outcome != "read":
+                raise ValueError("Skipped readings cannot have a target.")
+            if self.kind == "glucose" and not (
+                self.glucose_low is not None
+                and self.glucose_high is not None
+                and self.glucose_low < self.glucose_high
+                and self.systolic_limit is None
+                and self.diastolic_limit is None
+            ):
+                raise ValueError("A glucose target needs a valid range.")
+            if self.kind == "bp" and not (
+                self.systolic_limit is not None
+                and self.diastolic_limit is not None
+                and self.systolic_limit > self.diastolic_limit
+                and self.glucose_low is None
+                and self.glucose_high is None
+            ):
+                raise ValueError("Blood pressure needs both upper limits.")
         return self
 
 

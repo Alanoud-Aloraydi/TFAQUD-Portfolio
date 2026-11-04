@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
@@ -16,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the measurement plan form page UI.
 class MeasurementPlanFormPage extends StatefulWidget {
   const MeasurementPlanFormPage({
     super.key,
@@ -91,25 +93,39 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   }
 
   Future<void> _save(MeasurementPlan? plan) async {
+    if (plan == null &&
+        context.read<MeasurementPlansCubit>().state.plans.any(
+          (item) => item.kind == _kind && item.stoppedAt == null,
+        )) {
+      setState(() => _errorKey = 'measurements.active_plan_exists');
+      return;
+    }
     final low = int.tryParse(_low.text);
     final high = int.tryParse(_high.text);
     final systolic = int.tryParse(_systolic.text);
     final diastolic = int.tryParse(_diastolic.text);
-    if (_days.isEmpty ||
-        (_kind == MeasurementKind.glucose
-            ? low == null ||
-                  high == null ||
-                  low <= 0 ||
-                  high > 999 ||
-                  high <= low
-            : systolic == null ||
-                  diastolic == null ||
-                  systolic <= 0 ||
-                  systolic > 999 ||
-                  diastolic <= 0 ||
-                  diastolic > 999 ||
-                  systolic <= diastolic)) {
-      setState(() => _errorKey = 'measurements.invalid_plan');
+    if (_days.isEmpty) {
+      setState(() => _errorKey = 'measurements.days_required');
+      return;
+    }
+    if (_kind == MeasurementKind.glucose &&
+        (low == null ||
+            high == null ||
+            low <= 0 ||
+            high > 999 ||
+            high <= low)) {
+      setState(() => _errorKey = 'measurements.invalid_glucose_target');
+      return;
+    }
+    if (_kind == MeasurementKind.bp &&
+        (systolic == null ||
+            diastolic == null ||
+            systolic <= 0 ||
+            systolic > 999 ||
+            diastolic <= 0 ||
+            diastolic > 999 ||
+            systolic <= diastolic)) {
+      setState(() => _errorKey = 'measurements.invalid_bp_target');
       return;
     }
     final draft = MeasurementPlanDraft(
@@ -164,6 +180,15 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         ),
       );
     }
+    MeasurementPlan? existing;
+    if (plan == null) {
+      for (final item in state.plans) {
+        if (item.kind == _kind && item.stoppedAt == null) {
+          existing = item;
+          break;
+        }
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -193,7 +218,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
                   child: FilledButton(
-                    onPressed: _saving ? null : () => _save(plan),
+                    onPressed: _saving || existing != null
+                        ? null
+                        : () => _save(plan),
                     child: Text(context.tr('measurements.save')),
                   ),
                 ),
@@ -205,24 +232,43 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          InsetGroup(
-            header: context.tr('measurements.measurement'),
-            children: [
-              InsetBlock(
-                semanticLabel: context.tr('measurements.kind'),
-                child: GlassSegmentedControl<MeasurementKind>(
-                  segments: {
-                    MeasurementKind.glucose: context.tr('measurements.glucose'),
-                    MeasurementKind.bp: context.tr('measurements.bp'),
-                  },
-                  selected: _kind,
-                  onChanged: plan == null
-                      ? (value) => setState(() => _kind = value)
-                      : null,
-                ),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
+            child: Text(
+              context.tr('measurements.measurement'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
+          const SizedBox(height: AppSpacing.sm),
+          GlassSegmentedControl<MeasurementKind>(
+            segments: {
+              MeasurementKind.glucose: context.tr('measurements.glucose'),
+              MeasurementKind.bp: context.tr('measurements.bp'),
+            },
+            selected: _kind,
+            onChanged: plan == null
+                ? (value) => setState(() {
+                    _kind = value;
+                    _errorKey = null;
+                  })
+                : null,
+          ),
+          if (existing != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(context.tr('measurements.active_plan_exists')),
+            TextButton(
+              onPressed: () {
+                final router = GoRouter.of(context);
+                final path = Routes.editMeasurement(
+                  widget.circleId,
+                  existing!.id,
+                );
+                context.pop();
+                router.push(path);
+              },
+              child: Text(context.tr('measurements.edit_plan')),
+            ),
+          ],
           const SizedBox(height: AppSpacing.xl),
           InsetGroup(
             header: context.tr('measurements.schedule'),
@@ -347,7 +393,12 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
             children: _kind == MeasurementKind.glucose
                 ? [
                     _numberRow(context, 'measurements.glucose_low', _low),
-                    _numberRow(context, 'measurements.glucose_high', _high),
+                    _numberRow(
+                      context,
+                      'measurements.glucose_high',
+                      _high,
+                      errorKey: 'measurements.invalid_glucose_target',
+                    ),
                   ]
                 : [
                     _numberRow(
@@ -359,6 +410,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                       context,
                       'measurements.diastolic_limit',
                       _diastolic,
+                      errorKey: 'measurements.invalid_bp_target',
                     ),
                   ],
           ),
@@ -372,7 +424,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 ),
               ),
             ),
-          if (_errorKey != null)
+          if (_errorKey != null &&
+              _errorKey != 'measurements.invalid_glucose_target' &&
+              _errorKey != 'measurements.invalid_bp_target')
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
@@ -388,10 +442,14 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   Widget _numberRow(
     BuildContext context,
     String key,
-    TextEditingController controller,
-  ) => InsetTextRow(
+    TextEditingController controller, {
+    String? errorKey,
+  }) => InsetTextRow(
     label: context.tr(key),
     controller: controller,
+    errorText: errorKey != null && _errorKey == errorKey
+        ? context.tr(errorKey)
+        : null,
     onChanged: (_) => setState(() => _errorKey = null),
     keyboardType: TextInputType.number,
     inputFormatters: [

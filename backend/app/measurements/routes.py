@@ -66,6 +66,19 @@ def list_plans(circle_id):
     return response
 
 
+@bp.get("/measurement-targets")
+@require_circle_role(*MEMBERS)
+def list_targets(circle_id):
+    """Read the patient's saved and active scheduled targets."""
+    with transaction() as session:
+        values = MeasurementQueries(session, get_clock().now()).targets(
+            _uuid(circle_id)
+        )
+    response = jsonify(measurement_targets=values)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @bp.post("/measurement-plans")
 @require_circle_role(CircleRole.MANAGER)
 def create_plan(circle_id):

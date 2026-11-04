@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.measurements.service import outside_target, patient_for_circle
 from app.models import MeasurementPlan, MeasurementPlanVersion
-from app.models import MeasurementRecord
+from app.models import MeasurementRecord, MeasurementTarget
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
@@ -46,7 +46,7 @@ def reading_response(
 ) -> dict:
     """Return a saved outcome and its linked target comparison."""
     outside = None
-    if record.outcome == "read" and version is not None:
+    if record.outcome == "read":
         outside = outside_target(record, version)
     return {
         "id": str(record.id),
@@ -67,6 +67,10 @@ def reading_response(
         "condition": record.condition,
         "note": record.note,
         "outside_target": outside,
+        "glucose_low": record.glucose_low,
+        "glucose_high": record.glucose_high,
+        "systolic_limit": record.systolic_limit,
+        "diastolic_limit": record.diastolic_limit,
         "followed_up_at": (
             record.followed_up_at.isoformat()
             if record.followed_up_at
@@ -82,6 +86,51 @@ class MeasurementQueries:
     def __init__(self, session: Session, now: datetime):
         self.session = session
         self.now = now
+
+    def targets(self, circle_id: UUID) -> list[dict]:
+        """Return saved goals and the current active-plan override."""
+        patient = patient_for_circle(self.session, circle_id)
+        stored = list(self.session.scalars(
+            select(MeasurementTarget).where(
+                MeasurementTarget.patient_id == patient.id
+            )
+        ))
+        plans = list(self.session.execute(
+            select(MeasurementPlan, MeasurementPlanVersion)
+            .join(MeasurementPlanVersion,
+                  MeasurementPlanVersion.plan_id == MeasurementPlan.id)
+            .where(
+                MeasurementPlan.patient_id == patient.id,
+                MeasurementPlan.stopped_at.is_(None),
+            )
+            .order_by(MeasurementPlanVersion.number.desc())
+        ))
+        active = {}
+        future = {}
+        today = self.now.astimezone(RIYADH).date()
+        for plan, version in plans:
+            future[plan.kind] = (plan, version)
+            if version.effective_from_on <= today:
+                active.setdefault(plan.kind, (plan, version))
+        for kind, value in future.items():
+            active.setdefault(kind, value)
+        result = []
+        for kind in ("glucose", "bp"):
+            source = active[kind][1] if kind in active else next(
+                (item for item in stored if item.kind == kind), None
+            )
+            if source is None:
+                continue
+            result.append({
+                "kind": kind,
+                "glucose_low": source.glucose_low,
+                "glucose_high": source.glucose_high,
+                "systolic_limit": source.systolic_limit,
+                "diastolic_limit": source.diastolic_limit,
+                "plan_id": str(active[kind][0].id)
+                if kind in active else None,
+            })
+        return result
 
     def plans(self, circle_id: UUID) -> list[dict]:
         """Return active and stopped plans with version history."""

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.measurements.inputs import PlanRequest, ReadingRequest
 from app.models import MeasurementPlan, MeasurementPlanVersion
-from app.models import MeasurementRecord, Patient
+from app.models import MeasurementRecord, MeasurementTarget, Patient
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
@@ -31,17 +31,25 @@ def weekday_mask(days: list[int]) -> int:
 
 
 def outside_target(
-    record: MeasurementRecord, version: MeasurementPlanVersion
-) -> bool:
+    record: MeasurementRecord, version: MeasurementPlanVersion | None
+) -> bool | None:
     """Compare a reading with the target active for its occurrence."""
     if record.kind == "glucose":
+        low = version.glucose_low if version else record.glucose_low
+        high = version.glucose_high if version else record.glucose_high
+        if low is None or high is None:
+            return None
         return (
-            record.value_one < version.glucose_low
-            or record.value_one > version.glucose_high
+            record.value_one < low
+            or record.value_one > high
         )
+    systolic = version.systolic_limit if version else record.systolic_limit
+    diastolic = version.diastolic_limit if version else record.diastolic_limit
+    if systolic is None or diastolic is None:
+        return None
     return (
-        record.value_one >= version.systolic_limit
-        or record.value_two >= version.diastolic_limit
+        record.value_one >= systolic
+        or record.value_two >= diastolic
     )
 
 
@@ -58,7 +66,21 @@ class MeasurementService:
         """Create a plan from its first effective day."""
         if body.starts_on < self.now.astimezone(RIYADH).date():
             raise ValidationFailed(code="measurement_start_in_past")
-        patient = patient_for_circle(self.session, circle_id)
+        patient = self.session.scalar(
+            select(Patient).where(Patient.care_circle_id == circle_id)
+            .with_for_update()
+        )
+        if patient is None:
+            raise NotFound()
+        existing = self.session.scalar(
+            select(MeasurementPlan.id).where(
+                MeasurementPlan.patient_id == patient.id,
+                MeasurementPlan.kind == body.kind,
+                MeasurementPlan.stopped_at.is_(None),
+            )
+        )
+        if existing is not None:
+            raise Conflict(code="measurement_active_plan_exists")
         plan = MeasurementPlan(
             patient_id=patient.id,
             kind=body.kind,
@@ -68,6 +90,7 @@ class MeasurementService:
         self.session.add(plan)
         self.session.flush()
         self.session.add(self._version(plan.id, 1, body.starts_on, body))
+        self._save_target(patient.id, body.kind, body)
         self.session.flush()
         return plan
 
@@ -120,6 +143,17 @@ class MeasurementService:
         plan = self._plan(circle_id, plan_id)
         if plan.stopped_at is None:
             plan.stopped_at = self.now
+            version = self.session.scalar(
+                select(MeasurementPlanVersion)
+                .where(
+                    MeasurementPlanVersion.plan_id == plan.id,
+                    MeasurementPlanVersion.effective_from_on
+                    <= self.now.astimezone(RIYADH).date(),
+                )
+                .order_by(MeasurementPlanVersion.number.desc())
+            )
+            if version is not None:
+                self._save_target(plan.patient_id, plan.kind, version)
             self.session.flush()
         return plan
 
@@ -139,10 +173,45 @@ class MeasurementService:
                 raise ValidationFailed(code="measurement_time_offset_required")
             if body.measured_at > self.now:
                 raise ValidationFailed(code="future_measurement")
+        target = None
         if version_id is None:
             if scheduled_on is not None or body.outcome != "read":
                 raise ValidationFailed(code="measurement_link_required")
+            self.session.scalar(
+                select(Patient.id).where(Patient.id == patient.id)
+                .with_for_update()
+            )
+            target = self._active_target(patient.id, body.kind)
+            supplied = any(value is not None for value in (
+                body.glucose_low, body.glucose_high,
+                body.systolic_limit, body.diastolic_limit,
+            ))
+            if target is not None and supplied and not all(
+                getattr(body, field) == getattr(target, field)
+                for field in (
+                    "glucose_low", "glucose_high", "systolic_limit",
+                    "diastolic_limit",
+                )
+            ):
+                raise Conflict(code="measurement_target_from_plan")
+            if target is None:
+                if supplied:
+                    target = self._save_target(patient.id, body.kind, body)
+                else:
+                    target = self.session.scalar(
+                        select(MeasurementTarget).where(
+                            MeasurementTarget.patient_id == patient.id,
+                            MeasurementTarget.kind == body.kind,
+                        )
+                    )
+                    if target is None:
+                        raise ValidationFailed(code="measurement_target_required")
         else:
+            if any(value is not None for value in (
+                body.glucose_low, body.glucose_high,
+                body.systolic_limit, body.diastolic_limit,
+            )):
+                raise ValidationFailed(code="measurement_target_linked")
             if scheduled_on is None:
                 raise ValidationFailed(code="measurement_date_required")
             self._require_task(patient.id, version_id, scheduled_on, body.kind)
@@ -168,12 +237,60 @@ class MeasurementService:
             glucose_context=body.glucose_context,
             condition=body.condition,
             note=body.note,
+            glucose_low=target.glucose_low if target else None,
+            glucose_high=target.glucose_high if target else None,
+            systolic_limit=target.systolic_limit if target else None,
+            diastolic_limit=target.diastolic_limit if target else None,
             recorded_by_account_id=actor_id,
             recorded_at=self.now,
         )
         self.session.add(record)
         self.session.flush()
         return record
+
+    def _active_target(
+        self, patient_id: UUID, kind: str
+    ) -> MeasurementPlanVersion | None:
+        """Use the active plan target when a schedule exists."""
+        versions = list(self.session.scalars(
+            select(MeasurementPlanVersion)
+            .join(MeasurementPlan,
+                  MeasurementPlan.id == MeasurementPlanVersion.plan_id)
+            .where(
+                MeasurementPlan.patient_id == patient_id,
+                MeasurementPlan.kind == kind,
+                MeasurementPlan.stopped_at.is_(None),
+            )
+            .order_by(MeasurementPlanVersion.number.desc())
+        ))
+        today = self.now.astimezone(RIYADH).date()
+        return next(
+            (version for version in versions
+             if version.effective_from_on <= today),
+            versions[-1] if versions else None,
+        )
+
+    def _save_target(
+        self, patient_id: UUID, kind: str,
+        source: PlanRequest | ReadingRequest | MeasurementPlanVersion,
+    ) -> MeasurementTarget:
+        """Keep one durable target without changing prior reading snapshots."""
+        target = self.session.scalar(
+            select(MeasurementTarget).where(
+                MeasurementTarget.patient_id == patient_id,
+                MeasurementTarget.kind == kind,
+            ).with_for_update()
+        )
+        if target is None:
+            target = MeasurementTarget(patient_id=patient_id, kind=kind)
+            self.session.add(target)
+        for field in (
+            "glucose_low", "glucose_high", "systolic_limit",
+            "diastolic_limit",
+        ):
+            setattr(target, field, getattr(source, field))
+        self.session.flush()
+        return target
 
     def follow_up(self, circle_id: UUID, record_id: UUID) -> MeasurementRecord:
         """Acknowledge a saved reading without changing its numeric result."""
@@ -194,7 +311,7 @@ class MeasurementService:
             if record.plan_version_id
             else None
         )
-        if version is None:
+        if version is None and outside_target(record, None) is None:
             raise ValidationFailed(code="measurement_no_target")
         if not outside_target(record, version):
             raise ValidationFailed(code="measurement_within_target")

@@ -4,6 +4,7 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates measurement plans actions and UI state.
 class MeasurementPlansCubit extends Cubit<MeasurementPlansState> {
   MeasurementPlansCubit(this._repository)
     : super(const MeasurementPlansState());
