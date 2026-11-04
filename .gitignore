@@ -42,3 +42,6 @@ app/ios/Flutter/Generated.xcconfig
 .DS_Store
 Thumbs.db
 backend/secrets/
+
+# Flutter golden test output (made again by every failing run)
+app/test/failures/

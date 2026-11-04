@@ -42,7 +42,7 @@ class DoseOccurrenceCard extends StatelessWidget {
                   Text(
                     formatMedicationTime(context, occurrence.time),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTextTheme.bold,
                       color: AppSemanticColors.textPrimary,
                     ),
                   ),
