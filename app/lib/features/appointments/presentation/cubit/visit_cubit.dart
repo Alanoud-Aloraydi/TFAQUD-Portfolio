@@ -7,6 +7,7 @@ import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Holds the visit presentation state.
 class VisitState extends Equatable {
   const VisitState({
     this.loading = true,
@@ -63,6 +64,7 @@ class VisitState extends Equatable {
   ];
 }
 
+/// Coordinates visit actions and UI state.
 class VisitCubit extends Cubit<VisitState> {
   VisitCubit(this._repository, this._audio, this.circleId, this.appointmentId)
     : super(const VisitState());

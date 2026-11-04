@@ -3,6 +3,7 @@ import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 
+/// Sends appointment requests to the API.
 class AppointmentRemoteDataSource {
   AppointmentRemoteDataSource(this._client);
 

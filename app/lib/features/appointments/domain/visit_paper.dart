@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+/// Stores the notes and recording attached to a visit.
 class VisitPaper extends Equatable {
   const VisitPaper({
     required this.summary,
@@ -17,6 +18,7 @@ class VisitPaper extends Equatable {
   List<Object?> get props => [summary, recommendations, followUp, hasAudio];
 }
 
+/// Holds editable visit paper values before saving.
 class VisitPaperDraft extends Equatable {
   const VisitPaperDraft({
     required this.summary,

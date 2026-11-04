@@ -17,8 +17,15 @@ class Appointment(db.Model):
     __tablename__ = "appointment"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('follow_up', 'test', 'imaging', 'remote')",
+            "kind IN ('follow_up', 'test', 'imaging', 'remote', 'other')",
             name="kind",
+        ),
+        CheckConstraint(
+            "(kind = 'other' AND other_kind IS NOT NULL AND "
+            "length(btrim(other_kind)) > 0 AND "
+            "char_length(other_kind) <= 80) OR "
+            "(kind <> 'other' AND other_kind IS NULL)",
+            name="other_kind_shape",
         ),
         CheckConstraint(
             "status IN ('scheduled', 'completed', 'cancelled')",
@@ -51,6 +58,7 @@ class Appointment(db.Model):
     )
     specialty: Mapped[str] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(Text)
+    other_kind: Mapped[str | None] = mapped_column(Text)
     scheduled_on: Mapped[date] = mapped_column(Date)
     time_of_day: Mapped[time] = mapped_column(Time)
     place: Mapped[str | None] = mapped_column(Text)

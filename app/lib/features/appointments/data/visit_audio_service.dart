@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 
+/// Provides visit audio operations.
 class VisitAudioService {
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _player = AudioPlayer();

@@ -1,5 +1,6 @@
 import 'package:app/features/appointments/domain/visit_paper.dart';
 
+/// Maps visit data between the API and app.
 class VisitModel {
   const VisitModel._();
 

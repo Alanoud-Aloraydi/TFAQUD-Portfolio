@@ -4,8 +4,10 @@ import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Defines the supported appointments load status values.
 enum AppointmentsLoadStatus { initial, loading, ready, failure }
 
+/// Holds the appointments presentation state.
 class AppointmentsState extends Equatable {
   const AppointmentsState({
     this.status = AppointmentsLoadStatus.initial,
@@ -21,6 +23,7 @@ class AppointmentsState extends Equatable {
   List<Object?> get props => [status, appointments, errorKey];
 }
 
+/// Coordinates appointments actions and UI state.
 class AppointmentsCubit extends Cubit<AppointmentsState> {
   AppointmentsCubit(this._repository) : super(const AppointmentsState());
 

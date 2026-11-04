@@ -125,6 +125,7 @@ class AppointmentService:
     def _fill(appointment: Appointment, body: AppointmentRequest) -> None:
         appointment.specialty = body.specialty.strip()
         appointment.kind = body.kind
+        appointment.other_kind = body.other_kind.strip() if body.other_kind else None
         appointment.scheduled_on = body.scheduled_on
         appointment.time_of_day = body.time_of_day
         appointment.place = body.place.strip() if body.place else None

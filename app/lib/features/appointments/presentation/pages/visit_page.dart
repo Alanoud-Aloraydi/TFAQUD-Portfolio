@@ -1,3 +1,4 @@
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -15,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the visit page UI.
 class VisitPage extends StatelessWidget {
   const VisitPage({
     super.key,
@@ -126,6 +128,16 @@ class VisitPage extends StatelessWidget {
             ),
           ],
         ),
+        if (canManage) ...[
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: () => context.push<bool>(
+              Routes.newAppointment(context.read<VisitCubit>().circleId),
+            ),
+            icon: const Icon(CupertinoIcons.calendar),
+            label: Text(context.tr('appointments.add_follow_up_appointment')),
+          ),
+        ],
         const SizedBox(height: AppSpacing.md),
         if (paper?.hasAudio == true)
           Material(
@@ -289,6 +301,7 @@ class VisitPage extends StatelessWidget {
   }
 }
 
+/// Renders the visit edit sheet element of visit page.
 class _VisitEditSheet extends StatefulWidget {
   const _VisitEditSheet({required this.paper});
 
@@ -322,65 +335,90 @@ class _VisitEditSheetState extends State<_VisitEditSheet> {
         AppSpacing.lg,
         MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.tr('appointments.edit_visit'),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _input(context, 'appointments.visit_summary', _summary, 2000),
-            _input(
-              context,
-              'appointments.visit_recommendations',
-              _recommendations,
-              2000,
-            ),
-            _input(context, 'appointments.visit_follow_up', _followUp, 500),
-            if (context.watch<VisitCubit>().state.errorKey case final error?)
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .82,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Text(
-                context.tr(error),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                context.tr('appointments.edit_visit'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton(
-              onPressed: context.watch<VisitCubit>().state.saving
-                  ? null
-                  : () async {
-                      final saved = await context.read<VisitCubit>().save(
-                        VisitPaperDraft(
-                          summary: _summary.text,
-                          recommendations: _recommendations.text,
-                          followUp: _followUp.text,
-                        ),
-                      );
-                      if (saved && context.mounted) Navigator.of(context).pop();
-                    },
-              child: Text(context.tr('appointments.save')),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              InsetGroup(
+                header: context.tr('appointments.visit_summary'),
+                children: [
+                  InsetBlock(child: _paperInput(context, _summary, 2000)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              InsetGroup(
+                header: context.tr('appointments.visit_recommendations'),
+                children: [
+                  InsetBlock(
+                    child: _paperInput(context, _recommendations, 2000),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              InsetGroup(
+                header: context.tr('appointments.visit_follow_up'),
+                children: [
+                  InsetBlock(child: _paperInput(context, _followUp, 500)),
+                ],
+              ),
+              if (context.watch<VisitCubit>().state.errorKey case final error?)
+                Text(
+                  context.tr(error),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                onPressed: context.watch<VisitCubit>().state.saving
+                    ? null
+                    : () async {
+                        final saved = await context.read<VisitCubit>().save(
+                          VisitPaperDraft(
+                            summary: _summary.text,
+                            recommendations: _recommendations.text,
+                            followUp: _followUp.text,
+                          ),
+                        );
+                        if (saved && context.mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                child: Text(context.tr('appointments.save')),
+              ),
+            ],
+          ),
         ),
       ),
     ),
   );
 
-  Widget _input(
+  Widget _paperInput(
     BuildContext context,
-    String key,
     TextEditingController controller,
-    int maxLength,
+    int limit,
   ) => Padding(
-    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+    padding: const EdgeInsets.all(AppSpacing.md),
     child: TextField(
       controller: controller,
+      maxLength: limit,
+      minLines: 2,
+      maxLines: 4,
       textAlign: TextAlign.start,
-      maxLines: key == 'appointments.visit_follow_up' ? 2 : 4,
-      maxLength: maxLength,
-      decoration: InputDecoration(labelText: context.tr(key)),
+      decoration: InputDecoration(
+        hintText: context.tr('appointments.visit_empty'),
+        border: InputBorder.none,
+        counterText: '',
+      ),
     ),
   );
 }

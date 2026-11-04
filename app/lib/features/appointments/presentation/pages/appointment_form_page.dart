@@ -6,6 +6,8 @@ import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the appointment form page UI.
 class AppointmentFormPage extends StatefulWidget {
   const AppointmentFormPage({
     super.key,
@@ -35,6 +38,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
     'eyes',
     'dental',
     'neurology',
+    'other',
   ];
   AppointmentKind _kind = AppointmentKind.followUp;
   String _specialty = 'diabetes';
@@ -43,6 +47,8 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   String _remoteMethod = 'video';
   String? _companionId;
   final _place = TextEditingController();
+  final _otherSpecialty = TextEditingController();
+  final _otherKind = TextEditingController();
   bool _initialized = false;
   bool _saving = false;
   String? _errorKey;
@@ -50,14 +56,20 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   @override
   void dispose() {
     _place.dispose();
+    _otherSpecialty.dispose();
+    _otherKind.dispose();
     super.dispose();
   }
 
   void _fill(CareAppointment value) {
     if (_initialized) return;
     _initialized = true;
-    _specialty = value.specialty;
+    _specialty = _specialties.contains(value.specialty)
+        ? value.specialty
+        : 'other';
+    _otherSpecialty.text = _specialty == 'other' ? value.specialty : '';
     _kind = value.kind;
+    _otherKind.text = value.otherKind ?? '';
     _date = value.scheduledOn;
     final parts = value.time.split(':');
     _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
@@ -76,6 +88,14 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       '${context.tr(time.period == DayPeriod.am ? 'common.am' : 'common.pm')}';
 
   Future<void> _save(CareAppointment? value) async {
+    if (_specialty == 'other' && _otherSpecialty.text.trim().isEmpty) {
+      setState(() => _errorKey = 'appointments.specialty_required');
+      return;
+    }
+    if (_kind == AppointmentKind.other && _otherKind.text.trim().isEmpty) {
+      setState(() => _errorKey = 'appointments.kind_required');
+      return;
+    }
     if (_companionId == null) {
       setState(() => _errorKey = 'appointments.companion_required');
       return;
@@ -85,8 +105,11 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       return;
     }
     final draft = AppointmentDraft(
-      specialty: _specialty,
+      specialty: _specialty == 'other'
+          ? _otherSpecialty.text.trim()
+          : _specialty,
       kind: _kind,
+      otherKind: _kind == AppointmentKind.other ? _otherKind.text.trim() : null,
       scheduledOn: _date,
       time:
           '${_time.hour.toString().padLeft(2, '0')}:'
@@ -182,22 +205,58 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
             children: [
               InsetBlock(
                 semanticLabel: context.tr('appointments.specialty'),
-                child: _choices(
-                  _specialties,
-                  _specialty,
-                  (value) => setState(() => _specialty = value),
-                  (value) => context.tr('appointments.specialties.$value'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _choices(
+                      _specialties,
+                      _specialty,
+                      (value) => setState(() {
+                        _specialty = value;
+                        _errorKey = null;
+                      }),
+                      (value) => context.tr('appointments.specialties.$value'),
+                    ),
+                    if (_specialty == 'other')
+                      TextField(
+                        controller: _otherSpecialty,
+                        maxLength: 80,
+                        textAlign: TextAlign.start,
+                        onChanged: (_) => setState(() => _errorKey = null),
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'appointments.custom_specialty',
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               InsetBlock(
                 semanticLabel: context.tr('appointments.type'),
-                child: _choices(
-                  AppointmentKind.values.map((kind) => kind.name).toList(),
-                  _kind.name,
-                  (value) => setState(
-                    () => _kind = AppointmentKind.values.byName(value),
-                  ),
-                  (value) => context.tr('appointments.kinds.$value'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _choices(
+                      AppointmentKind.values.map((kind) => kind.name).toList(),
+                      _kind.name,
+                      (value) => setState(() {
+                        _kind = AppointmentKind.values.byName(value);
+                        _errorKey = null;
+                      }),
+                      (value) => context.tr('appointments.kinds.$value'),
+                    ),
+                    if (_kind == AppointmentKind.other)
+                      TextField(
+                        controller: _otherKind,
+                        maxLength: 80,
+                        textAlign: TextAlign.start,
+                        onChanged: (_) => setState(() => _errorKey = null),
+                        decoration: InputDecoration(
+                          labelText: context.tr('appointments.custom_kind'),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -279,13 +338,27 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                       )
                     : companions.companions.isEmpty
                     ? Text(context.tr('appointments.no_companions'))
-                    : _choices(
-                        companions.companions.map((item) => item.id).toList(),
-                        _companionId,
-                        (value) => setState(() => _companionId = value),
-                        (value) => companions.companions
-                            .firstWhere((item) => item.id == value)
-                            .name,
+                    : Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          for (final item in companions.companions)
+                            ChoiceChip(
+                              avatar: PersonPhoto(
+                                name: item.name,
+                                photoPath: ApiEndpoints.memberPhoto(
+                                  widget.circleId,
+                                  item.id,
+                                ),
+                                avatarCode: item.avatarCode,
+                                size: 20,
+                              ),
+                              label: Text(item.name),
+                              selected: _companionId == item.id,
+                              onSelected: (_) =>
+                                  setState(() => _companionId = item.id),
+                            ),
+                        ],
                       ),
               ),
             ],

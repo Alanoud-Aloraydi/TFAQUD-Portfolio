@@ -2,6 +2,7 @@ import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/data/appointment_remote_data_source.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 
+/// Provides appointment data operations.
 class AppointmentRepository {
   AppointmentRepository(this._remote);
 

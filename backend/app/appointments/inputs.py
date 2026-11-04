@@ -13,7 +13,8 @@ class AppointmentRequest(Dto):
     """A single appointment with a circle companion."""
 
     specialty: Annotated[str, Field(min_length=1, max_length=80)]
-    kind: Literal["follow_up", "test", "imaging", "remote"]
+    kind: Literal["follow_up", "test", "imaging", "remote", "other"]
+    other_kind: Annotated[str | None, Field(max_length=80)] = None
     scheduled_on: date
     time_of_day: time
     place: Annotated[str | None, Field(max_length=160)] = None
@@ -25,6 +26,11 @@ class AppointmentRequest(Dto):
         """Remote visits have a method; physical visits have a place."""
         if not self.specialty.strip():
             raise ValueError("A specialty is required.")
+        if self.kind == "other":
+            if not self.other_kind or not self.other_kind.strip():
+                raise ValueError("A custom appointment type is required.")
+        elif self.other_kind is not None:
+            raise ValueError("A custom type is only valid for other visits.")
         if self.time_of_day.tzinfo is not None:
             raise ValueError("The appointment time must be local time.")
         if self.kind == "remote":

@@ -1,10 +1,13 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/navigation/swipe_selection_area.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
@@ -14,9 +17,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-String appointmentTitle(BuildContext context, CareAppointment value) =>
-    '${context.tr('appointments.clinic')} '
-    '${context.tr('appointments.specialties.${value.specialty}')}';
+String appointmentTitle(BuildContext context, CareAppointment value) {
+  const presets = {
+    'internal',
+    'diabetes',
+    'cardiology',
+    'eyes',
+    'dental',
+    'neurology',
+  };
+  if (!presets.contains(value.specialty)) return value.specialty;
+  return '${context.tr('appointments.clinic')} '
+      '${context.tr('appointments.specialties.${value.specialty}')}';
+}
+
+String appointmentKindTitle(BuildContext context, CareAppointment value) =>
+    value.kind == AppointmentKind.other
+    ? value.otherKind ?? context.tr('appointments.kinds.other')
+    : context.tr('appointments.kinds.${value.kind.name}');
 
 String appointmentDate(BuildContext context, DateTime date) =>
     '${context.tr('common.weekdays.${date.weekday}')} '
@@ -31,6 +49,7 @@ String appointmentTime(BuildContext context, String value) {
       '${context.tr(hour < 12 ? 'common.am' : 'common.pm')}';
 }
 
+/// Displays the appointment plan section UI.
 class AppointmentPlanSection extends StatelessWidget {
   const AppointmentPlanSection({
     super.key,
@@ -88,6 +107,7 @@ class AppointmentPlanSection extends StatelessWidget {
   }
 }
 
+/// Displays the appointment card UI.
 class AppointmentCard extends StatelessWidget {
   const AppointmentCard({
     super.key,
@@ -108,6 +128,7 @@ class AppointmentCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppSemanticColors.surfaceContent,
+        border: Border.all(color: AppSemanticColors.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Padding(
@@ -132,7 +153,7 @@ class AppointmentCard extends StatelessWidget {
                         appointmentTitle(context, value),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      Text(context.tr('appointments.kinds.${value.kind.name}')),
+                      Text(appointmentKindTitle(context, value)),
                     ],
                   ),
                 ),
@@ -158,7 +179,8 @@ class AppointmentCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: AppSemanticColors.surfacePlan,
+                color: AppSemanticColors.surfaceContent,
+                border: Border.all(color: AppSemanticColors.borderSubtle),
                 borderRadius: BorderRadius.circular(AppRadius.field),
               ),
               child: Padding(
@@ -176,11 +198,27 @@ class AppointmentCard extends StatelessWidget {
                           ? context.tr('appointments.${value.remoteMethod}')
                           : value.place ?? '',
                     ),
-                    Text(
-                      context.tr(
-                        'appointments.companion_name',
-                        args: [value.companionName],
-                      ),
+                    Row(
+                      children: [
+                        PersonPhoto(
+                          name: value.companionName,
+                          photoPath: ApiEndpoints.memberPhoto(
+                            circleId,
+                            value.companionAccountId,
+                          ),
+                          avatarCode: value.companionAvatarCode,
+                          size: 20,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            context.tr(
+                              'appointments.companion_name',
+                              args: [value.companionName],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -196,10 +234,15 @@ class AppointmentCard extends StatelessWidget {
             ],
             if (value.status == AppointmentStatus.completed)
               TextButton.icon(
-                onPressed: () => context.push(
-                  Routes.appointmentVisit(circleId, value.id),
-                  extra: canManage,
-                ),
+                onPressed: () async {
+                  await context.push<void>(
+                    Routes.appointmentVisit(circleId, value.id),
+                    extra: canManage,
+                  );
+                  if (context.mounted) {
+                    context.read<AppointmentsCubit>().load(circleId);
+                  }
+                },
                 icon: const Icon(CupertinoIcons.doc_text),
                 label: Text(context.tr('appointments.visit_title')),
               ),
@@ -276,6 +319,7 @@ class AppointmentCard extends StatelessWidget {
   }
 }
 
+/// Displays the appointment record section UI.
 class AppointmentRecordSection extends StatefulWidget {
   const AppointmentRecordSection({
     super.key,
@@ -294,7 +338,15 @@ class AppointmentRecordSection extends StatefulWidget {
 }
 
 class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
+  static const _filters = ['all', 'upcoming', 'previous'];
   String _filter = 'all';
+
+  void _changeFilter(int offset) {
+    final next = _filters.indexOf(_filter) + offset;
+    if (next >= 0 && next < _filters.length) {
+      setState(() => _filter = _filters[next]);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -316,37 +368,48 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
           Text(context.tr(state.errorKey!)),
         GlassSegmentedControl<String>(
           segments: {
-            for (final key in const ['all', 'upcoming', 'previous'])
+            for (final key in _filters)
               key: context.tr('appointments.filters.$key'),
           },
           selected: _filter,
           onChanged: (value) => setState(() => _filter = value),
         ),
         const SizedBox(height: AppSpacing.md),
-        if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
-          const Center(child: CircularProgressIndicator())
-        else if (state.status == AppointmentsLoadStatus.failure)
-          TextButton(
-            onPressed: () =>
-                context.read<AppointmentsCubit>().load(widget.circleId),
-            child: Text(context.tr(state.errorKey ?? 'error.unknown')),
-          )
-        else if (values.isEmpty)
-          Center(child: Text(context.tr('appointments.no_records')))
-        else
-          for (final value in values) ...[
-            AppointmentCard(
-              value: value,
-              circleId: widget.circleId,
-              canManage: widget.canManage,
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
+        SwipeSelectionArea(
+          onPrevious: () => _changeFilter(-1),
+          onNext: () => _changeFilter(1),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (state.status == AppointmentsLoadStatus.loading &&
+                  values.isEmpty)
+                const Center(child: CircularProgressIndicator())
+              else if (state.status == AppointmentsLoadStatus.failure)
+                TextButton(
+                  onPressed: () =>
+                      context.read<AppointmentsCubit>().load(widget.circleId),
+                  child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+                )
+              else if (values.isEmpty)
+                Center(child: Text(context.tr('appointments.no_records')))
+              else
+                for (final value in values) ...[
+                  AppointmentCard(
+                    value: value,
+                    circleId: widget.circleId,
+                    canManage: widget.canManage,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+            ],
+          ),
+        ),
       ],
     );
   }
 }
 
+/// Displays the appointment today row UI.
 class AppointmentTodayRow extends StatelessWidget {
   const AppointmentTodayRow({super.key, required this.value});
   final CareAppointment value;

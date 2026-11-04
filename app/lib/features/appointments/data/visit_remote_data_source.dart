@@ -4,6 +4,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:dio/dio.dart';
 
+/// Sends visit requests to the API.
 class VisitRemoteDataSource {
   VisitRemoteDataSource(this._client);
 

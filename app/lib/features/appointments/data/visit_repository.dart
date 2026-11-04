@@ -4,6 +4,7 @@ import 'package:app/features/appointments/data/visit_model.dart';
 import 'package:app/features/appointments/data/visit_remote_data_source.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 
+/// Provides visit data operations.
 class VisitRepository {
   VisitRepository(this._remote);
 

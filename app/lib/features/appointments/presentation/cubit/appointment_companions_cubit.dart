@@ -4,6 +4,7 @@ import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Holds the appointment companions presentation state.
 class AppointmentCompanionsState extends Equatable {
   const AppointmentCompanionsState({
     this.loading = true,
@@ -19,6 +20,7 @@ class AppointmentCompanionsState extends Equatable {
   List<Object?> get props => [loading, companions, errorKey];
 }
 
+/// Coordinates appointment companions actions and UI state.
 class AppointmentCompanionsCubit extends Cubit<AppointmentCompanionsState> {
   AppointmentCompanionsCubit(this._repository)
     : super(const AppointmentCompanionsState());

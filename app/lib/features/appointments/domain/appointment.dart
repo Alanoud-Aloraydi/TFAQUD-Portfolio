@@ -1,20 +1,25 @@
 import 'package:equatable/equatable.dart';
 
-enum AppointmentKind { followUp, test, imaging, remote }
+/// Defines the supported appointment kind values.
+enum AppointmentKind { followUp, test, imaging, remote, other }
 
+/// Defines the supported appointment status values.
 enum AppointmentStatus { scheduled, completed, cancelled }
 
+/// Represents a scheduled care appointment.
 class CareAppointment extends Equatable {
   const CareAppointment({
     required this.id,
     required this.specialty,
     required this.kind,
+    required this.otherKind,
     required this.scheduledOn,
     required this.time,
     required this.place,
     required this.remoteMethod,
     required this.companionAccountId,
     required this.companionName,
+    this.companionAvatarCode,
     required this.status,
     required this.updatedAt,
   });
@@ -22,12 +27,14 @@ class CareAppointment extends Equatable {
   final String id;
   final String specialty;
   final AppointmentKind kind;
+  final String? otherKind;
   final DateTime scheduledOn;
   final String time;
   final String? place;
   final String? remoteMethod;
   final String companionAccountId;
   final String companionName;
+  final String? companionAvatarCode;
   final AppointmentStatus status;
   final DateTime updatedAt;
 
@@ -47,31 +54,41 @@ class CareAppointment extends Equatable {
     id,
     specialty,
     kind,
+    otherKind,
     scheduledOn,
     time,
     place,
     remoteMethod,
     companionAccountId,
     companionName,
+    companionAvatarCode,
     status,
     updatedAt,
   ];
 }
 
+/// Identifies a circle member accompanying an appointment.
 class AppointmentCompanion extends Equatable {
-  const AppointmentCompanion({required this.id, required this.name});
+  const AppointmentCompanion({
+    required this.id,
+    required this.name,
+    this.avatarCode,
+  });
 
   final String id;
   final String name;
+  final String? avatarCode;
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, avatarCode];
 }
 
+/// Holds editable appointment values before saving.
 class AppointmentDraft extends Equatable {
   const AppointmentDraft({
     required this.specialty,
     required this.kind,
+    required this.otherKind,
     required this.scheduledOn,
     required this.time,
     required this.place,
@@ -81,6 +98,7 @@ class AppointmentDraft extends Equatable {
 
   final String specialty;
   final AppointmentKind kind;
+  final String? otherKind;
   final DateTime scheduledOn;
   final String time;
   final String? place;
@@ -91,6 +109,7 @@ class AppointmentDraft extends Equatable {
   List<Object?> get props => [
     specialty,
     kind,
+    otherKind,
     scheduledOn,
     time,
     place,
