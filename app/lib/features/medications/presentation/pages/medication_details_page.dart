@@ -13,6 +13,7 @@ import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the medication details page UI.
 class MedicationDetailsPage extends StatelessWidget {
   const MedicationDetailsPage({
     super.key,
@@ -70,6 +72,7 @@ class MedicationDetailsPage extends StatelessWidget {
   }
 }
 
+/// Renders the content element of medication details page.
 class _Content extends StatelessWidget {
   const _Content({
     super.key,
@@ -110,6 +113,16 @@ class _Content extends StatelessWidget {
         body: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
+            MedicationPhotoBuilder(
+              circleId: circleId,
+              planId: plan.id,
+              builder: (context, bytes) => bytes == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                      child: MedicationPhotoImage(bytes: bytes, height: 268),
+                    ),
+            ),
             MedicationDetails(plan: plan),
             const SizedBox(height: AppSpacing.xl),
             MedicationRevisionHistory(plan: plan),
@@ -196,6 +209,7 @@ class _Content extends StatelessWidget {
   }
 }
 
+/// Renders the pending revision element of medication details page.
 class _PendingRevision extends StatelessWidget {
   const _PendingRevision({
     required this.plan,

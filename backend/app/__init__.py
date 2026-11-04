@@ -30,6 +30,7 @@ from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.home import bp as home_bp
 from app.medications.routes import bp as medications_bp
+from app.photo_routes import bp as photos_bp
 from app.measurements.routes import bp as measurements_bp
 from app.prayer_times.routes import bp as prayer_times_bp
 from app.push import PushSender, create_push_sender
@@ -141,6 +142,7 @@ def create_app(
     app.register_blueprint(creation_requests_bp)
     app.register_blueprint(invitations_bp)
     app.register_blueprint(medications_bp)
+    app.register_blueprint(photos_bp)
     app.register_blueprint(measurements_bp)
     app.register_blueprint(appointments_bp)
     app.register_blueprint(appointment_visits_bp)

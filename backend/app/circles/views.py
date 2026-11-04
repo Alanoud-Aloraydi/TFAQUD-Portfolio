@@ -43,6 +43,7 @@ def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
         "has_account": linked is not None,
         "app_mode": linked.app_mode if linked else None,
         "is_you": linked is not None and linked.id == viewer,
+        "avatar_code": patient.avatar_code,
     }
 
 
@@ -59,21 +60,46 @@ def circle_view(
     patient_account = patient.account_id if patient is not None else None
     members = [
         {
+            "account_id": str(account_id),
             "display_name": name,
             "is_you": account_id == viewer,
             "is_patient": account_id == patient_account,
             "role": "manager",
+            "avatar_code": (
+                patient.avatar_code
+                if account_id == patient_account else avatar_code
+            ),
         }
-        for account_id, name in sorted(
+        for account_id, name, avatar_code in sorted(
             session.execute(
-                select(CareCircleManager.account_id, Account.display_name)
+                select(CareCircleManager.account_id, Account.display_name,
+                       Account.avatar_code)
                 .join(Account, Account.id == CareCircleManager.account_id)
                 .where(CareCircleManager.care_circle_id == circle_id)
             ).all(),
-            # You first, then by name, so the order never jumps around.
-            key=lambda row: (row[0] != viewer, row[1] or "", str(row[0])),
+            key=lambda row: (row[0] != patient_account,
+                             row[0] != viewer, row[1] or "", str(row[0])),
         )
     ]
+    if patient_account is None or not any(
+        member["is_patient"] for member in members
+    ):
+        linked = (
+            session.get(Account, patient_account)
+            if patient_account else None
+        )
+        patient_name = (
+            f"{linked.first_name} {linked.last_name}" if linked
+            else f"{patient.first_name} {patient.last_name}"
+        )
+        members.insert(0, {
+            "account_id": str(patient_account) if patient_account else None,
+            "display_name": patient_name.strip(),
+            "is_you": patient_account == viewer,
+            "is_patient": True,
+            "role": "patient",
+            "avatar_code": patient.avatar_code,
+        })
     view = {
         "id": str(circle.id),
         "name": circle.name,

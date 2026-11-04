@@ -13,6 +13,7 @@ import 'package:app/features/appointments/presentation/pages/visit_page.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
+import 'package:app/features/account/presentation/pages/licenses_screen.dart';
 import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
@@ -74,6 +75,7 @@ import 'package:go_router/go_router.dart';
 
 import 'routers.dart';
 
+/// Defines page routes and navigation behavior.
 class AppRouter {
   // How the app decides what to show:
   //
@@ -370,6 +372,10 @@ class AppRouter {
             child: const AccountEditScreen(),
           ),
         ),
+      ),
+      GoRoute(
+        path: Routes.licenses,
+        pageBuilder: _iosPage((context, state) => const LicensesScreen()),
       ),
       // Welcome, phone number and code share one SignInCubit, so the code page
       // knows the number. The cubit is closed when the user leaves these pages.

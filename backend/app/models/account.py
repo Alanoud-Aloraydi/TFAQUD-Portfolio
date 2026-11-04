@@ -40,6 +40,12 @@ class Account(db.Model):
             "city IS NULL OR length(btrim(city)) BETWEEN 1 AND 60",
             name="city",
         ),
+        CheckConstraint(
+            "avatar_code IS NULL OR avatar_code IN "
+            "('w1_1', 'w1_3', 'w6_1', 'w6_3', 'w7_1', 'w7_3', "
+            "'m1_1', 'm1_3', 'm2_1', 'm2_3', 'm6_1', 'm6_3')",
+            name="avatar_code",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -50,6 +56,7 @@ class Account(db.Model):
     first_name: Mapped[str | None] = mapped_column(Text)
     last_name: Mapped[str | None] = mapped_column(Text)
     display_name: Mapped[str | None] = mapped_column(Text)
+    avatar_code: Mapped[str | None] = mapped_column(Text)
     app_mode: Mapped[str | None] = mapped_column(Text)
     # Asked once at onboarding, so a circle for your own care needs only its
     # name. A circle copies them into its patient when it is created.

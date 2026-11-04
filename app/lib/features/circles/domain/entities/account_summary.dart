@@ -12,6 +12,7 @@ class AccountSummary extends Equatable {
     this.patientCircleId,
     this.birthDate,
     this.city,
+    this.avatarCode,
   });
 
   final String firstName;
@@ -31,6 +32,7 @@ class AccountSummary extends Equatable {
   /// made before onboarding asked for them.
   final DateTime? birthDate;
   final String? city;
+  final String? avatarCode;
 
   /// True when a circle for this account's own care needs only its name: the
   /// server reads the birth date and city from the account.
@@ -51,5 +53,6 @@ class AccountSummary extends Equatable {
     patientCircleId,
     birthDate,
     city,
+    avatarCode,
   ];
 }

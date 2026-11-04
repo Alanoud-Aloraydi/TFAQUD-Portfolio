@@ -7,6 +7,7 @@ class CircleOverview extends Equatable {
     required this.patientName,
     required this.patientIsYou,
     required this.patientUsesApp,
+    this.patientAvatarCode,
     this.appMode,
     required this.patientBirthDate,
     required this.city,
@@ -20,6 +21,7 @@ class CircleOverview extends Equatable {
   final String patientName;
   final bool patientIsYou;
   final bool patientUsesApp;
+  final String? patientAvatarCode;
   final String? appMode;
   final DateTime patientBirthDate;
   final String city;
@@ -33,6 +35,7 @@ class CircleOverview extends Equatable {
     patientName,
     patientIsYou,
     patientUsesApp,
+    patientAvatarCode,
     appMode,
     patientBirthDate,
     city,
@@ -42,11 +45,15 @@ class CircleOverview extends Equatable {
   ];
 }
 
+/// Represents one member of a care circle.
 class CircleMember extends Equatable {
   const CircleMember({
     required this.name,
     required this.isYou,
     this.isPatient = false,
+    this.accountId,
+    this.avatarCode,
+    this.isManager = true,
   });
 
   final String name;
@@ -54,11 +61,22 @@ class CircleMember extends Equatable {
 
   /// Whether this member is the patient of the circle («صاحب الملف»).
   final bool isPatient;
+  final String? accountId;
+  final String? avatarCode;
+  final bool isManager;
 
   @override
-  List<Object?> get props => [name, isYou, isPatient];
+  List<Object?> get props => [
+    name,
+    isYou,
+    isPatient,
+    accountId,
+    avatarCode,
+    isManager,
+  ];
 }
 
+/// Tracks an invitation awaiting acceptance.
 class CirclePendingInvitation extends Equatable {
   const CirclePendingInvitation({
     required this.id,

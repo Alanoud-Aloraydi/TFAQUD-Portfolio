@@ -9,7 +9,7 @@ from app.auth.decorators import current_auth, require_auth
 from app.database import transaction
 from app.errors import ServiceUnavailable, Unauthorized
 from app.extensions import get_user_store
-from app.models import CareCircle, CareCircleManager, Patient
+from app.models import Account, CareCircle, CareCircleManager, Patient
 
 bp = Blueprint("home", __name__, url_prefix="/api/v1")
 
@@ -22,11 +22,16 @@ def home():
     if user is None:
         raise Unauthorized(code="session_revoked")
     circles = _circles(UUID(user.id)) if user.profile_complete else []
+    account = None
+    if "sqlalchemy" in current_app.extensions:
+        with transaction() as session:
+            account = session.get(Account, UUID(user.id))
     response = jsonify(
         account={
             "id": user.id,
             "display_name": user.display_name,
             "profile_complete": user.profile_complete,
+            "avatar_code": account.avatar_code if account else None,
         },
         care_circles=circles,
     )
@@ -47,7 +52,8 @@ def _circles(account_id: UUID) -> list[dict]:
     with transaction() as session:
         managed_ids = set(session.scalars(manages))
         statement = (
-            select(CareCircle.id, CareCircle.name)
+            select(CareCircle.id, CareCircle.name, Patient.avatar_code)
+            .join(Patient, Patient.care_circle_id == CareCircle.id)
             .where(CareCircle.id.in_(manages.union(receives_care)))
             .order_by(CareCircle.name, CareCircle.id)
         )
@@ -56,6 +62,7 @@ def _circles(account_id: UUID) -> list[dict]:
                 "id": str(row.id),
                 "name": row.name,
                 "can_manage_medications": row.id in managed_ids,
+                "patient_avatar_code": row.avatar_code,
             }
             for row in session.execute(statement)
         ]

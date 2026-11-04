@@ -1,4 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -189,14 +191,22 @@ class AccountScreen extends StatelessWidget {
         children: <Widget>[
           Column(
             children: <Widget>[
-              CircleAvatar(
-                radius: AppSizes.avatarLarge / 2,
-                backgroundColor: AppSemanticColors.textPrimary,
-                child: Text(
-                  shown.isEmpty ? '؟' : shown.characters.first,
-                  style: text.titleLarge?.copyWith(
-                    color: AppSemanticColors.surfaceContent,
-                  ),
+              GestureDetector(
+                onTap: () => showPersonPhotoSheet(
+                  context,
+                  title: context.tr('photos.your_photo'),
+                  name: shown,
+                  photoPath: ApiEndpoints.accountPhoto,
+                  avatarPath: ApiEndpoints.accountAvatar,
+                  avatarCode: account.avatarCode,
+                  frontCamera: true,
+                  onSaved: cubit.load,
+                ),
+                child: PersonPhoto(
+                  name: shown,
+                  photoPath: ApiEndpoints.accountPhoto,
+                  avatarCode: account.avatarCode,
+                  size: AppSizes.avatarLarge,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -251,6 +261,10 @@ class AccountScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
           SettingsCard(
             children: <Widget>[
+              ActionRow(
+                label: context.tr('photos.licenses'),
+                onPressed: () => context.push(Routes.licenses),
+              ),
               const SignOutRow(),
               ActionRow(
                 label: context.tr('account.delete_account'),

@@ -11,12 +11,14 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the medication plan card UI.
 class MedicationPlanCard extends StatefulWidget {
   const MedicationPlanCard({
     super.key,
@@ -57,14 +59,10 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     );
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: status == _PlanState.current
-            ? AppSemanticColors.surfacePlan
-            : AppSemanticColors.surfaceContent,
+        color: AppSemanticColors.surfaceContent,
         shape: AppRadius.shape(
           AppRadius.m,
-          side: status == _PlanState.scheduled
-              ? const BorderSide(color: AppSemanticColors.borderSubtle)
-              : BorderSide.none,
+          side: const BorderSide(color: AppSemanticColors.borderSubtle),
         ),
       ),
       child: Padding(
@@ -72,26 +70,42 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            MedicationPhotoBuilder(
+              circleId: widget.circleId,
+              planId: plan.id,
+              builder: (context, bytes) => bytes == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: MedicationPhotoImage(bytes: bytes, height: 140),
+                    ),
+            ),
             InkWell(
               onTap: () => setState(() => _expanded = !_expanded),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: AppSizes.touch),
                 child: Row(
                   children: [
-                    Container(
-                      width: AppSizes.touch,
-                      height: AppSizes.touch,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: status == _PlanState.current
-                            ? AppSemanticColors.surfaceContent
-                            : AppSemanticColors.surfacePlan,
-                        borderRadius: BorderRadius.circular(AppRadius.field),
-                      ),
-                      child: const Icon(
-                        TafaqodPhosphorIcons.pill,
-                        color: AppSemanticColors.textSupporting,
-                      ),
+                    MedicationPhotoBuilder(
+                      circleId: widget.circleId,
+                      planId: plan.id,
+                      builder: (context, bytes) => bytes != null
+                          ? const SizedBox.shrink()
+                          : Container(
+                              width: AppSizes.touch,
+                              height: AppSizes.touch,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AppSemanticColors.surfacePlan,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.field,
+                                ),
+                              ),
+                              child: const Icon(
+                                TafaqodPhosphorIcons.pill,
+                                color: AppSemanticColors.textSupporting,
+                              ),
+                            ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
@@ -145,9 +159,8 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             const SizedBox(height: AppSpacing.md),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: status == _PlanState.current
-                    ? AppSemanticColors.surfaceContent
-                    : AppSemanticColors.surfacePlan,
+                color: AppSemanticColors.surfaceContent,
+                border: Border.all(color: AppSemanticColors.borderSubtle),
                 borderRadius: BorderRadius.circular(AppRadius.field),
               ),
               child: Padding(
@@ -353,6 +366,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
       .join('، ');
 }
 
+/// Renders the detail value element of medication plan card.
 class _DetailValue extends StatelessWidget {
   const _DetailValue({required this.label, required this.value});
 
@@ -372,6 +386,7 @@ class _DetailValue extends StatelessWidget {
   );
 }
 
+/// Renders the schedule line element of medication plan card.
 class _ScheduleLine extends StatelessWidget {
   const _ScheduleLine({required this.schedule});
 
@@ -453,8 +468,10 @@ class _ScheduleLine extends StatelessWidget {
   }
 }
 
+/// Defines the supported plan state values.
 enum _PlanState { current, scheduled, previous }
 
+/// Renders the plan status element of medication plan card.
 class _PlanStatus extends StatelessWidget {
   const _PlanStatus({required this.state});
 

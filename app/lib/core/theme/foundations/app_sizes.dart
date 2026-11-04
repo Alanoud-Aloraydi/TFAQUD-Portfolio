@@ -23,6 +23,9 @@ abstract class AppSizes {
   /// The round initial of a person or circle in a row.
   static const double avatar = 40;
 
+  /// Profile portraits in the top bar and member list.
+  static const double avatarPortrait = 48;
+
   /// The round initial at the top of a page or a card that stands for one
   /// person: the account, a request, the emergency card.
   static const double avatarLarge = 56;

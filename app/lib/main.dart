@@ -1,10 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sizer/sizer.dart';
 
 import 'core/services/phone_notifications.dart';
 import 'core/setup.dart';
+import 'core/media/private_photo.dart';
+import 'core/network/dio_client.dart';
+import 'core/services/token_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/configure_dependencies.dart';
 import 'core/navigation/app_router.dart';
@@ -32,6 +36,7 @@ Future<void> main() async {
   );
 }
 
+/// Displays the main app UI.
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -41,13 +46,20 @@ class MainApp extends StatelessWidget {
       builder: (context, orientation, screenType) {
         return MaterialApp.router(
           routerConfig: AppRouter.router,
-          builder: (context, child) => ValueListenableBuilder<bool>(
-            valueListenable: AppAccessibility.reduceTransparency,
-            builder: (context, reduceTransparency, _) => GlassPreferences(
-              reduceTransparency: reduceTransparency,
-              child: KeyboardDismissOnTap(child: child!),
-            ),
-          ),
+          builder: (context, child) =>
+              RepositoryProvider<PrivatePhotoRepository>(
+                create: (_) => PrivatePhotoRepository(
+                  GetIt.I<DioClient>(),
+                  GetIt.I<TokenStorage>(),
+                ),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: AppAccessibility.reduceTransparency,
+                  builder: (context, reduceTransparency, _) => GlassPreferences(
+                    reduceTransparency: reduceTransparency,
+                    child: KeyboardDismissOnTap(child: child!),
+                  ),
+                ),
+              ),
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,

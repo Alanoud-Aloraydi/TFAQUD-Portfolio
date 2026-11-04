@@ -8,12 +8,14 @@ import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:app/features/medications/presentation/widgets/today_dose_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the today medication attention section UI.
 class TodayMedicationAttentionSection extends StatefulWidget {
   const TodayMedicationAttentionSection({
     super.key,
@@ -114,6 +116,7 @@ class _TodayMedicationAttentionSectionState
   );
 }
 
+/// Renders the attention medication card element of today medication components.
 class _AttentionMedicationCard extends StatelessWidget {
   const _AttentionMedicationCard({
     required this.occurrence,
@@ -194,6 +197,7 @@ class _AttentionMedicationCard extends StatelessWidget {
   }
 }
 
+/// Displays the today medication action dose UI.
 class TodayMedicationActionDose extends StatelessWidget {
   const TodayMedicationActionDose({
     super.key,
@@ -218,6 +222,16 @@ class TodayMedicationActionDose extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          MedicationPhotoBuilder(
+            circleId: circleId,
+            planId: occurrence.planId,
+            builder: (context, bytes) => bytes == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: MedicationPhotoImage(bytes: bytes, height: 150),
+                  ),
+          ),
           Text(
             context.tr(switch (status) {
               DoseTimingState.due => 'today_dashboard.due_title',
@@ -242,6 +256,7 @@ class TodayMedicationActionDose extends StatelessWidget {
   }
 }
 
+/// Renders the next dose info element of today medication components.
 class _NextDoseInfo extends StatelessWidget {
   const _NextDoseInfo({required this.occurrence, required this.circleId});
 
@@ -314,17 +329,20 @@ class _NextDoseInfo extends StatelessWidget {
   }
 }
 
+/// Displays the today medication prayer dose row UI.
 class TodayMedicationPrayerDoseRow extends StatelessWidget {
   const TodayMedicationPrayerDoseRow({
     super.key,
     required this.occurrence,
     required this.circleId,
     required this.now,
+    this.showThumbnail = false,
   });
 
   final DoseOccurrence occurrence;
   final String circleId;
   final DateTime now;
+  final bool showThumbnail;
 
   @override
   Widget build(BuildContext context) {
@@ -384,6 +402,25 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
+          if (showThumbnail) ...[
+            MedicationPhotoBuilder(
+              circleId: circleId,
+              planId: occurrence.planId,
+              builder: (context, bytes) => bytes == null
+                  ? Container(
+                      width: 56,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppSemanticColors.surfacePlan,
+                        borderRadius: BorderRadius.circular(AppRadius.field),
+                      ),
+                      child: const Icon(TafaqodPhosphorIcons.pill),
+                    )
+                  : MedicationPhotoImage(bytes: bytes, width: 56, height: 56),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,12 +432,14 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        TafaqodPhosphorIcons.pill,
-                        size: 15,
-                        color: AppSemanticColors.textSupporting,
-                      ),
-                      const SizedBox(width: AppSpacing.tight),
+                      if (!showThumbnail) ...[
+                        const Icon(
+                          TafaqodPhosphorIcons.pill,
+                          size: 15,
+                          color: AppSemanticColors.textSupporting,
+                        ),
+                        const SizedBox(width: AppSpacing.tight),
+                      ],
                       Flexible(
                         child: Text(
                           '${occurrence.name} '
@@ -436,6 +475,7 @@ String _strength(BuildContext context, DoseOccurrence occurrence) =>
     '${formatMedicationNumber(occurrence.strengthValue)} '
     '${context.tr('medications.strength_display.${occurrence.strengthUnit.name}')}';
 
+/// Displays the medication period marks UI.
 class MedicationPeriodMarks extends StatelessWidget {
   const MedicationPeriodMarks({
     super.key,
@@ -456,6 +496,7 @@ class MedicationPeriodMarks extends StatelessWidget {
   );
 }
 
+/// Renders the period mark element of today medication components.
 class _PeriodMark extends StatelessWidget {
   const _PeriodMark({required this.occurrence, required this.now});
 

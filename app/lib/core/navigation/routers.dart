@@ -1,3 +1,4 @@
+/// Names the app navigation destinations.
 class Routes {
   Routes._();
 
@@ -8,6 +9,7 @@ class Routes {
   static const String circle = '/circle';
   static const String account = '/account';
   static const String accountEdit = '/account/edit';
+  static const String licenses = '/account/licenses';
   static const String notifications = '/notifications';
   static const String gallery = '/gallery';
 

@@ -21,6 +21,7 @@ class CircleOverviewModel {
         ].join(' '),
         patientIsYou: patient['is_you'] as bool,
         patientUsesApp: patient['has_account'] as bool,
+        patientAvatarCode: patient['avatar_code'] as String?,
         appMode: patient['app_mode'] as String?,
         patientBirthDate: DateTime.parse(patient['birth_date'] as String),
         city: patient['city'] as String,
@@ -33,6 +34,9 @@ class CircleOverviewModel {
                   '',
               isYou: raw['is_you'] as bool,
               isPatient: raw['is_patient'] as bool? ?? false,
+              accountId: raw['account_id'] as String?,
+              avatarCode: raw['avatar_code'] as String?,
+              isManager: raw['role'] == 'manager',
             ),
         ],
         pendingInvitations: <CirclePendingInvitation>[

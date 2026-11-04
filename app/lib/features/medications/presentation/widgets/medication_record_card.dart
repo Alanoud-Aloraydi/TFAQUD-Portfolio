@@ -8,6 +8,7 @@ import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -44,8 +45,11 @@ class MedicationRecordCard extends StatelessWidget {
           : 'medications.current_label',
     );
     return Material(
-      color: AppSemanticColors.surfacePlan,
-      borderRadius: BorderRadius.circular(AppRadius.card),
+      color: AppSemanticColors.surfaceContent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: const BorderSide(color: AppSemanticColors.borderSubtle),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: () => context.push(Routes.medicationDetails(circleId, plan.id)),
@@ -56,15 +60,27 @@ class MedicationRecordCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: AppSizes.touch,
-                    height: AppSizes.touch,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppSemanticColors.surfaceContent,
-                      borderRadius: BorderRadius.circular(AppRadius.field),
-                    ),
-                    child: const Icon(TafaqodPhosphorIcons.pill),
+                  MedicationPhotoBuilder(
+                    circleId: circleId,
+                    planId: plan.id,
+                    builder: (context, bytes) => bytes == null
+                        ? Container(
+                            width: 64,
+                            height: 64,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppSemanticColors.surfaceContent,
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.field,
+                              ),
+                            ),
+                            child: const Icon(TafaqodPhosphorIcons.pill),
+                          )
+                        : MedicationPhotoImage(
+                            bytes: bytes,
+                            width: 64,
+                            height: 64,
+                          ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -113,6 +129,7 @@ class MedicationRecordCard extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: AppSemanticColors.surfaceContent,
+                    border: Border.all(color: AppSemanticColors.borderSubtle),
                     borderRadius: BorderRadius.circular(AppRadius.field),
                   ),
                   child: Text(
@@ -134,6 +151,7 @@ class MedicationRecordCard extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: AppSemanticColors.surfaceContent,
+                  border: Border.all(color: AppSemanticColors.borderSubtle),
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
                 child: Text(

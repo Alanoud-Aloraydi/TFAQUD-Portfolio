@@ -29,6 +29,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays the home feature screen UI.
 class HomeFeatureScreen extends StatefulWidget {
   const HomeFeatureScreen({super.key, required this.navigationShell});
 
@@ -202,7 +203,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       context.read<MedicationOccurrencesCubit>().load(
         circleId,
         today.subtract(const Duration(days: 1)),
-        today,
+        today.add(const Duration(days: 30)),
       ),
     );
     unawaited(context.read<PrayerTimesCubit>().load(circleId));
@@ -223,6 +224,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
         navigationShell: widget.navigationShell,
         topBar: AppTopBar(
           displayName: state.data?.displayName,
+          avatarCode: state.data?.avatarCode,
+          onPhotoSaved: cubit.refresh,
           circles: HomeWidget(
             state: state,
             onSelected: cubit.selectCircle,

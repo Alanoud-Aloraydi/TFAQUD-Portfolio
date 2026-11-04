@@ -18,10 +18,9 @@ class AccountModel {
         displayName: (account['display_name'] as String?) ?? '',
         phoneNumber: (account['phone_number'] as String?) ?? '',
         patientCircleId: account['patient_circle_id'] as String?,
-        birthDate: DateTime.tryParse(
-          (account['birth_date'] as String?) ?? '',
-        ),
+        birthDate: DateTime.tryParse((account['birth_date'] as String?) ?? ''),
         city: account['city'] as String?,
+        avatarCode: account['avatar_code'] as String?,
       ),
     );
   }

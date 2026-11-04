@@ -35,6 +35,8 @@ class ApiEndpoints {
 
   /// The phone's Apple push token, kept with the sign-in.
   static const String pushDevice = '/accounts/me/push-device';
+  static const String accountPhoto = '/accounts/me/photo';
+  static const String accountAvatar = '/accounts/me/avatar';
   static const String selfCircle = '/circles/self';
   static const String patientCircle = '/circles/patient-without-account';
   static const String circleRequests = '/circle-requests';
@@ -66,6 +68,12 @@ class ApiEndpoints {
   static String medicalProfile(String circleId) =>
       '${circle(circleId)}/medical-profile';
   static String circlePatient(String circleId) => '${circle(circleId)}/patient';
+  static String patientPhoto(String circleId) =>
+      '${circlePatient(circleId)}/photo';
+  static String patientAvatar(String circleId) =>
+      '${circlePatient(circleId)}/avatar';
+  static String memberPhoto(String circleId, String accountId) =>
+      '${circle(circleId)}/members/$accountId/photo';
   static String emergencyContacts(String circleId) =>
       '${circle(circleId)}/emergency-contacts';
   static String emergencyContact(String circleId, String contactId) =>
@@ -91,6 +99,8 @@ class ApiEndpoints {
 
   static String measurementPlans(String circleId) =>
       '/circles/$circleId/measurement-plans';
+  static String measurementTargets(String circleId) =>
+      '/circles/$circleId/measurement-targets';
   static String measurementPlan(String circleId, String planId) =>
       '${measurementPlans(circleId)}/$planId';
   static String stopMeasurementPlan(String circleId, String planId) =>
@@ -114,6 +124,8 @@ class ApiEndpoints {
 
   static String medicationPlan(String circleId, String planId) =>
       '${medicationPlans(circleId)}/$planId';
+  static String medicationPhoto(String circleId, String planId) =>
+      '${medicationPlan(circleId, planId)}/photo';
 
   static String discontinueMedication(String circleId, String planId) =>
       '${medicationPlan(circleId, planId)}/discontinue';

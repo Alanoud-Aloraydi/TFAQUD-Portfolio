@@ -1,4 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -64,6 +66,7 @@ class CircleTabScreen extends StatelessWidget {
   }
 }
 
+/// Renders the circle content element of circle tab screen.
 class _CircleContent extends StatelessWidget {
   const _CircleContent({required this.circle});
 
@@ -132,15 +135,12 @@ class _CircleContent extends StatelessWidget {
         ),
       ),
       _MembersHeader(overview: overview),
-      _MembersList(overview: overview),
+      _MembersList(overview: overview, circleId: circle.id),
       if (overview.canManage) ...<Widget>[
         const SizedBox(height: AppSpacing.md),
         FilledButton.icon(
           onPressed: () => _invite(context),
-          icon: const Icon(
-            AppIcons.userPlus,
-            size: AppSizes.iconSmall,
-          ),
+          icon: const Icon(AppIcons.userPlus, size: AppSizes.iconSmall),
           label: Text(context.tr('circle_overview.add_member')),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -150,10 +150,7 @@ class _CircleContent extends StatelessWidget {
             foregroundColor: AppSemanticColors.statusError,
             minimumSize: const Size.fromHeight(AppSizes.button),
           ),
-          icon: const Icon(
-            AppIcons.signOut,
-            size: AppSizes.iconSmall,
-          ),
+          icon: const Icon(AppIcons.signOut, size: AppSizes.iconSmall),
           label: Text(context.tr('circle_overview.leave')),
         ),
       ],
@@ -172,7 +169,8 @@ class _CircleContent extends StatelessWidget {
 
   Future<void> _leave(BuildContext context, CircleOverview overview) async {
     final bool deletesCircle =
-        overview.patientIsYou || overview.members.length == 1;
+        overview.patientIsYou ||
+        overview.members.where((member) => member.isManager).length == 1;
     final bool? confirmed = await showAppAlert<bool>(
       context,
       title: context.tr(
@@ -207,9 +205,8 @@ class _CircleContent extends StatelessWidget {
     );
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.tr(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr(error))));
       return;
     }
     await context.read<HomeCubit>().refresh();
@@ -237,7 +234,6 @@ class CircleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final String name = circle.name.trim();
     final MedicalProfileDraft? profile = medicalFile?.profile;
     return DecoratedBox(
       decoration: ShapeDecoration(
@@ -258,18 +254,11 @@ class CircleCard extends StatelessWidget {
             Row(
               children: <Widget>[
                 ExcludeSemantics(
-                  child: Container(
-                    width: AppSizes.avatarLarge,
-                    height: AppSizes.avatarLarge,
-                    alignment: Alignment.center,
-                    decoration: ShapeDecoration(
-                      color: AppSemanticColors.selectedSurface,
-                      shape: AppRadius.shape(AppRadius.s),
-                    ),
-                    child: Text(
-                      name.isEmpty ? '' : name.characters.first,
-                      style: text.headlineMedium,
-                    ),
+                  child: PersonPhoto(
+                    name: overview.patientName,
+                    photoPath: ApiEndpoints.patientPhoto(circle.id),
+                    avatarCode: overview.patientAvatarCode,
+                    size: AppSizes.avatarLarge,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -449,7 +438,9 @@ class _AppMode extends StatelessWidget {
               child: Text.rich(
                 TextSpan(
                   children: <InlineSpan>[
-                    TextSpan(text: '${context.tr('circle_overview.app_mode')} '),
+                    TextSpan(
+                      text: '${context.tr('circle_overview.app_mode')} ',
+                    ),
                     TextSpan(
                       text: value,
                       style: const TextStyle(
@@ -566,7 +557,11 @@ class _MembersHeader extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final int invitations = overview.pendingInvitations.length;
     final String summary = <String>[
-      _count(context, 'managers', overview.members.length),
+      _count(
+        context,
+        'managers',
+        overview.members.where((member) => member.isManager).length,
+      ),
       if (invitations > 0) _count(context, 'invitations', invitations),
     ].join(' · ');
     return Padding(
@@ -607,25 +602,27 @@ class _MembersHeader extends StatelessWidget {
       <= 10 => 'few',
       _ => 'many',
     };
-    return context.tr(
-      'circle_overview.${noun}_$key',
-      args: <String>['$count'],
-    );
+    return context.tr('circle_overview.${noun}_$key', args: <String>['$count']);
   }
 }
 
 /// The members, then the pending invitations, in one slate group with
 /// lines between the rows.
 class _MembersList extends StatelessWidget {
-  const _MembersList({required this.overview});
+  const _MembersList({required this.overview, required this.circleId});
 
   final CircleOverview overview;
+  final String circleId;
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> rows = <Widget>[
       for (final CircleMember member in overview.members)
-        _MemberRow(member: member, patientUsesApp: overview.patientUsesApp),
+        _MemberRow(
+          member: member,
+          circleId: circleId,
+          patientUsesApp: overview.patientUsesApp,
+        ),
       for (final CirclePendingInvitation invitation
           in overview.pendingInvitations)
         _InvitationRow(invitation: invitation, canManage: overview.canManage),
@@ -654,48 +651,26 @@ class _MembersList extends StatelessWidget {
   }
 }
 
-/// A round 40-point avatar on the members list.
+/// An hourglass portrait for pending invitations.
 class _Avatar extends StatelessWidget {
-  const _Avatar.letter(String name)
-    : letter = name,
-      icon = null;
-
-  const _Avatar.waiting() : letter = null, icon = AppIcons.hourglass;
-
-  final String? letter;
-  final IconData? icon;
+  const _Avatar.waiting();
 
   @override
   Widget build(BuildContext context) {
-    final String name = letter?.trim() ?? '';
     return ExcludeSemantics(
       child: Container(
         width: AppSizes.avatar,
         height: AppSizes.avatar,
         alignment: Alignment.center,
-        decoration: icon == null
-            ? const ShapeDecoration(
-                color: AppSemanticColors.surfaceContent,
-                shape: CircleBorder(
-                  side: BorderSide(color: AppSemanticColors.borderPlan),
-                ),
-              )
-            : const ShapeDecoration(
-                color: AppSemanticColors.surfaceAttention,
-                shape: CircleBorder(),
-              ),
-        child: icon == null
-            ? Text(
-                name.isEmpty ? '؟' : name.characters.first,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: AppTextTheme.bold,
-                ),
-              )
-            : Icon(
-                icon,
-                size: AppSizes.iconSmall,
-                color: AppSemanticColors.doseDueMarker,
-              ),
+        decoration: const ShapeDecoration(
+          color: AppSemanticColors.surfaceAttention,
+          shape: CircleBorder(),
+        ),
+        child: const Icon(
+          AppIcons.hourglass,
+          size: AppSizes.iconSmall,
+          color: AppSemanticColors.doseDueMarker,
+        ),
       ),
     );
   }
@@ -704,62 +679,96 @@ class _Avatar extends StatelessWidget {
 /// A member: the name with «أنت» for the viewer, «المريض · يستخدم التطبيق»
 /// under the patient, and the badges «مدير» and «صاحب الملف» at the end.
 class _MemberRow extends StatelessWidget {
-  const _MemberRow({required this.member, required this.patientUsesApp});
+  const _MemberRow({
+    required this.member,
+    required this.circleId,
+    required this.patientUsesApp,
+  });
 
   final CircleMember member;
+  final String circleId;
   final bool patientUsesApp;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      child: Row(
-        children: <Widget>[
-          _Avatar.letter(member.name),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    Text(member.name, style: text.titleSmall),
-                    if (member.isYou) const _YouPill(),
-                  ],
-                ),
-                if (member.isPatient && patientUsesApp)
-                  Text(
-                    context.tr('circle_overview.patient_line'),
-                    style: text.bodySmall,
+    return InkWell(
+      onTap: member.isPatient || member.isYou
+          ? () => showPersonPhotoSheet(
+              context,
+              title: member.isPatient
+                  ? context.tr('photos.patient_photo', args: [member.name])
+                  : context.tr('photos.your_photo'),
+              name: member.name,
+              photoPath: member.isPatient
+                  ? ApiEndpoints.patientPhoto(circleId)
+                  : ApiEndpoints.accountPhoto,
+              avatarPath: member.isPatient
+                  ? ApiEndpoints.patientAvatar(circleId)
+                  : ApiEndpoints.accountAvatar,
+              avatarCode: member.avatarCode,
+              frontCamera: member.isYou && !member.isPatient,
+              onSaved: context.read<CircleOverviewCubit>().load,
+            )
+          : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Row(
+          children: <Widget>[
+            PersonPhoto(
+              name: member.name,
+              photoPath: personPhotoPath(
+                circleId,
+                member.isPatient ? null : member.accountId,
+              ),
+              avatarCode: member.avatarCode,
+              size: AppSizes.avatarPortrait,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Text(member.name, style: text.titleSmall),
+                      if (member.isYou) const _YouPill(),
+                    ],
                   ),
+                  if (member.isPatient && patientUsesApp)
+                    Text(
+                      context.tr('circle_overview.patient_line'),
+                      style: text.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                if (member.isManager)
+                  StatusPill(
+                    text: context.tr('circle_overview.manager'),
+                    background: AppSemanticColors.borderPlan,
+                    foreground: AppSemanticColors.textSupporting,
+                    icon: AppIcons.crown,
+                  ),
+                if (member.isPatient) ...<Widget>[
+                  const SizedBox(height: AppSpacing.xs),
+                  StatusPill(
+                    text: context.tr('circle_overview.owner'),
+                    background: AppSemanticColors.selectedSurface,
+                    foreground: AppSemanticColors.statusSuccess,
+                    icon: AppIcons.user,
+                  ),
+                ],
               ],
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              StatusPill(
-                text: context.tr('circle_overview.manager'),
-                background: AppSemanticColors.borderPlan,
-                foreground: AppSemanticColors.textSupporting,
-                icon: AppIcons.crown,
-              ),
-              if (member.isPatient) ...<Widget>[
-                const SizedBox(height: AppSpacing.xs),
-                StatusPill(
-                  text: context.tr('circle_overview.owner'),
-                  background: AppSemanticColors.selectedSurface,
-                  foreground: AppSemanticColors.statusSuccess,
-                  icon: AppIcons.user,
-                ),
-              ],
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -782,9 +791,8 @@ class _YouPill extends StatelessWidget {
       ),
       child: Text(
         context.tr('circle_overview.you'),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: AppSemanticColors.surfaceContent,
-        ),
+        style: Theme.of(context).textTheme.labelMedium
+            ?.copyWith(color: AppSemanticColors.surfaceContent),
       ),
     );
   }
@@ -870,9 +878,8 @@ class _InvitationRow extends StatelessWidget {
   static Future<void> _act(BuildContext context, Future<String?> action) async {
     final String? errorKey = await action;
     if (!context.mounted || errorKey == null) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
   }
 }
 
@@ -963,9 +970,8 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               context.tr(_errorKey!),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppSemanticColors.statusError,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: AppSemanticColors.statusError),
             ),
           ),
         const SizedBox(height: AppSpacing.lg),

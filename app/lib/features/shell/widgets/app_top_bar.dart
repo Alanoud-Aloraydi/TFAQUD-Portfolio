@@ -1,4 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -17,12 +19,16 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   const AppTopBar({
     super.key,
     this.displayName,
+    this.avatarCode,
+    this.onPhotoSaved,
     this.circles,
     this.needsReply = 0,
     this.onNotifications,
   });
 
   final String? displayName;
+  final String? avatarCode;
+  final VoidCallback? onPhotoSaved;
 
   /// The circle switcher, centered between the two buttons.
   final Widget? circles;
@@ -47,20 +53,32 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: AppSemanticColors.transparent,
       flexibleSpace: const IgnorePointer(child: _ScrollEdge()),
       toolbarHeight: kToolbarHeight + AppSpacing.sm,
-      leadingWidth: AppSizes.glassButton + AppSpacing.lg,
+      leadingWidth: AppSizes.avatarPortrait + AppSpacing.lg,
       leading: Padding(
         padding: const EdgeInsetsDirectional.only(start: AppSpacing.lg),
         child: Center(
           child: GlassIconButton(
+            size: AppSizes.avatarPortrait,
             tooltip: context.tr('topbar.account'),
             icon: displayName == null
                 ? const Icon(AppIcons.user)
-                : Text(
-                    displayName!.characters.first,
-                    semanticsLabel: displayName,
-                    style: Theme.of(context).textTheme.titleLarge,
+                : PersonPhoto(
+                    name: displayName!,
+                    photoPath: ApiEndpoints.accountPhoto,
+                    avatarCode: avatarCode,
+                    size: AppSizes.avatarPortrait,
                   ),
-            onPressed: () => context.push(Routes.account),
+            onPressed: () => showPersonPhotoSheet(
+              context,
+              title: context.tr('photos.your_photo'),
+              name: displayName ?? '',
+              photoPath: ApiEndpoints.accountPhoto,
+              avatarPath: ApiEndpoints.accountAvatar,
+              avatarCode: avatarCode,
+              frontCamera: true,
+              onSaved: onPhotoSaved,
+              onOpenAccount: () => context.push(Routes.account),
+            ),
           ),
         ),
       ),

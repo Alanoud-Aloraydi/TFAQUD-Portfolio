@@ -29,6 +29,12 @@ class Patient(db.Model):
             "blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')",
             name="blood_type",
         ),
+        CheckConstraint(
+            "avatar_code IS NULL OR avatar_code IN "
+            "('w1_1', 'w1_3', 'w6_1', 'w6_3', 'w7_1', 'w7_3', "
+            "'m1_1', 'm1_3', 'm2_1', 'm2_3', 'm6_1', 'm6_3')",
+            name="avatar_code",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -45,6 +51,7 @@ class Patient(db.Model):
     )
     first_name: Mapped[str | None] = mapped_column(Text)
     last_name: Mapped[str | None] = mapped_column(Text)
+    avatar_code: Mapped[str | None] = mapped_column(Text)
     birth_date: Mapped[date]
     city: Mapped[str] = mapped_column(Text)
     latitude: Mapped[float | None]

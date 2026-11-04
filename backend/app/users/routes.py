@@ -15,7 +15,7 @@ from app.circles.support import care_work
 from app.database import transaction
 from app.errors import NotFound, ValidationFailed
 from app.extensions import get_clock, get_user_store
-from app.models import Patient
+from app.models import Account, Patient
 from app.validation import Dto, parse_json_body, parse_optional_json_body
 
 bp = Blueprint("users", __name__, url_prefix="/api/v1/accounts")
@@ -80,6 +80,12 @@ def read_account():
     if user is None:
         raise NotFound("This user does not exist.", code="user_not_found")
     account = user.to_dict()
+    if "sqlalchemy" in current_app.extensions:
+        with transaction() as session:
+            stored = session.get(Account, UUID(user.id))
+            account["avatar_code"] = stored.avatar_code if stored else None
+    else:
+        account["avatar_code"] = None
     # The app asks this before it shows the pages that create a circle for
     # your own care, so nobody fills them in for nothing.
     account["patient_circle_id"] = _patient_circle_id(user.id)
