@@ -41,3 +41,4 @@ app/ios/Flutter/Generated.xcconfig
 .vscode/
 .DS_Store
 Thumbs.db
+backend/secrets/
