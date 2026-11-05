@@ -3,6 +3,7 @@ import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +39,7 @@ class MedicationPlanList extends StatelessWidget {
     final children = <Widget>[
       ?header,
       if (title != null) ...[
-        Text(title!, style: Theme.of(context).textTheme.headlineSmall),
+        SectionHeader(title!),
         const SizedBox(height: AppSpacing.md),
       ],
       if (plans.isEmpty)

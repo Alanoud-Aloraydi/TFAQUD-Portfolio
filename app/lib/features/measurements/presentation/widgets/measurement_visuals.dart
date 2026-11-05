@@ -6,6 +6,7 @@ import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -445,7 +446,7 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           if (selectedReadings.isEmpty)
-            Text(context.tr('measurements.no_readings'))
+            EmptyStateNote(context.tr('measurements.no_readings'))
           else
             for (final reading in selectedReadings)
               Text(

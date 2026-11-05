@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
@@ -8,6 +10,8 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
+import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -97,7 +101,11 @@ class AppointmentPlanSection extends StatelessWidget {
             child: Text(context.tr(state.errorKey ?? 'error.unknown')),
           )
         else if (values.isEmpty)
-          Center(child: Text(context.tr('appointments.no_upcoming')))
+          EmptyStateNote(
+            context.tr('appointments.no_upcoming'),
+            actionLabel: canManage ? context.tr('add.appointment') : null,
+            onAction: canManage ? () => _addAppointment(context) : null,
+          )
         else
           for (final value in values) ...[
             AppointmentCard(
@@ -110,6 +118,13 @@ class AppointmentPlanSection extends StatelessWidget {
           ],
       ],
     );
+  }
+
+  Future<void> _addAppointment(BuildContext context) async {
+    final saved = await context.push<bool>(Routes.newAppointment(circleId));
+    if (saved == true && context.mounted) {
+      unawaited(context.read<AppointmentsCubit>().load(circleId));
+    }
   }
 }
 
@@ -276,6 +291,9 @@ class AppointmentCard extends StatelessWidget {
                         child: Text(context.tr('appointments.mark_completed')),
                       ),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppSemanticColors.statusError,
+                      ),
                       onPressed: () =>
                           _status(context, AppointmentStatus.cancelled),
                       child: Text(
@@ -304,7 +322,8 @@ class AppointmentCard extends StatelessWidget {
         AppAlertAction<bool>(
           label: context.tr('appointments.confirm'),
           value: true,
-          primary: true,
+          primary: status == AppointmentStatus.completed,
+          destructive: status == AppointmentStatus.cancelled,
         ),
       ],
     );
@@ -381,7 +400,13 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
             child: Text(context.tr(state.errorKey ?? 'error.unknown')),
           )
         else if (values.isEmpty)
-          Center(child: Text(context.tr('appointments.no_records')))
+          EmptyStateNote(
+            context.tr('appointments.no_records'),
+            actionLabel: widget.canManage
+                ? context.tr('add.appointment')
+                : null,
+            onAction: widget.canManage ? () => _addAppointment(context) : null,
+          )
         else
           for (final value in values) ...[
             AppointmentCard(
@@ -394,6 +419,15 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
       ],
     );
   }
+
+  Future<void> _addAppointment(BuildContext context) async {
+    final saved = await context.push<bool>(
+      Routes.newAppointment(widget.circleId),
+    );
+    if (saved == true && context.mounted) {
+      unawaited(context.read<AppointmentsCubit>().load(widget.circleId));
+    }
+  }
 }
 
 /// Displays the appointment today row UI.
@@ -402,34 +436,27 @@ class AppointmentTodayRow extends StatelessWidget {
   final CareAppointment value;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: AppSemanticColors.surfaceContent,
-      borderRadius: BorderRadius.circular(AppRadius.field),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          const Icon(CupertinoIcons.calendar),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(appointmentTitle(context, value)),
-                Text(
-                  context.tr(
-                    'appointments.companion_name',
-                    args: [appointmentCompanionNames(context, value)],
-                  ),
+  Widget build(BuildContext context) => TodayRowCard(
+    child: Row(
+      children: [
+        const Icon(CupertinoIcons.calendar),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(appointmentTitle(context, value)),
+              Text(
+                context.tr(
+                  'appointments.companion_name',
+                  args: [appointmentCompanionNames(context, value)],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Text(appointmentTime(context, value.time)),
-        ],
-      ),
+        ),
+        Text(appointmentTime(context, value.time)),
+      ],
     ),
   );
 }

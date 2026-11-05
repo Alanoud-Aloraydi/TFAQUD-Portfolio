@@ -4,6 +4,7 @@ import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
@@ -137,20 +138,13 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
               const SizedBox(height: AppSpacing.md),
               _chartCard(context, MeasurementKind.bp, values),
               const SizedBox(height: AppSpacing.xl),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.tr('measurements.readings'),
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => showMeasurementReadingSheet(context),
-                    icon: const Icon(CupertinoIcons.add),
-                    label: Text(context.tr('measurements.record_reading')),
-                  ),
-                ],
+              SectionHeader(
+                context.tr('measurements.readings'),
+                trailing: TextButton.icon(
+                  onPressed: () => showMeasurementReadingSheet(context),
+                  icon: const Icon(CupertinoIcons.add),
+                  label: Text(context.tr('measurements.record_reading')),
+                ),
               ),
               WhiteFilterMenu<String>(
                 options: {

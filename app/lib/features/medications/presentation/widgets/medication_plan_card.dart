@@ -259,6 +259,9 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                   ),
                   if (canManage && status != _PlanState.previous)
                     TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppSemanticColors.statusError,
+                      ),
                       onPressed: () => _discontinue(context),
                       child: Text(context.tr('medications.discontinue')),
                     ),

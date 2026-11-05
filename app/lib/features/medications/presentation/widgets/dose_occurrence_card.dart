@@ -1,9 +1,8 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
@@ -133,38 +132,28 @@ class _TimingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state == null) return const SizedBox.shrink();
-    final icon = switch (state!) {
-      DoseTimingState.upcoming => AppIcons.clock,
-      DoseTimingState.due => AppIcons.alarm,
-      DoseTimingState.late => AppIcons.warning,
-      DoseTimingState.missed => AppIcons.calendarX,
-    };
     final label = context.tr('medications.timing.${state!.name}');
     final tokens = context.tokens;
-    final (Color icon, Color text) colors = switch (state!) {
-      DoseTimingState.upcoming => (tokens.textSecondary, tokens.textSecondary),
+    final (Color background, Color foreground) colors = switch (state!) {
+      DoseTimingState.upcoming => (
+        AppSemanticColors.surfaceContent,
+        tokens.textSecondary,
+      ),
       DoseTimingState.due => (
-        AppSemanticColors.textPrimary,
+        AppSemanticColors.surfaceContent,
         AppSemanticColors.textPrimary,
       ),
       // Timing needs attention, but is not a medical error or proof of omission.
       DoseTimingState.late ||
-      DoseTimingState.missed => (tokens.warning, tokens.warningText),
-    };
-    return Semantics(
-      label: label,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: AppSizes.iconSmall, color: colors.$1),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: colors.$2),
-          ),
-        ],
+      DoseTimingState.missed => (
+        AppSemanticColors.surfaceAttention,
+        tokens.warningText,
       ),
+    };
+    return CompactStatusBadge(
+      text: label,
+      background: colors.$1,
+      foreground: colors.$2,
     );
   }
 }
