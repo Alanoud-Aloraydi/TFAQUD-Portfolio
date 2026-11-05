@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/png_encoder.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -18,6 +19,34 @@ import 'package:image_picker/image_picker.dart';
 
 /// Defines the supported photo source values.
 enum PhotoSource { camera, library, remove }
+
+/// Pencil badge pinned to a photo's bottom corner, marking it editable.
+/// Place inside a [Stack] (with `clipBehavior: Clip.none` over a circular
+/// photo, since the badge sits partly outside the circle) alongside the
+/// photo it edits.
+class PhotoEditBadge extends StatelessWidget {
+  const PhotoEditBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const PositionedDirectional(
+      end: 0,
+      bottom: 0,
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          color: AppSemanticColors.surfaceContent,
+          shape: CircleBorder(
+            side: BorderSide(color: AppSemanticColors.borderSubtle),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.xs),
+          child: Icon(AppIcons.pencil, size: 16),
+        ),
+      ),
+    );
+  }
+}
 
 /// Displays the private photo UI.
 class PrivatePhoto extends StatelessWidget {

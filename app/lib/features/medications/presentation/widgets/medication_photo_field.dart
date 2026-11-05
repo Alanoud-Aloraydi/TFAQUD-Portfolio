@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:app/core/media/private_photo.dart';
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -71,15 +70,7 @@ class MedicationPhotoField extends StatelessWidget {
                               borderRadius: BorderRadius.circular(AppRadius.m),
                               child: Image.memory(bytes, fit: BoxFit.cover),
                             ),
-                            PositionedDirectional(
-                              top: AppSpacing.sm,
-                              end: AppSpacing.sm,
-                              child: CircleAvatar(
-                                backgroundColor:
-                                    AppSemanticColors.surfaceContent,
-                                child: const Icon(AppIcons.pencil),
-                              ),
-                            ),
+                            const PhotoEditBadge(),
                           ],
                         ),
                 ),

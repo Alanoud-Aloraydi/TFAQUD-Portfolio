@@ -52,15 +52,30 @@ def _circles(account_id: UUID) -> list[dict]:
     with transaction() as session:
         managed_ids = set(session.scalars(manages))
         statement = (
-            select(CareCircle.id, CareCircle.name, Patient.avatar_code)
+            select(
+                CareCircle.id,
+                CareCircle.name,
+                Patient.avatar_code,
+                Patient.account_id,
+                Account.display_name,
+            )
             .join(Patient, Patient.care_circle_id == CareCircle.id)
+            .outerjoin(Account, Account.id == Patient.account_id)
             .where(CareCircle.id.in_(manages.union(receives_care)))
             .order_by(CareCircle.name, CareCircle.id)
         )
         return [
             {
                 "id": str(row.id),
-                "name": row.name,
+                # A patient with their own account picks this circle's name
+                # for themself; everyone else sees it named after them,
+                # not the patient's personal choice (e.g. "صحتي").
+                "name": (
+                    f"دائرة {row.display_name}"
+                    if row.account_id is not None
+                    and row.account_id != account_id
+                    else row.name
+                ),
                 "can_manage_medications": row.id in managed_ids,
                 "patient_avatar_code": row.avatar_code,
             }

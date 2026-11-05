@@ -8,10 +8,8 @@ import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
-import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The circle switcher in the middle of the top bar (design system TopBar):
 /// a glass capsule with the selected circle's name and a down chevron. A tap
@@ -72,20 +70,13 @@ class _HomeWidgetState extends State<HomeWidget> {
       opacity: _menuOpen ? 0 : 1,
       child: GlassCapsuleButton(
         label: name,
+        // Display only here: editing the patient's photo happens in the
+        // circle tab, never from the switcher.
         leading: PersonPhoto(
           name: name,
           photoPath: ApiEndpoints.patientPhoto(selectedId),
           avatarCode: selected.patientAvatarCode,
           size: 26,
-        ),
-        onLeadingPressed: () => showPersonPhotoSheet(
-          context,
-          title: context.tr('photos.patient_photo', args: [name]),
-          name: name,
-          photoPath: ApiEndpoints.patientPhoto(selectedId),
-          avatarPath: ApiEndpoints.patientAvatar(selectedId),
-          avatarCode: selected.patientAvatarCode,
-          onSaved: context.read<HomeCubit>().refresh,
         ),
         semanticLabel: context.tr(
           'topbar.switch_circle',

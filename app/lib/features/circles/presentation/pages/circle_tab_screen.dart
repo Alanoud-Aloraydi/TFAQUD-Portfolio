@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -269,8 +270,16 @@ class CircleCard extends StatelessWidget {
                               args: [overview.patientName],
                             ),
                             name: overview.patientName,
-                            photoPath: ApiEndpoints.patientPhoto(circle.id),
-                            avatarPath: ApiEndpoints.patientAvatar(circle.id),
+                            // A patient with their own account is one person
+                            // with one photo: edit it through the account
+                            // endpoint, so the circle tab and the profile
+                            // stay in sync.
+                            photoPath: overview.patientIsYou
+                                ? ApiEndpoints.accountPhoto
+                                : ApiEndpoints.patientPhoto(circle.id),
+                            avatarPath: overview.patientIsYou
+                                ? ApiEndpoints.accountAvatar
+                                : ApiEndpoints.patientAvatar(circle.id),
                             avatarCode: overview.patientAvatarCode,
                             onSaved: context.read<CircleOverviewCubit>().load,
                           )
@@ -280,29 +289,14 @@ class CircleCard extends StatelessWidget {
                       children: [
                         PersonPhoto(
                           name: overview.patientName,
-                          photoPath: ApiEndpoints.patientPhoto(circle.id),
+                          photoPath: overview.patientIsYou
+                              ? ApiEndpoints.accountPhoto
+                              : ApiEndpoints.patientPhoto(circle.id),
                           avatarCode: overview.patientAvatarCode,
                           size: AppSizes.avatarLarge,
                         ),
                         if (overview.canEditPatientPhoto)
-                          const PositionedDirectional(
-                            end: 0,
-                            bottom: 0,
-                            child: DecoratedBox(
-                              decoration: ShapeDecoration(
-                                color: AppSemanticColors.surfaceContent,
-                                shape: CircleBorder(
-                                  side: BorderSide(
-                                    color: AppSemanticColors.borderSubtle,
-                                  ),
-                                ),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.all(AppSpacing.xs),
-                                child: Icon(AppIcons.pencil, size: 16),
-                              ),
-                            ),
-                          ),
+                          const PhotoEditBadge(),
                       ],
                     ),
                   ),
@@ -668,6 +662,7 @@ class _MembersList extends StatelessWidget {
           member: member,
           circleId: circleId,
           patientUsesApp: overview.patientUsesApp,
+          patientIsYou: overview.patientIsYou,
           canEditPatientPhoto: overview.canEditPatientPhoto,
         ),
       for (final CirclePendingInvitation invitation
@@ -730,27 +725,40 @@ class _MemberRow extends StatelessWidget {
     required this.member,
     required this.circleId,
     required this.patientUsesApp,
+    required this.patientIsYou,
     required this.canEditPatientPhoto,
   });
 
   final CircleMember member;
   final String circleId;
   final bool patientUsesApp;
+  final bool patientIsYou;
   final bool canEditPatientPhoto;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
+    final bool canEditThisPhoto = member.isPatient && canEditPatientPhoto;
+    // A patient with their own account is one person with one photo: read
+    // and edit it through the account endpoint, so the circle tab and the
+    // profile stay in sync.
+    final String photoPath = member.isPatient
+        ? (patientIsYou
+              ? ApiEndpoints.accountPhoto
+              : ApiEndpoints.patientPhoto(circleId))
+        : personPhotoPath(circleId, member.accountId);
     return InkWell(
       onTap: member.isYou && !member.isPatient
           ? () => context.push(Routes.account)
-          : member.isPatient && canEditPatientPhoto
+          : canEditThisPhoto
           ? () => showPersonPhotoSheet(
               context,
               title: context.tr('photos.patient_photo', args: [member.name]),
               name: member.name,
-              photoPath: ApiEndpoints.patientPhoto(circleId),
-              avatarPath: ApiEndpoints.patientAvatar(circleId),
+              photoPath: photoPath,
+              avatarPath: patientIsYou
+                  ? ApiEndpoints.accountAvatar
+                  : ApiEndpoints.patientAvatar(circleId),
               avatarCode: member.avatarCode,
               onSaved: context.read<CircleOverviewCubit>().load,
             )
@@ -759,14 +767,17 @@ class _MemberRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
           children: <Widget>[
-            PersonPhoto(
-              name: member.name,
-              photoPath: personPhotoPath(
-                circleId,
-                member.isPatient ? null : member.accountId,
-              ),
-              avatarCode: member.avatarCode,
-              size: AppSizes.avatarPortrait,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                PersonPhoto(
+                  name: member.name,
+                  photoPath: photoPath,
+                  avatarCode: member.avatarCode,
+                  size: AppSizes.avatarPortrait,
+                ),
+                if (canEditThisPhoto) const PhotoEditBadge(),
+              ],
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
