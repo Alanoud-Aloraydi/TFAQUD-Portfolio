@@ -48,17 +48,17 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
         child: Row(
           children: [
             _Wheel(
-              count: 12,
-              initial: _hour - 1,
-              label: (index) => '${index + 1}',
-              onSelected: (index) => _hour = index + 1,
-              position: WheelPosition.first,
-            ),
-            _Wheel(
               count: 60,
               initial: _minute,
               label: (index) => index.toString().padLeft(2, '0'),
               onSelected: (index) => _minute = index,
+              position: WheelPosition.first,
+            ),
+            _Wheel(
+              count: 12,
+              initial: _hour - 1,
+              label: (index) => '${index + 1}',
+              onSelected: (index) => _hour = index + 1,
               position: WheelPosition.middle,
             ),
             _Wheel(
