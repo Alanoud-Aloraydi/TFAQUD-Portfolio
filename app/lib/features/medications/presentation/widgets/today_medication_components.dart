@@ -1,12 +1,13 @@
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -45,87 +46,26 @@ class _TodayMedicationAttentionSectionState
   bool _expanded = true;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(AppSpacing.md),
-    decoration: BoxDecoration(
-      color: AppSemanticColors.surfaceAttention,
-      border: Border.all(color: AppSemanticColors.borderAttention),
-      borderRadius: BorderRadius.circular(AppRadius.m),
-    ),
+  Widget build(BuildContext context) => AttentionBox(
+    title: context.tr('today_dashboard.attention'),
+    count: widget.occurrences.length + widget.extraCount,
+    expanded: _expanded,
+    onToggle: () => setState(() => _expanded = !_expanded),
     child: Column(
       children: [
-        InkWell(
-          onTap: () => setState(() => _expanded = !_expanded),
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.tight),
-            child: Row(
-              children: [
-                const Icon(
-                  TafaqodPhosphorIcons.warning,
-                  color: AppSemanticColors.statusWarning,
-                  size: 17,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  context.tr('today_dashboard.attention'),
-                  style: Theme.of(context).textTheme.titleMedium
-                      ?.copyWith(color: AppSemanticColors.statusWarning),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                CircleAvatar(
-                  radius: 11,
-                  backgroundColor: AppSemanticColors.accentWarm,
-                  child: Text(
-                    (widget.occurrences.length + widget.extraCount).toString(),
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  context.tr(
-                    _expanded
-                        ? 'today_dashboard.hide_attention'
-                        : 'today_dashboard.show_attention',
-                  ),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  _expanded
-                      ? TafaqodPhosphorIcons.caretUp
-                      : TafaqodPhosphorIcons.caretDown,
-                  size: 16,
-                  color: AppSemanticColors.statusWarning,
-                ),
-              ],
-            ),
+        for (final item in widget.occurrences) ...[
+          _AttentionMedicationCard(
+            occurrence: item,
+            circleId: widget.circleId,
           ),
-        ),
-        AnimatedCrossFade(
-          duration: AppMotion.disclosure,
-          crossFadeState: _expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Column(
-            children: [
-              for (final item in widget.occurrences) ...[
-                _AttentionMedicationCard(
-                  occurrence: item,
-                  circleId: widget.circleId,
-                ),
-                if (item != widget.occurrences.last)
-                  const SizedBox(height: AppSpacing.sm),
-              ],
-              if (widget.extra case final Widget extra) ...[
-                if (widget.occurrences.isNotEmpty)
-                  const SizedBox(height: AppSpacing.sm),
-                extra,
-              ],
-            ],
-          ),
-          secondChild: const SizedBox(width: double.infinity),
-        ),
+          if (item != widget.occurrences.last)
+            const SizedBox(height: AppSpacing.sm),
+        ],
+        if (widget.extra case final Widget extra) ...[
+          if (widget.occurrences.isNotEmpty)
+            const SizedBox(height: AppSpacing.sm),
+          extra,
+        ],
       ],
     ),
   );
@@ -205,6 +145,7 @@ class _AttentionMedicationCard extends StatelessWidget {
           DoseRecordControls(
             occurrence: occurrence,
             layout: DoseControlsLayout.attention,
+            circleId: circleId,
           ),
         ],
       ),
@@ -264,6 +205,7 @@ class TodayMedicationActionDose extends StatelessWidget {
           DoseRecordControls(
             occurrence: occurrence,
             layout: DoseControlsLayout.today,
+            circleId: circleId,
           ),
         ],
       ),
@@ -397,19 +339,21 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
         context.tr('medications.unit.${occurrence.doseUnit.name}'),
       ],
     );
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isMissed
-            ? Theme.of(context).colorScheme.errorContainer
-            : AppSemanticColors.surfaceContent,
-        borderRadius: BorderRadius.circular(AppRadius.field),
-        border: isMissed ? Border.all(color: context.tokens.error) : null,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final canRecord =
+        record == null &&
+        isRecordableNow(
+          riyadhScheduledAt(occurrence.scheduledOn, occurrence.time),
+          now,
+        );
+    return TodayRowCard(
+      isAttention: isMissed,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
             width: 48,
             child: Text(
               formatMedicationTime(context, occurrence.time),
@@ -480,6 +424,15 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
             background: statusBackground,
             foreground: statusColor,
           ),
+            ],
+          ),
+          if (canRecord) ...[
+            const SizedBox(height: AppSpacing.sm),
+            DoseRecordControls(
+              occurrence: occurrence,
+              layout: DoseControlsLayout.attention,
+            ),
+          ],
         ],
       ),
     );

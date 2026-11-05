@@ -12,8 +12,11 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/widgets/layout/section_header.dart';
+import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -98,6 +101,27 @@ class _TodayPageState extends State<TodayPage> {
       },
     );
   }
+
+  Future<void> _addSomething(BuildContext context, String circleId) =>
+      showHomeAddSheet(
+        context,
+        circleId: circleId,
+        onMedicationSaved: () {
+          if (mounted) unawaited(context.read<MedicationOccurrencesCubit>().reload());
+        },
+        onMeasurementSaved: () {
+          if (mounted) {
+            unawaited(context.read<MeasurementTasksCubit>().reload());
+            unawaited(context.read<MeasurementReadingsCubit>().reload());
+          }
+        },
+        onAppointmentSaved: () {
+          if (mounted) unawaited(context.read<AppointmentsCubit>().load(circleId));
+        },
+        onReadingSaved: () {
+          if (mounted) unawaited(context.read<MeasurementReadingsCubit>().reload());
+        },
+      );
 
   Widget _content(
     BuildContext context,
@@ -203,7 +227,11 @@ class _TodayPageState extends State<TodayPage> {
             todayOccurrences.isEmpty &&
             measurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
-          InsetText(context.tr('today_dashboard.no_tasks_today')),
+          EmptyStateNote(
+            context.tr('today_dashboard.no_tasks_today'),
+            actionLabel: context.tr('add.title'),
+            onAction: () => _addSomething(context, circleId),
+          ),
           const SizedBox(height: AppSpacing.xl),
         ],
         if (next != null) ...[
@@ -215,7 +243,11 @@ class _TodayPageState extends State<TodayPage> {
             attention.isEmpty &&
             measurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
-          InsetText(context.tr('today_dashboard.no_remaining_tasks')),
+          EmptyStateNote(
+            context.tr('today_dashboard.no_remaining_tasks'),
+            actionLabel: context.tr('add.title'),
+            onAction: () => _addSomething(context, circleId),
+          ),
           const SizedBox(height: AppSpacing.xl),
         ],
         // One «يحتاج انتباهك» box: the doses, then the measurements.
@@ -234,7 +266,7 @@ class _TodayPageState extends State<TodayPage> {
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
-        _SectionTitle(context.tr('today_dashboard.schedule')),
+        SectionHeader(context.tr('today_dashboard.schedule')),
         const SizedBox(height: AppSpacing.md),
         if (day != null) ...[
           InsetText(
@@ -266,7 +298,8 @@ class _TodayPageState extends State<TodayPage> {
               timingState: medicationTimingState(item, now),
             ),
         if (day == null)
-          for (final task in measurementTasks) MeasurementTaskRow(task: task),
+          for (final task in measurementTasks)
+            MeasurementTaskRow(task: task, now: now, circleId: circleId),
         if (day == null)
           for (final item in todayAppointments)
             AppointmentTodayRow(value: item),
@@ -415,16 +448,6 @@ class _NextTaskCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Renders the section title element of today page.
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) =>
-      Text(text, style: Theme.of(context).textTheme.headlineSmall);
 }
 
 /// Renders the prayer period element of today page.
@@ -602,7 +625,7 @@ class _PrayerPeriod extends StatelessWidget {
                   showThumbnail: photoState.data ?? false,
                 )
               else if (entry.measurement case final task?)
-                MeasurementTaskRow(task: task)
+                MeasurementTaskRow(task: task, now: now, circleId: circleId)
               else if (entry.appointment case final visit?)
                 AppointmentTodayRow(value: visit),
               if (entry != entries.last) const SizedBox(height: AppSpacing.sm),

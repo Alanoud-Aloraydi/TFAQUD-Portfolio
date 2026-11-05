@@ -6,6 +6,7 @@ from uuid import UUID
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 
+from app.accounts import accounts_by_id
 from app.auth.decorators import current_auth
 from app.authz.decorators import require_circle_role
 from app.authz.roles import CircleRole
@@ -188,7 +189,13 @@ def create_standalone_reading(circle_id):
         record = MeasurementService(session, get_clock().now()).record(
             _uuid(circle_id), _uuid(current_auth().user_id), body
         )
-        value = reading_response(record)
+        accounts = accounts_by_id(
+            session,
+            {record.recorded_by_account_id}
+            if record.recorded_by_account_id
+            else set(),
+        )
+        value = reading_response(record, accounts=accounts)
     return jsonify(measurement_reading=value), 201
 
 
@@ -206,7 +213,13 @@ def record_task(circle_id, version_id, scheduled_on):
             scheduled_on=_date(scheduled_on),
         )
         version = session.get(MeasurementPlanVersion, record.plan_version_id)
-        value = reading_response(record, version)
+        accounts = accounts_by_id(
+            session,
+            {record.recorded_by_account_id}
+            if record.recorded_by_account_id
+            else set(),
+        )
+        value = reading_response(record, version, accounts)
     return jsonify(measurement_reading=value)
 
 
@@ -223,5 +236,11 @@ def follow_up(circle_id, reading_id):
             if record.plan_version_id
             else None
         )
-        value = reading_response(record, version)
+        accounts = accounts_by_id(
+            session,
+            {record.recorded_by_account_id}
+            if record.recorded_by_account_id
+            else set(),
+        )
+        value = reading_response(record, version, accounts)
     return jsonify(measurement_reading=value)

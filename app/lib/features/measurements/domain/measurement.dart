@@ -177,6 +177,9 @@ class MeasurementReading extends Equatable {
     this.followedUpAt,
     this.scheduledOn,
     this.planVersionId,
+    this.recordedByAccountId,
+    this.recordedByName,
+    this.recordedByAvatarCode,
   });
 
   final String id;
@@ -197,6 +200,11 @@ class MeasurementReading extends Equatable {
   final DateTime? followedUpAt;
   final DateTime? scheduledOn;
   final String? planVersionId;
+
+  /// Who recorded it: null for a reading from before this was tracked.
+  final String? recordedByAccountId;
+  final String? recordedByName;
+  final String? recordedByAvatarCode;
 
   String get valueText =>
       kind == MeasurementKind.bp ? '$valueOne/$valueTwo' : '$valueOne';
@@ -227,6 +235,15 @@ class MeasurementReading extends Equatable {
             ? null
             : DateTime.parse(json['scheduled_on'] as String),
         planVersionId: json['plan_version_id'] as String?,
+        recordedByAccountId:
+            (json['recorded_by'] as Map<String, dynamic>?)?['account_id']
+                as String?,
+        recordedByName:
+            (json['recorded_by'] as Map<String, dynamic>?)?['name']
+                as String?,
+        recordedByAvatarCode:
+            (json['recorded_by'] as Map<String, dynamic>?)?['avatar_code']
+                as String?,
       );
 
   @override
@@ -249,6 +266,9 @@ class MeasurementReading extends Equatable {
     followedUpAt,
     scheduledOn,
     planVersionId,
+    recordedByAccountId,
+    recordedByName,
+    recordedByAvatarCode,
   ];
 }
 

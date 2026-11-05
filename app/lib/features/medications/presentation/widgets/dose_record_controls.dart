@@ -1,7 +1,9 @@
 import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -22,16 +24,20 @@ class DoseRecordControls extends StatelessWidget {
     super.key,
     required this.occurrence,
     this.layout = DoseControlsLayout.regular,
+    this.circleId,
   });
 
   final DoseOccurrence occurrence;
   final DoseControlsLayout layout;
 
+  /// Needed to show who recorded it; null hides that line.
+  final String? circleId;
+
   @override
   Widget build(BuildContext context) {
     final record = occurrence.record;
     if (record != null) {
-      return _RecordedStatus(occurrence: occurrence);
+      return _RecordedStatus(occurrence: occurrence, circleId: circleId);
     }
     final isRecording = context.select<MedicationOccurrencesCubit, bool>(
       (cubit) => cubit.state.recordingOccurrence == occurrence,
@@ -165,9 +171,10 @@ class _RecordingStatus extends StatelessWidget {
 
 /// Renders the recorded status element of dose record controls.
 class _RecordedStatus extends StatelessWidget {
-  const _RecordedStatus({required this.occurrence});
+  const _RecordedStatus({required this.occurrence, this.circleId});
 
   final DoseOccurrence occurrence;
+  final String? circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +228,29 @@ class _RecordedStatus extends StatelessWidget {
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                if (circleId case final circleId?)
+                  if (record.recordedByName case final name?) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PersonPhoto(
+                          name: name,
+                          photoPath: personPhotoPath(
+                            circleId,
+                            record.recordedByAccountId,
+                          ),
+                          avatarCode: record.recordedByAvatarCode,
+                          size: AppSizes.iconSmall,
+                        ),
+                        const SizedBox(width: AppSpacing.tight),
+                        Text(
+                          name,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ],
               ],
             ),
           ),

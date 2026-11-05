@@ -47,6 +47,7 @@ class DoseRecordModel {
 
   factory DoseRecordModel.fromJson(Map<String, dynamic> json) {
     final takenAt = json['taken_at'] as String?;
+    final recordedBy = json['recorded_by'] as Map<String, dynamic>?;
     return DoseRecordModel(
       DoseRecord(
         id: json['id'] as String,
@@ -55,6 +56,9 @@ class DoseRecordModel {
         skipReasonCode: json['skip_reason_code'] as String?,
         skipReasonNote: json['skip_reason_note'] as String?,
         recordedAt: DateTime.parse(json['recorded_at'] as String).toLocal(),
+        recordedByAccountId: recordedBy?['account_id'] as String?,
+        recordedByName: recordedBy?['name'] as String?,
+        recordedByAvatarCode: recordedBy?['avatar_code'] as String?,
       ),
     );
   }

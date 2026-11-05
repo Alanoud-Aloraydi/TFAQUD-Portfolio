@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from app.accounts import accounts_by_id, recorder_response
 from app.measurements.service import outside_target, patient_for_circle
 from app.models import MeasurementPlan, MeasurementPlanVersion
 from app.models import MeasurementRecord, MeasurementTarget
@@ -43,6 +44,7 @@ def version_response(version: MeasurementPlanVersion) -> dict:
 def reading_response(
     record: MeasurementRecord,
     version: MeasurementPlanVersion | None = None,
+    accounts: dict | None = None,
 ) -> dict:
     """Return a saved outcome and its linked target comparison."""
     outside = None
@@ -77,6 +79,9 @@ def reading_response(
             else None
         ),
         "recorded_at": record.recorded_at.isoformat(),
+        "recorded_by": recorder_response(
+            (accounts or {}).get(record.recorded_by_account_id)
+        ),
     }
 
 
@@ -233,6 +238,14 @@ class MeasurementQueries:
                 (item.plan_version_id, item.scheduled_on): item
                 for item in records
             }
+        accounts = accounts_by_id(
+            self.session,
+            {
+                item.recorded_by_account_id
+                for item in saved.values()
+                if item.recorded_by_account_id is not None
+            },
+        )
         result = []
         day = start
         while day <= end:
@@ -286,7 +299,7 @@ class MeasurementQueries:
                         "systolic_limit": version.systolic_limit,
                         "diastolic_limit": version.diastolic_limit,
                         "record": (
-                            reading_response(record, version)
+                            reading_response(record, version, accounts)
                             if record
                             else None
                         ),
@@ -330,18 +343,43 @@ class MeasurementQueries:
                 .order_by(MeasurementRecord.recorded_at.desc())
             )
         )
-        return [reading_response(record, version) for record, version in rows]
+        accounts = accounts_by_id(
+            self.session,
+            {
+                record.recorded_by_account_id
+                for record, _ in rows
+                if record.recorded_by_account_id is not None
+            },
+        )
+        return [
+            reading_response(record, version, accounts)
+            for record, version in rows
+        ]
 
     def all_readings(self, circle_id: UUID) -> list[dict]:
         """Return all saved outcomes for the circle's PDF export."""
         patient = patient_for_circle(self.session, circle_id)
-        rows = self.session.execute(
-            select(MeasurementRecord, MeasurementPlanVersion)
-            .outerjoin(
-                MeasurementPlanVersion,
-                MeasurementPlanVersion.id == MeasurementRecord.plan_version_id,
+        rows = list(
+            self.session.execute(
+                select(MeasurementRecord, MeasurementPlanVersion)
+                .outerjoin(
+                    MeasurementPlanVersion,
+                    MeasurementPlanVersion.id
+                    == MeasurementRecord.plan_version_id,
+                )
+                .where(MeasurementRecord.patient_id == patient.id)
+                .order_by(MeasurementRecord.recorded_at.desc())
             )
-            .where(MeasurementRecord.patient_id == patient.id)
-            .order_by(MeasurementRecord.recorded_at.desc())
         )
-        return [reading_response(record, version) for record, version in rows]
+        accounts = accounts_by_id(
+            self.session,
+            {
+                record.recorded_by_account_id
+                for record, _ in rows
+                if record.recorded_by_account_id is not None
+            },
+        )
+        return [
+            reading_response(record, version, accounts)
+            for record, version in rows
+        ]

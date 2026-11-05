@@ -4,9 +4,12 @@ from uuid import UUID
 
 from flask import request
 from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
+from app.accounts import recorder_response
 from app.errors import NotFound, ValidationFailed
 from app.medications.inputs import OccurrenceQuery
+from app.models import Account
 
 
 def uuid_value(value: str) -> UUID:
@@ -33,8 +36,13 @@ def occurrence_query() -> OccurrenceQuery:
         raise ValidationFailed(details=details) from exc
 
 
-def dose_record_response(record) -> dict:
+def dose_record_response(session: Session, record) -> dict:
     """Serialize the outcome returned after an idempotent write."""
+    recorder = (
+        session.get(Account, record.recorded_by_account_id)
+        if record.recorded_by_account_id
+        else None
+    )
     return {
         "id": str(record.id),
         "schedule_id": str(record.schedule_id),
@@ -46,4 +54,5 @@ def dose_record_response(record) -> dict:
         "skip_reason_code": record.skip_reason_code,
         "skip_reason_note": record.skip_reason_note,
         "recorded_at": record.recorded_at.isoformat(),
+        "recorded_by": recorder_response(recorder),
     }

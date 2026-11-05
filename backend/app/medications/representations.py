@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.accounts import recorder_response
 from app.models import MedicationSchedule, MedicationScheduleDay
 
 
@@ -90,7 +91,7 @@ def plan_response(plan, version) -> dict:
 
 
 def occurrence_response(
-    plan, version, schedule, day, record, timing_state
+    plan, version, schedule, day, record, accounts, timing_state
 ) -> dict:
     """Return one calculated occurrence with its optional outcome."""
     return {
@@ -116,5 +117,8 @@ def occurrence_response(
             "skip_reason_code": record.skip_reason_code,
             "skip_reason_note": record.skip_reason_note,
             "recorded_at": record.recorded_at.isoformat(),
+            "recorded_by": recorder_response(
+                accounts.get(record.recorded_by_account_id)
+            ),
         },
     }

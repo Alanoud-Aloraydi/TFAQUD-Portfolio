@@ -1,8 +1,11 @@
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
@@ -62,34 +65,12 @@ class MeasurementAttentionSection extends StatelessWidget {
         children: _cards(context, missed, outside),
       );
     }
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceAttention,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(color: AppSemanticColors.borderAttention),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  CupertinoIcons.exclamationmark_circle,
-                  color: AppSemanticColors.statusWarning,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  context.tr('measurements.needs_attention'),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            ..._cards(context, missed, outside),
-          ],
-        ),
+    return AttentionBox(
+      title: context.tr('measurements.needs_attention'),
+      count: missed.length + outside.length,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _cards(context, missed, outside),
       ),
     );
   }
@@ -145,22 +126,15 @@ class MeasurementAttentionSection extends StatelessWidget {
     required String title,
     required String subtitle,
     required List<Widget> actions,
-  }) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: AppSemanticColors.surfaceContent,
-      borderRadius: BorderRadius.circular(AppRadius.field),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleSmall),
-          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(spacing: AppSpacing.sm, children: actions),
-        ],
-      ),
+  }) => TodayRowCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(spacing: AppSpacing.sm, children: actions),
+      ],
     ),
   );
 
@@ -174,9 +148,16 @@ class MeasurementAttentionSection extends StatelessWidget {
 
 /// Displays the measurement task row UI.
 class MeasurementTaskRow extends StatelessWidget {
-  const MeasurementTaskRow({super.key, required this.task});
+  const MeasurementTaskRow({
+    super.key,
+    required this.task,
+    required this.now,
+    required this.circleId,
+  });
 
   final MeasurementOccurrence task;
+  final DateTime now;
+  final String circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +165,12 @@ class MeasurementTaskRow extends StatelessWidget {
         task.status == MeasurementStatus.upcoming ||
         task.status == MeasurementStatus.due ||
         task.status == MeasurementStatus.missed;
+    // Same one-hour-before rule as medication doses: upcoming tasks only
+    // become recordable close to their time. Due/missed are already past
+    // it, so this never blocks them.
+    final canRecord =
+        pending &&
+        isRecordableNow(riyadhScheduledAt(task.scheduledOn, task.time), now);
     final status = switch (task.status) {
       MeasurementStatus.read => 'measurements.read',
       MeasurementStatus.readLate => 'measurements.read_late',
@@ -192,17 +179,9 @@ class MeasurementTaskRow extends StatelessWidget {
       MeasurementStatus.due => 'measurements.due',
       MeasurementStatus.upcoming => 'measurements.upcoming',
     };
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceContent,
-        borderRadius: BorderRadius.circular(AppRadius.field),
-        border: task.status == MeasurementStatus.missed
-            ? Border.all(color: AppSemanticColors.statusError)
-            : null,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
+    return TodayRowCard(
+      isAttention: task.status == MeasurementStatus.missed,
+      child: Column(
           children: [
             Row(
               children: [
@@ -243,35 +222,84 @@ class MeasurementTaskRow extends StatelessWidget {
                 ),
               ],
             ),
-            if (task.record?.outcome == 'read')
-              Text(
-                task.record!.valueText,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            if (pending)
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () async {
-                      final saved = await showMeasurementReadingSheet(
-                        context,
-                        occurrence: task,
-                      );
-                      if (saved && context.mounted) {
-                        context.read<MeasurementTasksCubit>().reload();
-                      }
-                    },
-                    child: Text(context.tr('measurements.record_reading')),
+            if (task.record case final record?)
+              if (record.outcome == 'read') ...[
+                Text(
+                  record.valueText,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                Text(
+                  context.tr(
+                    'measurements.recorded_at',
+                    args: [_time(context, _hhmm(riyadhNow(record.recordedAt)))],
                   ),
-                  TextButton(
-                    onPressed: () =>
-                        context.read<MeasurementTasksCubit>().skip(task),
-                    child: Text(context.tr('measurements.skip')),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (record.recordedByName case final name?) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PersonPhoto(
+                        name: name,
+                        photoPath: personPhotoPath(
+                          circleId,
+                          record.recordedByAccountId,
+                        ),
+                        avatarCode: record.recordedByAvatarCode,
+                        size: AppSizes.iconSmall,
+                      ),
+                      const SizedBox(width: AppSpacing.tight),
+                      Text(
+                        name,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ],
+              ],
+            if (canRecord)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        minimumSize: const Size(0, 34),
+                      ),
+                      onPressed: () async {
+                        final saved = await showMeasurementReadingSheet(
+                          context,
+                          occurrence: task,
+                        );
+                        if (saved && context.mounted) {
+                          context.read<MeasurementTasksCubit>().reload();
+                        }
+                      },
+                      icon: const Icon(CupertinoIcons.checkmark, size: 16),
+                      label: Text(context.tr('measurements.record_reading')),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                    ),
+                    onPressed: () =>
+                        context.read<MeasurementTasksCubit>().skip(task),
+                    icon: const Icon(CupertinoIcons.minus_circle, size: 16),
+                    label: Text(context.tr('measurements.skip')),
+                  ),
+                ],
+                ),
               ),
           ],
-        ),
       ),
     );
   }
@@ -288,3 +316,7 @@ String _time(BuildContext context, String value) {
   return '$hour:${parts[1]} '
       '${context.tr(hour24 < 12 ? 'common.am' : 'common.pm')}';
 }
+
+String _hhmm(DateTime at) =>
+    '${at.hour.toString().padLeft(2, '0')}:'
+    '${at.minute.toString().padLeft(2, '0')}';

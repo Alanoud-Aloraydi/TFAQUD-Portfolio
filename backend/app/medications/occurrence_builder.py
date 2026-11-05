@@ -10,7 +10,7 @@ RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def build_occurrences(
-    rows, records, from_date: date, to_date: date, now: datetime
+    rows, records, accounts, from_date: date, to_date: date, now: datetime
 ):
     """Build only applicable occurrences, selecting the latest version."""
     by_plan = defaultdict(list)
@@ -50,6 +50,7 @@ def build_occurrences(
                         schedule,
                         current,
                         record,
+                        accounts,
                         _timing_state(
                             scheduled_at,
                             now,

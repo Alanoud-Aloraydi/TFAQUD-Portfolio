@@ -165,5 +165,5 @@ def record_dose(circle_id, schedule_id, scheduled_on):
             uuid_value(current_auth().user_id),
             body,
         )
-        result = dose_record_response(record)
+        result = dose_record_response(session, record)
     return jsonify(medication_dose_record=result)

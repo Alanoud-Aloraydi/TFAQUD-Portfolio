@@ -31,6 +31,9 @@ class DoseRecord extends Equatable {
     this.takenAt,
     this.skipReasonCode,
     this.skipReasonNote,
+    this.recordedByAccountId,
+    this.recordedByName,
+    this.recordedByAvatarCode,
   });
 
   final String id;
@@ -40,6 +43,11 @@ class DoseRecord extends Equatable {
   final String? skipReasonNote;
   final DateTime recordedAt;
 
+  /// Who recorded it: null for a dose from before this was tracked.
+  final String? recordedByAccountId;
+  final String? recordedByName;
+  final String? recordedByAvatarCode;
+
   @override
   List<Object?> get props => [
     id,
@@ -48,6 +56,9 @@ class DoseRecord extends Equatable {
     skipReasonCode,
     skipReasonNote,
     recordedAt,
+    recordedByAccountId,
+    recordedByName,
+    recordedByAvatarCode,
   ];
 }
 

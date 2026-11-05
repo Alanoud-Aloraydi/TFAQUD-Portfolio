@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from zoneinfo import ZoneInfo
 
+from app.accounts import accounts_by_id
 from app.errors import NotFound
 from app.medications.occurrence_builder import build_occurrences
 from app.medications.representations import plan_response
@@ -210,8 +211,16 @@ class MedicationQueries:
         rows = list(self.session.execute(statement))
         schedule_ids = {row[2].id for row in rows}
         records = self._records(schedule_ids, from_date, to_date)
+        accounts = accounts_by_id(
+            self.session,
+            {
+                record.recorded_by_account_id
+                for record in records.values()
+                if record.recorded_by_account_id is not None
+            },
+        )
         return build_occurrences(
-            rows, records, from_date, to_date, self.now
+            rows, records, accounts, from_date, to_date, self.now
         )
 
     def _patient(self, circle_id: UUID) -> Patient:
