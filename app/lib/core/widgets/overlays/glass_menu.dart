@@ -225,7 +225,24 @@ class _GlassMenuState extends State<GlassMenu> {
           AppSpacing.lg,
           constraints.maxWidth - AppSpacing.lg - width,
         );
-        final Rect target = Rect.fromLTWH(left, anchor.top, width, height);
+        final double bottomInset =
+            MediaQuery.paddingOf(context).bottom + AppSpacing.lg;
+        final double maxTop = math.max(
+          AppSpacing.lg,
+          constraints.maxHeight - bottomInset - height,
+        );
+        // Open downward from the anchor when there is room below it;
+        // otherwise flip to grow upward so low anchors never clip rows
+        // off the bottom of the screen.
+        final double top = anchor.top > maxTop
+            ? math.max(AppSpacing.lg, anchor.bottom - height)
+            : anchor.top;
+        final Rect target = Rect.fromLTWH(
+          left,
+          math.min(top, maxTop),
+          width,
+          height,
+        );
         final Widget rowsColumn = _MenuRows(
           sections: sections,
           rowHeight: row,
