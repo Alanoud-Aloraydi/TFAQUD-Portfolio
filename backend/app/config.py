@@ -111,6 +111,9 @@ def load_config(
         "APNS_BUNDLE_ID": os.environ.get("APNS_BUNDLE_ID"),
         "APNS_PRIVATE_KEY_PATH": os.environ.get("APNS_PRIVATE_KEY_PATH"),
         "APNS_ENVIRONMENT": os.environ.get("APNS_ENVIRONMENT", "sandbox"),
+        # Shared secret for the external scheduler's call to /internal/tick.
+        # None (unset) keeps the endpoint refusing every request.
+        "TICK_SECRET": os.environ.get("TICK_SECRET"),
         "SQLALCHEMY_DATABASE_URI": None,
         "SQLALCHEMY_ENGINE_OPTIONS": {
             "pool_pre_ping": True,

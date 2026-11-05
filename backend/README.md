@@ -179,9 +179,11 @@ at most 3 codes an hour (`OTP_MAX_SENDS_PER_HOUR`).
 ## Push notifications
 
 The server tells a person's phone about a new invitation, a request to care
-for them, the answer to their request, and a circle that is ready (the same
-things as the app's notifications page). Dose reminders do not come from the
-server: the app sets them on the phone itself.
+for them, the answer to their request, a circle that is ready (the same
+things as the app's notifications page), and the scheduled scan below (a
+dose or measurement due or missed, an appointment the day before). The app
+also sets its own dose reminders on the phone itself, independent of the
+server's.
 
 Apple sends a push only to an app signed with a **paid** Apple Developer
 account that has the Push Notifications capability. Until the team has one,
@@ -217,6 +219,30 @@ To switch it on with the paid account:
 The code is in `app/push/`. A push that cannot be sent never fails the
 request; a token Apple no longer knows is deleted. A signed-out phone gets
 nothing, because the token belongs to the sign-in that sent it.
+
+### Scheduled notifications
+
+`POST /internal/tick` scans every circle for a dose or measurement that just
+became due or missed, and every appointment due for its day-before
+reminder, and sends each exactly once (`notification_log` records what was
+already sent, so a repeat call never resends it). A dose/measurement push
+goes to every manager of that circle and to its patient if the patient has
+an account; an appointment reminder goes to its companions if any were
+chosen, otherwise to the whole circle, always including the patient if the
+patient has an account.
+
+The route only runs the scan when the `X-Tick-Secret` header equals
+`TICK_SECRET`; otherwise it answers 404, the same as a route that does not
+exist. Set `TICK_SECRET` in your `.env` (any long random value) and give
+the same value to whatever calls it on a schedule.
+
+Something has to call it on a schedule. The repository's own
+`.github/workflows/notify-tick.yml` does this for free, every 10 minutes,
+using the `TICK_SECRET` repository secret — set that secret once in GitHub
+(Settings, Secrets and variables, Actions) and it runs on its own, no
+server or paid plan required. On a paid Render plan, a Render Cron Job can
+call the same URL and header instead; nothing in the server changes either
+way, so switching is just turning one off and the other on.
 
 ## Deploy to Render
 

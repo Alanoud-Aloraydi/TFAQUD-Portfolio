@@ -27,6 +27,7 @@ from app.models.appointment import (
     AppointmentVisit,
 )
 from app.models.push import PushDevice
+from app.models.notification_log import NotificationLog
 from app.models.photo import Photo
 
 __all__ = [
@@ -55,5 +56,6 @@ __all__ = [
     "AppointmentCompanion",
     "AppointmentVisit",
     "PushDevice",
+    "NotificationLog",
     "Photo",
 ]

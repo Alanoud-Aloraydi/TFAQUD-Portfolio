@@ -68,3 +68,7 @@ services:
       # TestFlight and the App Store use Apple's production push service.
       - key: APNS_ENVIRONMENT
         value: production
+      # The scheduler (a GitHub Actions cron, see .github/workflows) calls
+      # POST /internal/tick with this value as the X-Tick-Secret header.
+      - key: TICK_SECRET
+        sync: false

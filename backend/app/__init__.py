@@ -35,6 +35,7 @@ from app.measurements.routes import bp as measurements_bp
 from app.prayer_times.routes import bp as prayer_times_bp
 from app.push import PushSender, create_push_sender
 from app.push.routes import bp as push_bp
+from app.push.tick_routes import bp as tick_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
 from app.users.routes import bp as users_bp
@@ -148,6 +149,7 @@ def create_app(
     app.register_blueprint(appointment_visits_bp)
     app.register_blueprint(prayer_times_bp)
     app.register_blueprint(push_bp)
+    app.register_blueprint(tick_bp)
     if database_enabled and env != "production":
         # `flask --app wsgi demo-data`: demo circles, medicines and doses for
         # trying the app on a local server (app/demo_data.py).
