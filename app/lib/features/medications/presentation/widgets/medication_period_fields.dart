@@ -119,7 +119,7 @@ class MedicationPeriodFields extends StatelessWidget {
   }
 }
 
-/// A revision starts on the next day or a later selected day.
+/// A revision starts right away or on a later selected day.
 class MedicationEffectiveDateGroup extends StatelessWidget {
   const MedicationEffectiveDateGroup({
     super.key,
@@ -132,9 +132,9 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tomorrow = riyadhToday().add(const Duration(days: 1));
-    final selected = data.effectiveFromOn ?? tomorrow;
-    final isTomorrow = DateUtils.isSameDay(selected, tomorrow);
+    final today = riyadhToday();
+    final selected = data.effectiveFromOn ?? today;
+    final isNow = DateUtils.isSameDay(selected, today);
     return InsetGroup(
       header: context.tr('medications.effective_question'),
       footer: context.tr('medications.effective_hint'),
@@ -143,26 +143,26 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
           semanticLabel: context.tr('medications.effective_question'),
           child: OptionChips(
             options: <ChipOption>[
-              ChipOption('tomorrow', context.tr('medications.tomorrow')),
+              ChipOption('now', context.tr('medications.now')),
               ChipOption('date', context.tr('medications.specific_date')),
             ],
             isSelected: (String code) =>
-                code == 'tomorrow' ? isTomorrow : !isTomorrow,
+                code == 'now' ? isNow : !isNow,
             onTap: (String code) {
-              if (code == 'tomorrow') {
-                data.effectiveFromOn = tomorrow;
+              if (code == 'now') {
+                data.effectiveFromOn = today;
                 onChanged();
               } else {
-                _chooseDate(context, tomorrow, selected);
+                _chooseDate(context, today, selected);
               }
             },
           ),
         ),
-        if (!isTomorrow)
+        if (!isNow)
           _DateRow(
             label: context.tr('medications.effective_from'),
             value: selected,
-            firstDate: tomorrow,
+            firstDate: today,
             onChanged: (DateTime? date) {
               if (date == null) return;
               data.effectiveFromOn = date;
@@ -175,15 +175,15 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
 
   Future<void> _chooseDate(
     BuildContext context,
-    DateTime tomorrow,
+    DateTime today,
     DateTime selected,
   ) async {
     final date = await showTafaqodDateSheet(
       context,
       title: context.tr('medications.effective_from'),
       initialDate: selected,
-      firstDate: tomorrow,
-      lastDate: tomorrow.add(const Duration(days: 3650)),
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 3650)),
     );
     if (date == null) return;
     data.effectiveFromOn = date;

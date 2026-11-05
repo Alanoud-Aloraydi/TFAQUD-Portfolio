@@ -1,6 +1,6 @@
 """Transactional measurement-plan and reading rules."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -113,8 +113,8 @@ class MeasurementService:
         if latest.effective_from_on > today:
             if len(versions) != 1:
                 raise Conflict(code="measurement_plan_changed")
-            effective = body.effective_from_on or latest.effective_from_on
-            if effective <= today:
+            effective = body.effective_from_on or today
+            if effective < today:
                 raise ValidationFailed(code="measurement_effective_date")
             replacement = self._version(plan.id, 1, effective, body)
             latest.effective_from_on = effective
@@ -128,8 +128,8 @@ class MeasurementService:
             latest.diastolic_limit = replacement.diastolic_limit
             self.session.flush()
             return plan
-        effective = body.effective_from_on or today + timedelta(days=1)
-        if effective <= today or effective <= latest.effective_from_on:
+        effective = body.effective_from_on or today
+        if effective < today or effective <= latest.effective_from_on:
             raise ValidationFailed(code="measurement_effective_date")
         latest.effective_until_on = effective
         self.session.add(

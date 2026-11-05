@@ -30,9 +30,7 @@ class MedicationFormData {
       missedAfterMinutes = plan?.version.missedAfterMinutes ?? 60,
       startsOn = plan?.version.startsOn ?? riyadhToday(),
       endsOn = plan?.version.endsOn,
-      effectiveFromOn = plan == null
-          ? null
-          : riyadhToday().add(const Duration(days: 1)),
+      effectiveFromOn = plan == null ? null : riyadhToday(),
       schedules = plan == null
           ? [_newSchedule()]
           : plan.version.schedules.map(_fromSchedule).toList();

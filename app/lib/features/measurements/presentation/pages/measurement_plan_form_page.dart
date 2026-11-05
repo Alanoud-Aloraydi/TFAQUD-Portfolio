@@ -75,7 +75,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     _context = version.glucoseContext ?? 'fasting';
     final parts = version.time.split(':');
     _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-    final earliest = riyadhToday().add(const Duration(days: 1));
+    final earliest = riyadhToday();
     _start = version.effectiveFromOn.isAfter(earliest)
         ? version.effectiveFromOn
         : earliest;
@@ -351,10 +351,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 ),
                 value: '${_start.day}/${_start.month}/${_start.year}',
                 onTap: () async {
-                  final today = riyadhToday();
-                  final earliest = plan == null
-                      ? today
-                      : today.add(const Duration(days: 1));
+                  final earliest = riyadhToday();
                   final selected = await showTafaqodDateSheet(
                     context,
                     title: context.tr(

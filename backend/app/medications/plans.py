@@ -1,7 +1,6 @@
 """Transactional commands for versioned medication plans."""
 
 import unicodedata
-from datetime import timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -86,12 +85,10 @@ class MedicationPlanService:
         if current.effective_from_on > today:
             raise Conflict(code="medication_pending_revision")
         normalized_name = normalize_medication_name(body.name)
-        effective_from_on = body.effective_from_on or (
-            today + timedelta(days=1)
-        )
-        if effective_from_on <= today:
+        effective_from_on = body.effective_from_on or today
+        if effective_from_on < today:
             raise ValidationFailed(
-                "A revision must start after today.",
+                "A revision cannot start in the past.",
                 code="medication_revision_date",
             )
         if effective_from_on <= current.effective_from_on:
