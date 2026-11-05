@@ -4,6 +4,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// A small grey title above a white card, as the account page groups its rows.
@@ -143,6 +144,62 @@ class InfoRow extends StatelessWidget {
       excludeSemantics: true,
       onTap: onEdit,
       child: InkWell(onTap: onEdit, child: row),
+    );
+  }
+}
+
+/// A row with a label, an optional hint below it, and a switch at the end.
+class ToggleRow extends StatelessWidget {
+  const ToggleRow({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.hint,
+  });
+
+  final String label;
+  final String? hint;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return Semantics(
+      toggled: value,
+      label: label,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(label, style: text.bodyLarge),
+                  if (hint case final String hint) ...<Widget>[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      hint,
+                      style: text.bodySmall?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            ExcludeSemantics(
+              child: CupertinoSwitch(value: value, onChanged: onChanged),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

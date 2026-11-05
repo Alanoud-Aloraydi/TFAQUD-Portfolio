@@ -11,6 +11,7 @@ import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/onboarding/di/onboarding_di.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
@@ -57,6 +58,15 @@ Future<void> configureDependencies() async {
       getIt<MedicationsUseCase>(),
       getIt<PhoneNotifications>(),
       texts: doseReminderTexts,
+    ),
+  );
+  // Optional mirror of doses, measurements and appointments onto the
+  // phone's own Calendar app; off until the person turns it on.
+  getIt.registerLazySingleton<CalendarSync>(
+    () => CalendarSync(
+      getIt<MedicationsUseCase>(),
+      getIt<MeasurementRepository>(),
+      getIt<AppointmentRepository>(),
     ),
   );
   // Circle updates from the server (Apple push, with the paid account).

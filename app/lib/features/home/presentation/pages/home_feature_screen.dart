@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/utils/riyadh_time.dart';
@@ -48,6 +49,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
 
   /// The reminders at the dose times of every circle, set on the phone.
   final DoseReminders _reminders = GetIt.I<DoseReminders>();
+  final CalendarSync _calendar = GetIt.I<CalendarSync>();
   final PhoneNotifications _phone = GetIt.I<PhoneNotifications>();
   StreamSubscription<String>? _taps;
 
@@ -126,12 +128,12 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   void _remind(HomeEntity data) {
     if (listEquals(_remindedCircles, data.circles)) return;
     _remindedCircles = data.circles;
-    unawaited(
-      _reminders.sync(<ReminderCircle>[
-        for (final CareCircleSummary circle in data.circles)
-          ReminderCircle(id: circle.id, name: circle.name),
-      ]),
-    );
+    final circles = <ReminderCircle>[
+      for (final CareCircleSummary circle in data.circles)
+        ReminderCircle(id: circle.id, name: circle.name),
+    ];
+    unawaited(_reminders.sync(circles));
+    unawaited(_calendar.sync(circles));
   }
 
   @override
@@ -142,6 +144,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       unawaited(context.read<InboxCubit>().load());
       // The next week of reminders, and none for a dose marked meanwhile.
       unawaited(_reminders.refresh());
+      unawaited(_calendar.refresh());
       final String? circleId = context.read<HomeCubit>().state.selectedCircleId;
       if (circleId != null) _loadClinicalData(circleId);
     }
@@ -171,6 +174,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     if (state.status == HomeStatus.signIn) {
       // The sign-in ended: no reminders for a person who is not signed in.
       unawaited(_reminders.clear());
+      unawaited(_calendar.clear());
       context.go(Routes.auth);
     } else if (state.status == HomeStatus.onboarding) {
       context.go(Routes.onboarding);

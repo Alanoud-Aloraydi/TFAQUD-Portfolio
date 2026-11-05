@@ -45,6 +45,10 @@
 	<string>يستخدم تفقّد الكاميرا لالتقاط صورة الدواء أو صورة الحساب عند اختيارك.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>يتيح تفقّد اختيار صورة الدواء أو صورة الحساب من مكتبة الصور عند اختيارك.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
