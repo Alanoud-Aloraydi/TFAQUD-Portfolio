@@ -145,6 +145,90 @@ def test_future_plan_can_be_edited_before_its_first_task(
     assert len(changed.json["measurement_plan"]["history"]) == 1
 
 
+def _todays_glucose_plan(client, headers, base):
+    """A glucose plan that starts today, with its task at midnight."""
+    now = datetime.now(timezone.utc)
+    day = now.astimezone(ZoneInfo("Asia/Riyadh")).date()
+    body = {
+        "kind": "glucose",
+        "time_of_day": "00:00",
+        "weekdays": [day.isoweekday()],
+        "starts_on": day.isoformat(),
+        "grace_minutes": 60,
+        "glucose_context": "fasting",
+        "glucose_low": 80,
+        "glucose_high": 140,
+    }
+    created = client.post(
+        f"{base}/measurement-plans", headers=headers, json=body
+    )
+    assert created.status_code == 201, created.json
+    return now, day, body, created.json["measurement_plan"]
+
+
+def test_an_edit_on_the_day_the_plan_was_added_replaces_it(
+    database_app, database, account
+):
+    owner = account()
+    circle = offline_circle(database, owner)
+    client = database_app.test_client()
+    headers = signed_in(database_app, owner)
+    base = f"/api/v1/circles/{circle.id}"
+    _, day, body, plan = _todays_glucose_plan(client, headers, base)
+
+    changed = client.put(
+        f"{base}/measurement-plans/{plan['id']}",
+        headers=headers,
+        json={**body, "glucose_high": 130, "expected_version_number": 1},
+    )
+
+    assert changed.status_code == 200, changed.json
+    answer = changed.json["measurement_plan"]
+    assert answer["version"]["glucose_high"] == 130
+    assert answer["version"]["effective_from_on"] == day.isoformat()
+    assert answer["pending_version"] is None
+    assert len(answer["history"]) == 1
+
+
+def test_a_same_day_edit_after_a_reading_starts_tomorrow(
+    database_app, database, account
+):
+    owner = account()
+    circle = offline_circle(database, owner)
+    client = database_app.test_client()
+    headers = signed_in(database_app, owner)
+    base = f"/api/v1/circles/{circle.id}"
+    now, day, body, plan = _todays_glucose_plan(client, headers, base)
+    version_id = plan["version"]["id"]
+    saved = client.put(
+        f"{base}/measurement-records/{version_id}/{day.isoformat()}",
+        headers=headers,
+        json={
+            "kind": "glucose",
+            "outcome": "read",
+            "measured_at": (now - timedelta(minutes=1)).isoformat(),
+            "value_one": 120,
+            "glucose_context": "fasting",
+        },
+    )
+    assert saved.status_code == 200, saved.json
+
+    changed = client.put(
+        f"{base}/measurement-plans/{plan['id']}",
+        headers=headers,
+        json={**body, "glucose_high": 130, "expected_version_number": 1},
+    )
+
+    # Today's reading keeps the plan it was taken under.
+    assert changed.status_code == 200, changed.json
+    answer = changed.json["measurement_plan"]
+    assert answer["version"]["glucose_high"] == 140
+    assert answer["pending_version"]["glucose_high"] == 130
+    assert answer["pending_version"]["effective_from_on"] == (
+        day + timedelta(days=1)
+    ).isoformat()
+
+
 def test_concurrent_task_records_keep_one_outcome(
     database_app, database, account
 ):

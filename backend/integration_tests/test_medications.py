@@ -160,7 +160,12 @@ def test_revision_keeps_history_and_requires_the_expected_version(
         "medication_plan"
     ]
     path = f"/api/v1/circles/{circle.id}/medication-plans/{plan['id']}"
-    revised_body = plan_body(now, expected_version_number=1)
+    # A change chosen for tomorrow waits as the pending version.
+    revised_body = plan_body(
+        now,
+        expected_version_number=1,
+        effective_from_on=(now + timedelta(days=1)).date().isoformat(),
+    )
     revised_body["strength_value"] = "850"
     revised = client.put(path, headers=headers, json=revised_body)
     assert revised.status_code == 200
@@ -203,6 +208,104 @@ def test_revision_keeps_history_and_requires_the_expected_version(
         version["version_number"]
         for version in current.json["medication_plan"]["history"]
     ] == [1, 3]
+
+
+def test_an_edit_on_the_day_the_medicine_was_added_replaces_it(
+    database_app, database, account, monkeypatch
+):
+    clock = ManualClock(datetime(2026, 10, 28, 9, tzinfo=timezone.utc))
+    monkeypatch.setitem(database_app.extensions, "clock", clock)
+    owner = account()
+    circle = offline_circle(database, owner)
+    now = clock.now()
+    client = database_app.test_client()
+    headers = signed_in(database_app, owner)
+    plan = create_plan(client, circle, headers, plan_body(now)).json[
+        "medication_plan"
+    ]
+    path = f"/api/v1/circles/{circle.id}/medication-plans/{plan['id']}"
+
+    fixed = plan_body(now, expected_version_number=1)
+    fixed["strength_value"] = "850"
+    first = client.put(path, headers=headers, json=fixed)
+
+    assert first.status_code == 200, first.json
+    version = first.json["medication_plan"]["version"]
+    assert version["strength_value"] == "850"
+    assert version["effective_from_on"] == "2026-10-28"
+    assert "pending_version" not in first.json["medication_plan"]
+
+    # A second edit the same day replaces it again.
+    again = plan_body(
+        now, expected_version_number=version["version_number"]
+    )
+    again["strength_value"] = "1000"
+    second = client.put(path, headers=headers, json=again)
+    assert second.status_code == 200, second.json
+    assert second.json["medication_plan"]["version"]["strength_value"] == (
+        "1000"
+    )
+    # Today's doses follow the newest plan.
+    day = now.date().isoformat()
+    occurrences = client.get(
+        f"/api/v1/circles/{circle.id}/medication-occurrences"
+        f"?from={day}&to={day}",
+        headers=headers,
+    )
+    assert occurrences.status_code == 200, occurrences.json
+    assert [o["strength_value"] for o in occurrences.json[
+        "medication_occurrences"
+    ]] == ["1000"]
+    # The replaced versions stay, cancelled, for the audit.
+    with Session(database) as session:
+        cancelled = session.scalar(
+            select(func.count())
+            .select_from(MedicationPlanVersion)
+            .where(MedicationPlanVersion.cancelled_at.is_not(None))
+        )
+    assert cancelled == 2
+
+
+def test_a_same_day_edit_after_a_recorded_dose_starts_tomorrow(
+    database_app, database, account, monkeypatch
+):
+    clock = ManualClock(datetime(2026, 10, 28, 9, tzinfo=timezone.utc))
+    monkeypatch.setitem(database_app.extensions, "clock", clock)
+    owner = account()
+    circle = offline_circle(database, owner)
+    now = clock.now()
+    client = database_app.test_client()
+    headers = signed_in(database_app, owner)
+    plan = create_plan(client, circle, headers, plan_body(now)).json[
+        "medication_plan"
+    ]
+    schedule_id = plan["version"]["schedules"][0]["id"]
+    taken = client.put(
+        f"/api/v1/circles/{circle.id}/medication-dose-records/"
+        f"{schedule_id}/{now.date().isoformat()}",
+        headers=headers,
+        json={
+            "outcome": "taken",
+            "taken_at": (now - timedelta(minutes=1)).isoformat(),
+        },
+    )
+    assert taken.status_code == 200, taken.json
+    path = f"/api/v1/circles/{circle.id}/medication-plans/{plan['id']}"
+
+    changed = plan_body(now, expected_version_number=1)
+    changed["strength_value"] = "850"
+    revised = client.put(path, headers=headers, json=changed)
+
+    # The dose taken today keeps its plan; the change starts tomorrow.
+    assert revised.status_code == 200, revised.json
+    answer = revised.json["medication_plan"]
+    assert answer["version"]["strength_value"] == "500"
+    assert answer["pending_version"]["strength_value"] == "850"
+    assert answer["pending_version"]["effective_from_on"] == "2026-10-29"
+    with Session(database) as session:
+        assert session.scalar(
+            select(func.count()).select_from(MedicationDoseRecord)
+        ) == 1
 
 
 def test_future_revision_and_immediate_stop_keep_only_earlier_dose(

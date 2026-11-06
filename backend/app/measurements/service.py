@@ -1,6 +1,6 @@
 """Transactional measurement-plan and reading rules."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -116,19 +116,18 @@ class MeasurementService:
             effective = body.effective_from_on or today
             if effective < today:
                 raise ValidationFailed(code="measurement_effective_date")
-            replacement = self._version(plan.id, 1, effective, body)
-            latest.effective_from_on = effective
-            latest.time_of_day = replacement.time_of_day
-            latest.weekdays_mask = replacement.weekdays_mask
-            latest.grace_minutes = replacement.grace_minutes
-            latest.glucose_context = replacement.glucose_context
-            latest.glucose_low = replacement.glucose_low
-            latest.glucose_high = replacement.glucose_high
-            latest.systolic_limit = replacement.systolic_limit
-            latest.diastolic_limit = replacement.diastolic_limit
-            self.session.flush()
+            self._replace(latest, effective, body)
             return plan
         effective = body.effective_from_on or today
+        if effective == latest.effective_from_on == today:
+            # The plan began today (added or edited today) and the edit is
+            # for today too. With no reading under it yet, the edit replaces
+            # it; a reading of today keeps the plan it was taken under, and
+            # the edit starts tomorrow. Days are the unit of a version.
+            if not self._has_readings(latest):
+                self._replace(latest, effective, body)
+                return plan
+            effective = today + timedelta(days=1)
         if effective < today or effective <= latest.effective_from_on:
             raise ValidationFailed(code="measurement_effective_date")
         latest.effective_until_on = effective
@@ -374,6 +373,32 @@ class MeasurementService:
             )
         ):
             raise NotFound()
+
+    def _replace(
+        self, version: MeasurementPlanVersion, effective: date, body
+    ) -> None:
+        """Change a version that has no history yet, in place."""
+        replacement = self._version(
+            version.plan_id, version.number, effective, body
+        )
+        version.effective_from_on = effective
+        version.time_of_day = replacement.time_of_day
+        version.weekdays_mask = replacement.weekdays_mask
+        version.grace_minutes = replacement.grace_minutes
+        version.glucose_context = replacement.glucose_context
+        version.glucose_low = replacement.glucose_low
+        version.glucose_high = replacement.glucose_high
+        version.systolic_limit = replacement.systolic_limit
+        version.diastolic_limit = replacement.diastolic_limit
+        self.session.flush()
+
+    def _has_readings(self, version: MeasurementPlanVersion) -> bool:
+        """Whether any task of this version has an outcome."""
+        return self.session.scalar(
+            select(MeasurementRecord.id)
+            .where(MeasurementRecord.plan_version_id == version.id)
+            .limit(1)
+        ) is not None
 
     @staticmethod
     def _version(

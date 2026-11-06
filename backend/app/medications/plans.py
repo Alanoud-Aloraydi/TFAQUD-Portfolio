@@ -1,6 +1,7 @@
 """Transactional commands for versioned medication plans."""
 
 import unicodedata
+from datetime import timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -12,8 +13,8 @@ from app.medications.availability import require_available_name
 from app.medications.inputs import PlanRequest, RevisePlanRequest
 from app.medications.plan_versions import add_plan_version
 from app.medications.plan_versions import same_definition
-from app.models import MedicationPlan, MedicationPlanVersion
-from app.models import Patient
+from app.models import MedicationDoseRecord, MedicationPlan
+from app.models import MedicationPlanVersion, MedicationSchedule, Patient
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
@@ -85,13 +86,29 @@ class MedicationPlanService:
         if current.effective_from_on > today:
             raise Conflict(code="medication_pending_revision")
         normalized_name = normalize_medication_name(body.name)
+        if same_definition(
+            self.session, current, body, normalized_name
+        ):
+            return plan
         effective_from_on = body.effective_from_on or today
         if effective_from_on < today:
             raise ValidationFailed(
                 "A revision cannot start in the past.",
                 code="medication_revision_date",
             )
-        if effective_from_on <= current.effective_from_on:
+        # The current version began today (the medicine was added or edited
+        # today) and the edit is for today too: it replaces that version.
+        # Days are the unit of a version, so two cannot start the same day.
+        replaces_today = effective_from_on == current.effective_from_on
+        if replaces_today and self._has_doses(current):
+            # A dose of today was already recorded under it. That dose keeps
+            # the plan it was given under: the edit starts tomorrow.
+            effective_from_on = today + timedelta(days=1)
+            replaces_today = False
+        if (
+            not replaces_today
+            and effective_from_on <= current.effective_from_on
+        ):
             raise ValidationFailed(
                 "A revision must follow the current version.",
                 code="medication_revision_date",
@@ -104,10 +121,6 @@ class MedicationPlanService:
                 "A revision cannot start after treatment ends.",
                 code="medication_revision_date",
             )
-        if same_definition(
-            self.session, current, body, normalized_name
-        ):
-            return plan
         require_available_name(
             self.session,
             plan.patient_id,
@@ -116,7 +129,12 @@ class MedicationPlanService:
             exclude_plan_id=plan.id,
             effective_from_on=effective_from_on,
         )
-        current.effective_until_on = effective_from_on
+        if replaces_today:
+            # Kept, cancelled, for the audit, like a cancelled future edit.
+            current.cancelled_at = self.now
+            self.session.flush()
+        else:
+            current.effective_until_on = effective_from_on
         next_number = self.session.scalar(
             select(func.max(MedicationPlanVersion.version_number)).where(
                 MedicationPlanVersion.medication_plan_id == plan.id
@@ -202,6 +220,18 @@ class MedicationPlanService:
         if plan is None:
             raise NotFound("The medication plan does not exist.")
         return plan
+
+    def _has_doses(self, version: MedicationPlanVersion) -> bool:
+        """Whether any dose was recorded under this version."""
+        return self.session.scalar(
+            select(MedicationDoseRecord.id)
+            .join(
+                MedicationSchedule,
+                MedicationSchedule.id == MedicationDoseRecord.schedule_id,
+            )
+            .where(MedicationSchedule.plan_version_id == version.id)
+            .limit(1)
+        ) is not None
 
     def _current_version(self, plan_id: UUID) -> MedicationPlanVersion:
         version = self.session.scalar(
