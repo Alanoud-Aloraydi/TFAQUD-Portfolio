@@ -75,13 +75,22 @@ def companions_for_appointments(
 
 
 def companions_for_circle(session: Session, circle_id: UUID) -> list[dict]:
-    """Offer only current circle managers as visit companions."""
-    rows = session.execute(
+    """Offer current circle managers as visit companions, other than the
+    patient themselves: a patient who manages their own circle is not their
+    own companion."""
+    patient_account_id = session.scalar(
+        select(Patient.account_id).where(Patient.care_circle_id == circle_id)
+    )
+    query = (
         select(CareCircleManager.account_id, Account.display_name,
                Account.avatar_code)
         .join(Account, Account.id == CareCircleManager.account_id)
         .where(CareCircleManager.care_circle_id == circle_id)
-        .order_by(Account.display_name, CareCircleManager.account_id)
+    )
+    if patient_account_id is not None:
+        query = query.where(CareCircleManager.account_id != patient_account_id)
+    rows = session.execute(
+        query.order_by(Account.display_name, CareCircleManager.account_id)
     ).all()
     return [
         {"account_id": str(account_id), "name": name or "",
