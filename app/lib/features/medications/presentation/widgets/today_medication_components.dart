@@ -122,7 +122,10 @@ class _AttentionMedicationCard extends StatelessWidget {
                       ),
                       child: Text(
                         '${occurrence.name} ${_strength(context, occurrence)}',
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppSemanticColors.actionPrimary,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                     Text(
@@ -168,6 +171,11 @@ class TodayMedicationActionDose extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final now = riyadhNow();
     final status = medicationTimingState(occurrence, now);
+    final canRecord = canRecordOccurrence(
+      resolved: occurrence.record != null,
+      scheduledAt: riyadhScheduledAt(occurrence.scheduledOn, occurrence.time),
+      now: now,
+    );
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -201,12 +209,14 @@ class TodayMedicationActionDose extends StatelessWidget {
           _NextDoseInfo(occurrence: occurrence, circleId: circleId),
           const SizedBox(height: AppSpacing.lg),
           TodayDoseWindow(occurrence: occurrence, now: now),
-          const SizedBox(height: AppSpacing.md),
-          DoseRecordControls(
-            occurrence: occurrence,
-            layout: DoseControlsLayout.today,
-            circleId: circleId,
-          ),
+          if (canRecord) ...[
+            const SizedBox(height: AppSpacing.md),
+            DoseRecordControls(
+              occurrence: occurrence,
+              layout: DoseControlsLayout.today,
+              circleId: circleId,
+            ),
+          ],
         ],
       ),
     );
@@ -260,12 +270,19 @@ class _NextDoseInfo extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(TafaqodPhosphorIcons.pill, size: 17),
+                    Icon(
+                      TafaqodPhosphorIcons.pill,
+                      size: 17,
+                      color: AppSemanticColors.actionPrimary,
+                    ),
                     const SizedBox(width: AppSpacing.tight),
                     Flexible(
                       child: Text(
                         '${occurrence.name} $strength',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppSemanticColors.actionPrimary,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                   ],
@@ -339,12 +356,11 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
         context.tr('medications.unit.${occurrence.doseUnit.name}'),
       ],
     );
-    final canRecord =
-        record == null &&
-        isRecordableNow(
-          riyadhScheduledAt(occurrence.scheduledOn, occurrence.time),
-          now,
-        );
+    final canRecord = canRecordOccurrence(
+      resolved: record != null,
+      scheduledAt: riyadhScheduledAt(occurrence.scheduledOn, occurrence.time),
+      now: now,
+    );
     return TodayRowCard(
       isAttention: isMissed,
       child: Column(
@@ -395,7 +411,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                         const Icon(
                           TafaqodPhosphorIcons.pill,
                           size: 15,
-                          color: AppSemanticColors.textSupporting,
+                          color: AppSemanticColors.actionPrimary,
                         ),
                         const SizedBox(width: AppSpacing.tight),
                       ],
@@ -403,7 +419,10 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                         child: Text(
                           '${occurrence.name} '
                           '${_strength(context, occurrence)}',
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: AppSemanticColors.actionPrimary,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
                     ],

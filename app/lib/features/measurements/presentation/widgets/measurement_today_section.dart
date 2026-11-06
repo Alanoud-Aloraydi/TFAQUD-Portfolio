@@ -161,16 +161,15 @@ class MeasurementTaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pending =
-        task.status == MeasurementStatus.upcoming ||
-        task.status == MeasurementStatus.due ||
-        task.status == MeasurementStatus.missed;
-    // Same one-hour-before rule as medication doses: upcoming tasks only
-    // become recordable close to their time. Due/missed are already past
-    // it, so this never blocks them.
-    final canRecord =
-        pending &&
-        isRecordableNow(riyadhScheduledAt(task.scheduledOn, task.time), now);
+    final resolved =
+        task.status != MeasurementStatus.upcoming &&
+        task.status != MeasurementStatus.due &&
+        task.status != MeasurementStatus.missed;
+    final canRecord = canRecordOccurrence(
+      resolved: resolved,
+      scheduledAt: riyadhScheduledAt(task.scheduledOn, task.time),
+      now: now,
+    );
     final status = switch (task.status) {
       MeasurementStatus.read => 'measurements.read',
       MeasurementStatus.readLate => 'measurements.read_late',
@@ -202,12 +201,19 @@ class MeasurementTaskRow extends StatelessWidget {
                         _title(context, task.kind),
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
-                      if (task.glucoseContext != null)
-                        Text(
-                          context.tr(
-                            'measurements.context.${task.glucoseContext}',
+                      if (task.glucoseContext != null) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: CompactStatusBadge(
+                            text: context.tr(
+                              'measurements.context.${task.glucoseContext}',
+                            ),
+                            background: AppSemanticColors.surfaceContent,
+                            foreground: AppSemanticColors.textSupporting,
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),

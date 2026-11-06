@@ -46,11 +46,6 @@ abstract class TafaqodPhosphorIcons {
     fontFamily: 'PhosphorRegular',
     fontPackage: 'phosphor_flutter',
   );
-  static const cloudMoon = IconData(
-    0xe53e,
-    fontFamily: 'PhosphorRegular',
-    fontPackage: 'phosphor_flutter',
-  );
   static const moonStars = IconData(
     0xe58e,
     fontFamily: 'PhosphorRegular',

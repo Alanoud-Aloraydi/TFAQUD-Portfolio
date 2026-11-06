@@ -296,6 +296,7 @@ class _TodayPageState extends State<TodayPage> {
               occurrence: item,
               showControls: false,
               timingState: medicationTimingState(item, now),
+              circleId: circleId,
             ),
         if (day == null)
           for (final task in measurementTasks)
@@ -428,7 +429,19 @@ class _NextTaskCard extends StatelessWidget {
                   args: [appointmentCompanionNames(context, appointment)],
                 ),
               ),
-            if (measurement != null && sameDay) ...[
+            if (measurement != null &&
+                sameDay &&
+                canRecordOccurrence(
+                  resolved:
+                      measurement.status != MeasurementStatus.upcoming &&
+                      measurement.status != MeasurementStatus.due &&
+                      measurement.status != MeasurementStatus.missed,
+                  scheduledAt: riyadhScheduledAt(
+                    measurement.scheduledOn,
+                    measurement.time,
+                  ),
+                  now: now,
+                )) ...[
               const SizedBox(height: AppSpacing.sm),
               FilledButton(
                 onPressed: () async {
@@ -569,12 +582,7 @@ class _PrayerPeriod extends StatelessWidget {
             AppSpacing.sm,
             AppSpacing.sm,
           ),
-          leading: Icon(
-            _prayerIcon(prayer),
-            color: current
-                ? AppSemanticColors.doseDueMarker
-                : AppSemanticColors.textSupporting,
-          ),
+          leading: _PrayerIcon(prayer: prayer, current: current),
           title: Row(
             children: [
               Text(title, style: Theme.of(context).textTheme.titleMedium),
@@ -654,9 +662,30 @@ Prayer _nearestPrayer(String time, Map<Prayer, String> prayerTimes) {
 }
 
 IconData _prayerIcon(Prayer prayer) => switch (prayer) {
-  Prayer.fajr => TafaqodPhosphorIcons.sunHorizon,
+  Prayer.fajr || Prayer.maghrib => TafaqodPhosphorIcons.sunHorizon,
   Prayer.dhuhr => TafaqodPhosphorIcons.sun,
   Prayer.asr => TafaqodPhosphorIcons.sunDim,
-  Prayer.maghrib => TafaqodPhosphorIcons.cloudMoon,
   Prayer.isha => TafaqodPhosphorIcons.moonStars,
 };
+
+/// Fajr and Maghrib share the sun-at-the-horizon glyph (Phosphor has no
+/// separate sunset icon); Maghrib's is mirrored so the sun reads as setting,
+/// not rising.
+class _PrayerIcon extends StatelessWidget {
+  const _PrayerIcon({required this.prayer, required this.current});
+
+  final Prayer prayer;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Icon(
+      _prayerIcon(prayer),
+      color: current
+          ? AppSemanticColors.doseDueMarker
+          : AppSemanticColors.textSupporting,
+    );
+    if (prayer != Prayer.maghrib) return icon;
+    return Transform.flip(flipX: true, child: icon);
+  }
+}
