@@ -76,6 +76,7 @@ class PostgresOtpStore(OtpStore):
                 else None
             )
             since = window_start
+            known = False
             if rules is not None:
                 verified = session.scalar(
                     select(func.max(OtpChallenge.verified_at)).where(
@@ -84,20 +85,21 @@ class PostgresOtpStore(OtpStore):
                 )
                 if verified is not None:
                     since = max(since, verified)
-            phone_times = list(
-                session.scalars(
-                    select(OtpSendAttempt.created_at)
-                    .join(
-                        OtpChallenge,
-                        OtpChallenge.id == OtpSendAttempt.challenge_id,
-                    )
-                    .where(
-                        OtpChallenge.phone_number == phone,
-                        OtpSendAttempt.status != "failed",
-                        OtpSendAttempt.created_at > since,
-                    )
-                )
+                known = self._is_known_phone(session, phone, rules.device_id)
+            counted = select(OtpSendAttempt.created_at).join(
+                OtpChallenge,
+                OtpChallenge.id == OtpSendAttempt.challenge_id,
+            ).where(
+                OtpChallenge.phone_number == phone,
+                OtpSendAttempt.status != "failed",
+                OtpSendAttempt.created_at > since,
             )
+            if known:
+                # The owner's phone: strangers' codes do not block it.
+                counted = counted.where(
+                    OtpSendAttempt.device_id == rules.device_id
+                )
+            phone_times = list(session.scalars(counted))
             device_times = self._asker_times(
                 session,
                 OtpSendAttempt.device_id,
@@ -107,7 +109,7 @@ class PostgresOtpStore(OtpStore):
             ip_times = self._asker_times(
                 session,
                 OtpSendAttempt.client_ip,
-                judged.client_ip if rules is not None else None,
+                judged.client_ip if rules is not None and not known else None,
                 now - judged.requester_window,
             )
             window = now - window_start
@@ -141,6 +143,25 @@ class PostgresOtpStore(OtpStore):
                     now, phone_times, window, max_sends, judged
                 ),
             )
+
+    @staticmethod
+    def _is_known_phone(session, phone, device_id):
+        """Whether this device already signed in with this number: it asked
+        for a code that was accepted."""
+        if not device_id:
+            return False
+        return session.scalar(
+            select(OtpSendAttempt.id)
+            .join(
+                OtpChallenge, OtpChallenge.id == OtpSendAttempt.challenge_id
+            )
+            .where(
+                OtpChallenge.phone_number == phone,
+                OtpChallenge.verified_at.is_not(None),
+                OtpSendAttempt.device_id == device_id,
+            )
+            .limit(1)
+        ) is not None
 
     @staticmethod
     def _asker_times(session, column, value, start):

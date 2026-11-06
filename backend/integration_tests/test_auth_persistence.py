@@ -400,3 +400,35 @@ def test_postgres_applies_the_waits_and_the_caps_of_the_asker(auth_app):
         later = now + timedelta(seconds=6)
         assert store.claim_send(None, PHONE, later, day, 20,
                                 rules=fresh).granted
+
+
+def test_postgres_lets_the_owners_known_phone_past_a_stranger(auth_app):
+    clock = auth_app.extensions["clock"]
+    now = clock.now()
+    day = now - timedelta(hours=24)
+    network = {"client_ip": "203.0.113.7", "max_ip_sends": 1}
+    owner = SendRules(waits=(30,), device_id="device-owner", **network)
+    stranger = SendRules(waits=(30,), device_id="device-stranger")
+    new_phone = SendRules(waits=(30,), device_id="device-newphone")
+    with auth_app.app_context():
+        store = PostgresOtpStore()
+        # The owner signs in on their phone: it becomes known.
+        signed = store.claim_send(None, PHONE, now, day, 20, rules=owner)
+        store.mark_sent(signed.send_id, now, now + timedelta(minutes=5))
+        assert store.mark_verified(signed.request_id, now + timedelta(seconds=5))
+
+        later = now + timedelta(seconds=6)
+        assert store.claim_send(None, PHONE, later, day, 20,
+                                rules=stranger).granted
+        soon = later + timedelta(seconds=1)
+        held = store.claim_send(None, PHONE, soon, day, 20, rules=stranger)
+        assert (held.granted, held.reason) == (False, "wait")
+        held = store.claim_send(None, PHONE, soon, day, 20, rules=new_phone)
+        assert (held.granted, held.reason) == (False, "wait")
+
+        # The owner's phone counts only its own codes, and its network's
+        # cap (one code an hour, already used) does not hold it back.
+        mine = store.claim_send(None, PHONE, soon, day, 20, rules=owner)
+        assert mine.granted
+        assert mine.next_send_at == soon + timedelta(seconds=30)
+

@@ -153,7 +153,9 @@ Sign-in codes: after each code to a number the next one waits 30 s, then 1, 2,
 counted since its last sign-in (`OTP_MAX_SENDS_PER_DAY`); one device and one
 IP get at most 10 and 30 codes an hour (`OTP_MAX_SENDS_PER_DEVICE_HOUR`,
 `OTP_MAX_SENDS_PER_IP_HOUR`). Behind a proxy, `CLIENT_IP_HEADER` names the
-header with the caller's address (Render: `CF-Connecting-IP`).
+header with the caller's address (Render: `CF-Connecting-IP`). A phone that
+already signed in with a number counts only its own codes, so a stranger who
+asks codes for that number cannot lock its owner out.
 
 ## Documents
 

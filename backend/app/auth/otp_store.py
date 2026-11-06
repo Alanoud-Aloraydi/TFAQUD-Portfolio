@@ -50,6 +50,12 @@ class SendRules:
     requester_window: how far back the sends of a device or an IP count.
     max_device_sends, max_ip_sends: their caps in it (None: no cap), so one
         phone or one network cannot ask codes for many numbers.
+
+    A known phone: a device that already signed in with this number (it
+    asked for a code that was accepted) counts only its own codes for the
+    number's waits and daily cap, and the IP cap does not apply to it. So
+    a stranger who asks for codes for the number cannot lock its owner out.
+    Every other device counts all the number's codes, the owner's too.
     """
 
     waits: tuple[int, ...] = ()
@@ -148,7 +154,8 @@ class OtpStore(ABC):
         With `rules`, the number's sends count only after its last accepted
         code (a successful sign-in starts it again), the waits between codes
         apply, and so do the caps of the asking device and IP
-        (`judge_send`).
+        (`judge_send`). A known phone (see `SendRules`) counts only its own
+        sends to the number and has no IP cap.
 
         Nonfailed reservations created after `window_start` count toward quota.
         A reservation exactly on `window_start` is outside the window.
@@ -225,6 +232,7 @@ class InMemoryOtpStore(OtpStore):
                 if max_tries is not None and request.wrong_tries >= max_tries:
                     raise AttemptsExhausted()
             since = window_start
+            known = False
             if rules is not None:
                 verified = [
                     r.verified_at
@@ -233,12 +241,19 @@ class InMemoryOtpStore(OtpStore):
                 ]
                 if verified:
                     since = max(since, max(verified))
+                known = bool(rules.device_id) and any(
+                    s.phone == phone
+                    and s.device_id == rules.device_id
+                    and self._requests[s.request_id].verified_at is not None
+                    for s in self._sends.values()
+                )
             phone_times = [
                 s.created_at
                 for s in self._sends.values()
                 if s.phone == phone
                 and s.created_at > since
                 and s.status != "failed"
+                and (not known or s.device_id == rules.device_id)
             ]
             device_times: list[datetime] = []
             ip_times: list[datetime] = []
@@ -255,7 +270,7 @@ class InMemoryOtpStore(OtpStore):
                         for s in live
                         if s.device_id == rules.device_id
                     ]
-                if rules.client_ip:
+                if rules.client_ip and not known:
                     ip_times = [
                         s.created_at
                         for s in live

@@ -40,13 +40,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
     super.dispose();
   }
 
-  void _back() {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(Routes.auth);
-    }
-  }
 
   Future<void> _send() async {
     final bool sent = await context.read<SignInCubit>().sendCode();
@@ -77,7 +70,11 @@ class _PhoneScreenState extends State<PhoneScreen> {
                           StepHeader(
                             title: context.tr('auth.phone_title'),
                             subtitle: context.tr('auth.phone_subtitle'),
-                            onBack: _back,
+                            // No back link when this is the first page:
+                            // the welcome was already shown on this install.
+                            onBack: context.canPop()
+                                ? () => context.pop()
+                                : null,
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           PhoneField(

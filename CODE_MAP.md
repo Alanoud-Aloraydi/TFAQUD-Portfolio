@@ -68,6 +68,7 @@ APNs اختصار **Apple Push Notification service**: قناة Apple لإرسا
 | [`app/lib/core/network/dio_client.dart`](app/lib/core/network/dio_client.dart) | شبكة مشتركة | `DioClient` |
 | [`app/lib/core/services/app_accessibility.dart`](app/lib/core/services/app_accessibility.dart) | خدمة جهاز مشتركة | `AppAccessibility` |
 | [`app/lib/core/services/app_device_utils.dart`](app/lib/core/services/app_device_utils.dart) | خدمة جهاز مشتركة | `AppDeviceUtils` |
+| [`app/lib/core/services/intro_memory.dart`](app/lib/core/services/intro_memory.dart) | خدمة جهاز مشتركة | `IntroMemory` |
 | [`app/lib/core/services/local_keys_service.dart`](app/lib/core/services/local_keys_service.dart) | خدمة جهاز مشتركة | `LocalKeysService` |
 | [`app/lib/core/services/native_glass.dart`](app/lib/core/services/native_glass.dart) | خدمة جهاز مشتركة | `NativeGlass` |
 | [`app/lib/core/services/phone_notifications.dart`](app/lib/core/services/phone_notifications.dart) | خدمة جهاز مشتركة | `ScheduledNotification`, `PluginPhoneNotifications` |
@@ -514,6 +515,7 @@ medical file |
 | [`app/test/home_repository_test.dart`](app/test/home_repository_test.dart) | اختبار | `_Storage`, `_Remote`, `main` |
 | [`app/test/inbox_cubit_test.dart`](app/test/inbox_cubit_test.dart) | اختبار | `main` |
 | [`app/test/input_behavior_test.dart`](app/test/input_behavior_test.dart) | اختبار | `main` |
+| [`app/test/intro_memory_test.dart`](app/test/intro_memory_test.dart) | اختبار | `main` |
 | [`app/test/measurement_cubits_test.dart`](app/test/measurement_cubits_test.dart) | اختبار | `_Repository`, `main` |
 | [`app/test/measurement_models_test.dart`](app/test/measurement_models_test.dart) | اختبار | `main` |
 | [`app/test/medical_data_test.dart`](app/test/medical_data_test.dart) | اختبار | `_Remote`, `main` |

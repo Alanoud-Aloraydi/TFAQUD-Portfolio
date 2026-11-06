@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/services/intro_memory.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -93,7 +94,12 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
     super.dispose();
   }
 
-  void _start() => context.push(Routes.authPhone);
+  /// «ابدأ» and «تخطي»: the welcome is done for this install
+  /// ([IntroMemory]), and the phone number page opens.
+  void _start() {
+    unawaited(IntroMemory.markSeen());
+    context.push(Routes.authPhone);
+  }
 
   void _next() {
     if (_last) {

@@ -289,7 +289,8 @@ anything else is ignored).
 | Phone number | `+966`, then 9 digits that start with 5 (`+9665XXXXXXXX`), English digits only. The app builds it from what the user types. Anything else is 422 `validation_error` with the detail code `invalid_phone`, and no SMS is sent. | Built |
 | New request | Without `verification_id` a new request starts, with its own 3 tries. | Built |
 | Resend | With `verification_id` another SMS is sent for the same request. The wrong tries already used stay used. | Built |
-| Wait between codes | After each SMS to a number the next one waits 30 s, then 1, 2, 5, and 10 minutes for every one after (`OTP_RESEND_WAITS`). Too soon is 429 `resend_wait` and nothing is sent. Someone who types another person's number can only slow the owner, never lock them out. | Built |
+| Wait between codes | After each SMS to a number the next one waits 30 s, then 1, 2, 5, and 10 minutes for every one after (`OTP_RESEND_WAITS`). Too soon is 429 `resend_wait` and nothing is sent. | Built |
+| The owner's known phone | A device (`X-Device-Id`) that already signed in with this number (it asked for a code that was accepted) counts only its own codes for the wait and the codes of the day, and the cap of its network does not apply to it. So someone who types another person's number cannot lock its owner out on the owner's phone. Every other device, a new phone of the owner too, counts all the number's codes. Since 6 November 2026. | Built |
 | Codes per phone number | At most 20 SMS per number in 24 hours (`OTP_MAX_SENDS_PER_DAY`), counted only since its last successful sign-in. A resend is an SMS. The next one is 429 `too_many_codes`; `retry_after_seconds` (and `Retry-After`) says when the oldest one leaves the 24 hours. | Built |
 | Codes per device and network | At most 10 codes per hour from one device (`X-Device-Id`, `OTP_MAX_SENDS_PER_DEVICE_HOUR`) and 30 from one IP (`OTP_MAX_SENDS_PER_IP_HOUR`), for any numbers. Behind Render the IP is read from `CLIENT_IP_HEADER` (`CF-Connecting-IP`). The next one is 429 `too_many_codes`. | Built |
 | Request without tries | A resend into a request that already used its 3 wrong tries is refused with 429 `too_many_attempts`. Nothing is sent. The app starts a new request. | Built |
@@ -1180,8 +1181,9 @@ Checking a code (`verify-code`):
   block after wrong tries. It keeps only the latest code of a number. Whether
   Authentica does the same is test 9.
 - Settings: `SMS_BACKEND` (`fake` or `authentica`), `AUTHENTICA_API_KEY`,
-  `AUTHENTICA_TEMPLATE_ID` (5), `OTP_VALID_SECONDS` (300), `OTP_MAX_WRONG_TRIES` (3)
-  and `OTP_MAX_SENDS_PER_HOUR` (3).
+  `AUTHENTICA_TEMPLATE_ID` (5), `OTP_VALID_SECONDS` (300), `OTP_MAX_WRONG_TRIES` (3),
+  and the code limits `OTP_RESEND_WAITS`, `OTP_MAX_SENDS_PER_DAY` (20),
+  `OTP_MAX_SENDS_PER_DEVICE_HOUR` (10) and `OTP_MAX_SENDS_PER_IP_HOUR` (30).
 - The sign-in endpoints (section 5) call the sender that `SMS_BACKEND` selects.
 - `scripts/try_authentica_sender.py` tries the real sender once, with one SMS.
   Not run yet (To confirm).
@@ -1195,9 +1197,9 @@ hour was confirmed on 18 October 2026.
 | Code | 6 digits, made by Authentica (template 5) | **Decided** |
 | Valid for | 300 seconds (5 minutes), set in the Authentica dashboard | **Decided** |
 | Wrong tries | 3 per verification request, counted by our server (`OTP_MAX_WRONG_TRIES`) | TFQD-13 |
-| Codes per phone number | At most 3 per hour (`OTP_MAX_SENDS_PER_HOUR`), a resend counts as a code | **Decided** |
+| Codes per phone number | Growing waits between codes and at most 20 a day (section 3, `request-code`); the owner's known phone counts only its own. Replaced the earlier 3 per hour on 6 November 2026. | **Decided** |
 | Counters | A new code for the same request (a resend) does not reset them | TFQD-13 |
-| A new request | A request started without a `verification_id` has its own 3 tries. The limit of 3 codes per hour still counts every SMS, so at most 9 tries per hour per phone number. | To confirm |
+| A new request | A request started without a `verification_id` has its own 3 tries. Every SMS still counts toward the waits and the 20 codes of the day. | To confirm |
 | Not used | A device identifier, an IP address. No phone lock in V1.0. | TFQD-13 |
 
 ## 9. Definition of Done
@@ -1236,7 +1238,7 @@ change in the pull request review.
 | 3 | Patients and Simplified Mode | Decided per story in section 7. |
 | 4 | The bell endpoint | `GET /api/v1/notifications` and `POST /api/v1/notifications/{notification_id}/read` (section 6). |
 | 5 | Who makes and checks the OTP code | Authentica, with template 5: a 6-digit code, Arabic text, valid 300 seconds (dashboard setting). Our server counts the 3 wrong tries (section 8). Decided on 19 October 2026. |
-| 6 | Codes per phone number | At most 3 per hour (section 8). |
+| 6 | Codes per phone number | Growing waits and at most 20 a day; the owner's known phone counts only its own (section 3). |
 | 7 | Sign-out of all sessions (F05) | Not in V1.0, because no story asks for it. Sign-out ends one session. Deleting an account ends every session of the user (section 4). |
 
 **Still open**

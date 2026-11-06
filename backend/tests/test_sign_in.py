@@ -369,6 +369,100 @@ def test_a_strange_device_id_is_ignored(guarded):
                    device="x!").status_code == 200
 
 
+# ---- request-code: the owner's known phone ----------------------------------
+
+
+def sms_code(client, phone=PHONE):
+    return client.application.extensions["sms_sender"].last_message_to(
+        phone
+    ).code
+
+
+def sign_in_on(client, device, phone=PHONE):
+    """Sign in with `phone` on `device`: it becomes a known phone."""
+    answer = ask(client, phone=phone, device=device)
+    assert answer.status_code == 200, answer.get_json()
+    vid = answer.get_json()["verification_id"]
+    done = verify_code(client, vid, sms_code(client, phone))
+    assert done.status_code == 200, done.get_json()
+
+
+STRANGER = {"device": "device-stranger", "ip": "198.51.100.9"}
+
+
+def test_a_stranger_does_not_make_the_owners_phone_wait(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    # Someone else asks for codes for the owner's number on another phone.
+    assert ask(guarded, **STRANGER).status_code == 200
+    error_of(ask(guarded, **STRANGER), 429, "resend_wait")
+
+    mine = ask(guarded, device="device-owner")
+
+    assert mine.status_code == 200, mine.get_json()
+    assert mine.get_json()["resend_after_seconds"] == 30
+
+
+def test_the_owners_code_makes_a_stranger_wait(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    assert ask(guarded, device="device-owner").status_code == 200
+
+    error_of(ask(guarded, **STRANGER), 429, "resend_wait")
+
+
+def test_a_known_phone_still_waits_for_its_own_codes(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    vid = ask(guarded, device="device-owner").get_json()["verification_id"]
+
+    error_of(ask(guarded, device="device-owner", vid=vid), 429, "resend_wait")
+
+
+def test_a_new_phone_waits_like_a_stranger(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    assert ask(guarded, **STRANGER).status_code == 200
+
+    # A phone that never signed in with this number is not known.
+    error_of(ask(guarded, device="device-newphone"), 429, "resend_wait")
+
+
+def test_a_phone_is_known_only_for_the_number_it_signed_in_with(
+    guarded, clock
+):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    assert ask(guarded, phone=OTHER_PHONE, **STRANGER).status_code == 200
+
+    error_of(ask(guarded, phone=OTHER_PHONE, device="device-owner"), 429,
+             "resend_wait")
+
+
+def test_a_stranger_cannot_use_up_the_owners_codes_of_the_day(client, clock):
+    sign_in_on(client, "device-owner")
+    clock.advance(seconds=1)
+    for _ in range(20):
+        assert ask(client, **STRANGER).status_code == 200
+    error_of(ask(client, **STRANGER), 429, "too_many_codes")
+    error_of(ask(client, device="device-newphone"), 429, "too_many_codes")
+
+    assert ask(client, device="device-owner").status_code == 200
+
+
+def test_a_busy_network_does_not_hold_back_the_owners_phone(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    # Four more codes from the same network: its five of the hour are used.
+    for n in range(4):
+        assert ask(guarded, phone=f"+96650000000{n}",
+                   device=f"device-{n:04d}").status_code == 200
+    error_of(ask(guarded, phone="+966500000009", device="device-9999"), 429,
+             "too_many_codes")
+
+    assert ask(guarded, device="device-owner").status_code == 200
+
+
 def test_a_rejected_send_does_not_count_toward_the_limit(client, sms, monkeypatch):
     with monkeypatch.context() as down:
         provider_is_down(sms, down, send=True, status=422)

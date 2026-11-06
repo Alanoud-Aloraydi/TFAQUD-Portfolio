@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:app/core/navigation/fading_branches.dart';
+import 'package:app/core/services/intro_memory.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
@@ -47,6 +50,7 @@ import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
 import 'package:app/features/home/presentation/pages/plan_page.dart';
 import 'package:app/features/home/presentation/pages/record_page.dart';
 import 'package:app/features/home/presentation/pages/today_page.dart';
+import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
@@ -402,6 +406,7 @@ class AppRouter {
         routes: <RouteBase>[
           GoRoute(
             path: Routes.auth,
+            redirect: _welcomeOnce,
             pageBuilder: _iosPage(
               (context, state) => const AuthFeatureScreen(),
             ),
@@ -592,6 +597,18 @@ class AppRouter {
     errorBuilder: (context, state) =>
         Scaffold(body: Center(child: Text(context.tr('error.not_found')))),
   );
+
+  /// The welcome shows once per install ([IntroMemory]). After it, a
+  /// signed-out phone opens on the phone number page, and the reminders of
+  /// the last person go, as the welcome would have removed them.
+  static Future<String?> _welcomeOnce(
+    BuildContext context,
+    GoRouterState state,
+  ) async {
+    if (!await IntroMemory.seen()) return null;
+    unawaited(GetIt.I<DoseReminders>().clear());
+    return Routes.authPhone;
+  }
 
   /// The page a phone is sent to instead of [location], or null when it may
   /// open [location]. The splash page, the sign-in pages and the debug

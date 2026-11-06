@@ -1952,6 +1952,34 @@ void main() {
         expect(find.text('intro.demo.circle'.tr()), findsOneWidget);
       });
 
+      testWidgets('after «تخطي» the welcome does not show again on this phone', (
+        WidgetTester tester,
+      ) async {
+        // A new install again for the tests after this one.
+        addTearDown(
+          () => SharedPreferences.setMockInitialValues(<String, Object>{}),
+        );
+        await openAccount(tester);
+        await tester.tap(find.text('auth.sign_out'.tr()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('intro.skip'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.text('auth.phone_title'.tr()), findsOneWidget);
+
+        // The next time the sign-in page opens, as after a sign-out.
+        AppRouter.router.go(Routes.auth);
+        await tester.pumpAndSettle();
+
+        expect(
+          AppRouter.router.routeInformationProvider.value.uri.path,
+          Routes.authPhone,
+        );
+        expect(find.text('intro.p1_title'.tr()), findsNothing);
+        expect(find.text('auth.phone_title'.tr()), findsOneWidget);
+        // The phone page is the first page: no back link to the welcome.
+        expect(find.text('common.back'.tr()), findsNothing);
+      });
+
       testWidgets('deleting asks first, and "no" deletes nothing', (
         WidgetTester tester,
       ) async {
