@@ -215,3 +215,17 @@ def test_it_needs_the_fake_sms(database_app, database):
     assert result.exit_code != 0
     assert "SMS_BACKEND=fake" in result.output
     assert _count(database, Account) == 0
+
+
+def test_the_start_skips_it_with_real_sms(database_app, database):
+    # On Render, DEMO_DATA=true runs --if-missing at every start: with real
+    # SMS it must say so and let the server start, making nothing.
+    database_app.config["SMS_BACKEND"] = "authentica"
+    try:
+        result = _run(database_app, "--if-missing")
+    finally:
+        database_app.config["SMS_BACKEND"] = "fake"
+
+    assert result.exit_code == 0, result.output
+    assert "skipped" in result.output
+    assert _count(database, Account) == 0

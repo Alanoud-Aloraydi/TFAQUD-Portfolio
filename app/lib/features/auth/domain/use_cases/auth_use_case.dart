@@ -1,4 +1,5 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:injectable/injectable.dart';
@@ -11,7 +12,7 @@ class AuthUseCase {
 
   final AuthRepositoryDomain _repository;
 
-  Future<Result<String, Failure>> requestCode(
+  Future<Result<CodeRequest, Failure>> requestCode(
     String phone, {
     String? verificationId,
   }) => _repository.requestCode(phone, verificationId: verificationId);

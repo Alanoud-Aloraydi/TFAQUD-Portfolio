@@ -16,7 +16,8 @@ class SignInCubit extends Cubit<SignInState> {
   /// Digits in the code. The SMS template of Authentica sends six.
   static const int codeLength = 6;
 
-  /// Seconds the user waits before asking for a new code (from the design).
+  /// Seconds the user waits before asking for a new code when the server
+  /// does not say (it normally does: 30 s, then longer after each code).
   static const int resendCooldownSeconds = 45;
 
   static final RegExp _phonePattern = RegExp(r'^5[0-9]{8}$');
@@ -73,9 +74,20 @@ class SignInCubit extends Cubit<SignInState> {
     );
     if (isClosed) return false;
     return result.when(
-      (id) {
-        _startCountdown();
-        emit(state.copyWith(status: SignInStatus.codeSent, verificationId: id));
+      (sent) {
+        // The server says when the next code may go; the wait grows with
+        // each code.
+        _startCountdown(
+          sent.resendAfterSeconds > 0
+              ? sent.resendAfterSeconds
+              : resendCooldownSeconds,
+        );
+        emit(
+          state.copyWith(
+            status: SignInStatus.codeSent,
+            verificationId: sent.verificationId,
+          ),
+        );
         return true;
       },
       (failure) {
@@ -86,6 +98,8 @@ class SignInCubit extends Cubit<SignInState> {
             clearVerificationId: _requestIsClosed(failure),
           ),
         );
+        // Too soon after the last code: the countdown shows how long.
+        if (failure is ResendWaitFailure) _startCountdown(failure.seconds);
         return false;
       },
     );
@@ -157,9 +171,9 @@ class SignInCubit extends Cubit<SignInState> {
   bool _requestIsClosed(Failure failure) =>
       failure is TooManyAttemptsFailure || failure is StartAgainFailure;
 
-  void _startCountdown() {
+  void _startCountdown(int seconds) {
     _timer?.cancel();
-    emit(state.copyWith(resendSeconds: resendCooldownSeconds));
+    emit(state.copyWith(resendSeconds: seconds));
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       if (isClosed) {
         timer.cancel();

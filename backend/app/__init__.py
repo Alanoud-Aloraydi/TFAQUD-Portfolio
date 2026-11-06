@@ -127,7 +127,10 @@ def create_app(
         clock=clock,
         otp_valid_seconds=app.config["OTP_VALID_SECONDS"],
         max_wrong_tries=app.config["OTP_MAX_WRONG_TRIES"],
-        max_sends_per_hour=app.config["OTP_MAX_SENDS_PER_HOUR"],
+        max_sends_per_day=app.config["OTP_MAX_SENDS_PER_DAY"],
+        resend_waits=app.config["OTP_RESEND_WAITS"],
+        max_sends_per_device_hour=app.config["OTP_MAX_SENDS_PER_DEVICE_HOUR"],
+        max_sends_per_ip_hour=app.config["OTP_MAX_SENDS_PER_IP_HOUR"],
         transaction=transaction if database_enabled else nullcontext,
     )
 

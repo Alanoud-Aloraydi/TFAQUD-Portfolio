@@ -1,6 +1,6 @@
 # Render Blueprint: the TFAQUD API and its PostgreSQL database, as the team's
-# shared test server (APP_ENV=staging): fake sign-in codes that only the team
-# reads in Render's log, and the demo data.
+# shared test server (APP_ENV=staging), with real sign-in codes by SMS
+# (Authentica).
 #
 # In Render: New, then Blueprint, then pick this repository and the branch to
 # deploy. Render reads this file, asks for the values marked `sync: false`,
@@ -38,21 +38,27 @@ services:
         value: staging
       - key: SECRET_KEY
         generateValue: true
+      # Cloudflare in front of Render puts the caller's address here; the
+      # server caps the sign-in codes one network may ask for with it.
+      - key: CLIENT_IP_HEADER
+        value: CF-Connecting-IP
       - key: DATABASE_URL
         fromDatabase:
           name: tfaqud-db
           property: connectionString
-      # No SMS is sent: the code is written in Render's log ("FAKE SMS ...
-      # Your code is ..."), which only the team can read. For real SMS, set
-      # SMS_BACKEND to authentica and add AUTHENTICA_API_KEY in Render.
+      # Real sign-in codes by SMS through Authentica. The key is typed in
+      # Render (Environment), never in git. For codes in Render's log instead,
+      # set SMS_BACKEND to fake and FAKE_SMS_LOG_CODES to "true".
       - key: SMS_BACKEND
-        value: fake
+        value: authentica
+      - key: AUTHENTICA_API_KEY
+        sync: false
       - key: FAKE_SMS_LOG_CODES
-        value: "true"
-      # Make the demo circles, medicines and doses at the start when they are
-      # not there yet (sign in with 0500000001).
+        value: "false"
+      # The demo data needs the fake SMS (its numbers are made up), so it is
+      # off with real SMS. The demo accounts already made stay as they are.
       - key: DEMO_DATA
-        value: "true"
+        value: "false"
       # Apple push. Type "none" first; after the key file is added as the
       # secret file apns_key.p8, change it to "apns".
       - key: PUSH_BACKEND

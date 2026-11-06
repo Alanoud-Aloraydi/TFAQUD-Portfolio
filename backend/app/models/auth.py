@@ -93,6 +93,8 @@ class OtpSendAttempt(db.Model):
         Index(
             "ix_otp_send_attempt_challenge_time", "challenge_id", "created_at"
         ),
+        Index("ix_otp_send_attempt_device_time", "device_id", "created_at"),
+        Index("ix_otp_send_attempt_ip_time", "client_ip", "created_at"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -102,3 +104,7 @@ class OtpSendAttempt(db.Model):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(Text, server_default="reserved")
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Who asked: the app's install id (X-Device-Id) and the network address,
+    # for the caps of one device and one IP (see app.auth.otp_store).
+    device_id: Mapped[str | None] = mapped_column(Text)
+    client_ip: Mapped[str | None] = mapped_column(Text)

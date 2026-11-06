@@ -15,9 +15,28 @@ class TooManyAttemptsFailure extends Failure {
   const TooManyAttemptsFailure() : super('auth.too_many_attempts');
 }
 
-/// Three codes were already sent to this phone number in the last hour.
+/// The number had its codes for the day, or this phone or network asked for
+/// too many codes in the last hour.
 class TooManyCodesFailure extends Failure {
   const TooManyCodesFailure() : super('auth.too_many_codes');
+}
+
+/// A code was sent to this number a moment ago: the next one may go after
+/// [seconds]. The wait grows with each code, up to 10 minutes, so someone
+/// who types another person's number can only slow them down.
+class ResendWaitFailure extends Failure {
+  const ResendWaitFailure(this.seconds) : super('auth.resend_wait');
+
+  final int seconds;
+
+  @override
+  List<Object?> get props => [messageKey, seconds];
+}
+
+/// Values used when the server does not say them.
+abstract final class SignInFailureDefaults {
+  /// The wait when a "resend_wait" answer has no number of seconds.
+  static const int resendWaitSeconds = 30;
 }
 
 /// The server no longer has this request (it is unknown, or its code was already

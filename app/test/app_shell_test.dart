@@ -8,6 +8,7 @@ import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/token_storage.dart';
@@ -19,6 +20,7 @@ import 'package:app/features/account/presentation/pages/account_edit_screen.dart
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
@@ -153,10 +155,12 @@ class _OfflineAuthRepository implements AuthRepositoryDomain {
   int signOuts = 0;
 
   @override
-  Future<Result<String, Failure>> requestCode(
+  Future<Result<CodeRequest, Failure>> requestCode(
     String phone, {
     String? verificationId,
-  }) async => Success('verification-id');
+  }) async => const Success(
+    CodeRequest(verificationId: 'verification-id', resendAfterSeconds: 30),
+  );
 
   @override
   Future<Result<SignInResult, Failure>> verifyCode({
@@ -225,6 +229,26 @@ class _EmptyAppointmentsRepository extends Fake
 
   @override
   Future<List<CareAppointment>> appointments(String circleId) async => const [];
+}
+
+/// The phone's own calendar is never touched here: the setting stays off
+/// and every call does nothing. The home page and the account page ask
+/// GetIt for it.
+class _OffCalendarSync extends Fake implements CalendarSync {
+  @override
+  Future<bool> isEnabled() async => false;
+
+  @override
+  Future<void> setEnabled(bool value) async {}
+
+  @override
+  Future<void> sync(List<ReminderCircle> circles) async {}
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<void> clear() async {}
 }
 
 class _OfflinePrayerTimes extends Fake implements PrayerTimesRemoteDataSource {
@@ -367,6 +391,7 @@ void main() {
         texts: doseReminderTexts,
       ),
     );
+    GetIt.I.registerSingleton<CalendarSync>(_OffCalendarSync());
     GetIt.I.registerSingleton<PushRegistration>(
       PushRegistration(phone, (String token) async => pushTokens.add(token)),
     );
@@ -483,10 +508,15 @@ void main() {
       );
       await pumpApp(tester);
 
+      // The empty Today page has its own add button with the same words, so
+      // the sheet adds one more of them.
+      final Finder addTitle = find.text('add.title'.tr());
+      final int behindTheSheet = tester.widgetList(addTitle).length;
+
       await tester.tap(find.byTooltip('tab.add'.tr()));
       await tester.pumpAndSettle();
 
-      expect(find.text('add.title'.tr()), findsOneWidget);
+      expect(addTitle, findsNWidgets(behindTheSheet + 1));
 
       await tester.tap(find.text('add.medication'.tr()));
       await tester.pumpAndSettle();

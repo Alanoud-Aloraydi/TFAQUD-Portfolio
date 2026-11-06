@@ -33,6 +33,7 @@ abstract class ApiErrorCodes {
   static const String codeAlreadyUsed = 'code_already_used';
   static const String tooManyAttempts = 'too_many_attempts';
   static const String tooManyCodes = 'too_many_codes';
+  static const String resendWait = 'resend_wait';
   static const String smsUnavailable = 'sms_unavailable';
 
   // Circle creation (backend/app/care.py).
@@ -78,3 +79,18 @@ String? apiErrorCode(Object? body) {
 /// response has the API error body. Returns null for any other error.
 String? apiErrorCodeOf(Object error) =>
     error is DioException ? apiErrorCode(error.response?.data) : null;
+
+/// The `error.retry_after_seconds` of an API error inside [error], when the
+/// server says how long to wait. Null otherwise.
+int? apiRetryAfterOf(Object error) {
+  if (error is! DioException) return null;
+  final Object? body = error.response?.data;
+  if (body is Map) {
+    final Object? inner = body['error'];
+    if (inner is Map) {
+      final Object? seconds = inner['retry_after_seconds'];
+      if (seconds is int && seconds > 0) return seconds;
+    }
+  }
+  return null;
+}

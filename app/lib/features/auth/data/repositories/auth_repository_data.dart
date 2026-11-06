@@ -5,6 +5,7 @@ import 'package:app/core/services/token_storage.dart';
 import 'package:app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
+import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/failures/invalid_code_failure.dart';
 import 'package:app/features/auth/domain/failures/sign_in_failures.dart';
@@ -21,16 +22,16 @@ class AuthRepositoryData implements AuthRepositoryDomain {
   final TokenStorage _tokens;
 
   @override
-  Future<Result<String, Failure>> requestCode(
+  Future<Result<CodeRequest, Failure>> requestCode(
     String phone, {
     String? verificationId,
   }) async {
     try {
-      final String id = await _remote.requestCode(
+      final CodeRequest sent = await _remote.requestCode(
         phone,
         verificationId: verificationId,
       );
-      return Success(id);
+      return Success(sent);
     } catch (error) {
       return Error(_signInFailure(error));
     }
@@ -109,6 +110,9 @@ class AuthRepositoryData implements AuthRepositoryDomain {
       ApiErrorCodes.codeExpired => const CodeExpiredFailure(),
       ApiErrorCodes.tooManyAttempts => const TooManyAttemptsFailure(),
       ApiErrorCodes.tooManyCodes => const TooManyCodesFailure(),
+      ApiErrorCodes.resendWait => ResendWaitFailure(
+        apiRetryAfterOf(error) ?? SignInFailureDefaults.resendWaitSeconds,
+      ),
       ApiErrorCodes.verificationNotFound ||
       ApiErrorCodes.codeAlreadyUsed => const StartAgainFailure(),
       ApiErrorCodes.smsUnavailable => const SmsUnavailableFailure(),

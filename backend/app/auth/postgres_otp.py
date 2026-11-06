@@ -10,6 +10,9 @@ from app.auth.otp_store import (
     OtpRequest,
     OtpStore,
     SendClaim,
+    SendRules,
+    judge_send,
+    next_send_at,
 )
 from app.database import transaction
 from app.models import OtpChallenge, OtpSendAttempt
@@ -61,8 +64,10 @@ class PostgresOtpStore(OtpStore):
         window_start,
         max_sends,
         *,
-        max_tries=None
+        max_tries=None,
+        rules=None
     ):
+        judged = rules or SendRules()
         with transaction() as session:
             _lock_phone(session, phone)
             row = (
@@ -70,30 +75,87 @@ class PostgresOtpStore(OtpStore):
                 if request_id is not None
                 else None
             )
-            count, oldest = session.execute(
-                select(func.count(), func.min(OtpSendAttempt.created_at))
-                .join(
-                    OtpChallenge,
-                    OtpChallenge.id == OtpSendAttempt.challenge_id,
+            since = window_start
+            if rules is not None:
+                verified = session.scalar(
+                    select(func.max(OtpChallenge.verified_at)).where(
+                        OtpChallenge.phone_number == phone
+                    )
                 )
-                .where(
-                    OtpChallenge.phone_number == phone,
-                    OtpSendAttempt.status != "failed",
-                    OtpSendAttempt.created_at > window_start,
+                if verified is not None:
+                    since = max(since, verified)
+            phone_times = list(
+                session.scalars(
+                    select(OtpSendAttempt.created_at)
+                    .join(
+                        OtpChallenge,
+                        OtpChallenge.id == OtpSendAttempt.challenge_id,
+                    )
+                    .where(
+                        OtpChallenge.phone_number == phone,
+                        OtpSendAttempt.status != "failed",
+                        OtpSendAttempt.created_at > since,
+                    )
                 )
-            ).one()
-            if count >= max_sends:
-                return SendClaim(granted=False, oldest_send_at=oldest)
+            )
+            device_times = self._asker_times(
+                session,
+                OtpSendAttempt.device_id,
+                judged.device_id if rules is not None else None,
+                now - judged.requester_window,
+            )
+            ip_times = self._asker_times(
+                session,
+                OtpSendAttempt.client_ip,
+                judged.client_ip if rules is not None else None,
+                now - judged.requester_window,
+            )
+            window = now - window_start
+            retry_at, reason = judge_send(
+                now, phone_times, window, max_sends, judged,
+                device_times, ip_times,
+            )
+            if retry_at is not None:
+                return SendClaim(
+                    granted=False,
+                    oldest_send_at=min(phone_times) if phone_times else None,
+                    retry_at=retry_at,
+                    reason=reason,
+                )
             if row is None:
                 row = self._challenge(session, None, phone, now, max_tries)
             send = OtpSendAttempt(
-                id=uuid4(), challenge_id=row.id, created_at=now
+                id=uuid4(),
+                challenge_id=row.id,
+                created_at=now,
+                device_id=judged.device_id,
+                client_ip=judged.client_ip,
             )
             session.add(send)
             session.flush()
             return SendClaim(
-                granted=True, request_id=row.id.hex, send_id=send.id.hex
+                granted=True,
+                request_id=row.id.hex,
+                send_id=send.id.hex,
+                next_send_at=next_send_at(
+                    now, phone_times, window, max_sends, judged
+                ),
             )
+
+    @staticmethod
+    def _asker_times(session, column, value, start):
+        """The times of the counted sends one device or one IP asked for."""
+        if not value:
+            return []
+        return list(
+            session.scalars(
+                select(OtpSendAttempt.created_at).where(
+                    column == value,
+                    OtpSendAttempt.status != "failed",
+                    OtpSendAttempt.created_at > start,
+                )
+            )
+        )
 
     @staticmethod
     def _challenge(session, request_id, phone, now, max_tries):

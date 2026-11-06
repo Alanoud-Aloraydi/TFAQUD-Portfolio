@@ -617,6 +617,14 @@ def demo_data_command(reset: bool, if_missing: bool) -> None:
     if config["APP_ENV"] == "production":
         raise click.ClickException("Demo data is for a local server only.")
     if config.get("SMS_BACKEND") != "fake":
+        if if_missing:
+            # The server's start (DEMO_DATA=true) must not stop because real
+            # SMS was switched on: it only leaves the demo data out.
+            click.echo(
+                "The demo data is skipped: real SMS is on, and the demo "
+                "numbers are made up."
+            )
+            return
         raise click.ClickException(
             "The demo numbers are made up, so they must not get a real SMS. "
             "Set SMS_BACKEND=fake in backend/.env, restart the server, and "

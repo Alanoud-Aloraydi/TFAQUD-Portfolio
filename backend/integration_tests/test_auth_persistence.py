@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import create_app
+from app.auth.otp_store import SendRules
 from app.auth.postgres_otp import PostgresOtpStore
 from app.clock import ManualClock
 from app.models import Account, AccountSession, OtpChallenge, OtpSendAttempt
@@ -30,6 +31,8 @@ def auth_app(database, database_app):
             "SQLALCHEMY_ENGINE_OPTIONS": database_app.config[
                 "SQLALCHEMY_ENGINE_OPTIONS"
             ],
+            # These tests were written for three codes per number.
+            "OTP_MAX_SENDS_PER_DAY": 3,
         },
     )
     yield app
@@ -47,7 +50,8 @@ def restarted(app):
         clock=app.extensions["clock"],
         sms_sender=app.extensions["sms_sender"],
         overrides={
-            "SQLALCHEMY_DATABASE_URI": app.config["SQLALCHEMY_DATABASE_URI"]
+            "SQLALCHEMY_DATABASE_URI": app.config["SQLALCHEMY_DATABASE_URI"],
+            "OTP_MAX_SENDS_PER_DAY": 3,
         },
     )
 
@@ -359,3 +363,40 @@ def test_delivery_uncertainty_retains_quota(
         assert set(session.scalars(select(OtpSendAttempt.status))) == {
             expected
         }
+
+
+def test_postgres_applies_the_waits_and_the_caps_of_the_asker(auth_app):
+    clock = auth_app.extensions["clock"]
+    now = clock.now()
+    day = now - timedelta(hours=24)
+    rules = SendRules(
+        waits=(30,),
+        device_id="device-aaaa",
+        client_ip="203.0.113.7",
+        max_device_sends=2,
+    )
+    with auth_app.app_context():
+        store = PostgresOtpStore()
+        first = store.claim_send(None, PHONE, now, day, 20, rules=rules)
+        assert first.granted
+        assert first.next_send_at == now + timedelta(seconds=30)
+
+        soon = now + timedelta(seconds=10)
+        too_soon = store.claim_send(None, PHONE, soon, day, 20, rules=rules)
+        assert (too_soon.granted, too_soon.reason) == (False, "wait")
+        assert too_soon.retry_at == now + timedelta(seconds=30)
+
+        other = store.claim_send(None, "+966512345678", now, day, 20,
+                                 rules=rules)
+        assert other.granted
+        third = store.claim_send(None, "+966500000003", now, day, 20,
+                                 rules=rules)
+        assert (third.granted, third.reason) == (False, "device")
+
+        # A sign-in starts the count of the number again: no wait after it.
+        store.mark_sent(first.send_id, now, now + timedelta(minutes=5))
+        assert store.mark_verified(first.request_id, now + timedelta(seconds=5))
+        fresh = SendRules(waits=(30,), device_id="device-bbbb")
+        later = now + timedelta(seconds=6)
+        assert store.claim_send(None, PHONE, later, day, 20,
+                                rules=fresh).granted

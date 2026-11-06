@@ -1,6 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
+import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
@@ -29,10 +30,12 @@ class _Auth implements AuthRepositoryDomain {
   }
 
   @override
-  Future<Result<String, Failure>> requestCode(
+  Future<Result<CodeRequest, Failure>> requestCode(
     String phone, {
     String? verificationId,
-  }) async => const Success('verification-id');
+  }) async => const Success(
+    CodeRequest(verificationId: 'verification-id', resendAfterSeconds: 30),
+  );
 
   @override
   Future<Result<SignInResult, Failure>> verifyCode({

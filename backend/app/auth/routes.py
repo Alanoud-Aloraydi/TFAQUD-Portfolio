@@ -10,7 +10,9 @@
 The rules of the two sign-in endpoints are in `app/auth/sign_in.py`.
 """
 
-from flask import Blueprint, jsonify
+import re
+
+from flask import Blueprint, current_app, jsonify, request
 
 from app.auth.decorators import current_auth, require_auth
 from app.auth.inputs import Code, Phone, VerificationId
@@ -40,13 +42,39 @@ class VerifyCodeRequest(Dto):
     code: Code
 
 
+_DEVICE_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
+
+
+def _device_id() -> str | None:
+    """The app's install id (X-Device-Id), when it looks like one."""
+    value = request.headers.get("X-Device-Id", "").strip()
+    return value if _DEVICE_ID.match(value) else None
+
+
+def _client_ip() -> str | None:
+    """The caller's address: from CLIENT_IP_HEADER behind a proxy (Render
+    puts it in CF-Connecting-IP), else the connection's own."""
+    header = current_app.config.get("CLIENT_IP_HEADER")
+    if header:
+        value = request.headers.get(header, "").split(",")[0].strip()
+        if value:
+            return value[:64]
+    return request.remote_addr
+
+
 @bp.post("/request-code")
 def request_code():
     body = parse_json_body(RequestCodeRequest)
-    verification_id = get_sign_in_service().request_code(
-        body.phone_number, body.verification_id
+    sent = get_sign_in_service().send_code(
+        body.phone_number,
+        body.verification_id,
+        device_id=_device_id(),
+        client_ip=_client_ip(),
     )
-    return jsonify(verification_id=verification_id)
+    return jsonify(
+        verification_id=sent.request_id,
+        resend_after_seconds=sent.resend_after_seconds,
+    )
 
 
 @bp.post("/verify-code")

@@ -30,7 +30,16 @@ DEFAULT_AUTHENTICA_TEMPLATE_ID = 5  # Arabic text, code of 6 digits
 
 # Server-side limits are configurable per environment.
 DEFAULT_OTP_MAX_WRONG_TRIES = 3  # per verification request
-DEFAULT_OTP_MAX_SENDS_PER_HOUR = 3  # per phone number
+# Codes to one phone number in 24 hours, counted since its last sign-in.
+DEFAULT_OTP_MAX_SENDS_PER_DAY = 20
+# Seconds to wait after the 1st, 2nd, 3rd ... code before the next one; the
+# last one repeats. Someone who types another person's number can then only
+# slow the owner (at most 10 minutes), never lock them out.
+DEFAULT_OTP_RESEND_WAITS = (30, 60, 120, 300, 600)
+# Codes one device (X-Device-Id) and one IP may ask for in an hour, for any
+# numbers, so one phone or one network cannot send codes to many people.
+DEFAULT_OTP_MAX_SENDS_PER_DEVICE_HOUR = 10
+DEFAULT_OTP_MAX_SENDS_PER_IP_HOUR = 30
 
 MIN_SECRET_KEY_LENGTH = 32
 
@@ -40,6 +49,34 @@ _TEST_SECRET_KEY = "testing-only-secret-key-not-for-real-use!!"
 
 class ConfigError(RuntimeError):
     """The settings are missing or unsafe. The app must not start."""
+
+
+def _waits_from_env(name: str, default: tuple[int, ...]) -> tuple[int, ...]:
+    """Whole seconds separated by commas, such as "30,60,120"; "0": none."""
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return default
+    if raw.strip() == "0":
+        return ()
+    try:
+        waits = tuple(int(part) for part in raw.split(","))
+    except ValueError as exc:
+        raise ConfigError(
+            f"{name} must be whole seconds separated by commas, got {raw!r}."
+        ) from exc
+    if any(wait <= 0 for wait in waits):
+        raise ConfigError(f"{name} must hold numbers greater than zero.")
+    return waits
+
+
+def _cap_from_env(name: str, default: int | None) -> int | None:
+    """A whole number greater than zero, or "0" for no cap."""
+    raw = os.environ.get(name)
+    if raw is not None and raw.strip() == "0":
+        return None
+    if raw is None or raw == "":
+        return default
+    return _int_from_env(name, 1)
 
 
 def _int_from_env(name: str, default: int) -> int:
@@ -85,9 +122,28 @@ def load_config(
         "OTP_MAX_WRONG_TRIES": _int_from_env(
             "OTP_MAX_WRONG_TRIES", DEFAULT_OTP_MAX_WRONG_TRIES
         ),
-        "OTP_MAX_SENDS_PER_HOUR": _int_from_env(
-            "OTP_MAX_SENDS_PER_HOUR", DEFAULT_OTP_MAX_SENDS_PER_HOUR
+        "OTP_MAX_SENDS_PER_DAY": _int_from_env(
+            "OTP_MAX_SENDS_PER_DAY", DEFAULT_OTP_MAX_SENDS_PER_DAY
         ),
+        # The tests send many codes in a row: there, no waits and no device
+        # or IP caps unless a test sets them.
+        "OTP_RESEND_WAITS": _waits_from_env(
+            "OTP_RESEND_WAITS",
+            () if env_name == "testing" else DEFAULT_OTP_RESEND_WAITS,
+        ),
+        "OTP_MAX_SENDS_PER_DEVICE_HOUR": _cap_from_env(
+            "OTP_MAX_SENDS_PER_DEVICE_HOUR",
+            None
+            if env_name == "testing"
+            else DEFAULT_OTP_MAX_SENDS_PER_DEVICE_HOUR,
+        ),
+        "OTP_MAX_SENDS_PER_IP_HOUR": _cap_from_env(
+            "OTP_MAX_SENDS_PER_IP_HOUR",
+            None if env_name == "testing" else DEFAULT_OTP_MAX_SENDS_PER_IP_HOUR,
+        ),
+        # The header that holds the caller's real address behind a proxy
+        # (Render: CF-Connecting-IP). Empty: the connection's address.
+        "CLIENT_IP_HEADER": os.environ.get("CLIENT_IP_HEADER", "").strip(),
         # Provider credentials remain server-side.
         "AUTHENTICA_API_KEY": os.environ.get("AUTHENTICA_API_KEY"),
         "AUTHENTICA_TEMPLATE_ID": _int_from_env(

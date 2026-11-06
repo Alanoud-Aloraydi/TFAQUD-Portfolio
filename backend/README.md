@@ -146,8 +146,14 @@ Everything is made through the app's own services and checked by the
 database rules, as if a family had used the app. It only touches the demo
 accounts; `--reset` deletes them as the app deletes an account. It refuses to
 run in production, and it refuses unless `SMS_BACKEND=fake`: the demo numbers
-are made up, and a real SMS to them could reach a stranger. A phone number gets
-at most 3 codes an hour (`OTP_MAX_SENDS_PER_HOUR`).
+are made up, and a real SMS to them could reach a stranger.
+
+Sign-in codes: after each code to a number the next one waits 30 s, then 1, 2,
+5 and 10 minutes (`OTP_RESEND_WAITS`); a number gets at most 20 codes a day,
+counted since its last sign-in (`OTP_MAX_SENDS_PER_DAY`); one device and one
+IP get at most 10 and 30 codes an hour (`OTP_MAX_SENDS_PER_DEVICE_HOUR`,
+`OTP_MAX_SENDS_PER_IP_HOUR`). Behind a proxy, `CLIENT_IP_HEADER` names the
+header with the caller's address (Render: `CF-Connecting-IP`).
 
 ## Documents
 
@@ -248,7 +254,7 @@ way, so switching is just turning one off and the other on.
 
 `render.yaml` (at the top of the repository) describes the team's shared test
 server on [Render](https://render.com): the API and its PostgreSQL database.
-It runs with `APP_ENV=staging`, the fake SMS sender and the demo data. The
+It runs with `APP_ENV=staging` and real SMS codes (Authentica). The
 image is the same `Dockerfile`; on Render its start command runs
 `flask --app wsgi db upgrade`, then `demo-data --if-missing` (with
 `DEMO_DATA=true`), then the production server (gunicorn). Photos and voice
@@ -271,13 +277,14 @@ The first time:
 6. Build the app for it: `[testflight api=https://<address>]` in a commit
    message.
 
-Signing in: no SMS is sent. Ask for a code in the app, then open the API's
-**Logs** in Render and search for `FAKE SMS`: the line ends with
-`Your code is 123456`. Only the people in the Render workspace see the log, so
-nobody else can sign in. The demo account is `0500000001`. For real SMS, set
-`SMS_BACKEND` to `authentica` and add `AUTHENTICA_API_KEY` in **Environment**;
-the demo data then stays as it is, and `DEMO_DATA` must be removed (the demo
-numbers are made up and must not get a real SMS).
+Signing in: the code comes by SMS through Authentica (`SMS_BACKEND` is
+`authentica`); add `AUTHENTICA_API_KEY` in **Environment** before the first
+deploy that uses it, or the server cannot start. Do not sign in with the demo
+numbers (`0500000001` …): they are made up and could belong to a stranger.
+For a test server without SMS, set `SMS_BACKEND` to `fake`,
+`FAKE_SMS_LOG_CODES` to `"true"` and `DEMO_DATA` to `"true"` in
+`render.yaml`: the code is then in the API's **Logs** (search for
+`FAKE SMS`), and the demo data is made at the start.
 
 After that, every push to the chosen branch deploys again by itself, with the
 new migrations, and the old version answers until the new one is ready.

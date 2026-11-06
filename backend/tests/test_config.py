@@ -137,19 +137,19 @@ def test_the_testing_environment_never_reads_the_authentica_key(monkeypatch):
 
 def test_default_sign_in_limits_are_the_ones_of_tfqd_13(app):
     assert app.config["OTP_MAX_WRONG_TRIES"] == 3
-    assert app.config["OTP_MAX_SENDS_PER_HOUR"] == 3
+    assert app.config["OTP_MAX_SENDS_PER_DAY"] == 20
 
 
 def test_sign_in_limits_can_be_changed_by_environment_variable(monkeypatch):
     monkeypatch.setenv("OTP_MAX_WRONG_TRIES", "5")
-    monkeypatch.setenv("OTP_MAX_SENDS_PER_HOUR", "10")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_DAY", "10")
 
     config = load_config("testing")
 
-    assert (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_HOUR"]) == (5, 10)
+    assert (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_DAY"]) == (5, 10)
 
 
-@pytest.mark.parametrize("name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_HOUR"])
+@pytest.mark.parametrize("name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_DAY"])
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
 def test_bad_sign_in_limits_are_refused(monkeypatch, name, value):
     monkeypatch.setenv(name, value)
@@ -195,3 +195,38 @@ def test_staging_logs_the_fake_codes_only_when_asked(monkeypatch):
     monkeypatch.setenv("FAKE_SMS_LOG_CODES", "true")
     assert load_config("staging")["FAKE_SMS_LOG_BODY"] is True
     assert load_config("production")["FAKE_SMS_LOG_BODY"] is False
+
+
+def test_the_real_servers_wait_between_codes_and_cap_the_askers(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    for name in ("OTP_RESEND_WAITS", "OTP_MAX_SENDS_PER_DEVICE_HOUR",
+                 "OTP_MAX_SENDS_PER_IP_HOUR"):
+        monkeypatch.delenv(name, raising=False)
+
+    config = load_config("staging")
+
+    assert config["OTP_RESEND_WAITS"] == (30, 60, 120, 300, 600)
+    assert config["OTP_MAX_SENDS_PER_DEVICE_HOUR"] == 10
+    assert config["OTP_MAX_SENDS_PER_IP_HOUR"] == 30
+    # The tests send many codes in a row, so there are none there.
+    testing = load_config("testing")
+    assert testing["OTP_RESEND_WAITS"] == ()
+    assert testing["OTP_MAX_SENDS_PER_DEVICE_HOUR"] is None
+
+
+@pytest.mark.parametrize("value", ["abc", "30,x", "30,-1"])
+def test_bad_waits_are_refused(monkeypatch, value):
+    monkeypatch.setenv("OTP_RESEND_WAITS", value)
+
+    with pytest.raises(ConfigError, match="OTP_RESEND_WAITS"):
+        load_config("testing")
+
+
+def test_zero_turns_a_wait_or_a_cap_off(monkeypatch):
+    monkeypatch.setenv("OTP_RESEND_WAITS", "0")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_IP_HOUR", "0")
+
+    config = load_config("testing")
+
+    assert config["OTP_RESEND_WAITS"] == ()
+    assert config["OTP_MAX_SENDS_PER_IP_HOUR"] is None

@@ -53,7 +53,8 @@ Every error has this shape and nothing else:
 - `message` is English, for developers and logs. It is not shown to the user.
 - `details` appears only for `validation_error`.
 - `retry_after_seconds` appears only when the app can be told how long to wait. Today
-  that is `too_many_codes` only. The same number is sent in the header `Retry-After`.
+  that is `too_many_codes` and `resend_wait`. The same number is sent in the header
+  `Retry-After`.
 - A 500 never contains a traceback or any internal detail.
 
 | Status | `code` | When | What the app does | Label |
@@ -74,7 +75,8 @@ Every error has this shape and nothing else:
 | 422 | `code_expired` | The code is older than 300 seconds. No try is used. | Offer to send a new code (a resend). | Built |
 | 422 | `code_already_used` | The request is finished: its code was accepted before. | Start again. | Built |
 | 429 | `too_many_attempts` | The request used its 3 wrong tries. | Tell the user; start a new request. | Built |
-| 429 | `too_many_codes` | 3 codes were already sent to this phone number in the last hour. Carries `retry_after_seconds`. | Show how long to wait. | Built |
+| 429 | `too_many_codes` | The phone number had its 20 codes for the day (counted since its last sign-in), or the asking device (10) or network (30) had its codes for the hour. Carries `retry_after_seconds`. | Show how long to wait. | Built |
+| 429 | `resend_wait` | A code went to this phone number a moment ago. The wait grows with each code: 30 s, 1, 2, 5, then 10 minutes. Carries `retry_after_seconds`. | Show the countdown. | Built |
 | 409 | `data_conflict` | The database refused a write that broke one of its rules, for example two requests at the same time. | Reload the data and try once more. | Built |
 | 500 | `internal_error` | An unexpected error on the server. | Show a general error. Keep the `request_id`. | Built |
 | 503 | `sms_unavailable` | The SMS provider could not send or check the code. Nothing was counted. | Show "try again". | Built |
@@ -274,21 +276,28 @@ first answer:
 200:
 
 ```json
-{ "verification_id": "10648d8694f64637be154c66408900ba" }
+{ "verification_id": "10648d8694f64637be154c66408900ba", "resend_after_seconds": 30 }
 ```
+
+`resend_after_seconds` is the wait before this number may get one more code; the
+app shows it as the countdown of «إعادة إرسال الرمز». The app also sends the header
+`X-Device-Id`: a random id of the install (8 to 64 letters, digits or `-`;
+anything else is ignored).
 
 | Rule | Contract | Label |
 |---|---|---|
 | Phone number | `+966`, then 9 digits that start with 5 (`+9665XXXXXXXX`), English digits only. The app builds it from what the user types. Anything else is 422 `validation_error` with the detail code `invalid_phone`, and no SMS is sent. | Built |
 | New request | Without `verification_id` a new request starts, with its own 3 tries. | Built |
 | Resend | With `verification_id` another SMS is sent for the same request. The wrong tries already used stay used. | Built |
-| Codes per phone number | At most 3 SMS per phone number in any 60 minutes. A resend is an SMS. The 4th is refused with 429 `too_many_codes` and nothing is sent. `retry_after_seconds` (and the header `Retry-After`) says how long to wait: until the oldest SMS of the hour is one hour old. | Built |
+| Wait between codes | After each SMS to a number the next one waits 30 s, then 1, 2, 5, and 10 minutes for every one after (`OTP_RESEND_WAITS`). Too soon is 429 `resend_wait` and nothing is sent. Someone who types another person's number can only slow the owner, never lock them out. | Built |
+| Codes per phone number | At most 20 SMS per number in 24 hours (`OTP_MAX_SENDS_PER_DAY`), counted only since its last successful sign-in. A resend is an SMS. The next one is 429 `too_many_codes`; `retry_after_seconds` (and `Retry-After`) says when the oldest one leaves the 24 hours. | Built |
+| Codes per device and network | At most 10 codes per hour from one device (`X-Device-Id`, `OTP_MAX_SENDS_PER_DEVICE_HOUR`) and 30 from one IP (`OTP_MAX_SENDS_PER_IP_HOUR`), for any numbers. Behind Render the IP is read from `CLIENT_IP_HEADER` (`CF-Connecting-IP`). The next one is 429 `too_many_codes`. | Built |
 | Request without tries | A resend into a request that already used its 3 wrong tries is refused with 429 `too_many_attempts`. Nothing is sent. The app starts a new request. | Built |
 | Same answer for every number | A phone number with an account and one without get the same answer, so the answer does not tell whether an account exists. | Built |
-| The provider fails | 503 `sms_unavailable`. A send that failed is not counted in the limit of 3, and a request that only had that send is removed. | Built |
+| The provider fails | 503 `sms_unavailable`. A send that failed is not counted in any limit, and a request that only had that send is removed. | Built |
 
 Errors: 400 `invalid_json`, 404 `verification_not_found`, 422 `validation_error`,
-429 `too_many_codes`, 429 `too_many_attempts`, 503 `sms_unavailable`.
+429 `too_many_codes`, 429 `resend_wait`, 429 `too_many_attempts`, 503 `sms_unavailable`.
 
 Real answers:
 
@@ -296,8 +305,8 @@ Real answers:
 POST /api/v1/auth/request-code   {"phone_number": "0501234567"}
 -> 422  validation_error, details: [{"field": "phone_number", "code": "invalid_phone", ...}]
 
-4th code in one hour
--> 429  too_many_codes, "retry_after_seconds": 3239, header Retry-After: 3239
+A second code 10 seconds after the first
+-> 429  resend_wait, "retry_after_seconds": 20, header Retry-After: 20
 ```
 
 ### POST /api/v1/auth/verify-code
@@ -844,8 +853,8 @@ time for `last_sent_at`, `responded_at` and `completed_at`.
 **Two requests at the same time (Built).** Every write that changes a circle locks
 the account and then the circle, always in this order, so two requests wait for each
 other and cannot deadlock. The sign-in operations use the same ideas: `INSERT ...
-ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limit
-of 3 codes per hour.
+ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limits
+on its codes.
 
 The phone number is personal data. Rows of `otp_challenge` and `otp_send_attempt`
 older than 24 hours serve no purpose and can be deleted by a cleanup job (not built
@@ -1101,8 +1110,9 @@ Sending a code (`request-code`):
 
 1. The server checks the format of the phone number. A resend must name a request
    that exists, is open and belongs to this phone number.
-2. The server takes one place in the limit of 3 codes per hour, in one step. If the
-   count is already 3, it refuses and does not call Authentica. Taking the place and
+2. The server takes one place in the limits (the wait since the number's last code,
+   its 20 codes a day, the device's 10 and the network's 30 an hour), in one step.
+   If one is full, it refuses and does not call Authentica. Taking the place and
    counting are one step, so two requests at the same time cannot both take the last
    place.
 3. The server calls `send-otp` with `method` `sms`, `template_id` 5 and the phone

@@ -9,7 +9,7 @@ from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import timedelta
 
-from app.auth.otp_store import AttemptsExhausted, OtpStore
+from app.auth.otp_store import AttemptsExhausted, OtpStore, SendRules
 from app.auth.service import IssuedSession, SessionService
 from app.errors import (
     NotFound,
@@ -20,8 +20,16 @@ from app.errors import (
 from app.sms.base import SmsDeliveryError, SmsSender
 from app.users.store import User, UserStore
 
-# Rolling interval used by the per-phone delivery quota.
-SEND_WINDOW = timedelta(hours=1)
+# The codes to one phone number count for 24 hours (and only since its last
+# accepted code); the codes of one device or one IP for one hour.
+SEND_WINDOW = timedelta(hours=24)
+ASKER_WINDOW = timedelta(hours=1)
+
+
+@dataclass(frozen=True)
+class CodeSent:
+    request_id: str
+    resend_after_seconds: int  # until the number may get one more code
 
 
 @dataclass(frozen=True)
@@ -42,7 +50,10 @@ class SignInService:
         *,
         otp_valid_seconds: int,
         max_wrong_tries: int,
-        max_sends_per_hour: int,
+        max_sends_per_day: int,
+        resend_waits: tuple[int, ...] = (),
+        max_sends_per_device_hour: int | None = None,
+        max_sends_per_ip_hour: int | None = None,
         transaction=nullcontext,
     ):
         self._otp = otp_store
@@ -52,11 +63,19 @@ class SignInService:
         self._clock = clock
         self._valid_for = timedelta(seconds=otp_valid_seconds)
         self._max_wrong_tries = max_wrong_tries
-        self._max_sends = max_sends_per_hour
+        self._max_sends = max_sends_per_day
+        self._waits = tuple(resend_waits)
+        self._max_device_sends = max_sends_per_device_hour
+        self._max_ip_sends = max_sends_per_ip_hour
         self._transaction = transaction
 
     def request_code(
-        self, phone: str, verification_id: str | None = None
+        self,
+        phone: str,
+        verification_id: str | None = None,
+        *,
+        device_id: str | None = None,
+        client_ip: str | None = None,
     ) -> str:
         """Send a code to `phone`. Returns the verification id.
 
@@ -64,7 +83,34 @@ class SignInService:
         With it, the SMS is a resend inside the same request: the tries already
         used stay used.
         """
+        return self.send_code(
+            phone, verification_id, device_id=device_id, client_ip=client_ip
+        ).request_id
+
+    def send_code(
+        self,
+        phone: str,
+        verification_id: str | None = None,
+        *,
+        device_id: str | None = None,
+        client_ip: str | None = None,
+    ) -> CodeSent:
+        """`request_code`, and when the number may get one more code.
+
+        Refused with "resend_wait" when it is too soon after the last code to
+        this number (the wait grows with each code, up to 10 minutes), and
+        with "too_many_codes" when the number had its codes for the day, or
+        the asking device or IP had theirs for the hour.
+        """
         now = self._clock.now()
+        rules = SendRules(
+            waits=self._waits,
+            device_id=device_id,
+            client_ip=client_ip,
+            requester_window=ASKER_WINDOW,
+            max_device_sends=self._max_device_sends,
+            max_ip_sends=self._max_ip_sends,
+        )
         try:
             claim = self._otp.claim_send(
                 verification_id,
@@ -73,6 +119,7 @@ class SignInService:
                 now - SEND_WINDOW,
                 self._max_sends,
                 max_tries=self._max_wrong_tries,
+                rules=rules,
             )
         except AttemptsExhausted:
             raise TooManyRequests(
@@ -82,15 +129,28 @@ class SignInService:
         except KeyError:
             raise NotFound(code="verification_not_found") from None
         if not claim.granted:
-            wait = (claim.oldest_send_at + SEND_WINDOW) - now
+            wait = claim.retry_at - now
+            retry_after = max(1, math.ceil(wait.total_seconds()))
+            if claim.reason == "wait":
+                raise TooManyRequests(
+                    "A code was sent a moment ago. Wait before the next one.",
+                    code="resend_wait",
+                    retry_after=retry_after,
+                )
             raise TooManyRequests(
                 "Too many codes were sent. Try again later.",
                 code="too_many_codes",
-                retry_after=max(1, math.ceil(wait.total_seconds())),
+                retry_after=retry_after,
             )
 
         self._send_code(phone, claim.send_id)
-        return claim.request_id
+        ready = claim.next_send_at or now
+        return CodeSent(
+            request_id=claim.request_id,
+            resend_after_seconds=max(
+                0, math.ceil((ready - now).total_seconds())
+            ),
+        )
 
     def _send_code(self, phone: str, send_id: str) -> None:
         """Release quota only when the provider confirms rejection."""

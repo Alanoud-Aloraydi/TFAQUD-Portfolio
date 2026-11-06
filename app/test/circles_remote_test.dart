@@ -40,7 +40,11 @@ class _FakeClient extends Fake implements DioClient {
   }
 
   @override
-  Future<Response<dynamic>> post(String path, {dynamic data}) async {
+  Future<Response<dynamic>> post(
+    String path, {
+    dynamic data,
+    Options? options,
+  }) async {
     calls.add(_Call('POST', path, data));
     return _response(path);
   }

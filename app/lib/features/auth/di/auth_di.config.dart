@@ -19,6 +19,7 @@ import 'package:app/features/auth/data/repositories/auth_repository_data.dart'
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart'
     as _i419;
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart' as _i642;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
@@ -30,7 +31,10 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     gh.lazySingleton<_i992.BaseAuthRemoteDataSource>(
-      () => _i992.AuthRemoteDataSource(gh<_i602.DioClient>()),
+      () => _i992.AuthRemoteDataSource(
+        gh<_i602.DioClient>(),
+        gh<_i558.FlutterSecureStorage>(),
+      ),
     );
     gh.lazySingleton<_i419.AuthRepositoryDomain>(
       () => _i877.AuthRepositoryData(
