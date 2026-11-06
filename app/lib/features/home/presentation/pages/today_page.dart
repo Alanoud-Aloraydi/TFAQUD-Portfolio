@@ -582,7 +582,12 @@ class _PrayerPeriod extends StatelessWidget {
             AppSpacing.sm,
             AppSpacing.sm,
           ),
-          leading: _PrayerIcon(prayer: prayer, current: current),
+          leading: Icon(
+            _prayerIcon(prayer),
+            color: current
+                ? AppSemanticColors.doseDueMarker
+                : AppSemanticColors.textSupporting,
+          ),
           title: Row(
             children: [
               Text(title, style: Theme.of(context).textTheme.titleMedium),
@@ -662,30 +667,12 @@ Prayer _nearestPrayer(String time, Map<Prayer, String> prayerTimes) {
 }
 
 IconData _prayerIcon(Prayer prayer) => switch (prayer) {
-  Prayer.fajr || Prayer.maghrib => TafaqodPhosphorIcons.sunHorizon,
+  Prayer.fajr => TafaqodPhosphorIcons.sunHorizon,
   Prayer.dhuhr => TafaqodPhosphorIcons.sun,
   Prayer.asr => TafaqodPhosphorIcons.sunDim,
+  // Phosphor's sun-horizon glyph is left-right symmetric, so mirroring it
+  // for Maghrib looked identical to Fajr. Maghrib is still about the sun
+  // (not the moon, which is Isha), so a fading/clouded sun shape instead.
+  Prayer.maghrib => TafaqodPhosphorIcons.cloudSun,
   Prayer.isha => TafaqodPhosphorIcons.moonStars,
 };
-
-/// Fajr and Maghrib share the sun-at-the-horizon glyph (Phosphor has no
-/// separate sunset icon); Maghrib's is mirrored so the sun reads as setting,
-/// not rising.
-class _PrayerIcon extends StatelessWidget {
-  const _PrayerIcon({required this.prayer, required this.current});
-
-  final Prayer prayer;
-  final bool current;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = Icon(
-      _prayerIcon(prayer),
-      color: current
-          ? AppSemanticColors.doseDueMarker
-          : AppSemanticColors.textSupporting,
-    );
-    if (prayer != Prayer.maghrib) return icon;
-    return Transform.flip(flipX: true, child: icon);
-  }
-}

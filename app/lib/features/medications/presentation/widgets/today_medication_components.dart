@@ -122,10 +122,7 @@ class _AttentionMedicationCard extends StatelessWidget {
                       ),
                       child: Text(
                         '${occurrence.name} ${_strength(context, occurrence)}',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppSemanticColors.actionPrimary,
-                          decoration: TextDecoration.underline,
-                        ),
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
                     ),
                     Text(
@@ -270,19 +267,12 @@ class _NextDoseInfo extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      TafaqodPhosphorIcons.pill,
-                      size: 17,
-                      color: AppSemanticColors.actionPrimary,
-                    ),
+                    const Icon(TafaqodPhosphorIcons.pill, size: 17),
                     const SizedBox(width: AppSpacing.tight),
                     Flexible(
                       child: Text(
                         '${occurrence.name} $strength',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppSemanticColors.actionPrimary,
-                          decoration: TextDecoration.underline,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                   ],
@@ -411,7 +401,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                         const Icon(
                           TafaqodPhosphorIcons.pill,
                           size: 15,
-                          color: AppSemanticColors.actionPrimary,
+                          color: AppSemanticColors.textSupporting,
                         ),
                         const SizedBox(width: AppSpacing.tight),
                       ],
@@ -419,10 +409,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                         child: Text(
                           '${occurrence.name} '
                           '${_strength(context, occurrence)}',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: AppSemanticColors.actionPrimary,
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall,
                         ),
                       ),
                     ],
