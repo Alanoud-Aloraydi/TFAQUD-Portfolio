@@ -130,7 +130,10 @@ class _Content extends StatelessWidget {
               ),
             ],
             const SizedBox(height: AppSpacing.xl),
-            MedicationDoseHistory(earliest: plan.version.startsOn),
+            MedicationDoseHistory(
+              earliest: plan.version.startsOn,
+              circleId: circleId,
+            ),
             if (canManage && !plan.isPreviousOn(today)) ...[
               const SizedBox(height: AppSpacing.xl),
               // Ending the treatment cannot be undone: the error red.

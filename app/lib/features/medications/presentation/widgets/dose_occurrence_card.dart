@@ -18,6 +18,7 @@ class DoseOccurrenceCard extends StatelessWidget {
     this.showControls = true,
     this.historyLayout = false,
     this.timingState,
+    this.circleId,
   });
 
   final DoseOccurrence occurrence;
@@ -25,6 +26,9 @@ class DoseOccurrenceCard extends StatelessWidget {
   final bool showControls;
   final bool historyLayout;
   final DoseTimingState? timingState;
+
+  /// Needed to show who recorded it; null hides that line.
+  final String? circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +70,7 @@ class DoseOccurrenceCard extends StatelessWidget {
               ),
             if (showControls || occurrence.record != null) ...[
               const SizedBox(height: AppSpacing.md),
-              DoseRecordControls(occurrence: occurrence),
+              DoseRecordControls(occurrence: occurrence, circleId: circleId),
             ],
           ],
         ),

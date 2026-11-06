@@ -16,11 +16,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Displays the medication dose history UI.
 class MedicationDoseHistory extends StatelessWidget {
-  const MedicationDoseHistory({super.key, required this.earliest});
+  const MedicationDoseHistory({
+    super.key,
+    required this.earliest,
+    required this.circleId,
+  });
 
   /// The first day of the medicine. When it is after today, nothing has
   /// been due yet and the history says when it begins.
   final DateTime earliest;
+
+  /// Needed to show who recorded each dose.
+  final String circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +86,7 @@ class MedicationDoseHistory extends StatelessWidget {
                       child: DoseOccurrenceCard(
                         occurrence: item,
                         historyLayout: true,
+                        circleId: circleId,
                       ),
                     ),
                   ),
