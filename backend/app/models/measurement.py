@@ -142,6 +142,9 @@ class MeasurementPlanVersion(db.Model):
     glucose_high: Mapped[int | None] = mapped_column(SmallInteger)
     systolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
     diastolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
+    created_by_account_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("account.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )

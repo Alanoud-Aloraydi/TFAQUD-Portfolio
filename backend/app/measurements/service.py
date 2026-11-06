@@ -89,12 +89,16 @@ class MeasurementService:
         )
         self.session.add(plan)
         self.session.flush()
-        self.session.add(self._version(plan.id, 1, body.starts_on, body))
+        self.session.add(
+            self._version(plan.id, 1, body.starts_on, body, actor_id)
+        )
         self._save_target(patient.id, body.kind, body)
         self.session.flush()
         return plan
 
-    def revise(self, circle_id: UUID, plan_id: UUID, body) -> MeasurementPlan:
+    def revise(
+        self, circle_id: UUID, plan_id: UUID, actor_id: UUID, body
+    ) -> MeasurementPlan:
         """Change future occurrences without rewriting prior readings."""
         plan = self._plan(circle_id, plan_id)
         if plan.stopped_at is not None or body.kind != plan.kind:
@@ -116,7 +120,7 @@ class MeasurementService:
             effective = body.effective_from_on or today
             if effective < today:
                 raise ValidationFailed(code="measurement_effective_date")
-            self._replace(latest, effective, body)
+            self._replace(latest, effective, body, actor_id)
             return plan
         effective = body.effective_from_on or today
         if effective == latest.effective_from_on == today:
@@ -125,14 +129,16 @@ class MeasurementService:
             # it; a reading of today keeps the plan it was taken under, and
             # the edit starts tomorrow. Days are the unit of a version.
             if not self._has_readings(latest):
-                self._replace(latest, effective, body)
+                self._replace(latest, effective, body, actor_id)
                 return plan
             effective = today + timedelta(days=1)
         if effective < today or effective <= latest.effective_from_on:
             raise ValidationFailed(code="measurement_effective_date")
         latest.effective_until_on = effective
         self.session.add(
-            self._version(plan.id, latest.number + 1, effective, body)
+            self._version(
+                plan.id, latest.number + 1, effective, body, actor_id
+            )
         )
         self.session.flush()
         return plan
@@ -375,13 +381,18 @@ class MeasurementService:
             raise NotFound()
 
     def _replace(
-        self, version: MeasurementPlanVersion, effective: date, body
+        self,
+        version: MeasurementPlanVersion,
+        effective: date,
+        body,
+        actor_id: UUID | None = None,
     ) -> None:
         """Change a version that has no history yet, in place."""
         replacement = self._version(
             version.plan_id, version.number, effective, body
         )
         version.effective_from_on = effective
+        version.created_by_account_id = actor_id
         version.time_of_day = replacement.time_of_day
         version.weekdays_mask = replacement.weekdays_mask
         version.grace_minutes = replacement.grace_minutes
@@ -402,12 +413,17 @@ class MeasurementService:
 
     @staticmethod
     def _version(
-        plan_id: UUID, number: int, effective: date, body: PlanRequest
+        plan_id: UUID,
+        number: int,
+        effective: date,
+        body: PlanRequest,
+        actor_id: UUID | None = None,
     ) -> MeasurementPlanVersion:
         return MeasurementPlanVersion(
             plan_id=plan_id,
             number=number,
             effective_from_on=effective,
+            created_by_account_id=actor_id,
             time_of_day=body.time_of_day,
             weekdays_mask=weekday_mask(body.weekdays),
             grace_minutes=body.grace_minutes,

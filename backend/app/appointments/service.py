@@ -44,7 +44,7 @@ class AppointmentService:
         return appointment
 
     def revise(
-        self, circle_id: UUID, appointment_id: UUID,
+        self, circle_id: UUID, appointment_id: UUID, actor_id: UUID,
         body: ReviseAppointmentRequest,
     ) -> Appointment:
         """Revise a scheduled visit without replacing its identity."""
@@ -57,6 +57,7 @@ class AppointmentService:
         self._companions(circle_id, body.companion_account_ids)
         self._fill(appointment, body)
         self._replace_companions(appointment.id, body.companion_account_ids)
+        appointment.updated_by_account_id = actor_id
         appointment.updated_at = max(
             self.now, appointment.updated_at + timedelta(microseconds=1)
         )
@@ -64,8 +65,8 @@ class AppointmentService:
         return appointment
 
     def set_status(
-        self, circle_id: UUID, appointment_id: UUID, status: str,
-        expected_updated_at: datetime,
+        self, circle_id: UUID, appointment_id: UUID, actor_id: UUID,
+        status: str, expected_updated_at: datetime,
     ) -> Appointment:
         """Record an explicit attended or cancelled outcome."""
         appointment = self._appointment(circle_id, appointment_id)
@@ -80,6 +81,7 @@ class AppointmentService:
         ) > self.now.astimezone(RIYADH):
             raise ValidationFailed(code="appointment_not_started")
         appointment.status = status
+        appointment.updated_by_account_id = actor_id
         appointment.updated_at = max(
             self.now, appointment.updated_at + timedelta(microseconds=1)
         )

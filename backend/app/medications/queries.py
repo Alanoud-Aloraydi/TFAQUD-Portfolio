@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from zoneinfo import ZoneInfo
 
-from app.accounts import accounts_by_id
+from app.accounts import accounts_by_id, recorder_response
 from app.errors import NotFound
 from app.medications.occurrence_builder import build_occurrences
 from app.medications.representations import plan_response
@@ -67,6 +67,7 @@ class MedicationQueries:
                 MedicationDoseRecord.outcome,
                 MedicationDoseRecord.scheduled_on,
                 MedicationDoseRecord.taken_at,
+                MedicationDoseRecord.recorded_by_account_id,
                 MedicationSchedule.time_of_day,
                 func.row_number().over(
                     partition_by=MedicationPlan.id,
@@ -95,8 +96,16 @@ class MedicationQueries:
             .where(MedicationPlan.patient_id == patient_id)
             .subquery()
         )
-        rows = self.session.execute(
+        rows = list(self.session.execute(
             select(ranked).where(ranked.c.position == 1)
+        ))
+        accounts = accounts_by_id(
+            self.session,
+            {
+                row.recorded_by_account_id
+                for row in rows
+                if row.recorded_by_account_id is not None
+            },
         )
         latest = {}
         for row in rows:
@@ -108,6 +117,9 @@ class MedicationQueries:
                 ),
                 "taken_at": (
                     row.taken_at.isoformat() if row.taken_at else None
+                ),
+                "recorded_by": recorder_response(
+                    accounts.get(row.recorded_by_account_id)
                 ),
             }
         return latest
@@ -144,6 +156,16 @@ class MedicationQueries:
             if v.effective_from_on > today and v.id != version.id
         ]
         result = plan_response(plan, version)
+        creator_id = plan.created_by_account_id
+        editor_id = version.created_by_account_id
+        accounts = accounts_by_id(
+            self.session,
+            {id for id in (creator_id, editor_id) if id is not None},
+        )
+        result["created_by"] = recorder_response(accounts.get(creator_id))
+        # Who made the version in effect now — the same person as
+        # created_by unless the plan was revised since.
+        result["last_edited_by"] = recorder_response(accounts.get(editor_id))
         result["version"]["schedules"] = schedule_responses(
             self.session, version.id
         )

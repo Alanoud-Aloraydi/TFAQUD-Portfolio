@@ -62,6 +62,10 @@ class MedicationPlan extends Equatable {
     this.discontinuedAt,
     this.lastRecord,
     this.history = const [],
+    this.createdByAccountId,
+    this.createdByName,
+    this.createdByAvatarCode,
+    this.lastEditedByName,
   });
 
   final String id;
@@ -71,6 +75,15 @@ class MedicationPlan extends Equatable {
   final MedicationVersion? pendingVersion;
   final MedicationLastRecord? lastRecord;
   final List<MedicationVersion> history;
+
+  /// Who added this plan, for tracking; null when it predates this field.
+  final String? createdByAccountId;
+  final String? createdByName;
+  final String? createdByAvatarCode;
+
+  /// Who made the version in effect now; same person as [createdByName]
+  /// unless the plan was revised since, or null when it predates this field.
+  final String? lastEditedByName;
 
   bool isPreviousOn(DateTime day) =>
       discontinuedAt != null ||
@@ -87,6 +100,10 @@ class MedicationPlan extends Equatable {
     pendingVersion,
     lastRecord,
     history,
+    createdByAccountId,
+    createdByName,
+    createdByAvatarCode,
+    lastEditedByName,
   ];
 }
 
@@ -97,15 +114,29 @@ class MedicationLastRecord extends Equatable {
     required this.scheduledOn,
     required this.time,
     this.takenAt,
+    this.recordedByAccountId,
+    this.recordedByName,
+    this.recordedByAvatarCode,
   });
 
   final DoseOutcome outcome;
   final DateTime scheduledOn;
   final String time;
   final DateTime? takenAt;
+  final String? recordedByAccountId;
+  final String? recordedByName;
+  final String? recordedByAvatarCode;
 
   @override
-  List<Object?> get props => [outcome, scheduledOn, time, takenAt];
+  List<Object?> get props => [
+    outcome,
+    scheduledOn,
+    time,
+    takenAt,
+    recordedByAccountId,
+    recordedByName,
+    recordedByAvatarCode,
+  ];
 }
 
 /// Holds editable medication plan values before saving.

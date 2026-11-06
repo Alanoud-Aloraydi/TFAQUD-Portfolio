@@ -240,6 +240,24 @@ class AppointmentCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (value.createdByName case final name?) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        context.tr('appointments.added_by', args: [name]),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                    if (value.updatedByName case final name?
+                        when name != value.createdByName) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        context.tr(
+                          'appointments.last_edited_by',
+                          args: [name],
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ],
                 ),
               ),

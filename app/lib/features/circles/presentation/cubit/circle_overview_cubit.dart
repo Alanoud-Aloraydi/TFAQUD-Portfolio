@@ -178,7 +178,7 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
 
   @override
   Future<void> close() async {
-    _photos.changes.removeListener(_onPhotoChanged);
+    _photoChanges?.removeListener(_onPhotoChanged);
     await _saves.cancel();
     return super.close();
   }

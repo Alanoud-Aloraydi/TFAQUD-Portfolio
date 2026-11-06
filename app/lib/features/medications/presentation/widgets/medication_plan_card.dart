@@ -234,6 +234,17 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
             ),
             if (_expanded) ...[
               const Divider(),
+              if (plan.createdByName case final name?)
+                _DetailValue(
+                  label: context.tr('medications.added_by'),
+                  value: name,
+                ),
+              if (plan.lastEditedByName case final name?
+                  when name != plan.createdByName)
+                _DetailValue(
+                  label: context.tr('medications.last_edited_by'),
+                  value: name,
+                ),
               _DetailValue(
                 label: context.tr('medications.missed_after'),
                 value: context.tr(
