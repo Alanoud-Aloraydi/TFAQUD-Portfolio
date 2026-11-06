@@ -59,8 +59,9 @@ class MeasurementReadingSheet extends StatefulWidget {
 
 class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   late MeasurementKind _kind = widget.occurrence?.kind ?? MeasurementKind.bp;
-  late bool _link = widget.occurrence != null;
-  String _context = 'fasting';
+  // A scheduled task's glucose context is fixed by its plan; only a free
+  // reading asks for it.
+  late String _context = widget.occurrence?.glucoseContext ?? 'fasting';
   String? _condition;
   TimeOfDay _time = TimeOfDay.now();
   final _systolic = TextEditingController();
@@ -109,7 +110,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   }
 
   Future<void> _save() async {
-    final freeReading = widget.occurrence == null || !_link;
+    final freeReading = widget.occurrence == null;
     final targetsState = context.read<MeasurementTargetsCubit>().state;
     if (freeReading &&
         (targetsState.loading || targetsState.errorKey != null)) {
@@ -182,7 +183,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
     final cubit = context.read<MeasurementReadingsCubit>();
     final saved = await cubit.record(
       draft,
-      occurrence: _link ? widget.occurrence : null,
+      occurrence: widget.occurrence,
     );
     if (!mounted) return;
     if (saved) {
@@ -241,7 +242,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      if (widget.occurrence == null || !_link) ...[
+                      if (widget.occurrence == null) ...[
                         if (context
                             .watch<MeasurementTargetsCubit>()
                             .state
@@ -356,7 +357,8 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      if (_kind == MeasurementKind.glucose) ...[
+                      if (_kind == MeasurementKind.glucose &&
+                          widget.occurrence == null) ...[
                         InsetGroup(
                           header: context.tr('measurements.glucose_context'),
                           children: [
@@ -433,20 +435,6 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                           ),
                         ],
                       ),
-                      if (widget.occurrence != null) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        CheckboxListTile(
-                          value: _link,
-                          onChanged: (value) =>
-                              setState(() => _link = value ?? false),
-                          title: Text(context.tr('measurements.link_task')),
-                          subtitle: Text(
-                            context.tr('measurements.link_task_hint'),
-                          ),
-                          controlAffinity: ListTileControlAffinity.leading,
-                          activeColor: AppSemanticColors.actionPrimary,
-                        ),
-                      ],
                       const SizedBox(height: AppSpacing.lg),
                       InsetGroup(
                         children: [
@@ -478,7 +466,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                     child: FilledButton(
                       onPressed:
                           _saving ||
-                              (widget.occurrence == null || !_link) &&
+                              widget.occurrence == null &&
                                   (context
                                           .watch<MeasurementTargetsCubit>()
                                           .state
