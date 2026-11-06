@@ -663,7 +663,6 @@ class _MembersList extends StatelessWidget {
           circleId: circleId,
           patientUsesApp: overview.patientUsesApp,
           patientIsYou: overview.patientIsYou,
-          canEditPatientPhoto: overview.canEditPatientPhoto,
         ),
       for (final CirclePendingInvitation invitation
           in overview.pendingInvitations)
@@ -726,58 +725,36 @@ class _MemberRow extends StatelessWidget {
     required this.circleId,
     required this.patientUsesApp,
     required this.patientIsYou,
-    required this.canEditPatientPhoto,
   });
 
   final CircleMember member;
   final String circleId;
   final bool patientUsesApp;
   final bool patientIsYou;
-  final bool canEditPatientPhoto;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final bool canEditThisPhoto = member.isPatient && canEditPatientPhoto;
     // A patient with their own account is one person with one photo: read
-    // and edit it through the account endpoint, so the circle tab and the
-    // profile stay in sync.
+    // it through the account endpoint, so the circle tab and the profile
+    // stay in sync. The photo is only ever edited from the patient card or
+    // the account page, never from this row.
     final String photoPath = member.isPatient
         ? (patientIsYou
               ? ApiEndpoints.accountPhoto
               : ApiEndpoints.patientPhoto(circleId))
         : personPhotoPath(circleId, member.accountId);
     return InkWell(
-      onTap: member.isYou && !member.isPatient
-          ? () => context.push(Routes.account)
-          : canEditThisPhoto
-          ? () => showPersonPhotoSheet(
-              context,
-              title: context.tr('photos.patient_photo', args: [member.name]),
-              name: member.name,
-              photoPath: photoPath,
-              avatarPath: patientIsYou
-                  ? ApiEndpoints.accountAvatar
-                  : ApiEndpoints.patientAvatar(circleId),
-              avatarCode: member.avatarCode,
-              onSaved: context.read<CircleOverviewCubit>().load,
-            )
-          : null,
+      onTap: member.isYou ? () => context.push(Routes.account) : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
           children: <Widget>[
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                PersonPhoto(
-                  name: member.name,
-                  photoPath: photoPath,
-                  avatarCode: member.avatarCode,
-                  size: AppSizes.avatarPortrait,
-                ),
-                if (canEditThisPhoto) const PhotoEditBadge(),
-              ],
+            PersonPhoto(
+              name: member.name,
+              photoPath: photoPath,
+              avatarCode: member.avatarCode,
+              size: AppSizes.avatarPortrait,
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(

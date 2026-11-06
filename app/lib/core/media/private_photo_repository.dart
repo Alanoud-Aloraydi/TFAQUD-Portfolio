@@ -44,13 +44,16 @@ class PrivatePhotoRepository {
       data: bytes,
       options: Options(contentType: 'image/png'),
     );
-    _photos.remove(path);
+    // The same photo can be cached under another path too (a patient's own
+    // photo is also a member's photo elsewhere): clear everything so every
+    // place showing it refetches, not just this one path.
+    _photos.clear();
     _changes.value++;
   }
 
   Future<void> remove(String path) async {
     await _client.delete(path);
-    _photos.remove(path);
+    _photos.clear();
     _changes.value++;
   }
 
