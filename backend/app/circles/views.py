@@ -26,7 +26,8 @@ def _time(value: datetime | None) -> str | None:
 
 
 def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
-    """Basic data of the patient. Names come from the account while linked."""
+    """Basic data of the patient. Names and avatar come from the account
+    while linked: one person, one picture, like their photo."""
     linked = (
         session.get(Account, patient.account_id)
         if patient.account_id
@@ -43,7 +44,7 @@ def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
         "has_account": linked is not None,
         "app_mode": linked.app_mode if linked else None,
         "is_you": linked is not None and linked.id == viewer,
-        "avatar_code": patient.avatar_code,
+        "avatar_code": source.avatar_code,
     }
 
 
@@ -65,10 +66,9 @@ def circle_view(
             "is_you": account_id == viewer,
             "is_patient": account_id == patient_account,
             "role": "manager",
-            "avatar_code": (
-                patient.avatar_code
-                if account_id == patient_account else avatar_code
-            ),
+            # Already the account's own avatar; a patient who manages their
+            # own circle shares it, like their photo.
+            "avatar_code": avatar_code,
         }
         for account_id, name, avatar_code in sorted(
             session.execute(
@@ -98,7 +98,7 @@ def circle_view(
             "is_you": patient_account == viewer,
             "is_patient": True,
             "role": "patient",
-            "avatar_code": patient.avatar_code,
+            "avatar_code": linked.avatar_code if linked else patient.avatar_code,
         })
     view = {
         "id": str(circle.id),

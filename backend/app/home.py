@@ -58,6 +58,7 @@ def _circles(account_id: UUID) -> list[dict]:
                 Patient.avatar_code,
                 Patient.account_id,
                 Account.display_name,
+                Account.avatar_code.label("account_avatar_code"),
             )
             .join(Patient, Patient.care_circle_id == CareCircle.id)
             .outerjoin(Account, Account.id == Patient.account_id)
@@ -77,7 +78,13 @@ def _circles(account_id: UUID) -> list[dict]:
                     else row.name
                 ),
                 "can_manage_medications": row.id in managed_ids,
-                "patient_avatar_code": row.avatar_code,
+                # A linked patient shares the account's own avatar, like
+                # their photo.
+                "patient_avatar_code": (
+                    row.account_avatar_code
+                    if row.account_id is not None
+                    else row.avatar_code
+                ),
             }
             for row in session.execute(statement)
         ]

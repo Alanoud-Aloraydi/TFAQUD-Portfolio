@@ -85,6 +85,14 @@ def _patient_write(session, circle_id: UUID) -> Patient:
     raise NotFound()
 
 
+def _patient_photo_owner(patient: Patient) -> tuple[str, UUID]:
+    """A patient with an account shares the account's own photo and avatar
+    (one person, one picture); a patient without one keeps their own."""
+    if patient.account_id is not None:
+        return "account", patient.account_id
+    return "patient", patient.id
+
+
 @bp.get("/accounts/me/photo")
 @require_auth
 def my_photo():
@@ -161,7 +169,7 @@ def patient_photo(circle_id):
     """Read the selected circle's patient portrait."""
     with transaction() as session:
         patient = _patient(session, _uuid(circle_id))
-        photo = PhotoService(session).get("patient", patient.id)
+        photo = PhotoService(session).get(*_patient_photo_owner(patient))
         if photo is None:
             raise NotFound()
         data = bytes(photo.data)
@@ -176,8 +184,12 @@ def save_patient_photo(circle_id):
     data = _png()
     with transaction() as session:
         patient = _patient_write(session, _uuid(circle_id))
-        PhotoService(session).put("patient", patient.id, data)
-        patient.avatar_code = None
+        kind, owner_id = _patient_photo_owner(patient)
+        PhotoService(session).put(kind, owner_id, data)
+        if kind == "account":
+            _account(session, owner_id).avatar_code = None
+        else:
+            patient.avatar_code = None
     return jsonify(saved=True)
 
 
@@ -188,8 +200,12 @@ def save_patient_avatar(circle_id):
     body = parse_json_body(AvatarRequest)
     with transaction() as session:
         patient = _patient_write(session, _uuid(circle_id))
-        PhotoService(session).delete("patient", patient.id)
-        patient.avatar_code = body.avatar_code
+        kind, owner_id = _patient_photo_owner(patient)
+        PhotoService(session).delete(kind, owner_id)
+        if kind == "account":
+            _account(session, owner_id).avatar_code = body.avatar_code
+        else:
+            patient.avatar_code = body.avatar_code
     return jsonify(avatar_code=body.avatar_code)
 
 
@@ -199,8 +215,12 @@ def clear_patient_avatar(circle_id):
     """Restore the patient's initial-letter appearance."""
     with transaction() as session:
         patient = _patient_write(session, _uuid(circle_id))
-        PhotoService(session).delete("patient", patient.id)
-        patient.avatar_code = None
+        kind, owner_id = _patient_photo_owner(patient)
+        PhotoService(session).delete(kind, owner_id)
+        if kind == "account":
+            _account(session, owner_id).avatar_code = None
+        else:
+            patient.avatar_code = None
     return jsonify(avatar_code=None)
 
 
