@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:flutter/material.dart';
@@ -21,17 +22,14 @@ class EmptyStateNote extends StatelessWidget {
         InsetText.note(message),
         if (actionLabel != null && onAction != null)
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
             child: Align(
               alignment: AlignmentDirectional.centerStart,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.inset,
-                  ),
-                ),
+              // Filled, not a bare text link: a clear, tappable button.
+              child: FilledButton.tonalIcon(
                 onPressed: onAction,
-                child: Text(actionLabel!),
+                icon: const Icon(AppIcons.plus, size: 18),
+                label: Text(actionLabel!),
               ),
             ),
           ),

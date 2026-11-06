@@ -1,8 +1,6 @@
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
@@ -20,6 +18,7 @@ class MedicationPlanList extends StatelessWidget {
     required this.canManage,
     this.shrinkWrap = false,
     this.header,
+    this.onAdd,
   });
 
   /// The section title. Null when something above already names the list,
@@ -34,6 +33,9 @@ class MedicationPlanList extends StatelessWidget {
   /// Shown above the title, such as the tab's large title.
   final Widget? header;
 
+  /// Opens the new-plan flow; null (or [canManage] false) hides the action.
+  final VoidCallback? onAdd;
+
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[
@@ -43,29 +45,10 @@ class MedicationPlanList extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
       ],
       if (plans.isEmpty)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppSemanticColors.surfaceContent,
-                  borderRadius: BorderRadius.circular(AppRadius.field),
-                ),
-                child: const Icon(TafaqodPhosphorIcons.pill),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(emptyText, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                context.tr('medications.add_from_plus'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
+        EmptyStateNote(
+          emptyText,
+          actionLabel: canManage ? context.tr('add.medication') : null,
+          onAction: canManage ? onAdd : null,
         )
       else
         for (final plan in plans) ...[

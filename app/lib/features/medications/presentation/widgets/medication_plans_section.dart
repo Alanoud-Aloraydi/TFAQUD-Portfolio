@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -9,6 +12,7 @@ import 'package:app/features/medications/presentation/widgets/medication_state_v
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// Displays the medication plans section UI.
 class MedicationPlansSection extends StatelessWidget {
@@ -75,6 +79,14 @@ class MedicationPlansSection extends StatelessWidget {
       plans: current,
       circleId: circleId,
       canManage: canManage,
+      onAdd: () => _addMedication(context),
     );
+  }
+
+  Future<void> _addMedication(BuildContext context) async {
+    final saved = await context.push<bool>(Routes.newMedication(circleId));
+    if (saved == true && context.mounted) {
+      unawaited(context.read<MedicationsCubit>().load(circleId));
+    }
   }
 }

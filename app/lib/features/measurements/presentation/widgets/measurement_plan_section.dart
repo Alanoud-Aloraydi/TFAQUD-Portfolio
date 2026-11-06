@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
@@ -6,6 +8,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
@@ -48,7 +51,11 @@ class MeasurementPlanSection extends StatelessWidget {
             child: Text(context.tr(state.errorKey ?? 'error.unknown')),
           )
         else if (state.plans.where((item) => item.stoppedAt == null).isEmpty)
-          Center(child: Text(context.tr('measurements.no_plans')))
+          EmptyStateNote(
+            context.tr('measurements.no_plans'),
+            actionLabel: canManage ? context.tr('add.measurement') : null,
+            onAction: canManage ? () => _addMeasurement(context) : null,
+          )
         else
           for (final plan in state.plans.where(
             (item) => item.stoppedAt == null,
@@ -62,6 +69,13 @@ class MeasurementPlanSection extends StatelessWidget {
           ],
       ],
     );
+  }
+
+  Future<void> _addMeasurement(BuildContext context) async {
+    final saved = await context.push<bool>(Routes.newMeasurement(circleId));
+    if (saved == true && context.mounted) {
+      unawaited(context.read<MeasurementPlansCubit>().load(circleId));
+    }
   }
 }
 
