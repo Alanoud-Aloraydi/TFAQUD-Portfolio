@@ -253,10 +253,13 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
               Wrap(
                 spacing: AppSpacing.sm,
                 children: [
-                  TextButton(
-                    onPressed: () => _openDetails(context),
-                    child: Text(context.tr('medications.dose_history')),
-                  ),
+                  if (canManage &&
+                      status == _PlanState.current &&
+                      plan.pendingVersion == null)
+                    TextButton(
+                      onPressed: () => _edit(context),
+                      child: Text(context.tr('medications.edit_title')),
+                    ),
                   if (canManage && status != _PlanState.previous)
                     TextButton(
                       style: TextButton.styleFrom(
@@ -272,21 +275,6 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
         ),
       ),
     );
-  }
-
-  Future<void> _openDetails(BuildContext context) async {
-    final changed = await context.push<bool>(
-      Routes.medicationDetails(widget.circleId, widget.plan.id),
-      extra: widget.canManage,
-    );
-    if (!context.mounted) return;
-    final updates = <Future<void>>[
-      context.read<MedicationOccurrencesCubit>().reload(),
-    ];
-    if (changed == true) {
-      updates.add(context.read<MedicationsCubit>().load(widget.circleId));
-    }
-    await Future.wait(updates);
   }
 
   Future<void> _edit(BuildContext context) async {

@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
@@ -183,10 +184,7 @@ class MedicationRecordCard extends StatelessWidget {
                     context.tr('medications.full_record'),
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
-                  const Icon(
-                    TafaqodPhosphorIcons.caretDown,
-                    size: AppSizes.iconSmall,
-                  ),
+                  const Icon(AppIcons.forward, size: AppSizes.iconSmall),
                 ],
               ),
             ],
