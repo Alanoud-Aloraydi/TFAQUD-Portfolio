@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -89,7 +90,10 @@ class _Content extends StatelessWidget {
         : from;
     return BlocProvider(
       create: (_) =>
-          MedicationOccurrencesCubit(GetIt.I<MedicationsUseCase>())
+          MedicationOccurrencesCubit(
+              GetIt.I<MedicationsUseCase>(),
+              GetIt.I<PrivatePhotoRepository>().changes,
+            )
             ..load(circleId, start, today, planId: plan.id),
       child: Scaffold(
         appBar: AppBar(

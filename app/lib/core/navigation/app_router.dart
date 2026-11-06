@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/intro_memory.dart';
 import 'package:app/core/services/token_storage.dart';
@@ -139,7 +140,12 @@ class AppRouter {
           (context, state, navigationShell) => MultiBlocProvider(
             providers: [
               BlocProvider(
-                create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+                create: (context) =>
+                    HomeCubit(
+                        GetIt.I<HomeUseCase>(),
+                        GetIt.I<PrivatePhotoRepository>().changes,
+                      )
+                      ..load(),
               ),
               BlocProvider(
                 create: (context) => InboxCubit(
@@ -154,7 +160,7 @@ class AppRouter {
               ),
               BlocProvider(
                 create: (context) =>
-                    MedicationOccurrencesCubit(GetIt.I<MedicationsUseCase>()),
+                    MedicationOccurrencesCubit(GetIt.I<MedicationsUseCase>(), GetIt.I<PrivatePhotoRepository>().changes),
               ),
               BlocProvider(
                 create: (context) =>
@@ -162,11 +168,11 @@ class AppRouter {
               ),
               BlocProvider(
                 create: (context) =>
-                    MeasurementTasksCubit(GetIt.I<MeasurementRepository>()),
+                    MeasurementTasksCubit(GetIt.I<MeasurementRepository>(), GetIt.I<PrivatePhotoRepository>().changes),
               ),
               BlocProvider(
                 create: (context) =>
-                    MeasurementReadingsCubit(GetIt.I<MeasurementRepository>()),
+                    MeasurementReadingsCubit(GetIt.I<MeasurementRepository>(), GetIt.I<PrivatePhotoRepository>().changes),
               ),
               BlocProvider(
                 create: (context) =>
@@ -326,7 +332,12 @@ class AppRouter {
           }
           // A direct link has no tab context, so it resolves permission here.
           return BlocProvider(
-            create: (context) => HomeCubit(GetIt.I<HomeUseCase>())..load(),
+            create: (context) =>
+                HomeCubit(
+                    GetIt.I<HomeUseCase>(),
+                    GetIt.I<PrivatePhotoRepository>().changes,
+                  )
+                  ..load(),
             child: Builder(
               builder: (context) {
                 final canManage = context.select<HomeCubit, bool>(

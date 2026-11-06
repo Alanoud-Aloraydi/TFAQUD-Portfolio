@@ -2,7 +2,6 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -28,7 +27,6 @@ import 'package:app/features/circles/presentation/widgets/request_sent_view.dart
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 /// "حسابي": the person's names and phone number, the circles that wait for the
@@ -271,11 +269,6 @@ class AccountScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           InsetText.note(context.tr('account.medical_note')),
           const SizedBox(height: AppSpacing.xl),
-          SettingsSection(
-            title: context.tr('account.reminders_title'),
-            children: const <Widget>[_CalendarSyncRow()],
-          ),
-          const SizedBox(height: AppSpacing.xl),
           SettingsCard(
             children: <Widget>[
               const SignOutRow(),
@@ -382,45 +375,6 @@ class _SentRequestRow extends StatelessWidget {
     return context.tr(
       days <= 10 ? 'account.sent_days_few' : 'account.sent_days_many',
       args: <String>['$days'],
-    );
-  }
-}
-
-/// The calendar-sync toggle: off by default, its own value loaded once.
-class _CalendarSyncRow extends StatefulWidget {
-  const _CalendarSyncRow();
-
-  @override
-  State<_CalendarSyncRow> createState() => _CalendarSyncRowState();
-}
-
-class _CalendarSyncRowState extends State<_CalendarSyncRow> {
-  final CalendarSync _calendar = GetIt.I<CalendarSync>();
-  bool? _enabled;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final value = await _calendar.isEnabled();
-    if (mounted) setState(() => _enabled = value);
-  }
-
-  Future<void> _onChanged(bool value) async {
-    setState(() => _enabled = value);
-    await _calendar.setEnabled(value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ToggleRow(
-      label: context.tr('account.calendar_sync'),
-      hint: context.tr('account.calendar_sync_hint'),
-      value: _enabled ?? false,
-      onChanged: _enabled == null ? (_) {} : _onChanged,
     );
   }
 }

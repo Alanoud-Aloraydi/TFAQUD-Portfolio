@@ -300,7 +300,6 @@ class _OfflineOnboardingRepository implements OnboardingRepositoryDomain {
 
 Future<void> pumpApp(WidgetTester tester) async {
   AppRouter.router.go(Routes.today);
-  final photoRepository = _OfflinePhotoRepository();
   await tester.pumpWidget(
     EasyLocalization(
       supportedLocales: const <Locale>[Locale('ar')],
@@ -314,7 +313,7 @@ Future<void> pumpApp(WidgetTester tester) async {
           routerConfig: AppRouter.router,
           builder: (context, child) =>
               RepositoryProvider<PrivatePhotoRepository>.value(
-                value: photoRepository,
+                value: GetIt.I<PrivatePhotoRepository>(),
                 child: child!,
               ),
           localizationsDelegates: context.localizationDelegates,
@@ -362,6 +361,7 @@ void main() {
   final circles = CirclesFakeRepository();
   final auth = _OfflineAuthRepository();
   final onboarding = _OfflineOnboardingRepository();
+  final photoRepository = _OfflinePhotoRepository();
   final phone = FakePhoneNotifications();
   final pushTokens = <String>[];
 
@@ -398,6 +398,7 @@ void main() {
     GetIt.I.registerSingleton<PrayerTimesRepository>(
       PrayerTimesRepository(_OfflinePrayerTimes()),
     );
+    GetIt.I.registerSingleton<PrivatePhotoRepository>(photoRepository);
   });
 
   setUp(() {

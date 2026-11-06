@@ -6,14 +6,21 @@ import 'dart:async';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Coordinates measurement readings actions and UI state.
 class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
-  MeasurementReadingsCubit(this._repository)
-    : super(const MeasurementReadingsState());
+  MeasurementReadingsCubit(this._repository, [Listenable? photoChanges])
+    : _photoChanges = photoChanges,
+      super(const MeasurementReadingsState()) {
+    // Who recorded a reading shows their avatar; a saved photo or avatar
+    // anywhere reloads it too, not just the screen that saved it.
+    _photoChanges?.addListener(_onPhotoChanged);
+  }
 
   final MeasurementRepository _repository;
+  final Listenable? _photoChanges;
   String? _circleId;
   String? get circleId => _circleId;
   DateTime? _from;
@@ -125,5 +132,13 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
       }
       return false;
     }
+  }
+
+  void _onPhotoChanged() => unawaited(reload());
+
+  @override
+  Future<void> close() async {
+    _photoChanges?.removeListener(_onPhotoChanged);
+    return super.close();
   }
 }

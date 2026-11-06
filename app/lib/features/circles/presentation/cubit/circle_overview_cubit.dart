@@ -5,6 +5,7 @@ import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Defines the supported circle overview status values.
@@ -34,13 +35,24 @@ class CircleOverviewState extends Equatable {
 /// saved on its own pages (pushed over this tab), the card shows the new
 /// answers at once, without reading the file again.
 class CircleOverviewCubit extends Cubit<CircleOverviewState> {
-  CircleOverviewCubit(this._circles, this.circleId)
-    : super(const CircleOverviewState()) {
+  CircleOverviewCubit(
+    this._circles,
+    this.circleId, [
+    Listenable? photoChanges,
+  ]) : _photoChanges = photoChanges,
+       super(const CircleOverviewState()) {
     _saves = _circles.medicalFileSaves(circleId).listen(_saved);
+    // The patient card and the member row show the patient's avatar; a
+    // saved photo or avatar anywhere reloads it too, not just the screen
+    // that saved it.
+    _photoChanges?.addListener(_onPhotoChanged);
   }
 
   final CirclesUseCase _circles;
   final String circleId;
+  final Listenable? _photoChanges;
+
+  void _onPhotoChanged() => unawaited(load());
 
   late final StreamSubscription<MedicalFile> _saves;
 
@@ -166,6 +178,7 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
 
   @override
   Future<void> close() async {
+    _photos.changes.removeListener(_onPhotoChanged);
     await _saves.cancel();
     return super.close();
   }

@@ -1,19 +1,36 @@
+import 'dart:async';
+
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
+import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Coordinates medication occurrences actions and UI state.
 class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState> {
-  MedicationOccurrencesCubit(this._medications)
-    : super(MedicationOccurrencesState());
+  MedicationOccurrencesCubit(this._medications, [Listenable? photoChanges])
+    : _photoChanges = photoChanges,
+      super(MedicationOccurrencesState()) {
+    // Who recorded a dose shows their avatar; a saved photo or avatar
+    // anywhere reloads it too, not just the screen that saved it.
+    _photoChanges?.addListener(_onPhotoChanged);
+  }
 
   final MedicationsUseCase _medications;
+  final Listenable? _photoChanges;
   String? _circleId;
   DateTime? _from;
   DateTime? _to;
   String? _planId;
   int _revision = 0;
+
+  void _onPhotoChanged() => unawaited(reload());
+
+  @override
+  Future<void> close() async {
+    _photoChanges?.removeListener(_onPhotoChanged);
+    return super.close();
+  }
 
   Future<void> load(
     String circleId,

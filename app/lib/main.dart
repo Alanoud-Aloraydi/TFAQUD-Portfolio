@@ -7,8 +7,6 @@ import 'package:sizer/sizer.dart';
 import 'core/services/phone_notifications.dart';
 import 'core/setup.dart';
 import 'core/media/private_photo_repository.dart';
-import 'core/network/dio_client.dart';
-import 'core/services/token_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/configure_dependencies.dart';
 import 'core/navigation/app_router.dart';
@@ -47,12 +45,8 @@ class MainApp extends StatelessWidget {
         return MaterialApp.router(
           routerConfig: AppRouter.router,
           builder: (context, child) =>
-              RepositoryProvider<PrivatePhotoRepository>(
-                create: (_) => PrivatePhotoRepository(
-                  GetIt.I<DioClient>(),
-                  GetIt.I<TokenStorage>(),
-                ),
-                dispose: (repository) => repository.dispose(),
+              RepositoryProvider<PrivatePhotoRepository>.value(
+                value: GetIt.I<PrivatePhotoRepository>(),
                 child: ValueListenableBuilder<bool>(
                   valueListenable: AppAccessibility.reduceTransparency,
                   builder: (context, reduceTransparency, _) => GlassPreferences(

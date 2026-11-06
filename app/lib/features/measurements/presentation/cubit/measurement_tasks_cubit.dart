@@ -1,18 +1,35 @@
+import 'dart:async';
+
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Coordinates measurement tasks actions and UI state.
 class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
-  MeasurementTasksCubit(this._repository)
-    : super(const MeasurementTasksState());
+  MeasurementTasksCubit(this._repository, [Listenable? photoChanges])
+    : _photoChanges = photoChanges,
+      super(const MeasurementTasksState()) {
+    // Who recorded a measurement shows their avatar; a saved photo or
+    // avatar anywhere reloads it too, not just the screen that saved it.
+    _photoChanges?.addListener(_onPhotoChanged);
+  }
 
   final MeasurementRepository _repository;
+  final Listenable? _photoChanges;
   String? _circleId;
   DateTime? _day;
   int _revision = 0;
+
+  void _onPhotoChanged() => unawaited(reload());
+
+  @override
+  Future<void> close() async {
+    _photoChanges?.removeListener(_onPhotoChanged);
+    return super.close();
+  }
 
   Future<void> load(String circleId, DateTime day) async {
     final changedQuery = _circleId != circleId || _day != day;

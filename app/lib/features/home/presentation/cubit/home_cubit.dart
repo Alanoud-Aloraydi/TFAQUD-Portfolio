@@ -4,21 +4,31 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Coordinates home actions and UI state.
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit(this._home) : super(const HomeState()) {
+  HomeCubit(this._home, [Listenable? photoChanges])
+    : _photoChanges = photoChanges,
+      super(const HomeState()) {
     _changes = _home.changes.listen((select) => refresh(select: select));
+    // The circle switcher shows the patient's avatar; a saved photo or
+    // avatar anywhere reloads it too, not just the screen that saved it.
+    _photoChanges?.addListener(_onPhotoChanged);
   }
 
   final HomeUseCase _home;
+  final Listenable? _photoChanges;
   late final StreamSubscription<String?> _changes;
   int _revision = 0;
   bool _selecting = false;
 
+  void _onPhotoChanged() => unawaited(refresh());
+
   @override
   Future<void> close() async {
+    _photoChanges?.removeListener(_onPhotoChanged);
     await _changes.cancel();
     return super.close();
   }

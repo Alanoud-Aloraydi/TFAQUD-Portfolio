@@ -1,4 +1,5 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/utils/riyadh_time.dart';
@@ -42,6 +43,7 @@ class MeasurementRecordSection extends StatefulWidget {
 class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   late final MeasurementReadingsCubit _readings = MeasurementReadingsCubit(
     GetIt.I<MeasurementRepository>(),
+    GetIt.I<PrivatePhotoRepository>().changes,
   );
   DateTime _month = DateTime(riyadhToday().year, riyadhToday().month);
   String _filter = 'all';

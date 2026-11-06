@@ -11,6 +11,9 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:device_calendar_plus/device_calendar_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// One kind of event this feature can mirror, switched on per circle.
+enum CalendarSyncCategory { doses, measurements, appointments }
+
 /// One event this feature wants on the phone's calendar, before it exists.
 class _DesiredEvent {
   const _DesiredEvent({
@@ -32,7 +35,9 @@ class _DesiredEvent {
 /// appointments, onto the phone's own Calendar app — a backup to the push
 /// and local-notification reminders, for a dose that must not be missed.
 ///
-/// Opt-in ([setEnabled]), off by default: a dose or appointment written into
+/// Opt-in ([setEnabled]), off by default, and chosen per circle and per
+/// category: someone in several circles may want only one circle's
+/// appointments on their calendar, say. A dose or appointment written into
 /// the phone's shared calendar is visible to anything else with calendar
 /// access, unlike the rest of this app's circle-scoped data.
 ///
@@ -58,7 +63,7 @@ class CalendarSync {
 
   final DeviceCalendar _calendar = DeviceCalendar.instance;
 
-  static const String _enabledKey = 'calendar_sync_enabled';
+  static const String _selectionsKey = 'calendar_sync_selections';
   static const String _eventsKey = 'calendar_sync_events';
 
   List<ReminderCircle> _circles = const <ReminderCircle>[];
@@ -66,21 +71,33 @@ class CalendarSync {
   bool _again = false;
   int _session = 0;
 
-  /// Whether the person turned this on.
-  Future<bool> isEnabled() async {
+  String _selectionKey(String circleId, CalendarSyncCategory category) =>
+      '$circleId:${category.name}';
+
+  Future<Set<String>> _selections(SharedPreferences prefs) async =>
+      (prefs.getStringList(_selectionsKey) ?? const <String>[]).toSet();
+
+  /// Whether this circle's category is turned on.
+  Future<bool> isEnabled(String circleId, CalendarSyncCategory category) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_enabledKey) ?? false;
+    final selections = await _selections(prefs);
+    return selections.contains(_selectionKey(circleId, category));
   }
 
-  /// Turns the sync on or off. Off removes every event this feature made.
-  Future<void> setEnabled(bool value) async {
+  /// Turns one circle's category on or off; [refresh] reconciles the
+  /// calendar to match every selection right after.
+  Future<void> setEnabled(
+    String circleId,
+    CalendarSyncCategory category,
+    bool value,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_enabledKey, value);
-    if (!value) {
-      await _removeAll(prefs);
-      return;
-    }
-    _calendar.autoPermissions = AutoPermissionMode.full;
+    final selections = await _selections(prefs);
+    final String key = _selectionKey(circleId, category);
+    final bool changed = value ? selections.add(key) : selections.remove(key);
+    if (!changed) return;
+    await prefs.setStringList(_selectionsKey, selections.toList());
+    if (value) _calendar.autoPermissions = AutoPermissionMode.full;
     await refresh();
   }
 
@@ -110,30 +127,43 @@ class CalendarSync {
   }
 
   /// Removes every event this feature made: the person signed out. Also
-  /// turns the setting off — it is stored on the device, not the account,
-  /// so the next person to sign in on this device must opt in themselves.
+  /// clears every selection — they are stored on the device, not the
+  /// account, so the next person to sign in on this device must opt in
+  /// themselves.
   Future<void> clear() async {
     _session++;
     _circles = const <ReminderCircle>[];
     _again = false;
     final prefs = await SharedPreferences.getInstance();
     await _removeAll(prefs);
-    await prefs.remove(_enabledKey);
+    await prefs.remove(_selectionsKey);
   }
 
   Future<void> _run() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!(prefs.getBool(_enabledKey) ?? false)) return;
+    final selections = await _selections(prefs);
     final int session = _session;
     final List<ReminderCircle> circles = _circles;
     final Map<String, _DesiredEvent> desired = <String, _DesiredEvent>{};
     for (final ReminderCircle circle in circles) {
       if (session != _session) return;
-      await _collectDoses(circle, desired);
+      if (selections.contains(
+        _selectionKey(circle.id, CalendarSyncCategory.doses),
+      )) {
+        await _collectDoses(circle, desired);
+      }
       if (session != _session) return;
-      await _collectMeasurements(circle, desired);
+      if (selections.contains(
+        _selectionKey(circle.id, CalendarSyncCategory.measurements),
+      )) {
+        await _collectMeasurements(circle, desired);
+      }
       if (session != _session) return;
-      await _collectAppointments(circle, desired);
+      if (selections.contains(
+        _selectionKey(circle.id, CalendarSyncCategory.appointments),
+      )) {
+        await _collectAppointments(circle, desired);
+      }
     }
     if (session != _session) return;
     await _reconcile(prefs, desired);

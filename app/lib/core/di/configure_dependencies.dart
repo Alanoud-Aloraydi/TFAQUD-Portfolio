@@ -11,7 +11,9 @@ import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/onboarding/di/onboarding_di.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
@@ -36,6 +38,10 @@ Future<void> configureDependencies() async {
   configureHome(getIt);
   configureCircles(getIt);
   configureMedications(getIt);
+  getIt.registerLazySingleton<PrivatePhotoRepository>(
+    () => PrivatePhotoRepository(getIt<DioClient>(), getIt<TokenStorage>()),
+    dispose: (repository) => repository.dispose(),
+  );
   getIt.registerLazySingleton<PrayerTimesRepository>(
     () =>
         PrayerTimesRepository(PrayerTimesRemoteDataSource(getIt<DioClient>())),
