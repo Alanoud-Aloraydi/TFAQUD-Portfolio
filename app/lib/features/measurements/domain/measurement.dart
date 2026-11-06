@@ -113,6 +113,10 @@ class MeasurementPlan extends Equatable {
     required this.history,
     this.pendingVersion,
     this.stoppedAt,
+    this.createdByAccountId,
+    this.createdByName,
+    this.createdByAvatarCode,
+    this.lastEditedByName,
   });
 
   final String id;
@@ -122,28 +126,44 @@ class MeasurementPlan extends Equatable {
   final List<MeasurementVersion> history;
   final DateTime? stoppedAt;
 
-  factory MeasurementPlan.fromJson(Map<String, dynamic> json) =>
-      MeasurementPlan(
-        id: json['id'] as String,
-        kind: MeasurementKind.values.byName(json['kind'] as String),
-        version: MeasurementVersion.fromJson(
-          json['version'] as Map<String, dynamic>,
-        ),
-        pendingVersion: json['pending_version'] == null
-            ? null
-            : MeasurementVersion.fromJson(
-                json['pending_version'] as Map<String, dynamic>,
-              ),
-        history: (json['history'] as List<dynamic>)
-            .map(
-              (value) =>
-                  MeasurementVersion.fromJson(value as Map<String, dynamic>),
-            )
-            .toList(),
-        stoppedAt: json['stopped_at'] == null
-            ? null
-            : DateTime.parse(json['stopped_at'] as String),
-      );
+  /// Who added this plan, for tracking; null when it predates this field.
+  final String? createdByAccountId;
+  final String? createdByName;
+  final String? createdByAvatarCode;
+
+  /// Who made the version in effect now; same person as [createdByName]
+  /// unless the plan was revised since, or null when it predates this field.
+  final String? lastEditedByName;
+
+  factory MeasurementPlan.fromJson(Map<String, dynamic> json) {
+    final createdBy = json['created_by'] as Map<String, dynamic>?;
+    final lastEditedBy = json['last_edited_by'] as Map<String, dynamic>?;
+    return MeasurementPlan(
+      id: json['id'] as String,
+      kind: MeasurementKind.values.byName(json['kind'] as String),
+      version: MeasurementVersion.fromJson(
+        json['version'] as Map<String, dynamic>,
+      ),
+      pendingVersion: json['pending_version'] == null
+          ? null
+          : MeasurementVersion.fromJson(
+              json['pending_version'] as Map<String, dynamic>,
+            ),
+      history: (json['history'] as List<dynamic>)
+          .map(
+            (value) =>
+                MeasurementVersion.fromJson(value as Map<String, dynamic>),
+          )
+          .toList(),
+      stoppedAt: json['stopped_at'] == null
+          ? null
+          : DateTime.parse(json['stopped_at'] as String),
+      createdByAccountId: createdBy?['account_id'] as String?,
+      createdByName: createdBy?['name'] as String?,
+      createdByAvatarCode: createdBy?['avatar_code'] as String?,
+      lastEditedByName: lastEditedBy?['name'] as String?,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -153,6 +173,10 @@ class MeasurementPlan extends Equatable {
     pendingVersion,
     history,
     stoppedAt,
+    createdByAccountId,
+    createdByName,
+    createdByAvatarCode,
+    lastEditedByName,
   ];
 }
 

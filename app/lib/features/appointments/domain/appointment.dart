@@ -21,6 +21,8 @@ class CareAppointment extends Equatable {
     required this.companions,
     required this.status,
     required this.updatedAt,
+    this.createdByName,
+    this.updatedByName,
   });
 
   final String id;
@@ -34,6 +36,10 @@ class CareAppointment extends Equatable {
   final List<AppointmentCompanion> companions;
   final AppointmentStatus status;
   final DateTime updatedAt;
+
+  /// Who added or last changed it, for tracking; null when unavailable.
+  final String? createdByName;
+  final String? updatedByName;
 
   DateTime get scheduledAt {
     return riyadhScheduledAt(scheduledOn, time);
@@ -52,6 +58,8 @@ class CareAppointment extends Equatable {
     companions,
     status,
     updatedAt,
+    createdByName,
+    updatedByName,
   ];
 }
 

@@ -246,6 +246,15 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
               label: Text(context.tr('medications.details')),
             ),
             if (_expanded) ...[
+              if (plan.createdByName case final name?) ...[
+                Text(context.tr('measurements.added_by', args: [name])),
+                const SizedBox(height: AppSpacing.xs),
+              ],
+              if (plan.lastEditedByName case final name?
+                  when name != plan.createdByName) ...[
+                Text(context.tr('measurements.last_edited_by', args: [name])),
+                const SizedBox(height: AppSpacing.xs),
+              ],
               Text(
                 context.tr(
                   'measurements.grace_value',

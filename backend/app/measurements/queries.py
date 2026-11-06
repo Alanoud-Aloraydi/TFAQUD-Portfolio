@@ -160,6 +160,19 @@ class MeasurementQueries:
                 .order_by(MeasurementPlanVersion.number)
             )
         )
+        creators = accounts_by_id(
+            self.session,
+            {
+                plan.created_by_account_id
+                for plan in plans
+                if plan.created_by_account_id is not None
+            }
+            | {
+                version.created_by_account_id
+                for version in versions
+                if version.created_by_account_id is not None
+            },
+        )
         by_plan: dict[UUID, list[MeasurementPlanVersion]] = {}
         for version in versions:
             by_plan.setdefault(version.plan_id, []).append(version)
@@ -189,6 +202,14 @@ class MeasurementQueries:
                     "id": str(plan.id),
                     "kind": plan.kind,
                     "created_at": plan.created_at.isoformat(),
+                    "created_by": recorder_response(
+                        creators.get(plan.created_by_account_id)
+                    ),
+                    # Who made the version in effect now — the same person
+                    # as created_by unless the plan was revised since.
+                    "last_edited_by": recorder_response(
+                        creators.get(current.created_by_account_id)
+                    ),
                     "stopped_at": (
                         plan.stopped_at.isoformat()
                         if plan.stopped_at

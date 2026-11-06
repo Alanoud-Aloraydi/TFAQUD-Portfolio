@@ -27,6 +27,10 @@ class AppointmentModel {
         .toList(),
     status: AppointmentStatus.values.byName(json['status'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
+    createdByName:
+        (json['created_by'] as Map<String, dynamic>?)?['name'] as String?,
+    updatedByName:
+        (json['updated_by'] as Map<String, dynamic>?)?['name'] as String?,
   );
 
   static Map<String, dynamic> toJson(

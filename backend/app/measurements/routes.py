@@ -109,7 +109,10 @@ def revise_plan(circle_id, plan_id):
     body = parse_json_body(RevisePlanRequest)
     with transaction() as session:
         plan = MeasurementService(session, get_clock().now()).revise(
-            _uuid(circle_id), _uuid(plan_id), body
+            _uuid(circle_id),
+            _uuid(plan_id),
+            _uuid(current_auth().user_id),
+            body,
         )
         values = MeasurementQueries(session, get_clock().now()).plans(
             _uuid(circle_id)

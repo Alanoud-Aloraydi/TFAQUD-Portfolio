@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -161,19 +162,46 @@ class MedicationRecordCard extends StatelessWidget {
                   border: Border.all(color: AppSemanticColors.borderSubtle),
                   borderRadius: BorderRadius.circular(AppRadius.field),
                 ),
-                child: Text(
-                  last == null
-                      ? context.tr('medications.no_recorded_dose')
-                      : context.tr(
-                          last.outcome == DoseOutcome.taken
-                              ? 'medications.last_taken_record'
-                              : 'medications.last_skipped_record',
-                          args: [
-                            formatMedicationDate(context, lastDate!),
-                            formatMedicationTime(context, lastTime!),
-                          ],
-                        ),
-                  style: Theme.of(context).textTheme.bodySmall,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      last == null
+                          ? context.tr('medications.no_recorded_dose')
+                          : context.tr(
+                              last.outcome == DoseOutcome.taken
+                                  ? 'medications.last_taken_record'
+                                  : 'medications.last_skipped_record',
+                              args: [
+                                formatMedicationDate(context, lastDate!),
+                                formatMedicationTime(context, lastTime!),
+                              ],
+                            ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (last?.recordedByName case final name?) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PersonPhoto(
+                            name: name,
+                            photoPath: personPhotoPath(
+                              circleId,
+                              last!.recordedByAccountId,
+                            ),
+                            avatarCode: last.recordedByAvatarCode,
+                            size: AppSizes.iconSmall,
+                          ),
+                          const SizedBox(width: AppSpacing.tight),
+                          Text(
+                            name,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),

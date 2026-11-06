@@ -1,5 +1,7 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/utils/riyadh_time.dart';
@@ -348,6 +350,28 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                                 '${reading.systolicLimit}/${reading.diastolicLimit}',
                     ),
                   if (reading.note != null) Text(reading.note!),
+                  if (reading.recordedByName case final name?) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PersonPhoto(
+                          name: name,
+                          photoPath: personPhotoPath(
+                            widget.circleId,
+                            reading.recordedByAccountId,
+                          ),
+                          avatarCode: reading.recordedByAvatarCode,
+                          size: AppSizes.iconSmall,
+                        ),
+                        const SizedBox(width: AppSpacing.tight),
+                        Text(
+                          name,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

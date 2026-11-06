@@ -11,6 +11,7 @@ from app.appointments.queries import appointment_view, appointments_for_circle
 from app.appointments.queries import companions_for_appointments
 from app.appointments.queries import companions_for_circle
 from app.appointments.service import AppointmentService
+from app.accounts import accounts_by_id
 from app.auth.decorators import current_auth
 from app.authz.decorators import require_circle_role
 from app.authz.roles import CircleRole
@@ -68,11 +69,23 @@ def create_appointment(circle_id):
         appointment = AppointmentService(
             session, get_clock().now()
         ).create(_uuid(circle_id), _uuid(current_auth().user_id), body)
+        accounts = accounts_by_id(
+            session,
+            {
+                account_id
+                for account_id in (
+                    appointment.created_by_account_id,
+                    appointment.updated_by_account_id,
+                )
+                if account_id is not None
+            },
+        )
         value = appointment_view(
             appointment,
             companions_for_appointments(session, [appointment.id])[
                 appointment.id
             ],
+            accounts,
         )
     return jsonify(appointment=value), 201
 
@@ -85,12 +98,27 @@ def revise_appointment(circle_id, appointment_id):
     with transaction() as session:
         appointment = AppointmentService(
             session, get_clock().now()
-        ).revise(_uuid(circle_id), _uuid(appointment_id), body)
+        ).revise(
+            _uuid(circle_id), _uuid(appointment_id),
+            _uuid(current_auth().user_id), body,
+        )
+        accounts = accounts_by_id(
+            session,
+            {
+                account_id
+                for account_id in (
+                    appointment.created_by_account_id,
+                    appointment.updated_by_account_id,
+                )
+                if account_id is not None
+            },
+        )
         value = appointment_view(
             appointment,
             companions_for_appointments(session, [appointment.id])[
                 appointment.id
             ],
+            accounts,
         )
     return jsonify(appointment=value)
 
@@ -104,13 +132,26 @@ def set_appointment_status(circle_id, appointment_id):
         appointment = AppointmentService(
             session, get_clock().now()
         ).set_status(
-            _uuid(circle_id), _uuid(appointment_id), body.status,
+            _uuid(circle_id), _uuid(appointment_id),
+            _uuid(current_auth().user_id), body.status,
             body.expected_updated_at,
+        )
+        accounts = accounts_by_id(
+            session,
+            {
+                account_id
+                for account_id in (
+                    appointment.created_by_account_id,
+                    appointment.updated_by_account_id,
+                )
+                if account_id is not None
+            },
         )
         value = appointment_view(
             appointment,
             companions_for_appointments(session, [appointment.id])[
                 appointment.id
             ],
+            accounts,
         )
     return jsonify(appointment=value)

@@ -1,5 +1,7 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -421,6 +423,25 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                       : '$dose · ${occurrence.instructions}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (record?.recordedByName case final name?) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PersonPhoto(
+                        name: name,
+                        photoPath: personPhotoPath(
+                          circleId,
+                          record!.recordedByAccountId,
+                        ),
+                        avatarCode: record.recordedByAvatarCode,
+                        size: AppSizes.iconSmall,
+                      ),
+                      const SizedBox(width: AppSpacing.tight),
+                      Text(name, style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
