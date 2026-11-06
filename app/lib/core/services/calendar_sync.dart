@@ -45,9 +45,11 @@ class _DesiredEvent {
 /// discontinued plan is picked up automatically, never left stale.
 class CalendarSync {
   CalendarSync(this._medications, this._measurements, this._appointments) {
-    // A recorded or revised dose changes the calendar sooner than the next
-    // app resume; measurement and appointment changes catch up then.
+    // Any accepted plan or appointment change reconciles the calendar right
+    // away, not just on the next app resume.
     _medications.changes.listen((_) => unawaited(refresh()));
+    _measurements.changes.listen((_) => unawaited(refresh()));
+    _appointments.changes.listen((_) => unawaited(refresh()));
   }
 
   final MedicationsUseCase _medications;
@@ -107,13 +109,16 @@ class CalendarSync {
     return run;
   }
 
-  /// Removes every event this feature made: the person signed out.
+  /// Removes every event this feature made: the person signed out. Also
+  /// turns the setting off — it is stored on the device, not the account,
+  /// so the next person to sign in on this device must opt in themselves.
   Future<void> clear() async {
     _session++;
     _circles = const <ReminderCircle>[];
     _again = false;
     final prefs = await SharedPreferences.getInstance();
     await _removeAll(prefs);
+    await prefs.remove(_enabledKey);
   }
 
   Future<void> _run() async {

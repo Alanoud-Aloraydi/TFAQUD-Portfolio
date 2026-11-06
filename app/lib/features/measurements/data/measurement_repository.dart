@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
@@ -7,6 +9,13 @@ class MeasurementRepository {
   MeasurementRepository(this._client);
 
   final DioClient _client;
+
+  final StreamController<String> _changes =
+      StreamController<String>.broadcast();
+
+  /// The circle whose measurement plans changed, each time the server
+  /// accepts a change (so calendar sync can pick it up right away).
+  Stream<String> get changes => _changes.stream;
 
   Future<List<MeasurementTarget>> targets(String circleId) async {
     final response = await _client.get(
@@ -38,6 +47,7 @@ class MeasurementRepository {
       ApiEndpoints.measurementPlans(circleId),
       data: draft.toJson(),
     );
+    _changes.add(circleId);
     return _plan(response.data);
   }
 
@@ -50,6 +60,7 @@ class MeasurementRepository {
       ApiEndpoints.measurementPlan(circleId, plan.id),
       data: draft.toJson(expectedVersion: plan.version.number),
     );
+    _changes.add(circleId);
     return _plan(response.data);
   }
 
@@ -57,6 +68,7 @@ class MeasurementRepository {
     final response = await _client.post(
       ApiEndpoints.stopMeasurementPlan(circleId, planId),
     );
+    _changes.add(circleId);
     return _plan(response.data);
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -193,6 +194,9 @@ class _EmptyMedicationsRepository extends Fake
 class _EmptyMeasurementsRepository extends Fake
     implements MeasurementRepository {
   @override
+  Stream<String> get changes => const Stream.empty();
+
+  @override
   Future<List<MeasurementReading>> allReadings(String circleId) async =>
       const [];
 
@@ -216,6 +220,9 @@ class _EmptyMeasurementsRepository extends Fake
 
 class _EmptyAppointmentsRepository extends Fake
     implements AppointmentRepository {
+  @override
+  Stream<String> get changes => const Stream.empty();
+
   @override
   Future<List<CareAppointment>> appointments(String circleId) async => const [];
 }
