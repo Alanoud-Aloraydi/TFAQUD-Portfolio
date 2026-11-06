@@ -41,7 +41,8 @@ def test_request_from_sending_to_the_new_circle(
     received = receiver.get(BASE).json["received"]
     assert len(received) == 1
     assert received[0]["id"] == request_id
-    assert received[0]["circle_name"] == "Mother Noura"
+    # Noura names the circle herself when she completes the request.
+    assert received[0]["circle_name"] is None
     assert received[0]["proposed_app_mode"] == "simplified"
     assert received[0]["requested_by"] == {
         "display_name": "Reem",
@@ -58,23 +59,36 @@ def test_request_from_sending_to_the_new_circle(
     assert len(receiver.get(BASE).json["received"]) == 1
 
     # Completing the basic data creates the circle.
-    done = receiver.post(f"{BASE}/{request_id}/complete", BASICS)
+    done = receiver.post(
+        f"{BASE}/{request_id}/complete", {**BASICS, "name": "صحتي"}
+    )
     assert done.status_code == 201
     circle = done.json["circle"]
-    assert circle["name"] == "Mother Noura"
+    assert circle["name"] == "صحتي"
     assert circle["role"] == "simplified_patient"
     assert circle["patient"]["is_you"] is True
     assert circle["patient"]["app_mode"] == "simplified"
-    assert [m["display_name"] for m in circle["members"]] == ["Reem"]
+    assert [m["display_name"] for m in circle["members"]] == [
+        "Noura Family",
+        "Reem",
+    ]
     assert sender.get(BASE).json["sent"] == []
     assert receiver.get(BASE).json["received"] == []
-    for api, can_manage in ((sender, True), (receiver, False)):
+    # Only Noura sees her own name; Reem sees «دائرة» and Noura's name.
+    assert sender.get(f"/api/v1/circles/{circle['id']}").json["circle"][
+        "name"
+    ] == "دائرة Noura"
+    for api, name, can_manage in (
+        (sender, "دائرة Noura", True),
+        (receiver, "صحتي", False),
+    ):
         listed = api.get("/api/v1/home").json["care_circles"]
         assert listed == [
             {
                 "id": circle["id"],
-                "name": "Mother Noura",
+                "name": name,
                 "can_manage_medications": can_manage,
+                "patient_avatar_code": None,
             }
         ]
     with Session(database) as session:
@@ -321,7 +335,7 @@ def test_a_request_waits_for_a_person_who_signs_up_later(
         )
     received = Api(database_app, late).get(BASE).json["received"]
     assert [r["id"] for r in received] == [sent.json["request"]["id"]]
-    assert received[0]["circle_name"] == "Mother Late"
+    assert received[0]["circle_name"] is None
 
 
 @pytest.mark.parametrize("accept", [True, False])

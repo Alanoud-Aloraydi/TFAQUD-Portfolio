@@ -294,7 +294,6 @@ class DemoBuilder:
         # 2. Lina's mother, who has no account: every kind of medicine.
         mother = care.create_without_account(
             lina.id,
-            "رعاية أمي",
             "نورة",
             "العتيبي",
             date(1956, 8, 3),
@@ -493,7 +492,6 @@ class DemoBuilder:
         # so Lina's bell has an invitation to answer.
         grandfather = CareService(self.session, self.at(-5)).create_without_account(
             sara.id,
-            "رعاية جدي",
             "عبدالله",
             "القحطاني",
             date(1948, 1, 20),
@@ -527,7 +525,7 @@ class DemoBuilder:
 
         # 4. Lina asked her father's number for a circle; it waits for him.
         CareService(self.session, self.at(-2)).request_creation(
-            lina.id, REQUEST_PHONE, "أبي", "simplified"
+            lina.id, REQUEST_PHONE, None, "simplified"
         )
 
         # The stop and the coming change first, so the dose history follows
@@ -543,7 +541,7 @@ class DemoBuilder:
         self.history(lina, mother)
         self.history(sara, grandfather)
 
-        self.summary.circles = ["رعايتي", "رعاية أمي", "رعاية جدي"]
+        self.summary.circles = ["رعايتي", "دائرة نورة", "دائرة عبدالله"]
         return self.summary
 
 

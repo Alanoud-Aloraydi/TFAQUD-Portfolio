@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
@@ -373,58 +372,39 @@ void main() {
     }
 
     test('the first step needs both names, the birth date and the city', () {
-      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isFalse);
+      expect(patient.continueFromPatientBasics(sharedName: 'دائرة نورة'), isFalse);
       expect(patient.state.showErrors, isTrue);
       patient.patientFirstNameChanged('نورة');
       patient.birthDateChanged(DateTime(1954, 6, 5));
       patient.cityChanged('بريدة');
       // The last name is still missing.
-      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isFalse);
+      expect(patient.continueFromPatientBasics(sharedName: 'دائرة نورة'), isFalse);
       patient.patientLastNameChanged('   ');
-      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isFalse);
+      expect(patient.continueFromPatientBasics(sharedName: 'دائرة نورة'), isFalse);
       patient.patientLastNameChanged('العتيبي');
-      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isTrue);
+      expect(patient.continueFromPatientBasics(sharedName: 'دائرة نورة'), isTrue);
       expect(patient.state.showErrors, isFalse);
     });
 
-    test('the circle is named with the label and the first name', () {
+    test('the circle is named «دائرة» and the first name, by nobody', () {
       fillPatient();
-      expect(patient.continueFromPatientBasics(labelName: 'أمي'), isTrue);
-      expect(patient.state.circleName, 'أمي نورة');
+      expect(
+        patient.continueFromPatientBasics(sharedName: ' دائرة نورة '),
+        isTrue,
+      );
+      expect(patient.state.circleName, 'دائرة نورة');
       expect(patient.state.basicsComplete, isTrue);
-    });
-
-    test('a label of your own needs its text, without outer spaces', () {
-      fillPatient();
-      patient.chooseLabel(CircleLabel.other);
-      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isFalse);
-      patient.customLabelChanged('   ');
-      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isFalse);
-      patient.customLabelChanged('  عمي ');
-      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isTrue);
-      expect(patient.state.circleName, 'عمي نورة');
-    });
-
-    test('a very long label and first name still make an accepted name', () {
-      patient.patientFirstNameChanged('ب' * CreateCircleCubit.maxNameLength);
-      patient.patientLastNameChanged('العتيبي');
-      patient.birthDateChanged(DateTime(1954, 6, 5));
-      patient.cityChanged('بريدة');
-      patient.chooseLabel(CircleLabel.other);
-      patient.customLabelChanged('ا' * CircleNames.maxLabelLength);
-      expect(patient.continueFromPatientBasics(labelName: 'اسم آخر'), isTrue);
-      expect(patient.state.circleName.length, CircleNames.maxLength);
     });
 
     test('creates the circle with the names, the date and the city', () async {
       fillPatient();
-      patient.continueFromPatientBasics(labelName: 'أمي');
+      patient.continueFromPatientBasics(sharedName: 'دائرة نورة');
       patient.chooseBloodType('O+');
 
       expect(await patient.create(), isTrue);
 
       final NewPatientCircle sent = circles.patientCircles.single;
-      expect(sent.name, 'أمي نورة');
+      expect(sent.name, 'دائرة نورة');
       expect(sent.patientFirstName, 'نورة');
       expect(sent.patientLastName, 'العتيبي');
       expect(sent.birthDate, DateTime(1954, 6, 5));
@@ -440,11 +420,11 @@ void main() {
       patient.patientLastNameChanged(' العتيبي  ');
       patient.birthDateChanged(DateTime(1954, 6, 5));
       patient.cityChanged('بريدة');
-      patient.continueFromPatientBasics(labelName: 'أمي');
+      patient.continueFromPatientBasics(sharedName: 'دائرة نورة');
       expect(await patient.create(), isTrue);
       expect(circles.patientCircles.single.patientFirstName, 'نورة');
       expect(circles.patientCircles.single.patientLastName, 'العتيبي');
-      expect(circles.patientCircles.single.name, 'أمي نورة');
+      expect(circles.patientCircles.single.name, 'دائرة نورة');
     });
 
     test('without the first step nothing is sent', () async {
@@ -456,7 +436,7 @@ void main() {
     test('tells every home screen to load again and select the new circle',
         () async {
       fillPatient();
-      patient.continueFromPatientBasics(labelName: 'أمي');
+      patient.continueFromPatientBasics(sharedName: 'دائرة نورة');
       final Future<String?> signal = home.changes.first;
       expect(await patient.create(), isTrue);
       expect(await signal, CirclesFakeRepository.newCircle.id);
@@ -464,7 +444,7 @@ void main() {
 
     test('a refusal keeps the answers and shows its text', () async {
       fillPatient();
-      patient.continueFromPatientBasics(labelName: 'أمي');
+      patient.continueFromPatientBasics(sharedName: 'دائرة نورة');
       circles.createdPatient = const Error(ModeConflictFailure());
       expect(await patient.create(), isFalse);
       expect(patient.state.status, CreateStatus.idle);
@@ -487,18 +467,41 @@ void main() {
 
     tearDown(() => approved.close());
 
-    test('the circle name is the one the sender chose', () {
-      expect(approved.state.circleName, 'أمي نورة');
+    test('the patient names the circle, as they would their own', () {
+      // Not the sender's word: the circle has no name until the patient
+      // chooses one.
+      expect(approved.state.circleName, isEmpty);
       expect(approved.request, CirclesFakeRepository.agreedByNoura);
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      approved.cityChanged('بريدة');
+      approved.choosePreset(NamePreset.health);
+      expect(approved.continueFromApprovedBasics(presetName: 'صحتي'), isTrue);
+      expect(approved.state.circleName, 'صحتي');
+    });
+
+    test('a name of their own needs its text', () {
+      approved.birthDateChanged(DateTime(1954, 6, 5));
+      approved.cityChanged('بريدة');
+      approved.choosePreset(NamePreset.other);
+      expect(
+        approved.continueFromApprovedBasics(presetName: 'اسم آخر'),
+        isFalse,
+      );
+      approved.customNameChanged('  دائرتي الصحية ');
+      expect(
+        approved.continueFromApprovedBasics(presetName: 'اسم آخر'),
+        isTrue,
+      );
+      expect(approved.state.circleName, 'دائرتي الصحية');
     });
 
     test('the first step needs the birth date and the city', () {
-      expect(approved.continueFromApprovedBasics(), isFalse);
+      expect(approved.continueFromApprovedBasics(presetName: 'رعايتي'), isFalse);
       expect(approved.state.showErrors, isTrue);
       approved.birthDateChanged(DateTime(1954, 6, 5));
-      expect(approved.continueFromApprovedBasics(), isFalse);
+      expect(approved.continueFromApprovedBasics(presetName: 'رعايتي'), isFalse);
       approved.cityChanged('بريدة');
-      expect(approved.continueFromApprovedBasics(), isTrue);
+      expect(approved.continueFromApprovedBasics(presetName: 'رعايتي'), isTrue);
       expect(approved.state.showErrors, isFalse);
     });
 
@@ -514,19 +517,22 @@ void main() {
       await approved.loadAccount();
       approved.birthDateChanged(DateTime(1954, 6, 5));
       approved.cityChanged('بريدة');
-      expect(approved.continueFromApprovedBasics(), isFalse);
+      expect(approved.continueFromApprovedBasics(presetName: 'رعايتي'), isFalse);
     });
 
-    test('completes the request with the date, the city and the answers',
-        () async {
+    test('completes the request with the name, the date, the city and the '
+        'answers', () async {
       approved.birthDateChanged(DateTime(1954, 6, 5));
       approved.cityChanged('بريدة');
+      approved.choosePreset(NamePreset.health);
+      approved.continueFromApprovedBasics(presetName: 'صحتي');
       approved.chooseBloodType('O+');
 
       expect(await approved.create(), isTrue);
 
       expect(circles.completedIds, <String>['request-in-1']);
       final CompleteCircleRequest sent = circles.completions.single;
+      expect(sent.name, 'صحتي');
       expect(sent.birthDate, DateTime(1954, 6, 5));
       expect(sent.city, 'بريدة');
       expect(sent.medicalProfile, const MedicalProfileDraft(bloodType: 'O+'));
@@ -540,6 +546,7 @@ void main() {
         () async {
       approved.birthDateChanged(DateTime(1954, 6, 5));
       approved.cityChanged('بريدة');
+      approved.continueFromApprovedBasics(presetName: 'رعايتي');
       final Future<String?> signal = home.changes.first;
       expect(await approved.create(), isTrue);
       expect(await signal, CirclesFakeRepository.newCircle.id);
@@ -568,6 +575,7 @@ void main() {
         () async {
       approved.birthDateChanged(DateTime(1954, 6, 5));
       approved.cityChanged('بريدة');
+      approved.continueFromApprovedBasics(presetName: 'رعايتي');
       circles.completed = const Error(RequestUnavailableFailure());
       expect(await approved.create(), isFalse);
       expect(approved.state.status, CreateStatus.idle);

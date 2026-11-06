@@ -76,10 +76,6 @@ class _SentRequestSheet extends StatelessWidget {
               ),
             ),
             _Line(
-              label: context.tr('circles.label_title'),
-              child: Text(request.circleLabel, style: text.bodyMedium),
-            ),
-            _Line(
               label: context.tr('circles.app_mode'),
               child: StatusPill(
                 text: context.tr(

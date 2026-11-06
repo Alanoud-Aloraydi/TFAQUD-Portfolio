@@ -293,8 +293,9 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-/// One circle that waits for the patient: the word it is named with, how long
-/// ago the request was sent, and where it stands.
+/// One circle that waits for the patient: the number it was sent to, how
+/// long ago, and where it stands. The circle has no name yet: the patient
+/// names it when they complete the request.
 class _SentRequestRow extends StatelessWidget {
   const _SentRequestRow({required this.request, required this.onTap});
 
@@ -323,13 +324,10 @@ class _SentRequestRow extends StatelessWidget {
                 color: AppSemanticColors.selectedSurface,
                 shape: BoxShape.circle,
               ),
-              child: Text(
-                request.circleLabel.isEmpty
-                    ? '؟'
-                    : request.circleLabel.characters.first,
-                style: text.titleMedium?.copyWith(
-                  color: AppSemanticColors.textPrimary,
-                ),
+              child: const Icon(
+                AppIcons.phone,
+                size: AppSizes.iconSmall,
+                color: AppSemanticColors.textPrimary,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -337,7 +335,11 @@ class _SentRequestRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(request.circleLabel, style: text.titleMedium),
+                  Text(
+                    RequestSentView.displayPhone(request.patientPhoneNumber),
+                    textDirection: TextDirection.ltr,
+                    style: text.titleMedium,
+                  ),
                   if (days != null)
                     Text(
                       _ageText(context, days),

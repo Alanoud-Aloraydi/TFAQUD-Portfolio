@@ -78,7 +78,7 @@ def respond(request_id):
             work.actor, parse_id(request_id, "circle request"), body.accept
         )
         view = views.sent_request_view(row)
-        push = request_answer_push(row)
+        push = request_answer_push(work.session, row)
     notify(push)
     return answer({"request": view})
 
@@ -97,6 +97,7 @@ def complete(request_id):
             body.city,
             body.latitude,
             body.longitude,
+            name=body.name,
         )
         save_medical(work, circle.id, body.medical_profile)
         mode = work.session.get(Account, work.actor).app_mode

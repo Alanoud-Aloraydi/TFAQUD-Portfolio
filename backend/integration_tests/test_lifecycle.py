@@ -47,8 +47,10 @@ def test_simplified_patient_can_edit_own_profile(database, account):
     )
     assert saved.city == "Buraidah"
     assert count(database, CareCircleManager) == 1
+    # The patient names their own circle; the manager cannot.
+    run(database, "rename_circle", patient.id, circle.id, "New name")
     with pytest.raises(Forbidden):
-        run(database, "rename_circle", patient.id, circle.id, "New name")
+        run(database, "rename_circle", owner.id, circle.id, "Other name")
     with pytest.raises(Forbidden):
         run(
             database,

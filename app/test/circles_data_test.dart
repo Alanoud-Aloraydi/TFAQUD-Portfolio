@@ -322,6 +322,18 @@ void main() {
       });
     });
 
+    test('a request of this app has no label: the patient names the circle',
+        () {
+      const NewCircleRequest unnamed = NewCircleRequest(
+        patientPhoneNumber: '+966501234567',
+        proposedAppMode: CircleAppMode.simplified,
+      );
+      expect(NewCircleRequestModel(unnamed).toJson(), <String, dynamic>{
+        'patient_phone_number': '+966501234567',
+        'proposed_app_mode': 'simplified',
+      });
+    });
+
     test('the detailed mode is written as the API names it', () {
       const NewCircleRequest detailed = NewCircleRequest(
         patientPhoneNumber: '+966501234567',
@@ -494,6 +506,15 @@ void main() {
       expect(CompleteCircleRequestModel(request).toJson(), <String, dynamic>{
         'birth_date': '1954-06-05',
         'city': 'بريدة',
+      });
+    });
+
+    test("sends the patient's own name for the circle", () {
+      const CompleteCircleRequest request = CompleteCircleRequest(
+        name: 'صحتي',
+      );
+      expect(CompleteCircleRequestModel(request).toJson(), <String, dynamic>{
+        'name': 'صحتي',
       });
     });
 

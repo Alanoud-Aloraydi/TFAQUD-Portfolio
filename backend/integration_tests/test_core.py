@@ -31,8 +31,8 @@ def test_circle_access_joins_an_existing_transaction(database, account):
 
 
 def test_migrations_create_care_authentication_and_medical_tables(database):
-    """Authentication, medical and push tables sit beside the six core
-    entities."""
+    """Authentication, medical, push, photo, measurement, appointment and
+    notification tables sit beside the six core entities."""
     assert set(inspect(database).get_table_names()) == {
         "account",
         "care_circle",
@@ -53,6 +53,15 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
         "medication_schedule_day",
         "medication_dose_record",
         "push_device",
+        "photo",
+        "measurement_plan",
+        "measurement_plan_version",
+        "measurement_target",
+        "measurement_record",
+        "appointment",
+        "appointment_companion",
+        "appointment_visit",
+        "notification_log",
     }
 
 

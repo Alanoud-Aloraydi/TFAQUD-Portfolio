@@ -1,5 +1,4 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
@@ -17,13 +16,14 @@ import 'package:multiple_result/multiple_result.dart';
 /// Coordinates create circle actions and UI state.
 class CreateCircleCubit extends Cubit<CreateCircleState> {
   /// [request] is the request the patient agreed to, and is needed for the
-  /// [CircleFlow.approved] flow only. Its circle name is the name of the circle.
+  /// [CircleFlow.approved] flow only. The patient names that circle on the
+  /// page, as they would their own.
   CreateCircleCubit(
     this._circles,
     this._home, {
     required this.flow,
     this.request,
-  }) : super(CreateCircleState(circleName: request?.circleName ?? ''));
+  }) : super(const CreateCircleState());
 
   final CirclesUseCase _circles;
   final HomeUseCase _home;
@@ -112,54 +112,30 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     emit(state.copyWith(patientLastName: value, clearError: true));
   }
 
-  void chooseLabel(CircleLabel label) {
-    emit(state.copyWith(label: label, clearError: true));
-  }
-
-  void customLabelChanged(String value) {
-    emit(state.copyWith(customLabel: value, clearError: true));
-  }
-
   /// Checks the first step of a circle for a patient without the app.
-  /// [labelName] is the text of the chosen chip, which the page translates. The
-  /// circle is named with the label and the first name of the patient. Returns
-  /// true when the page may go to the next step.
-  bool continueFromPatientBasics({required String labelName}) {
-    final String label = state.label == CircleLabel.other
-        ? state.customLabel.trim()
-        : labelName;
-    if (label.isEmpty ||
-        !state.patientNamesComplete ||
+  /// Nobody names that circle: everyone sees «دائرة» and the patient's first
+  /// name. [sharedName] is that name, which the page translates; the server
+  /// makes the same one. Returns true when the page may go to the next step.
+  bool continueFromPatientBasics({required String sharedName}) {
+    if (!state.patientNamesComplete ||
         state.birthDate == null ||
         state.city == null) {
       emit(state.copyWith(showErrors: true));
       return false;
     }
-    emit(
-      state.copyWith(
-        circleName: CircleNames.compose(label, state.patientFirstName),
-        showErrors: false,
-      ),
-    );
+    emit(state.copyWith(circleName: sharedName.trim(), showErrors: false));
     return true;
   }
 
   // ---- step 1 for a patient who agreed to a request -----------------------
 
-  /// Checks the page of a circle the patient agreed to: only the birth date
-  /// and the city can be asked, and only when onboarding did not save them.
-  /// Returns true when the circle may be created.
-  bool continueFromApprovedBasics() {
-    if (state.alreadyHasCircle) return false;
-    final bool basicsMissing =
-        state.asksBasics && (state.birthDate == null || state.city == null);
-    if (state.circleName.isEmpty || basicsMissing) {
-      emit(state.copyWith(showErrors: true));
-      return false;
-    }
-    emit(state.copyWith(showErrors: false));
-    return true;
-  }
+  /// Checks the page of a circle the patient agreed to: the patient's own
+  /// name for it (the same chips as their own circle), and the birth date and
+  /// the city only when onboarding did not save them. [presetName] is the
+  /// text of the chosen chip, which the page translates. Returns true when
+  /// the circle may be created.
+  bool continueFromApprovedBasics({required String presetName}) =>
+      continueFromBasics(presetName: presetName);
 
   // ---- step 2: health condition ----------------------------------------
 
@@ -343,6 +319,7 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
         result = await _circles.completeRequest(
           request!.id,
           CompleteCircleRequest(
+            name: state.circleName,
             birthDate: birthDate,
             city: city,
             medicalProfile: _medicalProfile(),

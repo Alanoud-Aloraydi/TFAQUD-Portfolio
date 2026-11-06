@@ -1,5 +1,4 @@
 import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:equatable/equatable.dart';
 
@@ -11,8 +10,6 @@ enum SendStatus { idle, sending, sent }
 class SendCircleRequestState extends Equatable {
   const SendCircleRequestState({
     this.phone = '',
-    this.label = CircleLabel.mother,
-    this.customLabel = '',
     this.mode = CircleAppMode.simplified,
     this.showErrors = false,
     this.status = SendStatus.idle,
@@ -23,9 +20,6 @@ class SendCircleRequestState extends Equatable {
 
   /// The nine digits after +966, written 0-9.
   final String phone;
-
-  final CircleLabel label;
-  final String customLabel;
 
   /// The mode proposed for the patient's app.
   final CircleAppMode mode;
@@ -46,8 +40,6 @@ class SendCircleRequestState extends Equatable {
 
   SendCircleRequestState copyWith({
     String? phone,
-    CircleLabel? label,
-    String? customLabel,
     CircleAppMode? mode,
     bool? showErrors,
     SendStatus? status,
@@ -58,8 +50,6 @@ class SendCircleRequestState extends Equatable {
   }) {
     return SendCircleRequestState(
       phone: phone ?? this.phone,
-      label: label ?? this.label,
-      customLabel: customLabel ?? this.customLabel,
       mode: mode ?? this.mode,
       showErrors: showErrors ?? this.showErrors,
       status: status ?? this.status,
@@ -72,8 +62,6 @@ class SendCircleRequestState extends Equatable {
   @override
   List<Object?> get props => [
     phone,
-    label,
-    customLabel,
     mode,
     showErrors,
     status,

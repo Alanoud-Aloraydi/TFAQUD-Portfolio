@@ -1,6 +1,5 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
@@ -42,44 +41,32 @@ void main() {
 
     test('a wrong number sends nothing and asks to correct it', () async {
       cubit.phoneChanged('1234');
-      expect(await cubit.send(labelName: 'أمي'), isFalse);
+      expect(await cubit.send(), isFalse);
       expect(cubit.state.showErrors, isTrue);
       expect(circles.sentRequests, isEmpty);
     });
   });
 
-  group('the label', () {
-    test('a label of your own needs its text', () async {
-      cubit.phoneChanged('501234567');
-      cubit.chooseLabel(CircleLabel.other);
-      expect(await cubit.send(labelName: 'اسم آخر'), isFalse);
-      cubit.customLabelChanged('   ');
-      expect(await cubit.send(labelName: 'اسم آخر'), isFalse);
-      expect(circles.sentRequests, isEmpty);
-      cubit.customLabelChanged('  عمي ');
-      expect(await cubit.send(labelName: 'اسم آخر'), isTrue);
-      expect(circles.sentRequests.single.circleLabel, 'عمي');
-    });
-  });
-
   group('send', () {
-    test('sends the number with +966, the label and the simplified mode', () async {
+    test('sends the number with +966 and the simplified mode, and no name',
+        () async {
       cubit.phoneChanged('501234567');
-      expect(await cubit.send(labelName: 'أمي'), isTrue);
+      expect(await cubit.send(), isTrue);
+      // The patient names the circle when they complete the request.
       expect(
         circles.sentRequests.single,
         const NewCircleRequest(
           patientPhoneNumber: '+966501234567',
-          circleLabel: 'أمي',
           proposedAppMode: CircleAppMode.simplified,
         ),
       );
+      expect(circles.sentRequests.single.circleLabel, isNull);
     });
 
     test('sends the mode that was chosen', () async {
       cubit.phoneChanged('501234567');
       cubit.chooseMode(CircleAppMode.detailed);
-      expect(await cubit.send(labelName: 'أمي'), isTrue);
+      expect(await cubit.send(), isTrue);
       expect(
         circles.sentRequests.single.proposedAppMode,
         CircleAppMode.detailed,
@@ -88,7 +75,7 @@ void main() {
 
     test('keeps the request the server saved and moves to "sent"', () async {
       cubit.phoneChanged('501234567');
-      expect(await cubit.send(labelName: 'أمي'), isTrue);
+      expect(await cubit.send(), isTrue);
       expect(cubit.state.status, SendStatus.sent);
       expect(cubit.state.sent, CirclesFakeRepository.waitingRequest);
     });
@@ -96,7 +83,7 @@ void main() {
     test('a refusal keeps the form and shows its text', () async {
       cubit.phoneChanged('501234567');
       circles.sent = const Error(SelfRequestFailure());
-      expect(await cubit.send(labelName: 'أمي'), isFalse);
+      expect(await cubit.send(), isFalse);
       expect(cubit.state.status, SendStatus.idle);
       expect(cubit.state.errorKey, 'circles.self_request');
       expect(cubit.state.sent, isNull);
@@ -107,7 +94,7 @@ void main() {
     test('typing again clears the refusal', () async {
       cubit.phoneChanged('501234567');
       circles.sent = const Error(PatientHasCircleFailure());
-      await cubit.send(labelName: 'أمي');
+      await cubit.send();
       expect(cubit.state.errorKey, 'circles.patient_has_circle');
       cubit.phoneChanged('501234568');
       expect(cubit.state.errorKey, isNull);
@@ -116,14 +103,14 @@ void main() {
     test('an ended session is reported', () async {
       cubit.phoneChanged('501234567');
       circles.sent = const Error(UnauthorizedFailure());
-      expect(await cubit.send(labelName: 'أمي'), isFalse);
+      expect(await cubit.send(), isFalse);
       expect(cubit.state.sessionEnded, isTrue);
     });
 
     test('a failure of the network is shown', () async {
       cubit.phoneChanged('501234567');
       circles.sent = const Error(NetworkFailure());
-      expect(await cubit.send(labelName: 'أمي'), isFalse);
+      expect(await cubit.send(), isFalse);
       expect(cubit.state.errorKey, 'error.network');
     });
   });

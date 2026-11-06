@@ -29,6 +29,7 @@ def test_the_account_page_reads_the_real_account(
         "birth_date": None,
         "city": None,
         "patient_circle_id": None,
+        "avatar_code": None,
     }
 
 
@@ -183,9 +184,11 @@ def test_a_member_leaves_other_circles_untouched(
         "circle"
     ]["members"] == [
         {
+            "account_id": str(owner.id),
             "display_name": "Nora",
             "is_you": True,
             "is_patient": False,
             "role": "manager",
+            "avatar_code": None,
         }
     ]

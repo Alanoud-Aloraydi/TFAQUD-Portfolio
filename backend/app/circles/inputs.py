@@ -177,13 +177,17 @@ class CreateSelfCircleInput(_OwnBasics):
 
 
 class CreateOfflineCircleInput(_PatientBasics):
-    name: CircleName
+    # Not used: the circle is named «دائرة» and the patient's first name.
+    # An older app still sends it.
+    name: CircleName | None = None
     patient_first_name: Name50
     patient_last_name: Name50
 
 
 class CompleteRequestInput(_OwnBasics):
-    pass
+    # The patient's own name for the circle; only they see it. An older app
+    # sends none, and the circle is then «دائرتي».
+    name: CircleName | None = None
 
 
 class PatientUpdateInput(_Place):
@@ -205,7 +209,9 @@ class LeaveCircleInput(Dto):
 
 class CreationRequestInput(Dto):
     patient_phone_number: Phone
-    circle_label: Label30
+    # Not used for the name any more (the patient names the circle). An
+    # older app still sends it.
+    circle_label: Label30 | None = None
     proposed_app_mode: AppMode
 
 

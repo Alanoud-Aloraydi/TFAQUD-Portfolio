@@ -1,10 +1,10 @@
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:equatable/equatable.dart';
 
-/// The circle name chips of the first step of the circle for your own care.
-/// [other] lets the user type a name.
+/// The circle name chips of your own circle: the one for your own care, or
+/// the one you agreed to. Only you see this name. [other] lets the user type
+/// a name.
 enum NamePreset { care, health, circle, other }
 
 /// Which circle the pages create. The health and allergies pages are the same
@@ -18,7 +18,7 @@ enum CircleFlow {
   patient,
 
   /// The patient agreed to a request and gives the basic data (PROFILE-01C).
-  /// The name comes from the account and the circle name from the request.
+  /// The name comes from the account; the patient names the circle.
   approved,
 }
 
@@ -39,8 +39,6 @@ class CreateCircleState extends Equatable {
     this.customName = '',
     this.patientFirstName = '',
     this.patientLastName = '',
-    this.label = CircleLabel.mother,
-    this.customLabel = '',
     this.circleName = '',
     this.birthDate,
     this.city,
@@ -65,12 +63,9 @@ class CreateCircleState extends Equatable {
   final NamePreset namePreset;
   final String customName;
 
-  // Step 1 of a circle for a patient without the app: the patient's names and
-  // the word the circle is named with.
+  // Step 1 of a circle for a patient without the app: the patient's names.
   final String patientFirstName;
   final String patientLastName;
-  final CircleLabel label;
-  final String customLabel;
 
   /// The name the circle gets. Set when the first step is complete.
   final String circleName;
@@ -144,8 +139,6 @@ class CreateCircleState extends Equatable {
     String? customName,
     String? patientFirstName,
     String? patientLastName,
-    CircleLabel? label,
-    String? customLabel,
     String? circleName,
     DateTime? birthDate,
     String? city,
@@ -171,8 +164,6 @@ class CreateCircleState extends Equatable {
       customName: customName ?? this.customName,
       patientFirstName: patientFirstName ?? this.patientFirstName,
       patientLastName: patientLastName ?? this.patientLastName,
-      label: label ?? this.label,
-      customLabel: customLabel ?? this.customLabel,
       circleName: circleName ?? this.circleName,
       birthDate: birthDate ?? this.birthDate,
       city: city ?? this.city,
@@ -199,8 +190,6 @@ class CreateCircleState extends Equatable {
     customName,
     patientFirstName,
     patientLastName,
-    label,
-    customLabel,
     circleName,
     birthDate,
     city,

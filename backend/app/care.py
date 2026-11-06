@@ -7,6 +7,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.errors import Forbidden, NotFound, ValidationFailed
+from app.circles.naming import OWN_NAME_DEFAULT, SHARED_PREFIX, shared_name
 from app.models import Account, CareCircle, CareCircleCreationRequest
 from app.models import CareCircleManager, CareCircleManagerInvitation, Patient
 
@@ -263,7 +264,6 @@ class CareService:
     def create_without_account(
         self,
         actor_id: UUID,
-        name: str,
         first_name: str,
         last_name: str,
         birth_date: date,
@@ -271,7 +271,11 @@ class CareService:
         latitude: float | None = None,
         longitude: float | None = None,
     ) -> CareCircle:
-        """Create a care circle for a patient without an account."""
+        """Create a care circle for a patient without an account.
+
+        Nobody chooses its name: everyone sees «دائرة» and the patient's
+        first name (`app.circles.naming`).
+        """
         account = self._lock_accounts(actor_id)[actor_id]
         self._assign_app_mode(account, "detailed")
         if not first_name.strip() or not last_name.strip():
@@ -280,7 +284,7 @@ class CareService:
                 code="patient_name_required",
             )
         return self._create_circle(
-            name,
+            shared_name(first_name),
             birth_date,
             city,
             {actor_id},
@@ -291,9 +295,13 @@ class CareService:
         )
 
     def request_creation(
-        self, actor_id: UUID, phone: str, label: str, mode: str
+        self, actor_id: UUID, phone: str, label: str | None, mode: str
     ) -> CareCircleCreationRequest:
-        """Persist a pending request without allocating a circle."""
+        """Persist a pending request without allocating a circle.
+
+        `label` no longer names the circle: the patient names it when they
+        complete the request. An older app still sends one; it is kept.
+        """
         target = self.session.scalar(
             select(Account).where(Account.phone_number == phone)
         )
@@ -323,7 +331,7 @@ class CareService:
         request = CareCircleCreationRequest(
             requested_by_account_id=actor_id,
             patient_phone_number=phone,
-            proposed_circle_label=label,
+            proposed_circle_label=(label or "").strip() or SHARED_PREFIX,
             proposed_app_mode=mode,
         )
         self.session.add(request)
@@ -376,8 +384,15 @@ class CareService:
         city: str | None,
         latitude: float | None = None,
         longitude: float | None = None,
+        *,
+        name: str | None = None,
     ) -> CareCircle:
-        """Activate only the accepted request owned by this patient."""
+        """Activate only the accepted request owned by this patient.
+
+        `name` is the patient's own name for the circle; only they see it.
+        The sender and the other managers see «دائرة» and the patient's
+        display name.
+        """
         request = self._get_creation_request(request_id)
         accounts = self._lock_accounts(
             actor_id, request.requested_by_account_id
@@ -406,9 +421,9 @@ class CareService:
         managers = {request.requested_by_account_id}
         if account.app_mode == "detailed":
             managers.add(actor_id)
-        name = f"{request.proposed_circle_label} {account.first_name}"
+        own_name = (name or "").strip() or OWN_NAME_DEFAULT
         circle = self._create_circle(
-            name,
+            own_name,
             birth_date,
             city,
             managers,
@@ -593,10 +608,23 @@ class CareService:
     def rename_circle(
         self, actor_id: UUID, circle_id: UUID, name: str
     ) -> None:
-        """Allow a current manager to rename the shared circle."""
+        """Only the patient with an account names the circle, for themself.
+
+        The others see an automatic name (`app.circles.naming`), so a
+        manager who is not the patient cannot change it.
+        """
         self._lock_accounts(actor_id)
         circle = self._lock_circle(circle_id)
-        self._require_manager(actor_id, circle_id)
+        patient_account = self.session.scalar(
+            select(Patient.account_id).where(
+                Patient.care_circle_id == circle_id
+            )
+        )
+        if patient_account is None or patient_account != actor_id:
+            raise Forbidden(
+                "Only the patient names this circle.",
+                code="patient_names_circle",
+            )
         if not name.strip():
             raise ValidationFailed(
                 "The circle name cannot be blank.", code="invalid_circle_name"

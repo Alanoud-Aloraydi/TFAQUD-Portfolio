@@ -64,7 +64,6 @@ def create_offline_circle():
     with care_work() as work:
         circle = work.care.create_without_account(
             work.actor,
-            body.name,
             body.patient_first_name,
             body.patient_last_name,
             body.birth_date,
@@ -94,13 +93,17 @@ def get_circle(circle_id):
 
 
 @bp.patch("/<circle_id>")
-@require_circle_role(MANAGER)
+@require_circle_role(*MEMBER)
 def rename_circle(circle_id):
+    """The patient's own name for their circle. Only the patient with an
+    account names it; the others see «دائرة» and the patient's name."""
     body = parse_json_body(RenameCircleInput)
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
         work.care.rename_circle(work.actor, cid, body.name)
-        view = views.circle_view(work.session, cid, work.actor, MANAGER)
+        view = views.circle_view(
+            work.session, cid, work.actor, current_circle_role()
+        )
     return answer({"circle": view})
 
 

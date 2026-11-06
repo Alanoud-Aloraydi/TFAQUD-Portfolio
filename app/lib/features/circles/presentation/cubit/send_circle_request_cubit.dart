@@ -1,6 +1,5 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
@@ -27,26 +26,15 @@ class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
     emit(state.copyWith(phone: digits, clearError: true));
   }
 
-  void chooseLabel(CircleLabel label) {
-    emit(state.copyWith(label: label, clearError: true));
-  }
-
-  void customLabelChanged(String value) {
-    emit(state.copyWith(customLabel: value, clearError: true));
-  }
-
   void chooseMode(CircleAppMode mode) {
     emit(state.copyWith(mode: mode, clearError: true));
   }
 
-  /// Sends the request. [labelName] is the text of the chosen chip, which the
-  /// page translates. Returns true when the server saved the request.
-  Future<bool> send({required String labelName}) async {
+  /// Sends the request. The circle gets no name here: the patient names it
+  /// when they complete the request. Returns true when the server saved it.
+  Future<bool> send() async {
     if (state.status == SendStatus.sending) return false;
-    final String label = state.label == CircleLabel.other
-        ? state.customLabel.trim()
-        : labelName;
-    if (!isPhoneValid || label.isEmpty) {
+    if (!isPhoneValid) {
       emit(state.copyWith(showErrors: true, clearError: true));
       return false;
     }
@@ -60,7 +48,6 @@ class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
     final result = await _circles.sendCircleRequest(
       NewCircleRequest(
         patientPhoneNumber: '$countryCode${state.phone}',
-        circleLabel: label,
         proposedAppMode: state.mode,
       ),
     );

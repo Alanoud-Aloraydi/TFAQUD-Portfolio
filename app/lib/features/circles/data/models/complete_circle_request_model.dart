@@ -3,8 +3,8 @@ import 'package:app/features/circles/domain/entities/complete_circle_request.dar
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 
 /// The body of POST /api/v1/circle-requests/{id}/complete
-/// (docs/api-contracts.md): the birth date, the city and, when the patient
-/// answered, the medical profile.
+/// (docs/api-contracts.md): the patient's own name for the circle, the birth
+/// date, the city and, when the patient answered, the medical profile.
 class CompleteCircleRequestModel {
   const CompleteCircleRequestModel(this._request);
 
@@ -15,6 +15,7 @@ class CompleteCircleRequestModel {
     final DateTime? birthDate = _request.birthDate;
     final String? city = _request.city;
     return <String, dynamic>{
+      'name': ?_request.name,
       // Left out: the server reads them from the account.
       if (birthDate != null)
         'birth_date': NewSelfCircleModel.isoDate(birthDate),

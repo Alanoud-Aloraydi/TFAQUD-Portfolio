@@ -31,6 +31,7 @@ def test_home_returns_empty_circles_and_own_identity(database_app, account):
             "id": owner.id.hex,
             "display_name": "Nora",
             "profile_complete": True,
+            "avatar_code": None,
         },
         "care_circles": [],
     }
@@ -55,6 +56,7 @@ def test_home_excludes_other_circles_and_pending_invitations(
             "id": str(visible.id),
             "name": visible.name,
             "can_manage_medications": True,
+            "patient_avatar_code": None,
         }
     ]
 
@@ -72,6 +74,7 @@ def test_home_lists_patient_manager_circle_once(
             "id": str(circle.id),
             "name": circle.name,
             "can_manage_medications": True,
+            "patient_avatar_code": None,
         }
     ]
 

@@ -496,7 +496,7 @@ the team has not approved them yet.
 | `POST /api/v1/circles/self` | any signed-in account with a profile | 201 `circle` |
 | `POST /api/v1/circles/patient-without-account` | the same | 201 `circle` |
 | `GET /api/v1/circles/{circle_id}` | manager, simplified patient | 200 `circle` |
-| `PATCH /api/v1/circles/{circle_id}` (rename) | manager | 200 `circle` |
+| `PATCH /api/v1/circles/{circle_id}` (rename) | the patient with an account (the rule below) | 200 `circle` |
 | `PUT /api/v1/circles/{circle_id}/patient` | manager, simplified patient | 200 `circle` |
 | `POST /api/v1/circles/{circle_id}/leave` | manager | 204 |
 | `DELETE /api/v1/circles/{circle_id}?confirm=true` | manager, simplified patient (the rule below) | 204 |
@@ -544,10 +544,29 @@ POST /api/v1/circles/self
 ```
 
 A patient without an account (PROFILE-01B). The caller manages the circle. Same
-body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each).
-In both bodies `latitude`, `longitude` and `medical_profile` are optional, and
-`name` is 1 to 60 characters. The app builds `name` from the chip the user chose,
-for example `Mother Noura`.
+body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each),
+and without `name`: the circle is named automatically (see "Circle names" below).
+An older app still sends `name`; it is accepted and not used. In both bodies
+`latitude`, `longitude` and `medical_profile` are optional. For self-care `name`
+is 1 to 60 characters: the patient's own name for the circle, for example
+`رعايتي`, `صحتي` or `دائرتي`.
+
+#### Circle names
+
+Since 6 November 2026 a circle has a name that depends on who reads it
+(`app/circles/naming.py`). Every answer that carries a circle name follows it:
+the circle page, `GET /api/v1/home`, `GET /api/v1/invitations` and the push
+texts.
+
+| Circle | The patient sees | Everyone else sees |
+|---|---|---|
+| Self-care | the name they typed or chose | «دائرة» and the patient's display name, for example `دائرة نورة` |
+| From a request (the patient has an account) | the name they chose when they completed the request | the same: «دائرة» and the patient's display name |
+| A patient without an account | (not an account) | «دائرة» and the patient's first name, for everyone |
+
+The automatic name is worked out when it is read, so a new display name, or a
+corrected first name of a patient without an account, shows at once. The
+patient's own choice is never shown to the others.
 
 201:
 
@@ -607,8 +626,10 @@ get the key.
 ]
 ```
 
-`PATCH` takes `{ "name": "Grandma Noura" }` (1 to 60 characters) and returns the
-circle. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
+`PATCH` takes `{ "name": "صحتي" }` (1 to 60 characters) and returns the circle.
+Only the patient with an account may call it, as a manager or as a simplified
+patient: it changes their own name for the circle. Anyone else, and anyone in a
+circle of a patient without an account, gets 403 `patient_names_circle`. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
 `birth_date` and `city` are required; `latitude`/`longitude` are replaced (sending
 none clears them). A patient without an account also needs `first_name` and
 `last_name`; for a patient with an account those two fields are an error
@@ -631,7 +652,7 @@ marked as sent again and the same invitation is returned. The invited person see
 in `GET /api/v1/invitations` after signing in with that number:
 
 ```json
-{ "invitations": [ { "id": "...", "circle_name": "Mother Noura",
+{ "invitations": [ { "id": "...", "circle_name": "دائرة نورة",
     "invited_by": { "display_name": "Reem" },
     "created_at": "...", "last_sent_at": "..." } ] }
 ```
@@ -652,20 +673,23 @@ The patient's answer is the story US-03 (section 7).
 The flow has three steps. The circle exists only after step 3.
 
 1. The sender calls `POST /api/v1/circle-requests` with
-   `{ "patient_phone_number": "+9665XXXXXXXX", "circle_label": "Mother", "proposed_app_mode": "simplified" }`.
-   The label is 1 to 30 characters. The number need not have an account yet; the
-   request waits for it. If the sender already has an open request to that number,
+   `{ "patient_phone_number": "+9665XXXXXXXX", "proposed_app_mode": "simplified" }`.
+   `circle_label` (1 to 30 characters) is optional and no longer names the circle;
+   an older app still sends it, and it is kept (`دائرة` when left out). The number
+   need not have an account yet; the request waits for it. If the sender already has an open request to that number,
    it is returned instead of a second one.
 2. The patient sees it in `GET /api/v1/circle-requests` under `received`, and calls
    `POST .../{request_id}/respond` with `{ "accept": true }` or `false`. Accepting
    is consent only. It does not create the circle.
 3. The patient calls `POST .../{request_id}/complete` with the basic data
-   (PROFILE-01C): `birth_date`, `city`, optional `latitude`, `longitude` and
-   `medical_profile`. This creates the circle (201 `circle`). Calling it again
-   returns the same circle.
+   (PROFILE-01C): `name` (their own name for the circle, 1 to 60 characters),
+   `birth_date`, `city`, optional `latitude`, `longitude` and `medical_profile`.
+   This creates the circle (201 `circle`). Calling it again returns the same
+   circle. An older app sends no `name`; the circle is then `دائرتي`.
 
-The circle name is the label and the first name of the patient, for example
-`Mother Noura`. The sender becomes a manager. The patient becomes a manager too if
+Only the patient sees their `name`. The sender and the other managers see
+«دائرة» and the patient's display name ("Circle names" above). The sender
+becomes a manager. The patient becomes a manager too if
 the proposed mode is `detailed`; with `simplified` the patient is only the patient.
 Accepting sets the mode of the patient's account, once.
 
@@ -677,7 +701,7 @@ Accepting sets the mode of the patient's account, once.
     {
       "id": "7c054a73-e522-4d1d-ae65-8fac8cf01e85",
       "patient_phone_number": "+966506666663",
-      "circle_label": "Mother",
+      "circle_label": "دائرة",
       "proposed_app_mode": "simplified",
       "status": "pending",
       "created_at": "2026-10-26T08:03:19.816997+00:00",
@@ -689,8 +713,8 @@ Accepting sets the mode of the patient's account, once.
     {
       "id": "...",
       "status": "pending",
-      "circle_label": "Mother",
-      "circle_name": "Mother Noura",
+      "circle_label": "دائرة",
+      "circle_name": null,
       "proposed_app_mode": "simplified",
       "requested_by": { "display_name": "Reem", "first_name": "Reem", "last_name": "Family" },
       "created_at": "..."
@@ -1068,7 +1092,7 @@ one real SMS. The steps are tests 8, 9 and 6 in `docs/authentica-test-guide.md`.
 | An expired code | Send, wait 5 minutes and 10 seconds, verify. The code must be refused. This shows that the 300 seconds of the dashboard are applied, and gives the answer for an expired code. |
 | Sending twice quickly | Whether the second send is refused, and whether the first code still works after the second send. |
 | A phone number in the wrong format | Our server checks the number before it calls Authentica. The answer of Authentica for a number it cannot deliver to is recorded in the F01 tests. |
-| The limit on `send-otp` calls | Our own limit (3 codes per phone number per hour) comes first. The limit of Authentica (60 calls per minute) is far above it. |
+| The limit on `send-otp` calls | Our own limits (growing waits, and 20 codes per phone number a day) come first. The limit of Authentica (60 calls per minute) is far above it. |
 
 ### Decision: Authentica makes and checks the code (Decided)
 
@@ -1084,7 +1108,7 @@ tries and it limits the codes per hour.
 | Keep the code for 300 seconds | Authentica (dashboard setting) |
 | Check the code, and accept it once | Authentica (`verify-otp`) |
 | Stop after 3 wrong tries | Our server |
-| At most 3 codes per phone number per hour | Our server |
+| Growing waits between codes, at most 20 codes per phone number a day, 10 per device and 30 per IP an hour | Our server |
 | Check the format of the phone number before any call | Our server |
 | Create the session after a correct code | Our server (section 4) |
 

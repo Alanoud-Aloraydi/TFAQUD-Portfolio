@@ -929,8 +929,9 @@ void main() {
 
         expect(find.byType(RequestPatientScreen), findsOneWidget);
         expect(find.text('circles.request_title'.tr()), findsOneWidget);
-        // The label chips, the mode and the note about the patient's consent.
-        expect(find.text('circles.label.mother'.tr()), findsOneWidget);
+        // No name to choose: the note says how the circle will be named.
+        // Then the mode and the note about the patient's consent.
+        expect(find.text('circles.request_name_note'.tr()), findsOneWidget);
         expect(find.text('circles.mode_simplified'.tr()), findsOneWidget);
         expect(find.text('circles.mode_detailed'.tr()), findsOneWidget);
         expect(find.text('circles.request_notice'.tr()), findsOneWidget);
@@ -964,7 +965,8 @@ void main() {
 
           final request = circles.sentRequests.single;
           expect(request.patientPhoneNumber, '+966501234567');
-          expect(request.circleLabel, 'circles.label.mother'.tr());
+          // The patient names the circle; the request carries no name.
+          expect(request.circleLabel, isNull);
           expect(request.proposedAppMode.name, 'detailed');
         },
       );
@@ -1036,21 +1038,6 @@ void main() {
         expect(find.text('circles.request_waiting_title'.tr()), findsNothing);
       });
 
-      testWidgets('a label of your own asks for the typed word', (
-        WidgetTester tester,
-      ) async {
-        await openFlow(tester, patientUsesApp: true);
-        await tester.tap(find.text('circles.label.other'.tr()));
-        await tester.pumpAndSettle();
-        expect(find.text('circles.custom_label'.tr()), findsOneWidget);
-
-        await tester.enterText(find.byType(TextField).first, '501234567');
-        await tester.pump();
-        await tester.tap(find.text('circles.send_request'.tr()));
-        await tester.pumpAndSettle();
-        expect(circles.sentRequests, isEmpty);
-        expect(find.text('circles.field_required'.tr()), findsOneWidget);
-      });
     });
 
     group('a patient who does not use the app', () {
@@ -1083,52 +1070,18 @@ void main() {
         'shows how the circle will be named while the name is typed',
         (WidgetTester tester) async {
           await openPatientBasics(tester);
-          expect(
-            find.text(
-              'circles.label_hint'.tr(
-                args: <String>['circles.label.mother'.tr()],
-              ),
-            ),
-            findsOneWidget,
-          );
+          // Nobody names it: «دائرة» and the patient's first name.
+          expect(find.text('circles.shared_name_hint'.tr()), findsOneWidget);
 
           await tester.enterText(find.byType(TextField).first, 'نورة');
           await tester.pump();
-          final String name = '${'circles.label.mother'.tr()} نورة';
+          final String name = 'circles.shared_name'.tr(args: <String>['نورة']);
           expect(
             find.text('circles.name_preview'.tr(args: <String>[name])),
             findsOneWidget,
           );
-
-          await tester.tap(find.text('circles.label.grandmother'.tr()));
-          await tester.pump();
-          final String other = '${'circles.label.grandmother'.tr()} نورة';
-          expect(
-            find.text('circles.name_preview'.tr(args: <String>[other])),
-            findsOneWidget,
-          );
         },
       );
-
-      testWidgets('a label of your own asks for the typed word', (
-        WidgetTester tester,
-      ) async {
-        final CreateCircleCubit cubit = await openPatientBasics(tester);
-        await tester.tap(find.text('circles.label.other'.tr()));
-        await tester.pumpAndSettle();
-        expect(find.text('circles.custom_label'.tr()), findsOneWidget);
-
-        await tester.enterText(find.byType(TextField).at(0), 'نورة');
-        await tester.enterText(find.byType(TextField).at(1), 'العتيبي');
-        cubit.birthDateChanged(DateTime(1954, 6, 5));
-        cubit.cityChanged('بريدة');
-        await tester.pump();
-        await tester.tap(find.text('circles.create'.tr()));
-        await tester.pumpAndSettle();
-
-        expect(find.text('circles.field_required'.tr()), findsOneWidget);
-        expect(find.text('circles.patient_title'.tr()), findsOneWidget);
-      });
 
       testWidgets('the city sheet asks for the city of the patient', (
         WidgetTester tester,
@@ -1159,7 +1112,7 @@ void main() {
         await tester.pumpAndSettle();
 
         final created = circles.patientCircles.single;
-        expect(created.name, '${'circles.label.mother'.tr()} نورة');
+        expect(created.name, 'circles.shared_name'.tr(args: <String>['نورة']));
         expect(created.patientFirstName, 'نورة');
         expect(created.patientLastName, 'العتيبي');
         expect(created.birthDate, DateTime(1954, 6, 5));
@@ -1325,7 +1278,7 @@ void main() {
       expect(find.text('circles.events_title'.tr()), findsOneWidget);
       expect(find.text('circles.declined_title'.tr()), findsOneWidget);
       expect(
-        find.text('circles.declined_body'.tr(args: <String>['أمي'])),
+        find.text('circles.declined_body'.tr()),
         findsOneWidget,
       );
       expect(find.text('+966 50 123 4567'), findsOneWidget);
@@ -1443,7 +1396,8 @@ void main() {
         expect(find.byType(RequestReplyScreen), findsOneWidget);
         expect(find.text('circles.reply_title'.tr()), findsOneWidget);
         expect(find.text('سارة الحربي'), findsOneWidget);
-        expect(find.text('أمي نورة'), findsOneWidget);
+        // No circle name yet: the patient names it after agreeing.
+        expect(find.text('أمي نورة'), findsNothing);
         expect(find.text('circles.mode_simplified'.tr()), findsOneWidget);
         expect(find.text('circles.reply_body_simplified'.tr()), findsOneWidget);
         expect(find.text('circles.reply_decline_note'.tr()), findsOneWidget);
@@ -1488,9 +1442,11 @@ void main() {
         expect(circles.requestAnswers.single, ('request-in-1', true));
         expect(find.byType(RequestReplyScreen), findsNothing);
         expect(find.byType(ApprovedCircleBasicsScreen), findsOneWidget);
-        // The name of the circle was set by the sender; the name is the account's.
-        expect(find.text('أمي نورة'), findsOneWidget);
-        expect(find.text('circles.set_by_requester'.tr()), findsOneWidget);
+        // The patient names the circle with the chips of their own circle;
+        // the name is the account's.
+        expect(find.text('circles.preset.care'.tr()), findsOneWidget);
+        expect(find.text('circles.name_hint'.tr()), findsOneWidget);
+        expect(find.text('أمي نورة'), findsNothing);
         expect(find.text('Reem Alahmadi'), findsOneWidget);
         // Nothing was created yet: the circle exists after the last step.
         expect(circles.completions, isEmpty);
@@ -1564,9 +1520,7 @@ void main() {
         expect(find.text('circles.complete_card_title'.tr()), findsOneWidget);
         expect(
           find.text(
-            'circles.complete_card_body'.tr(
-              args: <String>['سارة الحربي', 'أمي نورة'],
-            ),
+            'circles.complete_card_body'.tr(args: <String>['سارة الحربي']),
           ),
           findsOneWidget,
         );
@@ -1583,7 +1537,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(ApprovedCircleBasicsScreen), findsOneWidget);
-        expect(find.text('أمي نورة'), findsOneWidget);
+        expect(find.text('circles.preset.health'.tr()), findsOneWidget);
       });
 
       testWidgets('one tap creates the circle from the request', (
@@ -1607,6 +1561,8 @@ void main() {
 
         expect(circles.completedIds, <String>['request-in-1']);
         final completion = circles.completions.single;
+        // The first chip is chosen unless the patient picks another.
+        expect(completion.name, 'circles.preset.care'.tr());
         expect(completion.birthDate, DateTime(1954, 6, 5));
         expect(completion.city, 'بريدة');
         expect(completion.medicalProfile, isNull);
@@ -1785,8 +1741,11 @@ void main() {
       await openAccount(tester);
 
       expect(find.text('account.awaiting_title'.tr()), findsOneWidget);
-      expect(find.text('أمي'), findsOneWidget);
-      expect(find.text('أبي'), findsOneWidget);
+      // Each row shows the number: the circle has no name until the patient
+      // names it.
+      expect(find.text('+966 50 765 4321'), findsOneWidget);
+      expect(find.text('+966 50 111 2233'), findsOneWidget);
+      expect(find.text('أمي'), findsNothing);
       // The number of days is written 0-9.
       expect(
         find.text('account.sent_days_few'.tr(args: <String>['5'])),
@@ -1795,7 +1754,7 @@ void main() {
       expect(find.text('circles.request_status_pending'.tr()), findsOneWidget);
       expect(find.text('account.status_accepted_short'.tr()), findsOneWidget);
       // A refused request is told on the notifications page, not here.
-      expect(find.text('خالتي'), findsNothing);
+      expect(find.text('+966 50 444 5566'), findsNothing);
     });
 
     group('a request that waits', () {
@@ -1820,10 +1779,11 @@ void main() {
 
       testWidgets('opens its details', (WidgetTester tester) async {
         await openAccount(tester);
-        await openSheet(tester, 'أمي');
+        await openSheet(tester, '+966 50 765 4321');
 
         expect(find.text('account.request_sheet_title'.tr()), findsOneWidget);
-        expect(find.text('+966 50 765 4321'), findsOneWidget);
+        // In the sheet, and in the row under it.
+        expect(find.text('+966 50 765 4321'), findsWidgets);
         expect(find.text('circles.mode_simplified'.tr()), findsOneWidget);
         expect(find.text('circles.cancel_request'.tr()), findsOneWidget);
       });
@@ -1832,7 +1792,7 @@ void main() {
         WidgetTester tester,
       ) async {
         await openAccount(tester);
-        await openSheet(tester, 'أمي');
+        await openSheet(tester, '+966 50 765 4321');
 
         await tester.tap(find.text('circles.cancel_request'.tr()));
         await tester.pumpAndSettle();
@@ -1852,7 +1812,7 @@ void main() {
 
       testWidgets('stays when the sender says no', (WidgetTester tester) async {
         await openAccount(tester);
-        await openSheet(tester, 'أمي');
+        await openSheet(tester, '+966 50 765 4321');
 
         await tester.tap(find.text('circles.cancel_request'.tr()));
         await tester.pumpAndSettle();
@@ -1868,7 +1828,7 @@ void main() {
       ) async {
         circles.canceled = const Error(NetworkFailure());
         await openAccount(tester);
-        await openSheet(tester, 'أمي');
+        await openSheet(tester, '+966 50 765 4321');
 
         await tester.tap(find.text('circles.cancel_request'.tr()));
         await tester.pumpAndSettle();

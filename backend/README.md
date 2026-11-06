@@ -126,7 +126,7 @@ It makes two demo accounts. Sign in on the phone with **0500000001**
 `FAKE SMS ... Your code is ...`). The account has:
 
 - «رعايتي», her own care, with two medicines;
-- «رعاية أمي», her mother's care (no account), with every kind of medicine:
+- «دائرة نورة», her mother's care (no account), with every kind of medicine:
   twice a day, a revised dose, a change that starts in 5 days, an injection in
   units, a syrup course that ends soon, eye drops on three days a week, an
   inhaler, one that starts in a week, a finished course and a stopped one, a
@@ -134,9 +134,9 @@ It makes two demo accounts. Sign in on the phone with **0500000001**
 - a month of dose records: most taken (some late), some skipped with a
   reason, some missed, and today's doses of the last 3 hours left open;
 - an invitation she sent 2 days ago to 0559876543 (her sister) to help with
-  «رعاية أمي», still waiting;
-- an invitation from «سارة» (0500000002) to manage «رعاية جدي» in Jeddah;
-- a request she sent to 0500000003 («أبي») that still waits.
+  «دائرة نورة», still waiting;
+- an invitation from «سارة» (0500000002) to manage «دائرة عبدالله» in Jeddah;
+- a request she sent to 0500000003 (her father) that still waits.
 
 | What | Command |
 |---|---|

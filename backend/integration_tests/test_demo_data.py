@@ -66,8 +66,8 @@ def test_the_demo_account_reads_it_like_the_app(database_app, database):
     circles = client.get("/api/v1/home", headers=headers).get_json()[
         "care_circles"
     ]
-    assert {circle["name"] for circle in circles} == {"رعايتي", "رعاية أمي"}
-    mother = next(c["id"] for c in circles if c["name"] == "رعاية أمي")
+    assert {circle["name"] for circle in circles} == {"رعايتي", "دائرة نورة"}
+    mother = next(c["id"] for c in circles if c["name"] == "دائرة نورة")
     plans = client.get(
         f"/api/v1/circles/{mother}/medication-plans", headers=headers
     ).get_json()["medication_plans"]
@@ -90,7 +90,7 @@ def test_the_demo_account_reads_it_like_the_app(database_app, database):
     invitations = client.get("/api/v1/invitations", headers=headers).get_json()[
         "invitations"
     ]
-    assert [item["circle_name"] for item in invitations] == ["رعاية جدي"]
+    assert [item["circle_name"] for item in invitations] == ["دائرة عبدالله"]
     sent = client.get("/api/v1/circle-requests", headers=headers).get_json()[
         "sent"
     ]
@@ -125,7 +125,7 @@ def test_if_missing_makes_it_once_then_nothing(database_app, database):
 
 
 def test_a_reset_works_after_lina_joined_saras_circle(database_app, database):
-    # On the phone, Lina accepts Sara's invitation, so «رعاية جدي» has two
+    # On the phone, Lina accepts Sara's invitation, so «دائرة عبدالله» has two
     # demo managers. A reset deleted one account first and then failed at
     # the end on the doses of that circle; it must delete it whole.
     _run(database_app)

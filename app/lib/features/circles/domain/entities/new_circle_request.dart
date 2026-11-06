@@ -6,16 +6,17 @@ import 'package:equatable/equatable.dart';
 class NewCircleRequest extends Equatable {
   const NewCircleRequest({
     required this.patientPhoneNumber,
-    required this.circleLabel,
     required this.proposedAppMode,
+    this.circleLabel,
   });
 
   /// The patient's number with the country code, `+9665XXXXXXXX`.
   final String patientPhoneNumber;
 
-  /// The word of the circle name, for example "أمي". The patient's first name
-  /// is added when the circle is created.
-  final String circleLabel;
+  /// Not sent by this app any more: the patient names the circle when they
+  /// complete the request, and the sender sees «دائرة» and the patient's
+  /// name. The API still accepts it.
+  final String? circleLabel;
   final CircleAppMode proposedAppMode;
 
   @override

@@ -3,12 +3,11 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/circle_label_picker.dart';
 import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
 import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/picker_field.dart';
@@ -18,8 +17,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// The circle for a patient who does not use the app (PROFILE-01B) on one
-/// page: the names of the patient, the birth date, the word the circle is
-/// named with, and the city. The health condition and allergies are filled
+/// page: the names of the patient, the birth date and the city. Nobody names
+/// the circle: everyone sees «دائرة» and the patient's first name, and the
+/// page shows it as it is typed. The health condition and allergies are filled
 /// later in the medical file. Needs a [CreateCircleCubit] of the patient flow
 /// above it.
 class PatientCircleBasicsScreen extends StatefulWidget {
@@ -33,7 +33,6 @@ class PatientCircleBasicsScreen extends StatefulWidget {
 class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
   late final TextEditingController _firstName;
   late final TextEditingController _lastName;
-  late final TextEditingController _customLabel;
 
   @override
   void initState() {
@@ -41,14 +40,12 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     final CreateCircleState state = context.read<CreateCircleCubit>().state;
     _firstName = TextEditingController(text: state.patientFirstName);
     _lastName = TextEditingController(text: state.patientLastName);
-    _customLabel = TextEditingController(text: state.customLabel);
   }
 
   @override
   void dispose() {
     _firstName.dispose();
     _lastName.dispose();
-    _customLabel.dispose();
     super.dispose();
   }
 
@@ -78,9 +75,11 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
   }
 
   Future<void> _create(BuildContext context, CreateCircleCubit cubit) async {
-    final CircleLabel label = cubit.state.label;
     final bool ok = cubit.continueFromPatientBasics(
-      labelName: context.tr('circles.label.${label.name}'),
+      sharedName: context.tr(
+        'circles.shared_name',
+        args: <String>[cubit.state.patientFirstName.trim()],
+      ),
     );
     if (ok) await createCircleAndOpen(context, cubit);
   }
@@ -156,22 +155,22 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 : null,
                           ),
                           const SizedBox(height: AppSpacing.xl),
-                          CircleLabelPicker(
-                            selected: state.label,
-                            onSelected: cubit.chooseLabel,
-                            customController: _customLabel,
-                            onCustomChanged: cubit.customLabelChanged,
-                            hint: circleLabelHint(
-                              context,
-                              label: state.label,
-                              customLabel: state.customLabel,
-                              firstName: state.patientFirstName,
-                            ),
-                            customError:
-                                state.showErrors &&
-                                    state.customLabel.trim().isEmpty
-                                ? requiredText
-                                : null,
+                          InsetText.header(context.tr('circles.circle_name')),
+                          const SizedBox(height: AppSpacing.sm),
+                          InsetText.note(
+                            state.patientFirstName.trim().isEmpty
+                                ? context.tr('circles.shared_name_hint')
+                                : context.tr(
+                                    'circles.name_preview',
+                                    args: <String>[
+                                      context.tr(
+                                        'circles.shared_name',
+                                        args: <String>[
+                                          state.patientFirstName.trim(),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           PickerField(

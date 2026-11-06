@@ -104,7 +104,8 @@ def test_an_invitation_reaches_the_invited_phone(
     [message] = pushes.to(khaled_phone.token)
     assert message.kind == "invitation"
     assert message.title == "دعوة إلى دائرة رعاية"
-    assert message.body == f"دعوة من Reem للانضمام إلى دائرة «{circle.name}»."
+    # As Khaled sees the circle: «دائرة» and the patient's first name.
+    assert message.body == "دعوة من Reem للانضمام إلى «دائرة Nora»."
     assert pushes.to(reem_phone.token) == []
 
     # Sent again: told again.
@@ -181,18 +182,18 @@ def test_a_circle_request_from_sending_to_the_circle(
     [answered] = pushes.to(reem_phone.token)
     assert answered.kind == "request_answer"
     assert answered.title == "تمت الموافقة على طلبك"
-    assert "«Mother»" in answered.body
+    assert answered.body == (
+        "تمت الموافقة على طلبك لرعاية Noura. تُنشأ الدائرة بعد إكمال البيانات."
+    )
 
     done = noura_phone.call(
-        "post", f"{REQUESTS}/{request_id}/complete", BASICS
+        "post", f"{REQUESTS}/{request_id}/complete", {**BASICS, "name": "صحتي"}
     )
     assert done.status_code == 201
     ready = pushes.to(reem_phone.token)[-1]
     assert ready.kind == "circle_ready"
-    assert ready.body == (
-        f"أُنشئت دائرة «{done.json['circle']['name']}»، ويمكنك متابعة "
-        "الرعاية الآن."
-    )
+    # Reem is told the name she sees, not Noura's own «صحتي».
+    assert ready.body == "أُنشئت «دائرة Noura»، ويمكنك متابعة الرعاية الآن."
 
 
 def test_a_declined_request_is_told(database_app, database, account, pushes):
@@ -213,7 +214,7 @@ def test_a_declined_request_is_told(database_app, database, account, pushes):
 
     [answer] = pushes.to(reem_phone.token)
     assert answer.title == "اعتذار عن طلب الرعاية"
-    assert answer.body == "لم تتم الموافقة على طلبك لرعاية «Mother»."
+    assert answer.body == "لم تتم الموافقة على طلبك لرعاية Noura."
 
 
 def test_a_token_apple_forgot_is_deleted(

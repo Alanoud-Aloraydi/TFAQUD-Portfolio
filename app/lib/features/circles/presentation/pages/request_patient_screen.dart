@@ -13,10 +13,8 @@ import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
-import 'package:app/features/circles/presentation/widgets/circle_label_picker.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +22,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// The page that asks a patient who uses the app for a circle (CREAT-04): the
-/// patient's phone number, the word the circle is named with, and the mode
-/// proposed for the patient's app. Once the request is sent, the same page shows
+/// patient's phone number and the mode proposed for the patient's app. The
+/// circle is not named here: the patient names it for themself, and the
+/// sender sees «دائرة» and the patient's name. Once the request is sent, the same page shows
 /// the waiting state (CREAT-05). Needs a [SendCircleRequestCubit] above it.
 class RequestPatientScreen extends StatefulWidget {
   const RequestPatientScreen({super.key});
@@ -36,18 +35,11 @@ class RequestPatientScreen extends StatefulWidget {
 
 class _RequestPatientScreenState extends State<RequestPatientScreen> {
   final TextEditingController _phone = TextEditingController();
-  final TextEditingController _customLabel = TextEditingController();
 
   @override
   void dispose() {
     _phone.dispose();
-    _customLabel.dispose();
     super.dispose();
-  }
-
-  Future<void> _send(BuildContext context, SendCircleRequestCubit cubit) async {
-    final CircleLabel label = cubit.state.label;
-    await cubit.send(labelName: context.tr('circles.label.${label.name}'));
   }
 
   @override
@@ -85,7 +77,6 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
     SendCircleRequestCubit cubit,
     SendCircleRequestState state,
   ) {
-    final String requiredText = context.tr('circles.field_required');
     return Column(
       children: <Widget>[
         Expanded(
@@ -107,22 +98,8 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   onChanged: (String typed) =>
                       cubit.phoneChanged(ArabicDigits.digitsOnly(typed)),
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                CircleLabelPicker(
-                  selected: state.label,
-                  onSelected: cubit.chooseLabel,
-                  customController: _customLabel,
-                  onCustomChanged: cubit.customLabelChanged,
-                  hint: circleLabelHint(
-                    context,
-                    label: state.label,
-                    customLabel: state.customLabel,
-                  ),
-                  customError:
-                      state.showErrors && state.customLabel.trim().isEmpty
-                      ? requiredText
-                      : null,
-                ),
+                const SizedBox(height: AppSpacing.sm),
+                InsetText.note(context.tr('circles.request_name_note')),
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.proposed_mode')),
                 const SizedBox(height: AppSpacing.sm),
@@ -160,7 +137,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
         PillButton(
           label: context.tr('circles.send_request'),
           isLoading: state.status == SendStatus.sending,
-          onPressed: () => _send(context, cubit),
+          onPressed: () => cubit.send(),
         ),
       ],
     );

@@ -274,9 +274,10 @@ class AcceptedRequestCard extends StatelessWidget {
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.complete_card_title'),
+      // The patient names the circle on the next page.
       body: context.tr(
         'circles.complete_card_body',
-        args: <String>[request.requesterName, request.circleName],
+        args: <String>[request.requesterName],
       ),
       pill: _needsReplyPill(context),
       actions: Row(
@@ -328,10 +329,8 @@ class DeclinedRequestCard extends StatelessWidget {
       avatarBackground: AppSemanticColors.borderSubtle,
       avatarForeground: context.tokens.textSecondary,
       title: context.tr('circles.declined_title'),
-      body: context.tr(
-        'circles.declined_body',
-        args: <String>[request.circleLabel],
-      ),
+      // The number below says which request it was.
+      body: context.tr('circles.declined_body'),
       extra: Text(
         RequestSentView.displayPhone(request.patientPhoneNumber),
         textDirection: TextDirection.ltr,

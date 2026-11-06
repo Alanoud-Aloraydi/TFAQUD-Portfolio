@@ -174,16 +174,9 @@ class _RequestDetails extends StatelessWidget {
               ),
             ],
           ),
+          // No circle name here: the patient names the circle when they
+          // complete the request.
           const Divider(height: 32),
-          _Row(
-            label: context.tr('circles.approved_circle_name'),
-            child: StatusPill(
-              text: request.circleName,
-              background: AppSemanticColors.borderSubtle,
-              foreground: AppSemanticColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
           _Row(
             label: context.tr('circles.reply_mode'),
             child: StatusPill(

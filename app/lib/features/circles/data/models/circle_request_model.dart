@@ -11,7 +11,7 @@ class NewCircleRequestModel {
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'patient_phone_number': _request.patientPhoneNumber,
-    'circle_label': _request.circleLabel,
+    'circle_label': ?_request.circleLabel,
     'proposed_app_mode': _request.proposedAppMode.name,
   };
 }
