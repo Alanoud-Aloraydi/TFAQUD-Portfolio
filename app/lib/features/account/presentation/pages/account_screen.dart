@@ -336,6 +336,7 @@ class _CalendarSyncCardState extends State<_CalendarSyncCard> {
 
 class _CalendarSyncCircleRow extends StatelessWidget {
   const _CalendarSyncCircleRow({
+    super.key,
     required this.circle,
     required this.expanded,
     required this.onTap,
