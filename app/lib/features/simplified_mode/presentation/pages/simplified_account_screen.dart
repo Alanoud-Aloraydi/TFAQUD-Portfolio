@@ -191,7 +191,9 @@ class _SimplifiedAccountBodyState extends State<_SimplifiedAccountBody> {
         ),
         const SizedBox(height: AppSpacing.xl),
         if (circleId != null) ...[
-          CalendarSyncSection(circleId: circleId),
+          SectionTitle(context.tr('circle_overview.calendar_sync_title')),
+          CalendarSyncToggles(circleId: circleId),
+          const CalendarSyncHint(),
           const SizedBox(height: AppSpacing.xl),
           SettingsSection(
             title: context.tr('simplified_mode.medical_card_title'),

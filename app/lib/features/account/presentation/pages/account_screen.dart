@@ -19,7 +19,6 @@ import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
@@ -293,10 +292,9 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-/// The calendar-sync toggles for one of this account's circles, with a
-/// picker to switch between them when it manages more than one. A manager
-/// may be in several circles; each circle's own toggles are per-circle
-/// here, not tied to whichever circle tab they last opened.
+/// The calendar-sync toggles for this account's circles: one row per
+/// circle (a manager may be in several), each expanding in place to show
+/// that circle's own toggles, with one shared explanation below the list.
 class _CalendarSyncCard extends StatefulWidget {
   const _CalendarSyncCard({required this.circles});
 
@@ -307,24 +305,80 @@ class _CalendarSyncCard extends StatefulWidget {
 }
 
 class _CalendarSyncCardState extends State<_CalendarSyncCard> {
-  late String _selectedCircleId = widget.circles.first.id;
+  String? _expandedCircleId;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.circles.length > 1) ...[
-          GlassSegmentedControl<String>(
-            segments: {
-              for (final circle in widget.circles) circle.id: circle.name,
-            },
-            selected: _selectedCircleId,
-            onChanged: (value) => setState(() => _selectedCircleId = value),
+        SectionTitle(context.tr('circle_overview.calendar_sync_title')),
+        SettingsCard(
+          children: [
+            for (final circle in widget.circles)
+              _CalendarSyncCircleRow(
+                key: ValueKey(circle.id),
+                circle: circle,
+                expanded: _expandedCircleId == circle.id,
+                onTap: () => setState(() {
+                  _expandedCircleId = _expandedCircleId == circle.id
+                      ? null
+                      : circle.id;
+                }),
+              ),
+          ],
+        ),
+        const CalendarSyncHint(),
+      ],
+    );
+  }
+}
+
+class _CalendarSyncCircleRow extends StatelessWidget {
+  const _CalendarSyncCircleRow({
+    required this.circle,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  final CareCircleSummary circle;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    circle.name,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                Icon(
+                  expanded ? AppIcons.caretUp : AppIcons.caretDown,
+                  size: AppSizes.iconSmall,
+                  color: context.tokens.textSecondary,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-        CalendarSyncSection(circleId: _selectedCircleId),
+        ),
+        if (expanded)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: CalendarSyncToggles(circleId: circle.id),
+          ),
       ],
     );
   }

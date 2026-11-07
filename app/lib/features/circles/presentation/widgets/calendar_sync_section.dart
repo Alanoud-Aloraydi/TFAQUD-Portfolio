@@ -1,21 +1,22 @@
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-/// The per-circle, per-category calendar-sync toggles: doses,
-/// measurements, and appointments. Shared by the circle tab (detailed
-/// mode) and the simplified-mode account screen.
-class CalendarSyncSection extends StatelessWidget {
-  const CalendarSyncSection({super.key, required this.circleId});
+/// The calendar-sync toggles (doses, measurements, appointments) for one
+/// circle: no title of its own, so a page with several circles can put its
+/// own title and a shared hint around as many of these as it needs.
+class CalendarSyncToggles extends StatelessWidget {
+  const CalendarSyncToggles({super.key, required this.circleId});
 
   final String circleId;
 
   @override
   Widget build(BuildContext context) {
-    return SettingsSection(
-      title: context.tr('circle_overview.calendar_sync_title'),
+    return SettingsCard(
       children: <Widget>[
         _CalendarSyncRow(
           circleId: circleId,
@@ -31,9 +32,30 @@ class CalendarSyncSection extends StatelessWidget {
           circleId: circleId,
           category: CalendarSyncCategory.appointments,
           label: context.tr('circle_overview.calendar_sync_appointments'),
-          hint: context.tr('circle_overview.calendar_sync_hint'),
         ),
       ],
+    );
+  }
+}
+
+/// The one explanation of what calendar sync does, shown once beneath
+/// however many circles' toggles a page lists.
+class CalendarSyncHint extends StatelessWidget {
+  const CalendarSyncHint({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        top: AppSpacing.sm,
+        start: AppSpacing.inset,
+        end: AppSpacing.inset,
+      ),
+      child: Text(
+        context.tr('circle_overview.calendar_sync_hint'),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: context.tokens.textSecondary),
+      ),
     );
   }
 }
@@ -45,13 +67,11 @@ class _CalendarSyncRow extends StatefulWidget {
     required this.circleId,
     required this.category,
     required this.label,
-    this.hint,
   });
 
   final String circleId;
   final CalendarSyncCategory category;
   final String label;
-  final String? hint;
 
   @override
   State<_CalendarSyncRow> createState() => _CalendarSyncRowState();
@@ -65,6 +85,18 @@ class _CalendarSyncRowState extends State<_CalendarSyncRow> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void didUpdateWidget(_CalendarSyncRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A reused State (same slot, new circleId) must not keep showing the
+    // previous circle's value while this one's own load is in flight.
+    if (oldWidget.circleId != widget.circleId ||
+        oldWidget.category != widget.category) {
+      _enabled = null;
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -81,7 +113,6 @@ class _CalendarSyncRowState extends State<_CalendarSyncRow> {
   Widget build(BuildContext context) {
     return ToggleRow(
       label: widget.label,
-      hint: widget.hint,
       value: _enabled ?? false,
       onChanged: _enabled == null ? (_) {} : _onChanged,
     );
