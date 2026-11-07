@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/services/simplified_text_scale.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -16,11 +18,21 @@ class SimplifiedScale extends StatefulWidget {
 
 class _SimplifiedScaleState extends State<SimplifiedScale> {
   double? _factor;
+  StreamSubscription<SimplifiedTextScale>? _subscription;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _subscription = GetIt.I<SimplifiedTextScalePreference>().changes.listen(
+      (scale) => setState(() => _factor = scale.factor),
+    );
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {

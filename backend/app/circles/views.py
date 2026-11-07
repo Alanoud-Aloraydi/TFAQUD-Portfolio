@@ -70,11 +70,14 @@ def circle_view(
             # Already the account's own avatar; a patient who manages their
             # own circle shares it, like their photo.
             "avatar_code": avatar_code,
+            # So any circle member can call another, the same as an
+            # emergency contact's number.
+            "phone_number": phone_number,
         }
-        for account_id, name, avatar_code in sorted(
+        for account_id, name, avatar_code, phone_number in sorted(
             session.execute(
                 select(CareCircleManager.account_id, Account.display_name,
-                       Account.avatar_code)
+                       Account.avatar_code, Account.phone_number)
                 .join(Account, Account.id == CareCircleManager.account_id)
                 .where(CareCircleManager.care_circle_id == circle_id)
             ).all(),
@@ -100,6 +103,7 @@ def circle_view(
             "is_patient": True,
             "role": "patient",
             "avatar_code": linked.avatar_code if linked else patient.avatar_code,
+            "phone_number": linked.phone_number if linked else None,
         })
     linked_patient = (
         session.get(Account, patient_account) if patient_account else None

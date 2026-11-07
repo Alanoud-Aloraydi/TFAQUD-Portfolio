@@ -190,5 +190,6 @@ def test_a_member_leaves_other_circles_untouched(
             "is_patient": False,
             "role": "manager",
             "avatar_code": None,
+            "phone_number": owner.phone_number,
         }
     ]

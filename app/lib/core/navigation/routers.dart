@@ -94,16 +94,4 @@ class Routes {
       '/circles/$circleId/appointments/$appointmentId/visit';
   static const String simplifiedHome = '/simplifiedHome';
   static const String simplifiedAccount = '/simplifiedHome/account';
-  static const String simplifiedMeasurementTypePath =
-      '/simplifiedHome/circles/:circleId/measurement-type';
-  static String simplifiedMeasurementType(String circleId) =>
-      '/simplifiedHome/circles/$circleId/measurement-type';
-  static const String simplifiedGlucoseReadingPath =
-      '/simplifiedHome/circles/:circleId/glucose-reading';
-  static String simplifiedGlucoseReading(String circleId) =>
-      '/simplifiedHome/circles/$circleId/glucose-reading';
-  static const String simplifiedBpReadingPath =
-      '/simplifiedHome/circles/:circleId/bp-reading';
-  static String simplifiedBpReading(String circleId) =>
-      '/simplifiedHome/circles/$circleId/bp-reading';
 }

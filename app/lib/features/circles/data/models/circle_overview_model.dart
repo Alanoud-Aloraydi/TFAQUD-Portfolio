@@ -37,6 +37,7 @@ class CircleOverviewModel {
               accountId: raw['account_id'] as String?,
               avatarCode: raw['avatar_code'] as String?,
               isManager: raw['role'] == 'manager',
+              phoneNumber: raw['phone_number'] as String?,
             ),
         ],
         pendingInvitations: <CirclePendingInvitation>[

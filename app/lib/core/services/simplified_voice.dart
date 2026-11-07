@@ -6,15 +6,27 @@ import 'package:injectable/injectable.dart';
 @lazySingleton
 class SimplifiedVoice {
   SimplifiedVoice() {
-    _tts
-      ..setLanguage('ar-SA')
-      ..setSpeechRate(0.45);
+    _ready = _tts
+        .setLanguage('ar-SA')
+        .then((_) => _tts.setSpeechRate(0.45))
+        // Without this, iOS plays nothing at all while the silent switch is
+        // on — the default category follows it like any other media sound.
+        .then(
+          (_) => _tts.setIosAudioCategory(
+            IosTextToSpeechAudioCategory.playback,
+            <IosTextToSpeechAudioCategoryOptions>[
+              IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+            ],
+          ),
+        );
   }
 
   final FlutterTts _tts = FlutterTts();
+  late final Future<void> _ready;
 
   /// Speaks [segments] one after another, stopping whatever it was saying.
   Future<void> speak(List<String> segments) async {
+    await _ready;
     await _tts.stop();
     await _tts.speak(segments.where((text) => text.isNotEmpty).join('. '));
   }

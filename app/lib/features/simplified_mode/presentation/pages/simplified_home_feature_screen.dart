@@ -1,17 +1,21 @@
 import 'dart:async';
 
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_home_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_home_state.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/listen_button.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_measurement_sheet.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_scale.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -19,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Simplified mode's one home screen: the current task (due, missed, or
 /// nothing left today), the family row, and the measurement/emergency
@@ -178,6 +183,18 @@ class _SimplifiedHomeBody extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // In RTL, the leading edge is the right, so the photo (and
+              // the greeting next to it) sit there and the listen button
+              // is the one pushed to the far left.
+              GestureDetector(
+                onTap: () => context.push(Routes.simplifiedAccount),
+                child: PersonPhoto(
+                  name: state.greetingName ?? '',
+                  photoPath: ApiEndpoints.accountPhoto,
+                  size: 44,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               if (state.greetingName case final name?)
                 Expanded(
                   child: Text(
@@ -192,15 +209,6 @@ class _SimplifiedHomeBody extends StatelessWidget {
                   ),
                 ),
               ListenButton(segments: _listenSegments(context, state)),
-              const SizedBox(width: AppSpacing.xs),
-              GestureDetector(
-                onTap: () => context.push(Routes.simplifiedAccount),
-                child: PersonPhoto(
-                  name: state.greetingName ?? '',
-                  photoPath: ApiEndpoints.accountPhoto,
-                  size: 44,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -215,10 +223,10 @@ class _SimplifiedHomeBody extends StatelessWidget {
                           state.task?.measurementOccurrence?.kind;
                       final String? circleId = state.circleId;
                       if (kind == null || circleId == null) return;
-                      context.push(
-                        kind == MeasurementKind.glucose
-                            ? Routes.simplifiedGlucoseReading(circleId)
-                            : Routes.simplifiedBpReading(circleId),
+                      showSimplifiedMeasurementSheet(
+                        context,
+                        circleId: circleId,
+                        lockedKind: kind,
                       );
                     },
                     child: _SimplifiedHomeTaskCard(
@@ -236,23 +244,23 @@ class _SimplifiedHomeBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (state.members.isNotEmpty) ...[
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                for (final member in state.members)
-                  if (!member.isPatient)
-                    PersonPhoto(
-                      name: member.name,
-                      photoPath: ApiEndpoints.memberPhoto(
-                        state.circleId ?? '',
-                        member.accountId ?? '',
-                      ),
-                      avatarCode: member.avatarCode,
-                      size: 68,
-                    ),
-              ],
+          if (state.members.where((m) => !m.isPatient).toList()
+              case final family when family.isNotEmpty) ...[
+            // Horizontally scrollable, never wrapped to more rows: a
+            // circle with many members must not push the buttons below
+            // out of reach.
+            SizedBox(
+              height: 68,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: family.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: AppSpacing.sm),
+                itemBuilder: (context, index) => _FamilyPhoto(
+                  member: family[index],
+                  circleId: state.circleId ?? '',
+                ),
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
           ],
@@ -266,7 +274,10 @@ class _SimplifiedHomeBody extends StatelessWidget {
                   onTap: () {
                     final String? circleId = state.circleId;
                     if (circleId != null) {
-                      context.push(Routes.simplifiedMeasurementType(circleId));
+                      showSimplifiedMeasurementSheet(
+                        context,
+                        circleId: circleId,
+                      );
                     }
                   },
                 ),
@@ -493,6 +504,64 @@ class _SimplifiedHomeSquare extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One family member's photo, with a small badge to call them when their
+/// number is known.
+class _FamilyPhoto extends StatelessWidget {
+  const _FamilyPhoto({required this.member, required this.circleId});
+
+  final CircleMember member;
+  final String circleId;
+
+  Future<void> _call() async {
+    final String? phone = member.phoneNumber;
+    if (phone == null) return;
+    await launchUrl(Uri(scheme: 'tel', path: phone.replaceAll(' ', '')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = PersonPhoto(
+      name: member.name,
+      photoPath: ApiEndpoints.memberPhoto(circleId, member.accountId ?? ''),
+      avatarCode: member.avatarCode,
+      size: 68,
+    );
+    if (member.phoneNumber == null) return photo;
+    return Semantics(
+      button: true,
+      label: context.tr('simplified_mode.call_member', args: [member.name]),
+      child: GestureDetector(
+        onTap: _call,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            photo,
+            PositionedDirectional(
+              bottom: -2,
+              start: -2,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: AppSemanticColors.actionPrimary,
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      color: AppSemanticColors.surfaceContent,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(AppSpacing.xs),
+                  child: Icon(AppIcons.phoneCall, size: AppSizes.iconSmall),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

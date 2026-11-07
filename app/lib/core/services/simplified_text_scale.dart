@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,6 +26,14 @@ enum SimplifiedTextScale {
 class SimplifiedTextScalePreference {
   static const String _key = 'simplified_text_scale';
 
+  final StreamController<SimplifiedTextScale> _changes =
+      StreamController<SimplifiedTextScale>.broadcast();
+
+  /// Emits the new value right after [set], so a `SimplifiedScale` already
+  /// on screen re-applies it immediately instead of only the next one
+  /// built fresh.
+  Stream<SimplifiedTextScale> get changes => _changes.stream;
+
   Future<SimplifiedTextScale> get() async {
     final prefs = await SharedPreferences.getInstance();
     final String? value = prefs.getString(_key);
@@ -36,5 +46,6 @@ class SimplifiedTextScalePreference {
   Future<void> set(SimplifiedTextScale scale) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, scale.name);
+    _changes.add(scale);
   }
 }

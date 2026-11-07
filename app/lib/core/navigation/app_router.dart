@@ -79,12 +79,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_account_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_home_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_account_screen.dart';
-import 'package:app/features/simplified_mode/presentation/pages/simplified_bp_reading_page.dart';
-import 'package:app/features/simplified_mode/presentation/pages/simplified_glucose_reading_page.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_home_feature_screen.dart';
-import 'package:app/features/simplified_mode/presentation/pages/simplified_measurement_type_page.dart';
 
 import 'routers.dart';
 
@@ -157,41 +153,6 @@ class AppRouter {
               ),
             ],
             child: const SimplifiedAccountScreen(),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedMeasurementTypePath,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) =>
-                GetIt.I<SimplifiedMeasurementCubit>()
-                  ..load(state.pathParameters['circleId']!),
-            child: SimplifiedMeasurementTypePage(
-              circleId: state.pathParameters['circleId']!,
-            ),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedGlucoseReadingPath,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) =>
-                GetIt.I<SimplifiedMeasurementCubit>()
-                  ..load(state.pathParameters['circleId']!),
-            child: const SimplifiedGlucoseReadingPage(),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedBpReadingPath,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) =>
-                GetIt.I<SimplifiedMeasurementCubit>()
-                  ..load(state.pathParameters['circleId']!),
-            child: const SimplifiedBpReadingPage(),
           ),
         ),
       ),

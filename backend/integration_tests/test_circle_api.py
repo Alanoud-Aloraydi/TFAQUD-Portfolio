@@ -76,6 +76,7 @@ def test_self_care_circle_is_created_and_listed(
             "is_patient": True,
             "role": "manager",
             "avatar_code": None,
+            "phone_number": owner.phone_number,
         }
     ]
     assert circle["pending_invitations"] == []
@@ -230,6 +231,7 @@ def test_circle_for_a_patient_without_an_account(
             "is_patient": False,
             "role": "manager",
             "avatar_code": None,
+            "phone_number": owner.phone_number,
         }
     ]
     with Session(database) as session:

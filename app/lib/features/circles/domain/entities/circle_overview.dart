@@ -59,6 +59,7 @@ class CircleMember extends Equatable {
     this.accountId,
     this.avatarCode,
     this.isManager = true,
+    this.phoneNumber,
   });
 
   final String name;
@@ -70,6 +71,9 @@ class CircleMember extends Equatable {
   final String? avatarCode;
   final bool isManager;
 
+  /// So another member can call them; null for a patient with no account.
+  final String? phoneNumber;
+
   @override
   List<Object?> get props => [
     name,
@@ -78,6 +82,7 @@ class CircleMember extends Equatable {
     accountId,
     avatarCode,
     isManager,
+    phoneNumber,
   ];
 }
 
