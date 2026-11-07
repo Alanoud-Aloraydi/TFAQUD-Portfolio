@@ -168,7 +168,7 @@ class _SimplifiedHomeBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool onDark = state.status == SimplifiedHomeStatus.due;
     final Color foreground = onDark
-        ? Colors.white
+        ? AppSemanticColors.surfaceContent
         : AppSemanticColors.textPrimary;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -302,7 +302,7 @@ class _SimplifiedHomeTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color foreground = onDark
-        ? Colors.white
+        ? AppSemanticColors.surfaceContent
         : AppSemanticColors.textPrimary;
     if (state.status == SimplifiedHomeStatus.done) {
       return Column(
@@ -311,13 +311,13 @@ class _SimplifiedHomeTaskCard extends StatelessWidget {
           const Icon(
             CupertinoIcons.check_mark_circled_solid,
             size: 64,
-            color: Colors.white,
+            color: AppSemanticColors.surfaceContent,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             context.tr('simplified_mode.all_done'),
             style: Theme.of(context).textTheme.headlineMedium
-                ?.copyWith(color: Colors.white),
+                ?.copyWith(color: AppSemanticColors.surfaceContent),
             textAlign: TextAlign.center,
           ),
         ],
@@ -431,7 +431,7 @@ class _DoseActionButtonsState extends State<_DoseActionButtons> {
   @override
   Widget build(BuildContext context) {
     final Color foreground = widget.onDark
-        ? Colors.white
+        ? AppSemanticColors.surfaceContent
         : AppSemanticColors.textPrimary;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -482,12 +482,12 @@ class _SimplifiedHomeSquare extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: Colors.white, size: 32),
+                Icon(icon, color: AppSemanticColors.surfaceContent, size: 32),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   label,
                   style: Theme.of(context).textTheme.titleMedium
-                      ?.copyWith(color: Colors.white),
+                      ?.copyWith(color: AppSemanticColors.surfaceContent),
                   textAlign: TextAlign.center,
                 ),
               ],
