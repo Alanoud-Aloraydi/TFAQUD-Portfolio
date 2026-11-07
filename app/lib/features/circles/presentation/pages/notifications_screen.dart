@@ -5,15 +5,13 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
-import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/domain/entities/received_circle_request.dart';
-import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
+import 'package:app/features/circles/presentation/widgets/pending_invites_section.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,42 +22,6 @@ import 'package:go_router/go_router.dart';
 /// [InboxCubit] above it.
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
-
-  /// Opens the page of a request and loads the list again when the person comes
-  /// back, because the answer may have changed it.
-  Future<void> _open(
-    BuildContext context,
-    InboxCubit cubit,
-    String route,
-    ReceivedCircleRequest request,
-  ) async {
-    await context.push<void>(route, extra: request);
-    if (!cubit.isClosed) cubit.load();
-  }
-
-  Future<void> _confirmCancel(
-    BuildContext context,
-    InboxCubit cubit,
-    ReceivedCircleRequest request,
-  ) async {
-    final bool? yes = await showAppAlert<bool>(
-      context,
-      title: context.tr('circles.cancel_confirm_title'),
-      message: context.tr('circles.cancel_confirm_body_patient'),
-      actions: <AppAlertAction<bool>>[
-        AppAlertAction<bool>(
-          label: context.tr('circles.cancel_confirm_no'),
-          value: false,
-        ),
-        AppAlertAction<bool>(
-          label: context.tr('circles.cancel_confirm_yes'),
-          value: true,
-          destructive: true,
-        ),
-      ],
-    );
-    if (yes == true) await cubit.cancelRequest(request.id);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,45 +144,8 @@ class NotificationsScreen extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: AppSpacing.xl),
         children: <Widget>[
-          if (inbox.needsReply > 0) ...<Widget>[
-            Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: AppSpacing.inset,
-                bottom: AppSpacing.labelGap,
-              ),
-              child: Text(
-                context.tr(
-                  'circles.needs_reply',
-                  args: <String>['${inbox.needsReply}'],
-                ),
-                style: sectionStyle,
-              ),
-            ),
-            for (final ReceivedInvitation invitation in inbox.invitations)
-              InvitationCard(
-                invitation: invitation,
-                busy: state.busyIds.contains(invitation.id),
-                onAccept: () =>
-                    cubit.respondToInvitation(invitation.id, accept: true),
-                onDecline: () =>
-                    cubit.respondToInvitation(invitation.id, accept: false),
-              ),
-            for (final ReceivedCircleRequest request in inbox.received)
-              if (request.isAccepted)
-                AcceptedRequestCard(
-                  request: request,
-                  busy: state.busyIds.contains(request.id),
-                  onContinue: () =>
-                      _open(context, cubit, Routes.completeRequest, request),
-                  onCancel: () => _confirmCancel(context, cubit, request),
-                )
-              else
-                RequestCard(
-                  request: request,
-                  onView: () =>
-                      _open(context, cubit, Routes.replyRequest, request),
-                ),
-          ],
+          if (inbox.needsReply > 0)
+            PendingInvitesSection(cubit: cubit, state: state),
           if (declined.isNotEmpty) ...<Widget>[
             Padding(
               padding: const EdgeInsetsDirectional.only(

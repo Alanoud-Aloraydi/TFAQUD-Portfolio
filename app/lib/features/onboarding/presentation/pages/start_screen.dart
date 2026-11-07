@@ -5,6 +5,9 @@ import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
+import 'package:app/features/circles/presentation/widgets/pending_invites_section.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:app/features/onboarding/presentation/widgets/choice_card.dart';
@@ -13,9 +16,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Last page of the account setup: "كيف تريد أن تبدأ؟". The "+" next to the
+/// Last page of the account setup: "لديك دعوة؟ أم تبدأ دائرتك؟". The "+" next to the
 /// circles opens it again, to add another circle ([addingCircle]). That page
 /// has a back link and no "تخطي الآن", because the account is already set up.
+///
+/// Above the choice, a brand-new person's own pending invitations show up
+/// right away ([PendingInvitesSection]): someone may have invited them
+/// before they ever opened the app, so answering it here picks their circle
+/// directly, with no need to choose "أرعى شخصًا آخر" at all.
 ///
 /// "أدير رعايتي بنفسي" continues to the three steps that create your own circle.
 /// "أرعى شخصًا آخر" asks whether the patient uses the app. If the patient does,
@@ -59,6 +67,34 @@ class StartScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
+                          if (!addingCircle)
+                            BlocBuilder<InboxCubit, InboxState>(
+                              builder:
+                                  (
+                                    BuildContext context,
+                                    InboxState inboxState,
+                                  ) {
+                                    if (inboxState.status !=
+                                        InboxStatus.ready) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: AppSpacing.lg,
+                                      ),
+                                      // Capped to a short teaser so many
+                                      // pending invitations don't push the
+                                      // choice below out of reach; "عرض
+                                      // الكل" opens the full notifications
+                                      // list for the rest.
+                                      child: PendingInvitesSection(
+                                        cubit: context.read<InboxCubit>(),
+                                        state: inboxState,
+                                        maxItems: 2,
+                                      ),
+                                    );
+                                  },
+                            ),
                           StepHeader(
                             // Step 2 of the first set-up; from the "+" it is
                             // one page, with no steps.
@@ -144,9 +180,7 @@ class _PatientQuestion extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.inset,
-            ),
+            padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
             child: Text(
               context.tr('onboarding.patient_question'),
               style: text.titleSmall?.copyWith(
