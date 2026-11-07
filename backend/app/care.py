@@ -307,7 +307,11 @@ class CareService:
         )
         account_ids = [actor_id] + ([target.id] if target else [])
         account = self._lock_accounts(*account_ids)[actor_id]
-        self._assign_app_mode(account, "detailed")
+        # Not yet: nothing is created here, and `CircleAppMode.parse` already
+        # treats a null mode as detailed for routing, so this account's own
+        # mode stays undetermined until a circle actually exists for it
+        # (`complete_creation` sets it there, the same as `create_self` and
+        # `create_without_account` do at their own moment of creation).
         if phone == account.phone_number:
             raise ValidationFailed(
                 "You cannot request a circle for your own number.",
@@ -369,7 +373,11 @@ class CareService:
                     "Complete or cancel accepted care.",
                     code="accepted_request_exists",
                 )
-            self._assign_app_mode(account, request.proposed_app_mode)
+            # Not yet: the mode is only committed once the circle actually
+            # exists (complete_creation). Committing it here would strand
+            # the account on an abandoned or canceled request, since
+            # cancel_creation never clears it, blocking every later request
+            # proposing a different mode.
         request.status = desired
         request.responded_by_account_id = actor_id
         request.responded_at = self.now

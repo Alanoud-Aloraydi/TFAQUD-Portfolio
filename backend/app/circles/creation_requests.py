@@ -113,7 +113,7 @@ def complete(request_id):
         )
         push = circle_ready_push(work.session, request_uuid, circle)
     notify(push)
-    return answer({"circle": view}, 201)
+    return answer({"circle": view, "account_app_mode": mode}, 201)
 
 
 @bp.delete("/<request_id>")
