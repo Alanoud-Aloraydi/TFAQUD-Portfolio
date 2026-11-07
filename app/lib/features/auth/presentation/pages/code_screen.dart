@@ -8,6 +8,7 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
 import 'package:app/features/auth/presentation/widgets/otp_field.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,8 +40,15 @@ class CodeScreen extends StatelessWidget {
     final SignInCubit cubit = context.read<SignInCubit>();
     final bool correct = await cubit.verify();
     if (!context.mounted || !correct) return;
-    // A user who has not saved the name page goes to it; the others go home.
-    context.go(cubit.state.needsProfile ? Routes.onboarding : Routes.today);
+    // A user who has not saved the name page goes to it; the others go
+    // home, to whichever home their account's app mode uses.
+    context.go(
+      cubit.state.needsProfile
+          ? Routes.onboarding
+          : cubit.state.appMode == CircleAppMode.simplified
+          ? Routes.simplifiedHome
+          : Routes.today,
+    );
   }
 
   @override
@@ -63,7 +71,8 @@ class CodeScreen extends StatelessWidget {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

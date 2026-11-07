@@ -23,6 +23,7 @@ import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.d
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:app/features/simplified_mode/di/simplified_mode_di.dart';
 
 @InjectableInit(
   initializerName: 'init',
@@ -85,4 +86,5 @@ Future<void> configureDependencies() async {
       ),
     ),
   );
+  configureSimplifiedMode(getIt);
 }

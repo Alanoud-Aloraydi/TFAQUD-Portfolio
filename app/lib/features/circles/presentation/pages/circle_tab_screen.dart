@@ -5,7 +5,6 @@ import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -28,7 +27,6 @@ import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.da
 import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
@@ -60,13 +58,11 @@ class CircleTabScreen extends StatelessWidget {
         if (circle == null) return const SizedBox.shrink();
         return BlocProvider(
           key: ValueKey(selectedId),
-          create: (_) =>
-              CircleOverviewCubit(
-                  GetIt.I<CirclesUseCase>(),
-                  selectedId!,
-                  GetIt.I<PrivatePhotoRepository>().changes,
-                )
-                ..load(),
+          create: (_) => CircleOverviewCubit(
+            GetIt.I<CirclesUseCase>(),
+            selectedId!,
+            GetIt.I<PrivatePhotoRepository>().changes,
+          )..load(),
           child: _CircleContent(circle: circle),
         );
       },
@@ -144,8 +140,6 @@ class _CircleContent extends StatelessWidget {
       ),
       _MembersHeader(overview: overview),
       _MembersList(overview: overview, circleId: circle.id),
-      const SizedBox(height: AppSpacing.xl),
-      _CalendarSyncSection(circleId: circle.id),
       if (overview.canManage) ...<Widget>[
         const SizedBox(height: AppSpacing.md),
         FilledButton.icon(
@@ -597,87 +591,6 @@ class _CircleFeatureTile extends StatelessWidget {
 /// One switch per category (doses, measurements, appointments), each this
 /// circle's own setting — someone in several circles may want only one
 /// circle's appointments on their phone's calendar, say.
-class _CalendarSyncSection extends StatelessWidget {
-  const _CalendarSyncSection({required this.circleId});
-
-  final String circleId;
-
-  @override
-  Widget build(BuildContext context) {
-    return SettingsSection(
-      title: context.tr('circle_overview.calendar_sync_title'),
-      children: <Widget>[
-        _CalendarSyncRow(
-          circleId: circleId,
-          category: CalendarSyncCategory.doses,
-          label: context.tr('circle_overview.calendar_sync_doses'),
-        ),
-        _CalendarSyncRow(
-          circleId: circleId,
-          category: CalendarSyncCategory.measurements,
-          label: context.tr('circle_overview.calendar_sync_measurements'),
-        ),
-        _CalendarSyncRow(
-          circleId: circleId,
-          category: CalendarSyncCategory.appointments,
-          label: context.tr('circle_overview.calendar_sync_appointments'),
-          hint: context.tr('circle_overview.calendar_sync_hint'),
-        ),
-      ],
-    );
-  }
-}
-
-/// A calendar-sync toggle for one circle and category, off by default, its
-/// own value loaded once.
-class _CalendarSyncRow extends StatefulWidget {
-  const _CalendarSyncRow({
-    required this.circleId,
-    required this.category,
-    required this.label,
-    this.hint,
-  });
-
-  final String circleId;
-  final CalendarSyncCategory category;
-  final String label;
-  final String? hint;
-
-  @override
-  State<_CalendarSyncRow> createState() => _CalendarSyncRowState();
-}
-
-class _CalendarSyncRowState extends State<_CalendarSyncRow> {
-  final CalendarSync _calendar = GetIt.I<CalendarSync>();
-  bool? _enabled;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final value = await _calendar.isEnabled(widget.circleId, widget.category);
-    if (mounted) setState(() => _enabled = value);
-  }
-
-  Future<void> _onChanged(bool value) async {
-    setState(() => _enabled = value);
-    await _calendar.setEnabled(widget.circleId, widget.category, value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ToggleRow(
-      label: widget.label,
-      hint: widget.hint,
-      value: _enabled ?? false,
-      onChanged: _enabled == null ? (_) {} : _onChanged,
-    );
-  }
-}
-
 /// «الأعضاء», and at the end how many managers and pending invitations
 /// there are: «3 مديرين · دعوة معلّقة».
 class _MembersHeader extends StatelessWidget {

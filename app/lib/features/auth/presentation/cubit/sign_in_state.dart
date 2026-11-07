@@ -1,3 +1,4 @@
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
 /// Defines the supported sign in status values.
@@ -15,6 +16,7 @@ class SignInState extends Equatable {
     this.resendSeconds = 0,
     this.verificationId,
     this.needsProfile = false,
+    this.appMode = CircleAppMode.detailed,
   });
 
   /// The nine digits after +966, written 0-9 (for example 501234567).
@@ -44,6 +46,9 @@ class SignInState extends Equatable {
   /// Set when the code was correct and the user has not saved the name page.
   final bool needsProfile;
 
+  /// The mode the app opens in once the code is correct.
+  final CircleAppMode appMode;
+
   SignInState copyWith({
     String? phone,
     String? code,
@@ -55,6 +60,7 @@ class SignInState extends Equatable {
     String? verificationId,
     bool clearVerificationId = false,
     bool? needsProfile,
+    CircleAppMode? appMode,
   }) {
     return SignInState(
       phone: phone ?? this.phone,
@@ -67,6 +73,7 @@ class SignInState extends Equatable {
           ? null
           : (verificationId ?? this.verificationId),
       needsProfile: needsProfile ?? this.needsProfile,
+      appMode: appMode ?? this.appMode,
     );
   }
 
@@ -80,5 +87,6 @@ class SignInState extends Equatable {
     resendSeconds,
     verificationId,
     needsProfile,
+    appMode,
   ];
 }

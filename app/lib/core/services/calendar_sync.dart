@@ -3,7 +3,8 @@ import 'dart:convert';
 
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart' show ReminderCircle;
+import 'package:app/features/medications/domain/dose_reminders.dart'
+    show ReminderCircle;
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
@@ -219,7 +220,11 @@ class CalendarSync {
       final DateTime from = version.effectiveFromOn.isAfter(now)
           ? version.effectiveFromOn
           : now;
-      final DateTime start = _nextOccurrence(from, version.time, version.weekdays);
+      final DateTime start = _nextOccurrence(
+        from,
+        version.time,
+        version.weekdays,
+      );
       final String kindName = plan.kind == MeasurementKind.glucose
           ? 'قياس سكر الدم'
           : 'قياس ضغط الدم';
@@ -364,7 +369,13 @@ DateTime _nextOccurrence(DateTime from, String time, List<int> weekdays) {
   final int hour = int.parse(parts[0]);
   final int minute = int.parse(parts[1]);
   for (int i = 0; i < 7; i++) {
-    final DateTime day = DateTime(from.year, from.month, from.day + i, hour, minute);
+    final DateTime day = DateTime(
+      from.year,
+      from.month,
+      from.day + i,
+      hour,
+      minute,
+    );
     if (weekdays.contains(day.weekday) && !day.isBefore(from)) return day;
   }
   return DateTime(from.year, from.month, from.day, hour, minute);

@@ -78,6 +78,15 @@ void main() {
     expect(remote.checks, 1);
   });
 
+  test('a simplified-mode account resumes to its own home', () async {
+    remote.account = const AccountStatusResponse(
+      profileComplete: true,
+      appMode: 'simplified',
+    );
+    await splash.decide();
+    expect(splash.state, StartDestination.simplifiedHome);
+  });
+
   test('an incomplete profile resumes onboarding after reopening', () async {
     remote.account = const AccountStatusResponse(
       profileComplete: false,

@@ -19,11 +19,14 @@ import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/request_age.dart';
+import 'package:app/features/circles/presentation/widgets/calendar_sync_section.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -249,6 +252,10 @@ class AccountScreen extends StatelessWidget {
               ),
             ],
           ),
+          if (state.circles.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.xl),
+            _CalendarSyncCard(circles: state.circles),
+          ],
           if (state.sent.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.xl),
             SettingsSection(
@@ -282,6 +289,43 @@ class AccountScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The calendar-sync toggles for one of this account's circles, with a
+/// picker to switch between them when it manages more than one. A manager
+/// may be in several circles; each circle's own toggles are per-circle
+/// here, not tied to whichever circle tab they last opened.
+class _CalendarSyncCard extends StatefulWidget {
+  const _CalendarSyncCard({required this.circles});
+
+  final List<CareCircleSummary> circles;
+
+  @override
+  State<_CalendarSyncCard> createState() => _CalendarSyncCardState();
+}
+
+class _CalendarSyncCardState extends State<_CalendarSyncCard> {
+  late String _selectedCircleId = widget.circles.first.id;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.circles.length > 1) ...[
+          GlassSegmentedControl<String>(
+            segments: {
+              for (final circle in widget.circles) circle.id: circle.name,
+            },
+            selected: _selectedCircleId,
+            onChanged: (value) => setState(() => _selectedCircleId = value),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        CalendarSyncSection(circleId: _selectedCircleId),
+      ],
     );
   }
 }

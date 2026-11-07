@@ -7,6 +7,7 @@ import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,15 +40,21 @@ class AccountCubit extends Cubit<AccountState> {
     final List<Object> answers = await Future.wait<Object>(<Future<Object>>[
       _circles.getAccount(),
       _circles.getInbox(),
+      _home.getHome(),
     ]);
     if (isClosed || revision != _revision) return;
     final account = answers[0] as Result<AccountSummary, Failure>;
     final inbox = answers[1] as Result<CircleInbox, Failure>;
+    final home = answers[2] as Result<HomeEntity, Failure>;
     account.when(
       (AccountSummary summary) => emit(
         AccountState(
           status: AccountStatus.ready,
           account: summary,
+          circles: home.when(
+            (HomeEntity read) => read.circles,
+            (Failure _) => state.circles,
+          ),
           sent: inbox.when(
             (CircleInbox read) => _waiting(read),
             (Failure _) => state.sent,

@@ -1,8 +1,16 @@
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Where the app goes after it starts. [checking] is the state while it finds out.
-enum StartDestination { checking, home, signIn, onboarding, unavailable }
+enum StartDestination {
+  checking,
+  home,
+  simplifiedHome,
+  signIn,
+  onboarding,
+  unavailable,
+}
 
 /// Decides, once, whether the app opens on the home page or on the sign-in
 /// page. The answer comes from the tokens on this phone and from the server.
@@ -20,7 +28,10 @@ class SplashCubit extends Cubit<StartDestination> {
         (account) => switch (account?.needsProfile) {
           null => StartDestination.signIn,
           true => StartDestination.onboarding,
-          false => StartDestination.home,
+          false =>
+            CircleAppMode.parse(account!.appMode) == CircleAppMode.simplified
+                ? StartDestination.simplifiedHome
+                : StartDestination.home,
         },
         (_) => StartDestination.unavailable,
       ),

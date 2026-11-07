@@ -174,8 +174,8 @@ asks codes for that number cannot lock its owner out.
   endpoints and the rules are in `docs/api-contracts.md` (section 5).
 - The medical tables (blood type, conditions, allergies, emergency contacts) are a
   design that the team has not approved yet (`docs/api-contracts.md`, section 10).
-- Push notifications are built and wait for a paid Apple Developer account
-  (see "Push notifications").
+- Push notifications are built and live, with the team's paid Apple
+  Developer account (see "Push notifications").
 - Not built: the notifications endpoint, the care plan and the records. The
   emergency card is built without the current medicines (they come with F06).
 - This Docker setup is for development. Staging and production are TFQD-10.
@@ -194,11 +194,14 @@ also sets its own dose reminders on the phone itself, independent of the
 server's.
 
 Apple sends a push only to an app signed with a **paid** Apple Developer
-account that has the Push Notifications capability. Until the team has one,
+account that has the Push Notifications capability. The team has one, and
+`.env` sets `PUSH_BACKEND=apns`, so this is live. Without it,
 `PUSH_BACKEND=none` (the default): the app still sends its phone's token
-(`PUT /api/v1/accounts/me/push-device`), and the server sends nothing.
+(`PUT /api/v1/accounts/me/push-device`), but the server sends nothing — the
+state a fresh environment (a new developer's machine, a new paid account)
+starts in.
 
-To switch it on with the paid account:
+To set it up with a paid account:
 
 1. In the Apple Developer website: Certificates, Identifiers & Profiles, then
    Keys, then make a key with **Apple Push Notifications service (APNs)**.

@@ -2,21 +2,11 @@ import 'dart:async';
 
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/reminder_circle.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:equatable/equatable.dart';
 
-/// A circle whose medicine times remind the person: its id, and the name the
-/// reminder shows («أمي نورة»).
-class ReminderCircle extends Equatable {
-  const ReminderCircle({required this.id, required this.name});
-
-  final String id;
-  final String name;
-
-  @override
-  List<Object?> get props => [id, name];
-}
+export 'package:app/core/services/reminder_circle.dart';
 
 /// The words of the reminders. They are given from outside, so this file
 /// needs no translations and the tests can use plain words.
@@ -56,6 +46,15 @@ const int reminderIdBase = 7000;
 /// Whether a scheduled notification is one of the reminders.
 bool isReminderPayload(String payload) =>
     payload.startsWith(doseReminderPayload) || payload == keepRemindersPayload;
+
+/// What a simplified-mode "لاحقا" snooze's payload starts with; the
+/// circle's id follows, the same as [doseReminderPayload]. A separate
+/// prefix and id so [DoseReminders]'s own replace cycle never cancels it
+/// as an orphaned reminder.
+const String doseSnoozePayload = 'dose-snooze:';
+
+/// The one slot a snooze uses; a new snooze replaces any pending one.
+const int doseSnoozeId = reminderIdBase + maxDoseReminders + 10;
 
 /// The moment a dose is due. The server keeps the day and the time in Riyadh
 /// (UTC+3, no daylight saving), so this is the same moment on any phone.
@@ -183,6 +182,27 @@ class DoseReminders {
     _running = run;
     return run;
   }
+
+  /// Reschedules one dose's own reminder [after] from now — the simplified
+  /// mode's "لاحقا". Local-only: no plan or record changes, so nothing to
+  /// undo if the app is never reopened before it fires.
+  Future<void> snooze({
+    required String circleId,
+    required String title,
+    required String body,
+    required Duration after,
+  }) => _phone.schedule(
+    ScheduledNotification(
+      id: doseSnoozeId,
+      at: DateTime.now().toUtc().add(after),
+      title: title,
+      body: body,
+      payload: '$doseSnoozePayload$circleId',
+    ),
+  );
+
+  /// Cancels a pending snooze: the dose it was for got taken another way.
+  Future<void> cancelSnooze() => _phone.cancel(doseSnoozeId);
 
   /// Removes every reminder: the person signed out, or the sign-in ended.
   Future<void> clear() async {

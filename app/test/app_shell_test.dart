@@ -236,10 +236,17 @@ class _EmptyAppointmentsRepository extends Fake
 /// GetIt for it.
 class _OffCalendarSync extends Fake implements CalendarSync {
   @override
-  Future<bool> isEnabled() async => false;
+  Future<bool> isEnabled(
+    String circleId,
+    CalendarSyncCategory category,
+  ) async => false;
 
   @override
-  Future<void> setEnabled(bool value) async {}
+  Future<void> setEnabled(
+    String circleId,
+    CalendarSyncCategory category,
+    bool value,
+  ) async {}
 
   @override
   Future<void> sync(List<ReminderCircle> circles) async {}
@@ -1038,7 +1045,6 @@ void main() {
         expect(find.text('circles.send_request'.tr()), findsOneWidget);
         expect(find.text('circles.request_waiting_title'.tr()), findsNothing);
       });
-
     });
 
     group('a patient who does not use the app', () {
@@ -1278,10 +1284,7 @@ void main() {
 
       expect(find.text('circles.events_title'.tr()), findsOneWidget);
       expect(find.text('circles.declined_title'.tr()), findsOneWidget);
-      expect(
-        find.text('circles.declined_body'.tr()),
-        findsOneWidget,
-      );
+      expect(find.text('circles.declined_body'.tr()), findsOneWidget);
       expect(find.text('+966 50 123 4567'), findsOneWidget);
       expect(find.text('circles.inbox_empty'.tr()), findsNothing);
     });
@@ -1953,33 +1956,34 @@ void main() {
         expect(find.text('intro.demo.circle'.tr()), findsOneWidget);
       });
 
-      testWidgets('after «تخطي» the welcome does not show again on this phone', (
-        WidgetTester tester,
-      ) async {
-        // A new install again for the tests after this one.
-        addTearDown(
-          () => SharedPreferences.setMockInitialValues(<String, Object>{}),
-        );
-        await openAccount(tester);
-        await tester.tap(find.text('auth.sign_out'.tr()));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('intro.skip'.tr()));
-        await tester.pumpAndSettle();
-        expect(find.text('auth.phone_title'.tr()), findsOneWidget);
+      testWidgets(
+        'after «تخطي» the welcome does not show again on this phone',
+        (WidgetTester tester) async {
+          // A new install again for the tests after this one.
+          addTearDown(
+            () => SharedPreferences.setMockInitialValues(<String, Object>{}),
+          );
+          await openAccount(tester);
+          await tester.tap(find.text('auth.sign_out'.tr()));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('intro.skip'.tr()));
+          await tester.pumpAndSettle();
+          expect(find.text('auth.phone_title'.tr()), findsOneWidget);
 
-        // The next time the sign-in page opens, as after a sign-out.
-        AppRouter.router.go(Routes.auth);
-        await tester.pumpAndSettle();
+          // The next time the sign-in page opens, as after a sign-out.
+          AppRouter.router.go(Routes.auth);
+          await tester.pumpAndSettle();
 
-        expect(
-          AppRouter.router.routeInformationProvider.value.uri.path,
-          Routes.authPhone,
-        );
-        expect(find.text('intro.p1_title'.tr()), findsNothing);
-        expect(find.text('auth.phone_title'.tr()), findsOneWidget);
-        // The phone page is the first page: no back link to the welcome.
-        expect(find.text('common.back'.tr()), findsNothing);
-      });
+          expect(
+            AppRouter.router.routeInformationProvider.value.uri.path,
+            Routes.authPhone,
+          );
+          expect(find.text('intro.p1_title'.tr()), findsNothing);
+          expect(find.text('auth.phone_title'.tr()), findsOneWidget);
+          // The phone page is the first page: no back link to the welcome.
+          expect(find.text('common.back'.tr()), findsNothing);
+        },
+      );
 
       testWidgets('deleting asks first, and "no" deletes nothing', (
         WidgetTester tester,

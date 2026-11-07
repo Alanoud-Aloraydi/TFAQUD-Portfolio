@@ -1,6 +1,7 @@
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:equatable/equatable.dart';
 
 /// Defines the supported account status values.
@@ -26,6 +27,7 @@ class AccountState extends Equatable {
   const AccountState({
     this.status = AccountStatus.loading,
     this.account,
+    this.circles = const <CareCircleSummary>[],
     this.sent = const <SentCircleRequest>[],
     this.messageKey,
     this.errorKey,
@@ -40,6 +42,10 @@ class AccountState extends Equatable {
 
   final AccountStatus status;
   final AccountSummary? account;
+
+  /// The circles this account manages, for the calendar-sync circle
+  /// picker: a manager may have more than one.
+  final List<CareCircleSummary> circles;
 
   /// The requests this account sent that wait for the patient: pending ones,
   /// and accepted ones whose basic data is not finished.
@@ -73,6 +79,7 @@ class AccountState extends Equatable {
   AccountState copyWith({
     AccountStatus? status,
     AccountSummary? account,
+    List<CareCircleSummary>? circles,
     List<SentCircleRequest>? sent,
     String? messageKey,
     String? errorKey,
@@ -88,6 +95,7 @@ class AccountState extends Equatable {
     return AccountState(
       status: status ?? this.status,
       account: account ?? this.account,
+      circles: circles ?? this.circles,
       sent: sent ?? this.sent,
       messageKey: messageKey ?? this.messageKey,
       errorKey: clearMessages ? null : (errorKey ?? this.errorKey),
@@ -105,6 +113,7 @@ class AccountState extends Equatable {
   List<Object?> get props => [
     status,
     account,
+    circles,
     sent,
     messageKey,
     errorKey,

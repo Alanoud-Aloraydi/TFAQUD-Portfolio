@@ -35,12 +35,9 @@ class CircleOverviewState extends Equatable {
 /// saved on its own pages (pushed over this tab), the card shows the new
 /// answers at once, without reading the file again.
 class CircleOverviewCubit extends Cubit<CircleOverviewState> {
-  CircleOverviewCubit(
-    this._circles,
-    this.circleId, [
-    Listenable? photoChanges,
-  ]) : _photoChanges = photoChanges,
-       super(const CircleOverviewState()) {
+  CircleOverviewCubit(this._circles, this.circleId, [Listenable? photoChanges])
+    : _photoChanges = photoChanges,
+      super(const CircleOverviewState()) {
     _saves = _circles.medicalFileSaves(circleId).listen(_saved);
     // The patient card and the member row show the patient's avatar; a
     // saved photo or avatar anywhere reloads it too, not just the screen
