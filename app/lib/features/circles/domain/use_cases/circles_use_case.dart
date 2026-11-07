@@ -76,7 +76,7 @@ class CirclesUseCase {
     required bool accept,
   }) => _repository.respondToInvitation(id, accept: accept);
 
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) => _repository.completeRequest(id, request);

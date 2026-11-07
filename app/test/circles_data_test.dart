@@ -296,13 +296,16 @@ void main() {
 
   group('NewPatientCircleModel', () {
     test('has the names of the patient and no medical profile when empty', () {
-      expect(NewPatientCircleModel(_patientCircle()).toJson(), <String, dynamic>{
-        'name': 'أمي نورة',
-        'patient_first_name': 'نورة',
-        'patient_last_name': 'العتيبي',
-        'birth_date': '1954-06-05',
-        'city': 'بريدة',
-      });
+      expect(
+        NewPatientCircleModel(_patientCircle()).toJson(),
+        <String, dynamic>{
+          'name': 'أمي نورة',
+          'patient_first_name': 'نورة',
+          'patient_last_name': 'العتيبي',
+          'birth_date': '1954-06-05',
+          'city': 'بريدة',
+        },
+      );
     });
 
     test('sends the medical profile as the self circle does', () {
@@ -322,17 +325,19 @@ void main() {
       });
     });
 
-    test('a request of this app has no label: the patient names the circle',
-        () {
-      const NewCircleRequest unnamed = NewCircleRequest(
-        patientPhoneNumber: '+966501234567',
-        proposedAppMode: CircleAppMode.simplified,
-      );
-      expect(NewCircleRequestModel(unnamed).toJson(), <String, dynamic>{
-        'patient_phone_number': '+966501234567',
-        'proposed_app_mode': 'simplified',
-      });
-    });
+    test(
+      'a request of this app has no label: the patient names the circle',
+      () {
+        const NewCircleRequest unnamed = NewCircleRequest(
+          patientPhoneNumber: '+966501234567',
+          proposedAppMode: CircleAppMode.simplified,
+        );
+        expect(NewCircleRequestModel(unnamed).toJson(), <String, dynamic>{
+          'patient_phone_number': '+966501234567',
+          'proposed_app_mode': 'simplified',
+        });
+      },
+    );
 
     test('the detailed mode is written as the API names it', () {
       const NewCircleRequest detailed = NewCircleRequest(
@@ -359,15 +364,15 @@ void main() {
 
     test('an accepted request keeps its status; an unknown one is "other"', () {
       expect(
-        SentCircleRequestModel.fromJson(
-          _requestAnswer(status: 'accepted'),
-        ).toEntity().status,
+        SentCircleRequestModel.fromJson(_requestAnswer(status: 'accepted'))
+            .toEntity()
+            .status,
         CircleRequestStatus.accepted,
       );
       expect(
-        SentCircleRequestModel.fromJson(
-          _requestAnswer(status: 'completed'),
-        ).toEntity().status,
+        SentCircleRequestModel.fromJson(_requestAnswer(status: 'completed'))
+            .toEntity()
+            .status,
         CircleRequestStatus.other,
       );
     });
@@ -404,7 +409,10 @@ void main() {
       expect(received.circleName, 'أمي نورة');
       expect(received.proposedAppMode, CircleAppMode.detailed);
       expect(received.requesterName, 'سارة');
-      expect(received.createdAt, DateTime.utc(2026, 10, 26, 8, 3, 19, 816, 997));
+      expect(
+        received.createdAt,
+        DateTime.utc(2026, 10, 26, 8, 3, 19, 816, 997),
+      );
       expect(received.isAccepted, isFalse);
     });
 
@@ -426,15 +434,21 @@ void main() {
     });
 
     test('the sender is the full name when there is no display name', () {
-      final Map<String, dynamic> item = Map<String, dynamic>.of(
-        (listed['received'] as List<dynamic>).single as Map<String, dynamic>,
-      )..['requested_by'] = <String, dynamic>{
-          'display_name': null,
-          'first_name': 'سارة',
-          'last_name': 'الحربي',
-        };
+      final Map<String, dynamic> item =
+          Map<String, dynamic>.of(
+              (listed['received'] as List<dynamic>).single
+                  as Map<String, dynamic>,
+            )
+            ..['requested_by'] = <String, dynamic>{
+              'display_name': null,
+              'first_name': 'سارة',
+              'last_name': 'الحربي',
+            };
       final CircleRequestsModel model = CircleRequestsModel.fromJson(
-        <String, dynamic>{'sent': <dynamic>[], 'received': <dynamic>[item]},
+        <String, dynamic>{
+          'sent': <dynamic>[],
+          'received': <dynamic>[item],
+        },
       );
       expect(model.received.single.requesterName, 'سارة الحربي');
     });
@@ -444,7 +458,9 @@ void main() {
         (listed['received'] as List<dynamic>).single as Map<String, dynamic>,
       )..remove('circle_name');
       final CircleRequestsModel model = CircleRequestsModel.fromJson(
-        <String, dynamic>{'received': <dynamic>[item]},
+        <String, dynamic>{
+          'received': <dynamic>[item],
+        },
       );
       expect(model.received.single.circleName, 'أمي');
       // A list that is left out is an empty list, not a crash.
@@ -476,10 +492,7 @@ void main() {
     });
 
     test('no invitations is an empty list', () {
-      expect(
-        ReceivedInvitationsModel.fromJson(<String, dynamic>{}),
-        isEmpty,
-      );
+      expect(ReceivedInvitationsModel.fromJson(<String, dynamic>{}), isEmpty);
     });
 
     test('the inbox counts what waits for an answer', () {
@@ -498,21 +511,22 @@ void main() {
   });
 
   group('CompleteCircleRequestModel', () {
-    test('has the birth date and the city only when nothing else was typed', () {
-      final CompleteCircleRequest request = CompleteCircleRequest(
-        birthDate: DateTime(1954, 6, 5),
-        city: 'بريدة',
-      );
-      expect(CompleteCircleRequestModel(request).toJson(), <String, dynamic>{
-        'birth_date': '1954-06-05',
-        'city': 'بريدة',
-      });
-    });
+    test(
+      'has the birth date and the city only when nothing else was typed',
+      () {
+        final CompleteCircleRequest request = CompleteCircleRequest(
+          birthDate: DateTime(1954, 6, 5),
+          city: 'بريدة',
+        );
+        expect(CompleteCircleRequestModel(request).toJson(), <String, dynamic>{
+          'birth_date': '1954-06-05',
+          'city': 'بريدة',
+        });
+      },
+    );
 
     test("sends the patient's own name for the circle", () {
-      const CompleteCircleRequest request = CompleteCircleRequest(
-        name: 'صحتي',
-      );
+      const CompleteCircleRequest request = CompleteCircleRequest(name: 'صحتي');
       expect(CompleteCircleRequestModel(request).toJson(), <String, dynamic>{
         'name': 'صحتي',
       });
@@ -537,9 +551,9 @@ void main() {
         medicalProfile: const MedicalProfileDraft(),
       );
       expect(
-        CompleteCircleRequestModel(request).toJson().containsKey(
-          'medical_profile',
-        ),
+        CompleteCircleRequestModel(request)
+            .toJson()
+            .containsKey('medical_profile'),
         isFalse,
       );
     });
@@ -649,13 +663,10 @@ void main() {
 
     test('returns the new circle', () async {
       final result = await repository.createSelfCircle(_circle());
-      result.when(
-        (circle) {
-          expect(circle.id, '71771639-aaba-41e3-9418-5cb3179894ce');
-          expect(circle.name, 'My care');
-        },
-        (failure) => fail('Expected a circle, got $failure'),
-      );
+      result.when((circle) {
+        expect(circle.id, '71771639-aaba-41e3-9418-5cb3179894ce');
+        expect(circle.name, 'My care');
+      }, (failure) => fail('Expected a circle, got $failure'));
       expect(remote.sentBody!['birth_date'], '1964-03-12');
     });
 
@@ -686,25 +697,24 @@ void main() {
 
     test('a circle for a patient without the app is created', () async {
       final result = await repository.createPatientCircle(_patientCircle());
-      result.when(
-        (circle) {
-          expect(circle.id, '0f0d6d3c-3b0e-4d5a-9a53-7d4c5c0b2f10');
-          expect(circle.name, 'أمي نورة');
-        },
-        (failure) => fail('Expected a circle, got $failure'),
-      );
+      result.when((circle) {
+        expect(circle.id, '0f0d6d3c-3b0e-4d5a-9a53-7d4c5c0b2f10');
+        expect(circle.name, 'أمي نورة');
+      }, (failure) => fail('Expected a circle, got $failure'));
       expect(remote.sentPatientBody!['patient_first_name'], 'نورة');
     });
 
-    test('a refused patient circle has the same failures as a self circle',
-        () async {
-      remote.error = _api(422, 'mode_conflict');
-      final result = await repository.createPatientCircle(_patientCircle());
-      result.when(
-        (_) => fail('Expected a failure'),
-        (failure) => expect(failure, const ModeConflictFailure()),
-      );
-    });
+    test(
+      'a refused patient circle has the same failures as a self circle',
+      () async {
+        remote.error = _api(422, 'mode_conflict');
+        final result = await repository.createPatientCircle(_patientCircle());
+        result.when(
+          (_) => fail('Expected a failure'),
+          (failure) => expect(failure, const ModeConflictFailure()),
+        );
+      },
+    );
 
     test('a request is sent and its answer is kept', () async {
       final result = await repository.sendCircleRequest(_request);
@@ -723,8 +733,7 @@ void main() {
       'mode_conflict': const ModeConflictFailure(),
     };
     for (final MapEntry<String, Failure> entry in requestCodes.entries) {
-      test('a request refused with ${entry.key} has its own failure',
-          () async {
+      test('a request refused with ${entry.key} has its own failure', () async {
         remote.error = _api(422, entry.key);
         final result = await repository.sendCircleRequest(_request);
         result.when(
@@ -735,35 +744,34 @@ void main() {
     }
 
     group('the inbox', () {
-      test('puts the sent, the received and the invitations together',
-          () async {
-        remote.requests = CircleRequestsModel.fromJson(<String, dynamic>{
-          'sent': <dynamic>[_requestAnswer()['request']],
-          'received': <dynamic>[
-            <String, dynamic>{
-              'id': 'in-1',
-              'status': 'pending',
-              'circle_label': 'أمي',
-              'circle_name': 'أمي نورة',
-              'proposed_app_mode': 'simplified',
-              'requested_by': <String, dynamic>{'display_name': 'سارة'},
-            },
-          ],
-        });
-        remote.invitations = const <ReceivedInvitation>[
-          ReceivedInvitation(id: 'inv-1', circleName: 'أبي'),
-        ];
-        final result = await repository.getInbox();
-        result.when(
-          (CircleInbox inbox) {
+      test(
+        'puts the sent, the received and the invitations together',
+        () async {
+          remote.requests = CircleRequestsModel.fromJson(<String, dynamic>{
+            'sent': <dynamic>[_requestAnswer()['request']],
+            'received': <dynamic>[
+              <String, dynamic>{
+                'id': 'in-1',
+                'status': 'pending',
+                'circle_label': 'أمي',
+                'circle_name': 'أمي نورة',
+                'proposed_app_mode': 'simplified',
+                'requested_by': <String, dynamic>{'display_name': 'سارة'},
+              },
+            ],
+          });
+          remote.invitations = const <ReceivedInvitation>[
+            ReceivedInvitation(id: 'inv-1', circleName: 'أبي'),
+          ];
+          final result = await repository.getInbox();
+          result.when((CircleInbox inbox) {
             expect(inbox.sent, hasLength(1));
             expect(inbox.received.single.id, 'in-1');
             expect(inbox.invitations.single.id, 'inv-1');
             expect(inbox.needsReply, 2);
-          },
-          (failure) => fail('Expected an inbox, got $failure'),
-        );
-      });
+          }, (failure) => fail('Expected an inbox, got $failure'));
+        },
+      );
 
       test('is a failure when either list cannot be read', () async {
         remote.error = DioException(
@@ -897,13 +905,11 @@ void main() {
 
       test('creates the circle and sends the data for this request', () async {
         final result = await repository.completeRequest('in-1', basics);
-        result.when(
-          (circle) {
-            expect(circle.id, 'circle-9');
-            expect(circle.name, 'أمي نورة');
-          },
-          (failure) => fail('Expected a circle, got $failure'),
-        );
+        result.when((data) {
+          final (circle, _) = data;
+          expect(circle.id, 'circle-9');
+          expect(circle.name, 'أمي نورة');
+        }, (failure) => fail('Expected a circle, got $failure'));
         expect(remote.completedId, 'in-1');
         expect(remote.completedBody!['birth_date'], '1954-06-05');
         expect(remote.completedBody!['city'], 'بريدة');
@@ -935,15 +941,17 @@ void main() {
         expect(remote.canceledId, 'request-1');
       });
 
-      test('a request that cannot be canceled is "no longer available"',
-          () async {
-        remote.error = _api(422, 'request_not_cancelable');
-        final result = await repository.cancelRequest('request-1');
-        result.when(
-          (_) => fail('Expected a failure'),
-          (failure) => expect(failure, const RequestUnavailableFailure()),
-        );
-      });
+      test(
+        'a request that cannot be canceled is "no longer available"',
+        () async {
+          remote.error = _api(422, 'request_not_cancelable');
+          final result = await repository.cancelRequest('request-1');
+          result.when(
+            (_) => fail('Expected a failure'),
+            (failure) => expect(failure, const RequestUnavailableFailure()),
+          );
+        },
+      );
     });
 
     group('deleting the account', () {
@@ -966,15 +974,19 @@ void main() {
         );
       });
 
-      test('last_manager asks about the circles with no other manager',
-          () async {
-        remote.error = _api(422, 'last_manager');
-        final result = await repository.deleteAccount(const AccountDeletion());
-        result.when(
-          (_) => fail('Expected a failure'),
-          (failure) => expect(failure, const LastManagerFailure()),
-        );
-      });
+      test(
+        'last_manager asks about the circles with no other manager',
+        () async {
+          remote.error = _api(422, 'last_manager');
+          final result = await repository.deleteAccount(
+            const AccountDeletion(),
+          );
+          result.when(
+            (_) => fail('Expected a failure'),
+            (failure) => expect(failure, const LastManagerFailure()),
+          );
+        },
+      );
 
       test('another error is read like any other API error', () async {
         remote.error = _api(500, 'internal_error');

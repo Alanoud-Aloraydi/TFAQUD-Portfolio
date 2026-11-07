@@ -8,6 +8,10 @@ import 'package:go_router/go_router.dart';
 /// tab opens on it (the home screen selects the new circle), where the
 /// medical file waits with its «!» until it is filled, and a short line says
 /// the circle is ready. A refusal stays on the page, which shows its text.
+///
+/// [CircleFlow.approved] may instead commit the account to simplified mode
+/// right there; the person goes straight to the simplified home, with no
+/// detailed circle to visit and no sign-out/in needed to see it.
 Future<void> createCircleAndOpen(
   BuildContext context,
   CreateCircleCubit cubit,
@@ -17,6 +21,10 @@ Future<void> createCircleAndOpen(
   final String notice = context.tr('circles.created_notice');
   final bool created = await cubit.create();
   if (!created || !context.mounted) return;
+  if (cubit.state.switchToSimplified) {
+    context.go(Routes.simplifiedHome);
+    return;
+  }
   context.go(Routes.circle);
   messenger.showSnackBar(SnackBar(content: Text(notice)));
 }

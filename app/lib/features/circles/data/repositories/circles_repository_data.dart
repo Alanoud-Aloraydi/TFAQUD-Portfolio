@@ -196,7 +196,7 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   }
 
   @override
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) async {
@@ -205,7 +205,7 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
         id,
         CompleteCircleRequestModel(request),
       );
-      return Success(created.toEntity());
+      return Success((created.toEntity(), created.accountAppMode));
     } catch (error) {
       return Error(_replyFailure(error));
     }

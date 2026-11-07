@@ -194,6 +194,7 @@ void main() {
   test('completing posts the basic data to the complete route', () async {
     client.answer = <String, dynamic>{
       'circle': <String, dynamic>{'id': 'c-9', 'name': 'أمي نورة'},
+      'account_app_mode': 'simplified',
     };
     final circle = await remote.completeRequest(
       'r-1',
@@ -209,6 +210,7 @@ void main() {
       'city': 'بريدة',
     });
     expect(circle.toEntity().id, 'c-9');
+    expect(circle.accountAppMode, 'simplified');
   });
 
   test('canceling sends DELETE to this request', () async {
@@ -259,42 +261,48 @@ void main() {
       });
     });
 
-    test('agreeing to delete the circles with no other manager is sent alone', () async {
-      await remote.deleteAccount(
-        const AccountDeletion(deleteLastManagedCircles: true),
-      );
-      expect(client.calls.single.data, <String, dynamic>{
-        'delete_last_managed_circles': true,
-      });
-    });
+    test(
+      'agreeing to delete the circles with no other manager is sent alone',
+      () async {
+        await remote.deleteAccount(
+          const AccountDeletion(deleteLastManagedCircles: true),
+        );
+        expect(client.calls.single.data, <String, dynamic>{
+          'delete_last_managed_circles': true,
+        });
+      },
+    );
   });
 
   group('the medical file', () {
-    test('reads the whole file from GET /circles/{id}/medical-profile', () async {
-      client.answer = _medicalFile();
+    test(
+      'reads the whole file from GET /circles/{id}/medical-profile',
+      () async {
+        client.answer = _medicalFile();
 
-      final file = await remote.getMedicalFile('c-1');
+        final file = await remote.getMedicalFile('c-1');
 
-      final _Call call = client.calls.single;
-      expect(call.method, 'GET');
-      expect(call.path, '/circles/c-1/medical-profile');
-      expect(file.patient.fullName, 'نورة العتيبي');
-      expect(file.patient.birthDate, DateTime(1954, 6, 5));
-      expect(file.patient.city, 'بريدة');
-      expect(file.patient.latitude, 26.3);
-      expect(file.patient.hasAccount, isFalse);
-      expect(file.profile.bloodType, 'O+');
-      expect(
-        file.profile.conditions,
-        const ConditionsDraft.listed(
-          codes: <String>['diabetes', 'other'],
-          other: 'نقرس',
-        ),
-      );
-      expect(file.profile.allergies, const AllergiesDraft.none());
-      expect(file.contacts.single.name, 'خالد');
-      expect(file.contacts.single.phoneNumber, '+966512345678');
-    });
+        final _Call call = client.calls.single;
+        expect(call.method, 'GET');
+        expect(call.path, '/circles/c-1/medical-profile');
+        expect(file.patient.fullName, 'نورة العتيبي');
+        expect(file.patient.birthDate, DateTime(1954, 6, 5));
+        expect(file.patient.city, 'بريدة');
+        expect(file.patient.latitude, 26.3);
+        expect(file.patient.hasAccount, isFalse);
+        expect(file.profile.bloodType, 'O+');
+        expect(
+          file.profile.conditions,
+          const ConditionsDraft.listed(
+            codes: <String>['diabetes', 'other'],
+            other: 'نقرس',
+          ),
+        );
+        expect(file.profile.allergies, const AllergiesDraft.none());
+        expect(file.contacts.single.name, 'خالد');
+        expect(file.contacts.single.phoneNumber, '+966512345678');
+      },
+    );
 
     test('a part that nobody answered is read as no answer', () async {
       client.answer = _medicalFile()
@@ -470,24 +478,27 @@ void main() {
     });
   });
 
-  test('reads the emergency card from GET /circles/{id}/emergency-card', () async {
-    client.answer = <String, dynamic>{
-      'emergency_card': <String, dynamic>{
-        'first_name': 'نورة',
-        'last_name': 'العتيبي',
-        ...(_medicalFile()['medical_profile'] as Map<String, dynamic>),
-        'emergency_contacts': <dynamic>[_contact()],
-      },
-    };
+  test(
+    'reads the emergency card from GET /circles/{id}/emergency-card',
+    () async {
+      client.answer = <String, dynamic>{
+        'emergency_card': <String, dynamic>{
+          'first_name': 'نورة',
+          'last_name': 'العتيبي',
+          ...(_medicalFile()['medical_profile'] as Map<String, dynamic>),
+          'emergency_contacts': <dynamic>[_contact()],
+        },
+      };
 
-    final card = await remote.getEmergencyCard('c-1');
+      final card = await remote.getEmergencyCard('c-1');
 
-    final _Call call = client.calls.single;
-    expect(call.method, 'GET');
-    expect(call.path, '/circles/c-1/emergency-card');
-    expect(card.fullName, 'نورة العتيبي');
-    expect(card.profile.bloodType, 'O+');
-    expect(card.profile.allergies, const AllergiesDraft.none());
-    expect(card.contacts.single.relation, 'son');
-  });
+      final _Call call = client.calls.single;
+      expect(call.method, 'GET');
+      expect(call.path, '/circles/c-1/emergency-card');
+      expect(card.fullName, 'نورة العتيبي');
+      expect(card.profile.bloodType, 'O+');
+      expect(card.profile.allergies, const AllergiesDraft.none());
+      expect(card.contacts.single.relation, 'son');
+    },
+  );
 }

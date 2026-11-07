@@ -293,10 +293,10 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
         showErrors: false,
       ),
     );
-    final Result<CareCircleSummary, Failure> result;
+    final Result<(CareCircleSummary, String?), Failure> result;
     switch (flow) {
       case CircleFlow.self:
-        result = await _circles.createSelfCircle(
+        final selfResult = await _circles.createSelfCircle(
           NewSelfCircle(
             name: state.circleName,
             birthDate: birthDate,
@@ -304,8 +304,12 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
             medicalProfile: _medicalProfile(),
           ),
         );
+        result = selfResult.when(
+          (circle) => Success((circle, null)),
+          (failure) => Error(failure),
+        );
       case CircleFlow.patient:
-        result = await _circles.createPatientCircle(
+        final patientResult = await _circles.createPatientCircle(
           NewPatientCircle(
             name: state.circleName,
             patientFirstName: state.patientFirstName.trim(),
@@ -314,6 +318,10 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
             city: city!,
             medicalProfile: _medicalProfile(),
           ),
+        );
+        result = patientResult.when(
+          (circle) => Success((circle, null)),
+          (failure) => Error(failure),
         );
       case CircleFlow.approved:
         result = await _circles.completeRequest(
@@ -328,10 +336,16 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     }
     if (isClosed) return false;
     return result.when(
-      (circle) {
+      (data) {
+        final (circle, accountAppMode) = data;
         // Every open home screen loads the circles again and selects this one.
         _home.notifyCirclesChanged(select: circle.id);
-        emit(state.copyWith(status: CreateStatus.created));
+        emit(
+          state.copyWith(
+            status: CreateStatus.created,
+            switchToSimplified: accountAppMode == 'simplified',
+          ),
+        );
         return true;
       },
       (failure) {

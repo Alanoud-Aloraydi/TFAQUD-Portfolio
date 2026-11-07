@@ -54,6 +54,7 @@ class CreateCircleState extends Equatable {
     this.status = CreateStatus.idle,
     this.errorKey,
     this.sessionEnded = false,
+    this.switchToSimplified = false,
   });
 
   final AccountSummary? account;
@@ -96,6 +97,11 @@ class CreateCircleState extends Equatable {
 
   /// True when the server said the sign-in ended; the page goes to sign-in.
   final bool sessionEnded;
+
+  /// True right after [CircleFlow.approved] commits the account to
+  /// simplified mode: the page goes to the simplified home instead of the
+  /// detailed circle tab.
+  final bool switchToSimplified;
 
   String? get fullName => account?.fullName;
 
@@ -156,6 +162,7 @@ class CreateCircleState extends Equatable {
     String? errorKey,
     bool clearError = false,
     bool? sessionEnded,
+    bool? switchToSimplified,
   }) {
     return CreateCircleState(
       account: account ?? this.account,
@@ -179,6 +186,7 @@ class CreateCircleState extends Equatable {
       status: status ?? this.status,
       errorKey: clearError ? null : (errorKey ?? this.errorKey),
       sessionEnded: sessionEnded ?? this.sessionEnded,
+      switchToSimplified: switchToSimplified ?? this.switchToSimplified,
     );
   }
 
@@ -205,5 +213,6 @@ class CreateCircleState extends Equatable {
     status,
     errorKey,
     sessionEnded,
+    switchToSimplified,
   ];
 }

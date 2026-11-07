@@ -138,9 +138,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
 
   Result<AccountSummary, Failure> account = const Success(reem);
   Result<CareCircleSummary, Failure> created = const Success(newCircle);
-  Result<CareCircleSummary, Failure> createdPatient = const Success(
-    newCircle,
-  );
+  Result<CareCircleSummary, Failure> createdPatient = const Success(newCircle);
   Result<SentCircleRequest, Failure> sent = const Success(waitingRequest);
 
   Result<CircleInbox, Failure> inbox = const Success(CircleInbox.empty());
@@ -150,7 +148,10 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Result<String?, Failure> invitationReplied = const Success<String?, Failure>(
     'circle-from-invitation',
   );
-  Result<CareCircleSummary, Failure> completed = const Success(newCircle);
+  Result<(CareCircleSummary, String?), Failure> completed = const Success((
+    newCircle,
+    null,
+  ));
   Result<void, Failure> canceled = const Success(null);
   Result<void, Failure> deleted = const Success(null);
 
@@ -170,8 +171,13 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   /// contact is given back as sent.
   Result<EmergencyContact, Failure>? contactSaved;
 
-  /// When set, a create call waits for it, so a test can act in between.
+  /// When set, a create or patient-circle call waits for it, so a test can
+  /// act in between.
   Future<Result<CareCircleSummary, Failure>>? pending;
+
+  /// The same, for [completeRequest] specifically: its result shape differs
+  /// (it also carries the account's app mode), so it needs its own field.
+  Future<Result<(CareCircleSummary, String?), Failure>>? pendingCompleted;
 
   /// When set, adding or changing a contact waits for it.
   Future<Result<EmergencyContact, Failure>>? pendingContact;
@@ -217,8 +223,10 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     sent = const Success(waitingRequest);
     inbox = const Success(CircleInbox.empty());
     replied = const Success(CircleRequestStatus.accepted);
-    invitationReplied = const Success<String?, Failure>('circle-from-invitation');
-    completed = const Success(newCircle);
+    invitationReplied = const Success<String?, Failure>(
+      'circle-from-invitation',
+    );
+    completed = const Success((newCircle, null));
     canceled = const Success(null);
     deleted = const Success(null);
     circleOverview = Success(nouraOverview);
@@ -229,6 +237,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     profileSaved = null;
     contactSaved = null;
     pending = null;
+    pendingCompleted = null;
     pendingContact = null;
     queuedFileReads.clear();
     requests.clear();
@@ -304,13 +313,13 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   }
 
   @override
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) async {
     completedIds.add(id);
     completions.add(request);
-    return pending ?? completed;
+    return pendingCompleted ?? completed;
   }
 
   @override
@@ -347,8 +356,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   ) async {
     saveCalls.add('profile');
     profileUpdates.add(profile);
-    return profileSaved ??
-        Success<MedicalProfileDraft, Failure>(profile);
+    return profileSaved ?? Success<MedicalProfileDraft, Failure>(profile);
   }
 
   @override

@@ -84,7 +84,9 @@ abstract class CirclesRepositoryDomain {
 
   /// The patient gives the basic data of an accepted request:
   /// POST /api/v1/circle-requests/{id}/complete. This creates the circle.
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  /// The second value is the account's own app mode right after this
+  /// commits it, so the caller can switch shells immediately.
+  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   );
