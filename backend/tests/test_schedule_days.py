@@ -1,4 +1,5 @@
-"""Which days a weekly or a monthly medicine schedule has a dose on."""
+"""Which days a weekly, monthly or interval medicine schedule has a dose
+on."""
 
 from datetime import date
 
@@ -31,3 +32,26 @@ def test_monthly_uses_the_day_of_the_month(month_days, day, expected):
 
 def test_monthly_ignores_weekdays():
     assert not applies_on("monthly", [1], [3], date(2026, 11, 2))
+
+
+def test_interval_counts_from_the_treatment_start():
+    start = date(2026, 11, 1)
+    days = [
+        day
+        for day in range(1, 11)
+        if applies_on(
+            "interval", [], [], date(2026, 11, day),
+            interval_days=3, treatment_starts_on=start,
+        )
+    ]
+    assert days == [1, 4, 7, 10]
+    # Nothing before the treatment starts.
+    assert not applies_on(
+        "interval", [], [], date(2026, 10, 29),
+        interval_days=3, treatment_starts_on=start,
+    )
+    # Every day is every day.
+    assert applies_on(
+        "interval", [], [], date(2026, 12, 25),
+        interval_days=1, treatment_starts_on=start,
+    )

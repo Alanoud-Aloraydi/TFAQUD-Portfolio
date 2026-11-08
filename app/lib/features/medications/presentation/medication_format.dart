@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -24,3 +25,9 @@ String formatMonthDays(BuildContext context, List<int> days) =>
         (days.toList()..sort()).join(context.tr('medications.list_separator')),
       ],
     );
+
+/// An interval schedule's days, «كل يوم», «كل يومين», «كل 3 أيام».
+String formatInterval(BuildContext context, int days) => context.tr(
+  'medications.every',
+  args: <String>[arabicCount(context, ArabicCount.days, days)],
+);

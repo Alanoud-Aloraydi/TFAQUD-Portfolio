@@ -10,14 +10,78 @@ from app.validation import Dto
 Kind = Literal["glucose", "bp"]
 Context = Literal["fasting", "before_meal", "after_meal", "bedtime", "other"]
 Condition = Literal["exertion", "after_meal", "stress", "illness"]
+# «ظروف القياس»: what was going on at a reading, one or more of them. The
+# older `glucose_context` and `condition` (one of each) are among them.
+Code = Literal[
+    "fasting", "before_meal", "after_meal", "bedtime",
+    "exertion", "stress", "illness", "other",
+]
+CODES = Code.__args__
+# Where the stomach is: one of these at a time.
+MEAL_STATES = ("fasting", "before_meal", "after_meal", "bedtime")
+# Blood pressure is not read against a fast or bedtime.
+NOT_FOR_BP = ("fasting", "before_meal", "bedtime")
 Value = Annotated[int, Field(ge=1, le=999)]
 
 
+def check_conditions(kind: str, conditions: list[str]) -> None:
+    """Conditions do not repeat, hold one meal state, and suit the kind."""
+    if len(set(conditions)) != len(conditions):
+        raise ValueError("Conditions cannot repeat.")
+    if sum(code in MEAL_STATES for code in conditions) > 1:
+        raise ValueError("A reading has one meal state at most.")
+    if kind == "bp" and any(code in NOT_FOR_BP for code in conditions):
+        raise ValueError("Blood pressure has no fasting or bedtime.")
+
+
+def legacy_context(kind: str, conditions: list[str]) -> str | None:
+    """The one `glucose_context` an older app reads."""
+    if kind != "glucose":
+        return None
+    for code in conditions:
+        if code in MEAL_STATES:
+            return code
+    return "other" if "other" in conditions else None
+
+
+def legacy_condition(kind: str, conditions: list[str]) -> str | None:
+    """The one `condition` an older app reads."""
+    for code in conditions:
+        if code in ("exertion", "stress", "illness") or (
+            kind == "bp" and code == "after_meal"
+        ):
+            return code
+    return None
+
+
+def from_legacy(*codes: str | None) -> list[str]:
+    """Conditions from an older app's `glucose_context` and `condition`."""
+    return list(dict.fromkeys(code for code in codes if code is not None))
+
+
 class ReadingTime(Dto):
-    """One reading time of the day, with its glucose context."""
+    """One reading time of the day, with its conditions.
+
+    An older app sends `glucose_context` instead of `conditions`.
+    """
 
     time_of_day: time
     glucose_context: Context | None = None
+    conditions: Annotated[list[Code], Field(max_length=len(CODES))] | None = (
+        None
+    )
+
+    @model_validator(mode="after")
+    def one_shape(self):
+        if self.conditions is not None and self.glucose_context is not None:
+            raise ValueError("Send conditions, or the older field.")
+        return self
+
+    @property
+    def codes(self) -> list[str]:
+        if self.conditions is not None:
+            return list(self.conditions)
+        return from_legacy(self.glucose_context)
 
 
 # Up to six readings a day: fasting, after each meal, at bedtime.
@@ -69,7 +133,13 @@ class PlanRequest(Dto):
 
     @property
     def glucose_context(self) -> str | None:
-        return self.sorted_times[0].glucose_context
+        return self.context_of(self.sorted_times[0])
+
+    def context_of(self, item: ReadingTime) -> str | None:
+        """The `glucose_context` kept for an older app."""
+        if item.conditions is None:
+            return item.glucose_context
+        return legacy_context(self.kind, item.codes)
 
     @model_validator(mode="after")
     def valid_plan(self):
@@ -101,6 +171,8 @@ class PlanRequest(Dto):
             or any(item.glucose_context is not None for item in self.times)
         ):
             raise ValueError("Blood pressure needs both upper limits.")
+        for item in self.times:
+            check_conditions(self.kind, item.codes)
         return self
 
 
@@ -121,6 +193,10 @@ class ReadingRequest(Dto):
     value_two: Value | None = None
     glucose_context: Context | None = None
     condition: Condition | None = None
+    # One or more; an older app sends `glucose_context` and `condition`.
+    conditions: Annotated[list[Code], Field(max_length=len(CODES))] | None = (
+        None
+    )
     note: Annotated[str | None, Field(max_length=250)] = None
     glucose_low: Value | None = None
     glucose_high: Value | None = None
@@ -146,6 +222,10 @@ class ReadingRequest(Dto):
             raise ValueError("A reading needs values for its kind.")
         if self.kind == "bp" and self.glucose_context is not None:
             raise ValueError("Blood pressure has no glucose context.")
+        if self.conditions is not None:
+            if self.glucose_context is not None or self.condition is not None:
+                raise ValueError("Send conditions, or the older two fields.")
+            check_conditions(self.kind, list(self.conditions))
         if (
             self.outcome == "read" and self.kind == "bp"
             and self.value_one <= self.value_two
@@ -175,6 +255,26 @@ class ReadingRequest(Dto):
             ):
                 raise ValueError("Blood pressure needs both upper limits.")
         return self
+
+    @property
+    def codes(self) -> list[str]:
+        if self.conditions is not None:
+            return list(self.conditions)
+        return from_legacy(self.glucose_context, self.condition)
+
+    @property
+    def stored_context(self) -> str | None:
+        """The `glucose_context` kept for an older app."""
+        if self.conditions is None:
+            return self.glucose_context
+        return legacy_context(self.kind, self.codes)
+
+    @property
+    def stored_condition(self) -> str | None:
+        """The `condition` kept for an older app."""
+        if self.conditions is None:
+            return self.condition
+        return legacy_condition(self.kind, self.codes)
 
 
 class ReadingQuery(Dto):

@@ -21,6 +21,7 @@ class HomeRepositoryData implements HomeRepositoryDomain {
     try {
       final HomeEntity home = (await _remote.getHome()).toEntity();
       // The words of each circle follow who is reading it.
+      CareVoice.viewerName = home.displayName;
       CareVoice.update(<String, String?>{
         for (final CareCircleSummary circle in home.circles)
           circle.id: circle.isPatient ? null : circle.patientName,

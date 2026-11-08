@@ -11,8 +11,10 @@ import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,29 +37,53 @@ class MeasurementPlanFormPage extends StatefulWidget {
       _MeasurementPlanFormPageState();
 }
 
-/// One reading time of the form («القراءة 1»), with its glucose context.
+/// One reading time of the form («القراءة 1»), with its conditions.
 class _Reading {
-  _Reading(this.time, this.context);
+  _Reading(this.time, this.conditions);
 
   TimeOfDay time;
-  String context;
+  List<String> conditions;
+}
+
+/// The schedule of one kind: glucose and blood pressure each keep their own
+/// times, days, start and grace while the form switches between them, and
+/// only the kind shown is saved.
+class _Schedule {
+  _Schedule(this.readings);
+
+  /// The reading times of a day, like a medicine's dose times: one or more,
+  /// up to [_MeasurementPlanFormPageState._maxReadings], each with its own
+  /// conditions.
+  final List<_Reading> readings;
+  final Set<int> days = {1, 2, 3, 4, 5, 6, 7};
+  DateTime start = riyadhToday();
+  int grace = 60;
 }
 
 class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   MeasurementKind _kind = MeasurementKind.glucose;
 
-  /// The reading times of a day, like a medicine's dose times: one or more,
-  /// up to [_maxReadings], each with its own glucose context.
-  final List<_Reading> _readings = <_Reading>[
-    _Reading(const TimeOfDay(hour: 7, minute: 30), 'fasting'),
-  ];
-  DateTime _start = riyadhToday();
-  final Set<int> _days = {1, 2, 3, 4, 5, 6, 7};
+  final Map<MeasurementKind, _Schedule> _schedules = {
+    MeasurementKind.glucose: _Schedule(<_Reading>[
+      _Reading(const TimeOfDay(hour: 7, minute: 30), <String>['fasting']),
+    ]),
+    MeasurementKind.bp: _Schedule(<_Reading>[
+      _Reading(const TimeOfDay(hour: 8, minute: 0), <String>[]),
+    ]),
+  };
+
+  _Schedule get _schedule => _schedules[_kind]!;
+  List<_Reading> get _readings => _schedule.readings;
+  Set<int> get _days => _schedule.days;
+  DateTime get _start => _schedule.start;
+  set _start(DateTime value) => _schedule.start = value;
+  int get _grace => _schedule.grace;
+  set _grace(int value) => _schedule.grace = value;
+
   final _low = TextEditingController();
   final _high = TextEditingController();
   final _systolic = TextEditingController();
   final _diastolic = TextEditingController();
-  int _grace = 60;
   bool _initialized = false;
   bool _saving = false;
   String? _errorKey;
@@ -66,13 +92,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
 
   /// Fasting, after each meal, at bedtime: the server allows six.
   static const int _maxReadings = 6;
-  static const _contexts = [
-    'fasting',
-    'before_meal',
-    'after_meal',
-    'bedtime',
-    'other',
-  ];
 
   @override
   void dispose() {
@@ -92,7 +111,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       ..clear()
       ..addAll(<_Reading>[
         for (final MeasurementTime item in version.readingTimes)
-          _Reading(_parseTime(item.time), item.glucoseContext ?? 'fasting'),
+          _Reading(_parseTime(item.time), item.conditions),
       ]);
     final earliest = riyadhToday();
     _start = version.effectiveFromOn.isAfter(earliest)
@@ -155,12 +174,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       kind: _kind,
       times: <MeasurementTime>[
         for (final item in readings)
-          MeasurementTime(
-            time: _clock(item.time),
-            glucoseContext: _kind == MeasurementKind.glucose
-                ? item.context
-                : null,
-          ),
+          MeasurementTime(time: _clock(item.time), conditions: item.conditions),
       ],
       weekdays: _days.toList()..sort(),
       startsOn: _start,
@@ -499,40 +513,40 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
           }
         },
       ),
-      if (_kind == MeasurementKind.glucose)
-        InsetBlock(
-          semanticLabel: '$label، ${context.tr('measurements.glucose_context')}',
-          child: Wrap(
-            spacing: AppSpacing.sm,
-            children: [
-              for (final value in _contexts)
-                ChoiceChip(
-                  label: Text(context.tr('measurements.context.$value')),
-                  selected: reading.context == value,
-                  onSelected: (_) => setState(() => reading.context = value),
-                ),
-            ],
-          ),
+      InsetBlock(
+        semanticLabel:
+            '$label، ${context.tr('measurements.condition_optional')}',
+        child: MeasurementConditionChips(
+          kind: _kind,
+          selected: reading.conditions,
+          caption: context.tr('measurements.conditions_caption'),
+          onChanged: (value) => setState(() => reading.conditions = value),
         ),
+      ),
     ];
   }
 
-  /// A new reading three hours after the last one (the same day), with the
-  /// next glucose context not used yet: fasting, then after a meal...
+  /// A new reading three hours after the last one (the same day); a
+  /// glucose one with the next meal state not used yet: fasting, then
+  /// before a meal, then after it.
   void _addReading() {
     final TimeOfDay last = _readings.last.time;
     final int next = last.hour * 60 + last.minute + 180;
     final int minutes = next > 23 * 60 ? 23 * 60 : next;
-    final Set<String> used = {for (final item in _readings) item.context};
+    final Set<String> used = {
+      for (final item in _readings) ...item.conditions,
+    };
+    final String? meal = _kind == MeasurementKind.glucose
+        ? MeasurementConditions.mealStates
+              .take(3)
+              .where((value) => !used.contains(value))
+              .firstOrNull
+        : null;
     setState(() {
       _readings.add(
-        _Reading(
-          TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
-          _contexts.firstWhere(
-            (value) => !used.contains(value),
-            orElse: () => 'other',
-          ),
-        ),
+        _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), [
+          ?meal,
+        ]),
       );
       _errorKey = null;
     });

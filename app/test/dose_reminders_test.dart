@@ -23,16 +23,21 @@ const ReminderCircle _noura = ReminderCircle(id: 'c-noura', name: 'أمي نور
 const ReminderCircle _me = ReminderCircle(id: 'c-me', name: 'صحتي');
 
 final DoseReminderTexts _texts = DoseReminderTexts(
-  title: (ReminderCircle circle) => 'دواء ${circle.name}',
-  body: (DoseOccurrence dose) => dose.name,
+  title: (ReminderCircle circle, DoseOccurrence dose) => 'دواء ${circle.name}',
+  body: (ReminderCircle circle, DoseOccurrence dose) => dose.name,
   measurementTitle: (ReminderCircle circle) => 'قياس ${circle.name}',
-  measurementBody: (MeasurementOccurrence task) => task.kind.name,
-  appointmentTitle: (ReminderCircle circle, AppointmentLead lead) =>
-      'موعد ${circle.name} ${lead.name}',
+  measurementBody: (ReminderCircle circle, MeasurementOccurrence task) =>
+      task.kind.name,
+  appointmentTitle:
+      (ReminderCircle circle, AppointmentLead lead, CareAppointment visit) =>
+          'موعد ${circle.name} ${lead.name}',
   appointmentBody: (CareAppointment visit) => visit.specialty,
   keepTitle: () => 'keep',
   keepBody: () => 'open the app',
 );
+
+/// A payload without the words a snoozable reminder carries.
+String _plain(String payload) => payload.split('\u001F').first;
 
 /// A measurement task on [day] (of November 2026) at [time] in Riyadh.
 MeasurementOccurrence _measurement(
@@ -199,7 +204,7 @@ void main() {
       expect(planned[0].at, DateTime.utc(2026, 11, 3, 9));
       expect(planned[0].title, 'دواء صحتي');
       expect(planned[0].body, 'فيتامين د');
-      expect(planned[0].payload, 'dose:c-me');
+      expect(_plain(planned[0].payload), 'dose:c-me');
       expect(planned[0].thread, 'c-me');
       expect(planned[1].at, DateTime.utc(2026, 11, 3, 18));
       expect(planned[1].title, 'دواء أمي نورة');
@@ -270,7 +275,7 @@ void main() {
       expect(planned[0].at, DateTime.utc(2026, 11, 3, 7));
       expect(planned[0].title, 'قياس أمي نورة');
       expect(planned[0].body, 'bp');
-      expect(planned[0].payload, 'measurement:c-noura');
+      expect(_plain(planned[0].payload), 'measurement:c-noura');
       expect(planned[0].thread, 'c-noura');
       expect(planned[1].payload, keepRemindersPayload);
     });
@@ -326,7 +331,7 @@ void main() {
         texts: _texts,
       );
 
-      expect(planned.map((ScheduledNotification n) => n.payload), <String>[
+      expect(planned.map((ScheduledNotification n) => _plain(n.payload)), <String>[
         'measurement:c-noura',
         'appointment:c-noura',
         'appointment:c-noura',
@@ -350,6 +355,30 @@ void main() {
       );
 
       expect(planned, isEmpty);
+    });
+
+    test('a dose or measurement carries its words for a snooze', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        doses: <(ReminderCircle, DoseOccurrence)>[(_me, _dose(3, '21:00'))],
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(5, '16:30')),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      final ScheduledNotification dose = planned.firstWhere(
+        (ScheduledNotification n) => n.payload.startsWith('dose:'),
+      );
+      expect(dose.snoozable, isTrue);
+      expect(reminderText(dose.payload), (dose.title, dose.body));
+      expect(reminderCircleId(dose.payload), 'c-me');
+      expect(reminderCircleId('$snoozeTapPrefix${dose.payload}'), 'c-me');
+      final ScheduledNotification visit = planned.firstWhere(
+        (ScheduledNotification n) => n.payload.startsWith('appointment:'),
+      );
+      expect(visit.snoozable, isFalse);
+      expect(visit.payload, 'appointment:c-noura');
     });
 
     test('the circle of a tapped reminder', () {
@@ -386,6 +415,21 @@ void main() {
     /// Lets a reading started by a change finish.
     Future<void> settle() => Future<void>.delayed(Duration.zero);
 
+    test('«ذكّرني لاحقًا» in a notification sets it again', () async {
+      medications.doses[_me.id] = <DoseOccurrence>[_dose(3, '21:00')];
+      await reminders.sync(<ReminderCircle>[_me]);
+      final ScheduledNotification dose = phone.inOrder.first;
+
+      expect(await reminders.snoozeTap(dose.payload), isFalse);
+      expect(await reminders.snoozeTap('$snoozeTapPrefix${dose.payload}'), isTrue);
+
+      final ScheduledNotification again = phone.scheduled[doseSnoozeId]!;
+      expect(again.title, dose.title);
+      expect(again.body, dose.body);
+      expect(again.snoozable, isTrue);
+      expect(reminderCircleId(again.payload), 'c-me');
+    });
+
     test('sets the reminders of every circle and asks once', () async {
       medications.doses[_noura.id] = <DoseOccurrence>[_dose(3, '21:00')];
       medications.doses[_me.id] = <DoseOccurrence>[
@@ -395,7 +439,7 @@ void main() {
       await reminders.sync(<ReminderCircle>[_noura, _me]);
 
       expect(
-        phone.inOrder.map((ScheduledNotification n) => n.payload),
+        phone.inOrder.map((ScheduledNotification n) => _plain(n.payload)),
         <String>['dose:c-me', 'dose:c-noura', keepRemindersPayload],
       );
       expect(phone.permissionRequests, 1);
@@ -553,7 +597,7 @@ void main() {
       await reminders.sync(<ReminderCircle>[_noura]);
 
       expect(
-        phone.inOrder.map((ScheduledNotification n) => n.payload),
+        phone.inOrder.map((ScheduledNotification n) => _plain(n.payload)),
         <String>[
           'measurement:c-noura',
           'dose:c-noura',

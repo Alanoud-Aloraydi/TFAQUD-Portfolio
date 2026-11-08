@@ -14,6 +14,7 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -145,13 +146,14 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                         context.tr(kind),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      // With one reading a day, its context under the name;
-                      // with several, each one beside its time below.
+                      // With one reading a day, its conditions under the
+                      // name; with several, each one's beside its time below.
                       if (version.readingTimes.length == 1 &&
-                          version.glucoseContext != null)
+                          version.readingTimes.single.conditions.isNotEmpty)
                         Text(
-                          context.tr(
-                            'measurements.context.${version.glucoseContext}',
+                          conditionsText(
+                            context,
+                            version.readingTimes.single.conditions,
                           ),
                         ),
                     ],
@@ -184,14 +186,15 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                       Row(
                         children: [
                           Text(_formatTime(reading.time)),
-                          const Spacer(),
-                          Text(
-                            version.readingTimes.length > 1 &&
-                                    reading.glucoseContext != null
-                                ? context.tr(
-                                    'measurements.context.${reading.glucoseContext}',
-                                  )
-                                : context.tr('measurements.one_reading'),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Text(
+                              version.readingTimes.length > 1 &&
+                                      reading.conditions.isNotEmpty
+                                  ? conditionsText(context, reading.conditions)
+                                  : context.tr('measurements.one_reading'),
+                              textAlign: TextAlign.end,
+                            ),
                           ),
                         ],
                       ),

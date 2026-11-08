@@ -1,8 +1,9 @@
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/forms/month_day_grid.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/forms/ruler_picker.dart';
 import 'package:app/core/widgets/forms/stepper_control.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
@@ -26,7 +27,7 @@ class MedicationScheduleEditor extends StatelessWidget {
     required this.onChanged,
     this.onRemove,
     this.issue,
-    this.defaultMonthDay = 1,
+    this.startsOn,
   });
 
   final int index;
@@ -36,10 +37,8 @@ class MedicationScheduleEditor extends StatelessWidget {
   final VoidCallback? onRemove;
   final MedicationFormIssue? issue;
 
-  /// The day chosen the first time «شهري» is picked: the day the medicine
-  /// starts (the 28th at most), as Apple's Calendar starts a monthly repeat
-  /// on its event's day.
-  final int defaultMonthDay;
+  /// The day the treatment starts, where «كل كم يوم» counts from.
+  final DateTime? startsOn;
 
   /// Match the supplied schedule strip: Saturday through Friday. Numbers are
   /// those of [DateTime.weekday] (Monday 1 … Sunday 7).
@@ -206,20 +205,17 @@ class MedicationScheduleEditor extends StatelessWidget {
 
   // Days ---------------------------------------------------------------
 
-  /// «أسبوعي | شهري» on the app's glass segmented control, and under it the
-  /// weekdays or the days of the month. Apple's guidance for a segmented
-  /// control is this case: two closely related views of one choice, short
-  /// labels, segments of equal width.
+  /// «أسبوعي | كل كم يوم» on the app's glass segmented control, and under
+  /// it the weekdays, or the number of days on a ruler right here (not in a
+  /// sheet). Apple's guidance for a segmented control is this case: two
+  /// closely related views of one choice, short labels, segments of equal
+  /// width.
   Widget _dayChips(BuildContext context) {
-    final bool monthly = data.repeat == ScheduleRepeat.monthly;
+    final bool interval = data.repeat == ScheduleRepeat.interval;
     return InsetBlock(
       semanticLabel: context.tr('medications.repeat'),
       errorText: issue?.field == MedicationFormField.weekdays
-          ? context.tr(
-              monthly
-                  ? 'medications.month_day_required'
-                  : 'medications.weekday_required',
-            )
+          ? context.tr('medications.weekday_required')
           : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -227,27 +223,83 @@ class MedicationScheduleEditor extends StatelessWidget {
           GlassSegmentedControl<ScheduleRepeat>(
             segments: <ScheduleRepeat, String>{
               ScheduleRepeat.weekly: context.tr('medications.repeat_weekly'),
-              ScheduleRepeat.monthly: context.tr('medications.repeat_monthly'),
+              ScheduleRepeat.interval: context.tr(
+                'medications.repeat_interval',
+              ),
             },
             selected: data.repeat,
             onChanged: (ScheduleRepeat repeat) {
               data.repeat = repeat;
-              if (repeat == ScheduleRepeat.monthly && data.monthDays.isEmpty) {
-                // The 29th to the 31st are not offered: they start on the
-                // 28th.
-                data.monthDays.add(
-                  defaultMonthDay > MonthDayGrid.lastDay
-                      ? MonthDayGrid.lastDay
-                      : defaultMonthDay,
-                );
-              }
               onChanged();
             },
           ),
           const SizedBox(height: AppSpacing.md),
-          if (monthly) _monthDays(context) else _weekdays(context),
+          if (interval) _interval(context) else _weekdays(context),
         ],
       ),
+    );
+  }
+
+  /// «نذكرك كل» over the number of days, large, and the ruler under it:
+  /// 1 «يوم», 2 «يومين», 3 to 10 «أيام», then «يوم».
+  Widget _interval(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    final DateTime? start = startsOn;
+    String days(int count) => arabicCount(context, ArabicCount.days, count);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          context.tr('medications.interval_title'),
+          textAlign: TextAlign.center,
+          style: text.bodyMedium?.copyWith(
+            color: AppSemanticColors.textSupporting,
+          ),
+        ),
+        Text(
+          days(data.intervalDays),
+          textAlign: TextAlign.center,
+          style: text.headlineMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        RulerPicker(
+          min: 1,
+          max: maxIntervalDays,
+          value: data.intervalDays,
+          semanticLabel: context.tr('medications.interval_days'),
+          valueLabel: days,
+          onChanged: (int value) {
+            data.intervalDays = value;
+            onChanged();
+          },
+        ),
+        if (start != null) ...<Widget>[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            context.tr(
+              'medications.interval_from',
+              args: <String>[formatMedicationDate(context, start)],
+            ),
+            textAlign: TextAlign.center,
+            style: text.bodySmall?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
+          ),
+        ],
+        if (data.formerMonthDays.isNotEmpty) ...<Widget>[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            context.tr(
+              'medications.was_monthly',
+              args: <String>[formatMonthDays(context, data.formerMonthDays)],
+            ),
+            textAlign: TextAlign.center,
+            style: text.bodySmall?.copyWith(
+              color: AppSemanticColors.textSupporting,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -260,16 +312,6 @@ class MedicationScheduleEditor extends StatelessWidget {
     onTap: (String code) {
       final int day = int.parse(code);
       if (!data.weekdays.remove(day)) data.weekdays.add(day);
-      onChanged();
-    },
-  );
-
-  Widget _monthDays(BuildContext context) => MonthDayGrid(
-    selected: data.monthDays,
-    labelOf: (int day) =>
-        context.tr('medications.month_day_label', args: <String>['$day']),
-    onTap: (int day) {
-      if (!data.monthDays.remove(day)) data.monthDays.add(day);
       onChanged();
     },
   );

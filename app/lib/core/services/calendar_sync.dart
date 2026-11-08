@@ -189,6 +189,17 @@ class CalendarSync {
           _monthlyDoses(circle, version.name, schedule, from, desired);
           continue;
         }
+        if (schedule.repeat == ScheduleRepeat.interval) {
+          _intervalDoses(
+            circle,
+            version.name,
+            schedule,
+            version.startsOn,
+            from,
+            desired,
+          );
+          continue;
+        }
         final DateTime start = _nextOccurrence(
           from,
           schedule.time,
@@ -225,6 +236,34 @@ class CalendarSync {
       end: start.add(const Duration(minutes: 15)),
       reminders: const <Duration>[Duration.zero],
       recurrence: MonthlyRecurrence(daysOfMonth: days),
+    );
+  }
+
+  /// A dose every few days as one event repeating every that many days
+  /// («FREQ=DAILY;INTERVAL=3»), from its first day on or after [from] on
+  /// the count from [startsOn].
+  void _intervalDoses(
+    ReminderCircle circle,
+    String name,
+    MedicationSchedule schedule,
+    DateTime startsOn,
+    DateTime from,
+    Map<String, _DesiredEvent> desired,
+  ) {
+    final int? every = schedule.intervalDays;
+    if (every == null || every < 1) return;
+    final DateTime start = _nextIntervalDay(
+      from,
+      schedule.time,
+      startsOn,
+      every,
+    );
+    desired['dose:${schedule.id}'] = _DesiredEvent(
+      title: '${circle.name} · $name',
+      start: start,
+      end: start.add(const Duration(minutes: 15)),
+      reminders: const <Duration>[Duration.zero],
+      recurrence: DailyRecurrence(interval: every),
     );
   }
 
@@ -400,6 +439,31 @@ DateTime _nextMonthDay(DateTime from, String time, List<int> days) {
     if (days.contains(day.day) && !day.isBefore(from)) return day;
   }
   return DateTime(from.year, from.month, from.day, hour, minute);
+}
+
+/// The first moment on/after [from] that is [time] ("HH:mm") on a day
+/// [every] days apart from [startsOn] — only to seed a recurring event.
+DateTime _nextIntervalDay(
+  DateTime from,
+  String time,
+  DateTime startsOn,
+  int every,
+) {
+  final DateTime first = _wallClock(startsOn, time);
+  if (!first.isBefore(from)) return first;
+  // Whole days between the dates, counted on the calendar (UTC), so a
+  // clock change in between does not shift the count.
+  final int since = DateTime.utc(from.year, from.month, from.day)
+      .difference(DateTime.utc(startsOn.year, startsOn.month, startsOn.day))
+      .inDays;
+  final int ahead = (every - since % every) % every;
+  final DateTime day = _wallClock(
+    DateTime(from.year, from.month, from.day + ahead),
+    time,
+  );
+  return day.isBefore(from)
+      ? _wallClock(DateTime(day.year, day.month, day.day + every), time)
+      : day;
 }
 
 /// [date] and [time] ("HH:mm") as a plain local [DateTime], not tagged UTC.

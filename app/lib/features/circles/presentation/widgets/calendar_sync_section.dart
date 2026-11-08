@@ -1,4 +1,6 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
@@ -7,8 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 /// The calendar-sync toggles (doses, measurements, appointments) for one
-/// circle: no title of its own, so a page with several circles can put its
-/// own title and a shared hint around as many of these as it needs.
+/// circle, as one iOS Settings group: each row an icon square, its name and
+/// a switch. No title of its own, so a page with several circles can put a
+/// header over each group and one shared hint below them all.
 class CalendarSyncToggles extends StatelessWidget {
   const CalendarSyncToggles({super.key, required this.circleId});
 
@@ -22,18 +25,51 @@ class CalendarSyncToggles extends StatelessWidget {
           circleId: circleId,
           category: CalendarSyncCategory.doses,
           label: context.tr('circle_overview.calendar_sync_doses'),
+          icon: AppIcons.pill,
+          tile: AppSemanticColors.settingsTileDoses,
         ),
         _CalendarSyncRow(
           circleId: circleId,
           category: CalendarSyncCategory.measurements,
           label: context.tr('circle_overview.calendar_sync_measurements'),
+          icon: AppIcons.heartbeat,
+          tile: AppSemanticColors.settingsTileMeasurements,
         ),
         _CalendarSyncRow(
           circleId: circleId,
           category: CalendarSyncCategory.appointments,
           label: context.tr('circle_overview.calendar_sync_appointments'),
+          icon: AppIcons.calendar,
+          tile: AppSemanticColors.settingsTileAppointments,
         ),
       ],
+    );
+  }
+}
+
+/// The header over one circle's group: its name, small and grey, as iOS
+/// Settings names a group.
+class CalendarSyncGroupHeader extends StatelessWidget {
+  const CalendarSyncGroupHeader(this.name, {super.key});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpacing.inset,
+        end: AppSpacing.inset,
+        bottom: AppSpacing.labelGap,
+      ),
+      child: Semantics(
+        header: true,
+        child: Text(
+          name,
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.tokens.textSecondary),
+        ),
+      ),
     );
   }
 }
@@ -67,11 +103,15 @@ class _CalendarSyncRow extends StatefulWidget {
     required this.circleId,
     required this.category,
     required this.label,
+    required this.icon,
+    required this.tile,
   });
 
   final String circleId;
   final CalendarSyncCategory category;
   final String label;
+  final IconData icon;
+  final Color tile;
 
   @override
   State<_CalendarSyncRow> createState() => _CalendarSyncRowState();
@@ -113,6 +153,7 @@ class _CalendarSyncRowState extends State<_CalendarSyncRow> {
   Widget build(BuildContext context) {
     return ToggleRow(
       label: widget.label,
+      leading: SettingsIconTile(icon: widget.icon, background: widget.tile),
       value: _enabled ?? false,
       onChanged: _enabled == null ? (_) {} : _onChanged,
     );

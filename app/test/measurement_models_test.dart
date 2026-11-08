@@ -1,11 +1,14 @@
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('plan draft sends the entered target and Western date digits', () {
     final draft = MeasurementPlanDraft(
       kind: MeasurementKind.glucose,
-      times: const [MeasurementTime(time: '07:30', glucoseContext: 'fasting')],
+      times: const [
+        MeasurementTime(time: '07:30', conditions: ['fasting']),
+      ],
       weekdays: const [1, 3],
       startsOn: DateTime(2026, 11, 3),
       graceMinutes: 60,
@@ -54,8 +57,8 @@ void main() {
     final draft = MeasurementPlanDraft(
       kind: MeasurementKind.glucose,
       times: const [
-        MeasurementTime(time: '07:00', glucoseContext: 'fasting'),
-        MeasurementTime(time: '14:00', glucoseContext: 'after_meal'),
+        MeasurementTime(time: '07:00', conditions: ['fasting']),
+        MeasurementTime(time: '14:00', conditions: ['after_meal', 'exertion']),
       ],
       weekdays: const [1],
       startsOn: DateTime(2026, 11, 3),
@@ -67,7 +70,11 @@ void main() {
     expect(json.containsKey('time_of_day'), isFalse);
     expect(json['times'], [
       {'time_of_day': '07:00', 'glucose_context': 'fasting'},
-      {'time_of_day': '14:00', 'glucose_context': 'after_meal'},
+      // Two conditions: only a list holds them.
+      {
+        'time_of_day': '14:00',
+        'conditions': ['after_meal', 'exertion'],
+      },
     ]);
 
     final version = MeasurementVersion.fromJson({
@@ -93,7 +100,67 @@ void main() {
       'glucose_context': 'before_meal',
     });
     expect(older.readingTimes, const [
-      MeasurementTime(time: '08:00', glucoseContext: 'before_meal'),
+      MeasurementTime(time: '08:00', conditions: ['before_meal']),
     ]);
+  });
+
+  test('one time with conditions only a list holds goes as times', () {
+    final draft = MeasurementPlanDraft(
+      kind: MeasurementKind.bp,
+      times: const [
+        MeasurementTime(time: '08:00', conditions: ['exertion']),
+      ],
+      weekdays: const [1],
+      startsOn: DateTime(2026, 11, 3),
+      graceMinutes: 60,
+      systolicLimit: 130,
+      diastolicLimit: 80,
+    );
+    final json = draft.toJson();
+    expect(json.containsKey('time_of_day'), isFalse);
+    expect(json['times'], [
+      {
+        'time_of_day': '08:00',
+        'conditions': ['exertion'],
+      },
+    ]);
+  });
+
+  test('a reading sends one context and one condition when they fit', () {
+    const fits = MeasurementReadingDraft(
+      kind: MeasurementKind.glucose,
+      outcome: 'read',
+      conditions: ['after_meal', 'stress'],
+    );
+    expect(fits.toJson()['glucose_context'], 'after_meal');
+    expect(fits.toJson()['condition'], 'stress');
+    expect(fits.toJson().containsKey('conditions'), isFalse);
+
+    const more = MeasurementReadingDraft(
+      kind: MeasurementKind.glucose,
+      outcome: 'read',
+      conditions: ['after_meal', 'stress', 'exertion'],
+    );
+    expect(more.toJson()['conditions'], ['after_meal', 'stress', 'exertion']);
+    expect(more.toJson().containsKey('glucose_context'), isFalse);
+
+    // An older server's one of each reads back as a list.
+    final reading = MeasurementReading.fromJson({
+      'id': 'r',
+      'kind': 'glucose',
+      'outcome': 'read',
+      'recorded_at': '2026-11-03T09:00:00+03:00',
+      'glucose_context': 'fasting',
+      'condition': 'exertion',
+    });
+    expect(reading.conditions, ['fasting', 'exertion']);
+  });
+
+  test('a meal state replaces another; other conditions add up', () {
+    var selected = MeasurementConditions.toggle(const [], 'fasting');
+    selected = MeasurementConditions.toggle(selected, 'exertion');
+    selected = MeasurementConditions.toggle(selected, 'after_meal');
+    expect(selected, ['exertion', 'after_meal']);
+    expect(MeasurementConditions.toggle(selected, 'exertion'), ['after_meal']);
   });
 }

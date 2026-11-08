@@ -6,9 +6,11 @@ import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_targets_cubit.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,10 +61,10 @@ class MeasurementReadingSheet extends StatefulWidget {
 
 class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   late MeasurementKind _kind = widget.occurrence?.kind ?? MeasurementKind.bp;
-  // A scheduled task's glucose context is fixed by its plan; only a free
-  // reading asks for it.
-  late String _context = widget.occurrence?.glucoseContext ?? 'fasting';
-  String? _condition;
+  /// «ظروف القياس»: a scheduled task starts with its plan's, which the
+  /// reader can change; a free reading starts with none.
+  late List<String> _conditions =
+      widget.occurrence?.conditions ?? const <String>[];
   TimeOfDay _time = TimeOfDay.now();
   final _systolic = TextEditingController();
   final _diastolic = TextEditingController();
@@ -72,15 +74,6 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   final _targetHigh = TextEditingController();
   bool _saving = false;
   String? _errorKey;
-
-  static const _contexts = [
-    'fasting',
-    'before_meal',
-    'after_meal',
-    'bedtime',
-    'other',
-  ];
-  static const _conditions = ['exertion', 'after_meal', 'stress', 'illness'];
 
   MeasurementTarget? _targetFor(MeasurementKind kind) {
     for (final target
@@ -160,8 +153,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       measuredAt: measuredAt,
       valueOne: one,
       valueTwo: two,
-      glucoseContext: _kind == MeasurementKind.glucose ? _context : null,
-      condition: _condition,
+      conditions: _conditions,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
       glucoseLow: useTarget && _kind == MeasurementKind.glucose
           ? targetLow
@@ -238,6 +230,14 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                             ? (value) => setState(() {
                                 _kind = value;
                                 _showTarget(value);
+                                // Fasting is not for blood pressure.
+                                final offered = MeasurementConditions.offered(
+                                  value,
+                                );
+                                _conditions = [
+                                  for (final code in _conditions)
+                                    if (offered.contains(code)) code,
+                                ];
                               })
                             : null,
                       ),
@@ -357,36 +357,6 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      if (_kind == MeasurementKind.glucose &&
-                          widget.occurrence == null) ...[
-                        InsetGroup(
-                          header: context.tr('measurements.glucose_context'),
-                          children: [
-                            InsetBlock(
-                              semanticLabel: context.tr(
-                                'measurements.glucose_context',
-                              ),
-                              child: Wrap(
-                                spacing: AppSpacing.sm,
-                                children: [
-                                  for (final value in _contexts)
-                                    ChoiceChip(
-                                      label: Text(
-                                        context.tr(
-                                          'measurements.context.$value',
-                                        ),
-                                      ),
-                                      selected: _context == value,
-                                      onSelected: (_) =>
-                                          setState(() => _context = value),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
                       InsetGroup(
                         header: context.tr('measurements.condition_optional'),
                         children: [
@@ -394,24 +364,14 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                             semanticLabel: context.tr(
                               'measurements.condition_optional',
                             ),
-                            child: Wrap(
-                              spacing: AppSpacing.sm,
-                              children: [
-                                for (final value in _conditions)
-                                  ChoiceChip(
-                                    label: Text(
-                                      context.tr(
-                                        'measurements.condition.$value',
-                                      ),
-                                    ),
-                                    selected: _condition == value,
-                                    onSelected: (_) => setState(() {
-                                      _condition = _condition == value
-                                          ? null
-                                          : value;
-                                    }),
-                                  ),
-                              ],
+                            child: MeasurementConditionChips(
+                              kind: _kind,
+                              selected: _conditions,
+                              caption: context.tr(
+                                'measurements.conditions_hint',
+                              ),
+                              onChanged: (value) =>
+                                  setState(() => _conditions = value),
                             ),
                           ),
                         ],

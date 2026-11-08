@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -88,8 +89,10 @@ class _TodayPageState extends State<TodayPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // «صباح الخير، ياسر» before noon in Riyadh, «مساء
+                      // الخير، ياسر» after; the tab keeps «اليوم».
                       LargeTitle(
-                        title: context.tr('tab.today'),
+                        title: greeting(context, now, CareVoice.viewerName),
                         subtitle: date,
                       ),
                       const SizedBox(height: AppSpacing.xl),
@@ -381,14 +384,7 @@ class _NextTaskCard extends StatelessWidget {
       );
     }
     final minutes = (task.at.difference(now).inSeconds + 59) ~/ 60;
-    final relative = minutes < 60
-        ? context.tr('today_dashboard.after_minutes', args: ['$minutes'])
-        : minutes % 60 == 0
-        ? context.tr('today_dashboard.after_hours', args: ['${minutes ~/ 60}'])
-        : context.tr(
-            'today_dashboard.after_hours_minutes',
-            args: ['${minutes ~/ 60}', '${minutes % 60}'],
-          );
+    final relative = afterDuration(context, minutes);
     final title =
         medication?.name ??
         (measurement == null

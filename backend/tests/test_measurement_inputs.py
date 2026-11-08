@@ -115,3 +115,46 @@ def test_an_older_app_sends_one_time():
 def test_reading_times_are_valid(plan, message):
     with pytest.raises(ValidationError, match=message):
         PlanRequest.model_validate(plan)
+
+
+def test_conditions_and_what_an_older_app_reads():
+    """«ظروف القياس»: several at once, one of each kept for an older app."""
+    now = datetime.now(timezone.utc)
+    value = ReadingRequest(
+        kind="glucose", outcome="read", measured_at=now, value_one=120,
+        conditions=["exertion", "after_meal"],
+    )
+    assert value.codes == ["exertion", "after_meal"]
+    assert value.stored_context == "after_meal"
+    assert value.stored_condition == "exertion"
+
+    pressure = ReadingRequest(
+        kind="bp", outcome="read", measured_at=now, value_one=130,
+        value_two=80, conditions=["other"],
+    )
+    assert pressure.stored_context is None
+    assert pressure.stored_condition is None
+
+    older = ReadingRequest(
+        kind="glucose", outcome="read", measured_at=now, value_one=120,
+        glucose_context="after_meal", condition="after_meal",
+    )
+    assert older.codes == ["after_meal"]
+    assert older.stored_condition == "after_meal"
+
+
+@pytest.mark.parametrize(
+    "kind, conditions",
+    [
+        ("glucose", ["before_meal", "after_meal"]),
+        ("bp", ["fasting"]),
+        ("glucose", ["other", "other"]),
+    ],
+)
+def test_conditions_that_do_not_fit(kind, conditions):
+    now = datetime.now(timezone.utc)
+    with pytest.raises(ValidationError):
+        ReadingRequest(
+            kind=kind, outcome="read", measured_at=now, value_one=130,
+            value_two=80 if kind == "bp" else None, conditions=conditions,
+        )

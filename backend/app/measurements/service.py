@@ -258,8 +258,9 @@ class MeasurementService:
             measured_at=body.measured_at,
             value_one=body.value_one,
             value_two=body.value_two,
-            glucose_context=body.glucose_context,
-            condition=body.condition,
+            conditions=body.codes,
+            glucose_context=body.stored_context,
+            condition=body.stored_condition,
             note=body.note,
             glucose_low=target.glucose_low if target else None,
             glucose_high=target.glucose_high if target else None,
@@ -465,7 +466,8 @@ class MeasurementService:
             MeasurementPlanTime(
                 version_id=version_id,
                 time_of_day=item.time_of_day,
-                glucose_context=item.glucose_context,
+                conditions=item.codes,
+                glucose_context=body.context_of(item),
             )
             for item in body.sorted_times
         )

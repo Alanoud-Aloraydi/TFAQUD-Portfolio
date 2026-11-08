@@ -89,7 +89,7 @@ class MedicationFormData {
           scheduleIndex: index,
         );
       }
-      if (schedule.chosenDays.isEmpty) {
+      if (!schedule.hasDays) {
         return MedicationFormIssue(
           MedicationFormField.weekdays,
           scheduleIndex: index,
@@ -118,9 +118,9 @@ class MedicationFormData {
           weekdays: item.repeat == ScheduleRepeat.weekly
               ? (item.weekdays.toList()..sort())
               : const <int>[],
-          monthDays: item.repeat == ScheduleRepeat.monthly
-              ? (item.monthDays.toList()..sort())
-              : const <int>[],
+          intervalDays: item.repeat == ScheduleRepeat.interval
+              ? item.intervalDays
+              : null,
           instructions: _optional(item.instructionsController.text),
         ),
       );
@@ -165,16 +165,22 @@ class MedicationFormData {
 
   static ScheduleFormData _fromSchedule(MedicationSchedule value) {
     final parts = value.time.split(':');
+    // The form offers «كل كم يوم» in place of «شهري»: a monthly dose comes
+    // in as every 30 days, and the editor says what it was.
+    final bool monthly = value.repeat == ScheduleRepeat.monthly;
     return ScheduleFormData(
       time: TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
       dose: value.doseValue,
       doseUnit: value.doseUnit,
-      repeat: value.repeat,
-      // A monthly dose switched to weekly starts on every day, as a new one.
+      repeat: monthly ? ScheduleRepeat.interval : value.repeat,
+      // A dose switched to weekly starts on every day, as a new one.
       weekdays: value.weekdays.isEmpty
           ? <int>{1, 2, 3, 4, 5, 6, 7}
           : value.weekdays.toSet(),
-      monthDays: value.monthDays.toSet(),
+      intervalDays: monthly
+          ? ScheduleFormData.monthlyIntervalDays
+          : value.intervalDays ?? ScheduleFormData.defaultIntervalDays,
+      formerMonthDays: monthly ? value.monthDays : const <int>[],
       instructions: value.instructions,
     );
   }

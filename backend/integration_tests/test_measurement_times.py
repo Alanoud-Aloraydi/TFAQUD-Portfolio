@@ -42,6 +42,10 @@ TWO_TIMES = [
     {"time_of_day": "07:00", "glucose_context": "fasting"},
     {"time_of_day": "14:00", "glucose_context": "after_meal"},
 ]
+# As the server lists them: an older app's context is a condition too.
+TWO_TIMES_LISTED = [
+    {**item, "conditions": [item["glucose_context"]]} for item in TWO_TIMES
+]
 
 
 def reading(value, measured_at="2026-10-28T11:05:00+00:00"):
@@ -68,7 +72,7 @@ def test_each_reading_time_is_its_own_task(
     )
     assert created.status_code == 201, created.json
     version = created.json["measurement_plan"]["version"]
-    assert version["times"] == TWO_TIMES
+    assert version["times"] == TWO_TIMES_LISTED
     # The first time stays where an older app reads it.
     assert version["time_of_day"] == "07:00"
     assert version["glucose_context"] == "fasting"
@@ -138,4 +142,4 @@ def test_a_same_day_edit_changes_the_times(
     assert edited.status_code == 200, edited.json
     version = edited.json["measurement_plan"]["version"]
     assert version["number"] == 1
-    assert version["times"] == TWO_TIMES
+    assert version["times"] == TWO_TIMES_LISTED

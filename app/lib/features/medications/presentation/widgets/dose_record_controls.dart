@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -6,15 +7,19 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
+import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/dose_reminder_texts.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 /// Defines the supported dose controls layout values.
 enum DoseControlsLayout { regular, today, attention }
@@ -50,53 +55,87 @@ class DoseRecordControls extends StatelessWidget {
     final isToday = scheduledOn == today;
     if (layout != DoseControlsLayout.regular) {
       final height = layout == DoseControlsLayout.attention ? 34.0 : 44.0;
-      return Row(
+      final ButtonStyle compact = FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        minimumSize: Size(0, height),
+      );
+      final bool canSnooze = isToday && circleId != null;
+      // The two answers first («انأخذت», «ذكّرني لاحقًا»), then the two
+      // less common ones as text buttons, so no label wraps.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (isToday) ...[
-            Expanded(
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
+          Row(
+            children: [
+              if (isToday)
+                Expanded(
+                  child: FilledButton.icon(
+                    style: compact,
+                    onPressed: () => _takeNow(context),
+                    icon: const Icon(CupertinoIcons.checkmark, size: 16),
+                    label: Text(
+                      CareVoice.tr(context, circleId, 'medications.taken_short'),
+                    ),
                   ),
-                  minimumSize: Size(0, height),
                 ),
-                onPressed: () => _takeNow(context),
-                icon: const Icon(CupertinoIcons.checkmark, size: 16),
-                label: Text(
-                  CareVoice.tr(context, circleId, 'medications.taken_short'),
+              if (isToday && canSnooze) const SizedBox(width: AppSpacing.sm),
+              if (canSnooze)
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    style: compact.copyWith(
+                      backgroundColor: const WidgetStatePropertyAll<Color>(
+                        AppSemanticColors.surfaceContent,
+                      ),
+                      foregroundColor: const WidgetStatePropertyAll<Color>(
+                        AppSemanticColors.textPrimary,
+                      ),
+                    ),
+                    onPressed: () => _snooze(context),
+                    icon: const Icon(CupertinoIcons.bell, size: 16),
+                    label: Text(context.tr('reminders.snooze')),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          Expanded(
-            child: FilledButton.tonalIcon(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppSemanticColors.surfaceContent,
-                foregroundColor: AppSemanticColors.textPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                minimumSize: Size(0, height),
-              ),
-              onPressed: () => _takeAtDifferentTime(context),
-              icon: const Icon(CupertinoIcons.clock, size: 16),
-              label: Text(
-                CareVoice.tr(
-                  context,
-                  circleId,
-                  'medications.different_time_short',
+              if (!isToday)
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    style: compact,
+                    onPressed: () => _takeAtDifferentTime(context),
+                    icon: const Icon(CupertinoIcons.clock, size: 16),
+                    label: Text(
+                      CareVoice.tr(
+                        context,
+                        circleId,
+                        'medications.different_time_short',
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          TextButton.icon(
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            ),
-            onPressed: () => _skip(context),
-            icon: const Icon(CupertinoIcons.minus_circle, size: 16),
-            label: Text(context.tr('medications.skip_short')),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (isToday)
+                TextButton.icon(
+                  onPressed: () => _takeAtDifferentTime(context),
+                  icon: const Icon(CupertinoIcons.clock, size: 16),
+                  label: Text(
+                    CareVoice.tr(
+                      context,
+                      circleId,
+                      'medications.different_time_short',
+                    ),
+                  ),
+                )
+              else
+                const SizedBox.shrink(),
+              TextButton.icon(
+                onPressed: () => _skip(context),
+                icon: const Icon(CupertinoIcons.minus_circle, size: 16),
+                label: Text(context.tr('medications.skip_short')),
+              ),
+            ],
           ),
         ],
       );
@@ -128,6 +167,38 @@ class DoseRecordControls extends StatelessWidget {
 
   Future<void> _takeNow(BuildContext context) =>
       _recordTaken(context, DateTime.now());
+
+  /// «ذكّرني لاحقًا»: the dose's own reminder again in 15 minutes, half an
+  /// hour or an hour, with the same words as its notification.
+  Future<void> _snooze(BuildContext context) async {
+    final String? circle = circleId;
+    if (circle == null) return;
+    final int? minutes = await showOptionSheet<int>(
+      context,
+      title: context.tr('reminders.snooze_title'),
+      options: const <int>[15, 30, 60],
+      labelOf: (int value) => afterDuration(context, value),
+    );
+    if (minutes == null || !context.mounted) return;
+    final ReminderCircle reminderCircle = ReminderCircle(id: circle, name: '');
+    await GetIt.I<DoseReminders>().snooze(
+      circleId: circle,
+      title: doseReminderTexts.title(reminderCircle, occurrence),
+      body: doseReminderTexts.body(reminderCircle, occurrence),
+      after: Duration(minutes: minutes),
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.tr(
+            'reminders.snoozed',
+            args: <String>[afterDuration(context, minutes)],
+          ),
+        ),
+      ),
+    );
+  }
 
   Future<void> _takeAtDifferentTime(BuildContext context) async {
     final takenAt = await selectTakenTime(

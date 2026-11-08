@@ -30,6 +30,17 @@ abstract class AppSemanticColors {
   /// Accent for prayer periods and attention notices.
   static const Color accentWarm = AppColors.honey;
 
+  /// The small rounded squares behind a settings row's icon, as in iOS
+  /// Settings: one color per kind of care, the icon in [onSettingsTile].
+  static const Color settingsTileDoses = AppColors.leaf;
+  static const Color settingsTileMeasurements = AppColors.honey;
+  static const Color settingsTileAppointments = AppColors.slateSoft;
+  static const Color onSettingsTile = AppColors.ink;
+
+  /// The fixed mark over a ruler picker's chosen number: the brand's green
+  /// deep enough to stand out on white (above 3:1), unlike the pale leaf.
+  static const Color pickerMark = AppColors.success;
+
   /// Lines inside a slate group, the edge of white avatars and small
   /// buttons on it, and the neutral badge «مدير».
   static const Color borderPlan = AppColors.slatePale;

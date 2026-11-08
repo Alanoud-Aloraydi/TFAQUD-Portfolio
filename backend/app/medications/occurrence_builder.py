@@ -41,7 +41,7 @@ def build_occurrences(
             for plan, version, schedule in eligible:
                 if version.version_number != version_number or not days[
                     schedule.id
-                ].applies_on(current):
+                ].applies_on(current, version.treatment_starts_on):
                     continue
                 scheduled_at = datetime.combine(
                     current, schedule.time_of_day, tzinfo=RIYADH

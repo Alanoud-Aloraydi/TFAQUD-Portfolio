@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/core/services/calendar_sync.dart';
@@ -103,7 +104,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
 
   void _onTap(String payload) {
     if (!mounted) return;
-    if (context.read<HomeCubit>().state.status == HomeStatus.ready) {
+    if (isSnoozeTap(payload) ||
+        context.read<HomeCubit>().state.status == HomeStatus.ready) {
       _openTap(payload);
     } else {
       _pendingTap = payload;
@@ -115,11 +117,34 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   /// «اليوم» as it is.
   void _openTap(String payload) {
     _pendingTap = null;
+    // «ذكّرني لاحقًا» in the notification: set it again, and stay.
+    if (isSnoozeTap(payload)) {
+      unawaited(_snooze(payload));
+      return;
+    }
     final String? circleId = reminderCircleId(payload);
     if (circleId != null) {
       unawaited(context.read<HomeCubit>().selectCircle(circleId));
     }
     context.go(Routes.today);
+  }
+
+  /// Puts a reminder off from its notification, and says when it comes.
+  Future<void> _snooze(String tap) async {
+    final bool done = await _reminders.snoozeTap(tap);
+    if (!done || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.tr(
+            'reminders.snoozed',
+            args: <String>[
+              afterDuration(context, notificationSnooze.inMinutes),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// Sets the dose reminders for the person's circles when the list changes.

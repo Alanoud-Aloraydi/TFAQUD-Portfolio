@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -38,18 +39,7 @@ class TodayDoseWindow extends StatelessWidget {
     final minutesUntilDue = (scheduled.difference(now).inSeconds + 59) ~/ 60;
     final status = medicationTimingState(occurrence, now);
     final label = minutesUntilDue > 0
-        ? context.tr(
-            minutesUntilDue < 60
-                ? 'today_dashboard.after_minutes'
-                : minutesUntilDue % 60 == 0
-                ? 'today_dashboard.after_hours'
-                : 'today_dashboard.after_hours_minutes',
-            args: minutesUntilDue < 60
-                ? [minutesUntilDue.toString()]
-                : minutesUntilDue % 60 == 0
-                ? ['${minutesUntilDue ~/ 60}']
-                : ['${minutesUntilDue ~/ 60}', '${minutesUntilDue % 60}'],
-          )
+        ? afterDuration(context, minutesUntilDue)
         : context.tr('today_dashboard.status.${status!.name}');
     final missedTime =
         '${missed.hour.toString().padLeft(2, '0')}:'

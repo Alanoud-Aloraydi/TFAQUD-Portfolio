@@ -192,7 +192,7 @@ def test_a_weekly_schedule_needs_weekdays_and_no_month_days():
 
 
 def test_one_time_is_weekly_or_monthly_not_both():
-    with pytest.raises(ValidationError, match="either weekly or monthly"):
+    with pytest.raises(ValidationError, match="one way only"):
         PlanRequest.model_validate(plan(schedules=[schedule(), monthly()]))
 
 
@@ -211,3 +211,28 @@ def test_two_monthly_doses_at_one_time_never_meet():
             ]
         )
     )
+
+
+def test_an_interval_schedule_has_its_number_only():
+    every = schedule(repeat="interval", weekdays=[], interval_days=3)
+    assert PlanRequest(**plan(schedules=[every])).schedules[0].interval_days
+    for change in (
+        {"interval_days": None},
+        {"interval_days": 91},
+        {"weekdays": [1]},
+        {"month_days": [5]},
+    ):
+        with pytest.raises(ValidationError):
+            PlanRequest(**plan(schedules=[{**every, **change}]))
+    with pytest.raises(ValidationError):
+        PlanRequest(**plan(schedules=[schedule(interval_days=3)]))
+
+
+def test_one_dose_time_repeats_in_one_way_only():
+    every = schedule(repeat="interval", weekdays=[], interval_days=3)
+    with pytest.raises(ValidationError, match="one way only"):
+        PlanRequest(**plan(schedules=[every, {**every, "interval_days": 5}]))
+    with pytest.raises(ValidationError, match="one way only"):
+        PlanRequest(**plan(schedules=[every, schedule(weekdays=[2])]))
+    evening = {**every, "time_of_day": time(20)}
+    assert len(PlanRequest(**plan(schedules=[every, evening])).schedules) == 2

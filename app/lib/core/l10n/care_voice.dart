@@ -17,6 +17,10 @@ import 'package:flutter/widgets.dart';
 abstract final class CareVoice {
   static final Map<String, String> _patients = <String, String>{};
 
+  /// The signed-in person's display name, for «صباح الخير، ياسر» and the
+  /// reminders («يا ياسر، لا تنسى …»); null before `/home` is read.
+  static String? viewerName;
+
   /// Called each time the account's circles are read (`/home`): the
   /// patient's name for each circle the viewer cares for, and nothing for
   /// a circle where the viewer is the patient.
@@ -31,8 +35,11 @@ abstract final class CareVoice {
       ]);
   }
 
-  /// Forgets every circle (on sign-out).
-  static void clear() => _patients.clear();
+  /// Forgets every circle and the name (on sign-out).
+  static void clear() {
+    _patients.clear();
+    viewerName = null;
+  }
 
   /// The patient's name when the viewer cares for someone else in
   /// [circleId]; null when the viewer is the patient, or not known.

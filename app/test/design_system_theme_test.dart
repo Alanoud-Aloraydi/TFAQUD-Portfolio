@@ -90,6 +90,23 @@ void main() {
       expect(contrast(AppColors.leaf, AppColors.surface), lessThan(3));
       expect(contrast(AppColors.leafTint, AppColors.surface), lessThan(1.5));
     });
+
+    test('settings icon squares and the ruler mark can be seen', () {
+      for (final Color tile in <Color>[
+        AppSemanticColors.settingsTileDoses,
+        AppSemanticColors.settingsTileMeasurements,
+        AppSemanticColors.settingsTileAppointments,
+      ]) {
+        expect(
+          contrast(AppSemanticColors.onSettingsTile, tile),
+          greaterThanOrEqualTo(4.5),
+        );
+      }
+      expect(
+        contrast(AppSemanticColors.pickerMark, AppColors.surface),
+        greaterThanOrEqualTo(3),
+      );
+    });
   });
 
   group('theme', () {

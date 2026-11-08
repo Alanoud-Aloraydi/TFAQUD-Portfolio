@@ -153,7 +153,7 @@ class _MedicationFormState extends State<MedicationForm> {
                       data: _data.schedules[index],
                       units: _data.form.doseUnits,
                       issue: _issue?.scheduleIndex == index ? _issue : null,
-                      defaultMonthDay: _data.startsOn.day,
+                      startsOn: _data.startsOn,
                       onChanged: _changed,
                       onRemove: _data.schedules.length == 1
                           ? null

@@ -292,94 +292,31 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-/// The calendar-sync toggles for this account's circles: one row per
-/// circle (a manager may be in several), each expanding in place to show
-/// that circle's own toggles, with one shared explanation below the list.
-class _CalendarSyncCard extends StatefulWidget {
+/// «مزامنة مع تقويم الجهاز» the way iOS Settings lays out a list of
+/// switches: one group per circle (a manager may be in several), each with
+/// the circle's name over it when there is more than one, every switch in
+/// sight (nothing to expand), and one shared explanation below them all.
+class _CalendarSyncCard extends StatelessWidget {
   const _CalendarSyncCard({required this.circles});
 
   final List<CareCircleSummary> circles;
 
   @override
-  State<_CalendarSyncCard> createState() => _CalendarSyncCardState();
-}
-
-class _CalendarSyncCardState extends State<_CalendarSyncCard> {
-  String? _expandedCircleId;
-
-  @override
   Widget build(BuildContext context) {
+    final bool several = circles.length > 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionTitle(context.tr('circle_overview.calendar_sync_title')),
-        SettingsCard(
-          children: [
-            for (final circle in widget.circles)
-              _CalendarSyncCircleRow(
-                key: ValueKey(circle.id),
-                circle: circle,
-                expanded: _expandedCircleId == circle.id,
-                onTap: () => setState(() {
-                  _expandedCircleId = _expandedCircleId == circle.id
-                      ? null
-                      : circle.id;
-                }),
-              ),
-          ],
-        ),
+        for (int index = 0; index < circles.length; index++) ...[
+          if (index > 0) const SizedBox(height: AppSpacing.lg),
+          if (several) CalendarSyncGroupHeader(circles[index].name),
+          CalendarSyncToggles(
+            key: ValueKey(circles[index].id),
+            circleId: circles[index].id,
+          ),
+        ],
         const CalendarSyncHint(),
-      ],
-    );
-  }
-}
-
-class _CalendarSyncCircleRow extends StatelessWidget {
-  const _CalendarSyncCircleRow({
-    super.key,
-    required this.circle,
-    required this.expanded,
-    required this.onTap,
-  });
-
-  final CareCircleSummary circle;
-  final bool expanded;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    circle.name,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ),
-                Icon(
-                  expanded ? AppIcons.caretUp : AppIcons.caretDown,
-                  size: AppSizes.iconSmall,
-                  color: context.tokens.textSecondary,
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (expanded)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: CalendarSyncToggles(circleId: circle.id),
-          ),
       ],
     );
   }

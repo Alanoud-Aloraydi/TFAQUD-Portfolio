@@ -54,17 +54,25 @@ def _english_decimal(value):
     return value
 
 
+# «نذكرك كل … يوم»: from every day to every 90 days.
+MAX_INTERVAL_DAYS = 90
+
+
 class ScheduleRequest(Dto):
-    """One dose time: weekly on `weekdays` (ISO, 1 Monday .. 7 Sunday), or
-    monthly on `month_days` (1 .. 28, the days every month has). An older
-    app sends only `weekdays`, which is weekly."""
+    """One dose time: weekly on `weekdays` (ISO, 1 Monday .. 7 Sunday),
+    monthly on `month_days` (1 .. 28, the days every month has), or every
+    `interval_days` days from the treatment's start. An older app sends
+    only `weekdays`, which is weekly."""
 
     time_of_day: time
     dose_value: DoseValue
     dose_unit: DoseUnit
-    repeat: Literal["weekly", "monthly"] = "weekly"
+    repeat: Literal["weekly", "monthly", "interval"] = "weekly"
     weekdays: Annotated[list[int], Field(max_length=7)] = []
     month_days: Annotated[list[int], Field(max_length=28)] = []
+    interval_days: Annotated[
+        int | None, Field(ge=1, le=MAX_INTERVAL_DAYS)
+    ] = None
     instructions: OptionalText250 = None
 
     @field_validator("dose_value", mode="before")
@@ -74,7 +82,12 @@ class ScheduleRequest(Dto):
 
     @model_validator(mode="after")
     def valid_days(self):
-        if self.repeat == "weekly":
+        if (self.repeat == "interval") != (self.interval_days is not None):
+            raise ValueError("Only an interval dose has interval days.")
+        if self.repeat == "interval":
+            if self.weekdays or self.month_days:
+                raise ValueError("An interval dose has no other days.")
+        elif self.repeat == "weekly":
             if not self.weekdays:
                 raise ValueError("Choose at least one weekday.")
             if self.month_days:
@@ -138,11 +151,18 @@ class PlanRequest(Dto):
         count = sum(len(item.weekdays) for item in weekly)
         if len(occurrences) != count:
             raise ValueError("Dose times cannot repeat on one weekday.")
-        # A weekly and a monthly dose at one time would meet on some day.
-        if {item.time_of_day for item in weekly} & {
-            item.time_of_day for item in monthly
-        }:
-            raise ValueError("One dose time is either weekly or monthly.")
+        # A weekly and a monthly dose at one time would meet on some day;
+        # two every few days at one time meet on the first day.
+        interval = [item.time_of_day for item in self.schedules
+                    if item.repeat == "interval"]
+        weekly_times = {item.time_of_day for item in weekly}
+        monthly_times = {item.time_of_day for item in monthly}
+        if (
+            weekly_times & monthly_times
+            or len(set(interval)) != len(interval)
+            or set(interval) & (weekly_times | monthly_times)
+        ):
+            raise ValueError("One dose time repeats in one way only.")
         # Two monthly doses at one time never share a day of the month.
         days = {
             (item.time_of_day, day) for item in monthly for day in item.month_days

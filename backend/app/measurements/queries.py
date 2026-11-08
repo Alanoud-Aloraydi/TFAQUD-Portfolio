@@ -50,6 +50,7 @@ def version_response(
             {
                 "time_of_day": item.time_of_day.strftime("%H:%M"),
                 "glucose_context": item.glucose_context,
+                "conditions": list(item.conditions),
             }
             for item in (times or [])
         ],
@@ -91,6 +92,7 @@ def reading_response(
         "value_two": record.value_two,
         "glucose_context": record.glucose_context,
         "condition": record.condition,
+        "conditions": list(record.conditions),
         "note": record.note,
         "outside_target": outside,
         "glucose_low": record.glucose_low,
@@ -355,6 +357,7 @@ class MeasurementQueries:
             "deadline_at": deadline.isoformat(),
             "status": status,
             "glucose_context": reading_time.glucose_context,
+            "conditions": list(reading_time.conditions),
             "glucose_low": version.glucose_low,
             "glucose_high": version.glucose_high,
             "systolic_limit": version.systolic_limit,

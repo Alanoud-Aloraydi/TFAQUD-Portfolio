@@ -9,6 +9,7 @@ import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -201,14 +202,12 @@ class MeasurementTaskRow extends StatelessWidget {
                         _title(context, task.kind),
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
-                      if (task.glucoseContext != null) ...[
+                      if (task.conditions.isNotEmpty) ...[
                         const SizedBox(height: AppSpacing.xs),
                         Align(
                           alignment: AlignmentDirectional.centerStart,
                           child: CompactStatusBadge(
-                            text: context.tr(
-                              'measurements.context.${task.glucoseContext}',
-                            ),
+                            text: conditionsText(context, task.conditions),
                             background: AppSemanticColors.surfaceContent,
                             foreground: AppSemanticColors.textSupporting,
                           ),

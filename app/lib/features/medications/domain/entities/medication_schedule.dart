@@ -43,10 +43,14 @@ extension DoseUnitValue on DoseUnit {
   String get apiValue => this == DoseUnit.milliliter ? 'mL' : name;
 }
 
-/// How a dose time repeats: on chosen weekdays, or on chosen days of the
-/// month (1 to 31; a day the month lacks is the month's last day, as the
-/// server counts it). The API's words are the names.
-enum ScheduleRepeat { weekly, monthly }
+/// How a dose time repeats: on chosen weekdays, every few days from the
+/// treatment's start («نذكرك كل 3 أيام»), or on chosen days of the month.
+/// The app offers the first two; a monthly schedule saved before stays
+/// monthly until it is edited. The API's words are the names.
+enum ScheduleRepeat { weekly, monthly, interval }
+
+/// «نذكرك كل … يوم»: from every day to every 90 days, as the server allows.
+const int maxIntervalDays = 90;
 
 /// Defines when and how much medication is due.
 class MedicationSchedule extends Equatable {
@@ -59,6 +63,7 @@ class MedicationSchedule extends Equatable {
     this.instructions,
     this.repeat = ScheduleRepeat.weekly,
     List<int> monthDays = const <int>[],
+    this.intervalDays,
   }) : weekdays = List.unmodifiable(weekdays),
        monthDays = List.unmodifiable(monthDays);
 
@@ -77,6 +82,10 @@ class MedicationSchedule extends Equatable {
   /// one.
   final List<int> monthDays;
 
+  /// Every how many days an interval schedule repeats, counted from the
+  /// treatment's start; null for the others.
+  final int? intervalDays;
+
   @override
   List<Object?> get props => [
     id,
@@ -87,6 +96,7 @@ class MedicationSchedule extends Equatable {
     instructions,
     repeat,
     monthDays,
+    intervalDays,
   ];
 }
 
@@ -100,6 +110,7 @@ class MedicationScheduleDraft extends Equatable {
     this.instructions,
     this.repeat = ScheduleRepeat.weekly,
     List<int> monthDays = const <int>[],
+    this.intervalDays,
   }) : weekdays = List.unmodifiable(weekdays),
        monthDays = List.unmodifiable(monthDays);
 
@@ -110,9 +121,10 @@ class MedicationScheduleDraft extends Equatable {
   final String? instructions;
   final ScheduleRepeat repeat;
   final List<int> monthDays;
+  final int? intervalDays;
 
   /// A weekly schedule is sent as before (weekdays only), so it saves on a
-  /// server without monthly schedules too; a monthly one names its repeat.
+  /// server without other repeats too; the others name their repeat.
   Map<String, Object?> toJson() => {
     'time_of_day': time,
     'dose_value': doseValue,
@@ -123,6 +135,11 @@ class MedicationScheduleDraft extends Equatable {
         'repeat': repeat.name,
         'weekdays': const <int>[],
         'month_days': monthDays,
+      },
+      ScheduleRepeat.interval => <String, Object?>{
+        'repeat': repeat.name,
+        'weekdays': const <int>[],
+        'interval_days': intervalDays,
       },
     },
     'instructions': instructions,
@@ -137,5 +154,6 @@ class MedicationScheduleDraft extends Equatable {
     instructions,
     repeat,
     monthDays,
+    intervalDays,
   ];
 }

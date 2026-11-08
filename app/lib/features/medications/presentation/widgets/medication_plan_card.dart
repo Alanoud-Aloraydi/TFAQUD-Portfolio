@@ -406,12 +406,17 @@ class _ScheduleLine extends StatelessWidget {
         context.tr('medications.unit.${schedule.doseUnit.name}'),
       ],
     );
-    final Widget days = schedule.repeat == ScheduleRepeat.monthly
-        ? Text(
-            formatMonthDays(context, schedule.monthDays),
-            style: Theme.of(context).textTheme.labelSmall,
-          )
-        : _weekStrip(context);
+    final Widget days = switch (schedule.repeat) {
+      ScheduleRepeat.monthly => Text(
+        formatMonthDays(context, schedule.monthDays),
+        style: Theme.of(context).textTheme.labelSmall,
+      ),
+      ScheduleRepeat.interval => Text(
+        formatInterval(context, schedule.intervalDays ?? 1),
+        style: Theme.of(context).textTheme.labelSmall,
+      ),
+      ScheduleRepeat.weekly => _weekStrip(context),
+    };
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: LayoutBuilder(
@@ -428,10 +433,10 @@ class _ScheduleLine extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(child: Text(dose)),
                   // Many days of the month wrap instead of overflowing.
-                  if (schedule.repeat == ScheduleRepeat.monthly)
-                    Flexible(child: days)
+                  if (schedule.repeat == ScheduleRepeat.weekly)
+                    days
                   else
-                    days,
+                    Flexible(child: days),
                 ],
               )
             : Column(

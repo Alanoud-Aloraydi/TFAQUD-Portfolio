@@ -33,6 +33,7 @@ class ScheduledNotification extends Equatable {
     required this.body,
     required this.payload,
     this.thread,
+    this.snoozable = false,
   });
 
   final int id;
@@ -42,9 +43,27 @@ class ScheduledNotification extends Equatable {
   final String payload;
   final String? thread;
 
+  /// Whether the notification offers «ذكّرني بعد 15 دقيقة» when pressed
+  /// and held (a dose or a measurement).
+  final bool snoozable;
+
   @override
-  List<Object?> get props => [id, at, title, body, payload, thread];
+  List<Object?> get props => [id, at, title, body, payload, thread, snoozable];
 }
+
+/// The iOS category of a reminder that can be put off; its one action.
+const String reminderCategory = 'tafaqod.reminder';
+const String snoozeAction = 'snooze';
+
+/// How long «ذكّرني لاحقًا» puts a reminder off from the notification.
+const Duration notificationSnooze = Duration(minutes: 15);
+
+/// What [PhoneNotifications.taps] gives for the snooze action: this, then
+/// the reminder's own payload.
+const String snoozeTapPrefix = 'snooze-action:';
+
+/// Whether [tap] is the snooze action of a reminder, not a plain tap.
+bool isSnoozeTap(String tap) => tap.startsWith(snoozeTapPrefix);
 
 /// The notifications the app sets on the phone itself (no server and no
 /// Apple push needed). Behind an interface, so the tests run without the
@@ -90,28 +109,54 @@ class PluginPhoneNotifications implements PhoneNotifications {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
     await _plugin.initialize(
       // Permission is asked later, when there is something to remind.
-      settings: const InitializationSettings(
+      settings: InitializationSettings(
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,
+          // Press and hold a dose or measurement reminder: «ذكّرني بعد 15
+          // دقيقة». It opens the app, which sets the reminder again (the
+          // words are fixed here: the translations are not loaded yet).
+          notificationCategories: <DarwinNotificationCategory>[
+            DarwinNotificationCategory(
+              reminderCategory,
+              actions: <DarwinNotificationAction>[
+                DarwinNotificationAction.plain(
+                  snoozeAction,
+                  'ذكّرني بعد 15 دقيقة',
+                  options: <DarwinNotificationActionOption>{
+                    DarwinNotificationActionOption.foreground,
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        final String? payload = response.payload;
-        if (payload != null && payload.isNotEmpty) _taps.add(payload);
+        final String? tap = _tapOf(response);
+        if (tap != null) _taps.add(tap);
       },
     );
     final NotificationAppLaunchDetails? launch = await _plugin
         .getNotificationAppLaunchDetails();
-    final String? payload = launch?.notificationResponse?.payload;
-    if ((launch?.didNotificationLaunchApp ?? false) &&
-        payload != null &&
-        payload.isNotEmpty) {
-      _launchTap = payload;
+    final NotificationResponse? response = launch?.notificationResponse;
+    final String? tap = response == null ? null : _tapOf(response);
+    if ((launch?.didNotificationLaunchApp ?? false) && tap != null) {
+      _launchTap = tap;
     }
     _ready = true;
     unawaited(_installSound());
+  }
+
+  /// The payload of a tap, or [snoozeTapPrefix] and the payload for the
+  /// snooze action; null without a payload.
+  static String? _tapOf(NotificationResponse response) {
+    final String? payload = response.payload;
+    if (payload == null || payload.isEmpty) return null;
+    return response.actionId == snoozeAction
+        ? '$snoozeTapPrefix$payload'
+        : payload;
   }
 
   /// Copies [notificationSound] to `Library/Sounds`, where iOS finds it for
@@ -172,6 +217,9 @@ class PluginPhoneNotifications implements PhoneNotifications {
           // With the sound, also when the app is open.
           presentSound: true,
           sound: notificationSound,
+          categoryIdentifier: notification.snoozable
+              ? reminderCategory
+              : null,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

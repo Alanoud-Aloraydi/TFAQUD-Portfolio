@@ -19,6 +19,14 @@ class _Translations extends AssetLoader {
           as Map<String, dynamic>;
 }
 
+/// [count] days as the app says them: «يوم», «يومين», «3 أيام», «11 يوم».
+String arabicDays(int count) => switch (count) {
+  1 => 'يوم',
+  2 => 'يومين',
+  <= 10 => '$count أيام',
+  _ => '$count يوم',
+};
+
 void main() {
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
@@ -28,7 +36,7 @@ void main() {
   Future<ScheduleFormData> openEditor(
     WidgetTester tester,
     double dose, {
-    int defaultMonthDay = 1,
+    DateTime? startsOn,
   }) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1;
@@ -59,7 +67,7 @@ void main() {
                   index: 0,
                   data: data,
                   units: const [DoseUnit.tablet],
-                  defaultMonthDay: defaultMonthDay,
+                  startsOn: startsOn,
                   onChanged: () => setState(() {}),
                 ),
               ),
@@ -97,7 +105,11 @@ void main() {
     tester,
   ) async {
     final data = await openEditor(tester, 1);
-    final sunday = find.text('medications.weekday_short.7'.tr());
+    // The chip, not its letter: the chip takes the tap.
+    final sunday = find.widgetWithText(
+      FilterChip,
+      'medications.weekday_short.7'.tr(),
+    );
     await tester.tap(sunday);
     await tester.pump();
     expect(data.weekdays, {1, 2, 3, 4, 5, 6});
@@ -107,48 +119,68 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('«شهري» shows the days 1 to 28, «أسبوعي» the week', (
+  testWidgets('«كل كم يوم» sets the days on a ruler, «أسبوعي» the week', (
     tester,
   ) async {
-    final data = await openEditor(tester, 1);
-
-    await tester.tap(find.text('medications.repeat_monthly'.tr()));
-    await tester.pumpAndSettle();
-    expect(data.repeat, ScheduleRepeat.monthly);
-    // The first day chosen is the medicine's start day (1 by default).
-    expect(data.monthDays, {1});
-    expect(find.text('medications.weekday_short.7'.tr()), findsNothing);
-    // Every month has the 28th; the 29th to the 31st are not offered.
-    expect(find.text('28'), findsOneWidget);
-    expect(find.text('29'), findsNothing);
-    expect(find.text('31'), findsNothing);
-
-    await tester.tap(find.text('15'));
-    await tester.pump();
-    await tester.tap(find.text('28'));
-    await tester.pump();
-    expect(data.monthDays, {1, 15, 28});
-    expect(
-      tester.getSemantics(find.bySemanticsLabel('يوم 15 من الشهر')),
-      isSemantics(isButton: true, isSelected: true, hasTapAction: true),
+    final data = await openEditor(
+      tester,
+      1,
+      startsOn: DateTime(2026, 11, 1),
     );
+
+    await tester.tap(find.text('medications.repeat_interval'.tr()));
+    await tester.pumpAndSettle();
+    expect(data.repeat, ScheduleRepeat.interval);
+    // Every other day to start, said the Arabic way.
+    expect(data.intervalDays, 2);
+    expect(find.text(arabicDays(2)), findsOneWidget);
+    expect(find.text('medications.weekday_short.7'.tr()), findsNothing);
+    expect(find.textContaining('1 نوفمبر 2026'), findsOneWidget);
+
+    // VoiceOver reads the ruler as a slider and moves it one day at a time.
+    final ruler = find.bySemanticsLabel('عدد الأيام');
+    expect(
+      tester.getSemantics(ruler),
+      isSemantics(
+        isSlider: true,
+        value: 'يومين',
+        hasIncreaseAction: true,
+        hasDecreaseAction: true,
+      ),
+    );
+    // VoiceOver's swipe up.
+    tester
+        .widget<Semantics>(
+          find.byWidgetPredicate(
+            (widget) => widget is Semantics && widget.properties.slider == true,
+          ),
+        )
+        .properties
+        .onIncrease!();
+    await tester.pumpAndSettle();
+    expect(data.intervalDays, 3);
+    expect(find.text(arabicDays(3)), findsOneWidget);
 
     await tester.tap(find.text('medications.repeat_weekly'.tr()));
     await tester.pumpAndSettle();
     expect(data.repeat, ScheduleRepeat.weekly);
     expect(data.weekdays, {1, 2, 3, 4, 5, 6, 7});
-    expect(find.text('28'), findsNothing);
+    // The number of days stays, for switching back.
+    expect(data.intervalDays, 3);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a medicine starting on the 30th starts monthly on the 28th', (
-    tester,
-  ) async {
-    final data = await openEditor(tester, 1, defaultMonthDay: 30);
-
-    await tester.tap(find.text('medications.repeat_monthly'.tr()));
+  testWidgets('dragging the ruler picks a number of days', (tester) async {
+    final data = await openEditor(tester, 1);
+    await tester.tap(find.text('medications.repeat_interval'.tr()));
     await tester.pumpAndSettle();
 
-    expect(data.monthDays, {28});
+    // Arabic reads right to left: the larger numbers come from the left.
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(140, 0));
+    await tester.pumpAndSettle();
+
+    expect(data.intervalDays, greaterThan(2));
+    expect(find.text(arabicDays(data.intervalDays)), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

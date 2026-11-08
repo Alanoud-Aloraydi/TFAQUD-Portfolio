@@ -25,7 +25,8 @@ def schedule_responses(session: Session, version_id: UUID) -> list[dict]:
     """Return the schedules of a version, each with its repeat and days.
 
     A weekly schedule lists its weekdays and no month days; a monthly one
-    its month days and no weekdays. An older app reads only `weekdays`.
+    its month days and no weekdays; an interval one neither, and its
+    `interval_days`. An older app reads only `weekdays`.
     """
     schedules = list(
         session.scalars(
@@ -45,6 +46,7 @@ def schedule_responses(session: Session, version_id: UUID) -> list[dict]:
             "repeat": schedule.repeat,
             "weekdays": sorted(days[schedule.id].weekdays),
             "month_days": sorted(days[schedule.id].month_days),
+            "interval_days": schedule.interval_days,
         }
         for schedule in schedules
     ]

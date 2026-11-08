@@ -159,7 +159,45 @@ class InfoRow extends StatelessWidget {
   }
 }
 
-/// A row with a label, an optional hint below it, and a switch at the end.
+/// The small rounded square with an icon at the start of a settings row,
+/// as in iOS Settings: it tells the rows apart at a glance. Decorative: the
+/// row's label says what it is.
+class SettingsIconTile extends StatelessWidget {
+  const SettingsIconTile({
+    super.key,
+    required this.icon,
+    required this.background,
+  });
+
+  /// iOS Settings' icon square: 29 points, its corners about a quarter.
+  static const double size = 30;
+  static const double radius = 8;
+
+  final IconData icon;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        child: Icon(
+          icon,
+          size: AppSizes.iconSmall,
+          color: AppSemanticColors.onSettingsTile,
+        ),
+      ),
+    );
+  }
+}
+
+/// A row with a label, an optional hint below it, and a switch at the end;
+/// [leading] (a [SettingsIconTile]) before the label.
 class ToggleRow extends StatelessWidget {
   const ToggleRow({
     super.key,
@@ -167,12 +205,14 @@ class ToggleRow extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.hint,
+    this.leading,
   });
 
   final String label;
   final String? hint;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +227,10 @@ class ToggleRow extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
+            if (leading case final Widget leading) ...<Widget>[
+              leading,
+              const SizedBox(width: AppSpacing.md),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

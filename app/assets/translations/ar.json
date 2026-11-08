@@ -1,4 +1,30 @@
 {
+  "counts": {
+    "minutes": {
+      "zero": "{} دقيقة",
+      "one": "دقيقة",
+      "two": "دقيقتين",
+      "few": "{} دقائق",
+      "many": "{} دقيقة",
+      "other": "{} دقيقة"
+    },
+    "hours": {
+      "zero": "{} ساعة",
+      "one": "ساعة",
+      "two": "ساعتين",
+      "few": "{} ساعات",
+      "many": "{} ساعة",
+      "other": "{} ساعة"
+    },
+    "days": {
+      "zero": "{} يوم",
+      "one": "يوم",
+      "two": "يومين",
+      "few": "{} أيام",
+      "many": "{} يوم",
+      "other": "{} يوم"
+    }
+  },
   "data": "البيانات",
   "photos": {
     "medication": "صورة الدواء (اختياري)",
@@ -127,9 +153,12 @@
     "next_dose": "جرعتك الجاية",
     "next_dose_other": "جرعة {} الجاية",
     "next_task": "المهمة الجاية",
-    "after_minutes": "بعد {} دقيقة",
-    "after_hours": "بعد {} ساعة",
-    "after_hours_minutes": "بعد {} ساعة و{} دقيقة",
+    "after": "بعد {}",
+    "after_and": "بعد {} و{}",
+    "good_morning": "صباح الخير",
+    "good_morning_name": "صباح الخير، {}",
+    "good_evening": "مساء الخير",
+    "good_evening_name": "مساء الخير، {}",
     "missed_at": "تقدر تسجّل الجرعة إلى الساعة {}",
     "current_period": "الآن",
     "hide_attention": "إخفاء",
@@ -374,9 +403,12 @@
     "start_in_past": "اختَر اليوم أو تاريخ جاي لبداية العلاج",
     "weekday_required": "اختَر يوم واحد على الأقل",
     "repeat_weekly": "أسبوعي",
-    "repeat_monthly": "شهري",
-    "month_day_required": "اختَر يوم واحد على الأقل من الشهر",
-    "month_day_label": "يوم {} من الشهر",
+    "repeat_interval": "كل كم يوم",
+    "interval_title": "نذكرك كل",
+    "interval_days": "عدد الأيام",
+    "every": "كل {}",
+    "interval_from": "العدّ من بداية العلاج: {}",
+    "was_monthly": "كانت {}",
     "monthly_days": "شهريًا: يوم {}",
     "save": "حفظ الدواء",
     "change_date": "تعديل التاريخ",
@@ -904,7 +936,6 @@
     "added_by": "أضافها {}",
     "last_edited_by": "آخر تعديل من {}",
     "grace_value": "مهلة التسجيل {} دقيقة",
-    "glucose_context": "حالة القياس",
     "target": "الهدف",
     "glucose_low": "أدنى قيمة",
     "glucose_high": "أعلى قيمة",
@@ -933,6 +964,8 @@
     "save_reading": "حفظ القراءة",
     "value": "القيمة",
     "condition_optional": "ظروف القياس (اختياري)",
+    "conditions_hint": "اختر واحدًا أو أكثر",
+    "conditions_caption": "ظروف القياس (اختياري) · اختر واحدًا أو أكثر",
     "actual_time": "الوقت الفعلي",
     "note": "ملاحظة (اختياري)",
     "invalid_reading": "أدخل قيمة صحيحة لكل حقل.",
@@ -969,18 +1002,15 @@
     "calendar": "تقويم",
     "in_target": "ضمن الهدف",
     "all": "الكل",
-    "context": {
+    "condition": {
       "fasting": "صائم",
       "before_meal": "قبل الوجبة",
       "after_meal": "بعد الوجبة",
       "bedtime": "قبل النوم",
-      "other": "أخرى"
-    },
-    "condition": {
       "exertion": "بعد جهد",
-      "after_meal": "بعد وجبة",
-      "stress": "توتر",
-      "illness": "مرض"
+      "stress": "بعد توتر",
+      "illness": "مرض",
+      "other": "أخرى"
     }
   },
   "appointments": {
@@ -1069,13 +1099,29 @@
     }
   },
   "reminders": {
-    "dose_title": "تذكير لطيف: حان موعد دواء {}",
-    "measurement_title": "تذكير لطيف: حان وقت قياس {}",
-    "appointment_tomorrow_title": "تذكير لطيف: موعد {} بكرة",
-    "appointment_soon_title": "تذكير لطيف: موعد {} بعد ساعتين",
-    "appointment_body": "موعد {} الساعة {}",
+    "dose_title": "لا تنسى {}",
+    "dose_title_named": "يا {}، لا تنسى {}",
+    "dose_title_for": "لا تنسى {} لـ{}",
+    "dose_title_named_for": "يا {}، لا تنسى {} لـ{}",
+    "dose_body": "{} · الساعة {}",
+    "measurement_title": "وقت القياس الحين",
+    "measurement_title_named": "{}، وقت القياس الحين",
+    "measurement_body_for": "{} لـ{}",
+    "appointment_tomorrow": "عندك موعد {} بكرة",
+    "appointment_tomorrow_named": "{}! عندك موعد {} بكرة",
+    "appointment_tomorrow_for": "عند {} موعد {} بكرة",
+    "appointment_tomorrow_named_for": "{}! عند {} موعد {} بكرة",
+    "appointment_soon": "عندك موعد {} بعد ساعتين",
+    "appointment_soon_named": "{}! عندك موعد {} بعد ساعتين",
+    "appointment_soon_for": "عند {} موعد {} بعد ساعتين",
+    "appointment_soon_named_for": "{}! عند {} موعد {} بعد ساعتين",
+    "appointment_body": "الساعة {}",
+    "appointment_body_place": "الساعة {} · {}",
     "keep_title": "تذكيراتك في تفقّد",
-    "keep_body": "افتح تفقّد عشان نكمّل تذكيرك بأدويتك وقياساتك ومواعيدك، براحة واطمئنان."
+    "keep_body": "افتح تفقّد عشان نكمّل تذكيرك بأدويتك وقياساتك ومواعيدك، براحة واطمئنان.",
+    "snooze": "ذكّرني لاحقًا",
+    "snooze_title": "متى نذكّرك؟",
+    "snoozed": "بنذكّرك {}"
   },
   "simplified_mode": {
     "greeting_morning": "صباح الخير، {}",

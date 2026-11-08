@@ -47,7 +47,11 @@ class _SimplifiedHomeFeatureScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _phone.takeLaunchTap();
+    // Opened by «ذكّرني لاحقًا» in a notification: set it again.
+    final String? launch = _phone.takeLaunchTap();
+    if (launch != null && isSnoozeTap(launch)) {
+      unawaited(GetIt.I<DoseReminders>().snoozeTap(launch));
+    }
     _taps = _phone.taps.listen(_onTap);
   }
 
@@ -71,6 +75,10 @@ class _SimplifiedHomeFeatureScreenState
   /// so no payload parsing is needed here.
   void _onTap(String payload) {
     if (!mounted) return;
+    if (isSnoozeTap(payload)) {
+      unawaited(GetIt.I<DoseReminders>().snoozeTap(payload));
+      return;
+    }
     if (reminderCircleId(payload) != null) {
       unawaited(context.read<SimplifiedHomeCubit>().load());
     }

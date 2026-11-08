@@ -117,9 +117,9 @@ class MedicationDoseService:
             raise NotFound("The scheduled dose does not exist.")
         plan, version, schedule = row
         # A weekly schedule on its weekday, a monthly one on its day of the
-        # month (or the month's last day for a day the month lacks).
+        # month, an interval one every few days from the treatment's start.
         if not load_days(self.session, [schedule])[schedule.id].applies_on(
-            scheduled_on
+            scheduled_on, version.treatment_starts_on
         ):
             raise NotFound("The scheduled dose does not exist.")
         if version.effective_from_on > scheduled_on:

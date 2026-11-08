@@ -1,3 +1,4 @@
+import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:equatable/equatable.dart';
 
 /// Defines the supported measurement kind values.
@@ -45,28 +46,43 @@ class MeasurementTarget extends Equatable {
   ];
 }
 
-/// One reading time of the day («قراءة»), with its glucose context: a
-/// glucose plan can read fasting at 07:00 and after a meal at 14:00.
+/// One reading time of the day («قراءة»), with its conditions: a glucose
+/// plan can read fasting at 07:00 and after a meal at 14:00.
 class MeasurementTime extends Equatable {
-  const MeasurementTime({required this.time, this.glucoseContext});
+  const MeasurementTime({
+    required this.time,
+    this.conditions = const <String>[],
+  });
 
   /// «HH:mm» in Riyadh.
   final String time;
-  final String? glucoseContext;
+
+  /// «ظروف القياس» ([MeasurementConditions]), none or more.
+  final List<String> conditions;
 
   factory MeasurementTime.fromJson(Map<String, dynamic> json) =>
       MeasurementTime(
         time: json['time_of_day'] as String,
-        glucoseContext: json['glucose_context'] as String?,
+        conditions: MeasurementConditions.fromJson(json),
       );
 
-  Map<String, dynamic> toJson() => {
+  /// Whether `glucose_context` alone holds [conditions], as an older server
+  /// keeps them.
+  bool fitsLegacy(MeasurementKind kind) =>
+      MeasurementConditions.fitsLegacy(kind, conditions);
+
+  /// As before (`glucose_context`) when that holds the conditions, so it
+  /// saves on a server without lists too; otherwise `conditions`.
+  Map<String, dynamic> toJson(MeasurementKind kind) => {
     'time_of_day': time,
-    'glucose_context': glucoseContext,
+    if (fitsLegacy(kind))
+      'glucose_context': MeasurementConditions.legacyContext(kind, conditions)
+    else
+      'conditions': conditions,
   };
 
   @override
-  List<Object?> get props => [time, glucoseContext];
+  List<Object?> get props => [time, conditions];
 }
 
 /// Preserves one effective measurement schedule.
@@ -83,8 +99,8 @@ class MeasurementVersion extends Equatable {
     this.glucoseHigh,
     this.systolicLimit,
     this.diastolicLimit,
-    List<MeasurementTime> times = const <MeasurementTime>[],
-  }) : _times = times;
+    this.times = const <MeasurementTime>[],
+  });
 
   final String id;
   final int number;
@@ -99,15 +115,20 @@ class MeasurementVersion extends Equatable {
   final int? glucoseHigh;
   final int? systolicLimit;
   final int? diastolicLimit;
-  final List<MeasurementTime> _times;
+  /// The reading times as the server listed them (empty from an older
+  /// server); [readingTimes] is what to use.
+  final List<MeasurementTime> times;
 
   /// Every reading time of a day, earliest first; one when the plan reads
   /// once a day, or when an older server does not list them.
-  List<MeasurementTime> get readingTimes => _times.isEmpty
+  List<MeasurementTime> get readingTimes => times.isEmpty
       ? <MeasurementTime>[
-          MeasurementTime(time: time, glucoseContext: glucoseContext),
+          MeasurementTime(
+            time: time,
+            conditions: MeasurementConditions.fromLegacy(glucoseContext),
+          ),
         ]
-      : _times;
+      : times;
 
   factory MeasurementVersion.fromJson(Map<String, dynamic> json) =>
       MeasurementVersion(
@@ -138,7 +159,7 @@ class MeasurementVersion extends Equatable {
     weekdays,
     graceMinutes,
     glucoseContext,
-    _times,
+    times,
     glucoseLow,
     glucoseHigh,
     systolicLimit,
@@ -232,8 +253,7 @@ class MeasurementReading extends Equatable {
     this.measuredAt,
     this.valueOne,
     this.valueTwo,
-    this.glucoseContext,
-    this.condition,
+    this.conditions = const <String>[],
     this.note,
     this.outsideTarget,
     this.glucoseLow,
@@ -256,8 +276,9 @@ class MeasurementReading extends Equatable {
   final DateTime? measuredAt;
   final int? valueOne;
   final int? valueTwo;
-  final String? glucoseContext;
-  final String? condition;
+
+  /// «ظروف القياس» ([MeasurementConditions]), none or more.
+  final List<String> conditions;
   final String? note;
   final bool? outsideTarget;
   final int? glucoseLow;
@@ -290,8 +311,7 @@ class MeasurementReading extends Equatable {
             : DateTime.parse(json['measured_at'] as String),
         valueOne: json['value_one'] as int?,
         valueTwo: json['value_two'] as int?,
-        glucoseContext: json['glucose_context'] as String?,
-        condition: json['condition'] as String?,
+        conditions: MeasurementConditions.fromJson(json),
         note: json['note'] as String?,
         outsideTarget: json['outside_target'] as bool?,
         glucoseLow: json['glucose_low'] as int?,
@@ -326,8 +346,7 @@ class MeasurementReading extends Equatable {
     measuredAt,
     valueOne,
     valueTwo,
-    glucoseContext,
-    condition,
+    conditions,
     note,
     outsideTarget,
     glucoseLow,
@@ -354,7 +373,7 @@ class MeasurementOccurrence extends Equatable {
     required this.time,
     required this.deadlineAt,
     required this.status,
-    this.glucoseContext,
+    this.conditions = const <String>[],
     this.record,
   });
 
@@ -365,7 +384,9 @@ class MeasurementOccurrence extends Equatable {
   final String time;
   final DateTime deadlineAt;
   final MeasurementStatus status;
-  final String? glucoseContext;
+
+  /// The conditions its plan gives this reading time.
+  final List<String> conditions;
   final MeasurementReading? record;
 
   factory MeasurementOccurrence.fromJson(Map<String, dynamic> json) =>
@@ -382,7 +403,7 @@ class MeasurementOccurrence extends Equatable {
             (match) => match[1]!.toUpperCase(),
           ),
         ),
-        glucoseContext: json['glucose_context'] as String?,
+        conditions: MeasurementConditions.fromJson(json),
         record: json['record'] == null
             ? null
             : MeasurementReading.fromJson(
@@ -399,7 +420,7 @@ class MeasurementOccurrence extends Equatable {
     time,
     deadlineAt,
     status,
-    glucoseContext,
+    conditions,
     record,
   ];
 }
@@ -431,11 +452,14 @@ class MeasurementPlanDraft {
   final int? diastolicLimit;
 
   /// One reading time is sent as before (`time_of_day`), so it saves on a
-  /// server without several times too; more are sent as `times`.
+  /// server without several times too; more are sent as `times`, and so is
+  /// one with conditions only a list holds.
   Map<String, dynamic> toJson({int? expectedVersion}) => {
     'kind': kind.name,
-    if (times.length == 1) ...times.single.toJson() else
-      'times': [for (final MeasurementTime item in times) item.toJson()],
+    if (times.length == 1 && times.single.fitsLegacy(kind))
+      ...times.single.toJson(kind)
+    else
+      'times': [for (final MeasurementTime item in times) item.toJson(kind)],
     'weekdays': weekdays,
     'starts_on': _date(startsOn),
     'effective_from_on': ?(expectedVersion == null ? null : _date(startsOn)),
@@ -456,8 +480,7 @@ class MeasurementReadingDraft {
     this.measuredAt,
     this.valueOne,
     this.valueTwo,
-    this.glucoseContext,
-    this.condition,
+    this.conditions = const <String>[],
     this.note,
     this.glucoseLow,
     this.glucoseHigh,
@@ -470,8 +493,9 @@ class MeasurementReadingDraft {
   final DateTime? measuredAt;
   final int? valueOne;
   final int? valueTwo;
-  final String? glucoseContext;
-  final String? condition;
+
+  /// «ظروف القياس» ([MeasurementConditions]), none or more.
+  final List<String> conditions;
   final String? note;
   final int? glucoseLow;
   final int? glucoseHigh;
@@ -484,8 +508,17 @@ class MeasurementReadingDraft {
     'measured_at': measuredAt?.toUtc().toIso8601String(),
     'value_one': valueOne,
     'value_two': valueTwo,
-    'glucose_context': glucoseContext,
-    'condition': condition,
+    // As before (one context, one condition) when those hold them, so it
+    // saves on a server without lists too.
+    if (MeasurementConditions.fitsLegacy(
+      kind,
+      conditions,
+      withCondition: true,
+    )) ...{
+      'glucose_context': MeasurementConditions.legacyContext(kind, conditions),
+      'condition': MeasurementConditions.legacyCondition(kind, conditions),
+    } else
+      'conditions': conditions,
     'note': note,
     'glucose_low': glucoseLow,
     'glucose_high': glucoseHigh,

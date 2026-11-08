@@ -13,7 +13,8 @@ from app.database import db
 
 class MedicationSchedule(db.Model):
     """Dose amount and local wall-clock time, repeated weekly on selected
-    weekdays or monthly on selected days of the month."""
+    weekdays, monthly on selected days of the month, or every few days from
+    the treatment's start."""
 
     __tablename__ = "medication_schedule"
     __table_args__ = (
@@ -24,8 +25,14 @@ class MedicationSchedule(db.Model):
             name="dose_unit",
         ),
         CheckConstraint(
-            "repeat IN ('weekly', 'monthly')",
+            "repeat IN ('weekly', 'monthly', 'interval')",
             name="repeat",
+        ),
+        CheckConstraint(
+            "(repeat = 'interval' AND interval_days IS NOT NULL "
+            "AND interval_days BETWEEN 1 AND 90) OR "
+            "(repeat <> 'interval' AND interval_days IS NULL)",
+            name="interval_days",
         ),
     )
 
@@ -41,10 +48,12 @@ class MedicationSchedule(db.Model):
     dose_unit: Mapped[str] = mapped_column(Text)
     instructions: Mapped[str | None] = mapped_column(String(250))
     # Weekly: the days are in medication_schedule_day. Monthly: they are in
-    # medication_schedule_month_day.
+    # medication_schedule_month_day. Interval: every `interval_days` days
+    # from the version's treatment_starts_on (migration 0026).
     repeat: Mapped[str] = mapped_column(
         Text, server_default=text("'weekly'")
     )
+    interval_days: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class MedicationScheduleDay(db.Model):

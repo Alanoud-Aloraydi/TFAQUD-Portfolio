@@ -49,6 +49,7 @@ def add_plan_version(
             dose_unit=item.dose_unit,
             instructions=item.instructions,
             repeat=item.repeat,
+            interval_days=item.interval_days,
         )
         session.add(schedule)
         session.flush()
@@ -113,6 +114,7 @@ def same_definition(
         for kind, values in (
             ("weekday", days[schedule.id].weekdays),
             ("month_day", days[schedule.id].month_days),
+            ("interval", _interval(schedule.interval_days)),
         )
         for day in values
     }
@@ -130,7 +132,13 @@ def same_definition(
         for kind, values in (
             ("weekday", item.weekdays),
             ("month_day", item.month_days),
+            ("interval", _interval(item.interval_days)),
         )
         for day in values
     }
     return stored == requested
+
+
+def _interval(interval_days: int | None) -> tuple[int, ...]:
+    """An interval schedule's one number, compared like a day."""
+    return () if interval_days is None else (interval_days,)

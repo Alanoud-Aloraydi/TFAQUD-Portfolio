@@ -2,8 +2,10 @@ import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/features/medications/data/models/dose_occurrence_model.dart';
 import 'package:app/features/medications/data/models/medication_plan_model.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 
@@ -131,7 +133,7 @@ void main() {
     expect(data.toDraft()!.schedules.single.doseValue, 2.5);
   });
 
-  group('monthly schedules', () {
+  group('monthly and interval schedules', () {
     Map<String, dynamic> schedule(Map<String, dynamic> changes) => {
       'id': 'schedule-1',
       'time_of_day': '08:00',
@@ -142,7 +144,7 @@ void main() {
       ...changes,
     };
 
-    MedicationSchedule parse(Map<String, dynamic> schedule) =>
+    MedicationPlan plan(Map<String, dynamic> schedule) =>
         MedicationPlanModel.fromJson({
           'id': 'plan-1',
           'created_at': '2026-10-01T10:00:00Z',
@@ -162,7 +164,10 @@ void main() {
             'effective_until_on': null,
             'schedules': [schedule],
           },
-        }).toEntity().version.schedules.single;
+        }).toEntity();
+
+    MedicationSchedule parse(Map<String, dynamic> schedule) =>
+        plan(schedule).version.schedules.single;
 
     test('a monthly schedule keeps its days of the month', () {
       final MedicationSchedule value = parse(
@@ -212,22 +217,57 @@ void main() {
       expect(monthly['weekdays'], isEmpty);
     });
 
-    test('the form asks for a day of the month and sends only those', () {
+    test('an interval schedule keeps its number of days', () {
+      final MedicationSchedule value = parse(
+        schedule({'repeat': 'interval', 'interval_days': 3}),
+      );
+
+      expect(value.repeat, ScheduleRepeat.interval);
+      expect(value.intervalDays, 3);
+      expect(value.weekdays, isEmpty);
+
+      final Map<String, Object?> json = MedicationScheduleDraft(
+        time: '08:00',
+        doseValue: 1,
+        doseUnit: DoseUnit.tablet,
+        weekdays: const [],
+        repeat: ScheduleRepeat.interval,
+        intervalDays: 3,
+      ).toJson();
+      expect(json['repeat'], 'interval');
+      expect(json['interval_days'], 3);
+      expect(json['weekdays'], isEmpty);
+      expect(json.containsKey('month_days'), isFalse);
+    });
+
+    test('the form sends the number of days and keeps the week', () {
       final data = MedicationFormData(null);
       addTearDown(data.dispose);
       data.name.text = 'Medicine';
       data.strength.text = '5';
-      final schedule = data.schedules.single..repeat = ScheduleRepeat.monthly;
+      final schedule = data.schedules.single
+        ..repeat = ScheduleRepeat.interval
+        ..intervalDays = 4;
 
-      expect(data.firstIssue()!.field, MedicationFormField.weekdays);
-
-      schedule.monthDays.addAll({31, 1});
+      expect(data.firstIssue(), isNull);
       final MedicationScheduleDraft draft = data.toDraft()!.schedules.single;
-      expect(draft.repeat, ScheduleRepeat.monthly);
-      expect(draft.monthDays, [1, 31]);
+      expect(draft.repeat, ScheduleRepeat.interval);
+      expect(draft.intervalDays, 4);
       expect(draft.weekdays, isEmpty);
       // The weekdays stay in the form, for switching back.
       expect(schedule.weekdays, {1, 2, 3, 4, 5, 6, 7});
+    });
+
+    test('a monthly schedule opens as every 30 days, saying what it was', () {
+      final data = MedicationFormData(
+        plan(schedule({'repeat': 'monthly', 'month_days': [5, 20]})),
+      );
+      addTearDown(data.dispose);
+      final ScheduleFormData form = data.schedules.single;
+
+      expect(form.repeat, ScheduleRepeat.interval);
+      expect(form.intervalDays, 30);
+      expect(form.formerMonthDays, [5, 20]);
     });
   });
 }

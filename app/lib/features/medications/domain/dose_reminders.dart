@@ -30,23 +30,31 @@ class DoseReminderTexts {
     required this.keepBody,
   });
 
-  /// «تذكير لطيف: حان موعد دواء أمي نورة».
-  final String Function(ReminderCircle circle) title;
+  /// «يا ياسر، لا تنسى ميتفورمين».
+  final String Function(ReminderCircle circle, DoseOccurrence dose) title;
 
-  /// The medicine's name, «ميتفورمين».
-  final String Function(DoseOccurrence dose) body;
+  /// The dose, «1 حبة · 9:00 م».
+  final String Function(ReminderCircle circle, DoseOccurrence dose) body;
 
-  /// «تذكير لطيف: حان وقت قياس أمي نورة».
+  /// «ياسر، وقت القياس الحين».
   final String Function(ReminderCircle circle) measurementTitle;
 
   /// What to measure, «سكر الدم».
-  final String Function(MeasurementOccurrence measurement) measurementBody;
+  final String Function(
+    ReminderCircle circle,
+    MeasurementOccurrence measurement,
+  )
+  measurementBody;
 
-  /// «موعد أمي نورة بكرة», or «… بعد ساعتين».
-  final String Function(ReminderCircle circle, AppointmentLead lead)
+  /// «ياسر! عندك موعد القلب بكرة», or «… بعد ساعتين».
+  final String Function(
+    ReminderCircle circle,
+    AppointmentLead lead,
+    CareAppointment appointment,
+  )
   appointmentTitle;
 
-  /// «موعد القلب الساعة 4:30 م».
+  /// «الساعة 4:30 م · مستشفى الملك فهد».
   final String Function(CareAppointment appointment) appointmentBody;
 
   /// The last note: open the app so the reminders go on.
@@ -67,6 +75,20 @@ const String appointmentReminderPayload = 'appointment:';
 
 /// The payload of the note after the last reminder.
 const String keepRemindersPayload = 'reminders:keep';
+
+/// Between a payload's circle and the words a snoozable reminder carries,
+/// so «ذكّرني لاحقًا» in the notification can show them again.
+const String _textSeparator = '\u001F';
+
+/// [payload] with [title] and [body] after it.
+String payloadWithText(String payload, String title, String body) =>
+    '$payload$_textSeparator$title$_textSeparator$body';
+
+/// The title and body a reminder's payload carries, or null.
+(String, String)? reminderText(String payload) {
+  final List<String> parts = payload.split(_textSeparator);
+  return parts.length == 3 ? (parts[1], parts[2]) : null;
+}
 
 /// iOS keeps at most 64 scheduled notifications for an app (the 64 set
 /// last). The reminders of doses, measurements and appointments share
@@ -100,14 +122,21 @@ const int doseSnoozeId = reminderIdBase + maxDoseReminders + 10;
 /// The circle a tapped reminder is about, or null for the note and for
 /// notifications that are not reminders.
 String? reminderCircleId(String payload) {
+  // A snooze action's tap, and the words after the circle, are not part of
+  // the circle's id.
+  final String plain = (isSnoozeTap(payload)
+          ? payload.substring(snoozeTapPrefix.length)
+          : payload)
+      .split(_textSeparator)
+      .first;
   for (final String prefix in <String>[
     doseReminderPayload,
     measurementReminderPayload,
     appointmentReminderPayload,
     doseSnoozePayload,
   ]) {
-    if (payload.startsWith(prefix) && payload.length > prefix.length) {
-      return payload.substring(prefix.length);
+    if (plain.startsWith(prefix) && plain.length > prefix.length) {
+      return plain.substring(prefix.length);
     }
   }
   return null;
@@ -165,9 +194,10 @@ List<ScheduledNotification> planDoseReminders({
         _Reminder(
           at: doseMoment(dose),
           circle: circle,
-          title: texts.title(circle),
-          body: texts.body(dose),
+          title: texts.title(circle, dose),
+          body: texts.body(circle, dose),
           prefix: doseReminderPayload,
+          snoozable: true,
         ),
     for (final (ReminderCircle circle, MeasurementOccurrence task)
         in measurements)
@@ -179,8 +209,9 @@ List<ScheduledNotification> planDoseReminders({
           at: riyadhMoment(task.scheduledOn, task.time),
           circle: circle,
           title: texts.measurementTitle(circle),
-          body: texts.measurementBody(task),
+          body: texts.measurementBody(circle, task),
           prefix: measurementReminderPayload,
+          snoozable: true,
         ),
     for (final (ReminderCircle circle, CareAppointment visit) in appointments)
       if (visit.status == AppointmentStatus.scheduled)
@@ -195,7 +226,7 @@ List<ScheduledNotification> planDoseReminders({
             _Reminder(
               at: riyadhMoment(visit.scheduledOn, visit.time).subtract(before),
               circle: circle,
-              title: texts.appointmentTitle(circle, lead),
+              title: texts.appointmentTitle(circle, lead, visit),
               body: texts.appointmentBody(visit),
               prefix: appointmentReminderPayload,
             ),
@@ -208,8 +239,16 @@ List<ScheduledNotification> planDoseReminders({
         at: kept[i].at,
         title: kept[i].title,
         body: kept[i].body,
-        payload: '${kept[i].prefix}${kept[i].circle.id}',
+        // A dose or measurement carries its words, for «ذكّرني لاحقًا».
+        payload: kept[i].snoozable
+            ? payloadWithText(
+                '${kept[i].prefix}${kept[i].circle.id}',
+                kept[i].title,
+                kept[i].body,
+              )
+            : '${kept[i].prefix}${kept[i].circle.id}',
         thread: kept[i].circle.id,
+        snoozable: kept[i].snoozable,
       ),
     if (kept.isNotEmpty)
       ScheduledNotification(
@@ -230,6 +269,7 @@ class _Reminder {
     required this.title,
     required this.body,
     required this.prefix,
+    this.snoozable = false,
   });
 
   final DateTime at;
@@ -237,6 +277,7 @@ class _Reminder {
   final String title;
   final String body;
   final String prefix;
+  final bool snoozable;
 }
 
 /// Keeps the reminders of every circle of the signed-in person on the
@@ -335,9 +376,29 @@ class DoseReminders {
       at: DateTime.now().toUtc().add(after),
       title: title,
       body: body,
-      payload: '$doseSnoozePayload$circleId',
+      // It can be put off again, the same as the reminder it came from.
+      payload: payloadWithText('$doseSnoozePayload$circleId', title, body),
+      snoozable: true,
     ),
   );
+
+  /// «ذكّرني لاحقًا» from a notification: [tap] is the snooze action of a
+  /// reminder, which carries its words; it comes again in
+  /// [notificationSnooze]. False when the tap is not a snoozable reminder.
+  Future<bool> snoozeTap(String tap) async {
+    if (!isSnoozeTap(tap)) return false;
+    final String payload = tap.substring(snoozeTapPrefix.length);
+    final String? circleId = reminderCircleId(payload);
+    final (String, String)? text = reminderText(payload);
+    if (circleId == null || text == null) return false;
+    await snooze(
+      circleId: circleId,
+      title: text.$1,
+      body: text.$2,
+      after: notificationSnooze,
+    );
+    return true;
+  }
 
   /// Cancels a pending snooze: the dose it was for got taken another way.
   Future<void> cancelSnooze() => _phone.cancel(doseSnoozeId);

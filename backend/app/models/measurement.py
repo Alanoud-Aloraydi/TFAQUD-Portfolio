@@ -12,9 +12,16 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
+
+# «ظروف القياس» a reading time or a reading can have (migration 0025).
+CONDITIONS_CHECK = (
+    "conditions <@ ARRAY['fasting', 'before_meal', 'after_meal', 'bedtime', "
+    "'exertion', 'stress', 'illness', 'other']::text[]"
+)
 
 
 class MeasurementPlan(db.Model):
@@ -165,6 +172,7 @@ class MeasurementPlanTime(db.Model):
             "('fasting', 'before_meal', 'after_meal', 'bedtime', 'other')",
             name="glucose_context",
         ),
+        CheckConstraint(CONDITIONS_CHECK, name="conditions"),
     )
 
     version_id: Mapped[UUID] = mapped_column(
@@ -172,6 +180,10 @@ class MeasurementPlanTime(db.Model):
         primary_key=True,
     )
     time_of_day: Mapped[time] = mapped_column(Time, primary_key=True)
+    # Its conditions; `glucose_context` stays as the one an older app reads.
+    conditions: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'"), default=list
+    )
     glucose_context: Mapped[str | None] = mapped_column(Text)
 
 
@@ -194,6 +206,7 @@ class MeasurementRecord(db.Model):
             "('exertion', 'after_meal', 'stress', 'illness')",
             name="condition",
         ),
+        CheckConstraint(CONDITIONS_CHECK, name="conditions"),
         CheckConstraint(
             "kind = 'glucose' OR glucose_context IS NULL",
             name="context_kind",
@@ -262,6 +275,11 @@ class MeasurementRecord(db.Model):
     )
     value_one: Mapped[int | None] = mapped_column(SmallInteger)
     value_two: Mapped[int | None] = mapped_column(SmallInteger)
+    # «ظروف القياس»; `glucose_context` and `condition` stay as the one of
+    # each an older app reads.
+    conditions: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'"), default=list
+    )
     glucose_context: Mapped[str | None] = mapped_column(Text)
     condition: Mapped[str | None] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text)

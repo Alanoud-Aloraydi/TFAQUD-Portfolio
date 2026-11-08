@@ -57,6 +57,8 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
         outcome: 'read',
         measuredAt: DateTime.now(),
         valueOne: value,
+        // A planned reading keeps its plan's «ظروف القياس».
+        conditions: occurrence?.conditions ?? const <String>[],
         glucoseLow: needsFreeTarget ? target?.glucoseLow : null,
         glucoseHigh: needsFreeTarget ? target?.glucoseHigh : null,
       ),
@@ -78,6 +80,7 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
         measuredAt: DateTime.now(),
         valueOne: systolic,
         valueTwo: diastolic,
+        conditions: occurrence?.conditions ?? const <String>[],
         systolicLimit: needsFreeTarget ? target?.systolicLimit : null,
         diastolicLimit: needsFreeTarget ? target?.diastolicLimit : null,
       ),
