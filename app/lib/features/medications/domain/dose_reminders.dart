@@ -3,10 +3,18 @@ import 'dart:async';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminder_circle.dart';
+import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 
 export 'package:app/core/services/reminder_circle.dart';
+
+/// Which of an appointment's two reminders: the day before, or shortly
+/// before it.
+enum AppointmentLead { dayBefore, soon }
 
 /// The words of the reminders. They are given from outside, so this file
 /// needs no translations and the tests can use plain words.
@@ -14,38 +22,71 @@ class DoseReminderTexts {
   const DoseReminderTexts({
     required this.title,
     required this.body,
+    required this.measurementTitle,
+    required this.measurementBody,
+    required this.appointmentTitle,
+    required this.appointmentBody,
     required this.keepTitle,
     required this.keepBody,
   });
 
-  /// «حان موعد دواء أمي نورة».
+  /// «تذكير لطيف: حان موعد دواء أمي نورة».
   final String Function(ReminderCircle circle) title;
 
   /// The medicine's name, «ميتفورمين».
   final String Function(DoseOccurrence dose) body;
+
+  /// «تذكير لطيف: حان وقت قياس أمي نورة».
+  final String Function(ReminderCircle circle) measurementTitle;
+
+  /// What to measure, «سكر الدم».
+  final String Function(MeasurementOccurrence measurement) measurementBody;
+
+  /// «موعد أمي نورة بكرة», or «… بعد ساعتين».
+  final String Function(ReminderCircle circle, AppointmentLead lead)
+  appointmentTitle;
+
+  /// «موعد القلب الساعة 4:30 م».
+  final String Function(CareAppointment appointment) appointmentBody;
 
   /// The last note: open the app so the reminders go on.
   final String Function() keepTitle;
   final String Function() keepBody;
 }
 
-/// What a reminder's payload starts with; the circle's id follows.
+/// What a dose reminder's payload starts with; the circle's id follows.
 const String doseReminderPayload = 'dose:';
+
+/// What a measurement reminder's payload starts with; the circle's id
+/// follows.
+const String measurementReminderPayload = 'measurement:';
+
+/// What an appointment reminder's payload starts with; the circle's id
+/// follows.
+const String appointmentReminderPayload = 'appointment:';
 
 /// The payload of the note after the last reminder.
 const String keepRemindersPayload = 'reminders:keep';
 
 /// iOS keeps at most 64 scheduled notifications for an app (the 64 set
-/// last). The reminders take [maxDoseReminders] of them, and the note after
-/// them one more.
+/// last). The reminders of doses, measurements and appointments share
+/// [maxDoseReminders] of them, the nearest first; the note after them takes
+/// one more, and a snooze one more.
 const int maxDoseReminders = 60;
 
 /// The ids of the reminders: [reminderIdBase] to [reminderIdBase] + 60.
 const int reminderIdBase = 7000;
 
+/// How long before an appointment its second reminder comes; the first
+/// comes a day before.
+const Duration appointmentSoonLead = Duration(hours: 2);
+
 /// Whether a scheduled notification is one of the reminders.
 bool isReminderPayload(String payload) =>
-    payload.startsWith(doseReminderPayload) || payload == keepRemindersPayload;
+    payload.startsWith(doseReminderPayload) ||
+    payload.startsWith(measurementReminderPayload) ||
+    payload.startsWith(appointmentReminderPayload) ||
+    payload == keepRemindersPayload;
 
 /// What a simplified-mode "لاحقا" snooze's payload starts with; the
 /// circle's id follows, the same as [doseReminderPayload]. A separate
@@ -56,60 +97,124 @@ const String doseSnoozePayload = 'dose-snooze:';
 /// The one slot a snooze uses; a new snooze replaces any pending one.
 const int doseSnoozeId = reminderIdBase + maxDoseReminders + 10;
 
-/// The moment a dose is due. The server keeps the day and the time in Riyadh
-/// (UTC+3, no daylight saving), so this is the same moment on any phone.
-DateTime doseMoment(DoseOccurrence dose) {
-  final List<String> parts = dose.time.split(':');
+/// The circle a tapped reminder is about, or null for the note and for
+/// notifications that are not reminders.
+String? reminderCircleId(String payload) {
+  for (final String prefix in <String>[
+    doseReminderPayload,
+    measurementReminderPayload,
+    appointmentReminderPayload,
+    doseSnoozePayload,
+  ]) {
+    if (payload.startsWith(prefix) && payload.length > prefix.length) {
+      return payload.substring(prefix.length);
+    }
+  }
+  return null;
+}
+
+/// The moment of [time] on [day] in Riyadh. The server keeps days and times
+/// in Riyadh (UTC+3, no daylight saving), so this is the same moment on any
+/// phone.
+DateTime riyadhMoment(DateTime day, String time) {
+  final List<String> parts = time.split(':');
   return DateTime.utc(
-    dose.scheduledOn.year,
-    dose.scheduledOn.month,
-    dose.scheduledOn.day,
+    day.year,
+    day.month,
+    day.day,
     int.parse(parts[0]) - 3,
     int.parse(parts[1]),
   );
 }
 
-/// The reminders for [doses] after [now]: one at each dose that is not
-/// recorded yet (taken or skipped), the nearest first, at most
-/// [maxDoseReminders]. After the last one comes a note to open the app, which
-/// fires only when the app was not opened in all that time (each opening
-/// sets the reminders again, further on).
+/// The moment a dose is due.
+DateTime doseMoment(DoseOccurrence dose) =>
+    riyadhMoment(dose.scheduledOn, dose.time);
+
+/// The reminders after [now], the nearest first, at most [maxDoseReminders]:
+///
+/// * one at each dose not recorded yet (taken or skipped);
+/// * one at each measurement not recorded yet;
+/// * two for each appointment still to come: a day before it, and
+///   [appointmentSoonLead] before it.
+///
+/// None at or after [until], so the reminders end together and the note
+/// after the last one is not far behind the others. After the last one
+/// comes a note to open the app, which fires only when the app was not
+/// opened in all that time (each opening sets the reminders again, further
+/// on).
 List<ScheduledNotification> planDoseReminders({
-  required List<(ReminderCircle, DoseOccurrence)> doses,
+  List<(ReminderCircle, DoseOccurrence)> doses =
+      const <(ReminderCircle, DoseOccurrence)>[],
+  List<(ReminderCircle, MeasurementOccurrence)> measurements =
+      const <(ReminderCircle, MeasurementOccurrence)>[],
+  List<(ReminderCircle, CareAppointment)> appointments =
+      const <(ReminderCircle, CareAppointment)>[],
   required DateTime now,
   required DoseReminderTexts texts,
+  DateTime? until,
 }) {
-  // A dose in the next minute is too close to set: by the time the phone
+  // A moment in the next minute is too close to set: by the time the phone
   // has it, the moment may have passed.
   final DateTime earliest = now.toUtc().add(const Duration(minutes: 1));
-  final List<(DateTime, ReminderCircle, DoseOccurrence)> upcoming =
-      <(DateTime, ReminderCircle, DoseOccurrence)>[
-        for (final (ReminderCircle circle, DoseOccurrence dose) in doses)
-          if (dose.record == null && doseMoment(dose).isAfter(earliest))
-            (doseMoment(dose), circle, dose),
-      ]..sort(
-        (
-          (DateTime, ReminderCircle, DoseOccurrence) a,
-          (DateTime, ReminderCircle, DoseOccurrence) b,
-        ) => a.$1.compareTo(b.$1),
-      );
-  final List<(DateTime, ReminderCircle, DoseOccurrence)> kept = upcoming
-      .take(maxDoseReminders)
-      .toList();
+  bool inWindow(DateTime at) =>
+      at.isAfter(earliest) && (until == null || at.isBefore(until));
+  final List<_Reminder> upcoming = <_Reminder>[
+    for (final (ReminderCircle circle, DoseOccurrence dose) in doses)
+      if (dose.record == null && inWindow(doseMoment(dose)))
+        _Reminder(
+          at: doseMoment(dose),
+          circle: circle,
+          title: texts.title(circle),
+          body: texts.body(dose),
+          prefix: doseReminderPayload,
+        ),
+    for (final (ReminderCircle circle, MeasurementOccurrence task)
+        in measurements)
+      if (task.record == null &&
+          (task.status == MeasurementStatus.upcoming ||
+              task.status == MeasurementStatus.due) &&
+          inWindow(riyadhMoment(task.scheduledOn, task.time)))
+        _Reminder(
+          at: riyadhMoment(task.scheduledOn, task.time),
+          circle: circle,
+          title: texts.measurementTitle(circle),
+          body: texts.measurementBody(task),
+          prefix: measurementReminderPayload,
+        ),
+    for (final (ReminderCircle circle, CareAppointment visit) in appointments)
+      if (visit.status == AppointmentStatus.scheduled)
+        for (final (AppointmentLead lead, Duration before)
+            in const <(AppointmentLead, Duration)>[
+              (AppointmentLead.dayBefore, Duration(days: 1)),
+              (AppointmentLead.soon, appointmentSoonLead),
+            ])
+          if (inWindow(
+            riyadhMoment(visit.scheduledOn, visit.time).subtract(before),
+          ))
+            _Reminder(
+              at: riyadhMoment(visit.scheduledOn, visit.time).subtract(before),
+              circle: circle,
+              title: texts.appointmentTitle(circle, lead),
+              body: texts.appointmentBody(visit),
+              prefix: appointmentReminderPayload,
+            ),
+  ]..sort((_Reminder a, _Reminder b) => a.at.compareTo(b.at));
+  final List<_Reminder> kept = upcoming.take(maxDoseReminders).toList();
   return <ScheduledNotification>[
     for (int i = 0; i < kept.length; i++)
       ScheduledNotification(
         id: reminderIdBase + i,
-        at: kept[i].$1,
-        title: texts.title(kept[i].$2),
-        body: texts.body(kept[i].$3),
-        payload: '$doseReminderPayload${kept[i].$2.id}',
-        thread: kept[i].$2.id,
+        at: kept[i].at,
+        title: kept[i].title,
+        body: kept[i].body,
+        payload: '${kept[i].prefix}${kept[i].circle.id}',
+        thread: kept[i].circle.id,
       ),
     if (kept.isNotEmpty)
       ScheduledNotification(
         id: reminderIdBase + maxDoseReminders,
-        at: kept.last.$1.add(const Duration(minutes: 1)),
+        at: kept.last.at.add(const Duration(minutes: 1)),
         title: texts.keepTitle(),
         body: texts.keepBody(),
         payload: keepRemindersPayload,
@@ -117,27 +222,60 @@ List<ScheduledNotification> planDoseReminders({
   ];
 }
 
-/// Keeps a reminder on the phone at each dose time of every circle of the
-/// signed-in person, for the coming week.
+/// One reminder before it gets its id.
+class _Reminder {
+  const _Reminder({
+    required this.at,
+    required this.circle,
+    required this.title,
+    required this.body,
+    required this.prefix,
+  });
+
+  final DateTime at;
+  final ReminderCircle circle;
+  final String title;
+  final String body;
+  final String prefix;
+}
+
+/// Keeps the reminders of every circle of the signed-in person on the
+/// phone, for the coming week: each dose time, each measurement time, and
+/// each appointment (a day before, and shortly before). The name stays from
+/// when it reminded of doses only.
 ///
 /// The phone shows them even when the app is closed, so they work without a
-/// server push. They are set again when the home data loads
-/// ([sync]), when the app comes back to the front ([refresh]), and after
-/// each change of a medicine or a dose record anywhere in the app (the
-/// [MedicationsUseCase.changes]): a recorded dose loses its reminder. On
-/// sign-out [clear] removes them all.
+/// server push; the server only tells of a dose or measurement that was
+/// missed. They are set again when the home data loads ([sync]), when the
+/// app comes back to the front ([refresh]), and after each change of a
+/// medicine, a dose record, a measurement plan or reading, or an
+/// appointment anywhere in the app: a recorded dose or measurement, and a
+/// cancelled appointment, lose their reminders. On sign-out [clear] removes
+/// them all.
+///
+/// Without [measurements] or [appointments] (the tests of doses), only the
+/// doses are read.
 class DoseReminders {
   DoseReminders(
     this._medications,
     this._phone, {
     required this.texts,
+    MeasurementRepository? measurements,
+    AppointmentRepository? appointments,
     DateTime Function()? clock,
-  }) : _now = clock ?? DateTime.now {
+  }) : _measurements = measurements,
+       _appointments = appointments,
+       _now = clock ?? DateTime.now {
     // Kept for the life of the app, as this object is.
     _medications.changes.listen((_) => unawaited(refresh()));
+    measurements?.changes.listen((_) => unawaited(refresh()));
+    measurements?.recorded.listen((_) => unawaited(refresh()));
+    appointments?.changes.listen((_) => unawaited(refresh()));
   }
 
   final MedicationsUseCase _medications;
+  final MeasurementRepository? _measurements;
+  final AppointmentRepository? _appointments;
   final PhoneNotifications _phone;
 
   /// The words of the reminders.
@@ -223,8 +361,16 @@ class DoseReminders {
     final DateTime riyadh = riyadhNow(now);
     final DateTime from = DateTime.utc(riyadh.year, riyadh.month, riyadh.day);
     final DateTime to = from.add(const Duration(days: days - 1));
+    // Midnight in Riyadh after the last day read.
+    final DateTime until = from
+        .add(const Duration(days: days))
+        .subtract(const Duration(hours: 3));
     final List<(ReminderCircle, DoseOccurrence)> doses =
         <(ReminderCircle, DoseOccurrence)>[];
+    final List<(ReminderCircle, MeasurementOccurrence)> measurements =
+        <(ReminderCircle, MeasurementOccurrence)>[];
+    final List<(ReminderCircle, CareAppointment)> appointments =
+        <(ReminderCircle, CareAppointment)>[];
     for (final ReminderCircle circle in circles) {
       final result = await _medications.getOccurrences(circle.id, from, to);
       if (session != _session) return;
@@ -235,11 +381,37 @@ class DoseReminders {
       for (final DoseOccurrence dose in list) {
         doses.add((circle, dose));
       }
+      try {
+        final MeasurementRepository? measurementRepository = _measurements;
+        if (measurementRepository != null) {
+          final List<MeasurementOccurrence> tasks = await measurementRepository
+              .occurrences(circle.id, from, to);
+          if (session != _session) return;
+          for (final MeasurementOccurrence task in tasks) {
+            measurements.add((circle, task));
+          }
+        }
+        final AppointmentRepository? appointmentRepository = _appointments;
+        if (appointmentRepository != null) {
+          final List<CareAppointment> visits = await appointmentRepository
+              .appointments(circle.id);
+          if (session != _session) return;
+          for (final CareAppointment visit in visits) {
+            appointments.add((circle, visit));
+          }
+        }
+      } on Exception {
+        // The same as a failed dose reading: keep what is set.
+        return;
+      }
     }
     final List<ScheduledNotification> planned = planDoseReminders(
       doses: doses,
+      measurements: measurements,
+      appointments: appointments,
       now: now,
       texts: texts,
+      until: until,
     );
     // The question comes when there is something to remind of, once per run
     // of the app; iOS shows it only the first time.

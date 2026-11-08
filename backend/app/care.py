@@ -307,6 +307,9 @@ class CareService:
         )
         account_ids = [actor_id] + ([target.id] if target else [])
         account = self._lock_accounts(*account_ids)[actor_id]
+        # The mode used to be assigned here, and that assignment was also
+        # what checked the profile; the check stays without it.
+        self._require_complete_profile(account)
         # Not yet: nothing is created here, and `CircleAppMode.parse` already
         # treats a null mode as detailed for routing, so this account's own
         # mode stays undetermined until a circle actually exists for it

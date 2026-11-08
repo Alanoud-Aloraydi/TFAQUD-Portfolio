@@ -27,6 +27,10 @@ _HOSTS = {
 # Apple accepts a provider token for one hour; a new one is made before.
 _TOKEN_SECONDS = 50 * 60
 
+# The app's notification sound (app/assets/sounds/), the same name the app
+# gives its own reminders, so both sound the same.
+NOTIFICATION_SOUND = "tafaqod_chime.wav"
+
 
 @dataclass(frozen=True)
 class PushMessage:
@@ -127,7 +131,10 @@ class ApnsPushSender:
         return {
             "aps": {
                 "alert": {"title": message.title, "body": message.body},
-                "sound": "default",
+                # The app's own soft chime; the app copies it to the
+                # phone's Library/Sounds, where iOS finds it. Before the
+                # app has run once, iOS plays its default sound instead.
+                "sound": NOTIFICATION_SOUND,
                 # The phone stacks the notifications of one kind together.
                 "thread-id": message.kind,
             },

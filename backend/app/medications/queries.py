@@ -12,9 +12,10 @@ from app.errors import NotFound
 from app.medications.occurrence_builder import build_occurrences
 from app.medications.representations import plan_response
 from app.medications.representations import schedule_responses
+from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
-from app.models import MedicationScheduleDay, Patient
+from app.models import Patient
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
@@ -199,7 +200,6 @@ class MedicationQueries:
                 MedicationPlan,
                 MedicationPlanVersion,
                 MedicationSchedule,
-                MedicationScheduleDay.weekday,
             )
             .join(
                 MedicationPlanVersion,
@@ -210,10 +210,6 @@ class MedicationQueries:
                 MedicationSchedule,
                 MedicationSchedule.plan_version_id
                 == MedicationPlanVersion.id,
-            )
-            .join(
-                MedicationScheduleDay,
-                MedicationScheduleDay.schedule_id == MedicationSchedule.id,
             )
             .where(
                 MedicationPlan.patient_id == patient.id,
@@ -232,6 +228,7 @@ class MedicationQueries:
             statement = statement.where(MedicationPlan.id == plan_id)
         rows = list(self.session.execute(statement))
         schedule_ids = {row[2].id for row in rows}
+        days = load_days(self.session, [row[2] for row in rows])
         records = self._records(schedule_ids, from_date, to_date)
         accounts = accounts_by_id(
             self.session,
@@ -242,7 +239,7 @@ class MedicationQueries:
             },
         )
         return build_occurrences(
-            rows, records, accounts, from_date, to_date, self.now
+            rows, days, records, accounts, from_date, to_date, self.now
         )
 
     def _patient(self, circle_id: UUID) -> Patient:

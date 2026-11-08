@@ -185,6 +185,10 @@ class CalendarSync {
           ? version.effectiveFromOn
           : now;
       for (final MedicationSchedule schedule in version.schedules) {
+        if (schedule.repeat == ScheduleRepeat.monthly) {
+          _monthlyDoses(circle, version.name, schedule, from, desired);
+          continue;
+        }
         final DateTime start = _nextOccurrence(
           from,
           schedule.time,
@@ -200,6 +204,56 @@ class CalendarSync {
           ),
         );
       }
+    }
+  }
+
+  /// A monthly dose as monthly events. The days up to the 28th are in every
+  /// month, so one event repeats on all of them. A later day is the month's
+  /// last day when the month lacks it, which one calendar rule cannot say
+  /// together with other days: each gets its own event, repeating on the
+  /// last of the 28th up to that day (BYMONTHDAY=28..day, BYSETPOS=-1).
+  void _monthlyDoses(
+    ReminderCircle circle,
+    String name,
+    MedicationSchedule schedule,
+    DateTime from,
+    Map<String, _DesiredEvent> desired,
+  ) {
+    final List<int> regular = <int>[
+      for (final int day in schedule.monthDays)
+        if (day <= 28) day,
+    ]..sort();
+    final List<int> monthEnd = <int>[
+      for (final int day in schedule.monthDays)
+        if (day > 28) day,
+    ];
+    void add(String key, List<int> days, RecurrenceRule recurrence) {
+      final DateTime start = _nextMonthDay(from, schedule.time, days);
+      desired[key] = _DesiredEvent(
+        title: '${circle.name} · $name',
+        start: start,
+        end: start.add(const Duration(minutes: 15)),
+        reminders: const <Duration>[Duration.zero],
+        recurrence: recurrence,
+      );
+    }
+
+    if (regular.isNotEmpty) {
+      add(
+        'dose:${schedule.id}',
+        regular,
+        MonthlyRecurrence(daysOfMonth: regular),
+      );
+    }
+    for (final int day in monthEnd) {
+      add(
+        'dose:${schedule.id}:end$day',
+        <int>[day],
+        MonthlyRecurrence(
+          daysOfMonth: <int>[for (int d = 28; d <= day; d++) d],
+          setPositions: const <int>[-1],
+        ),
+      );
     }
   }
 
@@ -348,6 +402,28 @@ DayOfWeek _dayOfWeek(int weekday) => switch (weekday) {
   6 => DayOfWeek.saturday,
   _ => DayOfWeek.sunday,
 };
+
+/// The next moment on/after [from] that is [time] ("HH:mm") on one of the
+/// month [days] (1 .. 31, a day the month lacks being its last day) — only
+/// to seed a recurring event; the monthly rule itself repeats it.
+DateTime _nextMonthDay(DateTime from, String time, List<int> days) {
+  final List<String> parts = time.split(':');
+  final int hour = int.parse(parts[0]);
+  final int minute = int.parse(parts[1]);
+  for (int i = 0; i < 62; i++) {
+    final DateTime day = DateTime(
+      from.year,
+      from.month,
+      from.day + i,
+      hour,
+      minute,
+    );
+    final int last = DateTime(day.year, day.month + 1, 0).day;
+    final bool due = days.any((int d) => (d < last ? d : last) == day.day);
+    if (due && !day.isBefore(from)) return day;
+  }
+  return DateTime(from.year, from.month, from.day, hour, minute);
+}
 
 /// [date] and [time] ("HH:mm") as a plain local [DateTime], not tagged UTC.
 DateTime _wallClock(DateTime date, String time) {

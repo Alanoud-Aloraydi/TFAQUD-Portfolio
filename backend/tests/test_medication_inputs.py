@@ -147,3 +147,78 @@ def test_dose_status_changes_at_due_and_missed_boundaries():
     assert state(15) == "late"
     assert state(29) == "late"
     assert state(30) == "missed"
+
+
+def monthly(**changes):
+    value = schedule(repeat="monthly", weekdays=[], month_days=[1, 15])
+    value.update(changes)
+    return value
+
+
+def test_a_schedule_without_repeat_is_weekly():
+    body = PlanRequest.model_validate(plan())
+    assert body.schedules[0].repeat == "weekly"
+    assert body.schedules[0].month_days == []
+
+
+def test_a_monthly_schedule_takes_days_of_the_month():
+    body = PlanRequest.model_validate(plan(schedules=[monthly()]))
+    assert body.schedules[0].repeat == "monthly"
+    assert body.schedules[0].month_days == [1, 15]
+
+
+@pytest.mark.parametrize(
+    "changes, message",
+    [
+        ({"month_days": []}, "at least one day of the month"),
+        ({"month_days": [0]}, "1 to 31"),
+        ({"month_days": [32]}, "1 to 31"),
+        ({"month_days": [5, 5]}, "cannot repeat"),
+        ({"weekdays": [1]}, "no weekdays"),
+    ],
+)
+def test_a_monthly_schedule_needs_valid_days(changes, message):
+    with pytest.raises(ValidationError, match=message):
+        PlanRequest.model_validate(plan(schedules=[monthly(**changes)]))
+
+
+def test_a_weekly_schedule_needs_weekdays_and_no_month_days():
+    with pytest.raises(ValidationError, match="at least one weekday"):
+        PlanRequest.model_validate(plan(schedules=[schedule(weekdays=[])]))
+    with pytest.raises(ValidationError, match="no days of the month"):
+        PlanRequest.model_validate(
+            plan(schedules=[schedule(month_days=[3])])
+        )
+
+
+def test_one_time_is_weekly_or_monthly_not_both():
+    with pytest.raises(ValidationError, match="either weekly or monthly"):
+        PlanRequest.model_validate(plan(schedules=[schedule(), monthly()]))
+
+
+def test_two_monthly_doses_at_one_time_never_meet():
+    # The same day.
+    with pytest.raises(ValidationError, match="day of the month"):
+        PlanRequest.model_validate(
+            plan(schedules=[monthly(), monthly(month_days=[15, 20])])
+        )
+    # The 30th and the 31st are both February's last day.
+    with pytest.raises(ValidationError, match="day of the month"):
+        PlanRequest.model_validate(
+            plan(
+                schedules=[
+                    monthly(month_days=[30]),
+                    monthly(month_days=[31], dose_value=Decimal("2")),
+                ]
+            )
+        )
+    # Different days, not both near the end: fine, and at other times too.
+    PlanRequest.model_validate(
+        plan(
+            schedules=[
+                monthly(month_days=[1]),
+                monthly(month_days=[31], dose_value=Decimal("2")),
+                monthly(time_of_day=time(20), month_days=[31]),
+            ]
+        )
+    )

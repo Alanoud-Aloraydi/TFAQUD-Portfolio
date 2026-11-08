@@ -110,16 +110,14 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     }
   }
 
-  /// A dose reminder opens «اليوم» of its circle, where the dose is marked;
-  /// the note to open the app opens «اليوم» as it is.
+  /// A reminder of a dose, a measurement or an appointment opens «اليوم» of
+  /// its circle, where each of them is; the note to open the app opens
+  /// «اليوم» as it is.
   void _openTap(String payload) {
     _pendingTap = null;
-    if (payload.startsWith(doseReminderPayload)) {
-      unawaited(
-        context.read<HomeCubit>().selectCircle(
-          payload.substring(doseReminderPayload.length),
-        ),
-      );
+    final String? circleId = reminderCircleId(payload);
+    if (circleId != null) {
+      unawaited(context.read<HomeCubit>().selectCircle(circleId));
     }
     context.go(Routes.today);
   }

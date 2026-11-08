@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -21,9 +25,91 @@ const ReminderCircle _me = ReminderCircle(id: 'c-me', name: 'صحتي');
 final DoseReminderTexts _texts = DoseReminderTexts(
   title: (ReminderCircle circle) => 'دواء ${circle.name}',
   body: (DoseOccurrence dose) => dose.name,
+  measurementTitle: (ReminderCircle circle) => 'قياس ${circle.name}',
+  measurementBody: (MeasurementOccurrence task) => task.kind.name,
+  appointmentTitle: (ReminderCircle circle, AppointmentLead lead) =>
+      'موعد ${circle.name} ${lead.name}',
+  appointmentBody: (CareAppointment visit) => visit.specialty,
   keepTitle: () => 'keep',
   keepBody: () => 'open the app',
 );
+
+/// A measurement task on [day] (of November 2026) at [time] in Riyadh.
+MeasurementOccurrence _measurement(
+  int day,
+  String time, {
+  MeasurementKind kind = MeasurementKind.glucose,
+  MeasurementStatus status = MeasurementStatus.upcoming,
+}) => MeasurementOccurrence(
+  planId: 'plan-${kind.name}',
+  versionId: 'version-${kind.name}',
+  kind: kind,
+  scheduledOn: DateTime(2026, 11, day),
+  time: time,
+  deadlineAt: DateTime.utc(2026, 11, day, 23),
+  status: status,
+);
+
+/// An appointment on [day] (of November 2026) at [time] in Riyadh.
+CareAppointment _appointment(
+  int day,
+  String time, {
+  AppointmentStatus status = AppointmentStatus.scheduled,
+}) => CareAppointment(
+  id: 'appointment-$day',
+  specialty: 'القلب',
+  kind: AppointmentKind.followUp,
+  otherKind: null,
+  scheduledOn: DateTime(2026, 11, day),
+  time: time,
+  place: 'مستشفى',
+  remoteMethod: null,
+  companions: const <AppointmentCompanion>[],
+  status: status,
+  updatedAt: DateTime.utc(2026, 11),
+);
+
+/// The measurement tasks of each circle.
+class _Measurements extends Fake implements MeasurementRepository {
+  final Map<String, List<MeasurementOccurrence>> tasks =
+      <String, List<MeasurementOccurrence>>{};
+  final StreamController<String> changed =
+      StreamController<String>.broadcast();
+  final StreamController<String> recordedNow =
+      StreamController<String>.broadcast();
+  bool offline = false;
+
+  @override
+  Stream<String> get changes => changed.stream;
+
+  @override
+  Stream<String> get recorded => recordedNow.stream;
+
+  @override
+  Future<List<MeasurementOccurrence>> occurrences(
+    String circleId,
+    DateTime from,
+    DateTime to,
+  ) async {
+    if (offline) throw Exception('offline');
+    return tasks[circleId] ?? const <MeasurementOccurrence>[];
+  }
+}
+
+/// The appointments of each circle.
+class _Appointments extends Fake implements AppointmentRepository {
+  final Map<String, List<CareAppointment>> visits =
+      <String, List<CareAppointment>>{};
+  final StreamController<String> changed =
+      StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get changes => changed.stream;
+
+  @override
+  Future<List<CareAppointment>> appointments(String circleId) async =>
+      visits[circleId] ?? const <CareAppointment>[];
+}
 
 /// A dose on [day] (of November 2026) at [time] in Riyadh.
 DoseOccurrence _dose(
@@ -162,6 +248,120 @@ void main() {
       expect(planned.first.body, 'دواء 4 9');
       expect(planned[maxDoseReminders - 1].body, 'دواء 9 18');
       expect(planned.last.payload, keepRemindersPayload);
+    });
+
+    test('a measurement to come is reminded at its time', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        measurements: <(ReminderCircle, MeasurementOccurrence)>[
+          (_noura, _measurement(3, '10:00', kind: MeasurementKind.bp)),
+          // Already read, skipped, or missed: nothing to remind of.
+          (_noura, _measurement(3, '11:00', status: MeasurementStatus.read)),
+          (
+            _noura,
+            _measurement(3, '12:00', status: MeasurementStatus.skipped),
+          ),
+          (_noura, _measurement(3, '07:00', status: MeasurementStatus.missed)),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned, hasLength(2));
+      expect(planned[0].at, DateTime.utc(2026, 11, 3, 7));
+      expect(planned[0].title, 'قياس أمي نورة');
+      expect(planned[0].body, 'bp');
+      expect(planned[0].payload, 'measurement:c-noura');
+      expect(planned[0].thread, 'c-noura');
+      expect(planned[1].payload, keepRemindersPayload);
+    });
+
+    test('an appointment is reminded a day before and two hours before', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(5, '16:30')),
+          (
+            _noura,
+            _appointment(6, '09:00', status: AppointmentStatus.cancelled),
+          ),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned, hasLength(3));
+      // 16:30 in Riyadh on the 4th, then 14:30 in Riyadh on the 5th.
+      expect(planned[0].at, DateTime.utc(2026, 11, 4, 13, 30));
+      expect(planned[0].title, 'موعد أمي نورة dayBefore');
+      expect(planned[0].body, 'القلب');
+      expect(planned[0].payload, 'appointment:c-noura');
+      expect(planned[1].at, DateTime.utc(2026, 11, 5, 11, 30));
+      expect(planned[1].title, 'موعد أمي نورة soon');
+      expect(planned[2].payload, keepRemindersPayload);
+    });
+
+    test('an appointment added for today keeps only the near reminder', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(3, '15:00')),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned.first.at, DateTime.utc(2026, 11, 3, 10));
+      expect(planned.first.title, 'موعد أمي نورة soon');
+      expect(planned, hasLength(2));
+    });
+
+    test('doses, measurements and appointments share one order', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        doses: <(ReminderCircle, DoseOccurrence)>[(_me, _dose(4, '20:00'))],
+        measurements: <(ReminderCircle, MeasurementOccurrence)>[
+          (_noura, _measurement(3, '09:00')),
+        ],
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(4, '12:00')),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned.map((ScheduledNotification n) => n.payload), <String>[
+        'measurement:c-noura',
+        'appointment:c-noura',
+        'appointment:c-noura',
+        'dose:c-me',
+        keepRemindersPayload,
+      ]);
+      expect(
+        planned.map((ScheduledNotification n) => n.id),
+        <int>[7000, 7001, 7002, 7003, 7000 + maxDoseReminders],
+      );
+    });
+
+    test('nothing at or after the end of the week read', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(20, '10:00')),
+        ],
+        now: _now,
+        texts: _texts,
+        until: DateTime.utc(2026, 11, 9, 21),
+      );
+
+      expect(planned, isEmpty);
+    });
+
+    test('the circle of a tapped reminder', () {
+      expect(reminderCircleId('dose:c-1'), 'c-1');
+      expect(reminderCircleId('measurement:c-2'), 'c-2');
+      expect(reminderCircleId('appointment:c-3'), 'c-3');
+      expect(reminderCircleId('dose-snooze:c-4'), 'c-4');
+      expect(reminderCircleId(keepRemindersPayload), isNull);
+      expect(reminderCircleId('invitation'), isNull);
+      expect(isReminderPayload('measurement:c-2'), isTrue);
+      expect(isReminderPayload('appointment:c-3'), isTrue);
+      expect(isReminderPayload('dose-snooze:c-4'), isFalse);
     });
   });
 
@@ -312,6 +512,102 @@ void main() {
       await reminders.sync(<ReminderCircle>[_noura]);
 
       expect(phone.scheduled.keys.toList(), <int>[1]);
+    });
+  });
+
+  group('measurements and appointments on the phone', () {
+    late _Medications medications;
+    late _Measurements measurements;
+    late _Appointments appointments;
+    late FakePhoneNotifications phone;
+    late DoseReminders reminders;
+
+    setUp(() {
+      medications = _Medications();
+      measurements = _Measurements();
+      appointments = _Appointments();
+      phone = FakePhoneNotifications();
+      reminders = DoseReminders(
+        MedicationsUseCase(medications),
+        phone,
+        texts: _texts,
+        measurements: measurements,
+        appointments: appointments,
+        clock: () => _now,
+      );
+    });
+
+    Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+    test('sets them with the doses', () async {
+      medications.doses[_noura.id] = <DoseOccurrence>[_dose(3, '21:00')];
+      measurements.tasks[_noura.id] = <MeasurementOccurrence>[
+        _measurement(3, '10:00'),
+      ];
+      appointments.visits[_noura.id] = <CareAppointment>[
+        _appointment(5, '16:30'),
+        // Beyond the week read: set at a later opening.
+        _appointment(25, '16:30'),
+      ];
+
+      await reminders.sync(<ReminderCircle>[_noura]);
+
+      expect(
+        phone.inOrder.map((ScheduledNotification n) => n.payload),
+        <String>[
+          'measurement:c-noura',
+          'dose:c-noura',
+          'appointment:c-noura',
+          'appointment:c-noura',
+          keepRemindersPayload,
+        ],
+      );
+    });
+
+    test('a recorded measurement loses its reminder', () async {
+      measurements.tasks[_noura.id] = <MeasurementOccurrence>[
+        _measurement(3, '10:00'),
+      ];
+      await reminders.sync(<ReminderCircle>[_noura]);
+      expect(phone.scheduled, hasLength(2));
+
+      measurements.tasks[_noura.id] = <MeasurementOccurrence>[
+        _measurement(3, '10:00', status: MeasurementStatus.read),
+      ];
+      measurements.recordedNow.add(_noura.id);
+      await settle();
+      await settle();
+
+      expect(phone.scheduled, isEmpty);
+    });
+
+    test('a cancelled appointment loses its reminders', () async {
+      appointments.visits[_noura.id] = <CareAppointment>[
+        _appointment(5, '16:30'),
+      ];
+      await reminders.sync(<ReminderCircle>[_noura]);
+      expect(phone.scheduled, hasLength(3));
+
+      appointments.visits[_noura.id] = <CareAppointment>[
+        _appointment(5, '16:30', status: AppointmentStatus.cancelled),
+      ];
+      appointments.changed.add(_noura.id);
+      await settle();
+      await settle();
+
+      expect(phone.scheduled, isEmpty);
+    });
+
+    test('a failed measurement reading keeps what is set', () async {
+      measurements.tasks[_noura.id] = <MeasurementOccurrence>[
+        _measurement(3, '10:00'),
+      ];
+      await reminders.sync(<ReminderCircle>[_noura]);
+
+      measurements.offline = true;
+      await reminders.refresh();
+
+      expect(phone.scheduled, hasLength(2));
     });
   });
 }

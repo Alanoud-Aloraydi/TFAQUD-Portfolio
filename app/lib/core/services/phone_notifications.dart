@@ -1,9 +1,25 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
+
+/// The app's own notification sound: a soft two-note chime, calm like the
+/// app's words. The server's pushes name the same file (`sender.py`), so a
+/// reminder set on the phone and a push from the server sound the same.
+///
+/// iOS looks for a notification sound in the app's `Library/Sounds` folder
+/// (and in the main bundle). A Flutter asset is not in the main bundle, so
+/// [PluginPhoneNotifications.initialize] copies it to `Library/Sounds`; until
+/// then, and if the copy ever fails, iOS plays its default sound.
+const String notificationSound = 'tafaqod_chime.wav';
+
+/// Where the sound is in the app's assets.
+const String notificationSoundAsset = 'assets/sounds/$notificationSound';
 
 /// One notification the phone shows at [at], even when the app is closed.
 ///
@@ -95,6 +111,28 @@ class PluginPhoneNotifications implements PhoneNotifications {
       _launchTap = payload;
     }
     _ready = true;
+    unawaited(_installSound());
+  }
+
+  /// Copies [notificationSound] to `Library/Sounds`, where iOS finds it for
+  /// the reminders and the pushes. Done once; a failure leaves iOS's default
+  /// sound, which is still a sound.
+  Future<void> _installSound() async {
+    try {
+      final Directory library = await getLibraryDirectory();
+      final File file = File('${library.path}/Sounds/$notificationSound');
+      final data = await rootBundle.load(notificationSoundAsset);
+      if (file.existsSync() && file.lengthSync() == data.lengthInBytes) {
+        return;
+      }
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        flush: true,
+      );
+    } on Exception catch (error) {
+      debugPrint('The notification sound was not copied: $error');
+    }
   }
 
   @override
@@ -129,7 +167,12 @@ class PluginPhoneNotifications implements PhoneNotifications {
       // the phone's time zone is.
       scheduledDate: tz.TZDateTime.from(notification.at.toUtc(), tz.UTC),
       notificationDetails: NotificationDetails(
-        iOS: DarwinNotificationDetails(threadIdentifier: notification.thread),
+        iOS: DarwinNotificationDetails(
+          threadIdentifier: notification.thread,
+          // With the sound, also when the app is open.
+          presentSound: true,
+          sound: notificationSound,
+        ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: notification.payload,

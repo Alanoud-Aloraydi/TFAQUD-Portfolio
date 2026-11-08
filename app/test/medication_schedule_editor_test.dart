@@ -101,4 +101,37 @@ void main() {
     expect(data.weekdays, {1, 2, 3, 4, 5, 6, 7});
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('«شهري» shows the days of the month, «أسبوعي» the week', (
+    tester,
+  ) async {
+    final data = await openEditor(tester, 1);
+
+    await tester.tap(find.text('medications.repeat_monthly'.tr()));
+    await tester.pumpAndSettle();
+    expect(data.repeat, ScheduleRepeat.monthly);
+    // The first day chosen is the medicine's start day (1 by default).
+    expect(data.monthDays, {1});
+    expect(find.text('medications.weekday_short.7'.tr()), findsNothing);
+    expect(find.text('medications.month_end_note'.tr()), findsNothing);
+
+    await tester.tap(find.text('15'));
+    await tester.pump();
+    await tester.tap(find.text('31'));
+    await tester.pump();
+    expect(data.monthDays, {1, 15, 31});
+    // The 31st is not in every month: the note says where the dose goes.
+    expect(find.text('medications.month_end_note'.tr()), findsOneWidget);
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('يوم 15 من الشهر')),
+      isSemantics(isButton: true, isSelected: true, hasTapAction: true),
+    );
+
+    await tester.tap(find.text('medications.repeat_weekly'.tr()));
+    await tester.pumpAndSettle();
+    expect(data.repeat, ScheduleRepeat.weekly);
+    expect(data.weekdays, {1, 2, 3, 4, 5, 6, 7});
+    expect(find.text('31'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

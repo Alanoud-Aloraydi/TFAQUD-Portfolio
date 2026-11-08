@@ -401,7 +401,55 @@ class _ScheduleLine extends StatelessWidget {
         context.tr('medications.unit.${schedule.doseUnit.name}'),
       ],
     );
-    final days = Row(
+    final Widget days = schedule.repeat == ScheduleRepeat.monthly
+        ? Text(
+            formatMonthDays(context, schedule.monthDays),
+            style: Theme.of(context).textTheme.labelSmall,
+          )
+        : _weekStrip(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: LayoutBuilder(
+        builder: (context, constraints) => constraints.maxWidth >= 290
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      time,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: Text(dose)),
+                  // Many days of the month wrap instead of overflowing.
+                  if (schedule.repeat == ScheduleRepeat.monthly)
+                    Flexible(child: days)
+                  else
+                    days,
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(time, style: Theme.of(context).textTheme.titleSmall),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(child: Text(dose)),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  days,
+                ],
+              ),
+      ),
+    );
+  }
+
+  /// The week from Saturday, the days of a weekly schedule filled.
+  Widget _weekStrip(BuildContext context) {
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final day in const [6, 7, 1, 2, 3, 4, 5]) ...[
@@ -429,40 +477,6 @@ class _ScheduleLine extends StatelessWidget {
           if (day != 5) const SizedBox(width: AppSpacing.xs),
         ],
       ],
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: LayoutBuilder(
-        builder: (context, constraints) => constraints.maxWidth >= 290
-            ? Row(
-                children: [
-                  SizedBox(
-                    width: 60,
-                    child: Text(
-                      time,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(child: Text(dose)),
-                  days,
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(time, style: Theme.of(context).textTheme.titleSmall),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Text(dose)),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  days,
-                ],
-              ),
-      ),
     );
   }
 }

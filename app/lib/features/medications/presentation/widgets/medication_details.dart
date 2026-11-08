@@ -216,9 +216,11 @@ class _ScheduleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final time = formatMedicationTime(context, schedule.time);
-    final days = schedule.weekdays
-        .map((day) => context.tr('medications.weekday.$day'))
-        .join(context.tr('medications.list_separator'));
+    final days = schedule.repeat == ScheduleRepeat.monthly
+        ? formatMonthDays(context, schedule.monthDays)
+        : schedule.weekdays
+              .map((day) => context.tr('medications.weekday.$day'))
+              .join(context.tr('medications.list_separator'));
     final dose = context.tr(
       'medications.dose',
       args: [

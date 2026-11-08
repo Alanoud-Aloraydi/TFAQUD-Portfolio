@@ -66,12 +66,12 @@ class _SimplifiedHomeFeatureScreenState
     }
   }
 
-  /// A dose reminder, or its snooze, reloads this screen: it already shows
-  /// whichever task is due or missed, so no payload parsing is needed here.
+  /// A reminder (a dose, a measurement, an appointment), or a snooze,
+  /// reloads this screen: it already shows whichever task is due or missed,
+  /// so no payload parsing is needed here.
   void _onTap(String payload) {
     if (!mounted) return;
-    if (payload.startsWith(doseReminderPayload) ||
-        payload.startsWith(doseSnoozePayload)) {
+    if (reminderCircleId(payload) != null) {
       unawaited(context.read<SimplifiedHomeCubit>().load());
     }
   }

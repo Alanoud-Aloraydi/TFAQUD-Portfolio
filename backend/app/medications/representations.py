@@ -7,7 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.accounts import recorder_response
-from app.models import MedicationSchedule, MedicationScheduleDay
+from app.medications.schedule_days import load_days
+from app.models import MedicationSchedule
 
 
 def plain_number(value: Decimal) -> str:
@@ -21,36 +22,32 @@ def plain_number(value: Decimal) -> str:
 
 
 def schedule_responses(session: Session, version_id: UUID) -> list[dict]:
-    """Return schedules with their normalized weekday rows grouped."""
-    rows = session.execute(
-        select(MedicationSchedule, MedicationScheduleDay.weekday)
-        .join(
-            MedicationScheduleDay,
-            MedicationScheduleDay.schedule_id == MedicationSchedule.id,
-        )
-        .where(MedicationSchedule.plan_version_id == version_id)
-        .order_by(
-            MedicationSchedule.time_of_day,
-            MedicationScheduleDay.weekday,
+    """Return the schedules of a version, each with its repeat and days.
+
+    A weekly schedule lists its weekdays and no month days; a monthly one
+    its month days and no weekdays. An older app reads only `weekdays`.
+    """
+    schedules = list(
+        session.scalars(
+            select(MedicationSchedule)
+            .where(MedicationSchedule.plan_version_id == version_id)
+            .order_by(MedicationSchedule.time_of_day, MedicationSchedule.id)
         )
     )
-    grouped = {}
-    for schedule, weekday in rows:
-        value = grouped.setdefault(
-            schedule.id,
-            {
-                "id": str(schedule.id),
-                "time_of_day": schedule.time_of_day.isoformat(
-                    timespec="minutes"
-                ),
-                "dose_value": plain_number(schedule.dose_value),
-                "dose_unit": schedule.dose_unit,
-                "instructions": schedule.instructions,
-                "weekdays": [],
-            },
-        )
-        value["weekdays"].append(weekday)
-    return list(grouped.values())
+    days = load_days(session, schedules)
+    return [
+        {
+            "id": str(schedule.id),
+            "time_of_day": schedule.time_of_day.isoformat(timespec="minutes"),
+            "dose_value": plain_number(schedule.dose_value),
+            "dose_unit": schedule.dose_unit,
+            "instructions": schedule.instructions,
+            "repeat": schedule.repeat,
+            "weekdays": sorted(days[schedule.id].weekdays),
+            "month_days": sorted(days[schedule.id].month_days),
+        }
+        for schedule in schedules
+    ]
 
 
 def plan_response(plan, version) -> dict:

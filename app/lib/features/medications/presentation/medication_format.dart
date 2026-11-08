@@ -15,3 +15,12 @@ String formatMedicationTime(BuildContext context, String value) {
   final period = context.tr(hour24 < 12 ? 'common.am' : 'common.pm');
   return '$hour:${minute.toString().padLeft(2, '0')} $period';
 }
+
+/// A monthly schedule's days, «شهريًا: يوم 1، 15».
+String formatMonthDays(BuildContext context, List<int> days) =>
+    context.tr(
+      'medications.monthly_days',
+      args: <String>[
+        (days.toList()..sort()).join(context.tr('medications.list_separator')),
+      ],
+    );

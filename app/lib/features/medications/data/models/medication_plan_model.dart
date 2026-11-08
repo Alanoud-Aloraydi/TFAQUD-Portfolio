@@ -91,6 +91,12 @@ class MedicationPlanModel {
       doseUnit: unit,
       instructions: json['instructions'] as String?,
       weekdays: (json['weekdays'] as List<dynamic>).cast<int>(),
+      // An older server sends neither: every schedule is weekly there.
+      repeat: json['repeat'] == 'monthly'
+          ? ScheduleRepeat.monthly
+          : ScheduleRepeat.weekly,
+      monthDays:
+          (json['month_days'] as List<dynamic>?)?.cast<int>() ?? const <int>[],
     );
   }
 

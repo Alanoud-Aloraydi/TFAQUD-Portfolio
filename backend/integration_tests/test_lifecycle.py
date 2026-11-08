@@ -111,8 +111,9 @@ def test_failed_creation_rolls_back_mode_assignment(database, account):
     assert count(database, CareCircle) == 0
 
 
-def test_canceling_consent_does_not_change_assigned_mode(database, account):
-    """Canceling a request does not undo the patient's immutable mode."""
+def test_canceling_consent_leaves_the_mode_unset(database, account):
+    """Accepting a request sets no mode (only a created circle does), so
+    canceling it leaves the patient free to accept another mode later."""
     owner, patient = account(), account()
     request = run(
         database,
@@ -125,7 +126,7 @@ def test_canceling_consent_does_not_change_assigned_mode(database, account):
     run(database, "respond_creation", patient.id, request.id, True)
     run(database, "cancel_creation", patient.id, request.id)
     with Session(database) as session:
-        assert session.get(Account, patient.id).app_mode == "simplified"
+        assert session.get(Account, patient.id).app_mode is None
         assert (
             session.get(CareCircleCreationRequest, request.id).status
             == "canceled"

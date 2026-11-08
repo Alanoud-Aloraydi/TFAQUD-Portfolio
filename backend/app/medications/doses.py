@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.medications.inputs import DoseRecordRequest
+from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
-from app.models import MedicationScheduleDay, Patient
+from app.models import Patient
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
@@ -96,16 +97,10 @@ class MedicationDoseService:
                 MedicationSchedule.plan_version_id
                 == MedicationPlanVersion.id,
             )
-            .join(
-                MedicationScheduleDay,
-                MedicationScheduleDay.schedule_id == MedicationSchedule.id,
-            )
             .join(Patient, Patient.id == MedicationPlan.patient_id)
             .where(
                 Patient.care_circle_id == circle_id,
                 MedicationSchedule.id == schedule_id,
-                MedicationScheduleDay.weekday
-                == scheduled_on.isoweekday(),
                 MedicationPlanVersion.treatment_starts_on <= scheduled_on,
                 MedicationPlanVersion.cancelled_at.is_(None),
                 (
@@ -121,6 +116,12 @@ class MedicationDoseService:
         if row is None:
             raise NotFound("The scheduled dose does not exist.")
         plan, version, schedule = row
+        # A weekly schedule on its weekday, a monthly one on its day of the
+        # month (or the month's last day for a day the month lacks).
+        if not load_days(self.session, [schedule])[schedule.id].applies_on(
+            scheduled_on
+        ):
+            raise NotFound("The scheduled dose does not exist.")
         if version.effective_from_on > scheduled_on:
             raise NotFound("The scheduled dose does not exist.")
         if (

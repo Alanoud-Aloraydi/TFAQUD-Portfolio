@@ -103,9 +103,9 @@ def test_an_invitation_reaches_the_invited_phone(
     assert sent.status_code == 201
     [message] = pushes.to(khaled_phone.token)
     assert message.kind == "invitation"
-    assert message.title == "دعوة إلى دائرة رعاية"
+    assert message.title == "دعوة لدائرة رعاية"
     # As Khaled sees the circle: «دائرة» and the patient's first name.
-    assert message.body == "دعوة من Reem للانضمام إلى «دائرة Nora»."
+    assert message.body == "وصلتك دعوة من Reem للانضمام إلى «دائرة Nora»."
     assert pushes.to(reem_phone.token) == []
 
     # Sent again: told again.
@@ -173,7 +173,7 @@ def test_a_circle_request_from_sending_to_the_circle(
     )
     [asked] = pushes.to(noura_phone.token)
     assert asked.kind == "circle_request"
-    assert asked.body == "طلب من Reem لمتابعة رعايتك في تفقّد."
+    assert asked.body == "وصلك طلب من Reem لمتابعة رعايتك في تفقّد."
 
     request_id = sent.json["request"]["id"]
     noura_phone.call(
@@ -181,9 +181,9 @@ def test_a_circle_request_from_sending_to_the_circle(
     )
     [answered] = pushes.to(reem_phone.token)
     assert answered.kind == "request_answer"
-    assert answered.title == "تمت الموافقة على طلبك"
+    assert answered.title == "تم قبول طلبك"
     assert answered.body == (
-        "تمت الموافقة على طلبك لرعاية Noura. تُنشأ الدائرة بعد إكمال البيانات."
+        "تم قبول طلبك لرعاية Noura. الدائرة تجهز أول ما تكتمل البيانات."
     )
 
     done = noura_phone.call(
@@ -193,7 +193,7 @@ def test_a_circle_request_from_sending_to_the_circle(
     ready = pushes.to(reem_phone.token)[-1]
     assert ready.kind == "circle_ready"
     # Reem is told the name she sees, not Noura's own «صحتي».
-    assert ready.body == "أُنشئت «دائرة Noura»، ويمكنك متابعة الرعاية الآن."
+    assert ready.body == "«دائرة Noura» جاهزة، وتقدر تتابع الرعاية الحين."
 
 
 def test_a_declined_request_is_told(database_app, database, account, pushes):
@@ -213,8 +213,8 @@ def test_a_declined_request_is_told(database_app, database, account, pushes):
     )
 
     [answer] = pushes.to(reem_phone.token)
-    assert answer.title == "اعتذار عن طلب الرعاية"
-    assert answer.body == "لم تتم الموافقة على طلبك لرعاية Noura."
+    assert answer.title == "تم الاعتذار عن طلبك"
+    assert answer.body == "تم الاعتذار عن طلبك لرعاية Noura."
 
 
 def test_a_token_apple_forgot_is_deleted(

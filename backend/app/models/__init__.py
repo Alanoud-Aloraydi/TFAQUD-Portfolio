@@ -14,6 +14,7 @@ from app.models.medication_plan import MedicationPlan, MedicationPlanVersion
 from app.models.medication_schedule import (
     MedicationSchedule,
     MedicationScheduleDay,
+    MedicationScheduleMonthDay,
 )
 from app.models.measurement import (
     MeasurementPlan,
@@ -47,6 +48,7 @@ __all__ = [
     "MedicationPlanVersion",
     "MedicationSchedule",
     "MedicationScheduleDay",
+    "MedicationScheduleMonthDay",
     "MedicationDoseRecord",
     "MeasurementPlan",
     "MeasurementPlanVersion",

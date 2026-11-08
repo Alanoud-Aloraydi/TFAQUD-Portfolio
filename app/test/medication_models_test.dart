@@ -130,4 +130,104 @@ void main() {
     expect(data.toDraft()!.strengthValue, 50.5);
     expect(data.toDraft()!.schedules.single.doseValue, 2.5);
   });
+
+  group('monthly schedules', () {
+    Map<String, dynamic> schedule(Map<String, dynamic> changes) => {
+      'id': 'schedule-1',
+      'time_of_day': '08:00',
+      'dose_value': '1',
+      'dose_unit': 'tablet',
+      'instructions': null,
+      'weekdays': <int>[],
+      ...changes,
+    };
+
+    MedicationSchedule parse(Map<String, dynamic> schedule) =>
+        MedicationPlanModel.fromJson({
+          'id': 'plan-1',
+          'created_at': '2026-10-01T10:00:00Z',
+          'discontinued_at': null,
+          'history': [],
+          'version': {
+            'version_number': 1,
+            'name': 'Medicine',
+            'strength_value': '5',
+            'strength_unit': 'mg',
+            'dosage_form': 'tablet',
+            'reason_for_use': null,
+            'instructions': null,
+            'treatment_starts_on': '2026-10-01',
+            'treatment_ends_on': null,
+            'effective_from_on': '2026-10-01',
+            'effective_until_on': null,
+            'schedules': [schedule],
+          },
+        }).toEntity().version.schedules.single;
+
+    test('a monthly schedule keeps its days of the month', () {
+      final MedicationSchedule value = parse(
+        schedule({
+          'repeat': 'monthly',
+          'month_days': [1, 15],
+        }),
+      );
+
+      expect(value.repeat, ScheduleRepeat.monthly);
+      expect(value.monthDays, [1, 15]);
+      expect(value.weekdays, isEmpty);
+    });
+
+    test('an older server without repeat is weekly', () {
+      final MedicationSchedule value = parse(
+        schedule({
+          'weekdays': [1, 3],
+        }),
+      );
+
+      expect(value.repeat, ScheduleRepeat.weekly);
+      expect(value.monthDays, isEmpty);
+    });
+
+    test('a weekly draft is sent as before, a monthly one names it', () {
+      final Map<String, Object?> weekly = MedicationScheduleDraft(
+        time: '08:00',
+        doseValue: 1,
+        doseUnit: DoseUnit.tablet,
+        weekdays: const [1, 2],
+      ).toJson();
+      final Map<String, Object?> monthly = MedicationScheduleDraft(
+        time: '08:00',
+        doseValue: 1,
+        doseUnit: DoseUnit.tablet,
+        weekdays: const [],
+        repeat: ScheduleRepeat.monthly,
+        monthDays: const [5, 31],
+      ).toJson();
+
+      expect(weekly.containsKey('repeat'), isFalse);
+      expect(weekly.containsKey('month_days'), isFalse);
+      expect(weekly['weekdays'], [1, 2]);
+      expect(monthly['repeat'], 'monthly');
+      expect(monthly['month_days'], [5, 31]);
+      expect(monthly['weekdays'], isEmpty);
+    });
+
+    test('the form asks for a day of the month and sends only those', () {
+      final data = MedicationFormData(null);
+      addTearDown(data.dispose);
+      data.name.text = 'Medicine';
+      data.strength.text = '5';
+      final schedule = data.schedules.single..repeat = ScheduleRepeat.monthly;
+
+      expect(data.firstIssue()!.field, MedicationFormField.weekdays);
+
+      schedule.monthDays.addAll({31, 1});
+      final MedicationScheduleDraft draft = data.toDraft()!.schedules.single;
+      expect(draft.repeat, ScheduleRepeat.monthly);
+      expect(draft.monthDays, [1, 31]);
+      expect(draft.weekdays, isEmpty);
+      // The weekdays stay in the form, for switching back.
+      expect(schedule.weekdays, {1, 2, 3, 4, 5, 6, 7});
+    });
+  });
 }

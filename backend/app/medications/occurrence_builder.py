@@ -1,4 +1,4 @@
-"""Expand weekly schedules into calendar occurrences."""
+"""Expand weekly and monthly schedules into calendar occurrences."""
 
 from collections import defaultdict
 from datetime import date, datetime, timedelta
@@ -10,9 +10,19 @@ RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def build_occurrences(
-    rows, records, accounts, from_date: date, to_date: date, now: datetime
+    rows,
+    days,
+    records,
+    accounts,
+    from_date: date,
+    to_date: date,
+    now: datetime,
 ):
-    """Build only applicable occurrences, selecting the latest version."""
+    """Build only applicable occurrences, selecting the latest version.
+
+    `rows` are (plan, version, schedule); `days` maps each schedule's id to
+    its `ScheduleDays`.
+    """
     by_plan = defaultdict(list)
     for row in rows:
         by_plan[row[0].id].append(row)
@@ -28,11 +38,10 @@ def build_occurrences(
             if not eligible:
                 continue
             version_number = max(row[1].version_number for row in eligible)
-            for plan, version, schedule, weekday in eligible:
-                if (
-                    version.version_number != version_number
-                    or weekday != current.isoweekday()
-                ):
+            for plan, version, schedule in eligible:
+                if version.version_number != version_number or not days[
+                    schedule.id
+                ].applies_on(current):
                     continue
                 scheduled_at = datetime.combine(
                     current, schedule.time_of_day, tzinfo=RIYADH

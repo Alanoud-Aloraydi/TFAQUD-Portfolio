@@ -233,14 +233,24 @@ nothing, because the token belongs to the sign-in that sent it.
 
 ### Scheduled notifications
 
-`POST /internal/tick` scans every circle for a dose or measurement that just
-became due or missed, and every appointment due for its day-before
-reminder, and sends each exactly once (`notification_log` records what was
-already sent, so a repeat call never resends it). A dose/measurement push
-goes to every manager of that circle and to its patient if the patient has
-an account; an appointment reminder goes to its companions if any were
-chosen, otherwise to the whole circle, always including the patient if the
-patient has an account.
+The reminders before a task are set on each phone by the app itself, so
+they come on time with no server and no tick: each dose and measurement at
+its time, and each appointment a day before and two hours before
+(`app/lib/features/medications/domain/dose_reminders.dart`). The server
+only tells what a phone cannot know ahead.
+
+`POST /internal/tick` scans every circle for a dose or measurement whose
+time passed with nothing recorded, and sends each exactly once
+(`notification_log` records what was already sent, so a repeat call never
+resends it). The push goes to every manager of that circle and to its
+patient if the patient has an account.
+
+Every push uses the app's own sound, `tafaqod_chime.wav`, the same as the
+app's reminders (the app copies it to the phone's `Library/Sounds`; until
+the app has run once, iOS plays its default sound).
+
+GitHub runs a scheduled workflow only from the repository's default branch
+(`main`), so the tick below starts once `notify-tick.yml` is on `main`.
 
 The route only runs the scan when the `X-Tick-Secret` header equals
 `TICK_SECRET`; otherwise it answers 404, the same as a route that does not

@@ -89,7 +89,7 @@ class MedicationFormData {
           scheduleIndex: index,
         );
       }
-      if (schedule.weekdays.isEmpty) {
+      if (schedule.chosenDays.isEmpty) {
         return MedicationFormIssue(
           MedicationFormField.weekdays,
           scheduleIndex: index,
@@ -114,7 +114,13 @@ class MedicationFormData {
           time: _time(item.time),
           doseValue: dose,
           doseUnit: item.doseUnit,
-          weekdays: item.weekdays.toList()..sort(),
+          repeat: item.repeat,
+          weekdays: item.repeat == ScheduleRepeat.weekly
+              ? (item.weekdays.toList()..sort())
+              : const <int>[],
+          monthDays: item.repeat == ScheduleRepeat.monthly
+              ? (item.monthDays.toList()..sort())
+              : const <int>[],
           instructions: _optional(item.instructionsController.text),
         ),
       );
@@ -163,7 +169,12 @@ class MedicationFormData {
       time: TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
       dose: value.doseValue,
       doseUnit: value.doseUnit,
-      weekdays: value.weekdays.toSet(),
+      repeat: value.repeat,
+      // A monthly dose switched to weekly starts on every day, as a new one.
+      weekdays: value.weekdays.isEmpty
+          ? <int>{1, 2, 3, 4, 5, 6, 7}
+          : value.weekdays.toSet(),
+      monthDays: value.monthDays.toSet(),
       instructions: value.instructions,
     );
   }

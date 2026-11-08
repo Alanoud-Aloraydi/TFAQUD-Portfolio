@@ -17,6 +17,14 @@ class MeasurementRepository {
   /// accepts a change (so calendar sync can pick it up right away).
   Stream<String> get changes => _changes.stream;
 
+  final StreamController<String> _recorded =
+      StreamController<String>.broadcast();
+
+  /// The circle where a measurement task was just recorded, so its reminder
+  /// is taken off. Apart from [changes], which the calendar also follows: a
+  /// reading does not change the calendar.
+  Stream<String> get recorded => _recorded.stream;
+
   Future<List<MeasurementTarget>> targets(String circleId) async {
     final response = await _client.get(
       ApiEndpoints.measurementTargets(circleId),
@@ -146,6 +154,7 @@ class MeasurementRepository {
     final response = occurrence == null
         ? await _client.post(path, data: draft.toJson())
         : await _client.put(path, data: draft.toJson());
+    if (occurrence != null) _recorded.add(circleId);
     return MeasurementReading.fromJson(
       (response.data as Map<String, dynamic>)['measurement_reading']
           as Map<String, dynamic>,

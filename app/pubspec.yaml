@@ -37,6 +37,9 @@ dependencies:
   multiple_result: ^5.3.0
   native_glass_navbar: 1.2.0
   package_info_plus: ^10.2.2
+  # The app's Library folder, where the notification sound is copied for
+  # iOS to find it (see phone_notifications.dart).
+  path_provider: ^2.1.6
   pdf: ^3.13.1
   printing: ^5.15.1
   record: ^7.1.2
@@ -68,6 +71,7 @@ flutter:
     - assets/images/
     - assets/translations/
     - assets/avatars/
+    - assets/sounds/
     - .env
   uses-material-design: true
 

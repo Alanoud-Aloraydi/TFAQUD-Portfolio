@@ -1,9 +1,11 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/forms/month_day_grid.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/stepper_control.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
@@ -24,6 +26,7 @@ class MedicationScheduleEditor extends StatelessWidget {
     required this.onChanged,
     this.onRemove,
     this.issue,
+    this.defaultMonthDay = 1,
   });
 
   final int index;
@@ -32,6 +35,10 @@ class MedicationScheduleEditor extends StatelessWidget {
   final VoidCallback onChanged;
   final VoidCallback? onRemove;
   final MedicationFormIssue? issue;
+
+  /// The day chosen the first time «شهري» is picked: the day the medicine
+  /// starts, as Apple's Calendar starts a monthly repeat on its event's day.
+  final int defaultMonthDay;
 
   /// Match the supplied schedule strip: Saturday through Friday. Numbers are
   /// those of [DateTime.weekday] (Monday 1 … Sunday 7).
@@ -198,24 +205,75 @@ class MedicationScheduleEditor extends StatelessWidget {
 
   // Days ---------------------------------------------------------------
 
+  /// «أسبوعي | شهري» on the app's glass segmented control, and under it the
+  /// weekdays or the days of the month. Apple's guidance for a segmented
+  /// control is this case: two closely related views of one choice, short
+  /// labels, segments of equal width.
   Widget _dayChips(BuildContext context) {
+    final bool monthly = data.repeat == ScheduleRepeat.monthly;
     return InsetBlock(
       semanticLabel: context.tr('medications.repeat'),
       errorText: issue?.field == MedicationFormField.weekdays
-          ? context.tr('medications.weekday_required')
+          ? context.tr(
+              monthly
+                  ? 'medications.month_day_required'
+                  : 'medications.weekday_required',
+            )
           : null,
-      child: OptionChips(
-        options: <ChipOption>[
-          for (final int day in _weekOrder)
-            ChipOption('$day', context.tr('medications.weekday_short.$day')),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          GlassSegmentedControl<ScheduleRepeat>(
+            segments: <ScheduleRepeat, String>{
+              ScheduleRepeat.weekly: context.tr('medications.repeat_weekly'),
+              ScheduleRepeat.monthly: context.tr('medications.repeat_monthly'),
+            },
+            selected: data.repeat,
+            onChanged: (ScheduleRepeat repeat) {
+              data.repeat = repeat;
+              if (repeat == ScheduleRepeat.monthly && data.monthDays.isEmpty) {
+                data.monthDays.add(defaultMonthDay);
+              }
+              onChanged();
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (monthly) ..._monthDays(context) else _weekdays(context),
         ],
-        isSelected: (String code) => data.weekdays.contains(int.parse(code)),
-        onTap: (String code) {
-          final int day = int.parse(code);
-          if (!data.weekdays.remove(day)) data.weekdays.add(day);
-          onChanged();
-        },
       ),
     );
   }
+
+  Widget _weekdays(BuildContext context) => OptionChips(
+    options: <ChipOption>[
+      for (final int day in _weekOrder)
+        ChipOption('$day', context.tr('medications.weekday_short.$day')),
+    ],
+    isSelected: (String code) => data.weekdays.contains(int.parse(code)),
+    onTap: (String code) {
+      final int day = int.parse(code);
+      if (!data.weekdays.remove(day)) data.weekdays.add(day);
+      onChanged();
+    },
+  );
+
+  List<Widget> _monthDays(BuildContext context) => <Widget>[
+    MonthDayGrid(
+      selected: data.monthDays,
+      labelOf: (int day) =>
+          context.tr('medications.month_day_label', args: <String>['$day']),
+      onTap: (int day) {
+        if (!data.monthDays.remove(day)) data.monthDays.add(day);
+        onChanged();
+      },
+    ),
+    // The 29th to the 31st are not in every month.
+    if (data.monthDays.any((int day) => day >= 29)) ...<Widget>[
+      const SizedBox(height: AppSpacing.sm),
+      Text(
+        context.tr('medications.month_end_note'),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ],
+  ];
 }

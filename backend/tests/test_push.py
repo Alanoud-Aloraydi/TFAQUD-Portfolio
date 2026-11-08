@@ -129,7 +129,7 @@ def test_the_request_apple_expects(key):
     assert json.loads(request.content) == {
         "aps": {
             "alert": {"title": MESSAGE.title, "body": MESSAGE.body},
-            "sound": "default",
+            "sound": "tafaqod_chime.wav",
             "thread-id": "invitation",
         },
         "kind": "invitation",

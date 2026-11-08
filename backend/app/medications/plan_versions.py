@@ -7,8 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.medications.inputs import PlanRequest
+from app.medications.schedule_days import load_days
 from app.models import MedicationPlan, MedicationPlanVersion
 from app.models import MedicationSchedule, MedicationScheduleDay
+from app.models import MedicationScheduleMonthDay
 
 
 def add_plan_version(
@@ -46,6 +48,7 @@ def add_plan_version(
             dose_value=item.dose_value,
             dose_unit=item.dose_unit,
             instructions=item.instructions,
+            repeat=item.repeat,
         )
         session.add(schedule)
         session.flush()
@@ -55,6 +58,13 @@ def add_plan_version(
                 weekday=weekday,
             )
             for weekday in sorted(item.weekdays)
+        )
+        session.add_all(
+            MedicationScheduleMonthDay(
+                schedule_id=schedule.id,
+                month_day=month_day,
+            )
+            for month_day in sorted(item.month_days)
         )
     session.flush()
     return version
@@ -81,23 +91,30 @@ def same_definition(
     )
     if not fields_match:
         return False
-    rows = session.execute(
-        select(MedicationSchedule, MedicationScheduleDay.weekday)
-        .join(
-            MedicationScheduleDay,
-            MedicationScheduleDay.schedule_id == MedicationSchedule.id,
+    schedules = list(
+        session.scalars(
+            select(MedicationSchedule).where(
+                MedicationSchedule.plan_version_id == version.id
+            )
         )
-        .where(MedicationSchedule.plan_version_id == version.id)
     )
+    days = load_days(session, schedules)
     stored = {
         (
             schedule.time_of_day,
             schedule.dose_value,
             schedule.dose_unit,
             schedule.instructions,
-            weekday,
+            schedule.repeat,
+            kind,
+            day,
         )
-        for schedule, weekday in rows
+        for schedule in schedules
+        for kind, values in (
+            ("weekday", days[schedule.id].weekdays),
+            ("month_day", days[schedule.id].month_days),
+        )
+        for day in values
     }
     requested = {
         (
@@ -105,9 +122,15 @@ def same_definition(
             item.dose_value,
             item.dose_unit,
             item.instructions,
-            weekday,
+            item.repeat,
+            kind,
+            day,
         )
         for item in body.schedules
-        for weekday in item.weekdays
+        for kind, values in (
+            ("weekday", item.weekdays),
+            ("month_day", item.month_days),
+        )
+        for day in values
     }
     return stored == requested

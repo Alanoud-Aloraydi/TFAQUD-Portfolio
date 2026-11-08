@@ -15,8 +15,8 @@ bp = Blueprint("tick", __name__, url_prefix="/internal")
 
 @bp.post("/tick")
 def tick():
-    """Scan every circle for a due/missed dose or measurement, and every
-    appointment due for its day-before reminder.
+    """Scan every circle for a dose or measurement that was missed (the
+    reminders before them, and before appointments, are set on the phone).
 
     Requires the `X-Tick-Secret` header to equal `TICK_SECRET`; refuses as
     a plain 404 otherwise, so an unconfigured or probing caller learns

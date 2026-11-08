@@ -1,6 +1,11 @@
-"""The scheduled tick: dose/measurement due or missed, and appointment
-reminders, each sent once to the right people and logged so a repeat tick
-never resends it.
+"""The scheduled tick: a dose or measurement that was missed, each told
+once to the circle and logged so a repeat tick never resends it.
+
+The reminders before a dose, a measurement or an appointment (at its time,
+and for an appointment a day before and two hours before) are set on each
+phone by the app itself, so they come on time without this tick and without
+the server. The server tells only what a phone cannot know ahead: that a
+task's time passed and nothing was recorded.
 
 Called by `/internal/tick` on an external schedule (see README). Never
 raises: a failed scan or send is logged and the tick moves on, so one bad
@@ -8,7 +13,7 @@ circle never blocks the rest.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -20,8 +25,6 @@ from app.database import transaction
 from app.medications.queries import MedicationQueries
 from app.measurements.queries import MeasurementQueries
 from app.models import (
-    Appointment,
-    AppointmentCompanion,
     CareCircle,
     CareCircleManager,
     NotificationLog,
@@ -35,7 +38,7 @@ RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def run_tick(now: datetime) -> None:
-    """Scan every circle and appointment once; swallow one circle's error."""
+    """Scan every circle once; swallow one circle's error."""
     with transaction() as session:
         circle_ids = list(session.scalars(select(CareCircle.id)))
     for circle_id in circle_ids:
@@ -46,10 +49,6 @@ def run_tick(now: datetime) -> None:
             log.warning(
                 "Scheduled scan failed for a circle.", exc_info=True
             )
-    try:
-        _scan_appointments(now)
-    except Exception:  # noqa: BLE001 - see the module docstring
-        log.warning("Scheduled appointment scan failed.", exc_info=True)
 
 
 def _claim(dedupe_key: str) -> bool:
@@ -87,27 +86,30 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
         )
         recipients = _circle_recipients(session, circle_id)
     for occurrence in occurrences:
-        state = occurrence["timing_state"]
-        if occurrence["record"] is not None or state not in (
-            "due",
-            "missed",
+        if (
+            occurrence["record"] is not None
+            or occurrence["timing_state"] != "missed"
         ):
             continue
         key = (
-            f"dose_{state}:{occurrence['schedule_id']}:"
+            f"dose_missed:{occurrence['schedule_id']}:"
             f"{occurrence['scheduled_on']}"
         )
         if not _claim(key):
             continue
-        title = (
-            "دواء مستحق" if state == "due" else "دواء فات وقته"
+        # «ما تسجّلت» says only what the app knows: the dose may have been
+        # taken and not recorded.
+        notify(
+            Push(
+                recipients,
+                PushMessage(
+                    "جرعة ما تسجّلت",
+                    f"جرعة {occurrence['name']} ما تسجّلت للحين. "
+                    "تقدر تسجّلها من تفقّد.",
+                    "dose_missed",
+                ),
+            )
         )
-        body = (
-            f"حان وقت {occurrence['name']}."
-            if state == "due"
-            else f"فات وقت {occurrence['name']} ولم يُسجَّل."
-        )
-        notify(Push(recipients, PushMessage(title, body, f"dose_{state}")))
 
 
 def _scan_measurements(circle_id: UUID, now: datetime) -> None:
@@ -118,71 +120,25 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         )
         recipients = _circle_recipients(session, circle_id)
     for occurrence in occurrences:
-        status = occurrence["status"]
-        if status not in ("due", "missed"):
+        if occurrence["status"] != "missed":
             continue
         kind_name = "سكر الدم" if occurrence["kind"] == "glucose" else (
             "ضغط الدم"
         )
         key = (
-            f"measurement_{status}:{occurrence['version_id']}:"
+            f"measurement_missed:{occurrence['version_id']}:"
             f"{occurrence['scheduled_on']}"
         )
         if not _claim(key):
             continue
-        title = (
-            "قياس مستحق" if status == "due" else "قياس فات وقته"
-        )
-        body = (
-            f"حان وقت قياس {kind_name}."
-            if status == "due"
-            else f"فات وقت قياس {kind_name} ولم يُسجَّل."
-        )
         notify(
-            Push(recipients, PushMessage(title, body, f"measurement_{status}"))
-        )
-
-
-def _scan_appointments(now: datetime) -> None:
-    """One reminder, the day before, to the companions or the circle."""
-    tomorrow = (now.astimezone(RIYADH) + timedelta(days=1)).date()
-    with transaction() as session:
-        rows = list(
-            session.execute(
-                select(Appointment, Patient)
-                .join(Patient, Patient.id == Appointment.patient_id)
-                .where(
-                    Appointment.status == "scheduled",
-                    Appointment.scheduled_on == tomorrow,
-                )
+            Push(
+                recipients,
+                PushMessage(
+                    "قياس ما تسجّل",
+                    f"قياس {kind_name} ما تسجّل للحين. "
+                    "تقدر تسجّله من تفقّد.",
+                    "measurement_missed",
+                ),
             )
         )
-        for appointment, patient in rows:
-            key = f"appointment_reminder:{appointment.id}"
-            if not _claim(key):
-                continue
-            companions = set(
-                session.scalars(
-                    select(AppointmentCompanion.account_id).where(
-                        AppointmentCompanion.appointment_id == appointment.id
-                    )
-                )
-            )
-            recipients = (
-                companions
-                if companions
-                else _circle_recipients(session, patient.care_circle_id)
-            )
-            if patient.account_id is not None:
-                recipients = set(recipients) | {patient.account_id}
-            specialty = appointment.specialty
-            notify(
-                Push(
-                    tuple(recipients),
-                    PushMessage(
-                        "موعد غدًا",
-                        f"موعد {specialty} غدًا.",
-                        "appointment_reminder",
-                    ),
-                )
-            )

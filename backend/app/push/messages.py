@@ -1,8 +1,9 @@
 """The pushes that mirror the app's notifications page.
 
 Each one is built inside the request's transaction, from the rows it just
-changed, and sent after the commit with `notify`. The words are Arabic, as
-the app is. They do not guess anyone's gender.
+changed, and sent after the commit with `notify`. The words are Arabic, in
+the app's own tone (calm, friendly, white Saudi dialect; see the copy guide
+the app's translations follow). They do not guess anyone's gender.
 """
 
 from uuid import UUID
@@ -48,13 +49,13 @@ def invitation_push(
     name = circle_name(session, invitation.care_circle_id, invitee)
     inviter = _display_name(session, invitation.invited_by_account_id)
     body = (
-        f"دعوة من {inviter} للانضمام إلى «{name}»."
+        f"وصلتك دعوة من {inviter} للانضمام إلى «{name}»."
         if inviter
-        else f"دعوة للانضمام إلى «{name}»."
+        else f"وصلتك دعوة للانضمام إلى «{name}»."
     )
     return Push(
         (invitee,),
-        PushMessage("دعوة إلى دائرة رعاية", body, "invitation"),
+        PushMessage("دعوة لدائرة رعاية", body, "invitation"),
     )
 
 
@@ -68,11 +69,13 @@ def circle_request_push(
         return None
     requester = _display_name(session, request.requested_by_account_id)
     body = (
-        f"طلب من {requester} لمتابعة رعايتك في تفقّد."
+        f"وصلك طلب من {requester} لمتابعة رعايتك في تفقّد."
         if requester
-        else "طلب جديد لمتابعة رعايتك في تفقّد."
+        else "وصلك طلب جديد لمتابعة رعايتك في تفقّد."
     )
-    return Push((patient,), PushMessage("طلب رعاية", body, "circle_request"))
+    return Push(
+        (patient,), PushMessage("طلب رعاية جديد", body, "circle_request")
+    )
 
 
 def request_answer_push(
@@ -86,14 +89,14 @@ def request_answer_push(
     whom = f"لرعاية {patient}" if patient else "للرعاية"
     if request.status == "accepted":
         message = PushMessage(
-            "تمت الموافقة على طلبك",
-            f"تمت الموافقة على طلبك {whom}. تُنشأ الدائرة بعد إكمال البيانات.",
+            "تم قبول طلبك",
+            f"تم قبول طلبك {whom}. الدائرة تجهز أول ما تكتمل البيانات.",
             "request_answer",
         )
     elif request.status == "declined":
         message = PushMessage(
-            "اعتذار عن طلب الرعاية",
-            f"لم تتم الموافقة على طلبك {whom}.",
+            "تم الاعتذار عن طلبك",
+            f"تم الاعتذار عن طلبك {whom}.",
             "request_answer",
         )
     else:
@@ -115,7 +118,7 @@ def circle_ready_push(
         (request.requested_by_account_id,),
         PushMessage(
             "الدائرة جاهزة",
-            f"أُنشئت «{name}»، ويمكنك متابعة الرعاية الآن.",
+            f"«{name}» جاهزة، وتقدر تتابع الرعاية الحين.",
             "circle_ready",
         ),
     )

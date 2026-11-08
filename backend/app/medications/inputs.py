@@ -55,10 +55,16 @@ def _english_decimal(value):
 
 
 class ScheduleRequest(Dto):
+    """One dose time: weekly on `weekdays` (ISO, 1 Monday .. 7 Sunday), or
+    monthly on `month_days` (1 .. 31). An older app sends only `weekdays`,
+    which is weekly."""
+
     time_of_day: time
     dose_value: DoseValue
     dose_unit: DoseUnit
-    weekdays: Annotated[list[int], Field(min_length=1, max_length=7)]
+    repeat: Literal["weekly", "monthly"] = "weekly"
+    weekdays: Annotated[list[int], Field(max_length=7)] = []
+    month_days: Annotated[list[int], Field(max_length=31)] = []
     instructions: OptionalText250 = None
 
     @field_validator("dose_value", mode="before")
@@ -67,11 +73,25 @@ class ScheduleRequest(Dto):
         return _english_decimal(value)
 
     @model_validator(mode="after")
-    def valid_weekdays(self):
-        if len(set(self.weekdays)) != len(self.weekdays):
-            raise ValueError("Weekdays cannot repeat.")
-        if any(day < 1 or day > 7 for day in self.weekdays):
-            raise ValueError("Weekdays must be between 1 and 7.")
+    def valid_days(self):
+        if self.repeat == "weekly":
+            if not self.weekdays:
+                raise ValueError("Choose at least one weekday.")
+            if self.month_days:
+                raise ValueError("A weekly dose has no days of the month.")
+            if len(set(self.weekdays)) != len(self.weekdays):
+                raise ValueError("Weekdays cannot repeat.")
+            if any(day < 1 or day > 7 for day in self.weekdays):
+                raise ValueError("Weekdays must be between 1 and 7.")
+        else:
+            if not self.month_days:
+                raise ValueError("Choose at least one day of the month.")
+            if self.weekdays:
+                raise ValueError("A monthly dose has no weekdays.")
+            if len(set(self.month_days)) != len(self.month_days):
+                raise ValueError("Days of the month cannot repeat.")
+            if any(day < 1 or day > 31 for day in self.month_days):
+                raise ValueError("Days of the month must be 1 to 31.")
         return self
 
 
@@ -110,14 +130,32 @@ class PlanRequest(Dto):
             for item in self.schedules
         ):
             raise ValueError("Dose unit does not match the dosage form.")
+        weekly = [item for item in self.schedules if item.repeat == "weekly"]
+        monthly = [item for item in self.schedules if item.repeat == "monthly"]
         occurrences = {
-            (item.time_of_day, day)
-            for item in self.schedules
-            for day in item.weekdays
+            (item.time_of_day, day) for item in weekly for day in item.weekdays
         }
-        count = sum(len(item.weekdays) for item in self.schedules)
+        count = sum(len(item.weekdays) for item in weekly)
         if len(occurrences) != count:
             raise ValueError("Dose times cannot repeat on one weekday.")
+        # A weekly and a monthly dose at one time would meet on some day.
+        if {item.time_of_day for item in weekly} & {
+            item.time_of_day for item in monthly
+        }:
+            raise ValueError("One dose time is either weekly or monthly.")
+        # Two monthly doses at one time: no shared day, and at most one of
+        # them near the month's end (the 28th to the 31st can all land on
+        # February's last day).
+        for index, item in enumerate(monthly):
+            for other in monthly[index + 1 :]:
+                if item.time_of_day != other.time_of_day:
+                    continue
+                if set(item.month_days) & set(other.month_days) or (
+                    max(item.month_days) >= 28 and max(other.month_days) >= 28
+                ):
+                    raise ValueError(
+                        "Dose times cannot repeat on one day of the month."
+                    )
         return self
 
 

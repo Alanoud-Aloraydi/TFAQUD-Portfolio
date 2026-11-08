@@ -201,6 +201,9 @@ class _EmptyMeasurementsRepository extends Fake
   Stream<String> get changes => const Stream.empty();
 
   @override
+  Stream<String> get recorded => const Stream.empty();
+
+  @override
   Future<List<MeasurementReading>> allReadings(String circleId) async =>
       const [];
 
@@ -396,6 +399,8 @@ void main() {
         GetIt.I<MedicationsUseCase>(),
         phone,
         texts: doseReminderTexts,
+        measurements: GetIt.I<MeasurementRepository>(),
+        appointments: GetIt.I<AppointmentRepository>(),
       ),
     );
     GetIt.I.registerSingleton<CalendarSync>(_OffCalendarSync());

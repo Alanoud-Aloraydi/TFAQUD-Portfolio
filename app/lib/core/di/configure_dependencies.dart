@@ -57,14 +57,16 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<VisitRepository>(
     () => VisitRepository(VisitRemoteDataSource(getIt<DioClient>())),
   );
-  // The notifications set on the phone, and the dose reminders that use
-  // them.
+  // The notifications set on the phone, and the reminders that use them:
+  // doses, measurements and appointments.
   getIt.registerLazySingleton<PhoneNotifications>(PluginPhoneNotifications.new);
   getIt.registerLazySingleton<DoseReminders>(
     () => DoseReminders(
       getIt<MedicationsUseCase>(),
       getIt<PhoneNotifications>(),
       texts: doseReminderTexts,
+      measurements: getIt<MeasurementRepository>(),
+      appointments: getIt<AppointmentRepository>(),
     ),
   );
   // Optional mirror of doses, measurements and appointments onto the
