@@ -1,56 +1,73 @@
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported simplified measurement status values.
 enum SimplifiedMeasurementStatus { loading, ready, failure }
 
-enum SimplifiedMeasurementSaveStatus { idle, saving }
-
-/// Holds the simplified measurement-recording flow's presentation state:
-/// which kinds have an active plan (for the type-selection skip), today's
-/// unrecorded occurrence per kind (so saving resolves it instead of
-/// creating an unrelated free reading), and the save action's own status.
+/// What the «تسجيل قياس» screen needs: the kinds that can be recorded and
+/// today's tasks they may answer.
 class SimplifiedMeasurementState extends Equatable {
-  const SimplifiedMeasurementState({
+  SimplifiedMeasurementState({
     this.status = SimplifiedMeasurementStatus.loading,
-    this.targets = const [],
-    this.occurrences = const [],
-    this.saveStatus = SimplifiedMeasurementSaveStatus.idle,
-    this.errorKey,
-  });
+    List<MeasurementTarget> targets = const <MeasurementTarget>[],
+    List<MeasurementOccurrence> occurrences = const <MeasurementOccurrence>[],
+    this.saving = false,
+    this.messageKey,
+  }) : targets = List<MeasurementTarget>.unmodifiable(targets),
+       occurrences = List<MeasurementOccurrence>.unmodifiable(occurrences);
 
   final SimplifiedMeasurementStatus status;
   final List<MeasurementTarget> targets;
   final List<MeasurementOccurrence> occurrences;
-  final SimplifiedMeasurementSaveStatus saveStatus;
-  final String? errorKey;
+  final bool saving;
 
-  MeasurementTarget? targetFor(MeasurementKind kind) {
-    for (final target in targets) {
-      if (target.kind == kind) return target;
-    }
-    return null;
-  }
+  /// Why loading or saving failed: a key in assets/translations.
+  final String? messageKey;
 
-  /// Today's due or missed task for [kind], not yet recorded; null when
-  /// nothing is scheduled right now, so saving starts a free reading.
-  MeasurementOccurrence? occurrenceFor(MeasurementKind kind) {
-    for (final occurrence in occurrences) {
-      if (occurrence.kind == kind &&
-          occurrence.record == null &&
-          (occurrence.status == MeasurementStatus.due ||
-              occurrence.status == MeasurementStatus.missed)) {
-        return occurrence;
-      }
-    }
-    return null;
+  /// The kinds that can be recorded: a free reading needs a saved target,
+  /// which a plan always has. Blood pressure first, as on the screen.
+  List<MeasurementKind> get kinds => <MeasurementKind>[
+    for (final MeasurementKind kind in const <MeasurementKind>[
+      MeasurementKind.bp,
+      MeasurementKind.glucose,
+    ])
+      if (targets.any((target) => target.kind == kind) ||
+          occurrences.any((item) => item.kind == kind))
+        kind,
+  ];
+
+  /// The task of [kind] a reading at [now] answers: the latest one not
+  /// recorded that can be recorded now (its time came, or comes within the
+  /// hour, the rule of every «اليوم» row); null for a free reading.
+  MeasurementOccurrence? taskFor(MeasurementKind kind, DateTime now) =>
+      occurrences
+          .where(
+            (item) =>
+                item.kind == kind &&
+                item.record == null &&
+                isRecordableNow(
+                  riyadhScheduledAt(item.scheduledOn, item.time),
+                  riyadhNow(now),
+                ),
+          )
+          .lastOrNull;
+
+  SimplifiedMeasurementState copyWith({
+    SimplifiedMeasurementStatus? status,
+    bool? saving,
+    String? messageKey,
+    bool clearMessage = false,
+  }) {
+    return SimplifiedMeasurementState(
+      status: status ?? this.status,
+      targets: targets,
+      occurrences: occurrences,
+      saving: saving ?? this.saving,
+      messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
+    );
   }
 
   @override
-  List<Object?> get props => [
-    status,
-    targets,
-    occurrences,
-    saveStatus,
-    errorKey,
-  ];
+  List<Object?> get props => [status, targets, occurrences, saving, messageKey];
 }

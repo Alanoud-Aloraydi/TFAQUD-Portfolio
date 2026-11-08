@@ -81,45 +81,43 @@ class MeasurementAttentionSection extends StatelessWidget {
     List<MeasurementOccurrence> missed,
     List<MeasurementReading> outside,
   ) => [
-      for (final task in missed) ...[
-        _attentionCard(
-          context,
-          title:
-              '${_title(context, task.kind)} · '
-              '${_time(context, task.time)}',
-          subtitle: context.tr('measurements.not_recorded'),
-          actions: [
-            FilledButton(
-              onPressed: () => _record(context, task),
-              child: Text(context.tr('measurements.record_reading')),
-            ),
-            TextButton(
-              onPressed: () =>
-                  context.read<MeasurementTasksCubit>().skip(task),
-              child: Text(context.tr('measurements.skip')),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-      ],
-      for (final reading in outside) ...[
-        _attentionCard(
-          context,
-          title:
-              '${_title(context, reading.kind)} '
-              '${reading.valueText}',
-          subtitle: context.tr('measurements.outside_target'),
-          actions: [
-            TextButton(
-              onPressed: () => context
-                  .read<MeasurementReadingsCubit>()
-                  .followUp(reading),
-              child: Text(context.tr('measurements.follow_up')),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-      ],
+    for (final task in missed) ...[
+      _attentionCard(
+        context,
+        title:
+            '${_title(context, task.kind)} · '
+            '${_time(context, task.time)}',
+        subtitle: context.tr('measurements.not_recorded'),
+        actions: [
+          FilledButton(
+            onPressed: () => _record(context, task),
+            child: Text(context.tr('measurements.record_reading')),
+          ),
+          TextButton(
+            onPressed: () => context.read<MeasurementTasksCubit>().skip(task),
+            child: Text(context.tr('measurements.skip')),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.xs),
+    ],
+    for (final reading in outside) ...[
+      _attentionCard(
+        context,
+        title:
+            '${_title(context, reading.kind)} '
+            '${reading.valueText}',
+        subtitle: context.tr('measurements.outside_target'),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                context.read<MeasurementReadingsCubit>().followUp(reading),
+            child: Text(context.tr('measurements.follow_up')),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.xs),
+    ],
   ];
 
   Widget _attentionCard(
@@ -182,91 +180,88 @@ class MeasurementTaskRow extends StatelessWidget {
     return TodayRowCard(
       isAttention: task.status == MeasurementStatus.missed,
       child: Column(
-          children: [
-            Row(
-              children: [
-                Text(_time(context, task.time)),
-                const SizedBox(width: AppSpacing.sm),
-                Icon(
-                  task.kind == MeasurementKind.glucose
-                      ? CupertinoIcons.drop
-                      : CupertinoIcons.heart,
-                  size: 18,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _title(context, task.kind),
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      if (task.conditions.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: CompactStatusBadge(
-                            text: conditionsText(context, task.conditions),
-                            background: AppSemanticColors.surfaceContent,
-                            foreground: AppSemanticColors.textSupporting,
-                          ),
+        children: [
+          Row(
+            children: [
+              Text(_time(context, task.time)),
+              const SizedBox(width: AppSpacing.sm),
+              Icon(
+                task.kind == MeasurementKind.glucose
+                    ? CupertinoIcons.drop
+                    : CupertinoIcons.heart,
+                size: 18,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _title(context, task.kind),
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    if (task.conditions.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: CompactStatusBadge(
+                          text: conditionsText(context, task.conditions),
+                          background: AppSemanticColors.surfaceContent,
+                          foreground: AppSemanticColors.textSupporting,
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-                CompactStatusBadge(
-                  text: context.tr(status),
-                  background: task.status == MeasurementStatus.missed
-                      ? Theme.of(context).colorScheme.errorContainer
-                      : AppSemanticColors.surfaceContent,
-                  foreground: task.status == MeasurementStatus.missed
-                      ? AppSemanticColors.statusError
-                      : AppSemanticColors.textSupporting,
-                ),
-              ],
-            ),
-            if (task.record case final record?)
-              if (record.outcome == 'read') ...[
-                Text(
-                  record.valueText,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                Text(
-                  context.tr(
-                    'measurements.recorded_at',
-                    args: [_time(context, _hhmm(riyadhNow(record.recordedAt)))],
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (record.recordedByName case final name?) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PersonPhoto(
-                        name: name,
-                        photoPath: personPhotoPath(
-                          circleId,
-                          record.recordedByAccountId,
-                        ),
-                        avatarCode: record.recordedByAvatarCode,
-                        size: AppSizes.iconSmall,
-                      ),
-                      const SizedBox(width: AppSpacing.tight),
-                      Text(
-                        name,
-                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              CompactStatusBadge(
+                text: context.tr(status),
+                background: task.status == MeasurementStatus.missed
+                    ? Theme.of(context).colorScheme.errorContainer
+                    : AppSemanticColors.surfaceContent,
+                foreground: task.status == MeasurementStatus.missed
+                    ? AppSemanticColors.statusError
+                    : AppSemanticColors.textSupporting,
+              ),
+            ],
+          ),
+          if (task.record case final record?)
+            if (record.outcome == 'read') ...[
+              Text(
+                record.valueText,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              Text(
+                context.tr(
+                  'measurements.recorded_at',
+                  args: [_time(context, _hhmm(riyadhNow(record.recordedAt)))],
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (record.recordedByName case final name?) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PersonPhoto(
+                      name: name,
+                      photoPath: personPhotoPath(
+                        circleId,
+                        record.recordedByAccountId,
+                      ),
+                      avatarCode: record.recordedByAvatarCode,
+                      size: AppSizes.iconSmall,
+                    ),
+                    const SizedBox(width: AppSpacing.tight),
+                    Text(name, style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
               ],
-            if (canRecord)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
-                child: Row(
+            ],
+          if (canRecord)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Row(
                 children: [
                   Expanded(
                     child: FilledButton.icon(
@@ -302,9 +297,9 @@ class MeasurementTaskRow extends StatelessWidget {
                     label: Text(context.tr('measurements.skip')),
                   ),
                 ],
-                ),
               ),
-          ],
+            ),
+        ],
       ),
     );
   }

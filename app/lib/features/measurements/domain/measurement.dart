@@ -115,6 +115,7 @@ class MeasurementVersion extends Equatable {
   final int? glucoseHigh;
   final int? systolicLimit;
   final int? diastolicLimit;
+
   /// The reading times as the server listed them (empty from an older
   /// server); [readingTimes] is what to use.
   final List<MeasurementTime> times;
@@ -330,8 +331,7 @@ class MeasurementReading extends Equatable {
             (json['recorded_by'] as Map<String, dynamic>?)?['account_id']
                 as String?,
         recordedByName:
-            (json['recorded_by'] as Map<String, dynamic>?)?['name']
-                as String?,
+            (json['recorded_by'] as Map<String, dynamic>?)?['name'] as String?,
         recordedByAvatarCode:
             (json['recorded_by'] as Map<String, dynamic>?)?['avatar_code']
                 as String?,

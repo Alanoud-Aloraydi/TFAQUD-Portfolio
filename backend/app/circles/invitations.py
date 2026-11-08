@@ -22,7 +22,8 @@ _NOT_FOUND = "The invitation does not exist."
 @bp.get("")
 @require_auth
 def list_invitations():
-    """Pending invitations to manage a circle, sent to your number."""
+    """Pending invitations to manage a circle, sent to the caller's
+    number."""
     with care_work() as work:
         account = work.session.get(Account, work.actor)
         if account is None:
@@ -34,7 +35,7 @@ def list_invitations():
 @bp.post("/<invitation_id>/respond")
 @require_auth
 def respond(invitation_id):
-    """Accept (you become a manager of the circle) or decline."""
+    """Accept (the caller becomes a manager of the circle) or decline."""
     body = parse_json_body(RespondInput)
     with care_work(hide_forbidden=_NOT_FOUND) as work:
         row = work.care.respond_invitation(

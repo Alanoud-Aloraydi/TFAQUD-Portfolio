@@ -112,26 +112,30 @@ class _TodayPageState extends State<TodayPage> {
     );
   }
 
-  Future<void> _addSomething(BuildContext context, String circleId) =>
-      showHomeAddSheet(
-        context,
-        circleId: circleId,
-        onMedicationSaved: () {
-          if (mounted) unawaited(context.read<MedicationOccurrencesCubit>().reload());
-        },
-        onMeasurementSaved: () {
-          if (mounted) {
-            unawaited(context.read<MeasurementTasksCubit>().reload());
-            unawaited(context.read<MeasurementReadingsCubit>().reload());
-          }
-        },
-        onAppointmentSaved: () {
-          if (mounted) unawaited(context.read<AppointmentsCubit>().load(circleId));
-        },
-        onReadingSaved: () {
-          if (mounted) unawaited(context.read<MeasurementReadingsCubit>().reload());
-        },
-      );
+  Future<void> _addSomething(
+    BuildContext context,
+    String circleId,
+  ) => showHomeAddSheet(
+    context,
+    circleId: circleId,
+    onMedicationSaved: () {
+      if (mounted) {
+        unawaited(context.read<MedicationOccurrencesCubit>().reload());
+      }
+    },
+    onMeasurementSaved: () {
+      if (mounted) {
+        unawaited(context.read<MeasurementTasksCubit>().reload());
+        unawaited(context.read<MeasurementReadingsCubit>().reload());
+      }
+    },
+    onAppointmentSaved: () {
+      if (mounted) unawaited(context.read<AppointmentsCubit>().load(circleId));
+    },
+    onReadingSaved: () {
+      if (mounted) unawaited(context.read<MeasurementReadingsCubit>().reload());
+    },
+  );
 
   /// Today's prayer times, or null while they load (or are yesterday's).
   static PrayerDay? _today(PrayerTimesState prayers, DateTime now) =>

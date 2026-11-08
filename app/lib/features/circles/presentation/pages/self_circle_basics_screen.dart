@@ -15,9 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// The circle for your own care (PROFILE-01) on one page: only its name.
-/// Your name, birth date and city come from the account (onboarding saved
-/// them); an account made before onboarding asked for them is asked here.
+/// The circle for the person's own care (PROFILE-01) on one page: only its
+/// name. Their name, birth date and city come from the account (onboarding
+/// saved them); an account made before onboarding asked for them is asked
+/// here.
 /// The health condition and allergies are filled later in the medical file.
 /// Needs a [CreateCircleCubit] of the self flow above it.
 class SelfCircleBasicsScreen extends StatefulWidget {
@@ -72,7 +73,8 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

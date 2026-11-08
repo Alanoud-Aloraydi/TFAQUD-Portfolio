@@ -150,7 +150,9 @@ class MeasurementService:
         if effective < today or effective <= latest.effective_from_on:
             raise ValidationFailed(code="measurement_effective_date")
         latest.effective_until_on = effective
-        self._add_version(plan.id, latest.number + 1, effective, body, actor_id)
+        self._add_version(
+            plan.id, latest.number + 1, effective, body, actor_id
+        )
         return plan
 
     def stop(self, circle_id: UUID, plan_id: UUID) -> MeasurementPlan:
@@ -225,7 +227,9 @@ class MeasurementService:
                         )
                     )
                     if target is None:
-                        raise ValidationFailed(code="measurement_target_required")
+                        raise ValidationFailed(
+                            code="measurement_target_required"
+                        )
         else:
             if any(value is not None for value in (
                 body.glucose_low, body.glucose_high,

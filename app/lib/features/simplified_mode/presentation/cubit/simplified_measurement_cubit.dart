@@ -1,129 +1,69 @@
-import 'package:app/core/errors/network_exceptions.dart';
-import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/core/errors/failure.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
+import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:injectable/injectable.dart';
+import 'package:multiple_result/multiple_result.dart';
 
-/// Loads what the simplified measurement screens need in one call, and
-/// saves a glucose or blood-pressure reading — against today's task when
-/// one is due or missed, otherwise as a free reading.
-@injectable
+/// Loads what «تسجيل قياس» needs and saves one reading.
 class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
-  SimplifiedMeasurementCubit(this._repository)
-    : super(const SimplifiedMeasurementState());
+  SimplifiedMeasurementCubit(
+    this._useCase,
+    this._circleId, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now,
+       super(SimplifiedMeasurementState());
 
-  final MeasurementRepository _repository;
-  String? _circleId;
+  final SimplifiedModeUseCase _useCase;
+  final String _circleId;
+  final DateTime Function() _clock;
 
-  Future<void> load(String circleId) async {
-    _circleId = circleId;
-    emit(const SimplifiedMeasurementState());
-    final DateTime today = riyadhToday();
-    try {
-      final results = await (
-        _repository.targets(circleId),
-        _repository.occurrences(circleId, today, today),
-      ).wait;
-      emit(
+  Future<void> load() async {
+    emit(SimplifiedMeasurementState());
+    final result = await _useCase.measurementOptions(_circleId, _clock());
+    if (isClosed) return;
+    result.when(
+      (options) => emit(
         SimplifiedMeasurementState(
           status: SimplifiedMeasurementStatus.ready,
-          targets: results.$1,
-          occurrences: results.$2,
+          targets: options.$1,
+          occurrences: options.$2,
         ),
-      );
-    } catch (error) {
-      emit(
+      ),
+      (Failure failure) => emit(
         SimplifiedMeasurementState(
           status: SimplifiedMeasurementStatus.failure,
-          errorKey: FailureExceptions.getException(error).messageKey,
+          messageKey: failure.messageKey,
         ),
-      );
-    }
-  }
-
-  /// Saves a one-reading glucose value. Returns whether it was saved.
-  Future<bool> recordGlucose(int value) {
-    final MeasurementTarget? target = state.targetFor(MeasurementKind.glucose);
-    final MeasurementOccurrence? occurrence = state.occurrenceFor(
-      MeasurementKind.glucose,
-    );
-    final bool needsFreeTarget = occurrence == null && target?.planId == null;
-    return _record(
-      occurrence: occurrence,
-      draft: MeasurementReadingDraft(
-        kind: MeasurementKind.glucose,
-        outcome: 'read',
-        measuredAt: DateTime.now(),
-        valueOne: value,
-        // A planned reading keeps its plan's «ظروف القياس».
-        conditions: occurrence?.conditions ?? const <String>[],
-        glucoseLow: needsFreeTarget ? target?.glucoseLow : null,
-        glucoseHigh: needsFreeTarget ? target?.glucoseHigh : null,
       ),
     );
   }
 
-  /// Saves a blood-pressure reading. Returns whether it was saved.
-  Future<bool> recordBp(int systolic, int diastolic) {
-    final MeasurementTarget? target = state.targetFor(MeasurementKind.bp);
-    final MeasurementOccurrence? occurrence = state.occurrenceFor(
-      MeasurementKind.bp,
-    );
-    final bool needsFreeTarget = occurrence == null && target?.planId == null;
-    return _record(
-      occurrence: occurrence,
-      draft: MeasurementReadingDraft(
-        kind: MeasurementKind.bp,
-        outcome: 'read',
-        measuredAt: DateTime.now(),
-        valueOne: systolic,
-        valueTwo: diastolic,
-        conditions: occurrence?.conditions ?? const <String>[],
-        systolicLimit: needsFreeTarget ? target?.systolicLimit : null,
-        diastolicLimit: needsFreeTarget ? target?.diastolicLimit : null,
-      ),
-    );
-  }
-
-  Future<bool> _record({
-    required MeasurementReadingDraft draft,
-    MeasurementOccurrence? occurrence,
-  }) async {
-    final String? circleId = _circleId;
-    if (circleId == null) return false;
-    emit(
-      SimplifiedMeasurementState(
-        status: state.status,
-        targets: state.targets,
-        occurrences: state.occurrences,
-        saveStatus: SimplifiedMeasurementSaveStatus.saving,
-      ),
-    );
-    try {
-      await _repository.record(circleId, draft, occurrence: occurrence);
-      if (isClosed) return true;
-      emit(
-        SimplifiedMeasurementState(
-          status: state.status,
-          targets: state.targets,
-          occurrences: state.occurrences,
-        ),
-      );
-      return true;
-    } catch (error) {
-      if (!isClosed) {
-        emit(
-          SimplifiedMeasurementState(
-            status: state.status,
-            targets: state.targets,
-            occurrences: state.occurrences,
-            errorKey: FailureExceptions.getException(error).messageKey,
+  /// Saves [reading] against today's task of its kind when one is waiting,
+  /// else as a free reading. Returns whether it was saved.
+  Future<bool> save(SimplifiedReading reading) async {
+    if (state.saving || !reading.isValid) return false;
+    emit(state.copyWith(saving: true, clearMessage: true));
+    final DateTime now = _clock();
+    final MeasurementOccurrence? task = state.taskFor(reading.kind, now);
+    final Result<MeasurementReading, Failure> result = await _useCase
+        .recordMeasurement(
+          _circleId,
+          MeasurementReadingDraft(
+            kind: reading.kind,
+            outcome: 'read',
+            measuredAt: now,
+            valueOne: reading.valueOne,
+            valueTwo: reading.valueTwo,
+            conditions: reading.conditions,
+            note: reading.note,
           ),
+          occurrence: task,
         );
-      }
-      return false;
-    }
+    if (isClosed) return result.isSuccess();
+    final Failure? failure = result.tryGetError();
+    emit(state.copyWith(saving: false, messageKey: failure?.messageKey));
+    return failure == null;
   }
 }

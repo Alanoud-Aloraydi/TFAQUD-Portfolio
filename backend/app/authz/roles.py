@@ -10,4 +10,5 @@ class CircleRole(str, Enum):
 
     MANAGER = "manager"
     PATIENT = "patient"  # a patient who uses the full app for themselves
-    SIMPLIFIED_PATIENT = "simplified_patient"  # a patient using Simplified Mode
+    # A patient using Simplified Mode.
+    SIMPLIFIED_PATIENT = "simplified_patient"

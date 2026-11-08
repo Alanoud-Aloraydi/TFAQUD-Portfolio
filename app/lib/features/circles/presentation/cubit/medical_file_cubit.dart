@@ -196,9 +196,7 @@ class MedicalFileCubit extends Cubit<MedicalFileState> {
     if (form == null || file == null || contactId == null || form.saving) {
       return false;
     }
-    emit(
-      state.copyWith(form: form.copyWith(saving: true, clearError: true)),
-    );
+    emit(state.copyWith(form: form.copyWith(saving: true, clearError: true)));
     final result = await _circles.deleteContact(circleId, contactId);
     if (isClosed) return false;
     return result.when(

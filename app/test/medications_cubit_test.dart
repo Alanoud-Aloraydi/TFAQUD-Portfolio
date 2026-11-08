@@ -48,9 +48,7 @@ class _PlansRepository extends Fake implements MedicationsRepositoryDomain {
   final calls = <String>[];
 
   @override
-  Future<Result<List<MedicationPlan>, Failure>> getPlans(
-    String circleId,
-  ) {
+  Future<Result<List<MedicationPlan>, Failure>> getPlans(String circleId) {
     calls.add(circleId);
     return responses.removeAt(0);
   }

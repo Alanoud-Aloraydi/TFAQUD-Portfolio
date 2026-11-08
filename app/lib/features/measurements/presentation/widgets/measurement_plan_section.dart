@@ -181,8 +181,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   children: [
-                    for (final MeasurementTime reading
-                        in version.readingTimes)
+                    for (final MeasurementTime reading in version.readingTimes)
                       Row(
                         children: [
                           Text(_formatTime(reading.time)),

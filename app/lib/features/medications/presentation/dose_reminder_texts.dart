@@ -14,8 +14,8 @@ final DoseReminderTexts doseReminderTexts = DoseReminderTexts(
   title: (ReminderCircle circle, DoseOccurrence dose) =>
       _named('reminders.dose_title', circle, <String>[dose.name]),
   // «1 حبة · الساعة 9:00 م».
-  body: (ReminderCircle circle, DoseOccurrence dose) => 'reminders.dose_body'
-      .tr(
+  body: (ReminderCircle circle, DoseOccurrence dose) =>
+      'reminders.dose_body'.tr(
         args: <String>[
           '${formatMedicationNumber(dose.doseValue)} '
               '${'medications.unit.${dose.doseUnit.name}'.tr()}',
@@ -76,13 +76,7 @@ String _named(String key, ReminderCircle circle, List<String> args) {
   final String? name = _viewer();
   final String? patient = CareVoice.patientOf(circle.id);
   return '$key${name == null ? '' : '_named'}${patient == null ? '' : '_for'}'
-      .tr(
-        args: <String>[
-          ?name,
-          ...args,
-          ?patient,
-        ],
-      );
+      .tr(args: <String>[?name, ...args, ?patient]);
 }
 
 /// «ياسر! عندك موعد …» or «ياسر! عند محمود موعد …»: the patient's name
@@ -91,13 +85,7 @@ String _appointment(String key, ReminderCircle circle, String specialty) {
   final String? name = _viewer();
   final String? patient = CareVoice.patientOf(circle.id);
   return '$key${name == null ? '' : '_named'}${patient == null ? '' : '_for'}'
-      .tr(
-        args: <String>[
-          ?name,
-          ?patient,
-          specialty,
-        ],
-      );
+      .tr(args: <String>[?name, ?patient, specialty]);
 }
 
 /// «4:30 م», the same as the appointment pages show it.

@@ -40,7 +40,12 @@ import 'package:url_launcher/url_launcher.dart';
 /// read-only. Needs an [EmergencyCardCubit] and a [MedicationsCubit] above
 /// it.
 class EmergencyCardScreen extends StatefulWidget {
-  const EmergencyCardScreen({super.key});
+  const EmergencyCardScreen({super.key, this.closeTo = Routes.circle});
+
+  /// Where «رجوع» goes when there is no page under the card to return to
+  /// (an address opened directly): the circle tab in the detailed mode,
+  /// the simplified home in the simplified mode.
+  final String closeTo;
 
   @override
   State<EmergencyCardScreen> createState() => _EmergencyCardScreenState();
@@ -99,7 +104,7 @@ class _EmergencyCardScreenState extends State<EmergencyCardScreen> {
                       BackLink(
                         onPressed: context.canPop()
                             ? () => context.pop()
-                            : () => context.go(Routes.circle),
+                            : () => context.go(widget.closeTo),
                       ),
                       const Spacer(),
                       if (ready)

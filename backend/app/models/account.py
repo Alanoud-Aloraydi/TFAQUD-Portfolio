@@ -58,8 +58,9 @@ class Account(db.Model):
     display_name: Mapped[str | None] = mapped_column(Text)
     avatar_code: Mapped[str | None] = mapped_column(Text)
     app_mode: Mapped[str | None] = mapped_column(Text)
-    # Asked once at onboarding, so a circle for your own care needs only its
-    # name. A circle copies them into its patient when it is created.
+    # Asked once at onboarding, so a circle for the person's own care needs
+    # only its name. A circle copies them into its patient when it is
+    # created.
     birth_date: Mapped[date | None]
     city: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(

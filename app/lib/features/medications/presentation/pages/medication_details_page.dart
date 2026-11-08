@@ -90,12 +90,10 @@ class _Content extends StatelessWidget {
         ? plan.version.startsOn
         : from;
     return BlocProvider(
-      create: (_) =>
-          MedicationOccurrencesCubit(
-              GetIt.I<MedicationsUseCase>(),
-              GetIt.I<PrivatePhotoRepository>().changes,
-            )
-            ..load(circleId, start, today, planId: plan.id),
+      create: (_) => MedicationOccurrencesCubit(
+        GetIt.I<MedicationsUseCase>(),
+        GetIt.I<PrivatePhotoRepository>().changes,
+      )..load(circleId, start, today, planId: plan.id),
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.tr('medications.details')),

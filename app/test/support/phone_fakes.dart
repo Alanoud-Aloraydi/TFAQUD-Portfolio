@@ -15,11 +15,11 @@ class FakePhoneNotifications implements PhoneNotifications {
   String? launchTap;
 
   /// The scheduled notifications, the soonest first.
-  List<ScheduledNotification> get inOrder =>
-      scheduled.values.toList()..sort(
-        (ScheduledNotification a, ScheduledNotification b) =>
-            a.at.compareTo(b.at),
-      );
+  List<ScheduledNotification> get inOrder => scheduled.values.toList()
+    ..sort(
+      (ScheduledNotification a, ScheduledNotification b) =>
+          a.at.compareTo(b.at),
+    );
 
   @override
   Future<void> initialize() async {}
@@ -32,8 +32,7 @@ class FakePhoneNotifications implements PhoneNotifications {
 
   @override
   Future<Map<int, String>> pending() async => <int, String>{
-    for (final MapEntry<int, ScheduledNotification> entry
-        in scheduled.entries)
+    for (final MapEntry<int, ScheduledNotification> entry in scheduled.entries)
       entry.key: entry.value.payload,
   };
 

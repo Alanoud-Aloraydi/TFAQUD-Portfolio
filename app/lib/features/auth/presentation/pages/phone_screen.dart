@@ -40,7 +40,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
     super.dispose();
   }
 
-
   Future<void> _send() async {
     final bool sent = await context.read<SignInCubit>().sendCode();
     if (sent && mounted) context.push(Routes.authCode);
@@ -63,7 +62,8 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

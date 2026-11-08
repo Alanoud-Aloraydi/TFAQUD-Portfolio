@@ -130,13 +130,12 @@ void main() {
     test('accepting it removes the card and selects the circle', () async {
       final Future<String?> signal = home.changes.first;
       circles.inbox = Success(_inbox(invitation: false));
-      expect(await cubit.respondToInvitation('invitation-1', accept: true),
-          isTrue);
-      expect(await signal, 'circle-from-invitation');
       expect(
-        circles.invitationAnswers.single,
-        ('invitation-1', true),
+        await cubit.respondToInvitation('invitation-1', accept: true),
+        isTrue,
       );
+      expect(await signal, 'circle-from-invitation');
+      expect(circles.invitationAnswers.single, ('invitation-1', true));
       await pumpEventQueue();
       expect(cubit.state.inbox.invitations, isEmpty);
       expect(cubit.state.busyIds, isEmpty);
@@ -148,8 +147,10 @@ void main() {
       var notified = false;
       final sub = home.changes.listen((_) => notified = true);
       addTearDown(sub.cancel);
-      expect(await cubit.respondToInvitation('invitation-1', accept: false),
-          isTrue);
+      expect(
+        await cubit.respondToInvitation('invitation-1', accept: false),
+        isTrue,
+      );
       await pumpEventQueue();
       expect(notified, isFalse);
       expect(cubit.state.inbox.invitations, isEmpty);
@@ -157,8 +158,10 @@ void main() {
 
     test('a refusal keeps the card and says why', () async {
       circles.invitationReplied = const Error(ReplyModeConflictFailure());
-      expect(await cubit.respondToInvitation('invitation-1', accept: true),
-          isFalse);
+      expect(
+        await cubit.respondToInvitation('invitation-1', accept: true),
+        isFalse,
+      );
       expect(cubit.state.errorKey, 'circles.reply_mode_conflict');
       expect(cubit.state.inbox.invitations, hasLength(1));
       expect(cubit.state.busyIds, isEmpty);
@@ -167,8 +170,10 @@ void main() {
     test('an invitation that is gone makes the list load again', () async {
       circles.invitationReplied = const Error(RequestUnavailableFailure());
       circles.inbox = Success(_inbox(invitation: false));
-      expect(await cubit.respondToInvitation('invitation-1', accept: true),
-          isFalse);
+      expect(
+        await cubit.respondToInvitation('invitation-1', accept: true),
+        isFalse,
+      );
       await pumpEventQueue();
       expect(cubit.state.errorKey, 'circles.request_unavailable');
       expect(cubit.state.inbox.invitations, isEmpty);

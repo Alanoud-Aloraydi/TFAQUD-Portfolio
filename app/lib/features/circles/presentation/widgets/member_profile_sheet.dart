@@ -70,11 +70,7 @@ class _MemberProfile extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        Text(
-          member.name,
-          textAlign: TextAlign.center,
-          style: text.titleLarge,
-        ),
+        Text(member.name, textAlign: TextAlign.center, style: text.titleLarge),
         if (member.isPatient && patientUsesApp) ...<Widget>[
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -150,7 +146,10 @@ class _MemberProfile extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           TextButton.icon(
             onPressed: () => _copy(context, phone),
-            icon: const Icon(CupertinoIcons.doc_on_doc, size: AppSizes.iconSmall),
+            icon: const Icon(
+              CupertinoIcons.doc_on_doc,
+              size: AppSizes.iconSmall,
+            ),
             label: Text(context.tr('circle_overview.member_copy')),
           ),
         ],

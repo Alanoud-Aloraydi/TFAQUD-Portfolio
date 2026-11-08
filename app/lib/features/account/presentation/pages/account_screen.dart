@@ -19,7 +19,6 @@ import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
-import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/request_age.dart';
@@ -40,39 +39,6 @@ class AccountScreen extends StatelessWidget {
   Future<void> _edit(BuildContext context, AccountCubit cubit) async {
     final saved = await context.push<bool>(Routes.accountEdit);
     if (saved == true && !cubit.isClosed) await cubit.load();
-  }
-
-  /// Asks the question of the delete flow that the cubit is waiting on.
-  Future<void> _ask(
-    BuildContext context,
-    AccountCubit cubit,
-    DeletePrompt prompt,
-  ) async {
-    switch (prompt) {
-      case DeletePrompt.none:
-        return;
-      case DeletePrompt.confirm:
-        final bool? agreed = await showDeleteConfirmDialog(context);
-        if (agreed == true) {
-          await cubit.confirmDelete();
-        } else {
-          cubit.cancelDelete();
-        }
-      case DeletePrompt.patientChoice:
-        final PatientChoice? choice = await showPatientChoiceDialog(context);
-        if (choice == null) {
-          cubit.cancelDelete();
-        } else {
-          await cubit.choosePatient(choice);
-        }
-      case DeletePrompt.lastManager:
-        final bool? agreedToAll = await showLastManagerDialog(context);
-        if (agreedToAll == true) {
-          await cubit.confirmLastManager();
-        } else {
-          cubit.cancelDelete();
-        }
-    }
   }
 
   @override
@@ -108,7 +74,7 @@ class AccountScreen extends StatelessWidget {
                 cubit.messagesShown();
               }
               if (state.deletePrompt != DeletePrompt.none) {
-                _ask(context, cubit, state.deletePrompt);
+                answerDeletePrompt(context, cubit, state.deletePrompt);
               }
             },
             builder: (BuildContext context, AccountState state) {

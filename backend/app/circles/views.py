@@ -102,7 +102,9 @@ def circle_view(
             "is_you": patient_account == viewer,
             "is_patient": True,
             "role": "patient",
-            "avatar_code": linked.avatar_code if linked else patient.avatar_code,
+            "avatar_code": (
+                linked.avatar_code if linked else patient.avatar_code
+            ),
             "phone_number": linked.phone_number if linked else None,
         })
     linked_patient = (
@@ -320,7 +322,9 @@ def received_invitations_view(
                 patient_first_name=row.first_name,
             ),
             "invited_by": (
-                {"display_name": row.display_name} if row.display_name else None
+                {"display_name": row.display_name}
+                if row.display_name
+                else None
             ),
             "created_at": _time(row[0].created_at),
             "last_sent_at": _time(row[0].last_sent_at),

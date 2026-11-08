@@ -159,9 +159,8 @@ class _Tick extends StatelessWidget {
                     '$number',
                     textAlign: TextAlign.center,
                     maxLines: 1,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppSemanticColors.textSupporting,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: AppSemanticColors.textSupporting),
                   ),
                 )
               : null,

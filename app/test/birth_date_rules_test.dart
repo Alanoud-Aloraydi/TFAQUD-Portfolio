@@ -30,10 +30,7 @@ void main() {
 
   group('clamp', () {
     test('keeps a valid date', () {
-      expect(
-        BirthDateRules.clamp(1964, 3, 12, today),
-        DateTime(1964, 3, 12),
-      );
+      expect(BirthDateRules.clamp(1964, 3, 12, today), DateTime(1964, 3, 12));
     });
 
     test('moves a day that the new month does not have', () {

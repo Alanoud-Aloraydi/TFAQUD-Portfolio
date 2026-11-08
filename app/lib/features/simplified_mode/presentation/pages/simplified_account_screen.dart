@@ -1,88 +1,213 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/services/simplified_text_scale.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/step_header.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
-import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
-import 'package:app/features/circles/presentation/widgets/calendar_sync_section.dart';
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_account_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_account_state.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/listen_button.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_scale.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/care_visuals.dart';
+import 'package:app/features/account/presentation/cubit/account_cubit.dart';
+import 'package:app/features/account/presentation/cubit/account_state.dart';
+import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
+import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/auth/presentation/cubit/auth_state.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-/// "حسابي" for simplified mode: the patient's photo and name, the circle's
-/// reminder sync, the medical card, and signing out. No circle tab exists
-/// in this mode, so the medical card opens from here instead.
+/// «حسابي»: the patient's name and number, the text size and «استماع»,
+/// the calendar copy of appointments, the medical file, signing out and
+/// deleting the account. Needs an [AccountCubit] and an [AuthCubit].
 class SimplifiedAccountScreen extends StatelessWidget {
   const SimplifiedAccountScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SimplifiedScale(
-      child: Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                StepHeader(
-                  title: context.tr('account.title'),
-                  onBack: () => context.pop(),
-                  trailing: ListenButton(
-                    segments: [
-                      context.tr('account.title'),
-                      context.tr('simplified_mode.medical_card_title'),
-                      context.tr('simplified_mode.medical_card'),
-                      context.tr('auth.sign_out'),
+    final String? circleId = context.select<SimplifiedModeCubit, String?>(
+      (cubit) => cubit.state.day?.circleId,
+    );
+    return BlocListener<AccountCubit, AccountState>(
+      listenWhen: (before, after) =>
+          (after.sessionEnded && !before.sessionEnded) ||
+          (after.signedOut && !before.signedOut) ||
+          (after.errorKey != null && after.errorKey != before.errorKey) ||
+          (after.deletePrompt != before.deletePrompt &&
+              after.deletePrompt != DeletePrompt.none),
+      listener: (context, state) {
+        final AccountCubit cubit = context.read<AccountCubit>();
+        if (state.sessionEnded || state.signedOut) {
+          context.go(Routes.auth);
+          return;
+        }
+        if (state.errorKey case final String key) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(context.tr(key))));
+          cubit.messagesShown();
+        }
+        if (state.deletePrompt != DeletePrompt.none) {
+          answerDeletePrompt(
+            context,
+            cubit,
+            state.deletePrompt,
+            confirm: _confirmDelete,
+          );
+        }
+      },
+      child: BlocBuilder<AccountCubit, AccountState>(
+        builder: (context, state) {
+          final account = state.account;
+          return SimplifiedPage(
+            title: context.tr('simplified_mode.account_title'),
+            listen: <String>[
+              ?account?.displayName,
+              context.tr('simplified_mode.display_sound'),
+              context.tr('simplified_mode.calendar_title'),
+              context.tr('simplified_mode.my_info'),
+              context.tr('simplified_mode.sign_out'),
+              context.tr('simplified_mode.delete_account'),
+            ],
+            children: <Widget>[
+              if (account != null)
+                Row(
+                  children: <Widget>[
+                    PersonPhoto(
+                      name: account.displayName,
+                      photoPath: ApiEndpoints.accountPhoto,
+                      avatarCode: account.avatarCode,
+                      size: 72,
+                    ),
+                    const SizedBox(width: SimplifiedStyle.gap),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            account.displayName,
+                            style: SimplifiedStyle.head(
+                              SimplifiedStyle.headline,
+                            ),
+                          ),
+                          Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Text(
+                              account.phoneNumber,
+                              style: SimplifiedStyle.text(
+                                SimplifiedStyle.caption,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              else if (state.status == AccountStatus.loading)
+                const Center(child: CircularProgressIndicator()),
+              _SectionTitle(context.tr('simplified_mode.display_sound')),
+              const _TextSizeCard(),
+              const _VoiceSwitch(),
+              if (circleId != null) ...<Widget>[
+                _SectionTitle(context.tr('simplified_mode.calendar_title')),
+                _CalendarSyncCard(circleId: circleId),
+                _SectionTitle(context.tr('simplified_mode.my_info')),
+                SimplifiedCard(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SimplifiedStyle.pad,
+                    vertical: SimplifiedStyle.gap,
+                  ),
+                  onTap: () =>
+                      context.push(Routes.simplifiedMedicalFile(circleId)),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              context.tr('simplified_mode.my_medical_file'),
+                              style: SimplifiedStyle.head(SimplifiedStyle.body),
+                            ),
+                            Text(
+                              context.tr('simplified_mode.my_medical_file_sub'),
+                              style: SimplifiedStyle.text(
+                                SimplifiedStyle.caption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        AppIcons.next,
+                        size: 28,
+                        color: SimplifiedStyle.ink,
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Expanded(
-                  child:
-                      BlocBuilder<
-                        SimplifiedAccountCubit,
-                        SimplifiedAccountState
-                      >(
-                        builder: (context, state) {
-                          switch (state.status) {
-                            case SimplifiedAccountStatus.loading:
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            case SimplifiedAccountStatus.failure:
-                              return Center(
-                                child: TextButton(
-                                  onPressed: () => context
-                                      .read<SimplifiedAccountCubit>()
-                                      .load(),
-                                  child: Text(context.tr('error.unknown')),
-                                ),
-                              );
-                            case SimplifiedAccountStatus.ready:
-                              return _SimplifiedAccountBody(state: state);
-                          }
-                        },
-                      ),
-                ),
               ],
-            ),
+              const SizedBox(height: 8),
+              const _SignOutButton(),
+              _OutlinedDanger(
+                label: context.tr('simplified_mode.delete_account'),
+                busy: state.deleting,
+                filled: false,
+                onPressed: context.read<AccountCubit>().startDelete,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// The first question of deleting, asked as a big sheet.
+  static Future<bool?> _confirmDelete(BuildContext context) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: SimplifiedStyle.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                sheetContext.tr('simplified_mode.delete_title'),
+                style: SimplifiedStyle.head(26),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                sheetContext.tr('simplified_mode.delete_text'),
+                style: SimplifiedStyle.text(
+                  SimplifiedStyle.body,
+                  weight: AppTextTheme.medium,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SimplifiedButton(
+                label: sheetContext.tr('simplified_mode.delete_yes'),
+                tone: SimplifiedButtonTone.danger,
+                onPressed: () => Navigator.of(sheetContext).pop(true),
+              ),
+              const SizedBox(height: 12),
+              SimplifiedButton(
+                label: sheetContext.tr('simplified_mode.delete_no'),
+                tone: SimplifiedButtonTone.quiet,
+                onPressed: () => Navigator.of(sheetContext).pop(false),
+              ),
+            ],
           ),
         ),
       ),
@@ -90,124 +215,399 @@ class SimplifiedAccountScreen extends StatelessWidget {
   }
 }
 
-class _SimplifiedAccountBody extends StatefulWidget {
-  const _SimplifiedAccountBody({required this.state});
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
 
-  final SimplifiedAccountState state;
+  final String text;
 
   @override
-  State<_SimplifiedAccountBody> createState() => _SimplifiedAccountBodyState();
+  Widget build(BuildContext context) =>
+      Text(text, style: SimplifiedStyle.head(SimplifiedStyle.body));
 }
 
-class _SimplifiedAccountBodyState extends State<_SimplifiedAccountBody> {
-  SimplifiedTextScale? _textScale;
+/// Three big tiles, each showing «أ» at the size it gives.
+class _TextSizeCard extends StatelessWidget {
+  const _TextSizeCard();
 
-  @override
-  void initState() {
-    super.initState();
-    GetIt.I<SimplifiedTextScalePreference>().get().then((value) {
-      if (mounted) setState(() => _textScale = value);
-    });
-  }
-
-  Future<void> _setTextScale(SimplifiedTextScale value) async {
-    setState(() => _textScale = value);
-    await GetIt.I<SimplifiedTextScalePreference>().set(value);
-  }
-
-  SimplifiedAccountState get state => widget.state;
+  static const Map<SimplifiedTextSize, double> _sample =
+      <SimplifiedTextSize, double>{
+        SimplifiedTextSize.normal: 24,
+        SimplifiedTextSize.large: 34,
+        SimplifiedTextSize.larger: 44,
+      };
 
   @override
   Widget build(BuildContext context) {
-    final String shown = state.displayName ?? '';
-    final String? circleId = state.circleId;
-    return ListView(
-      children: [
-        Column(
-          children: [
-            Semantics(
-              button: true,
-              label: context.tr('photos.edit_your_photo'),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () => showPersonPhotoSheet(
-                  context,
-                  title: context.tr('photos.your_photo'),
-                  name: shown,
-                  photoPath: ApiEndpoints.accountPhoto,
-                  avatarPath: ApiEndpoints.accountAvatar,
-                  avatarCode: state.avatarCode,
-                  frontCamera: true,
-                  onSaved: () => context.read<SimplifiedAccountCubit>().load(),
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    PersonPhoto(
-                      name: shown,
-                      photoPath: ApiEndpoints.accountPhoto,
-                      avatarCode: state.avatarCode,
-                      size: AppSizes.avatarLarge,
+    final SimplifiedTextSize selected = context
+        .select<SimplifiedSettingsCubit, SimplifiedTextSize>(
+          (cubit) => cubit.state.textSize,
+        );
+    return SimplifiedCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SimplifiedStyle.pad,
+        vertical: SimplifiedStyle.gap,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr('simplified_mode.text_size'),
+            style: SimplifiedStyle.head(SimplifiedStyle.body),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              for (final SimplifiedTextSize size
+                  in SimplifiedTextSize.values) ...<Widget>[
+                if (size != SimplifiedTextSize.normal)
+                  const SizedBox(width: 10),
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    selected: size == selected,
+                    child: GestureDetector(
+                      onTap: () => context
+                          .read<SimplifiedSettingsCubit>()
+                          .setTextSize(size),
+                      child: Container(
+                        height: 104,
+                        decoration: BoxDecoration(
+                          color: size == selected
+                              ? SimplifiedStyle.accentTint
+                              : SimplifiedStyle.surface,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: size == selected
+                                ? SimplifiedStyle.ink
+                                : SimplifiedStyle.disabled,
+                            width: size == selected ? 3 : 2,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            // A fixed size, so each tile shows its own
+                            // size and not the one chosen now.
+                            MediaQuery.withNoTextScaling(
+                              child: Text(
+                                context.tr('simplified_mode.size_sample'),
+                                style: SimplifiedStyle.head(
+                                  _sample[size]!,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              context.tr('simplified_mode.size.${size.name}'),
+                              style: SimplifiedStyle.head(
+                                SimplifiedStyle.caption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    const PhotoEditBadge(),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(shown, style: Theme.of(context).textTheme.titleLarge),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        SettingsSection(
-          title: context.tr('simplified_mode.display_sound_title'),
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SwitchCard extends StatelessWidget {
+  const _SwitchCard({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SimplifiedCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SimplifiedStyle.pad,
+        vertical: SimplifiedStyle.gap,
+      ),
+      child: MergeSemantics(
+        child: Row(
+          children: <Widget>[
+            Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(context.tr('simplified_mode.text_size')),
-                  const SizedBox(height: AppSpacing.sm),
-                  GlassSegmentedControl<SimplifiedTextScale>(
-                    segments: {
-                      SimplifiedTextScale.small: context.tr(
-                        'simplified_mode.text_size_small',
-                      ),
-                      SimplifiedTextScale.normal: context.tr(
-                        'simplified_mode.text_size_normal',
-                      ),
-                      SimplifiedTextScale.large: context.tr(
-                        'simplified_mode.text_size_large',
-                      ),
-                    },
-                    selected: _textScale ?? SimplifiedTextScale.normal,
-                    onChanged: _setTextScale,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    title,
+                    style: SimplifiedStyle.head(SimplifiedStyle.body),
+                  ),
+                  Text(
+                    subtitle,
+                    style: SimplifiedStyle.text(SimplifiedStyle.caption),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: SimplifiedStyle.gap),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: SimplifiedStyle.success,
+            ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xl),
-        if (circleId != null) ...[
-          SectionTitle(context.tr('circle_overview.calendar_sync_title')),
-          CalendarSyncToggles(circleId: circleId),
-          const CalendarSyncHint(),
-          const SizedBox(height: AppSpacing.xl),
-          SettingsSection(
-            title: context.tr('simplified_mode.medical_card_title'),
-            children: [
-              ActionRow(
-                label: context.tr('simplified_mode.medical_card'),
-                onPressed: () => context.push(Routes.medicalFile(circleId)),
-              ),
+      ),
+    );
+  }
+}
+
+class _VoiceSwitch extends StatelessWidget {
+  const _VoiceSwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled = context.select<SimplifiedSettingsCubit, bool>(
+      (cubit) => cubit.state.voiceEnabled,
+    );
+    return _SwitchCard(
+      title: context.tr('simplified_mode.voice_title'),
+      subtitle: context.tr('simplified_mode.voice_text'),
+      value: enabled,
+      onChanged: context.read<SimplifiedSettingsCubit>().setVoiceEnabled,
+    );
+  }
+}
+
+/// The circle's medicines, scheduled measurements and appointments on the
+/// phone's own calendar — the detailed mode's calendar group in this
+/// mode's sizes: one group, each row the kind's icon square, its name and a
+/// switch, and the explanation under it. The same choices, kept by the
+/// same [CalendarSync]; all off until chosen.
+class _CalendarSyncCard extends StatefulWidget {
+  const _CalendarSyncCard({required this.circleId});
+
+  final String circleId;
+
+  @override
+  State<_CalendarSyncCard> createState() => _CalendarSyncCardState();
+}
+
+class _CalendarSyncCardState extends State<_CalendarSyncCard> {
+  final CalendarSync _calendar = GetIt.I<CalendarSync>();
+
+  /// Null while the values load.
+  Map<CalendarSyncCategory, bool>? _enabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final String circleId = widget.circleId;
+    final Map<CalendarSyncCategory, bool> values = <CalendarSyncCategory, bool>{
+      for (final CalendarSyncCategory category in CalendarSyncCategory.values)
+        category: await _calendar.isEnabled(circleId, category),
+    };
+    if (mounted && circleId == widget.circleId) {
+      setState(() => _enabled = values);
+    }
+  }
+
+  Future<void> _set(CalendarSyncCategory category, bool value) async {
+    final Map<CalendarSyncCategory, bool>? enabled = _enabled;
+    if (enabled == null) return;
+    setState(() {
+      _enabled = <CalendarSyncCategory, bool>{...enabled, category: value};
+    });
+    await _calendar.setEnabled(widget.circleId, category, value);
+  }
+
+  static (IconData, Color) _look(CalendarSyncCategory category) =>
+      switch (category) {
+        CalendarSyncCategory.doses => (
+          CareVisuals.medicationIcon,
+          CareVisuals.medicationTile,
+        ),
+        CalendarSyncCategory.measurements => (
+          CareVisuals.measurementIcon,
+          CareVisuals.measurementTile,
+        ),
+        CalendarSyncCategory.appointments => (
+          CareVisuals.appointmentIcon,
+          CareVisuals.appointmentTile,
+        ),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SimplifiedCard(
+          padding: const EdgeInsets.symmetric(horizontal: SimplifiedStyle.pad),
+          child: Column(
+            children: <Widget>[
+              for (final CalendarSyncCategory category
+                  in CalendarSyncCategory.values) ...<Widget>[
+                if (category != CalendarSyncCategory.values.first)
+                  const Divider(height: 1, color: SimplifiedStyle.chip),
+                _CalendarRow(
+                  look: _look(category),
+                  label: context.tr(
+                    'simplified_mode.calendar.${category.name}',
+                  ),
+                  value: _enabled?[category] ?? false,
+                  onChanged: _enabled == null
+                      ? null
+                      : (value) => _set(category, value),
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-        const SettingsCard(children: [SignOutRow()]),
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(
+            top: 8,
+            start: SimplifiedStyle.pad,
+            end: SimplifiedStyle.pad,
+          ),
+          child: Text(
+            context.tr('simplified_mode.calendar_text'),
+            style: SimplifiedStyle.text(SimplifiedStyle.caption),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// One calendar row: the kind's icon square, its name, a switch.
+class _CalendarRow extends StatelessWidget {
+  const _CalendarRow({
+    required this.look,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final (IconData, Color) look;
+  final String label;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return MergeSemantics(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 72),
+        child: Row(
+          children: <Widget>[
+            CareIconTile(icon: look.$1, background: look.$2),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: SimplifiedStyle.label(SimplifiedStyle.body),
+              ),
+            ),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: SimplifiedStyle.success,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SignOutButton extends StatelessWidget {
+  const _SignOutButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthErrorState) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.tr(state.messageKey))));
+        }
+        if (state is AuthSignedOutState) {
+          if (!state.serverConfirmed) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.tr('auth.sign_out_local_only'))),
+            );
+          }
+          context.go(Routes.auth);
+        }
+      },
+      builder: (context, state) => _OutlinedDanger(
+        label: context.tr('simplified_mode.sign_out'),
+        busy: state is AuthLoadingState,
+        filled: true,
+        onPressed: context.read<AuthCubit>().signOut,
+      ),
+    );
+  }
+}
+
+/// A red-worded capsule for leaving or deleting the account.
+class _OutlinedDanger extends StatelessWidget {
+  const _OutlinedDanger({
+    required this.label,
+    required this.busy,
+    required this.filled,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool busy;
+
+  /// White behind it with a light edge; else only a red edge.
+  final bool filled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: busy ? null : onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(64),
+        shape: const StadiumBorder(),
+        backgroundColor: filled
+            ? SimplifiedStyle.surface
+            : SimplifiedStyle.clear,
+        side: BorderSide(
+          color: filled ? SimplifiedStyle.line : SimplifiedStyle.danger,
+          width: filled ? 1 : 1.5,
+        ),
+        foregroundColor: SimplifiedStyle.danger,
+      ),
+      child: busy
+          ? const SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            )
+          : Text(
+              label,
+              style: SimplifiedStyle.head(
+                SimplifiedStyle.body,
+                color: SimplifiedStyle.danger,
+              ),
+            ),
     );
   }
 }

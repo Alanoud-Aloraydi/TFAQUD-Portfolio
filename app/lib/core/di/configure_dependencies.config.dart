@@ -18,7 +18,6 @@ import 'package:injectable/injectable.dart' as _i526;
 import '../network/auth_interceptor.dart' as _i908;
 import '../network/dio_client.dart' as _i667;
 import '../services/local_keys_service.dart' as _i945;
-import '../services/simplified_text_scale.dart' as _i730;
 import '../services/simplified_voice.dart' as _i378;
 import '../services/token_storage.dart' as _i2;
 import 'third_part.dart' as _i423;
@@ -34,9 +33,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i792.GetStorage>(() => thirdPartyConfig.storage);
     gh.lazySingleton<_i558.FlutterSecureStorage>(
       () => thirdPartyConfig.flutterSecureStorage,
-    );
-    gh.lazySingleton<_i730.SimplifiedTextScalePreference>(
-      () => _i730.SimplifiedTextScalePreference(),
     );
     gh.lazySingleton<_i378.SimplifiedVoice>(() => _i378.SimplifiedVoice());
     gh.lazySingleton<_i2.TokenStorage>(

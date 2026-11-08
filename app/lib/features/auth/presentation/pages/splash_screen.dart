@@ -22,7 +22,7 @@ class SplashScreen extends StatelessWidget {
           case StartDestination.home:
             context.go(Routes.today);
           case StartDestination.simplifiedHome:
-            context.go(Routes.simplifiedHome);
+            context.go(Routes.simplifiedMode);
           case StartDestination.signIn:
             context.go(Routes.auth);
           case StartDestination.onboarding:

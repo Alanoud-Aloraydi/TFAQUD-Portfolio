@@ -533,9 +533,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     final TimeOfDay last = _readings.last.time;
     final int next = last.hour * 60 + last.minute + 180;
     final int minutes = next > 23 * 60 ? 23 * 60 : next;
-    final Set<String> used = {
-      for (final item in _readings) ...item.conditions,
-    };
+    final Set<String> used = {for (final item in _readings) ...item.conditions};
     final String? meal = _kind == MeasurementKind.glucose
         ? MeasurementConditions.mealStates
               .take(3)
@@ -544,9 +542,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         : null;
     setState(() {
       _readings.add(
-        _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), [
-          ?meal,
-        ]),
+        _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), [?meal]),
       );
       _errorKey = null;
     });

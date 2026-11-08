@@ -2,19 +2,19 @@ import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:equatable/equatable.dart';
 
-/// The circle name chips of your own circle: the one for your own care, or
-/// the one you agreed to. Only you see this name. [other] lets the user type
-/// a name.
+/// The circle name chips of the person's own circle: the one for their own
+/// care, or the one they agreed to. Only they see this name. [other] lets
+/// them type a name.
 enum NamePreset { care, health, circle, other }
 
 /// Which circle the pages create. The health and allergies pages are the same
 /// for both; the first page and the call that creates the circle differ.
 enum CircleFlow {
-  /// A circle for your own care (PROFILE-01): you are the patient.
+  /// A circle for the person's own care (PROFILE-01): they are the patient.
   self,
 
-  /// A circle for a patient who does not use the app (PROFILE-01B): you type
-  /// the names of the patient.
+  /// A circle for a patient who does not use the app (PROFILE-01B): the
+  /// person types the patient's names.
   patient,
 
   /// The patient agreed to a request and gives the basic data (PROFILE-01C).
@@ -119,8 +119,8 @@ class CreateCircleState extends Equatable {
   bool get ownBasicsSaved => account?.hasBasics ?? false;
 
   /// The page asks for the birth date and city: always for a patient without
-  /// the app (no account is loaded), and for your own care only when the
-  /// account has not saved them.
+  /// the app (no account is loaded), and for the person's own care only when
+  /// the account has not saved them.
   bool get asksBasics => !ownBasicsSaved;
 
   /// The first step is complete and the circle name is set.

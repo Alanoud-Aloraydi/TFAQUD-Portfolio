@@ -87,7 +87,7 @@ def read_account():
     else:
         account["avatar_code"] = None
     # The app asks this before it shows the pages that create a circle for
-    # your own care, so nobody fills them in for nothing.
+    # the person's own care, so nobody fills them in for nothing.
     account["patient_circle_id"] = _patient_circle_id(user.id)
     response = jsonify(account=account)
     response.headers["Cache-Control"] = "no-store"
@@ -116,11 +116,13 @@ def delete_account():
     """Delete the account and end every sign-in of it.
 
     What happens to the account's care is decided by the body:
-      - patient_choice "delete" deletes the circle you are the patient of;
-        "continue" keeps it, with the managers, under your name as text.
-        It is required when you are a patient.
-      - delete_last_managed_circles true also deletes circles where you are
-        the only manager. Without it, such a circle blocks the deletion.
+      - patient_choice "delete" deletes the circle the account is the
+        patient of; "continue" keeps it, with the managers, under the
+        account's name as text. It is required when the account is a
+        patient.
+      - delete_last_managed_circles true also deletes circles where the
+        account is the only manager. Without it, such a circle blocks the
+        deletion.
     An account with no circles can send no body.
     """
     body = parse_optional_json_body(DeleteAccountInput)

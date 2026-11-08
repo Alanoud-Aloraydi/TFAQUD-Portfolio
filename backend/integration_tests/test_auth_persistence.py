@@ -395,7 +395,9 @@ def test_postgres_applies_the_waits_and_the_caps_of_the_asker(auth_app):
 
         # A sign-in starts the count of the number again: no wait after it.
         store.mark_sent(first.send_id, now, now + timedelta(minutes=5))
-        assert store.mark_verified(first.request_id, now + timedelta(seconds=5))
+        assert store.mark_verified(
+            first.request_id, now + timedelta(seconds=5)
+        )
         fresh = SendRules(waits=(30,), device_id="device-bbbb")
         later = now + timedelta(seconds=6)
         assert store.claim_send(None, PHONE, later, day, 20,
@@ -415,7 +417,9 @@ def test_postgres_lets_the_owners_known_phone_past_a_stranger(auth_app):
         # The owner signs in on their phone: it becomes known.
         signed = store.claim_send(None, PHONE, now, day, 20, rules=owner)
         store.mark_sent(signed.send_id, now, now + timedelta(minutes=5))
-        assert store.mark_verified(signed.request_id, now + timedelta(seconds=5))
+        assert store.mark_verified(
+            signed.request_id, now + timedelta(seconds=5)
+        )
 
         later = now + timedelta(seconds=6)
         assert store.claim_send(None, PHONE, later, day, 20,
@@ -431,4 +435,3 @@ def test_postgres_lets_the_owners_known_phone_past_a_stranger(auth_app):
         mine = store.claim_send(None, PHONE, soon, day, 20, rules=owner)
         assert mine.granted
         assert mine.next_send_at == soon + timedelta(seconds=30)
-

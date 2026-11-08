@@ -46,7 +46,7 @@ class CodeScreen extends StatelessWidget {
       cubit.state.needsProfile
           ? Routes.onboarding
           : cubit.state.appMode == CircleAppMode.simplified
-          ? Routes.simplifiedHome
+          ? Routes.simplifiedMode
           : Routes.today,
     );
   }

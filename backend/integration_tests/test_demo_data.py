@@ -78,18 +78,18 @@ def test_the_demo_account_reads_it_like_the_app(database_app, database):
     assert by_name["ميتفورمين"]["version"]["strength_value"] == "500"
     assert by_name["أوميغا 3"]["version"]["strength_value"] == "1000"
 
-    circle = client.get(f"/api/v1/circles/{mother}", headers=headers).get_json()[
-        "circle"
-    ]
+    circle = client.get(
+        f"/api/v1/circles/{mother}", headers=headers
+    ).get_json()["circle"]
     [waiting] = circle["pending_invitations"]
     assert waiting["invitee_phone_number"] == INVITED_PHONE
     sent = datetime.fromisoformat(waiting["created_at"])
     assert timedelta(days=1) < datetime.now(UTC) - sent < timedelta(days=3)
     assert [m["is_patient"] for m in circle["members"]] == [False]
 
-    invitations = client.get("/api/v1/invitations", headers=headers).get_json()[
-        "invitations"
-    ]
+    invitations = client.get(
+        "/api/v1/invitations", headers=headers
+    ).get_json()["invitations"]
     assert [item["circle_name"] for item in invitations] == ["دائرة عبدالله"]
     sent = client.get("/api/v1/circle-requests", headers=headers).get_json()[
         "sent"
@@ -131,9 +131,9 @@ def test_a_reset_works_after_lina_joined_saras_circle(database_app, database):
     _run(database_app)
     client = database_app.test_client()
     headers = _sign_in(database_app, client, DEMO_PHONES[0])
-    [invitation] = client.get("/api/v1/invitations", headers=headers).get_json()[
-        "invitations"
-    ]
+    [invitation] = client.get(
+        "/api/v1/invitations", headers=headers
+    ).get_json()["invitations"]
     accepted = client.post(
         f"/api/v1/invitations/{invitation['id']}/respond",
         json={"accept": True},

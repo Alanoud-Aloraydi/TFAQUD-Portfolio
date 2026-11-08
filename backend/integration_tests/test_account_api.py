@@ -37,7 +37,11 @@ def test_onboarding_saves_the_birth_date_and_city(
     database_app, database, account
 ):
     api = Api(database_app, account(name="Reem"))
-    names = {"first_name": "Reem", "last_name": "Family", "display_name": "Reem"}
+    names = {
+        "first_name": "Reem",
+        "last_name": "Family",
+        "display_name": "Reem",
+    }
 
     saved = api.put(
         f"{URL}/profile",

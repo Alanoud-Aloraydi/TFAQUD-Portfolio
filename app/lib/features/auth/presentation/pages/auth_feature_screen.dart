@@ -174,8 +174,7 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
                       // The cards' soft shadows show past the pages' edge.
                       clipBehavior: Clip.none,
                       itemCount: _pages.length,
-                      onPageChanged: (int page) =>
-                          setState(() => _page = page),
+                      onPageChanged: (int page) => setState(() => _page = page),
                       itemBuilder: (BuildContext context, int index) =>
                           _IntroPage(
                             intro: _pages[index],

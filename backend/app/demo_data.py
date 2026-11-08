@@ -223,7 +223,9 @@ class DemoBuilder:
         today = scheduled_on == self.today
         if today or roll < 0.80:
             taken_at = due + timedelta(minutes=chance.randint(-10, 45))
-            recorded_at = min(max(taken_at, due) + timedelta(minutes=3), self.now)
+            recorded_at = min(
+                max(taken_at, due) + timedelta(minutes=3), self.now
+            )
             body = {"outcome": "taken", "taken_at": min(taken_at, recorded_at)}
             self.summary.taken += 1
         elif roll < 0.92:
@@ -284,7 +286,11 @@ class DemoBuilder:
                 "20",
                 "mg",
                 "capsule",
-                [_schedule("07:00", "1", "capsule", instructions="قبل الإفطار")],
+                [
+                    _schedule(
+                        "07:00", "1", "capsule", instructions="قبل الإفطار"
+                    )
+                ],
                 self.day(-14),
                 reason_for_use="حموضة المعدة",
             ),
@@ -446,7 +452,11 @@ class DemoBuilder:
                 "1000",
                 "mg",
                 "capsule",
-                [_schedule("14:00", "1", "capsule", instructions="بعد الغداء")],
+                [
+                    _schedule(
+                        "14:00", "1", "capsule", instructions="بعد الغداء"
+                    )
+                ],
                 self.day(7),
             ),
             self.at(0, 8),
@@ -490,7 +500,8 @@ class DemoBuilder:
 
         # 3. Sara's grandfather in Jeddah. Sara invites Lina to manage it,
         # so Lina's bell has an invitation to answer.
-        grandfather = CareService(self.session, self.at(-5)).create_without_account(
+        recent_care = CareService(self.session, self.at(-5))
+        grandfather = recent_care.create_without_account(
             sara.id,
             "عبدالله",
             "القحطاني",

@@ -139,7 +139,9 @@ def load_config(
         ),
         "OTP_MAX_SENDS_PER_IP_HOUR": _cap_from_env(
             "OTP_MAX_SENDS_PER_IP_HOUR",
-            None if env_name == "testing" else DEFAULT_OTP_MAX_SENDS_PER_IP_HOUR,
+            None
+            if env_name == "testing"
+            else DEFAULT_OTP_MAX_SENDS_PER_IP_HOUR,
         ),
         # The header that holds the caller's real address behind a proxy
         # (Render: CF-Connecting-IP). Empty: the connection's address.

@@ -11,7 +11,12 @@ import 'package:flutter/material.dart';
 /// shows an empty view (the message, then the action under it, centred),
 /// so every empty section of the app looks the same.
 class EmptyStateNote extends StatelessWidget {
-  const EmptyStateNote(this.message, {super.key, this.actionLabel, this.onAction});
+  const EmptyStateNote(
+    this.message, {
+    super.key,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String message;
   final String? actionLabel;
@@ -25,30 +30,29 @@ class EmptyStateNote extends StatelessWidget {
       alignment: Alignment.topCenter,
       heightFactor: 1,
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.inset),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.tokens.textSecondary,
-            ),
-          ),
-        ),
-        if (actionLabel != null && onAction != null)
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            // Filled, not a bare text link: a clear, tappable button.
-            child: FilledButton.tonalIcon(
-              onPressed: onAction,
-              icon: const Icon(AppIcons.plus, size: 18),
-              label: Text(actionLabel!),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.inset),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.tokens.textSecondary),
             ),
           ),
-      ],
+          if (actionLabel != null && onAction != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              // Filled, not a bare text link: a clear, tappable button.
+              child: FilledButton.tonalIcon(
+                onPressed: onAction,
+                icon: const Icon(AppIcons.plus, size: 18),
+                label: Text(actionLabel!),
+              ),
+            ),
+        ],
       ),
     );
   }

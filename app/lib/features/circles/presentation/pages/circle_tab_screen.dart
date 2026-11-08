@@ -752,8 +752,8 @@ class _MemberRow extends StatelessWidget {
               : ApiEndpoints.patientPhoto(circleId))
         : personPhotoPath(circleId, member.accountId);
     return InkWell(
-      // You open your own account; anyone else opens their card: photo,
-      // name and number, to call them.
+      // The viewer's own row opens their account; anyone else's opens that
+      // member's card: photo, name and number, to call them.
       onTap: member.isYou
           ? () => context.push(Routes.account)
           : () => showMemberProfileSheet(

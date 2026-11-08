@@ -22,7 +22,7 @@ Future<void> createCircleAndOpen(
   final bool created = await cubit.create();
   if (!created || !context.mounted) return;
   if (cubit.state.switchToSimplified) {
-    context.go(Routes.simplifiedHome);
+    context.go(Routes.simplifiedMode);
     return;
   }
   context.go(Routes.circle);

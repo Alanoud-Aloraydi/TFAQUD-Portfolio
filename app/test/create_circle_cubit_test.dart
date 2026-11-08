@@ -430,7 +430,7 @@ void main() {
       expect(sent.birthDate, DateTime(1954, 6, 5));
       expect(sent.city, 'بريدة');
       expect(sent.medicalProfile, const MedicalProfileDraft(bloodType: 'O+'));
-      // It is not a circle for your own care.
+      // It is not a circle for the person's own care.
       expect(circles.requests, isEmpty);
       expect(patient.state.status, CreateStatus.created);
     });

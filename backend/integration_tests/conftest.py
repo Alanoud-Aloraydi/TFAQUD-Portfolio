@@ -54,7 +54,8 @@ def database(database_app):
     with db.engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE otp_challenge, account, care_circle, patient, care_circle_manager, "
+                "TRUNCATE otp_challenge, account, care_circle, patient, "
+                "care_circle_manager, "
                 "care_circle_creation_request, care_circle_manager_invitation "
                 "CASCADE"
             )

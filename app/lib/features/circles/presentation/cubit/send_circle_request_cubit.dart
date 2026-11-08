@@ -8,8 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Sends the request to a patient who uses the app. The circle does not exist
 /// after this: the patient has to agree and complete the details first.
 class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
-  SendCircleRequestCubit(this._circles)
-    : super(const SendCircleRequestState());
+  SendCircleRequestCubit(this._circles) : super(const SendCircleRequestState());
 
   final CirclesUseCase _circles;
 

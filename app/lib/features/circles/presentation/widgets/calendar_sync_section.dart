@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -72,17 +72,15 @@ String _labelKey(CalendarSyncCategory category) => switch (category) {
 };
 
 IconData _icon(CalendarSyncCategory category) => switch (category) {
-  CalendarSyncCategory.doses => AppIcons.pill,
-  CalendarSyncCategory.measurements => AppIcons.heartbeat,
-  CalendarSyncCategory.appointments => AppIcons.calendar,
+  CalendarSyncCategory.doses => CareVisuals.medicationIcon,
+  CalendarSyncCategory.measurements => CareVisuals.measurementIcon,
+  CalendarSyncCategory.appointments => CareVisuals.appointmentIcon,
 };
 
 Color _tile(CalendarSyncCategory category) => switch (category) {
-  CalendarSyncCategory.doses => AppSemanticColors.settingsTileDoses,
-  CalendarSyncCategory.measurements =>
-    AppSemanticColors.settingsTileMeasurements,
-  CalendarSyncCategory.appointments =>
-    AppSemanticColors.settingsTileAppointments,
+  CalendarSyncCategory.doses => CareVisuals.medicationTile,
+  CalendarSyncCategory.measurements => CareVisuals.measurementTile,
+  CalendarSyncCategory.appointments => CareVisuals.appointmentTile,
 };
 
 /// One circle's switches, their values loaded once and kept here, so the
@@ -119,11 +117,10 @@ class _CircleCalendarState extends State<_CircleCalendar> {
 
   Future<void> _load() async {
     final String circleId = widget.circleId;
-    final Map<CalendarSyncCategory, bool> values =
-        <CalendarSyncCategory, bool>{
-          for (final CalendarSyncCategory category in _categories)
-            category: await _calendar.isEnabled(circleId, category),
-        };
+    final Map<CalendarSyncCategory, bool> values = <CalendarSyncCategory, bool>{
+      for (final CalendarSyncCategory category in _categories)
+        category: await _calendar.isEnabled(circleId, category),
+    };
     if (mounted && circleId == widget.circleId) {
       setState(() => _enabled = values);
     }

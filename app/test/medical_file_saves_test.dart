@@ -72,21 +72,24 @@ void main() {
     expect(circles.medicalFileReads, reads);
   });
 
-  test('a file read before the save does not bring the old answer back', () async {
-    final Completer<Result<MedicalFile, Failure>> slow =
-        Completer<Result<MedicalFile, Failure>>();
-    circles.queuedFileReads.add(slow.future);
-    final Future<void> reading = file.load();
-    edit.start(noura);
-    edit.chooseBloodType('A+');
+  test(
+    'a file read before the save does not bring the old answer back',
+    () async {
+      final Completer<Result<MedicalFile, Failure>> slow =
+          Completer<Result<MedicalFile, Failure>>();
+      circles.queuedFileReads.add(slow.future);
+      final Future<void> reading = file.load();
+      edit.start(noura);
+      edit.chooseBloodType('A+');
 
-    await edit.save();
-    await settle();
-    slow.complete(Success<MedicalFile, Failure>(noura));
-    await reading;
+      await edit.save();
+      await settle();
+      slow.complete(Success<MedicalFile, Failure>(noura));
+      await reading;
 
-    expect(file.state.file!.profile.bloodType, 'A+');
-  });
+      expect(file.state.file!.profile.bloodType, 'A+');
+    },
+  );
 
   test('the tab keeps a save made while it was still reading', () async {
     final CircleOverviewCubit opening = CircleOverviewCubit(
@@ -110,18 +113,20 @@ void main() {
     expect(opening.state.medicalFile!.profile.bloodType, 'B-');
   });
 
-  test('a new city also reads the circle again for the line under its name',
-      () async {
-    final int circleReads = circles.circleOverviewReads;
-    edit.start(noura);
-    edit.cityChanged('الرياض');
+  test(
+    'a new city also reads the circle again for the line under its name',
+    () async {
+      final int circleReads = circles.circleOverviewReads;
+      edit.start(noura);
+      edit.cityChanged('الرياض');
 
-    expect(await edit.save(), isTrue);
-    await settle();
+      expect(await edit.save(), isTrue);
+      await settle();
 
-    expect(tab.state.medicalFile!.patient.city, 'الرياض');
-    expect(circles.circleOverviewReads, circleReads + 1);
-  });
+      expect(tab.state.medicalFile!.patient.city, 'الرياض');
+      expect(circles.circleOverviewReads, circleReads + 1);
+    },
+  );
 
   test('a new answer alone does not read the circle again', () async {
     final int circleReads = circles.circleOverviewReads;

@@ -13,8 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// "About you" page of the account setup: the names, the birth date and the
-/// city. They are asked once here, so a circle for your own care needs only
-/// its name. Needs an [OnboardingCubit] above it.
+/// city. They are asked once here, so a circle for the person's own care
+/// needs only its name. Needs an [OnboardingCubit] above it.
 class OnboardingFeatureScreen extends StatefulWidget {
   const OnboardingFeatureScreen({super.key});
 
@@ -82,7 +82,8 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[

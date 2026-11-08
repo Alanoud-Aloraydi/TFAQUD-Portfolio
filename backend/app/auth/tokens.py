@@ -1,11 +1,12 @@
 """The two kinds of token.
 
-Access token  - a signed JWT. Short life (15 minutes, proposal). The app sends it
-                with every request. It carries the user id and the session id.
-Refresh token - a random string. Long life (30 days, proposal). The app sends it
-                only to get a new access token. It is not a JWT: it means
-                nothing by itself and is valid only while the server has a
-                matching, non-revoked session record.
+Access token  - a signed JWT. Short life (15 minutes, proposal). The app
+                sends it with every request. It carries the user id and the
+                session id.
+Refresh token - a random string. Long life (30 days, proposal). The app
+                sends it only to get a new access token. It is not a JWT: it
+                means nothing by itself and is valid only while the server
+                has a matching, non-revoked session record.
 """
 
 import hashlib
@@ -28,7 +29,11 @@ class AccessClaims:
 
 
 def encode_access_token(
-    secret: str, user_id: str, session_id: str, issued_at: datetime, expires_at: datetime
+    secret: str,
+    user_id: str,
+    session_id: str,
+    issued_at: datetime,
+    expires_at: datetime,
 ) -> str:
     payload = {
         "typ": _ACCESS_TYPE,
@@ -40,7 +45,9 @@ def encode_access_token(
     return jwt.encode(payload, secret, algorithm=_ALGORITHM)
 
 
-def decode_access_token(secret: str, token: str, now: datetime) -> AccessClaims:
+def decode_access_token(
+    secret: str, token: str, now: datetime
+) -> AccessClaims:
     """Check the signature and the expiry. Raises Unauthorized if either fails.
 
     All time checks are done here against our own clock, not the library's, so
@@ -51,7 +58,8 @@ def decode_access_token(secret: str, token: str, now: datetime) -> AccessClaims:
         payload = jwt.decode(
             token,
             secret,
-            algorithms=[_ALGORITHM],  # never accept the algorithm the token names
+            # Never accept the algorithm the token names.
+            algorithms=[_ALGORITHM],
             options={
                 "verify_exp": False,
                 "verify_iat": False,
@@ -60,12 +68,18 @@ def decode_access_token(secret: str, token: str, now: datetime) -> AccessClaims:
             },
         )
     except jwt.PyJWTError as exc:
-        raise Unauthorized("The access token is not valid.", code="invalid_token") from exc
+        raise Unauthorized(
+            "The access token is not valid.", code="invalid_token"
+        ) from exc
 
     if payload.get("typ") != _ACCESS_TYPE:
-        raise Unauthorized("The access token is not valid.", code="invalid_token")
+        raise Unauthorized(
+            "The access token is not valid.", code="invalid_token"
+        )
     if now.timestamp() >= payload["exp"]:
-        raise Unauthorized("The access token has expired.", code="access_token_expired")
+        raise Unauthorized(
+            "The access token has expired.", code="access_token_expired"
+        )
 
     return AccessClaims(user_id=payload["sub"], session_id=payload["sid"])
 

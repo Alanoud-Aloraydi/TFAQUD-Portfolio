@@ -25,10 +25,7 @@ void main() {
 
   test('agreeing sends the answer for this request and moves on', () async {
     await cubit.accept();
-    expect(
-      circles.requestAnswers.single,
-      ('request-in-1', true),
-    );
+    expect(circles.requestAnswers.single, ('request-in-1', true));
     expect(cubit.state.outcome, ReplyOutcome.accepted);
     expect(cubit.state.sending, isFalse);
     expect(cubit.state.errorKey, isNull);
@@ -37,15 +34,11 @@ void main() {
   test('declining sends "no" and goes back', () async {
     circles.replied = const Success(CircleRequestStatus.declined);
     await cubit.decline();
-    expect(
-      circles.requestAnswers.single,
-      ('request-in-1', false),
-    );
+    expect(circles.requestAnswers.single, ('request-in-1', false));
     expect(cubit.state.outcome, ReplyOutcome.declined);
   });
 
-  test('a request that is gone shows its text and stays on the page',
-      () async {
+  test('a request that is gone shows its text and stays on the page', () async {
     circles.replied = const Error(RequestUnavailableFailure());
     await cubit.accept();
     expect(cubit.state.outcome, ReplyOutcome.none);

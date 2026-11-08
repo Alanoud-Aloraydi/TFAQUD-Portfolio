@@ -40,7 +40,9 @@ class SessionStore(ABC):
     def get(self, session_id: str) -> SessionRecord | None: ...
 
     @abstractmethod
-    def get_by_refresh_hash(self, refresh_token_hash: str) -> SessionRecord | None: ...
+    def get_by_refresh_hash(
+        self, refresh_token_hash: str
+    ) -> SessionRecord | None: ...
 
     @abstractmethod
     def revoke(self, session_id: str, at: datetime) -> bool:
@@ -66,7 +68,9 @@ class InMemorySessionStore(SessionStore):
         with self._lock:
             return self._by_id.get(session_id)
 
-    def get_by_refresh_hash(self, refresh_token_hash: str) -> SessionRecord | None:
+    def get_by_refresh_hash(
+        self, refresh_token_hash: str
+    ) -> SessionRecord | None:
         with self._lock:
             session_id = self._id_by_hash.get(refresh_token_hash)
             return self._by_id.get(session_id) if session_id else None

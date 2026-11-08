@@ -99,12 +99,18 @@ def test_each_reading_time_is_its_own_task(
     assert unnamed.status_code == 422
     assert unnamed.json["error"]["code"] == "measurement_time_required"
     wrong = client.put(
-        path, headers=headers, json=reading(120), query_string={"time": "09:00"}
+        path,
+        headers=headers,
+        json=reading(120),
+        query_string={"time": "09:00"},
     )
     assert wrong.status_code == 404
 
     saved = client.put(
-        path, headers=headers, json=reading(120), query_string={"time": "14:00"}
+        path,
+        headers=headers,
+        json=reading(120),
+        query_string={"time": "14:00"},
     )
     assert saved.status_code == 200, saved.json
     assert saved.json["measurement_reading"]["scheduled_time"] == "14:00"
@@ -113,7 +119,10 @@ def test_each_reading_time_is_its_own_task(
         ("14:00", "after_meal", "read"),
     ]
     again = client.put(
-        path, headers=headers, json=reading(121), query_string={"time": "14:00"}
+        path,
+        headers=headers,
+        json=reading(121),
+        query_string={"time": "14:00"},
     )
     assert again.status_code == 409
 

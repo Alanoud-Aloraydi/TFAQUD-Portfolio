@@ -110,7 +110,8 @@ def rename_circle(circle_id):
 @bp.put("/<circle_id>/patient")
 @require_circle_role(*MEMBER)
 def update_patient(circle_id):
-    """Birth date, city, location; names too when the patient has no account."""
+    """Birth date, city, location; the names too when the patient has no
+    account."""
     body = parse_json_body(PatientUpdateInput)
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
@@ -133,7 +134,8 @@ def update_patient(circle_id):
 @bp.post("/<circle_id>/leave")
 @require_circle_role(MANAGER)
 def leave_circle(circle_id):
-    """Leave as a manager. The last manager must confirm deleting the circle."""
+    """Leave as a manager; the last manager must confirm deleting the
+    circle."""
     body = parse_optional_json_body(LeaveCircleInput)
     with care_work() as work:
         work.care.leave_circle(

@@ -57,10 +57,7 @@ class _TodayMedicationAttentionSectionState
     child: Column(
       children: [
         for (final item in widget.occurrences) ...[
-          _AttentionMedicationCard(
-            occurrence: item,
-            circleId: widget.circleId,
-          ),
+          _AttentionMedicationCard(occurrence: item, circleId: widget.circleId),
           if (item != widget.occurrences.last)
             const SizedBox(height: AppSpacing.sm),
         ],
@@ -363,95 +360,104 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-            width: 48,
-            child: Text(
-              formatMedicationTime(context, occurrence.time),
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          if (showThumbnail) ...[
-            MedicationPhotoBuilder(
-              circleId: circleId,
-              planId: occurrence.planId,
-              builder: (context, bytes) => bytes == null
-                  ? Container(
-                      width: 56,
-                      height: 56,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppSemanticColors.surfaceContent,
-                        borderRadius: BorderRadius.circular(AppRadius.field),
-                      ),
-                      child: const Icon(TafaqodPhosphorIcons.pill),
-                    )
-                  : MedicationPhotoImage(bytes: bytes, width: 56, height: 56),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InkWell(
-                  onTap: () => context.push(
-                    Routes.medicationDetails(circleId, occurrence.planId),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!showThumbnail) ...[
-                        const Icon(
-                          TafaqodPhosphorIcons.pill,
-                          size: 15,
-                          color: AppSemanticColors.textSupporting,
-                        ),
-                        const SizedBox(width: AppSpacing.tight),
-                      ],
-                      Flexible(
-                        child: Text(
-                          '${occurrence.name} '
-                          '${_strength(context, occurrence)}',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                      ),
-                    ],
-                  ),
+                width: 48,
+                child: Text(
+                  formatMedicationTime(context, occurrence.time),
+                  style: Theme.of(context).textTheme.labelMedium,
                 ),
-                Text(
-                  occurrence.instructions == null
-                      ? dose
-                      : '$dose · ${occurrence.instructions}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (record?.recordedByName case final name?) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PersonPhoto(
-                        name: name,
-                        photoPath: personPhotoPath(
-                          circleId,
-                          record!.recordedByAccountId,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              if (showThumbnail) ...[
+                MedicationPhotoBuilder(
+                  circleId: circleId,
+                  planId: occurrence.planId,
+                  builder: (context, bytes) => bytes == null
+                      ? Container(
+                          width: 56,
+                          height: 56,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppSemanticColors.surfaceContent,
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.field,
+                            ),
+                          ),
+                          child: const Icon(TafaqodPhosphorIcons.pill),
+                        )
+                      : MedicationPhotoImage(
+                          bytes: bytes,
+                          width: 56,
+                          height: 56,
                         ),
-                        avatarCode: record.recordedByAvatarCode,
-                        size: AppSizes.iconSmall,
-                      ),
-                      const SizedBox(width: AppSpacing.tight),
-                      Text(name, style: Theme.of(context).textTheme.bodySmall),
-                    ],
-                  ),
-                ],
+                ),
+                const SizedBox(width: AppSpacing.sm),
               ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          CompactStatusBadge(
-            text: label,
-            background: statusBackground,
-            foreground: statusColor,
-          ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: () => context.push(
+                        Routes.medicationDetails(circleId, occurrence.planId),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!showThumbnail) ...[
+                            const Icon(
+                              TafaqodPhosphorIcons.pill,
+                              size: 15,
+                              color: AppSemanticColors.textSupporting,
+                            ),
+                            const SizedBox(width: AppSpacing.tight),
+                          ],
+                          Flexible(
+                            child: Text(
+                              '${occurrence.name} '
+                              '${_strength(context, occurrence)}',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      occurrence.instructions == null
+                          ? dose
+                          : '$dose · ${occurrence.instructions}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (record?.recordedByName case final name?) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PersonPhoto(
+                            name: name,
+                            photoPath: personPhotoPath(
+                              circleId,
+                              record!.recordedByAccountId,
+                            ),
+                            avatarCode: record.recordedByAvatarCode,
+                            size: AppSizes.iconSmall,
+                          ),
+                          const SizedBox(width: AppSpacing.tight),
+                          Text(
+                            name,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              CompactStatusBadge(
+                text: label,
+                background: statusBackground,
+                foreground: statusColor,
+              ),
             ],
           ),
           if (canRecord) ...[

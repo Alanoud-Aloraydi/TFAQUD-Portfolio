@@ -7,7 +7,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The birth date and the city, each a row that opens its sheet. Used by
-/// onboarding (your own) and by the circle pages that still ask for them.
+/// onboarding (the person's own) and by the circle pages that still ask for
+/// them.
 class BirthDateCityFields extends StatelessWidget {
   const BirthDateCityFields({
     super.key,

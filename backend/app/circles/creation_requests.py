@@ -38,8 +38,8 @@ _NOT_FOUND = "The circle request does not exist."
 def send_request():
     """Ask a person to be the patient of a new circle.
 
-    If an open request from you to the same number already exists, that
-    request is returned instead of a second one.
+    If an open request from the caller to the same number already exists,
+    that request is returned instead of a second one.
     """
     body = parse_json_body(CreationRequestInput)
     with care_work() as work:
@@ -59,7 +59,8 @@ def send_request():
 @bp.get("")
 @require_auth
 def list_requests():
-    """Requests you sent (open ones) and requests addressed to your number."""
+    """The caller's open sent requests, and requests to the caller's
+    number."""
     with care_work() as work:
         account = work.session.get(Account, work.actor)
         if account is None:
@@ -71,7 +72,8 @@ def list_requests():
 @bp.post("/<request_id>/respond")
 @require_auth
 def respond(request_id):
-    """The patient accepts or declines. Accepting does not create the circle."""
+    """The patient accepts or declines; accepting does not create the
+    circle."""
     body = parse_json_body(RespondInput)
     with care_work(hide_forbidden=_NOT_FOUND) as work:
         row = work.care.respond_creation(

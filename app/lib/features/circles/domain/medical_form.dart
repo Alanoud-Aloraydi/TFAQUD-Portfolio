@@ -95,14 +95,11 @@ class MedicalForm extends Equatable {
     }
     return _copy(
       conditions: next,
-      conditionOther: next.contains(MedicalOptions.other)
-          ? conditionOther
-          : '',
+      conditionOther: next.contains(MedicalOptions.other) ? conditionOther : '',
     );
   }
 
-  MedicalForm withConditionOther(String text) =>
-      _copy(conditionOther: text);
+  MedicalForm withConditionOther(String text) => _copy(conditionOther: text);
 
   /// "No allergies" stands alone: it clears the lists, and any item clears it.
   MedicalForm toggleNoAllergies() {
@@ -138,8 +135,7 @@ class MedicalForm extends Equatable {
     );
   }
 
-  MedicalForm withMedicationOther(String text) =>
-      _copy(medicationOther: text);
+  MedicalForm withMedicationOther(String text) => _copy(medicationOther: text);
 
   MedicalForm withFoodOther(String text) => _copy(foodOther: text);
 
@@ -187,9 +183,7 @@ class MedicalForm extends Equatable {
           ? medicationOther.trim()
           : null,
       food: foods,
-      otherFood: foods.contains(MedicalOptions.other)
-          ? foodOther.trim()
-          : null,
+      otherFood: foods.contains(MedicalOptions.other) ? foodOther.trim() : null,
     );
   }
 

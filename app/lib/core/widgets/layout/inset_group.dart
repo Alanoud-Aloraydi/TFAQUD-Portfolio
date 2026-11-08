@@ -6,7 +6,6 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -487,10 +486,7 @@ class InsetChoiceButton extends StatelessWidget {
           children: <Widget>[
             Text(label),
             const SizedBox(width: AppSpacing.xs),
-            const Icon(
-              AppIcons.caretUpDown,
-              size: AppSizes.iconSmall,
-            ),
+            const Icon(AppIcons.caretUpDown, size: AppSizes.iconSmall),
           ],
         ),
       ),
@@ -525,65 +521,6 @@ Future<T?> showOptionSheet<T>(
         child: Text(sheetContext.tr('common.cancel'), style: style),
       ),
     ),
-  );
-}
-
-/// A sheet to pick several options, as Apple Health picks the days of a
-/// medicine: a grouped list with a check mark on each chosen row, and the
-/// confirm button. Confirm stays off until at least [minimum] are chosen.
-/// Returns null when the sheet is closed without confirming.
-Future<Set<T>?> showChecklistSheet<T>(
-  BuildContext context, {
-  required String title,
-  required List<T> options,
-  required String Function(T option) labelOf,
-  required Set<T> selected,
-  int minimum = 1,
-}) {
-  return showModalBottomSheet<Set<T>>(
-    context: context,
-    useRootNavigator: true,
-    useSafeArea: true,
-    isScrollControlled: true,
-    builder: (BuildContext sheetContext) {
-      final Set<T> chosen = <T>{...selected};
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return PickerSheetFrame(
-            title: title,
-            confirmLabel: context.tr('common.confirm'),
-            onConfirm: chosen.length < minimum
-                ? null
-                : () => Navigator.pop(context, chosen),
-            child: InsetGroup(
-              children: <Widget>[
-                for (final T option in options)
-                  Semantics(
-                    selected: chosen.contains(option),
-                    child: InsetRow(
-                      label: labelOf(option),
-                      labelOnly: true,
-                      trailing: chosen.contains(option)
-                          ? const Icon(
-                              AppIcons.check,
-                              size: AppSizes.iconSmall,
-                              color: AppSemanticColors.textPrimary,
-                            )
-                          : null,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          if (!chosen.remove(option)) chosen.add(option);
-                        });
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      );
-    },
   );
 }
 

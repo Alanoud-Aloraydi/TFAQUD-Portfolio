@@ -39,9 +39,8 @@ class MeasurementConditionChips extends StatelessWidget {
         if (caption != null) ...<Widget>[
           Text(
             caption!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppSemanticColors.textSupporting,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: AppSemanticColors.textSupporting),
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -60,6 +59,5 @@ class MeasurementConditionChips extends StatelessWidget {
 }
 
 /// [codes] on one line: «بعد الوجبة، بعد جهد».
-String conditionsText(BuildContext context, List<String> codes) => codes
-    .map((code) => context.tr('measurements.condition.$code'))
-    .join('، ');
+String conditionsText(BuildContext context, List<String> codes) =>
+    codes.map((code) => context.tr('measurements.condition.$code')).join('، ');

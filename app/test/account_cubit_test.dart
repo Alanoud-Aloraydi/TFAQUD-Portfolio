@@ -102,28 +102,30 @@ void main() {
   tearDown(() => cubit.close());
 
   group('load', () {
-    test('shows the account and the requests that wait for the patient',
-        () async {
-      circles.inbox = Success(
-        CircleInbox(
-          sent: <SentCircleRequest>[
-            _sent('a', CircleRequestStatus.pending),
-            _sent('b', CircleRequestStatus.accepted),
-            _sent('c', CircleRequestStatus.declined),
-          ],
-          received: const [],
-          invitations: const [],
-        ),
-      );
-      await cubit.load();
-      expect(cubit.state.status, AccountStatus.ready);
-      expect(cubit.state.account, CirclesFakeRepository.reem);
-      // A declined request is not a circle that waits for approval.
-      expect(cubit.state.sent.map((SentCircleRequest r) => r.id), <String>[
-        'a',
-        'b',
-      ]);
-    });
+    test(
+      'shows the account and the requests that wait for the patient',
+      () async {
+        circles.inbox = Success(
+          CircleInbox(
+            sent: <SentCircleRequest>[
+              _sent('a', CircleRequestStatus.pending),
+              _sent('b', CircleRequestStatus.accepted),
+              _sent('c', CircleRequestStatus.declined),
+            ],
+            received: const [],
+            invitations: const [],
+          ),
+        );
+        await cubit.load();
+        expect(cubit.state.status, AccountStatus.ready);
+        expect(cubit.state.account, CirclesFakeRepository.reem);
+        // A declined request is not a circle that waits for approval.
+        expect(cubit.state.sent.map((SentCircleRequest r) => r.id), <String>[
+          'a',
+          'b',
+        ]);
+      },
+    );
 
     test('still shows the account when only the requests fail', () async {
       circles.inbox = const Error(NetworkFailure());
@@ -221,7 +223,9 @@ void main() {
       await cubit.load();
       expect(await cubit.cancelRequest('a'), isTrue);
       expect(circles.canceledIds, <String>['a']);
-      expect(cubit.state.sent.map((SentCircleRequest r) => r.id), <String>['b']);
+      expect(cubit.state.sent.map((SentCircleRequest r) => r.id), <String>[
+        'b',
+      ]);
       expect(cubit.state.noticeKey, 'account.request_canceled');
     });
 
@@ -278,8 +282,7 @@ void main() {
       expect(cubit.state.signedOut, isTrue);
     });
 
-    test('the only manager of a circle is asked about those circles',
-        () async {
+    test('the only manager of a circle is asked about those circles', () async {
       circles.deleted = const Error(LastManagerFailure());
       cubit.startDelete();
       await cubit.confirmDelete();

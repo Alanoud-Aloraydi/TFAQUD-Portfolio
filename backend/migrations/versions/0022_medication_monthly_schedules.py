@@ -103,10 +103,12 @@ _DAYS_REQUIRED = """    IF EXISTS (
     END IF;
 """
 
-_WEEKDAY_OVERLAP_END = """        RAISE EXCEPTION 'Medication times cannot overlap on one weekday'
-            USING ERRCODE = '23514';
-    END IF;
-"""
+_WEEKDAY_OVERLAP_END = (
+    "        RAISE EXCEPTION "
+    "'Medication times cannot overlap on one weekday'\n"
+    "            USING ERRCODE = '23514';\n"
+    "    END IF;\n"
+)
 
 _MONTH_OVERLAP = _WEEKDAY_OVERLAP_END + """
     IF EXISTS (

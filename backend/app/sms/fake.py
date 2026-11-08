@@ -1,7 +1,7 @@
 """The fake sign-in code sender. It never contacts any provider.
 
-It makes and checks its own 6-digit code, with the rules that Authentica showed in
-the tests of TFQD-12 (docs/api-contracts.md, section 8):
+It makes and checks its own 6-digit code, with the rules that Authentica
+showed in the tests of TFQD-12 (docs/api-contracts.md, section 8):
 
   - the code is valid for `valid_seconds` (300) after it is sent;
   - a code is accepted once; the same code a second time is refused;
@@ -11,10 +11,11 @@ the tests of TFQD-12 (docs/api-contracts.md, section 8):
     them is the job of our server.
 
 One rule is a choice, not a finding: a new code replaces the old code of the
-same phone number. Whether Authentica does the same is test 9 of the test guide.
+same phone number. Whether Authentica does the same is test 9 of the test
+guide.
 
-Every message "sent" is kept in `outbox`, so a test can read the code that would
-have been texted to the user.
+Every message "sent" is kept in `outbox`, so a test can read the code that
+would have been texted to the user.
 
 The codes live in the memory of this one process. A server that runs several
 processes would not find a code sent by another one, so the Dockerfile starts
@@ -55,7 +56,8 @@ class FakeSmsSender(SmsSender):
         self._valid_for = timedelta(seconds=valid_seconds)
         self._lock = threading.Lock()
         self.outbox: list[SentSms] = []
-        # phone number -> (code, time it was sent). Removed when the code is used.
+        # phone number -> (code, time it was sent). Removed when the code is
+        # used.
         self._open_codes: dict[str, tuple[str, datetime]] = {}
 
     def send_code(self, phone: str) -> None:
@@ -63,10 +65,12 @@ class FakeSmsSender(SmsSender):
         message = f"Your code is {code}"
         now = self._clock.now()
         with self._lock:
-            self.outbox.append(SentSms(to=phone, message=message, sent_at=now, code=code))
+            self.outbox.append(
+                SentSms(to=phone, message=message, sent_at=now, code=code)
+            )
             self._open_codes[phone] = (code, now)
         if self._log_body:
-            # Development only: lets the developer read the code in the console.
+            # Development only: the developer reads the code in the console.
             logger.info("FAKE SMS (not sent) to=%s message=%r", phone, message)
         else:
             logger.info("FAKE SMS (not sent) to=%s", phone)

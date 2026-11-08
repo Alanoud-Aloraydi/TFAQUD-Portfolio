@@ -55,3 +55,8 @@ def test_interval_counts_from_the_treatment_start():
         "interval", [], [], date(2026, 12, 25),
         interval_days=1, treatment_starts_on=start,
     )
+
+
+def test_an_unknown_repeat_is_a_bug_not_a_weekly_schedule():
+    with pytest.raises(ValueError, match="daily"):
+        applies_on("daily", [1], [], date(2026, 11, 2))

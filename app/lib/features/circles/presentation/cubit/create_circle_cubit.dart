@@ -28,8 +28,8 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
   final CirclesUseCase _circles;
   final HomeUseCase _home;
 
-  /// Which circle is created: your own, one for a patient without the app, or
-  /// the one a patient agreed to.
+  /// Which circle is created: the signed-in person's own, one for a patient
+  /// without the app, or the one a patient agreed to.
   final CircleFlow flow;
 
   /// The request of the [CircleFlow.approved] flow.

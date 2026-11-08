@@ -6,7 +6,7 @@ enum OnboardingStatus { idle, saving, saved }
 /// Who the care circle is for (page "كيف تريد أن تبدأ؟").
 enum CareTarget { self, other }
 
-/// State of the account setup pages (about you, then how to start).
+/// State of the account setup pages («About you», then how to start).
 class OnboardingState extends Equatable {
   const OnboardingState({
     this.firstName = '',
@@ -25,8 +25,8 @@ class OnboardingState extends Equatable {
   final String lastName;
   final String displayName;
 
-  /// Your own birth date and city: asked once here, so a circle for your own
-  /// care needs only its name.
+  /// The person's own birth date and city: asked once here, so a circle for
+  /// their own care needs only its name.
   final DateTime? birthDate;
   final String? city;
 

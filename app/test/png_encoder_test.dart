@@ -44,16 +44,27 @@ void main() {
       expect(rows[y * (stride + 1)], 1);
       for (int x = 0; x < stride; x++) {
         final int left = x < 4 ? 0 : decoded[y * stride + x - 4];
-        decoded[y * stride + x] = (rows[y * (stride + 1) + 1 + x] + left) & 0xff;
+        decoded[y * stride + x] =
+            (rows[y * (stride + 1) + 1 + x] + left) & 0xff;
       }
     }
     expect(decoded, pixels.rgba);
 
     // It ends with the standard IEND chunk and its well-known checksum.
-    expect(
-      png.sublist(png.length - 12),
-      <int>[0, 0, 0, 0, 73, 69, 78, 68, 0xAE, 0x42, 0x60, 0x82],
-    );
+    expect(png.sublist(png.length - 12), <int>[
+      0,
+      0,
+      0,
+      0,
+      73,
+      69,
+      78,
+      68,
+      0xAE,
+      0x42,
+      0x60,
+      0x82,
+    ]);
   });
 
   test('refuses pixels that do not match the size', () {

@@ -29,10 +29,8 @@ class AttentionMark extends StatelessWidget {
         ),
         child: Text(
           '!',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: AppSemanticColors.textPrimary,
-            height: 1,
-          ),
+          style: Theme.of(context).textTheme.titleSmall
+              ?.copyWith(color: AppSemanticColors.textPrimary, height: 1),
         ),
       ),
     );

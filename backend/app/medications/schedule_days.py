@@ -65,7 +65,10 @@ def applies_on(
     if repeat == MONTHLY:
         last = calendar.monthrange(day.year, day.month)[1]
         return any(min(month_day, last) == day.day for month_day in month_days)
-    return day.isoweekday() in set(weekdays)
+    if repeat == WEEKLY:
+        return day.isoweekday() in set(weekdays)
+    # The database allows only the three above; anything else is a bug.
+    raise ValueError(f"Unknown schedule repeat {repeat!r}.")
 
 
 def load_days(session: Session, schedules) -> dict[UUID, ScheduleDays]:

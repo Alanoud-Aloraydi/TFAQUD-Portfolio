@@ -10,16 +10,33 @@ import jwt
 
 from tests.conftest import bearer
 
+SESSION = "/api/v1/auth/session"
+REFRESH = "/api/v1/auth/refresh"
+SIGN_OUT = "/api/v1/auth/sign-out"
+
 
 def error_code(response):
     return response.get_json()["error"]["code"]
+
+
+def session_of(client, access_token):
+    """The protected session endpoint, called with [access_token]."""
+    return client.get(SESSION, headers=bearer(access_token))
+
+
+def refresh_with(client, refresh_token):
+    return client.post(REFRESH, json={"refresh_token": refresh_token})
+
+
+def sign_out_with(client, access_token):
+    return client.post(SIGN_OUT, headers=bearer(access_token))
 
 
 # ---------------------------------------------------------------- access token
 
 
 def test_valid_access_token_reaches_a_protected_endpoint(client, signed_in):
-    response = client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token))
+    response = session_of(client, signed_in.access_token)
 
     assert response.status_code == 200
     body = response.get_json()
@@ -30,7 +47,7 @@ def test_valid_access_token_reaches_a_protected_endpoint(client, signed_in):
 
 
 def test_missing_header_is_rejected(client):
-    response = client.get("/api/v1/auth/session")
+    response = client.get(SESSION)
 
     assert response.status_code == 401
     assert error_code(response) == "missing_token"
@@ -38,7 +55,8 @@ def test_missing_header_is_rejected(client):
 
 def test_wrong_scheme_is_rejected(client, signed_in):
     response = client.get(
-        "/api/v1/auth/session", headers={"Authorization": f"Basic {signed_in.access_token}"}
+        SESSION,
+        headers={"Authorization": f"Basic {signed_in.access_token}"},
     )
 
     assert response.status_code == 401
@@ -46,7 +64,7 @@ def test_wrong_scheme_is_rejected(client, signed_in):
 
 
 def test_garbage_token_is_rejected(client):
-    response = client.get("/api/v1/auth/session", headers=bearer("not-a-token"))
+    response = session_of(client, "not-a-token")
 
     assert response.status_code == 401
     assert error_code(response) == "invalid_token"
@@ -64,7 +82,7 @@ def test_token_signed_with_another_key_is_rejected(client, signed_in, clock):
         algorithm="HS256",
     )
 
-    response = client.get("/api/v1/auth/session", headers=bearer(forged))
+    response = session_of(client, forged)
 
     assert response.status_code == 401
     assert error_code(response) == "invalid_token"
@@ -82,7 +100,7 @@ def test_token_with_algorithm_none_is_rejected(client, signed_in, clock):
         algorithm="none",
     )
 
-    response = client.get("/api/v1/auth/session", headers=bearer(unsigned))
+    response = session_of(client, unsigned)
 
     assert response.status_code == 401
     assert error_code(response) == "invalid_token"
@@ -90,16 +108,17 @@ def test_token_with_algorithm_none_is_rejected(client, signed_in, clock):
 
 def test_tampered_token_is_rejected(client, signed_in):
     header, payload, signature = signed_in.access_token.split(".")
-    tampered = ".".join([header, payload[:-2] + ("AA" if payload[-2:] != "AA" else "BB"), signature])
+    changed_end = "AA" if payload[-2:] != "AA" else "BB"
+    tampered = ".".join([header, payload[:-2] + changed_end, signature])
 
-    response = client.get("/api/v1/auth/session", headers=bearer(tampered))
+    response = session_of(client, tampered)
 
     assert response.status_code == 401
     assert error_code(response) == "invalid_token"
 
 
 def test_refresh_token_cannot_be_used_as_an_access_token(client, signed_in):
-    response = client.get("/api/v1/auth/session", headers=bearer(signed_in.refresh_token))
+    response = session_of(client, signed_in.refresh_token)
 
     assert response.status_code == 401
     assert error_code(response) == "invalid_token"
@@ -107,9 +126,9 @@ def test_refresh_token_cannot_be_used_as_an_access_token(client, signed_in):
 
 def test_access_token_lives_15_minutes(client, signed_in, clock):
     clock.advance(minutes=14, seconds=59)
-    still_valid = client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token))
+    still_valid = session_of(client, signed_in.access_token)
     clock.advance(seconds=1)
-    expired = client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token))
+    expired = session_of(client, signed_in.access_token)
 
     assert still_valid.status_code == 200
     assert expired.status_code == 401
@@ -119,35 +138,33 @@ def test_access_token_lives_15_minutes(client, signed_in, clock):
 # --------------------------------------------------------------------- refresh
 
 
-def test_expired_access_token_can_be_replaced_with_a_refresh(client, signed_in, clock):
+def test_expired_access_token_can_be_replaced_with_a_refresh(
+    client, signed_in, clock
+):
     clock.advance(minutes=20)
-    assert (
-        client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token)).status_code
-        == 401
-    )
+    assert session_of(client, signed_in.access_token).status_code == 401
 
-    refreshed = client.post("/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token})
+    refreshed = refresh_with(client, signed_in.refresh_token)
 
     assert refreshed.status_code == 200
     new_access = refreshed.get_json()["access_token"]
     assert new_access != signed_in.access_token
-    retry = client.get("/api/v1/auth/session", headers=bearer(new_access))
+    retry = session_of(client, new_access)
     assert retry.status_code == 200
-    assert retry.get_json()["session_id"] == signed_in.session_id  # same session
+    # The same session.
+    assert retry.get_json()["session_id"] == signed_in.session_id
 
 
 def test_refresh_response_has_the_new_expiry_time(client, signed_in, clock):
     clock.advance(minutes=20)
 
-    body = client.post(
-        "/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token}
-    ).get_json()
+    body = refresh_with(client, signed_in.refresh_token).get_json()
 
     assert body["access_token_expires_at"] == "2026-10-15T12:35:00+00:00"
 
 
 def test_unknown_refresh_token_is_rejected(client):
-    response = client.post("/api/v1/auth/refresh", json={"refresh_token": "made-up"})
+    response = refresh_with(client, "made-up")
 
     assert response.status_code == 401
     assert error_code(response) == "invalid_refresh_token"
@@ -155,9 +172,9 @@ def test_unknown_refresh_token_is_rejected(client):
 
 def test_refresh_token_lives_30_days(client, signed_in, clock):
     clock.advance(days=29, hours=23)
-    still_valid = client.post("/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token})
+    still_valid = refresh_with(client, signed_in.refresh_token)
     clock.advance(hours=1)
-    expired = client.post("/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token})
+    expired = refresh_with(client, signed_in.refresh_token)
 
     assert still_valid.status_code == 200
     assert expired.status_code == 401
@@ -168,58 +185,65 @@ def test_refresh_token_lives_30_days(client, signed_in, clock):
 
 
 def test_sign_out_returns_204(client, signed_in):
-    response = client.post("/api/v1/auth/sign-out", headers=bearer(signed_in.access_token))
+    response = sign_out_with(client, signed_in.access_token)
 
     assert response.status_code == 204
     assert response.get_data() == b""
 
 
 def test_sign_out_needs_a_valid_access_token(client):
-    response = client.post("/api/v1/auth/sign-out")
+    response = client.post(SIGN_OUT)
 
     assert response.status_code == 401
 
 
 def test_refresh_token_of_a_revoked_session_is_rejected(client, signed_in):
     """Acceptance criterion of TFQD-6."""
-    before = client.post("/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token})
+    before = refresh_with(client, signed_in.refresh_token)
     assert before.status_code == 200
 
-    client.post("/api/v1/auth/sign-out", headers=bearer(signed_in.access_token))
+    sign_out_with(client, signed_in.access_token)
 
-    after = client.post("/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token})
+    after = refresh_with(client, signed_in.refresh_token)
     assert after.status_code == 401
     assert error_code(after) == "invalid_refresh_token"
 
 
-def test_access_token_of_a_revoked_session_is_rejected_at_once(client, signed_in):
-    """The access token is still inside its 15 minutes, but the session has ended."""
-    client.post("/api/v1/auth/sign-out", headers=bearer(signed_in.access_token))
+def test_access_token_of_a_revoked_session_is_rejected_at_once(
+    client, signed_in
+):
+    """The access token is still inside its 15 minutes, but the session
+    has ended."""
+    sign_out_with(client, signed_in.access_token)
 
-    response = client.get("/api/v1/auth/session", headers=bearer(signed_in.access_token))
+    response = session_of(client, signed_in.access_token)
 
     assert response.status_code == 401
     assert error_code(response) == "session_revoked"
 
 
-def test_access_token_issued_by_a_refresh_dies_with_the_session(client, signed_in, clock):
+def test_access_token_issued_by_a_refresh_dies_with_the_session(
+    client, signed_in, clock
+):
     clock.advance(minutes=20)
-    new_access = client.post(
-        "/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token}
+    new_access = refresh_with(
+        client, signed_in.refresh_token
     ).get_json()["access_token"]
 
-    client.post("/api/v1/auth/sign-out", headers=bearer(new_access))
+    sign_out_with(client, new_access)
 
-    response = client.get("/api/v1/auth/session", headers=bearer(new_access))
+    response = session_of(client, new_access)
     assert error_code(response) == "session_revoked"
 
 
-def test_signing_out_twice_does_not_break_anything(client, signed_in, sessions):
-    client.post("/api/v1/auth/sign-out", headers=bearer(signed_in.access_token))
+def test_signing_out_twice_does_not_break_anything(
+    client, signed_in, sessions
+):
+    sign_out_with(client, signed_in.access_token)
 
     sessions.sign_out(signed_in.session_id)  # a second sign-out, no error
 
-    response = client.post("/api/v1/auth/refresh", json={"refresh_token": signed_in.refresh_token})
+    response = refresh_with(client, signed_in.refresh_token)
     assert response.status_code == 401
 
 
@@ -228,19 +252,11 @@ def test_sign_out_ends_only_that_session(client, sessions, user_store, clock):
     phone = sessions.create_session(user.id)
     tablet = sessions.create_session(user.id)
 
-    client.post("/api/v1/auth/sign-out", headers=bearer(phone.access_token))
+    sign_out_with(client, phone.access_token)
 
-    assert (
-        client.post("/api/v1/auth/refresh", json={"refresh_token": phone.refresh_token}).status_code
-        == 401
-    )
-    assert (
-        client.post("/api/v1/auth/refresh", json={"refresh_token": tablet.refresh_token}).status_code
-        == 200
-    )
-    assert (
-        client.get("/api/v1/auth/session", headers=bearer(tablet.access_token)).status_code == 200
-    )
+    assert refresh_with(client, phone.refresh_token).status_code == 401
+    assert refresh_with(client, tablet.refresh_token).status_code == 200
+    assert session_of(client, tablet.access_token).status_code == 200
 
 
 # --------------------------------------------------------------------- storage

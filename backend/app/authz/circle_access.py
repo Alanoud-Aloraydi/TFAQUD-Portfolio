@@ -14,7 +14,7 @@ from app.authz.roles import CircleRole
 class CircleAccess(ABC):
     @abstractmethod
     def role_in(self, user_id: str, circle_id: str) -> CircleRole | None:
-        """The user's role in the circle, or None if the user is not a member."""
+        """The user's role in the circle; None if the user is not in it."""
 
 
 class DenyAllCircleAccess(CircleAccess):

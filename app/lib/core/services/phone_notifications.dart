@@ -217,9 +217,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
           // With the sound, also when the app is open.
           presentSound: true,
           sound: notificationSound,
-          categoryIdentifier: notification.snoozable
-              ? reminderCategory
-              : null,
+          categoryIdentifier: notification.snoozable ? reminderCategory : null,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

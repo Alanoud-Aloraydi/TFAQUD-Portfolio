@@ -148,8 +148,7 @@ class _TimingState extends StatelessWidget {
         AppSemanticColors.textPrimary,
       ),
       // Timing needs attention, but is not a medical error or proof of omission.
-      DoseTimingState.late ||
-      DoseTimingState.missed => (
+      DoseTimingState.late || DoseTimingState.missed => (
         AppSemanticColors.surfaceAttention,
         tokens.warningText,
       ),

@@ -35,10 +35,14 @@ def test_api_error_uses_the_error_format(app, client):
 
     @app.get("/boom/forbidden")
     def forbidden():
-        raise Forbidden(code="custom_code", details=[{"field": "x", "message": "y"}])
+        raise Forbidden(
+            code="custom_code", details=[{"field": "x", "message": "y"}]
+        )
 
     assert_error_shape(client.get("/boom/not-found"), 404, "not_found")
-    error = assert_error_shape(client.get("/boom/forbidden"), 403, "custom_code")
+    error = assert_error_shape(
+        client.get("/boom/forbidden"), 403, "custom_code"
+    )
     assert error["details"] == [{"field": "x", "message": "y"}]
 
 
@@ -70,18 +74,29 @@ def test_every_response_has_a_request_id(client):
 
 
 def test_a_safe_client_request_id_is_kept(client):
-    response = client.get("/api/v1/health", headers={"X-Request-ID": "abc-123_XYZ"})
+    response = client.get(
+        "/api/v1/health", headers={"X-Request-ID": "abc-123_XYZ"}
+    )
 
     assert response.headers["X-Request-ID"] == "abc-123_XYZ"
 
 
 @pytest.mark.parametrize(
-    "unsafe", ["has space", "x" * 65, "line\nbreak", "ends-with-newline\n", "<script>"]
+    "unsafe",
+    [
+        "has space",
+        "x" * 65,
+        "line\nbreak",
+        "ends-with-newline\n",
+        "<script>",
+    ],
 )
 def test_an_unsafe_client_request_id_is_replaced(client, unsafe):
     # The header is sent directly through the WSGI environ so that characters a
     # real HTTP client would refuse can still be tested.
-    response = client.get("/api/v1/health", environ_overrides={"HTTP_X_REQUEST_ID": unsafe})
+    response = client.get(
+        "/api/v1/health", environ_overrides={"HTTP_X_REQUEST_ID": unsafe}
+    )
 
     assert response.headers["X-Request-ID"] != unsafe
     assert len(response.headers["X-Request-ID"]) == 32

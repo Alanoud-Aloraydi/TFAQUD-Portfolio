@@ -165,10 +165,14 @@ class PlanRequest(Dto):
             raise ValueError("One dose time repeats in one way only.")
         # Two monthly doses at one time never share a day of the month.
         days = {
-            (item.time_of_day, day) for item in monthly for day in item.month_days
+            (item.time_of_day, day)
+            for item in monthly
+            for day in item.month_days
         }
         if len(days) != sum(len(item.month_days) for item in monthly):
-            raise ValueError("Dose times cannot repeat on one day of the month.")
+            raise ValueError(
+                "Dose times cannot repeat on one day of the month."
+            )
         return self
 
 

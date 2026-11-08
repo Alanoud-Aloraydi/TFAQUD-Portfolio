@@ -85,9 +85,12 @@ def test_a_different_role_in_each_circle_is_respected(
     )
     headers = bearer(signed_in.access_token)
 
-    assert circle_client.get("/test/circles/circle-A/today", headers=headers).status_code == 200
-    assert circle_client.get("/test/circles/circle-B/today", headers=headers).status_code == 403
-    assert circle_client.get("/test/circles/circle-B/anyone", headers=headers).status_code == 200
+    def status(path):
+        return circle_client.get(path, headers=headers).status_code
+
+    assert status("/test/circles/circle-A/today") == 200
+    assert status("/test/circles/circle-B/today") == 403
+    assert status("/test/circles/circle-B/anyone") == 200
 
 
 def test_non_member_and_unknown_circle_get_the_same_answer(
@@ -96,12 +99,18 @@ def test_non_member_and_unknown_circle_get_the_same_answer(
     circle_access.grant("someone-else", "circle-A", CircleRole.MANAGER)
     headers = bearer(signed_in.access_token)
 
-    real_but_not_member = circle_client.get("/test/circles/circle-A/today", headers=headers)
-    does_not_exist = circle_client.get("/test/circles/no-such-circle/today", headers=headers)
+    real_but_not_member = circle_client.get(
+        "/test/circles/circle-A/today", headers=headers
+    )
+    does_not_exist = circle_client.get(
+        "/test/circles/no-such-circle/today", headers=headers
+    )
 
     assert real_but_not_member.status_code == does_not_exist.status_code == 403
-    assert real_but_not_member.get_json()["error"]["code"] == does_not_exist.get_json()["error"]["code"]
-    assert real_but_not_member.get_json()["error"]["message"] == does_not_exist.get_json()["error"]["message"]
+    member_error = real_but_not_member.get_json()["error"]
+    unknown_error = does_not_exist.get_json()["error"]
+    assert member_error["code"] == unknown_error["code"]
+    assert member_error["message"] == unknown_error["message"]
 
 
 def test_no_roles_listed_accepts_any_member(

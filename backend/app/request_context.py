@@ -17,9 +17,13 @@ def register_request_id(app: Flask) -> None:
     @app.before_request
     def assign_request_id():
         supplied = request.headers.get("X-Request-ID", "")
-        # fullmatch: the whole value must fit the pattern. (`$` would also accept
-        # a value that ends with a newline.)
-        g.request_id = supplied if _SAFE_REQUEST_ID.fullmatch(supplied) else uuid.uuid4().hex
+        # fullmatch: the whole value must fit the pattern. (`$` would also
+        # accept a value that ends with a newline.)
+        g.request_id = (
+            supplied
+            if _SAFE_REQUEST_ID.fullmatch(supplied)
+            else uuid.uuid4().hex
+        )
 
     @app.after_request
     def return_request_id(response):

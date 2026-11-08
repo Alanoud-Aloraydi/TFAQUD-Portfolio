@@ -61,6 +61,7 @@ class MeasurementReadingSheet extends StatefulWidget {
 
 class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   late MeasurementKind _kind = widget.occurrence?.kind ?? MeasurementKind.bp;
+
   /// «ظروف القياس»: a scheduled task starts with its plan's, which the
   /// reader can change; a free reading starts with none.
   late List<String> _conditions =
@@ -173,10 +174,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       _errorKey = null;
     });
     final cubit = context.read<MeasurementReadingsCubit>();
-    final saved = await cubit.record(
-      draft,
-      occurrence: widget.occurrence,
-    );
+    final saved = await cubit.record(draft, occurrence: widget.occurrence);
     if (!mounted) return;
     if (saved) {
       Navigator.of(context).pop(true);

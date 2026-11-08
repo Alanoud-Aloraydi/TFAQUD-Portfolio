@@ -91,7 +91,9 @@ def _circles(account_id: UUID) -> list[dict]:
                 # the patient's name instead («… أخذ نورة للجرعة»).
                 "is_patient": row.account_id == account_id,
                 "patient_name": (
-                    row.display_name or row.account_first_name or row.first_name
+                    row.display_name
+                    or row.account_first_name
+                    or row.first_name
                 ),
                 # A linked patient shares the account's own avatar, like
                 # their photo.

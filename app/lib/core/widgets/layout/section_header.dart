@@ -15,6 +15,11 @@ class SectionHeader extends StatelessWidget {
       child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
     );
     if (trailing == null) return label;
-    return Row(children: [Expanded(child: label), trailing!]);
+    return Row(
+      children: [
+        Expanded(child: label),
+        trailing!,
+      ],
+    );
   }
 }

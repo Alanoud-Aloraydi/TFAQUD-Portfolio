@@ -289,7 +289,11 @@ class MeasurementQueries:
                 )
             )
             saved = {
-                (item.plan_version_id, item.scheduled_on, item.scheduled_time): item
+                (
+                    item.plan_version_id,
+                    item.scheduled_on,
+                    item.scheduled_time,
+                ): item
                 for item in records
             }
         accounts = accounts_by_id(

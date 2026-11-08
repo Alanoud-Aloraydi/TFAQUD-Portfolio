@@ -8,7 +8,11 @@ import 'package:flutter/material.dart';
 /// task, an appointment): same background, radius and padding, with the red
 /// border shown when the row needs attention (late or missed).
 class TodayRowCard extends StatelessWidget {
-  const TodayRowCard({super.key, required this.child, this.isAttention = false});
+  const TodayRowCard({
+    super.key,
+    required this.child,
+    this.isAttention = false,
+  });
 
   final Widget child;
   final bool isAttention;
@@ -21,11 +25,12 @@ class TodayRowCard extends StatelessWidget {
             ? Theme.of(context).colorScheme.errorContainer
             : AppSemanticColors.surfaceContent,
         borderRadius: BorderRadius.circular(AppRadius.field),
-        border: isAttention
-            ? Border.all(color: context.tokens.error)
-            : null,
+        border: isAttention ? Border.all(color: context.tokens.error) : null,
       ),
-      child: Padding(padding: const EdgeInsets.all(AppSpacing.md), child: child),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: child,
+      ),
     );
   }
 }

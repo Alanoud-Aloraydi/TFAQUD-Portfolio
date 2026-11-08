@@ -19,7 +19,8 @@ def test_token_lifetimes_can_be_changed_by_environment_variable(monkeypatch):
 
     config = load_config("testing")
 
-    assert (config["ACCESS_TOKEN_MINUTES"], config["REFRESH_TOKEN_DAYS"]) == (5, 7)
+    lifetimes = (config["ACCESS_TOKEN_MINUTES"], config["REFRESH_TOKEN_DAYS"])
+    assert lifetimes == (5, 7)
 
 
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
@@ -61,7 +62,8 @@ def test_development_works_without_any_setup(monkeypatch):
 
     app = create_app("development")
 
-    assert app.config["FAKE_SMS_LOG_BODY"] is True  # developer reads the OTP in the log
+    # The developer reads the code in the log.
+    assert app.config["FAKE_SMS_LOG_BODY"] is True
 
 
 def test_production_refuses_the_in_memory_session_store(monkeypatch):
@@ -74,7 +76,9 @@ def test_production_refuses_the_in_memory_session_store(monkeypatch):
         create_app("production", sms_sender=sender)
 
 
-def test_staging_starts_with_a_warning_about_the_in_memory_store(monkeypatch, caplog):
+def test_staging_starts_with_a_warning_about_the_in_memory_store(
+    monkeypatch, caplog
+):
     monkeypatch.setenv("SECRET_KEY", "x" * 40)
 
     with caplog.at_level("WARNING"):
@@ -94,7 +98,9 @@ def test_a_given_session_store_is_used_without_warning(monkeypatch, caplog):
     assert "in-memory session store" not in caplog.text
 
 
-def test_default_code_validity_is_300_seconds_like_the_authentica_dashboard(app):
+def test_default_code_validity_is_300_seconds_like_the_authentica_dashboard(
+    app,
+):
     assert app.config["OTP_VALID_SECONDS"] == 300
 
 
@@ -104,7 +110,9 @@ def test_code_validity_can_be_changed_by_environment_variable(monkeypatch):
     assert load_config("testing")["OTP_VALID_SECONDS"] == 120
 
 
-@pytest.mark.parametrize("name", ["OTP_VALID_SECONDS", "AUTHENTICA_TEMPLATE_ID"])
+@pytest.mark.parametrize(
+    "name", ["OTP_VALID_SECONDS", "AUTHENTICA_TEMPLATE_ID"]
+)
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
 def test_bad_otp_numbers_are_refused(monkeypatch, name, value):
     monkeypatch.setenv(name, value)
@@ -117,13 +125,17 @@ def test_default_authentica_template_is_5(app):
     assert app.config["AUTHENTICA_TEMPLATE_ID"] == 5
 
 
-def test_authentica_template_can_be_changed_by_environment_variable(monkeypatch):
+def test_authentica_template_can_be_changed_by_environment_variable(
+    monkeypatch,
+):
     monkeypatch.setenv("AUTHENTICA_TEMPLATE_ID", "31")
 
     assert load_config("testing")["AUTHENTICA_TEMPLATE_ID"] == 31
 
 
-def test_the_authentica_key_is_read_from_the_environment_outside_tests(monkeypatch):
+def test_the_authentica_key_is_read_from_the_environment_outside_tests(
+    monkeypatch,
+):
     monkeypatch.setenv("AUTHENTICA_API_KEY", "k" * 30)
 
     assert load_config("development")["AUTHENTICA_API_KEY"] == "k" * 30
@@ -146,10 +158,13 @@ def test_sign_in_limits_can_be_changed_by_environment_variable(monkeypatch):
 
     config = load_config("testing")
 
-    assert (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_DAY"]) == (5, 10)
+    limits = (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_DAY"])
+    assert limits == (5, 10)
 
 
-@pytest.mark.parametrize("name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_DAY"])
+@pytest.mark.parametrize(
+    "name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_DAY"]
+)
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
 def test_bad_sign_in_limits_are_refused(monkeypatch, name, value):
     monkeypatch.setenv(name, value)

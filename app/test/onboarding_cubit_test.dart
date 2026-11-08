@@ -46,16 +46,18 @@ void main() {
       ..displayNameChanged('Reem');
   }
 
-  test('the names alone are not enough: the birth date and city are asked',
-      () async {
-    typeNames();
+  test(
+    'the names alone are not enough: the birth date and city are asked',
+    () async {
+      typeNames();
 
-    final bool saved = await cubit.saveProfile();
+      final bool saved = await cubit.saveProfile();
 
-    expect(saved, isFalse);
-    expect(cubit.state.showErrors, isTrue);
-    expect(repository.saved, isEmpty);
-  });
+      expect(saved, isFalse);
+      expect(cubit.state.showErrors, isTrue);
+      expect(repository.saved, isEmpty);
+    },
+  );
 
   test('saves the names with the birth date and city', () async {
     typeNames();

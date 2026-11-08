@@ -69,6 +69,22 @@ import 'package:app/features/onboarding/presentation/pages/onboarding_feature_sc
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
+import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_account_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_done_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_measure_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_medical_file_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_mode_feature_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_reminder_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_snooze_screen.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, visibleForTesting;
@@ -77,11 +93,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_account_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_home_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/pages/simplified_account_screen.dart';
-import 'package:app/features/simplified_mode/presentation/pages/simplified_home_feature_screen.dart';
 
 import 'routers.dart';
 
@@ -132,31 +143,7 @@ class AppRouter {
         ),
       ),
       GoRoute(path: Routes.home, redirect: (context, state) => Routes.today),
-      GoRoute(
-        path: Routes.simplifiedHome,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) => GetIt.I<SimplifiedHomeCubit>()..load(),
-            child: const SimplifiedHomeFeatureScreen(),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedAccount,
-        pageBuilder: _iosPage(
-          (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => GetIt.I<SimplifiedAccountCubit>()..load(),
-              ),
-              BlocProvider(
-                create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
-              ),
-            ],
-            child: const SimplifiedAccountScreen(),
-          ),
-        ),
-      ),
+      _simplifiedShell(),
       StatefulShellRoute(
         // The tabs fade into each other instead of swapping at once.
         navigatorContainerBuilder: (context, navigationShell, children) =>
@@ -507,8 +494,9 @@ class AppRouter {
         ],
       ),
       // A circle is created on one page with its own CreateCircleCubit. The
-      // circle for your own care loads the account at the start, to learn
-      // whether it already has a circle and holds the birth date and city.
+      // circle for the signed-in person's own care loads the account at the
+      // start, to learn whether it already has a circle and holds the birth
+      // date and city.
       // When the server says the sign-in ended, the page sends the user to
       // sign-in.
       _createCircleShell(
@@ -627,22 +615,8 @@ class AppRouter {
       GoRoute(
         path: Routes.emergencyCardPath,
         pageBuilder: _iosPage(
-          (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => EmergencyCardCubit(
-                  GetIt.I<CirclesUseCase>(),
-                  state.pathParameters['circleId']!,
-                )..load(),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    MedicationsCubit(GetIt.I<MedicationsUseCase>())
-                      ..load(state.pathParameters['circleId']!),
-              ),
-            ],
-            child: const EmergencyCardScreen(),
-          ),
+          (context, state) =>
+              _emergencyCard(state.pathParameters['circleId']!, Routes.circle),
         ),
       ),
       if (kDebugMode)
@@ -681,6 +655,156 @@ class AppRouter {
         location == Routes.auth ||
         location.startsWith('${Routes.auth}/');
     return open ? null : Routes.auth;
+  }
+
+  /// The simplified mode's screens share one day ([SimplifiedModeCubit]),
+  /// so a reminder, the day's list and the home always agree, and one text
+  /// size. The medical file's edit page and the emergency card are the
+  /// detailed mode's pages, opened on top: going back returns here.
+  static ShellRoute _simplifiedShell() {
+    return ShellRoute(
+      pageBuilder: _iosShellPage(
+        (context, state, child) => MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => SimplifiedModeCubit(
+                GetIt.I<SimplifiedModeUseCase>(),
+                photoChanges: GetIt.I<PrivatePhotoRepository>().changes,
+              )..load(),
+            ),
+            BlocProvider(
+              create: (context) =>
+                  SimplifiedSettingsCubit(GetIt.I<SimplifiedPreferences>())
+                    ..load(),
+            ),
+          ],
+          child: SimplifiedTextScale(child: child),
+        ),
+      ),
+      routes: <RouteBase>[
+        GoRoute(
+          path: Routes.simplifiedMode,
+          pageBuilder: _iosPage(
+            (context, state) => const SimplifiedModeFeatureScreen(),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedSchedule,
+          pageBuilder: _iosPage(
+            (context, state) => const SimplifiedScheduleScreen(),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedReminder,
+          redirect: _requireExtra<TodayTaskKind>,
+          pageBuilder: _iosModalPage(
+            (context, state) =>
+                SimplifiedReminderScreen(kind: state.extra! as TodayTaskKind),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedSnooze,
+          redirect: _requireExtra<TodayTaskKind>,
+          pageBuilder: _iosPage(
+            (context, state) =>
+                SimplifiedSnoozeScreen(kind: state.extra! as TodayTaskKind),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedDone,
+          redirect: _requireExtra<SimplifiedDoneMessage>,
+          pageBuilder: _iosPage(
+            (context, state) => SimplifiedDoneScreen(
+              message: state.extra! as SimplifiedDoneMessage,
+            ),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedMeasurePath,
+          pageBuilder: _iosPage(
+            (context, state) => BlocProvider(
+              create: (context) => SimplifiedMeasurementCubit(
+                GetIt.I<SimplifiedModeUseCase>(),
+                state.pathParameters['circleId']!,
+              )..load(),
+              child: SimplifiedMeasureScreen(
+                lockedKind: state.extra is MeasurementKind
+                    ? state.extra! as MeasurementKind
+                    : null,
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedAccount,
+          pageBuilder: _iosPage(
+            (context, state) => MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => AccountCubit(
+                    GetIt.I<CirclesUseCase>(),
+                    GetIt.I<OnboardingUseCase>(),
+                    GetIt.I<AuthUseCase>(),
+                    GetIt.I<HomeUseCase>(),
+                  )..load(),
+                ),
+                BlocProvider(
+                  create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
+                ),
+              ],
+              child: const SimplifiedAccountScreen(),
+            ),
+          ),
+        ),
+        // The same card as the detailed mode's, but inside this shell: the
+        // text size holds, and «رجوع» never lands in the detailed mode.
+        GoRoute(
+          path: Routes.simplifiedEmergencyCardPath,
+          pageBuilder: _iosPage(
+            (context, state) => _emergencyCard(
+              state.pathParameters['circleId']!,
+              Routes.simplifiedMode,
+            ),
+          ),
+        ),
+        GoRoute(
+          path: Routes.simplifiedMedicalFilePath,
+          pageBuilder: _iosPage((context, state) {
+            final String circleId = state.pathParameters['circleId']!;
+            return BlocProvider(
+              create: (context) =>
+                  MedicalFileCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
+              child: SimplifiedMedicalFileScreen(circleId: circleId),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  /// The emergency card of [circleId], with the medicines it lists;
+  /// [closeTo] is where «رجوع» goes when there is no page under it.
+  static Widget _emergencyCard(String circleId, String closeTo) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) =>
+              EmergencyCardCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
+        ),
+        BlocProvider(
+          create: (context) =>
+              MedicationsCubit(GetIt.I<MedicationsUseCase>())..load(circleId),
+        ),
+      ],
+      child: EmergencyCardScreen(closeTo: closeTo),
+    );
+  }
+
+  /// A simplified screen whose subject travels as the `extra` of the
+  /// navigation; without it (a restored or typed address) the home is the
+  /// way in.
+  static String? _requireExtra<T>(BuildContext context, GoRouterState state) {
+    return state.extra is T ? null : Routes.simplifiedMode;
   }
 
   static ShellRoute _createCircleShell({

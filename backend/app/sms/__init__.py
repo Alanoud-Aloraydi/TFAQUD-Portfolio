@@ -10,15 +10,17 @@ def create_sms_sender(config: dict, clock) -> SmsSender:
     Two rules protect against sending by mistake:
       - the testing environment can only ever use the fake sender;
       - the production environment can never use the fake sender.
-    Choosing "authentica" needs AUTHENTICA_API_KEY. Creating the sender makes no
-    call: the first call happens when a code is sent or checked.
+    Choosing "authentica" needs AUTHENTICA_API_KEY. Creating the sender makes
+    no call: the first call happens when a code is sent or checked.
     """
     backend = config["SMS_BACKEND"]
     env = config["APP_ENV"]
 
     if backend == "fake":
         if env == "production":
-            raise ConfigError("The fake SMS sender cannot be used in production.")
+            raise ConfigError(
+                "The fake SMS sender cannot be used in production."
+            )
         return FakeSmsSender(
             clock,
             log_body=config["FAKE_SMS_LOG_BODY"],
@@ -33,8 +35,12 @@ def create_sms_sender(config: dict, clock) -> SmsSender:
             raise ConfigError(
                 "SMS_BACKEND is authentica, so AUTHENTICA_API_KEY is required."
             )
-        return AuthenticaSmsSender(api_key, template_id=config["AUTHENTICA_TEMPLATE_ID"])
-    raise ConfigError(f"Unknown SMS_BACKEND {backend!r}. Use 'fake' or 'authentica'.")
+        return AuthenticaSmsSender(
+            api_key, template_id=config["AUTHENTICA_TEMPLATE_ID"]
+        )
+    raise ConfigError(
+        f"Unknown SMS_BACKEND {backend!r}. Use 'fake' or 'authentica'."
+    )
 
 
 __all__ = [

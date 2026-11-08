@@ -177,10 +177,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: form.saving ? null : widget.onDelete,
-                icon: const Icon(
-                  AppIcons.trash,
-                  size: AppSizes.iconSmall,
-                ),
+                icon: const Icon(AppIcons.trash, size: AppSizes.iconSmall),
                 label: Text(context.tr('circles.contact_delete')),
                 // Deleting is a destructive action: the error red. No start
                 // padding, so the trash sits on the card's content edge.

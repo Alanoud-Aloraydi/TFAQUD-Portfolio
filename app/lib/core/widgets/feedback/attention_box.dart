@@ -55,9 +55,8 @@ class AttentionBox extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppSemanticColors.statusWarning,
-                    ),
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(color: AppSemanticColors.statusWarning),
                   ),
                   if (count != null) ...[
                     const SizedBox(width: AppSpacing.sm),

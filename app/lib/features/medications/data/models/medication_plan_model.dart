@@ -12,8 +12,7 @@ class MedicationPlanModel {
     final versionJson = json['version'] as Map<String, dynamic>;
     final pendingJson = json['pending_version'] as Map<String, dynamic>?;
     final lastJson = json['last_record'] as Map<String, dynamic>?;
-    final lastRecordedBy =
-        lastJson?['recorded_by'] as Map<String, dynamic>?;
+    final lastRecordedBy = lastJson?['recorded_by'] as Map<String, dynamic>?;
     final historyJson = json['history'] as List<dynamic>? ?? const [];
     final createdBy = json['created_by'] as Map<String, dynamic>?;
     final lastEditedBy = json['last_edited_by'] as Map<String, dynamic>?;
@@ -40,8 +39,7 @@ class MedicationPlanModel {
                 takenAt: _optionalDateTime(lastJson['taken_at']),
                 recordedByAccountId: lastRecordedBy?['account_id'] as String?,
                 recordedByName: lastRecordedBy?['name'] as String?,
-                recordedByAvatarCode:
-                    lastRecordedBy?['avatar_code'] as String?,
+                recordedByAvatarCode: lastRecordedBy?['avatar_code'] as String?,
               ),
         history: List.unmodifiable(
           historyJson.map((item) => _version(item as Map<String, dynamic>)),

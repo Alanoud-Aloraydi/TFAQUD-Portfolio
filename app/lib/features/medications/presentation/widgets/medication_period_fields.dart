@@ -151,8 +151,7 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
               ChipOption('now', context.tr('medications.now')),
               ChipOption('date', context.tr('medications.specific_date')),
             ],
-            isSelected: (String code) =>
-                code == 'now' ? isNow : !isNow,
+            isSelected: (String code) => code == 'now' ? isNow : !isNow,
             onTap: (String code) {
               if (code == 'now') {
                 data.effectiveFromOn = today;

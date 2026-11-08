@@ -1,4 +1,4 @@
-"""Browser access (CORS) exists only in development, and only for this computer."""
+"""Browser access (CORS): only in development, only for this computer."""
 
 import pytest
 
@@ -30,7 +30,8 @@ def test_the_browser_check_before_a_call_is_answered(dev_client):
     assert response.status_code in (200, 204)
     assert response.headers["Access-Control-Allow-Origin"] == ORIGIN
     allowed_headers = response.headers["Access-Control-Allow-Headers"].lower()
-    assert "authorization" in allowed_headers and "content-type" in allowed_headers
+    assert "authorization" in allowed_headers
+    assert "content-type" in allowed_headers
     assert "POST" in response.headers["Access-Control-Allow-Methods"]
     assert "PUT" in response.headers["Access-Control-Allow-Methods"]
 
@@ -52,7 +53,12 @@ def test_the_browser_may_use_every_method_the_api_has(dev_client):
 
 @pytest.mark.parametrize(
     "origin",
-    ["http://localhost:5000", "http://127.0.0.1:8080", "https://localhost", "http://localhost"],
+    [
+        "http://localhost:5000",
+        "http://127.0.0.1:8080",
+        "https://localhost",
+        "http://localhost",
+    ],
 )
 def test_addresses_of_this_computer_are_allowed(dev_client, origin):
     response = dev_client.get("/api/v1/health", headers={"Origin": origin})

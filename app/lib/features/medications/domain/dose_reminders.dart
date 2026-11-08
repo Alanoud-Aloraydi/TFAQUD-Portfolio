@@ -121,6 +121,27 @@ bool isReminderPayload(String payload) =>
 /// as an orphaned reminder.
 const String doseSnoozePayload = 'dose-snooze:';
 
+/// The same for a measurement's "ذكّرني لاحقًا".
+const String measurementSnoozePayload = 'measurement-snooze:';
+
+/// What a snooze reminds of again.
+enum SnoozedTask {
+  dose(doseSnoozePayload),
+  measurement(measurementSnoozePayload);
+
+  const SnoozedTask(this.payloadPrefix);
+
+  final String payloadPrefix;
+
+  /// What a reminder or snooze [payload] is about: a measurement's stays a
+  /// measurement when put off again, anything else is a dose.
+  static SnoozedTask of(String payload) =>
+      payload.startsWith(measurementReminderPayload) ||
+          payload.startsWith(measurementSnoozePayload)
+      ? SnoozedTask.measurement
+      : SnoozedTask.dose;
+}
+
 /// The one slot a snooze uses; a new snooze replaces any pending one.
 const int doseSnoozeId = reminderIdBase + maxDoseReminders + 10;
 
@@ -129,16 +150,18 @@ const int doseSnoozeId = reminderIdBase + maxDoseReminders + 10;
 String? reminderCircleId(String payload) {
   // A snooze action's tap, and the words after the circle, are not part of
   // the circle's id.
-  final String plain = (isSnoozeTap(payload)
-          ? payload.substring(snoozeTapPrefix.length)
-          : payload)
-      .split(_textSeparator)
-      .first;
+  final String plain =
+      (isSnoozeTap(payload)
+              ? payload.substring(snoozeTapPrefix.length)
+              : payload)
+          .split(_textSeparator)
+          .first;
   for (final String prefix in <String>[
     doseReminderPayload,
     measurementReminderPayload,
     appointmentReminderPayload,
     doseSnoozePayload,
+    measurementSnoozePayload,
   ]) {
     if (plain.startsWith(prefix) && plain.length > prefix.length) {
       return plain.substring(prefix.length);
@@ -367,29 +390,32 @@ class DoseReminders {
     return run;
   }
 
-  /// Reschedules one dose's own reminder [after] from now — the simplified
-  /// mode's "لاحقا". Local-only: no plan or record changes, so nothing to
-  /// undo if the app is never reopened before it fires.
+  /// Reminds of one dose or measurement again [after] from now — the
+  /// simplified mode's "ذكّرني لاحقًا". Local-only: no plan or record
+  /// changes, so nothing to undo if the app is never reopened before it
+  /// fires.
   Future<void> snooze({
     required String circleId,
+    required SnoozedTask task,
     required String title,
     required String body,
     required Duration after,
   }) => _phone.schedule(
     ScheduledNotification(
       id: doseSnoozeId,
-      at: DateTime.now().toUtc().add(after),
+      at: _now().toUtc().add(after),
       title: title,
       body: body,
       // It can be put off again, the same as the reminder it came from.
-      payload: payloadWithText('$doseSnoozePayload$circleId', title, body),
+      payload: payloadWithText('${task.payloadPrefix}$circleId', title, body),
       snoozable: true,
     ),
   );
 
   /// «ذكّرني لاحقًا» from a notification: [tap] is the snooze action of a
   /// reminder, which carries its words; it comes again in
-  /// [notificationSnooze]. False when the tap is not a snoozable reminder.
+  /// [notificationSnooze], still a dose or a measurement as it was. False
+  /// when the tap is not a snoozable reminder.
   Future<bool> snoozeTap(String tap) async {
     if (!isSnoozeTap(tap)) return false;
     final String payload = tap.substring(snoozeTapPrefix.length);
@@ -398,6 +424,7 @@ class DoseReminders {
     if (circleId == null || text == null) return false;
     await snooze(
       circleId: circleId,
+      task: SnoozedTask.of(payload),
       title: text.$1,
       body: text.$2,
       after: notificationSnooze,
@@ -405,7 +432,7 @@ class DoseReminders {
     return true;
   }
 
-  /// Cancels a pending snooze: the dose it was for got taken another way.
+  /// Cancels a pending snooze: the task it was for got recorded another way.
   Future<void> cancelSnooze() => _phone.cancel(doseSnoozeId);
 
   /// Removes every reminder: the person signed out, or the sign-in ended.

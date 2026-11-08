@@ -71,8 +71,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
 
   void chooseBloodType(String code) => _form(state.form.chooseBloodType(code));
 
-  void toggleCondition(String code) =>
-      _form(state.form.toggleCondition(code));
+  void toggleCondition(String code) => _form(state.form.toggleCondition(code));
 
   void conditionOtherChanged(String value) =>
       _form(state.form.withConditionOther(value));
@@ -87,8 +86,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
   void medicationOtherChanged(String value) =>
       _form(state.form.withMedicationOther(value));
 
-  void foodOtherChanged(String value) =>
-      _form(state.form.withFoodOther(value));
+  void foodOtherChanged(String value) => _form(state.form.withFoodOther(value));
 
   void _form(MedicalForm form) =>
       emit(state.copyWith(form: form, clearError: true));

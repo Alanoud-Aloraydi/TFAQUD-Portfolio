@@ -10,6 +10,7 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:device_calendar_plus/device_calendar_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// One kind of event this feature can mirror, switched on per circle.
@@ -284,9 +285,11 @@ class CalendarSync {
       final DateTime from = version.effectiveFromOn.isAfter(now)
           ? version.effectiveFromOn
           : now;
-      final String kindName = plan.kind == MeasurementKind.glucose
-          ? 'قياس سكر الدم'
-          : 'قياس ضغط الدم';
+      // Read when the events are set; the translations are loaded by then.
+      final String kindName = switch (plan.kind) {
+        MeasurementKind.glucose => 'measurements.glucose_event'.tr(),
+        MeasurementKind.bp => 'measurements.bp_event'.tr(),
+      };
       // One event per reading time; the first keeps the key it always had,
       // so a calendar set before several times were possible stays as is.
       final List<MeasurementTime> readings = version.readingTimes;
@@ -297,17 +300,16 @@ class CalendarSync {
           version.weekdays,
         );
         desired[index == 0
-                ? 'measurement:${version.id}'
-                : 'measurement:${version.id}:$index'] =
-            _DesiredEvent(
-              title: '${circle.name} · $kindName',
-              start: start,
-              end: start.add(const Duration(minutes: 15)),
-              reminders: const <Duration>[Duration.zero],
-              recurrence: WeeklyRecurrence(
-                daysOfWeek: version.weekdays.map(_dayOfWeek).toList(),
-              ),
-            );
+            ? 'measurement:${version.id}'
+            : 'measurement:${version.id}:$index'] = _DesiredEvent(
+          title: '${circle.name} · $kindName',
+          start: start,
+          end: start.add(const Duration(minutes: 15)),
+          reminders: const <Duration>[Duration.zero],
+          recurrence: WeeklyRecurrence(
+            daysOfWeek: version.weekdays.map(_dayOfWeek).toList(),
+          ),
+        );
       }
     }
   }

@@ -104,21 +104,23 @@ void main() {
       expect(cubit.state.file!.profile.bloodType, isNull);
     });
 
-    test('the conditions and the allergies are sent as the design shows them',
-        () async {
-      cubit.toggleCondition('diabetes');
-      cubit.toggleCondition('heart');
-      cubit.toggleNoAllergies();
-      cubit.toggleMedication('penicillin');
-      cubit.toggleFood('milk');
+    test(
+      'the conditions and the allergies are sent as the design shows them',
+      () async {
+        cubit.toggleCondition('diabetes');
+        cubit.toggleCondition('heart');
+        cubit.toggleNoAllergies();
+        cubit.toggleMedication('penicillin');
+        cubit.toggleFood('milk');
 
-      expect(await cubit.save(), isTrue);
+        expect(await cubit.save(), isTrue);
 
-      final MedicalProfileDraft sent = circles.profileUpdates.single;
-      expect(sent.conditions?.codes, <String>['heart']);
-      expect(sent.allergies?.medication, <String>['penicillin']);
-      expect(sent.allergies?.food, <String>['milk']);
-    });
+        final MedicalProfileDraft sent = circles.profileUpdates.single;
+        expect(sent.conditions?.codes, <String>['heart']);
+        expect(sent.allergies?.medication, <String>['penicillin']);
+        expect(sent.allergies?.food, <String>['milk']);
+      },
+    );
 
     test('a new birth date keeps the city and the coordinates', () async {
       cubit.birthDateChanged(DateTime(1955, 1, 2));

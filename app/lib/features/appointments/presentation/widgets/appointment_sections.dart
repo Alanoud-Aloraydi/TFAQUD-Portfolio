@@ -251,10 +251,7 @@ class AppointmentCard extends StatelessWidget {
                         when name != value.createdByName) ...[
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        context.tr(
-                          'appointments.last_edited_by',
-                          args: [name],
-                        ),
+                        context.tr('appointments.last_edited_by', args: [name]),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

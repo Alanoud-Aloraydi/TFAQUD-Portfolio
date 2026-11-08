@@ -37,6 +37,8 @@ class HomeRepositoryData implements HomeRepositoryDomain {
     try {
       return _local.selectedCircle(accountId);
     } catch (_) {
+      // The phone's storage could not be read: no saved choice, so the
+      // first circle shows, as on a new install.
       return null;
     }
   }

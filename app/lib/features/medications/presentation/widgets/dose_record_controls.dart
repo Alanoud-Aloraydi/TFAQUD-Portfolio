@@ -74,7 +74,11 @@ class DoseRecordControls extends StatelessWidget {
                     onPressed: () => _takeNow(context),
                     icon: const Icon(CupertinoIcons.checkmark, size: 16),
                     label: Text(
-                      CareVoice.tr(context, circleId, 'medications.taken_short'),
+                      CareVoice.tr(
+                        context,
+                        circleId,
+                        'medications.taken_short',
+                      ),
                     ),
                   ),
                 ),
@@ -183,6 +187,7 @@ class DoseRecordControls extends StatelessWidget {
     final ReminderCircle reminderCircle = ReminderCircle(id: circle, name: '');
     await GetIt.I<DoseReminders>().snooze(
       circleId: circle,
+      task: SnoozedTask.dose,
       title: doseReminderTexts.title(reminderCircle, occurrence),
       body: doseReminderTexts.body(reminderCircle, occurrence),
       after: Duration(minutes: minutes),

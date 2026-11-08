@@ -122,11 +122,7 @@ void main() {
   testWidgets('«كل كم يوم» sets the days on a ruler, «أسبوعي» the week', (
     tester,
   ) async {
-    final data = await openEditor(
-      tester,
-      1,
-      startsOn: DateTime(2026, 11, 1),
-    );
+    final data = await openEditor(tester, 1, startsOn: DateTime(2026, 11, 1));
 
     await tester.tap(find.text('medications.repeat_interval'.tr()));
     await tester.pumpAndSettle();

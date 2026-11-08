@@ -92,6 +92,27 @@ class Routes {
       '/circles/:circleId/appointments/:appointmentId/visit';
   static String appointmentVisit(String circleId, String appointmentId) =>
       '/circles/$circleId/appointments/$appointmentId/visit';
-  static const String simplifiedHome = '/simplifiedHome';
-  static const String simplifiedAccount = '/simplifiedHome/account';
+
+  // The simplified mode: one home and the screens it opens. The task a
+  // reminder or the done screen is about travels as the navigation's
+  // `extra`; the circle is in the address where a screen loads its own data.
+  static const String simplifiedMode = '/simplifiedMode';
+  static const String simplifiedSchedule = '/simplifiedMode/schedule';
+  static const String simplifiedReminder = '/simplifiedMode/reminder';
+  static const String simplifiedSnooze = '/simplifiedMode/snooze';
+  static const String simplifiedDone = '/simplifiedMode/done';
+  static const String simplifiedAccount = '/simplifiedMode/account';
+  static const String simplifiedMeasurePath =
+      '/simplifiedMode/:circleId/measure';
+  static const String simplifiedMedicalFilePath =
+      '/simplifiedMode/:circleId/medical-file';
+  static const String simplifiedEmergencyCardPath =
+      '/simplifiedMode/:circleId/emergency-card';
+
+  static String simplifiedMeasure(String circleId) =>
+      '/simplifiedMode/$circleId/measure';
+  static String simplifiedMedicalFile(String circleId) =>
+      '/simplifiedMode/$circleId/medical-file';
+  static String simplifiedEmergencyCard(String circleId) =>
+      '/simplifiedMode/$circleId/emergency-card';
 }

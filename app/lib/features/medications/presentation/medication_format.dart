@@ -18,13 +18,12 @@ String formatMedicationTime(BuildContext context, String value) {
 }
 
 /// A monthly schedule's days, «شهريًا: يوم 1، 15».
-String formatMonthDays(BuildContext context, List<int> days) =>
-    context.tr(
-      'medications.monthly_days',
-      args: <String>[
-        (days.toList()..sort()).join(context.tr('medications.list_separator')),
-      ],
-    );
+String formatMonthDays(BuildContext context, List<int> days) => context.tr(
+  'medications.monthly_days',
+  args: <String>[
+    (days.toList()..sort()).join(context.tr('medications.list_separator')),
+  ],
+);
 
 /// An interval schedule's days, «كل يوم», «كل يومين», «كل 3 أيام».
 String formatInterval(BuildContext context, int days) => context.tr(

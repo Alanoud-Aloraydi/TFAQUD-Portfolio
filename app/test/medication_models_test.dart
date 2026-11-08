@@ -260,7 +260,12 @@ void main() {
 
     test('a monthly schedule opens as every 30 days, saying what it was', () {
       final data = MedicationFormData(
-        plan(schedule({'repeat': 'monthly', 'month_days': [5, 20]})),
+        plan(
+          schedule({
+            'repeat': 'monthly',
+            'month_days': [5, 20],
+          }),
+        ),
       );
       addTearDown(data.dispose);
       final ScheduleFormData form = data.schedules.single;

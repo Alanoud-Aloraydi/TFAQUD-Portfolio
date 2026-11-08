@@ -46,9 +46,8 @@ class SentCircleRequestModel {
 
   SentCircleRequest toEntity() => _entity;
 
-  static CircleAppMode parseMode(String? value) => value == 'detailed'
-      ? CircleAppMode.detailed
-      : CircleAppMode.simplified;
+  static CircleAppMode parseMode(String? value) =>
+      value == 'detailed' ? CircleAppMode.detailed : CircleAppMode.simplified;
 
   static CircleRequestStatus parseStatus(String? value) => switch (value) {
     'pending' => CircleRequestStatus.pending,
@@ -122,7 +121,8 @@ abstract class ReceivedInvitationsModel {
   }
 
   static ReceivedInvitation _invitation(Map<String, dynamic> item) {
-    final Map<String, dynamic>? by = item['invited_by'] as Map<String, dynamic>?;
+    final Map<String, dynamic>? by =
+        item['invited_by'] as Map<String, dynamic>?;
     return ReceivedInvitation(
       id: item['id'] as String,
       circleName: item['circle_name'] as String,

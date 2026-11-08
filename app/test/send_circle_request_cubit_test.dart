@@ -48,20 +48,22 @@ void main() {
   });
 
   group('send', () {
-    test('sends the number with +966 and the simplified mode, and no name',
-        () async {
-      cubit.phoneChanged('501234567');
-      expect(await cubit.send(), isTrue);
-      // The patient names the circle when they complete the request.
-      expect(
-        circles.sentRequests.single,
-        const NewCircleRequest(
-          patientPhoneNumber: '+966501234567',
-          proposedAppMode: CircleAppMode.simplified,
-        ),
-      );
-      expect(circles.sentRequests.single.circleLabel, isNull);
-    });
+    test(
+      'sends the number with +966 and the simplified mode, and no name',
+      () async {
+        cubit.phoneChanged('501234567');
+        expect(await cubit.send(), isTrue);
+        // The patient names the circle when they complete the request.
+        expect(
+          circles.sentRequests.single,
+          const NewCircleRequest(
+            patientPhoneNumber: '+966501234567',
+            proposedAppMode: CircleAppMode.simplified,
+          ),
+        );
+        expect(circles.sentRequests.single.circleLabel, isNull);
+      },
+    );
 
     test('sends the mode that was chosen', () async {
       cubit.phoneChanged('501234567');
