@@ -299,7 +299,10 @@ numbers (`0500000001` …): they are made up and could belong to a stranger.
 For a test server without SMS, set `SMS_BACKEND` to `fake`,
 `FAKE_SMS_LOG_CODES` to `"true"` and `DEMO_DATA` to `"true"` in
 `render.yaml`: the code is then in the API's **Logs** (search for
-`FAKE SMS`), and the demo data is made at the start.
+`FAKE SMS`), and the demo data is made at the start. The server then runs one
+process instead of two: the fake sender keeps its codes in the memory of the
+process that sent them, so with two a correct code was refused about every
+second try.
 
 After that, every push to the chosen branch deploys again by itself, with the
 new migrations, and the old version answers until the new one is ready.

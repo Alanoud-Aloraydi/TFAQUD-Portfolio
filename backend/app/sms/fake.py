@@ -15,6 +15,10 @@ same phone number. Whether Authentica does the same is test 9 of the test guide.
 
 Every message "sent" is kept in `outbox`, so a test can read the code that would
 have been texted to the user.
+
+The codes live in the memory of this one process. A server that runs several
+processes would not find a code sent by another one, so the Dockerfile starts
+one gunicorn worker when the fake sender is used.
 """
 
 import hmac

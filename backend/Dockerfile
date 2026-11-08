@@ -27,4 +27,9 @@ EXPOSE 5000
 # with DEMO_DATA=true, make the demo data when it is not there yet; then start
 # the production server (gunicorn) on the port Render gives in $PORT (5000
 # when nothing sets it). docker-compose.yml replaces this command.
-CMD ["sh", "-c", "flask --app wsgi db upgrade && if [ \"$DEMO_DATA\" = true ]; then flask --app wsgi demo-data --if-missing; fi && exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --timeout 120 --access-logfile - wsgi:app"]
+#
+# With the fake SMS (SMS_BACKEND=fake, or not set), one worker: the fake
+# sender keeps each code in the memory of the process that sent it, so with
+# two workers a code sent by one is unknown to the other, and about every
+# second try says «الرمز غير صحيح» for the right code.
+CMD ["sh", "-c", "flask --app wsgi db upgrade && if [ \"$DEMO_DATA\" = true ]; then flask --app wsgi demo-data --if-missing; fi && if [ \"${SMS_BACKEND:-fake}\" = fake ]; then workers=1; else workers=2; fi && exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers $workers --timeout 120 --access-logfile - wsgi:app"]

@@ -2,6 +2,8 @@
 
 import re
 import socket
+import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -244,3 +246,32 @@ def test_production_may_use_authentica():
     sender = create_sms_sender(config, ManualClock())
 
     assert isinstance(sender, AuthenticaSmsSender)
+
+
+# --- the server process -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "backend, workers", [("fake", "1"), (None, "1"), ("authentica", "2")]
+)
+def test_the_fake_sender_runs_in_one_server_process(backend, workers):
+    """The fake sender keeps its codes in one process's memory. The start
+    command of the Dockerfile runs one gunicorn worker with it, else a code
+    sent by one worker is unknown to the other."""
+    dockerfile = (Path(__file__).parents[1] / "Dockerfile").read_text()
+    command = re.search(r'^CMD \["sh", "-c", "(.*)"\]$', dockerfile, re.M)
+    assert command, "the Dockerfile's start command is not where it was"
+    script = command.group(1).replace('\\"', '"')
+    choice = re.search(
+        r"if \[ [^;]*SMS_BACKEND[^;]*\]; then [^;]*; else [^;]*; fi", script
+    )
+    assert choice, "the start command does not choose the workers"
+    env = {"PATH": "/usr/bin:/bin"}
+    if backend is not None:
+        env["SMS_BACKEND"] = backend
+    chosen = subprocess.run(
+        ["sh", "-c", choice.group(0) + ' && printf %s "$workers"'],
+        env=env, capture_output=True, text=True, check=True,
+    ).stdout
+    assert chosen == workers
+    assert "--workers $workers" in script
