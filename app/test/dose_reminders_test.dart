@@ -224,7 +224,7 @@ void main() {
         doses: <(ReminderCircle, DoseOccurrence)>[
           (_noura, _dose(3, '09:00', record: _taken)),
           (_noura, _dose(3, '07:00')),
-          // In less than a minute.
+          // Now: too close to set.
           (_noura, _dose(3, '08:00')),
         ],
         now: _now,
@@ -232,6 +232,20 @@ void main() {
       );
 
       expect(planned, isEmpty);
+    });
+
+    test('a medicine saved a minute before its dose is still reminded', () {
+      // 07:59:20 in Riyadh, and a dose at 08:00.
+      final List<ScheduledNotification> planned = planDoseReminders(
+        doses: <(ReminderCircle, DoseOccurrence)>[
+          (_noura, _dose(3, '08:00')),
+        ],
+        now: _now.subtract(const Duration(seconds: 40)),
+        texts: _texts,
+      );
+
+      expect(planned.first.at, _now);
+      expect(planned.first.payload, isNot(keepRemindersPayload));
     });
 
     test('at most 60 reminders, the nearest ones, and the note', () {

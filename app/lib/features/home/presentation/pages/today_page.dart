@@ -89,10 +89,16 @@ class _TodayPageState extends State<TodayPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // «صباح الخير، ياسر» before noon in Riyadh, «مساء
-                      // الخير، ياسر» after; the tab keeps «اليوم».
+                      // «صباح الخير، ياسر» from Fajr, «مساء الخير، ياسر»
+                      // from Asr; the tab keeps «اليوم».
                       LargeTitle(
-                        title: greeting(context, now, CareVoice.viewerName),
+                        title: greeting(
+                          context,
+                          now,
+                          CareVoice.viewerName,
+                          fajr: _today(prayers, now)?.times[Prayer.fajr],
+                          asr: _today(prayers, now)?.times[Prayer.asr],
+                        ),
                         subtitle: date,
                       ),
                       const SizedBox(height: AppSpacing.xl),
@@ -127,6 +133,12 @@ class _TodayPageState extends State<TodayPage> {
         },
       );
 
+  /// Today's prayer times, or null while they load (or are yesterday's).
+  static PrayerDay? _today(PrayerTimesState prayers, DateTime now) =>
+      prayers.day != null && DateUtils.isSameDay(prayers.day!.date, now)
+      ? prayers.day
+      : null;
+
   Widget _content(
     BuildContext context,
     String circleId,
@@ -134,10 +146,7 @@ class _TodayPageState extends State<TodayPage> {
     PrayerTimesState prayers,
     DateTime now,
   ) {
-    final PrayerDay? day =
-        prayers.day != null && DateUtils.isSameDay(prayers.day!.date, now)
-        ? prayers.day
-        : null;
+    final PrayerDay? day = _today(prayers, now);
     final medications = TodayMedicationView(
       state.status == MedicationOccurrencesStatus.loading ||
               state.status == MedicationOccurrencesStatus.failure

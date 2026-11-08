@@ -1,75 +1,252 @@
+import 'dart:async';
+
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/account/presentation/widgets/settings_card.dart';
-import 'package:easy_localization/easy_localization.dart';
+// Its own TextDirection (from intl) would hide Flutter's.
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-/// The calendar-sync toggles (doses, measurements, appointments) for one
+/// The calendar-sync switches (doses, measurements, appointments) for one
 /// circle, as one iOS Settings group: each row an icon square, its name and
-/// a switch. No title of its own, so a page with several circles can put a
-/// header over each group and one shared hint below them all.
+/// a switch. No title of its own, so a page can put its own title and the
+/// shared [CalendarSyncHint] around it.
 class CalendarSyncToggles extends StatelessWidget {
   const CalendarSyncToggles({super.key, required this.circleId});
 
   final String circleId;
 
   @override
+  Widget build(BuildContext context) =>
+      _CircleCalendar(key: ValueKey<String>(circleId), circleId: circleId);
+}
+
+/// One circle in a [CalendarSyncCircleList]: its id, the name shown, and a
+/// small picture before the name (the patient's photo).
+typedef CalendarSyncCircle = ({String id, String name, Widget? leading});
+
+/// Several circles in one group, each a row that opens in place to its
+/// three switches, closed at first: the page stays short, and each row says
+/// how many of its switches are on («2 من 3»). As SwiftUI's DisclosureGroup:
+/// the chevron points to the end when closed and down when open.
+class CalendarSyncCircleList extends StatelessWidget {
+  const CalendarSyncCircleList({super.key, required this.circles});
+
+  final List<CalendarSyncCircle> circles;
+
+  @override
   Widget build(BuildContext context) {
     return SettingsCard(
       children: <Widget>[
-        _CalendarSyncRow(
-          circleId: circleId,
-          category: CalendarSyncCategory.doses,
-          label: context.tr('circle_overview.calendar_sync_doses'),
-          icon: AppIcons.pill,
-          tile: AppSemanticColors.settingsTileDoses,
-        ),
-        _CalendarSyncRow(
-          circleId: circleId,
-          category: CalendarSyncCategory.measurements,
-          label: context.tr('circle_overview.calendar_sync_measurements'),
-          icon: AppIcons.heartbeat,
-          tile: AppSemanticColors.settingsTileMeasurements,
-        ),
-        _CalendarSyncRow(
-          circleId: circleId,
-          category: CalendarSyncCategory.appointments,
-          label: context.tr('circle_overview.calendar_sync_appointments'),
-          icon: AppIcons.calendar,
-          tile: AppSemanticColors.settingsTileAppointments,
-        ),
+        for (final CalendarSyncCircle circle in circles)
+          _CircleCalendar(
+            key: ValueKey<String>(circle.id),
+            circleId: circle.id,
+            name: circle.name,
+            leading: circle.leading,
+          ),
       ],
     );
   }
 }
 
-/// The header over one circle's group: its name, small and grey, as iOS
-/// Settings names a group.
-class CalendarSyncGroupHeader extends StatelessWidget {
-  const CalendarSyncGroupHeader(this.name, {super.key});
+/// The three kinds of care a circle can put on the calendar, in order.
+const List<CalendarSyncCategory> _categories = <CalendarSyncCategory>[
+  CalendarSyncCategory.doses,
+  CalendarSyncCategory.measurements,
+  CalendarSyncCategory.appointments,
+];
 
-  final String name;
+String _labelKey(CalendarSyncCategory category) => switch (category) {
+  CalendarSyncCategory.doses => 'circle_overview.calendar_sync_doses',
+  CalendarSyncCategory.measurements =>
+    'circle_overview.calendar_sync_measurements',
+  CalendarSyncCategory.appointments =>
+    'circle_overview.calendar_sync_appointments',
+};
+
+IconData _icon(CalendarSyncCategory category) => switch (category) {
+  CalendarSyncCategory.doses => AppIcons.pill,
+  CalendarSyncCategory.measurements => AppIcons.heartbeat,
+  CalendarSyncCategory.appointments => AppIcons.calendar,
+};
+
+Color _tile(CalendarSyncCategory category) => switch (category) {
+  CalendarSyncCategory.doses => AppSemanticColors.settingsTileDoses,
+  CalendarSyncCategory.measurements =>
+    AppSemanticColors.settingsTileMeasurements,
+  CalendarSyncCategory.appointments =>
+    AppSemanticColors.settingsTileAppointments,
+};
+
+/// One circle's switches, their values loaded once and kept here, so the
+/// row that opens them can say how many are on. With a [name], a row that
+/// opens and closes; without one, the switches in their own group.
+class _CircleCalendar extends StatefulWidget {
+  const _CircleCalendar({
+    super.key,
+    required this.circleId,
+    this.name,
+    this.leading,
+  });
+
+  final String circleId;
+  final String? name;
+  final Widget? leading;
+
+  @override
+  State<_CircleCalendar> createState() => _CircleCalendarState();
+}
+
+class _CircleCalendarState extends State<_CircleCalendar> {
+  final CalendarSync _calendar = GetIt.I<CalendarSync>();
+
+  /// Null while the values load.
+  Map<CalendarSyncCategory, bool>? _enabled;
+  bool _open = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final String circleId = widget.circleId;
+    final Map<CalendarSyncCategory, bool> values =
+        <CalendarSyncCategory, bool>{
+          for (final CalendarSyncCategory category in _categories)
+            category: await _calendar.isEnabled(circleId, category),
+        };
+    if (mounted && circleId == widget.circleId) {
+      setState(() => _enabled = values);
+    }
+  }
+
+  Future<void> _set(CalendarSyncCategory category, bool value) async {
+    final Map<CalendarSyncCategory, bool>? enabled = _enabled;
+    if (enabled == null) return;
+    setState(() {
+      _enabled = <CalendarSyncCategory, bool>{...enabled, category: value};
+    });
+    await _calendar.setEnabled(widget.circleId, category, value);
+  }
+
+  List<Widget> _switches(BuildContext context) => <Widget>[
+    for (final CalendarSyncCategory category in _categories)
+      ToggleRow(
+        label: context.tr(_labelKey(category)),
+        leading: SettingsIconTile(
+          icon: _icon(category),
+          background: _tile(category),
+        ),
+        value: _enabled?[category] ?? false,
+        onChanged: (bool value) => unawaited(_set(category, value)),
+      ),
+  ];
+
+  /// «الكل», «2 من 3» or «متوقفة»; nothing while the values load.
+  String _summary(BuildContext context) {
+    final Map<CalendarSyncCategory, bool>? enabled = _enabled;
+    if (enabled == null) return '';
+    final int on = enabled.values.where((bool value) => value).length;
+    if (on == 0) return context.tr('circle_overview.calendar_sync_off');
+    if (on == _categories.length) {
+      return context.tr('circle_overview.calendar_sync_all');
+    }
+    return context.tr(
+      'circle_overview.calendar_sync_some',
+      args: <String>['$on', '${_categories.length}'],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(
-        start: AppSpacing.inset,
-        end: AppSpacing.inset,
-        bottom: AppSpacing.labelGap,
-      ),
-      child: Semantics(
-        header: true,
-        child: Text(
-          name,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: context.tokens.textSecondary),
+    final String? name = widget.name;
+    if (name == null) return SettingsCard(children: _switches(context));
+    final bool still = MediaQuery.disableAnimationsOf(context);
+    final Duration motion = still ? Duration.zero : AppMotion.disclosure;
+    final bool rtl = Directionality.of(context) == TextDirection.rtl;
+    final String summary = _summary(context);
+    final TextTheme text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Semantics(
+          button: true,
+          expanded: _open,
+          label: summary.isEmpty ? name : '$name، $summary',
+          excludeSemantics: true,
+          child: InkWell(
+            onTap: () => setState(() => _open = !_open),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: AppSizes.field),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: <Widget>[
+                    if (widget.leading case final Widget leading) ...<Widget>[
+                      leading,
+                      const SizedBox(width: AppSpacing.md),
+                    ],
+                    Expanded(child: Text(name, style: text.bodyLarge)),
+                    if (summary.isNotEmpty) ...<Widget>[
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        summary,
+                        style: text.bodyMedium?.copyWith(
+                          color: context.tokens.textSecondary,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: AppSpacing.sm),
+                    // Points to the end closed, down open.
+                    AnimatedRotation(
+                      turns: _open ? (rtl ? -0.25 : 0.25) : 0,
+                      duration: motion,
+                      curve: AppMotion.easeOut,
+                      child: Icon(
+                        AppIcons.forward,
+                        size: AppSizes.iconSmall,
+                        color: context.tokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
+        AnimatedSize(
+          duration: motion,
+          curve: AppMotion.easeOut,
+          alignment: AlignmentDirectional.topStart,
+          child: _open
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    for (final Widget row in _switches(context)) ...<Widget>[
+                      const Divider(
+                        height: AppSizes.divider,
+                        indent: AppSpacing.lg,
+                        endIndent: AppSpacing.lg,
+                      ),
+                      row,
+                    ],
+                  ],
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
     );
   }
 }
@@ -92,70 +269,6 @@ class CalendarSyncHint extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall
             ?.copyWith(color: context.tokens.textSecondary),
       ),
-    );
-  }
-}
-
-/// A calendar-sync toggle for one circle and category, off by default, its
-/// own value loaded once.
-class _CalendarSyncRow extends StatefulWidget {
-  const _CalendarSyncRow({
-    required this.circleId,
-    required this.category,
-    required this.label,
-    required this.icon,
-    required this.tile,
-  });
-
-  final String circleId;
-  final CalendarSyncCategory category;
-  final String label;
-  final IconData icon;
-  final Color tile;
-
-  @override
-  State<_CalendarSyncRow> createState() => _CalendarSyncRowState();
-}
-
-class _CalendarSyncRowState extends State<_CalendarSyncRow> {
-  final CalendarSync _calendar = GetIt.I<CalendarSync>();
-  bool? _enabled;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  @override
-  void didUpdateWidget(_CalendarSyncRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // A reused State (same slot, new circleId) must not keep showing the
-    // previous circle's value while this one's own load is in flight.
-    if (oldWidget.circleId != widget.circleId ||
-        oldWidget.category != widget.category) {
-      _enabled = null;
-      _load();
-    }
-  }
-
-  Future<void> _load() async {
-    final value = await _calendar.isEnabled(widget.circleId, widget.category);
-    if (mounted) setState(() => _enabled = value);
-  }
-
-  Future<void> _onChanged(bool value) async {
-    setState(() => _enabled = value);
-    await _calendar.setEnabled(widget.circleId, widget.category, value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ToggleRow(
-      label: widget.label,
-      leading: SettingsIconTile(icon: widget.icon, background: widget.tile),
-      value: _enabled ?? false,
-      onChanged: _enabled == null ? (_) {} : _onChanged,
     );
   }
 }

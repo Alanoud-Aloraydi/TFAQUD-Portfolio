@@ -103,6 +103,11 @@ const int reminderIdBase = 7000;
 /// comes a day before.
 const Duration appointmentSoonLead = Duration(hours: 2);
 
+/// A reminder this close is not set: by the time the phone has it, its
+/// moment may have passed. Short, so a medicine saved a minute before its
+/// dose is still reminded.
+const Duration reminderMargin = Duration(seconds: 10);
+
 /// Whether a scheduled notification is one of the reminders.
 bool isReminderPayload(String payload) =>
     payload.startsWith(doseReminderPayload) ||
@@ -183,9 +188,9 @@ List<ScheduledNotification> planDoseReminders({
   required DoseReminderTexts texts,
   DateTime? until,
 }) {
-  // A moment in the next minute is too close to set: by the time the phone
-  // has it, the moment may have passed.
-  final DateTime earliest = now.toUtc().add(const Duration(minutes: 1));
+  // A moment in the next few seconds is too close to set: by the time the
+  // phone has it, it may have passed.
+  final DateTime earliest = now.toUtc().add(reminderMargin);
   bool inWindow(DateTime at) =>
       at.isAfter(earliest) && (until == null || at.isBefore(until));
   final List<_Reminder> upcoming = <_Reminder>[
@@ -470,7 +475,9 @@ class DoseReminders {
       doses: doses,
       measurements: measurements,
       appointments: appointments,
-      now: now,
+      // The time after the readings, which can take a while on a slow
+      // network: a dose that came close meanwhile is not set too late.
+      now: _now(),
       texts: texts,
       until: until,
     );

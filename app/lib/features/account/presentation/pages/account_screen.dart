@@ -293,9 +293,10 @@ class AccountScreen extends StatelessWidget {
 }
 
 /// «مزامنة مع تقويم الجهاز» the way iOS Settings lays out a list of
-/// switches: one group per circle (a manager may be in several), each with
-/// the circle's name over it when there is more than one, every switch in
-/// sight (nothing to expand), and one shared explanation below them all.
+/// switches. One circle: its three switches. Several (a manager may be in
+/// many): one group with a row per circle, its patient's photo and how many
+/// switches are on, closed until tapped, so the page stays short. One
+/// shared explanation below.
 class _CalendarSyncCard extends StatelessWidget {
   const _CalendarSyncCard({required this.circles});
 
@@ -303,19 +304,32 @@ class _CalendarSyncCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool several = circles.length > 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionTitle(context.tr('circle_overview.calendar_sync_title')),
-        for (int index = 0; index < circles.length; index++) ...[
-          if (index > 0) const SizedBox(height: AppSpacing.lg),
-          if (several) CalendarSyncGroupHeader(circles[index].name),
-          CalendarSyncToggles(
-            key: ValueKey(circles[index].id),
-            circleId: circles[index].id,
+        if (circles.length == 1)
+          CalendarSyncToggles(circleId: circles.single.id)
+        else
+          CalendarSyncCircleList(
+            circles: <CalendarSyncCircle>[
+              for (final CareCircleSummary circle in circles)
+                (
+                  id: circle.id,
+                  name: circle.name,
+                  leading: PersonPhoto(
+                    name: circle.patientName ?? circle.name,
+                    // The patient with their own account has one photo:
+                    // the account's.
+                    photoPath: circle.isPatient
+                        ? ApiEndpoints.accountPhoto
+                        : ApiEndpoints.patientPhoto(circle.id),
+                    avatarCode: circle.patientAvatarCode,
+                    size: SettingsIconTile.size,
+                  ),
+                ),
+            ],
           ),
-        ],
         const CalendarSyncHint(),
       ],
     );
