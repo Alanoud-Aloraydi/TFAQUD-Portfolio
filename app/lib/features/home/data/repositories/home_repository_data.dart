@@ -1,5 +1,6 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/features/home/data/datasources/home_local_data_source.dart';
 import 'package:app/features/home/data/datasources/home_remote_data_source.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -18,7 +19,13 @@ class HomeRepositoryData implements HomeRepositoryDomain {
   @override
   Future<Result<HomeEntity, Failure>> getHome() async {
     try {
-      return Success((await _remote.getHome()).toEntity());
+      final HomeEntity home = (await _remote.getHome()).toEntity();
+      // The words of each circle follow who is reading it.
+      CareVoice.update(<String, String?>{
+        for (final CareCircleSummary circle in home.circles)
+          circle.id: circle.isPatient ? null : circle.patientName,
+      });
+      return Success(home);
     } catch (error) {
       return Error(FailureExceptions.getException(error));
     }

@@ -45,6 +45,30 @@ class MeasurementTarget extends Equatable {
   ];
 }
 
+/// One reading time of the day («قراءة»), with its glucose context: a
+/// glucose plan can read fasting at 07:00 and after a meal at 14:00.
+class MeasurementTime extends Equatable {
+  const MeasurementTime({required this.time, this.glucoseContext});
+
+  /// «HH:mm» in Riyadh.
+  final String time;
+  final String? glucoseContext;
+
+  factory MeasurementTime.fromJson(Map<String, dynamic> json) =>
+      MeasurementTime(
+        time: json['time_of_day'] as String,
+        glucoseContext: json['glucose_context'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'time_of_day': time,
+    'glucose_context': glucoseContext,
+  };
+
+  @override
+  List<Object?> get props => [time, glucoseContext];
+}
+
 /// Preserves one effective measurement schedule.
 class MeasurementVersion extends Equatable {
   const MeasurementVersion({
@@ -59,11 +83,14 @@ class MeasurementVersion extends Equatable {
     this.glucoseHigh,
     this.systolicLimit,
     this.diastolicLimit,
-  });
+    List<MeasurementTime> times = const <MeasurementTime>[],
+  }) : _times = times;
 
   final String id;
   final int number;
   final DateTime effectiveFromOn;
+
+  /// The first reading time ([readingTimes] has them all).
   final String time;
   final List<int> weekdays;
   final int graceMinutes;
@@ -72,6 +99,15 @@ class MeasurementVersion extends Equatable {
   final int? glucoseHigh;
   final int? systolicLimit;
   final int? diastolicLimit;
+  final List<MeasurementTime> _times;
+
+  /// Every reading time of a day, earliest first; one when the plan reads
+  /// once a day, or when an older server does not list them.
+  List<MeasurementTime> get readingTimes => _times.isEmpty
+      ? <MeasurementTime>[
+          MeasurementTime(time: time, glucoseContext: glucoseContext),
+        ]
+      : _times;
 
   factory MeasurementVersion.fromJson(Map<String, dynamic> json) =>
       MeasurementVersion(
@@ -86,6 +122,11 @@ class MeasurementVersion extends Equatable {
         glucoseHigh: json['glucose_high'] as int?,
         systolicLimit: json['systolic_limit'] as int?,
         diastolicLimit: json['diastolic_limit'] as int?,
+        times: (json['times'] as List<dynamic>? ?? const <dynamic>[])
+            .map(
+              (item) => MeasurementTime.fromJson(item as Map<String, dynamic>),
+            )
+            .toList(),
       );
 
   @override
@@ -97,6 +138,7 @@ class MeasurementVersion extends Equatable {
     weekdays,
     graceMinutes,
     glucoseContext,
+    _times,
     glucoseLow,
     glucoseHigh,
     systolicLimit,
@@ -200,6 +242,7 @@ class MeasurementReading extends Equatable {
     this.diastolicLimit,
     this.followedUpAt,
     this.scheduledOn,
+    this.scheduledTime,
     this.planVersionId,
     this.recordedByAccountId,
     this.recordedByName,
@@ -223,6 +266,9 @@ class MeasurementReading extends Equatable {
   final int? diastolicLimit;
   final DateTime? followedUpAt;
   final DateTime? scheduledOn;
+
+  /// Which reading time of [scheduledOn] it answers («HH:mm»).
+  final String? scheduledTime;
   final String? planVersionId;
 
   /// Who recorded it: null for a reading from before this was tracked.
@@ -258,6 +304,7 @@ class MeasurementReading extends Equatable {
         scheduledOn: json['scheduled_on'] == null
             ? null
             : DateTime.parse(json['scheduled_on'] as String),
+        scheduledTime: json['scheduled_time'] as String?,
         planVersionId: json['plan_version_id'] as String?,
         recordedByAccountId:
             (json['recorded_by'] as Map<String, dynamic>?)?['account_id']
@@ -289,6 +336,7 @@ class MeasurementReading extends Equatable {
     diastolicLimit,
     followedUpAt,
     scheduledOn,
+    scheduledTime,
     planVersionId,
     recordedByAccountId,
     recordedByName,
@@ -360,11 +408,10 @@ class MeasurementOccurrence extends Equatable {
 class MeasurementPlanDraft {
   const MeasurementPlanDraft({
     required this.kind,
-    required this.time,
+    required this.times,
     required this.weekdays,
     required this.startsOn,
     required this.graceMinutes,
-    this.glucoseContext,
     this.glucoseLow,
     this.glucoseHigh,
     this.systolicLimit,
@@ -372,24 +419,27 @@ class MeasurementPlanDraft {
   });
 
   final MeasurementKind kind;
-  final String time;
+
+  /// The reading times of a day, one or more.
+  final List<MeasurementTime> times;
   final List<int> weekdays;
   final DateTime startsOn;
   final int graceMinutes;
-  final String? glucoseContext;
   final int? glucoseLow;
   final int? glucoseHigh;
   final int? systolicLimit;
   final int? diastolicLimit;
 
+  /// One reading time is sent as before (`time_of_day`), so it saves on a
+  /// server without several times too; more are sent as `times`.
   Map<String, dynamic> toJson({int? expectedVersion}) => {
     'kind': kind.name,
-    'time_of_day': time,
+    if (times.length == 1) ...times.single.toJson() else
+      'times': [for (final MeasurementTime item in times) item.toJson()],
     'weekdays': weekdays,
     'starts_on': _date(startsOn),
     'effective_from_on': ?(expectedVersion == null ? null : _date(startsOn)),
     'grace_minutes': graceMinutes,
-    'glucose_context': glucoseContext,
     'glucose_low': glucoseLow,
     'glucose_high': glucoseHigh,
     'systolic_limit': systolicLimit,

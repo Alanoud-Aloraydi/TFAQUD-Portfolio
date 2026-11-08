@@ -86,6 +86,13 @@ def _circles(account_id: UUID) -> list[dict]:
                     patient_first_name=row.first_name,
                 ),
                 "can_manage_medications": row.id in managed_ids,
+                # Who the app speaks to about this circle: the patient
+                # («أخذت الجرعة»), or someone caring for them, who reads
+                # the patient's name instead («… أخذ نورة للجرعة»).
+                "is_patient": row.account_id == account_id,
+                "patient_name": (
+                    row.display_name or row.account_first_name or row.first_name
+                ),
                 # A linked patient shares the account's own avatar, like
                 # their photo.
                 "patient_avatar_code": (

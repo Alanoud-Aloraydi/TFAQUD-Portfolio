@@ -1,5 +1,6 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
@@ -34,10 +35,22 @@ class MeasurementPlanFormPage extends StatefulWidget {
       _MeasurementPlanFormPageState();
 }
 
+/// One reading time of the form («القراءة 1»), with its glucose context.
+class _Reading {
+  _Reading(this.time, this.context);
+
+  TimeOfDay time;
+  String context;
+}
+
 class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   MeasurementKind _kind = MeasurementKind.glucose;
-  String _context = 'fasting';
-  TimeOfDay _time = const TimeOfDay(hour: 7, minute: 30);
+
+  /// The reading times of a day, like a medicine's dose times: one or more,
+  /// up to [_maxReadings], each with its own glucose context.
+  final List<_Reading> _readings = <_Reading>[
+    _Reading(const TimeOfDay(hour: 7, minute: 30), 'fasting'),
+  ];
   DateTime _start = riyadhToday();
   final Set<int> _days = {1, 2, 3, 4, 5, 6, 7};
   final _low = TextEditingController();
@@ -50,6 +63,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   String? _errorKey;
 
   static const _weekOrder = [6, 7, 1, 2, 3, 4, 5];
+
+  /// Fasting, after each meal, at bedtime: the server allows six.
+  static const int _maxReadings = 6;
   static const _contexts = [
     'fasting',
     'before_meal',
@@ -72,9 +88,12 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     _initialized = true;
     final version = plan.version;
     _kind = plan.kind;
-    _context = version.glucoseContext ?? 'fasting';
-    final parts = version.time.split(':');
-    _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    _readings
+      ..clear()
+      ..addAll(<_Reading>[
+        for (final MeasurementTime item in version.readingTimes)
+          _Reading(_parseTime(item.time), item.glucoseContext ?? 'fasting'),
+      ]);
     final earliest = riyadhToday();
     _start = version.effectiveFromOn.isAfter(earliest)
         ? version.effectiveFromOn
@@ -105,6 +124,11 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       setState(() => _errorKey = 'measurements.days_required');
       return;
     }
+    final times = <String>{for (final item in _readings) _clock(item.time)};
+    if (times.length != _readings.length) {
+      setState(() => _errorKey = 'measurements.times_repeat');
+      return;
+    }
     if (_kind == MeasurementKind.glucose &&
         (low == null ||
             high == null ||
@@ -125,15 +149,22 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       setState(() => _errorKey = 'measurements.invalid_bp_target');
       return;
     }
+    final readings = _readings.toList()
+      ..sort((a, b) => _clock(a.time).compareTo(_clock(b.time)));
     final draft = MeasurementPlanDraft(
       kind: _kind,
-      time:
-          '${_time.hour.toString().padLeft(2, '0')}:'
-          '${_time.minute.toString().padLeft(2, '0')}',
+      times: <MeasurementTime>[
+        for (final item in readings)
+          MeasurementTime(
+            time: _clock(item.time),
+            glucoseContext: _kind == MeasurementKind.glucose
+                ? item.context
+                : null,
+          ),
+      ],
       weekdays: _days.toList()..sort(),
       startsOn: _start,
       graceMinutes: _grace,
-      glucoseContext: _kind == MeasurementKind.glucose ? _context : null,
       glucoseLow: _kind == MeasurementKind.glucose ? low : null,
       glucoseHigh: _kind == MeasurementKind.glucose ? high : null,
       systolicLimit: _kind == MeasurementKind.bp ? systolic : null,
@@ -270,18 +301,14 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
           InsetGroup(
             header: context.tr('measurements.schedule'),
             children: [
-              InsetRow(
-                label: context.tr('measurements.time'),
-                value: _formatTime(_time),
-                onTap: () async {
-                  final selected = await showTafaqodTimeSheet(
-                    context,
-                    title: context.tr('measurements.time'),
-                    initialTime: _time,
-                  );
-                  if (selected != null) setState(() => _time = selected);
-                },
-              ),
+              for (int index = 0; index < _readings.length; index++)
+                ..._readingRows(context, index),
+              if (_readings.length < _maxReadings)
+                InsetRow(
+                  label: context.tr('measurements.add_reading'),
+                  leading: const Icon(AppIcons.plusCircle),
+                  onTap: _addReading,
+                ),
               InsetBlock(
                 semanticLabel: context.tr('measurements.days'),
                 child: Column(
@@ -326,23 +353,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                   ],
                 ),
               ),
-              if (_kind == MeasurementKind.glucose)
-                InsetBlock(
-                  semanticLabel: context.tr('measurements.glucose_context'),
-                  child: Wrap(
-                    spacing: AppSpacing.sm,
-                    children: [
-                      for (final value in _contexts)
-                        ChoiceChip(
-                          label: Text(
-                            context.tr('measurements.context.$value'),
-                          ),
-                          selected: _context == value,
-                          onSelected: (_) => setState(() => _context = value),
-                        ),
-                    ],
-                  ),
-                ),
               InsetRow(
                 label: context.tr(
                   plan == null
@@ -450,6 +460,92 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       LengthLimitingTextInputFormatter(3),
     ],
   );
+
+  /// One reading: its time («القراءة 2» when there are several), its
+  /// glucose context, and «حذف» for all but a single reading.
+  List<Widget> _readingRows(BuildContext context, int index) {
+    final _Reading reading = _readings[index];
+    final String label = _readings.length == 1
+        ? context.tr('measurements.time')
+        : context.tr('measurements.reading_number', args: ['${index + 1}']);
+    return <Widget>[
+      InsetRow(
+        label: label,
+        value: _formatTime(reading.time),
+        trailing: _readings.length == 1
+            ? null
+            : IconButton(
+                tooltip: context.tr(
+                  'measurements.remove_reading',
+                  args: ['${index + 1}'],
+                ),
+                icon: const Icon(AppIcons.trash),
+                onPressed: () => setState(() {
+                  _readings.removeAt(index);
+                  _errorKey = null;
+                }),
+              ),
+        onTap: () async {
+          final selected = await showTafaqodTimeSheet(
+            context,
+            title: label,
+            initialTime: reading.time,
+          );
+          if (selected != null) {
+            setState(() {
+              reading.time = selected;
+              _errorKey = null;
+            });
+          }
+        },
+      ),
+      if (_kind == MeasurementKind.glucose)
+        InsetBlock(
+          semanticLabel: '$label، ${context.tr('measurements.glucose_context')}',
+          child: Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              for (final value in _contexts)
+                ChoiceChip(
+                  label: Text(context.tr('measurements.context.$value')),
+                  selected: reading.context == value,
+                  onSelected: (_) => setState(() => reading.context = value),
+                ),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  /// A new reading three hours after the last one (the same day), with the
+  /// next glucose context not used yet: fasting, then after a meal...
+  void _addReading() {
+    final TimeOfDay last = _readings.last.time;
+    final int next = last.hour * 60 + last.minute + 180;
+    final int minutes = next > 23 * 60 ? 23 * 60 : next;
+    final Set<String> used = {for (final item in _readings) item.context};
+    setState(() {
+      _readings.add(
+        _Reading(
+          TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
+          _contexts.firstWhere(
+            (value) => !used.contains(value),
+            orElse: () => 'other',
+          ),
+        ),
+      );
+      _errorKey = null;
+    });
+  }
+
+  static TimeOfDay _parseTime(String value) {
+    final parts = value.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  static String _clock(TimeOfDay value) =>
+      '${value.hour.toString().padLeft(2, '0')}:'
+      '${value.minute.toString().padLeft(2, '0')}';
 
   String _formatTime(TimeOfDay value) {
     final hour = value.hourOfPeriod == 0 ? 12 : value.hourOfPeriod;

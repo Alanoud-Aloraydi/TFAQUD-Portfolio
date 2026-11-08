@@ -7,6 +7,8 @@ class CareCircleSummary extends Equatable {
     required this.name,
     this.canManageMedications = false,
     this.patientAvatarCode,
+    this.isPatient = true,
+    this.patientName,
   });
 
   final String id;
@@ -14,12 +16,22 @@ class CareCircleSummary extends Equatable {
   final bool canManageMedications;
   final String? patientAvatarCode;
 
+  /// Whether the signed-in account is this circle's patient; the app then
+  /// speaks to them as «أنت». True when an older server does not say.
+  final bool isPatient;
+
+  /// The patient's name, for the words someone caring for them reads
+  /// («أدوية محمود الحالية»).
+  final String? patientName;
+
   @override
   List<Object?> get props => [
     id,
     name,
     canManageMedications,
     patientAvatarCode,
+    isPatient,
+    patientName,
   ];
 }
 

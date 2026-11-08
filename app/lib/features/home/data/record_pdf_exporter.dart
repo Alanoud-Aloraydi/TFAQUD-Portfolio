@@ -76,7 +76,8 @@ class RecordPdfExporter {
   static final PdfColor _slate = PdfColor.fromHex('#4E5A75');
   static final PdfColor _line = PdfColor.fromHex('#DFE2EA');
   static final PdfColor _panel = PdfColor.fromHex('#F6F7F9');
-  static final PdfColor _leaf = PdfColor.fromHex('#E0F8C7');
+  // The app's leaf tint (AppColors.leafTint).
+  static final PdfColor _leaf = PdfColor.fromHex('#E3F3EA');
   static final PdfColor _leafInk = PdfColor.fromHex('#3D6B1C');
 
   static const double _labelWidth = 110;

@@ -1,10 +1,11 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
@@ -125,10 +126,14 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
     super.key,
     required this.data,
     required this.onChanged,
+    this.circleId,
   });
 
   final MedicationFormData data;
   final VoidCallback onChanged;
+
+  /// For the words: the patient's «جدولك» or the patient's name.
+  final String? circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +142,7 @@ class MedicationEffectiveDateGroup extends StatelessWidget {
     final isNow = DateUtils.isSameDay(selected, today);
     return InsetGroup(
       header: context.tr('medications.effective_question'),
-      footer: context.tr('medications.effective_hint'),
+      footer: CareVoice.tr(context, circleId, 'medications.effective_hint'),
       children: <Widget>[
         InsetBlock(
           semanticLabel: context.tr('medications.effective_question'),

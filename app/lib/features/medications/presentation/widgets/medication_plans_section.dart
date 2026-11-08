@@ -1,9 +1,10 @@
 import 'dart:async';
 
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
@@ -75,7 +76,7 @@ class MedicationPlansSection extends StatelessWidget {
               'medications.plan_summary',
               args: [activeCount.toString(), laterCount.toString()],
             ),
-      emptyText: context.tr('medications.no_current'),
+      emptyText: CareVoice.tr(context, circleId, 'medications.no_current'),
       plans: current,
       circleId: circleId,
       canManage: canManage,

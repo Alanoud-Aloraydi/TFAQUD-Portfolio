@@ -1,11 +1,11 @@
 """On which days a medicine schedule applies: weekly or monthly.
 
 A weekly schedule applies on its ISO weekdays (1 Monday .. 7 Sunday). A
-monthly one applies on its days of the month (1 .. 31); a day the month
-does not have moves to the month's last day (the 31st is the 30th in
-April, and the 29th to the 31st are the 28th or 29th in February), the
-same as the app explains under the day picker. A schedule never has two
-doses on one day, even when two of its days land on the same last day.
+monthly one applies on its days of the month, 1 to 28: every month has
+them, so a monthly dose is always on the day chosen (migration 0023).
+
+Should an older row still hold a later day, it lands on the month's last
+day when the month lacks it, as the database's own dose rule counts it.
 """
 
 import calendar

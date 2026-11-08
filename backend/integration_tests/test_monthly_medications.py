@@ -1,6 +1,5 @@
 """Monthly medicine schedules on PostgreSQL: stored, listed, expanded into
-doses on their days (a missing day on the month's last day), and recorded
-only on those days."""
+doses on their days (1 to 28), and recorded only on those days."""
 
 from datetime import date, datetime, timezone
 from uuid import UUID
@@ -10,7 +9,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.clock import ManualClock
-from app.models import MedicationDoseRecord, MedicationScheduleDay
+from app.models import (
+    MedicationDoseRecord,
+    MedicationScheduleDay,
+    MedicationScheduleMonthDay,
+)
 from integration_tests.helpers import offline_circle
 from integration_tests.test_medications import (
     create_plan,
@@ -69,22 +72,22 @@ def test_a_monthly_plan_is_kept_and_listed(
     ) == ["2026-11-01", "2026-11-15"]
 
 
-def test_a_day_the_month_lacks_is_its_last_day(
-    database_app, database, account, november
-):
+def test_the_days_are_1_to_28(database_app, database, account, november):
     owner = account()
     circle = offline_circle(database, owner)
     client = database_app.test_client()
     headers = signed_in(database_app, owner)
-    created = create_plan(
-        client, circle, headers, monthly_body(november, [30, 31])
-    )
-    assert created.status_code == 201, created.json
 
-    # October has the 30th and the 31st; November only the 30th, once.
+    later = create_plan(client, circle, headers, monthly_body(november, [30]))
+    created = create_plan(
+        client, circle, headers, monthly_body(november, [28])
+    )
+
+    assert later.status_code == 422
+    assert created.status_code == 201, created.json
     assert occurrences(
         client, circle, headers, "2026-10-30", "2026-11-30"
-    ) == ["2026-10-30", "2026-10-31", "2026-11-30"]
+    ) == ["2026-11-28"]
 
 
 def test_a_monthly_dose_is_recorded_only_on_its_day(
@@ -141,13 +144,14 @@ def test_the_database_keeps_monthly_days_whole(
     database_app, database, account, november
 ):
     """The database's own rules, below the API: a monthly schedule has no
-    weekdays, and a dose is recorded only on one of its days."""
+    weekdays nor a day after the 28th, and a dose is recorded only on one
+    of its days."""
     owner = account()
     circle = offline_circle(database, owner)
     client = database_app.test_client()
     headers = signed_in(database_app, owner)
     created = create_plan(
-        client, circle, headers, monthly_body(november, [31])
+        client, circle, headers, monthly_body(november, [28])
     )
     schedule_id = UUID(
         created.json["medication_plan"]["version"]["schedules"][0]["id"]
@@ -156,6 +160,13 @@ def test_the_database_keeps_monthly_days_whole(
     with Session(database) as session:
         session.add(MedicationScheduleDay(schedule_id=schedule_id, weekday=1))
         with pytest.raises(IntegrityError, match="day of the month"):
+            session.commit()
+
+    with Session(database) as session:
+        session.add(
+            MedicationScheduleMonthDay(schedule_id=schedule_id, month_day=30)
+        )
+        with pytest.raises(IntegrityError, match="month_day"):
             session.commit()
 
     def record(day):
@@ -172,6 +183,5 @@ def test_the_database_keeps_monthly_days_whole(
             session.commit()
 
     with pytest.raises(IntegrityError, match="does not belong"):
-        record(date(2026, 11, 29))
-    # November's last day stands for the 31st.
-    record(date(2026, 11, 30))
+        record(date(2026, 10, 27))
+    record(date(2026, 10, 28))

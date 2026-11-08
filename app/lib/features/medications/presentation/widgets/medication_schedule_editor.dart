@@ -37,7 +37,8 @@ class MedicationScheduleEditor extends StatelessWidget {
   final MedicationFormIssue? issue;
 
   /// The day chosen the first time «شهري» is picked: the day the medicine
-  /// starts, as Apple's Calendar starts a monthly repeat on its event's day.
+  /// starts (the 28th at most), as Apple's Calendar starts a monthly repeat
+  /// on its event's day.
   final int defaultMonthDay;
 
   /// Match the supplied schedule strip: Saturday through Friday. Numbers are
@@ -232,13 +233,19 @@ class MedicationScheduleEditor extends StatelessWidget {
             onChanged: (ScheduleRepeat repeat) {
               data.repeat = repeat;
               if (repeat == ScheduleRepeat.monthly && data.monthDays.isEmpty) {
-                data.monthDays.add(defaultMonthDay);
+                // The 29th to the 31st are not offered: they start on the
+                // 28th.
+                data.monthDays.add(
+                  defaultMonthDay > MonthDayGrid.lastDay
+                      ? MonthDayGrid.lastDay
+                      : defaultMonthDay,
+                );
               }
               onChanged();
             },
           ),
           const SizedBox(height: AppSpacing.md),
-          if (monthly) ..._monthDays(context) else _weekdays(context),
+          if (monthly) _monthDays(context) else _weekdays(context),
         ],
       ),
     );
@@ -257,23 +264,13 @@ class MedicationScheduleEditor extends StatelessWidget {
     },
   );
 
-  List<Widget> _monthDays(BuildContext context) => <Widget>[
-    MonthDayGrid(
-      selected: data.monthDays,
-      labelOf: (int day) =>
-          context.tr('medications.month_day_label', args: <String>['$day']),
-      onTap: (int day) {
-        if (!data.monthDays.remove(day)) data.monthDays.add(day);
-        onChanged();
-      },
-    ),
-    // The 29th to the 31st are not in every month.
-    if (data.monthDays.any((int day) => day >= 29)) ...<Widget>[
-      const SizedBox(height: AppSpacing.sm),
-      Text(
-        context.tr('medications.month_end_note'),
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-    ],
-  ];
+  Widget _monthDays(BuildContext context) => MonthDayGrid(
+    selected: data.monthDays,
+    labelOf: (int day) =>
+        context.tr('medications.month_day_label', args: <String>['$day']),
+    onTap: (int day) {
+      if (!data.monthDays.remove(day)) data.monthDays.add(day);
+      onChanged();
+    },
+  );
 }

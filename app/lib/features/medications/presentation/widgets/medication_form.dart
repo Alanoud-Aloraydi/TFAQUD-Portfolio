@@ -168,7 +168,11 @@ class _MedicationFormState extends State<MedicationForm> {
               ),
               if (widget.plan != null && _medicalFieldsDirty) ...[
                 const SizedBox(height: AppSpacing.xl),
-                MedicationEffectiveDateGroup(data: _data, onChanged: _changed),
+                MedicationEffectiveDateGroup(
+                  data: _data,
+                  circleId: widget.circleId,
+                  onChanged: _changed,
+                ),
               ],
               const SizedBox(height: AppSpacing.xl),
               MedicationInstructionsGroup(data: _data, onChanged: _changed),

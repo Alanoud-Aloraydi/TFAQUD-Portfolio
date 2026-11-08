@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
@@ -7,15 +8,18 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+/// [circleId] picks the words: «متى أخذت الجرعة؟» for the patient, «متى تم
+/// أخذ الجرعة؟» for someone caring for them ([CareVoice]).
 Future<DateTime?> selectTakenTime(
   BuildContext context,
-  DateTime scheduledOn,
-) async {
+  DateTime scheduledOn, {
+  String? circleId,
+}) async {
   final now = DateTime.now();
   final selected = await showTafaqodTimeSheet(
     context,
     initialTime: TimeOfDay.fromDateTime(now),
-    title: context.tr('medications.actual_time'),
+    title: CareVoice.tr(context, circleId, 'medications.actual_time'),
   );
   if (selected == null) return null;
   return DateTime(

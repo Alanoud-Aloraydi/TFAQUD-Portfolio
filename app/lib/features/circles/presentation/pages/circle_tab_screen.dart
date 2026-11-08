@@ -1,10 +1,10 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -26,6 +26,7 @@ import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
+import 'package:app/features/circles/presentation/widgets/member_profile_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
@@ -751,7 +752,16 @@ class _MemberRow extends StatelessWidget {
               : ApiEndpoints.patientPhoto(circleId))
         : personPhotoPath(circleId, member.accountId);
     return InkWell(
-      onTap: member.isYou ? () => context.push(Routes.account) : null,
+      // You open your own account; anyone else opens their card: photo,
+      // name and number, to call them.
+      onTap: member.isYou
+          ? () => context.push(Routes.account)
+          : () => showMemberProfileSheet(
+              context,
+              member: member,
+              photoPath: photoPath,
+              patientUsesApp: patientUsesApp,
+            ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(

@@ -111,11 +111,15 @@ class ApiEndpoints {
       '/circles/$circleId/measurement-readings';
   static String measurementReadingsExport(String circleId) =>
       '${measurementReadings(circleId)}/export';
+  /// One task: a version's reading [time] («HH:mm») on [scheduledOn].
   static String measurementRecord(
     String circleId,
     String versionId,
-    String scheduledOn,
-  ) => '/circles/$circleId/measurement-records/$versionId/$scheduledOn';
+    String scheduledOn, {
+    String? time,
+  }) =>
+      '/circles/$circleId/measurement-records/$versionId/$scheduledOn'
+      '${time == null ? '' : '?${Uri(queryParameters: <String, String>{'time': time}).query}'}';
   static String measurementFollowUp(String circleId, String readingId) =>
       '${measurementReadings(circleId)}/$readingId/follow-up';
 

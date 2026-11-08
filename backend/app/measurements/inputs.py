@@ -13,19 +13,63 @@ Condition = Literal["exertion", "after_meal", "stress", "illness"]
 Value = Annotated[int, Field(ge=1, le=999)]
 
 
+class ReadingTime(Dto):
+    """One reading time of the day, with its glucose context."""
+
+    time_of_day: time
+    glucose_context: Context | None = None
+
+
+# Up to six readings a day: fasting, after each meal, at bedtime.
+MAX_READING_TIMES = 6
+
+
 class PlanRequest(Dto):
-    """One daily time, selected weekdays, and a user-entered target."""
+    """The reading times of a day, selected weekdays, and a target.
+
+    An older app sends one `time_of_day` and `glucose_context` instead of
+    `times`; that is a plan with one reading time.
+    """
 
     kind: Kind
-    time_of_day: time
+    times: Annotated[
+        list[ReadingTime], Field(min_length=1, max_length=MAX_READING_TIMES)
+    ]
     weekdays: Annotated[list[int], Field(min_length=1, max_length=7)]
     starts_on: date
     grace_minutes: Literal[30, 60, 120] = 60
-    glucose_context: Context | None = None
     glucose_low: Value | None = None
     glucose_high: Value | None = None
     systolic_limit: Value | None = None
     diastolic_limit: Value | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def one_time_from_an_older_app(cls, data):
+        if isinstance(data, dict) and "times" not in data and (
+            "time_of_day" in data
+        ):
+            data = dict(data)
+            data["times"] = [
+                {
+                    "time_of_day": data.pop("time_of_day"),
+                    "glucose_context": data.pop("glucose_context", None),
+                }
+            ]
+        return data
+
+    @property
+    def sorted_times(self) -> list[ReadingTime]:
+        return sorted(self.times, key=lambda item: item.time_of_day)
+
+    @property
+    def time_of_day(self) -> time:
+        """The first reading time, the copy a version keeps."""
+        return self.sorted_times[0].time_of_day
+
+    @property
+    def glucose_context(self) -> str | None:
+        return self.sorted_times[0].glucose_context
 
     @model_validator(mode="after")
     def valid_plan(self):
@@ -34,6 +78,11 @@ class PlanRequest(Dto):
             day < 1 or day > 7 for day in self.weekdays
         ):
             raise ValueError("Weekdays must be unique and between 1 and 7.")
+        moments = [item.time_of_day for item in self.times]
+        if any(moment.tzinfo is not None for moment in moments):
+            raise ValueError("Reading times have no time zone.")
+        if len(set(moments)) != len(moments):
+            raise ValueError("Reading times cannot repeat.")
         if self.kind == "glucose":
             if (
                 self.glucose_low is None
@@ -49,7 +98,7 @@ class PlanRequest(Dto):
             or self.systolic_limit <= self.diastolic_limit
             or self.glucose_low is not None
             or self.glucose_high is not None
-            or self.glucose_context is not None
+            or any(item.glucose_context is not None for item in self.times)
         ):
             raise ValueError("Blood pressure needs both upper limits.")
         return self

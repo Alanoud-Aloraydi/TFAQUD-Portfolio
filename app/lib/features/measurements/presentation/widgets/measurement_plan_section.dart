@@ -145,7 +145,10 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                         context.tr(kind),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      if (version.glucoseContext != null)
+                      // With one reading a day, its context under the name;
+                      // with several, each one beside its time below.
+                      if (version.readingTimes.length == 1 &&
+                          version.glucoseContext != null)
                         Text(
                           context.tr(
                             'measurements.context.${version.glucoseContext}',
@@ -176,13 +179,22 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   children: [
-                    Row(
-                      children: [
-                        Text(_formatTime(version.time)),
-                        const Spacer(),
-                        Text(context.tr('measurements.one_reading')),
-                      ],
-                    ),
+                    for (final MeasurementTime reading
+                        in version.readingTimes)
+                      Row(
+                        children: [
+                          Text(_formatTime(reading.time)),
+                          const Spacer(),
+                          Text(
+                            version.readingTimes.length > 1 &&
+                                    reading.glucoseContext != null
+                                ? context.tr(
+                                    'measurements.context.${reading.glucoseContext}',
+                                  )
+                                : context.tr('measurements.one_reading'),
+                          ),
+                        ],
+                      ),
                     const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [

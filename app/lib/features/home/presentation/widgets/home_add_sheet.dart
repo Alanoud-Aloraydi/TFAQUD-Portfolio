@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -25,6 +26,7 @@ Future<void> showHomeAddSheet(
     context,
     title: context.tr('add.title'),
     builder: (BuildContext sheetContext) => _HomeAddSheet(
+      circleId: circleId,
       onMedication: () {
         Navigator.of(sheetContext).pop();
         unawaited(
@@ -64,12 +66,14 @@ Future<void> showHomeAddSheet(
 /// Renders the home add sheet element of home add sheet.
 class _HomeAddSheet extends StatelessWidget {
   const _HomeAddSheet({
+    required this.circleId,
     required this.onMedication,
     required this.onMeasurement,
     required this.onAppointment,
     required this.onReading,
   });
 
+  final String circleId;
   final VoidCallback onMedication;
   final VoidCallback onMeasurement;
   final VoidCallback onAppointment;
@@ -91,7 +95,8 @@ class _HomeAddSheet extends StatelessWidget {
         _LabelledLine(label: context.tr('add.plans')),
         const SizedBox(height: AppSpacing.sm),
         Material(
-          color: AppSemanticColors.surfaceContent.withValues(alpha: 0.75),
+          // Solid, so nothing under the sheet shades the last row.
+          color: AppSemanticColors.surfaceContent,
           shape: AppRadius.shape(AppRadius.m),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -99,7 +104,7 @@ class _HomeAddSheet extends StatelessWidget {
               _PlanOption(
                 icon: AppIcons.pill,
                 title: context.tr('add.medication'),
-                hint: context.tr('add.medication_hint'),
+                hint: CareVoice.tr(context, circleId, 'add.medication_hint'),
                 onTap: onMedication,
               ),
               const _RowDivider(),

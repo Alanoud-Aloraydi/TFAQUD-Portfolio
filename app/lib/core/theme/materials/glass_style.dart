@@ -7,6 +7,13 @@ abstract class AppGlass {
 
   static const Color normalTop = Color(0xE0FFFFFF);
   static const Color normalBottom = Color(0xCCFFFFFF);
+
+  /// A sheet's glass: nearly opaque, so the tab bar and the dim under the
+  /// sheet do not show through its lower part as a dark shade. The sheet
+  /// reads as the top layer, the way iOS fills a sheet's glass more than a
+  /// bar's.
+  static const Color denseTop = Color(0xF7FFFFFF);
+  static const Color denseBottom = Color(0xF2FFFFFF);
   static const Color innerRim = Color(0xD9FFFFFF);
   static const Color clear = Color(0x00FFFFFF);
   static const Color highlight = Color(0x66FFFFFF);

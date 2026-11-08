@@ -78,9 +78,9 @@ def test_request_from_sending_to_the_new_circle(
     assert sender.get(f"/api/v1/circles/{circle['id']}").json["circle"][
         "name"
     ] == "دائرة Noura"
-    for api, name, can_manage in (
-        (sender, "دائرة Noura", True),
-        (receiver, "صحتي", False),
+    for api, name, can_manage, is_patient in (
+        (sender, "دائرة Noura", True, False),
+        (receiver, "صحتي", False, True),
     ):
         listed = api.get("/api/v1/home").json["care_circles"]
         assert listed == [
@@ -88,6 +88,8 @@ def test_request_from_sending_to_the_new_circle(
                 "id": circle["id"],
                 "name": name,
                 "can_manage_medications": can_manage,
+                "is_patient": is_patient,
+                "patient_name": "Noura",
                 "patient_avatar_code": None,
             }
         ]

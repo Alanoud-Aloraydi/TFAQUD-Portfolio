@@ -25,7 +25,11 @@ void main() {
     await EasyLocalization.ensureInitialized();
   });
 
-  Future<ScheduleFormData> openEditor(WidgetTester tester, double dose) async {
+  Future<ScheduleFormData> openEditor(
+    WidgetTester tester,
+    double dose, {
+    int defaultMonthDay = 1,
+  }) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -55,6 +59,7 @@ void main() {
                   index: 0,
                   data: data,
                   units: const [DoseUnit.tablet],
+                  defaultMonthDay: defaultMonthDay,
                   onChanged: () => setState(() {}),
                 ),
               ),
@@ -102,7 +107,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('«شهري» shows the days of the month, «أسبوعي» the week', (
+  testWidgets('«شهري» shows the days 1 to 28, «أسبوعي» the week', (
     tester,
   ) async {
     final data = await openEditor(tester, 1);
@@ -113,15 +118,16 @@ void main() {
     // The first day chosen is the medicine's start day (1 by default).
     expect(data.monthDays, {1});
     expect(find.text('medications.weekday_short.7'.tr()), findsNothing);
-    expect(find.text('medications.month_end_note'.tr()), findsNothing);
+    // Every month has the 28th; the 29th to the 31st are not offered.
+    expect(find.text('28'), findsOneWidget);
+    expect(find.text('29'), findsNothing);
+    expect(find.text('31'), findsNothing);
 
     await tester.tap(find.text('15'));
     await tester.pump();
-    await tester.tap(find.text('31'));
+    await tester.tap(find.text('28'));
     await tester.pump();
-    expect(data.monthDays, {1, 15, 31});
-    // The 31st is not in every month: the note says where the dose goes.
-    expect(find.text('medications.month_end_note'.tr()), findsOneWidget);
+    expect(data.monthDays, {1, 15, 28});
     expect(
       tester.getSemantics(find.bySemanticsLabel('يوم 15 من الشهر')),
       isSemantics(isButton: true, isSelected: true, hasTapAction: true),
@@ -131,7 +137,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(data.repeat, ScheduleRepeat.weekly);
     expect(data.weekdays, {1, 2, 3, 4, 5, 6, 7});
-    expect(find.text('31'), findsNothing);
+    expect(find.text('28'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a medicine starting on the 30th starts monthly on the 28th', (
+    tester,
+  ) async {
+    final data = await openEditor(tester, 1, defaultMonthDay: 30);
+
+    await tester.tap(find.text('medications.repeat_monthly'.tr()));
+    await tester.pumpAndSettle();
+
+    expect(data.monthDays, {28});
   });
 }

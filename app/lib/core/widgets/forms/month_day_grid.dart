@@ -5,8 +5,9 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// The days of a month, 1 to 31, seven to a row, to choose one or more —
-/// the same as the "Each" grid of a monthly repeat in Apple's Calendar.
+/// The days of a month, 1 to [lastDay] (28: the days every month has, so a
+/// monthly dose never moves), seven to a row, to choose one or more — the
+/// same as the "Each" grid of a monthly repeat in Apple's Calendar.
 ///
 /// A chosen day is filled and outlined more strongly, and screen readers
 /// hear it as selected, so the choice never rests on colour alone. Each
@@ -26,6 +27,9 @@ class MonthDayGrid extends StatelessWidget {
 
   static const int _columns = 7;
 
+  /// The last day offered; February has no 29th in most years.
+  static const int lastDay = 28;
+
   void _choose(int day) {
     HapticFeedback.selectionClick();
     onTap(day);
@@ -44,7 +48,7 @@ class MonthDayGrid extends StatelessWidget {
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
           children: <Widget>[
-            for (int day = 1; day <= 31; day++)
+            for (int day = 1; day <= lastDay; day++)
               SizedBox(
                 width: cell,
                 height: AppSizes.touch,

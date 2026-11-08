@@ -23,6 +23,8 @@ class HomeModel {
             canManageMedications:
                 circle['can_manage_medications'] as bool? ?? false,
             patientAvatarCode: circle['patient_avatar_code'] as String?,
+            isPatient: circle['is_patient'] as bool? ?? true,
+            patientName: circle['patient_name'] as String?,
           );
         }).toList(),
       ),

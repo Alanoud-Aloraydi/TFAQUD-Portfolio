@@ -1,10 +1,11 @@
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -62,7 +63,9 @@ class DoseRecordControls extends StatelessWidget {
                 ),
                 onPressed: () => _takeNow(context),
                 icon: const Icon(CupertinoIcons.checkmark, size: 16),
-                label: Text(context.tr('medications.taken_short')),
+                label: Text(
+                  CareVoice.tr(context, circleId, 'medications.taken_short'),
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -77,7 +80,13 @@ class DoseRecordControls extends StatelessWidget {
               ),
               onPressed: () => _takeAtDifferentTime(context),
               icon: const Icon(CupertinoIcons.clock, size: 16),
-              label: Text(context.tr('medications.different_time_short')),
+              label: Text(
+                CareVoice.tr(
+                  context,
+                  circleId,
+                  'medications.different_time_short',
+                ),
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -99,7 +108,9 @@ class DoseRecordControls extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => _takeNow(context),
             icon: const Icon(CupertinoIcons.checkmark),
-            label: Text(context.tr('medications.taken_now_action')),
+            label: Text(
+              CareVoice.tr(context, circleId, 'medications.taken_now_action'),
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -119,7 +130,11 @@ class DoseRecordControls extends StatelessWidget {
       _recordTaken(context, DateTime.now());
 
   Future<void> _takeAtDifferentTime(BuildContext context) async {
-    final takenAt = await selectTakenTime(context, occurrence.scheduledOn);
+    final takenAt = await selectTakenTime(
+      context,
+      occurrence.scheduledOn,
+      circleId: circleId,
+    );
     if (takenAt == null || !context.mounted) return;
     if (takenAt.isAfter(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -209,8 +224,12 @@ class _RecordedStatus extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // The patient reads «تم تسجيل إنك أخذت الجرعة»; someone
+                // caring for them reads the patient's name instead.
                 Text(
-                  context.tr(
+                  CareVoice.tr(
+                    context,
+                    circleId,
                     taken
                         ? occurrence.takenLate
                               ? 'medications.taken_late_status'

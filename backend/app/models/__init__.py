@@ -18,6 +18,7 @@ from app.models.medication_schedule import (
 )
 from app.models.measurement import (
     MeasurementPlan,
+    MeasurementPlanTime,
     MeasurementPlanVersion,
     MeasurementRecord,
     MeasurementTarget,
@@ -51,6 +52,7 @@ __all__ = [
     "MedicationScheduleMonthDay",
     "MedicationDoseRecord",
     "MeasurementPlan",
+    "MeasurementPlanTime",
     "MeasurementPlanVersion",
     "MeasurementRecord",
     "MeasurementTarget",

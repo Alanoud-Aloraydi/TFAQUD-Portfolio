@@ -1,12 +1,13 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -168,7 +169,9 @@ class MedicationRecordCard extends StatelessWidget {
                     Text(
                       last == null
                           ? context.tr('medications.no_recorded_dose')
-                          : context.tr(
+                          : CareVoice.tr(
+                              context,
+                              circleId,
                               last.outcome == DoseOutcome.taken
                                   ? 'medications.last_taken_record'
                                   : 'medications.last_skipped_record',

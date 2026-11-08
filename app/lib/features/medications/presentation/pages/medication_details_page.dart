@@ -1,9 +1,10 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -13,8 +14,8 @@ import 'package:app/features/medications/presentation/cubit/medications_state.da
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
-import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -129,6 +130,7 @@ class _Content extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               _PendingRevision(
                 plan: plan,
+                circleId: circleId,
                 canManage: canManage,
                 onCancel: () => _cancelPending(context),
               ),
@@ -196,7 +198,11 @@ class _Content extends StatelessWidget {
     final confirmed = await showAppAlert<bool>(
       context,
       title: context.tr('medications.cancel_pending_title'),
-      message: context.tr('medications.cancel_pending_message'),
+      message: CareVoice.tr(
+        context,
+        circleId,
+        'medications.cancel_pending_message',
+      ),
       actions: [
         AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
         AppAlertAction<bool>(
@@ -215,11 +221,13 @@ class _Content extends StatelessWidget {
 class _PendingRevision extends StatelessWidget {
   const _PendingRevision({
     required this.plan,
+    required this.circleId,
     required this.canManage,
     required this.onCancel,
   });
 
   final MedicationPlan plan;
+  final String circleId;
   final bool canManage;
   final VoidCallback onCancel;
 
@@ -244,7 +252,7 @@ class _PendingRevision extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(context.tr('medications.effective_hint')),
+            Text(CareVoice.tr(context, circleId, 'medications.effective_hint')),
             const SizedBox(height: AppSpacing.md),
             Text(pending.name, style: Theme.of(context).textTheme.titleMedium),
             Text(

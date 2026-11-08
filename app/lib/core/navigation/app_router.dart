@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/intro_memory.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/account/presentation/cubit/account_cubit.dart';
+import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
+import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/data/visit_audio_service.dart';
 import 'package:app/features/appointments/data/visit_repository.dart';
@@ -14,10 +17,8 @@ import 'package:app/features/appointments/presentation/cubit/appointments_cubit.
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_page.dart';
 import 'package:app/features/appointments/presentation/pages/visit_page.dart';
+import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:app/features/account/presentation/cubit/account_cubit.dart';
-import 'package:app/features/account/presentation/pages/account_screen.dart';
-import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:app/features/auth/presentation/pages/auth_feature_screen.dart';
@@ -51,17 +52,17 @@ import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
 import 'package:app/features/home/presentation/pages/plan_page.dart';
 import 'package:app/features/home/presentation/pages/record_page.dart';
 import 'package:app/features/home/presentation/pages/today_page.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/pages/measurement_plan_form_page.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/pages/medication_details_page.dart';
 import 'package:app/features/medications/presentation/pages/medication_form_page.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
-import 'package:app/features/measurements/presentation/pages/measurement_plan_form_page.dart';
 import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
@@ -663,6 +664,7 @@ class AppRouter {
   ) async {
     if (!await IntroMemory.seen()) return null;
     unawaited(GetIt.I<DoseReminders>().clear());
+    CareVoice.clear();
     return Routes.authPhone;
   }
 

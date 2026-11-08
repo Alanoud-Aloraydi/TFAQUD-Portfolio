@@ -56,6 +56,8 @@ def test_home_excludes_other_circles_and_pending_invitations(
             "id": str(visible.id),
             "name": visible.name,
             "can_manage_medications": True,
+            "is_patient": False,
+            "patient_name": "Nora",
             "patient_avatar_code": None,
         }
     ]
@@ -74,6 +76,8 @@ def test_home_lists_patient_manager_circle_once(
             "id": str(circle.id),
             "name": circle.name,
             "can_manage_medications": True,
+            "is_patient": True,
+            "patient_name": "Nora",
             "patient_avatar_code": None,
         }
     ]

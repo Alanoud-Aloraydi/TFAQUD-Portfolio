@@ -1,20 +1,21 @@
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
-import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/today_dose_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -196,7 +197,7 @@ class TodayMedicationActionDose extends StatelessWidget {
                   ),
           ),
           Text(
-            context.tr(switch (status) {
+            CareVoice.tr(context, circleId, switch (status) {
               DoseTimingState.due => 'today_dashboard.due_title',
               DoseTimingState.late => 'today_dashboard.late_title',
               _ => 'today_dashboard.next_dose',
@@ -458,6 +459,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
             DoseRecordControls(
               occurrence: occurrence,
               layout: DoseControlsLayout.attention,
+              circleId: circleId,
             ),
           ],
         ],

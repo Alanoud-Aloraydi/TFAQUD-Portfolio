@@ -134,6 +134,10 @@ class MeasurementPlanVersion(db.Model):
     number: Mapped[int] = mapped_column(Integer)
     effective_from_on: Mapped[date] = mapped_column(Date)
     effective_until_on: Mapped[date | None] = mapped_column(Date)
+    # The version's first reading time and its context. Every reading time,
+    # this one too, is a MeasurementPlanTime row; these two stay as a copy
+    # of the earliest one, for what read a version before a plan had more
+    # than one time a day (migration 0024).
     time_of_day: Mapped[time] = mapped_column(Time)
     weekdays_mask: Mapped[int] = mapped_column(SmallInteger)
     grace_minutes: Mapped[int] = mapped_column(SmallInteger)
@@ -150,12 +154,34 @@ class MeasurementPlanVersion(db.Model):
     )
 
 
+class MeasurementPlanTime(db.Model):
+    """One reading time of a plan version, the same days as the version: a
+    glucose plan can read fasting at 07:00 and after a meal at 14:00."""
+
+    __tablename__ = "measurement_plan_time"
+    __table_args__ = (
+        CheckConstraint(
+            "glucose_context IS NULL OR glucose_context IN "
+            "('fasting', 'before_meal', 'after_meal', 'bedtime', 'other')",
+            name="glucose_context",
+        ),
+    )
+
+    version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("measurement_plan_version.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    time_of_day: Mapped[time] = mapped_column(Time, primary_key=True)
+    glucose_context: Mapped[str | None] = mapped_column(Text)
+
+
 class MeasurementRecord(db.Model):
     """A measured or skipped occurrence, or a standalone reading."""
 
     __tablename__ = "measurement_record"
     __table_args__ = (
-        UniqueConstraint("plan_version_id", "scheduled_on"),
+        # One outcome per reading time of a day.
+        UniqueConstraint("plan_version_id", "scheduled_on", "scheduled_time"),
         CheckConstraint("kind IN ('glucose', 'bp')", name="kind"),
         CheckConstraint("outcome IN ('read', 'skipped')", name="outcome"),
         CheckConstraint(
@@ -181,8 +207,10 @@ class MeasurementRecord(db.Model):
             name="note_length",
         ),
         CheckConstraint(
-            "(plan_version_id IS NULL AND scheduled_on IS NULL) OR "
-            "(plan_version_id IS NOT NULL AND scheduled_on IS NOT NULL)",
+            "(plan_version_id IS NULL AND scheduled_on IS NULL "
+            "AND scheduled_time IS NULL) OR "
+            "(plan_version_id IS NOT NULL AND scheduled_on IS NOT NULL "
+            "AND scheduled_time IS NOT NULL)",
             name="schedule_pair",
         ),
         CheckConstraint(
@@ -225,6 +253,8 @@ class MeasurementRecord(db.Model):
         ForeignKey("measurement_plan_version.id", ondelete="CASCADE")
     )
     scheduled_on: Mapped[date | None] = mapped_column(Date)
+    # Which reading time of that day; null for a standalone reading.
+    scheduled_time: Mapped[time | None] = mapped_column(Time)
     kind: Mapped[str] = mapped_column(Text)
     outcome: Mapped[str] = mapped_column(Text)
     measured_at: Mapped[datetime | None] = mapped_column(

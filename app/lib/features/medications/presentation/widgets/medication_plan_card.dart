@@ -1,11 +1,12 @@
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -208,7 +209,11 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        context.tr('medications.effective_hint'),
+                        CareVoice.tr(
+                          context,
+                          widget.circleId,
+                          'medications.effective_hint',
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

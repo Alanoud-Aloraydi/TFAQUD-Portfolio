@@ -1,39 +1,40 @@
 import 'dart:async';
 
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/layout/section_header.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
-import 'package:app/features/medications/domain/dose_timing.dart';
-import 'package:app/features/medications/presentation/today_medication_view.dart';
-import 'package:app/features/medications/presentation/widgets/today_medication_components.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
-import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
-import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
+import 'package:app/features/medications/domain/dose_timing.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
+import 'package:app/features/medications/presentation/medication_format.dart';
+import 'package:app/features/medications/presentation/today_medication_view.dart';
+import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_components.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
@@ -228,7 +229,7 @@ class _TodayPageState extends State<TodayPage> {
             measurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
           EmptyStateNote(
-            context.tr('today_dashboard.no_tasks_today'),
+            CareVoice.tr(context, circleId, 'today_dashboard.no_tasks_today'),
             actionLabel: context.tr('add.title'),
             onAction: () => _addSomething(context, circleId),
           ),

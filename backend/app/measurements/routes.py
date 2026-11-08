@@ -1,6 +1,6 @@
 """Authorized circle measurement endpoints."""
 
-from datetime import date
+from datetime import date, time
 from uuid import UUID
 
 from flask import Blueprint, jsonify, request
@@ -44,6 +44,19 @@ def _date(value: str) -> date:
         return date.fromisoformat(value)
     except (ValueError, TypeError):
         raise ValidationFailed(code="invalid_measurement_date") from None
+
+
+def _time(value: str | None) -> time | None:
+    """The reading time of a task, «HH:MM», or None when not given."""
+    if value is None:
+        return None
+    try:
+        parsed = time.fromisoformat(value)
+    except (ValueError, TypeError):
+        raise ValidationFailed(code="invalid_measurement_time") from None
+    if parsed.tzinfo is not None:
+        raise ValidationFailed(code="invalid_measurement_time")
+    return parsed
 
 
 def _range() -> ReadingQuery:
@@ -205,8 +218,11 @@ def create_standalone_reading(circle_id):
 @bp.put("/measurement-records/<version_id>/<scheduled_on>")
 @require_circle_role(*MEMBERS)
 def record_task(circle_id, version_id, scheduled_on):
-    """Save the reading or skip for one scheduled occurrence."""
+    """Save the reading or skip for one scheduled occurrence: a version's
+    reading time (`?time=HH:MM`) on a day. Without `time`, the version's
+    only reading time (an older app)."""
     body = parse_json_body(ReadingRequest)
+    scheduled_time = _time(request.args.get("time"))
     with transaction() as session:
         record = MeasurementService(session, get_clock().now()).record(
             _uuid(circle_id),
@@ -214,6 +230,7 @@ def record_task(circle_id, version_id, scheduled_on):
             body,
             version_id=_uuid(version_id),
             scheduled_on=_date(scheduled_on),
+            scheduled_time=scheduled_time,
         )
         version = session.get(MeasurementPlanVersion, record.plan_version_id)
         accounts = accounts_by_id(

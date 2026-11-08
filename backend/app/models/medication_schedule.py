@@ -63,15 +63,12 @@ class MedicationScheduleDay(db.Model):
 
 
 class MedicationScheduleMonthDay(db.Model):
-    """One day of the month (1 to 31) on which a monthly schedule applies.
-
-    In a month without that day (31 in a 30-day month, 29 to 31 in
-    February) the dose is on the month's last day instead.
-    """
+    """One day of the month (1 to 28, the days every month has) on which a
+    monthly schedule applies."""
 
     __tablename__ = "medication_schedule_month_day"
     __table_args__ = (
-        CheckConstraint("month_day BETWEEN 1 AND 31", name="month_day"),
+        CheckConstraint("month_day BETWEEN 1 AND 28", name="month_day"),
     )
 
     schedule_id: Mapped[UUID] = mapped_column(

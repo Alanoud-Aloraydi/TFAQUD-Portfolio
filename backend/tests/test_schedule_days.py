@@ -18,20 +18,14 @@ def test_weekly_uses_the_iso_weekday():
     [
         ([15], date(2026, 11, 15), True),
         ([15], date(2026, 11, 16), False),
-        # November has 30 days: the 31st moves to the 30th.
-        ([31], date(2026, 11, 30), True),
-        ([31], date(2026, 12, 31), True),
-        ([31], date(2026, 12, 30), False),
-        # February 2027 has 28 days, February 2028 has 29.
-        ([29, 30, 31], date(2027, 2, 28), True),
-        ([30], date(2028, 2, 29), True),
-        ([30], date(2028, 2, 28), False),
-        ([28], date(2028, 2, 28), True),
+        ([1, 28], date(2026, 11, 28), True),
+        ([1, 28], date(2026, 11, 29), False),
+        # February 2027 has 28 days: the 28th is still the 28th.
+        ([28], date(2027, 2, 28), True),
+        ([28], date(2028, 2, 29), False),
     ],
 )
-def test_monthly_moves_a_missing_day_to_the_months_end(
-    month_days, day, expected
-):
+def test_monthly_uses_the_day_of_the_month(month_days, day, expected):
     assert applies_on("monthly", [], month_days, day) is expected
 
 

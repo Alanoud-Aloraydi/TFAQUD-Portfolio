@@ -8,15 +8,27 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.accounts import accounts_by_id, recorder_response
-from app.measurements.service import outside_target, patient_for_circle
-from app.models import MeasurementPlan, MeasurementPlanVersion
+from app.measurements.service import (
+    outside_target,
+    patient_for_circle,
+    plan_times,
+)
+from app.models import MeasurementPlan, MeasurementPlanTime
+from app.models import MeasurementPlanVersion
 from app.models import MeasurementRecord, MeasurementTarget
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 
 
-def version_response(version: MeasurementPlanVersion) -> dict:
-    """Return editable version fields without presentation strings."""
+def version_response(
+    version: MeasurementPlanVersion,
+    times: list[MeasurementPlanTime] | None = None,
+) -> dict:
+    """Return editable version fields without presentation strings.
+
+    `times` are every reading time of a day; `time_of_day` and
+    `glucose_context` stay as the first of them, for an older app.
+    """
     return {
         "id": str(version.id),
         "number": version.number,
@@ -34,6 +46,13 @@ def version_response(version: MeasurementPlanVersion) -> dict:
         ],
         "grace_minutes": version.grace_minutes,
         "glucose_context": version.glucose_context,
+        "times": [
+            {
+                "time_of_day": item.time_of_day.strftime("%H:%M"),
+                "glucose_context": item.glucose_context,
+            }
+            for item in (times or [])
+        ],
         "glucose_low": version.glucose_low,
         "glucose_high": version.glucose_high,
         "systolic_limit": version.systolic_limit,
@@ -57,6 +76,11 @@ def reading_response(
         ),
         "scheduled_on": (
             record.scheduled_on.isoformat() if record.scheduled_on else None
+        ),
+        "scheduled_time": (
+            record.scheduled_time.strftime("%H:%M")
+            if record.scheduled_time
+            else None
         ),
         "kind": record.kind,
         "outcome": record.outcome,
@@ -176,6 +200,7 @@ class MeasurementQueries:
         by_plan: dict[UUID, list[MeasurementPlanVersion]] = {}
         for version in versions:
             by_plan.setdefault(version.plan_id, []).append(version)
+        times = plan_times(self.session, [version.id for version in versions])
         today = self.now.astimezone(RIYADH).date()
         result = []
         for plan in plans:
@@ -215,11 +240,16 @@ class MeasurementQueries:
                         if plan.stopped_at
                         else None
                     ),
-                    "version": version_response(current),
+                    "version": version_response(current, times[current.id]),
                     "pending_version": (
-                        version_response(pending) if pending else None
+                        version_response(pending, times[pending.id])
+                        if pending
+                        else None
                     ),
-                    "history": [version_response(item) for item in history],
+                    "history": [
+                        version_response(item, times[item.id])
+                        for item in history
+                    ],
                 }
             )
         return result
@@ -247,7 +277,8 @@ class MeasurementQueries:
             )
         )
         version_ids = [version.id for _, version in rows]
-        saved: dict[tuple[UUID, date], MeasurementRecord] = {}
+        times = plan_times(self.session, version_ids)
+        saved: dict[tuple[UUID, date, object], MeasurementRecord] = {}
         if version_ids:
             records = self.session.scalars(
                 select(MeasurementRecord).where(
@@ -256,7 +287,7 @@ class MeasurementQueries:
                 )
             )
             saved = {
-                (item.plan_version_id, item.scheduled_on): item
+                (item.plan_version_id, item.scheduled_on, item.scheduled_time): item
                 for item in records
             }
         accounts = accounts_by_id(
@@ -281,56 +312,57 @@ class MeasurementQueries:
                     & (1 << (day.isoweekday() - 1))
                 ):
                     continue
-                scheduled = datetime.combine(day, version.time_of_day, RIYADH)
-                if (
-                    plan.stopped_at is not None
-                    and scheduled >= plan.stopped_at
-                ):
-                    continue
-                record = saved.get((version.id, day))
-                deadline = scheduled + timedelta(minutes=version.grace_minutes)
-                if record is not None:
-                    status = (
-                        "skipped"
-                        if record.outcome == "skipped"
-                        else (
-                            "read_late"
-                            if record.measured_at > deadline
-                            else "read"
-                        )
+                for reading_time in times[version.id]:
+                    item = self._occurrence(
+                        plan, version, reading_time, day, saved, accounts
                     )
-                elif self.now < scheduled:
-                    status = "upcoming"
-                elif self.now <= deadline:
-                    status = "due"
-                else:
-                    status = "missed"
-                result.append(
-                    {
-                        "plan_id": str(plan.id),
-                        "version_id": str(version.id),
-                        "kind": plan.kind,
-                        "scheduled_on": day.isoformat(),
-                        "time_of_day": version.time_of_day.strftime("%H:%M"),
-                        "deadline_at": deadline.isoformat(),
-                        "status": status,
-                        "glucose_context": version.glucose_context,
-                        "glucose_low": version.glucose_low,
-                        "glucose_high": version.glucose_high,
-                        "systolic_limit": version.systolic_limit,
-                        "diastolic_limit": version.diastolic_limit,
-                        "record": (
-                            reading_response(record, version, accounts)
-                            if record
-                            else None
-                        ),
-                    }
-                )
+                    if item is not None:
+                        result.append(item)
             day += timedelta(days=1)
         return sorted(
             result,
             key=lambda item: (item["scheduled_on"], item["time_of_day"]),
         )
+
+    def _occurrence(
+        self, plan, version, reading_time, day, saved, accounts
+    ) -> dict | None:
+        """One reading time of a version on a day, as a task, or None when
+        the plan stopped before it."""
+        scheduled = datetime.combine(day, reading_time.time_of_day, RIYADH)
+        if plan.stopped_at is not None and scheduled >= plan.stopped_at:
+            return None
+        record = saved.get((version.id, day, reading_time.time_of_day))
+        deadline = scheduled + timedelta(minutes=version.grace_minutes)
+        if record is not None:
+            status = (
+                "skipped"
+                if record.outcome == "skipped"
+                else ("read_late" if record.measured_at > deadline else "read")
+            )
+        elif self.now < scheduled:
+            status = "upcoming"
+        elif self.now <= deadline:
+            status = "due"
+        else:
+            status = "missed"
+        return {
+            "plan_id": str(plan.id),
+            "version_id": str(version.id),
+            "kind": plan.kind,
+            "scheduled_on": day.isoformat(),
+            "time_of_day": reading_time.time_of_day.strftime("%H:%M"),
+            "deadline_at": deadline.isoformat(),
+            "status": status,
+            "glucose_context": reading_time.glucose_context,
+            "glucose_low": version.glucose_low,
+            "glucose_high": version.glucose_high,
+            "systolic_limit": version.systolic_limit,
+            "diastolic_limit": version.diastolic_limit,
+            "record": (
+                reading_response(record, version, accounts) if record else None
+            ),
+        }
 
     def readings(self, circle_id: UUID, start: date, end: date) -> list[dict]:
         """Return recorded readings and skips in the requested date range."""

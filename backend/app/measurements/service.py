@@ -1,6 +1,6 @@
 """Transactional measurement-plan and reading rules."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.measurements.inputs import PlanRequest, ReadingRequest
-from app.models import MeasurementPlan, MeasurementPlanVersion
+from app.models import MeasurementPlan, MeasurementPlanTime
+from app.models import MeasurementPlanVersion
 from app.models import MeasurementRecord, MeasurementTarget, Patient
 
 RIYADH = ZoneInfo("Asia/Riyadh")
@@ -28,6 +29,22 @@ def patient_for_circle(session: Session, circle_id: UUID) -> Patient:
 def weekday_mask(days: list[int]) -> int:
     """Store ISO weekdays in one constrained integer."""
     return sum(1 << (day - 1) for day in days)
+
+
+def plan_times(
+    session: Session, version_ids
+) -> dict[UUID, list[MeasurementPlanTime]]:
+    """The reading times of each version, earliest first."""
+    ids = list(version_ids)
+    result: dict[UUID, list[MeasurementPlanTime]] = {key: [] for key in ids}
+    if ids:
+        for item in session.scalars(
+            select(MeasurementPlanTime)
+            .where(MeasurementPlanTime.version_id.in_(ids))
+            .order_by(MeasurementPlanTime.time_of_day)
+        ):
+            result[item.version_id].append(item)
+    return result
 
 
 def outside_target(
@@ -89,9 +106,7 @@ class MeasurementService:
         )
         self.session.add(plan)
         self.session.flush()
-        self.session.add(
-            self._version(plan.id, 1, body.starts_on, body, actor_id)
-        )
+        self._add_version(plan.id, 1, body.starts_on, body, actor_id)
         self._save_target(patient.id, body.kind, body)
         self.session.flush()
         return plan
@@ -135,12 +150,7 @@ class MeasurementService:
         if effective < today or effective <= latest.effective_from_on:
             raise ValidationFailed(code="measurement_effective_date")
         latest.effective_until_on = effective
-        self.session.add(
-            self._version(
-                plan.id, latest.number + 1, effective, body, actor_id
-            )
-        )
-        self.session.flush()
+        self._add_version(plan.id, latest.number + 1, effective, body, actor_id)
         return plan
 
     def stop(self, circle_id: UUID, plan_id: UUID) -> MeasurementPlan:
@@ -170,8 +180,13 @@ class MeasurementService:
         *,
         version_id: UUID | None = None,
         scheduled_on: date | None = None,
+        scheduled_time: time | None = None,
     ) -> MeasurementRecord:
-        """Write one outcome, linked to a task or as a standalone reading."""
+        """Write one outcome, linked to a task or as a standalone reading.
+
+        A task is a version's reading time on a day; an older app names no
+        time, which is fine while the version has one.
+        """
         patient = patient_for_circle(self.session, circle_id)
         if body.measured_at is not None:
             if body.measured_at.tzinfo is None:
@@ -219,12 +234,15 @@ class MeasurementService:
                 raise ValidationFailed(code="measurement_target_linked")
             if scheduled_on is None:
                 raise ValidationFailed(code="measurement_date_required")
-            self._require_task(patient.id, version_id, scheduled_on, body.kind)
+            scheduled_time = self._require_task(
+                patient.id, version_id, scheduled_on, body.kind, scheduled_time
+            )
             existing = self.session.scalar(
                 select(MeasurementRecord)
                 .where(
                     MeasurementRecord.plan_version_id == version_id,
                     MeasurementRecord.scheduled_on == scheduled_on,
+                    MeasurementRecord.scheduled_time == scheduled_time,
                 )
                 .with_for_update()
             )
@@ -234,6 +252,7 @@ class MeasurementService:
             patient_id=patient.id,
             plan_version_id=version_id,
             scheduled_on=scheduled_on,
+            scheduled_time=scheduled_time if version_id is not None else None,
             kind=body.kind,
             outcome=body.outcome,
             measured_at=body.measured_at,
@@ -345,7 +364,9 @@ class MeasurementService:
         version_id: UUID,
         scheduled_on: date,
         kind: str,
-    ) -> None:
+        scheduled_time: time | None,
+    ) -> time:
+        """The reading time this task is, after checking the task exists."""
         if scheduled_on > self.now.astimezone(RIYADH).date():
             raise ValidationFailed(code="future_measurement_task")
         row = self.session.execute(
@@ -364,8 +385,17 @@ class MeasurementService:
         if row is None:
             raise NotFound()
         plan, version = row
+        times = [
+            item.time_of_day
+            for item in plan_times(self.session, [version.id])[version.id]
+        ]
+        if scheduled_time is None:
+            if len(times) != 1:
+                raise ValidationFailed(code="measurement_time_required")
+            scheduled_time = times[0]
         if (
-            scheduled_on < version.effective_from_on
+            scheduled_time not in times
+            or scheduled_on < version.effective_from_on
             or (
                 version.effective_until_on is not None
                 and scheduled_on >= version.effective_until_on
@@ -374,11 +404,12 @@ class MeasurementService:
             & (1 << (scheduled_on.isoweekday() - 1))
             or (
                 plan.stopped_at is not None
-                and datetime.combine(scheduled_on, version.time_of_day, RIYADH)
+                and datetime.combine(scheduled_on, scheduled_time, RIYADH)
                 >= plan.stopped_at
             )
         ):
             raise NotFound()
+        return scheduled_time
 
     def _replace(
         self,
@@ -401,7 +432,10 @@ class MeasurementService:
         version.glucose_high = replacement.glucose_high
         version.systolic_limit = replacement.systolic_limit
         version.diastolic_limit = replacement.diastolic_limit
+        for item in plan_times(self.session, [version.id])[version.id]:
+            self.session.delete(item)
         self.session.flush()
+        self._add_times(version.id, body)
 
     def _has_readings(self, version: MeasurementPlanVersion) -> bool:
         """Whether any task of this version has an outcome."""
@@ -410,6 +444,32 @@ class MeasurementService:
             .where(MeasurementRecord.plan_version_id == version.id)
             .limit(1)
         ) is not None
+
+    def _add_version(
+        self,
+        plan_id: UUID,
+        number: int,
+        effective: date,
+        body: PlanRequest,
+        actor_id: UUID | None,
+    ) -> MeasurementPlanVersion:
+        """A new version with its reading times."""
+        version = self._version(plan_id, number, effective, body, actor_id)
+        self.session.add(version)
+        self.session.flush()
+        self._add_times(version.id, body)
+        return version
+
+    def _add_times(self, version_id: UUID, body: PlanRequest) -> None:
+        self.session.add_all(
+            MeasurementPlanTime(
+                version_id=version_id,
+                time_of_day=item.time_of_day,
+                glucose_context=item.glucose_context,
+            )
+            for item in body.sorted_times
+        )
+        self.session.flush()
 
     @staticmethod
     def _version(

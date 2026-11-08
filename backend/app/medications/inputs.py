@@ -56,15 +56,15 @@ def _english_decimal(value):
 
 class ScheduleRequest(Dto):
     """One dose time: weekly on `weekdays` (ISO, 1 Monday .. 7 Sunday), or
-    monthly on `month_days` (1 .. 31). An older app sends only `weekdays`,
-    which is weekly."""
+    monthly on `month_days` (1 .. 28, the days every month has). An older
+    app sends only `weekdays`, which is weekly."""
 
     time_of_day: time
     dose_value: DoseValue
     dose_unit: DoseUnit
     repeat: Literal["weekly", "monthly"] = "weekly"
     weekdays: Annotated[list[int], Field(max_length=7)] = []
-    month_days: Annotated[list[int], Field(max_length=31)] = []
+    month_days: Annotated[list[int], Field(max_length=28)] = []
     instructions: OptionalText250 = None
 
     @field_validator("dose_value", mode="before")
@@ -90,8 +90,8 @@ class ScheduleRequest(Dto):
                 raise ValueError("A monthly dose has no weekdays.")
             if len(set(self.month_days)) != len(self.month_days):
                 raise ValueError("Days of the month cannot repeat.")
-            if any(day < 1 or day > 31 for day in self.month_days):
-                raise ValueError("Days of the month must be 1 to 31.")
+            if any(day < 1 or day > 28 for day in self.month_days):
+                raise ValueError("Days of the month must be 1 to 28.")
         return self
 
 
@@ -143,19 +143,12 @@ class PlanRequest(Dto):
             item.time_of_day for item in monthly
         }:
             raise ValueError("One dose time is either weekly or monthly.")
-        # Two monthly doses at one time: no shared day, and at most one of
-        # them near the month's end (the 28th to the 31st can all land on
-        # February's last day).
-        for index, item in enumerate(monthly):
-            for other in monthly[index + 1 :]:
-                if item.time_of_day != other.time_of_day:
-                    continue
-                if set(item.month_days) & set(other.month_days) or (
-                    max(item.month_days) >= 28 and max(other.month_days) >= 28
-                ):
-                    raise ValueError(
-                        "Dose times cannot repeat on one day of the month."
-                    )
+        # Two monthly doses at one time never share a day of the month.
+        days = {
+            (item.time_of_day, day) for item in monthly for day in item.month_days
+        }
+        if len(days) != sum(len(item.month_days) for item in monthly):
+            raise ValueError("Dose times cannot repeat on one day of the month.")
         return self
 
 

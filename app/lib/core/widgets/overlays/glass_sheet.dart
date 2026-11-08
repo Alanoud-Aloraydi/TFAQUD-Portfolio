@@ -61,6 +61,8 @@ class _GlassSheet extends StatelessWidget {
         AppSpacing.sm + keyboard,
       ),
       child: GlassSurface(
+        // On top of everything: the tab bar does not show through.
+        dense: true,
         borderRadius: BorderRadius.circular(AppRadius.xl),
         child: Material(
           type: MaterialType.transparency,

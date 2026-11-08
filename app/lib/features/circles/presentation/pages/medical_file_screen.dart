@@ -236,8 +236,8 @@ class MedicalFileScreen extends StatelessWidget {
         ],
         if (form != null && form.isNew) _form(context, cubit, form, null),
         if (form == null && file.canAddContact)
+          // In the middle, like the other add buttons of an empty list.
           Align(
-            alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
               onPressed: cubit.startAdd,
               icon: const Icon(AppIcons.plus),

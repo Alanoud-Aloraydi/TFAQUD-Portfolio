@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/intro_memory.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -86,6 +87,7 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
     // Nobody is signed in on the welcome (after a sign-out, an ended sign-in
     // or a deleted account): the dose reminders of the last person go.
     unawaited(GetIt.I<DoseReminders>().clear());
+    CareVoice.clear();
   }
 
   @override

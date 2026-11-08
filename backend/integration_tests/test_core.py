@@ -57,6 +57,7 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
         "photo",
         "measurement_plan",
         "measurement_plan_version",
+        "measurement_plan_time",
         "measurement_target",
         "measurement_record",
         "appointment",

@@ -67,6 +67,20 @@ class StartScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
+                          StepHeader(
+                            // Step 2 of the first set-up; from the "+" it is
+                            // one page, with no steps.
+                            step: addingCircle ? null : 2,
+                            totalSteps: addingCircle ? null : 2,
+                            title: context.tr('onboarding.start_title'),
+                            // After the name page the link is hidden, as in the
+                            // design. From the "+" it takes the user back.
+                            onBack: addingCircle && context.canPop()
+                                ? () => context.pop()
+                                : null,
+                          ),
+                          // The steps and the question first, then any
+                          // invitation waiting, then the two choices.
                           if (!addingCircle)
                             BlocBuilder<InboxCubit, InboxState>(
                               builder:
@@ -74,13 +88,15 @@ class StartScreen extends StatelessWidget {
                                     BuildContext context,
                                     InboxState inboxState,
                                   ) {
+                                    // Nothing waiting: no gap either.
                                     if (inboxState.status !=
-                                        InboxStatus.ready) {
+                                            InboxStatus.ready ||
+                                        inboxState.inbox.needsReply == 0) {
                                       return const SizedBox.shrink();
                                     }
                                     return Padding(
                                       padding: const EdgeInsets.only(
-                                        bottom: AppSpacing.lg,
+                                        top: AppSpacing.lg,
                                       ),
                                       // Capped to a short teaser so many
                                       // pending invitations don't push the
@@ -95,18 +111,6 @@ class StartScreen extends StatelessWidget {
                                     );
                                   },
                             ),
-                          StepHeader(
-                            // Step 2 of the first set-up; from the "+" it is
-                            // one page, with no steps.
-                            step: addingCircle ? null : 2,
-                            totalSteps: addingCircle ? null : 2,
-                            title: context.tr('onboarding.start_title'),
-                            // After the name page the link is hidden, as in the
-                            // design. From the "+" it takes the user back.
-                            onBack: addingCircle && context.canPop()
-                                ? () => context.pop()
-                                : null,
-                          ),
                           const SizedBox(height: AppSpacing.lg),
                           ChoiceCard(
                             icon: AppIcons.heart,

@@ -86,6 +86,8 @@ def test_self_care_circle_is_created_and_listed(
             "id": circle["id"],
             "name": "My care",
             "can_manage_medications": True,
+            "is_patient": True,
+            "patient_name": "Nora",
             "patient_avatar_code": None,
         }
     ]

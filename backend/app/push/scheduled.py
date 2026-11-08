@@ -125,9 +125,10 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         kind_name = "سكر الدم" if occurrence["kind"] == "glucose" else (
             "ضغط الدم"
         )
+        # One alert per reading time of the day.
         key = (
             f"measurement_missed:{occurrence['version_id']}:"
-            f"{occurrence['scheduled_on']}"
+            f"{occurrence['scheduled_on']}:{occurrence['time_of_day']}"
         )
         if not _claim(key):
             continue

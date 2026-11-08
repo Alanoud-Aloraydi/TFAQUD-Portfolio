@@ -27,11 +27,16 @@ class GlassSurface extends StatelessWidget {
     super.key,
     required this.borderRadius,
     required this.child,
+    this.dense = false,
   });
 
   /// A capsule or a circle: half the height.
   final BorderRadius borderRadius;
   final Widget child;
+
+  /// The nearly opaque glass of a sheet ([AppGlass.denseTop]), so what is
+  /// under the sheet does not show through it.
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -83,10 +88,9 @@ class GlassSurface extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: const <Color>[
-                  AppGlass.normalTop,
-                  AppGlass.normalBottom,
-                ],
+                colors: dense
+                    ? const <Color>[AppGlass.denseTop, AppGlass.denseBottom]
+                    : const <Color>[AppGlass.normalTop, AppGlass.normalBottom],
               ),
               border: Border.all(
                 color: AppEffects.subtleEdge,

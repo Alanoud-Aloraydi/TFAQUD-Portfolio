@@ -171,8 +171,8 @@ def test_a_monthly_schedule_takes_days_of_the_month():
     "changes, message",
     [
         ({"month_days": []}, "at least one day of the month"),
-        ({"month_days": [0]}, "1 to 31"),
-        ({"month_days": [32]}, "1 to 31"),
+        ({"month_days": [0]}, "1 to 28"),
+        ({"month_days": [29]}, "1 to 28"),
         ({"month_days": [5, 5]}, "cannot repeat"),
         ({"weekdays": [1]}, "no weekdays"),
     ],
@@ -197,28 +197,17 @@ def test_one_time_is_weekly_or_monthly_not_both():
 
 
 def test_two_monthly_doses_at_one_time_never_meet():
-    # The same day.
     with pytest.raises(ValidationError, match="day of the month"):
         PlanRequest.model_validate(
             plan(schedules=[monthly(), monthly(month_days=[15, 20])])
         )
-    # The 30th and the 31st are both February's last day.
-    with pytest.raises(ValidationError, match="day of the month"):
-        PlanRequest.model_validate(
-            plan(
-                schedules=[
-                    monthly(month_days=[30]),
-                    monthly(month_days=[31], dose_value=Decimal("2")),
-                ]
-            )
-        )
-    # Different days, not both near the end: fine, and at other times too.
+    # Different days, and the same day at another time: fine.
     PlanRequest.model_validate(
         plan(
             schedules=[
                 monthly(month_days=[1]),
-                monthly(month_days=[31], dose_value=Decimal("2")),
-                monthly(time_of_day=time(20), month_days=[31]),
+                monthly(month_days=[28], dose_value=Decimal("2")),
+                monthly(time_of_day=time(20), month_days=[28]),
             ]
         )
     )

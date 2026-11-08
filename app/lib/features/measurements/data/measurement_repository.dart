@@ -150,6 +150,8 @@ class MeasurementRepository {
             circleId,
             occurrence.versionId,
             measurementDate(occurrence.scheduledOn),
+            // Which reading time of the day: a plan can have several.
+            time: occurrence.time,
           );
     final response = occurrence == null
         ? await _client.post(path, data: draft.toJson())
