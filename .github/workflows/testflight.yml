@@ -3,7 +3,7 @@
 # it from the TestFlight app on the iPhone. This build has the Push
 # Notifications capability, so the server can send circle updates.
 #
-# When it runs:
+# When it runs (and only after the checks of ci.yml pass in the same run):
 #   - on a push whose commit message contains [testflight], on any branch.
 #     The app calls the team's server on Render
 #     (https://tfaqud-api.onrender.com). To build for another server, add its
@@ -37,8 +37,14 @@ on:
         default: "https://tfaqud-api.onrender.com"
 
 jobs:
-  testflight:
+  # The checks of ci.yml first: a build that fails them never reaches the
+  # testers.
+  checks:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[testflight')
+    uses: ./.github/workflows/ci.yml
+
+  testflight:
+    needs: checks
     # The same Mac as ios-build.yml (Xcode 27 for the glass tab bar).
     runs-on: xcode-27
     timeout-minutes: 60
@@ -50,10 +56,12 @@ jobs:
       - name: Get the code
         uses: actions/checkout@v4
 
+      # The version ci.yml checked the code with.
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.8
 
       - name: Show the tool versions
         run: |

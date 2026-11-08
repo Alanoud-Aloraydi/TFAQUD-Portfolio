@@ -4,8 +4,10 @@
 #
 # In Render: New, then Blueprint, then pick this repository and the branch to
 # deploy. Render reads this file, asks for the values marked `sync: false`,
-# and creates both. Each push to that branch deploys the API again by itself;
-# the start command runs the new database migrations first.
+# and creates both. A push to that branch deploys the API again by itself
+# once every GitHub check on the commit has passed (.github/workflows/ci.yml);
+# a failed check, or a commit with no checks, deploys nothing. The start
+# command runs the new database migrations first.
 #
 # backend/README.md ("Deploy to Render") has the steps.
 
@@ -32,7 +34,7 @@ services:
       paths:
         - backend/**
     healthCheckPath: /api/v1/health
-    autoDeployTrigger: commit
+    autoDeployTrigger: checksPass
     envVars:
       - key: APP_ENV
         value: staging

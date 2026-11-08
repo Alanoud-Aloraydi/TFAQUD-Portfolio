@@ -304,8 +304,10 @@ process instead of two: the fake sender keeps its codes in the memory of the
 process that sent them, so with two a correct code was refused about every
 second try.
 
-After that, every push to the chosen branch deploys again by itself, with the
-new migrations, and the old version answers until the new one is ready.
+After that, every push to the chosen branch deploys again by itself once the
+GitHub checks of `.github/workflows/ci.yml` pass on it, with the new
+migrations, and the old version answers until the new one is ready. A failed
+check deploys nothing.
 `[skip render]` in a commit message skips one deploy. Settings change in
 **Environment**, without a new commit.
 
