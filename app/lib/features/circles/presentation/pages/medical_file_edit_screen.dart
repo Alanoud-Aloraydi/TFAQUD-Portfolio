@@ -26,14 +26,28 @@ import 'package:go_router/go_router.dart';
 /// The edit page of the medical file (CIRCLE-05, "تعديل"): the names of a
 /// patient without an account, the birth date, the city, the blood type, the
 /// chronic conditions and the allergies. Needs a [MedicalFileEditCubit] above
-/// it. After «حفظ» it goes back to the circle tab, where the patient card
-/// already shows what was saved.
+/// it. The detailed mode and the simplified mode open the same page, each
+/// telling it where to go so that leaving it never changes the mode.
 class MedicalFileEditScreen extends StatelessWidget {
-  const MedicalFileEditScreen({super.key});
+  const MedicalFileEditScreen({
+    super.key,
+    this.savedTo = Routes.circle,
+    this.closeTo,
+  });
+
+  /// Where «حفظ» goes: by default the circle tab, past the medical file
+  /// page, where the patient card already shows what was saved. Null returns
+  /// to the page under this one, which reads the file again.
+  final String? savedTo;
+
+  /// Where «رجوع» goes when there is no page under this one (an address
+  /// opened on its own); by default the detailed mode's medical file.
+  final String? closeTo;
 
   @override
   Widget build(BuildContext context) {
     final MedicalFileEditCubit cubit = context.read<MedicalFileEditCubit>();
+    final String fileRoute = closeTo ?? Routes.medicalFile(cubit.circleId);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -58,14 +72,14 @@ class MedicalFileEditScreen extends StatelessWidget {
                     title: context.tr('circles.file_edit_title'),
                     onBack: context.canPop()
                         ? () => context.pop()
-                        : () => context.go(Routes.medicalFile(cubit.circleId)),
+                        : () => context.go(fileRoute),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Expanded(
                     // Loading, error and content fade into each other.
                     child: ContentSwitcher(
                       stateKey: state.status,
-                      child: _body(context, cubit, state),
+                      child: _body(context, cubit, state, fileRoute),
                     ),
                   ),
                 ],
@@ -81,6 +95,7 @@ class MedicalFileEditScreen extends StatelessWidget {
     BuildContext context,
     MedicalFileEditCubit cubit,
     MedicalFileEditState state,
+    String fileRoute,
   ) {
     switch (state.status) {
       case MedicalFileEditStatus.loading:
@@ -103,7 +118,11 @@ class MedicalFileEditScreen extends StatelessWidget {
           ),
         );
       case MedicalFileEditStatus.ready:
-        return _EditForm(state: state);
+        return _EditForm(
+          state: state,
+          savedTo: savedTo,
+          fileRoute: fileRoute,
+        );
     }
   }
 }
@@ -111,9 +130,19 @@ class MedicalFileEditScreen extends StatelessWidget {
 /// The fields and the save button. It is created once the file is loaded and
 /// keeps the text controllers, which start from the saved values.
 class _EditForm extends StatefulWidget {
-  const _EditForm({required this.state});
+  const _EditForm({
+    required this.state,
+    required this.savedTo,
+    required this.fileRoute,
+  });
 
   final MedicalFileEditState state;
+
+  /// See [MedicalFileEditScreen.savedTo].
+  final String? savedTo;
+
+  /// The medical file, for a save with no page under this one.
+  final String fileRoute;
 
   @override
   State<_EditForm> createState() => _EditFormState();
@@ -188,8 +217,14 @@ class _EditFormState extends State<_EditForm> {
     final bool ok = await cubit.save();
     if (!ok || !mounted) return;
     messenger.showSnackBar(SnackBar(content: Text(saved)));
-    // Back to the circle tab, past the medical file page.
-    router.go(Routes.circle);
+    final String? savedTo = widget.savedTo;
+    if (savedTo != null) {
+      router.go(savedTo);
+    } else if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go(widget.fileRoute);
+    }
   }
 
   List<ChipOption> _options(String group, List<String> codes) {

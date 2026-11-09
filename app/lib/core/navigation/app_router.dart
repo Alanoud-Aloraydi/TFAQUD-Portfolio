@@ -589,27 +589,11 @@ class AppRouter {
           );
         }),
       ),
-      // The edit page starts from the file the medical file page passes
-      // (no second read); opened from its address alone, it reads the file.
       GoRoute(
         path: Routes.medicalFileEditPath,
         pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) {
-              final MedicalFileEditCubit cubit = MedicalFileEditCubit(
-                GetIt.I<CirclesUseCase>(),
-                state.pathParameters['circleId']!,
-              );
-              final Object? file = state.extra;
-              if (file is MedicalFile) {
-                cubit.start(file);
-              } else {
-                cubit.load();
-              }
-              return cubit;
-            },
-            child: const MedicalFileEditScreen(),
-          ),
+          (context, state) =>
+              _medicalFileEdit(state, const MedicalFileEditScreen()),
         ),
       ),
       GoRoute(
@@ -660,7 +644,8 @@ class AppRouter {
   /// The simplified mode's screens share one day ([SimplifiedModeCubit]),
   /// so a reminder, the day's list and the home always agree, and one text
   /// size. The medical file's edit page and the emergency card are the
-  /// detailed mode's pages, opened on top: going back returns here.
+  /// detailed mode's pages, routed inside this shell so the size holds and
+  /// leaving them returns here, never to the detailed mode.
   static ShellRoute _simplifiedShell() {
     return ShellRoute(
       pageBuilder: _iosShellPage(
@@ -778,7 +763,47 @@ class AppRouter {
             );
           }),
         ),
+        // The detailed mode's edit page inside this shell, at this mode's
+        // size: «حفظ» and «رجوع» return to the simplified medical file.
+        GoRoute(
+          path: Routes.simplifiedMedicalFileEditPath,
+          pageBuilder: _iosPage(
+            (context, state) => _medicalFileEdit(
+              state,
+              SimplifiedDetailScale(
+                child: MedicalFileEditScreen(
+                  savedTo: null,
+                  closeTo: Routes.simplifiedMedicalFile(
+                    state.pathParameters['circleId']!,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  /// The medical file's edit page [screen] with its cubit. It starts from
+  /// the file the medical file page passes (no second read); opened from its
+  /// address alone, it reads the file.
+  static Widget _medicalFileEdit(GoRouterState state, Widget screen) {
+    return BlocProvider(
+      create: (context) {
+        final MedicalFileEditCubit cubit = MedicalFileEditCubit(
+          GetIt.I<CirclesUseCase>(),
+          state.pathParameters['circleId']!,
+        );
+        final Object? file = state.extra;
+        if (file is MedicalFile) {
+          cubit.start(file);
+        } else {
+          cubit.load();
+        }
+        return cubit;
+      },
+      child: screen,
     );
   }
 

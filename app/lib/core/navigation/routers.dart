@@ -106,6 +106,8 @@ class Routes {
       '/simplifiedMode/:circleId/measure';
   static const String simplifiedMedicalFilePath =
       '/simplifiedMode/:circleId/medical-file';
+  static const String simplifiedMedicalFileEditPath =
+      '/simplifiedMode/:circleId/medical-file/edit';
   static const String simplifiedEmergencyCardPath =
       '/simplifiedMode/:circleId/emergency-card';
 
@@ -113,6 +115,8 @@ class Routes {
       '/simplifiedMode/$circleId/measure';
   static String simplifiedMedicalFile(String circleId) =>
       '/simplifiedMode/$circleId/medical-file';
+  static String simplifiedMedicalFileEdit(String circleId) =>
+      '/simplifiedMode/$circleId/medical-file/edit';
   static String simplifiedEmergencyCard(String circleId) =>
       '/simplifiedMode/$circleId/emergency-card';
 }

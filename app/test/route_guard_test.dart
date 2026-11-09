@@ -22,6 +22,10 @@ void main() {
     Routes.medicalFile('c-1'),
     Routes.medicalFileEdit('c-1'),
     Routes.emergencyCard('c-1'),
+    Routes.simplifiedMode,
+    Routes.simplifiedMedicalFile('c-1'),
+    Routes.simplifiedMedicalFileEdit('c-1'),
+    Routes.simplifiedEmergencyCard('c-1'),
   ];
 
   // Pages that anyone may open.

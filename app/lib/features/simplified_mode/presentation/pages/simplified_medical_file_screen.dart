@@ -9,14 +9,15 @@ import 'package:app/features/circles/presentation/widgets/contact_form_card.dart
 import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// «الملف الطبي» in the simplified mode: the patient's answers in big rows
-/// and the people to call. «تعديل» opens the detailed mode's edit page on
-/// top of this one, and coming back from it lands here again.
+/// and the people to call. «تعديل» opens the detailed mode's edit page
+/// inside the simplified mode, and «حفظ» or «رجوع» there lands here again.
 class SimplifiedMedicalFileScreen extends StatelessWidget {
   const SimplifiedMedicalFileScreen({super.key, required this.circleId});
 
@@ -24,7 +25,10 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
 
   Future<void> _edit(BuildContext context, MedicalFile file) async {
     final MedicalFileCubit cubit = context.read<MedicalFileCubit>();
-    await context.push<void>(Routes.medicalFileEdit(circleId), extra: file);
+    await context.push<void>(
+      Routes.simplifiedMedicalFileEdit(circleId),
+      extra: file,
+    );
     if (!cubit.isClosed) await cubit.load();
   }
 
@@ -143,14 +147,16 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
     final ContactForm? form = state.form;
     if (form != null && form.isNew) {
       return <Widget>[
-        ContactFormCard(
-          key: const ValueKey<String>('new-contact'),
-          form: form,
-          onRelation: cubit.relationChosen,
-          onName: cubit.nameChanged,
-          onPhone: cubit.phoneChanged,
-          onSave: cubit.saveContact,
-          onCancel: cubit.cancelForm,
+        SimplifiedDetailScale(
+          child: ContactFormCard(
+            key: const ValueKey<String>('new-contact'),
+            form: form,
+            onRelation: cubit.relationChosen,
+            onName: cubit.nameChanged,
+            onPhone: cubit.phoneChanged,
+            onSave: cubit.saveContact,
+            onCancel: cubit.cancelForm,
+          ),
         ),
       ];
     }

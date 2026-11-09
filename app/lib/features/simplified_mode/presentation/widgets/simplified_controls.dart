@@ -91,12 +91,20 @@ class SimplifiedButton extends StatelessWidget {
 }
 
 /// «استماع»: reads [segments] aloud, in order; «إيقاف» while it reads.
-/// Hidden when the person turned reading off in «حسابي».
+/// Hidden when the person turned reading off in «حسابي». On a phone without
+/// an Arabic voice it says where to add one, instead of staying silent.
 class ListenButton extends StatelessWidget {
   const ListenButton({super.key, required this.segments, this.onDark = false});
 
   final List<String> segments;
   final bool onDark;
+
+  Future<void> _listen(BuildContext context, SimplifiedVoice voice) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final String missing = context.tr('simplified_mode.no_arabic_voice');
+    if (await voice.speak(segments)) return;
+    messenger.showSnackBar(SnackBar(content: Text(missing)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +121,7 @@ class ListenButton extends StatelessWidget {
       builder: (context, speaking, _) => SizedBox(
         height: SimplifiedStyle.touch,
         child: OutlinedButton.icon(
-          onPressed: () => speaking ? voice.stop() : voice.speak(segments),
+          onPressed: () => speaking ? voice.stop() : _listen(context, voice),
           icon: Icon(
             speaking ? CupertinoIcons.stop_fill : CupertinoIcons.speaker_2_fill,
             size: 24,
