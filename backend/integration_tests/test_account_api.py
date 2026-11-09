@@ -1,8 +1,11 @@
 """The account page and account deletion on PostgreSQL."""
 
-from sqlalchemy import select
+from datetime import datetime, timezone
+
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from app.clock import ManualClock
 from app.models import Account, CareCircle, Patient
 from integration_tests.helpers import Api, BIRTH, add_manager, count
 from integration_tests.helpers import error_code, offline_circle, run
@@ -197,3 +200,54 @@ def test_a_member_leaves_other_circles_untouched(
             "phone_number": owner.phone_number,
         }
     ]
+
+
+def test_a_companion_who_deletes_their_account_leaves_the_visit_in_place(
+    database_app, database, account, monkeypatch
+):
+    # 9 November 2026 in Riyadh: the visit on the 11th is still to come.
+    monkeypatch.setitem(
+        database_app.extensions,
+        "clock",
+        ManualClock(datetime(2026, 11, 8, 22, 9, tzinfo=timezone.utc)),
+    )
+    owner, member = account(name="لينا"), account(name="حامد")
+    circle = offline_circle(database, owner)
+    add_manager(database, owner, circle, member)
+    base = f"/api/v1/circles/{circle.id}/appointments"
+    saved = Api(database_app, owner).post(base, {
+        "specialty": "السكري",
+        "kind": "follow_up",
+        "other_kind": None,
+        "scheduled_on": "2026-11-11",
+        "time_of_day": "10:00",
+        "place": "الحبيب",
+        "remote_method": None,
+        "companion_account_ids": [str(member.id)],
+    }).get_json()["appointment"]
+
+    deleted = Api(database_app, member).delete(URL)
+
+    assert deleted.status_code == 204, deleted.get_json()
+    owner_api = Api(database_app, owner)
+    (visit,) = owner_api.get(base).get_json()["appointments"]
+    assert (visit["id"], visit["companions"]) == (saved["id"], [])
+    # The visit with no companion left can still be closed.
+    closed = owner_api.post(f"{base}/{saved['id']}/status", {
+        "status": "cancelled",
+        "expected_updated_at": visit["updated_at"],
+    })
+    assert closed.status_code == 200, closed.get_json()
+
+
+def test_a_dose_is_checked_again_only_when_its_day_or_schedule_changes(
+    database,
+):
+    # Deleting the account that recorded a dose clears its recorder; that
+    # must not check the dose against a medicine changed since.
+    with Session(database) as session:
+        definition = session.scalar(text(
+            "SELECT pg_get_triggerdef(oid) FROM pg_trigger "
+            "WHERE tgname = 'check_medication_dose_valid'"
+        ))
+    assert "UPDATE OF schedule_id, scheduled_on" in definition

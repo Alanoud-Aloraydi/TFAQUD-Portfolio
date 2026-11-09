@@ -89,8 +89,9 @@ class AppointmentCompanion(db.Model):
         ForeignKey("appointment.id", ondelete="CASCADE"),
         primary_key=True,
     )
+    # Goes with a deleted account; the appointment stays (migration 0029).
     account_id: Mapped[UUID] = mapped_column(
-        ForeignKey("account.id", ondelete="RESTRICT"),
+        ForeignKey("account.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
     )
