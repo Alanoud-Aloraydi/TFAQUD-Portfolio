@@ -118,11 +118,7 @@ class MedicalFileEditScreen extends StatelessWidget {
           ),
         );
       case MedicalFileEditStatus.ready:
-        return _EditForm(
-          state: state,
-          savedTo: savedTo,
-          fileRoute: fileRoute,
-        );
+        return _EditForm(state: state, savedTo: savedTo, fileRoute: fileRoute);
     }
   }
 }
