@@ -304,7 +304,7 @@ class DemoBuilder:
                 "allergies": {
                     "status": "listed",
                     "medication": [],
-                    "food": ["nuts"],
+                    "food": ["tree_nuts"],
                 },
             },
         )
