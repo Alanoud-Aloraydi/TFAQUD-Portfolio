@@ -57,10 +57,16 @@ services:
         sync: false
       - key: FAKE_SMS_LOG_CODES
         value: "false"
-      # The demo data needs the fake SMS (its numbers are made up), so it is
-      # off with real SMS. The demo accounts already made stay as they are.
+      # The demo accounts (0500000001 detailed, 0500000004 simplified):
+      # their numbers are made up, so they get no SMS and sign in with
+      # DEMO_SIGN_IN_CODE, six digits typed in Render (Environment), never
+      # in git. The start makes the demo when it is missing, and
+      # .github/workflows/demo-refresh.yml makes it fresh each morning.
+      # Without the code, nothing of the demo runs.
       - key: DEMO_DATA
-        value: "false"
+        value: "true"
+      - key: DEMO_SIGN_IN_CODE
+        sync: false
       # Apple push. Type "none" first; after the key file is added as the
       # secret file apns_key.p8, change it to "apns".
       - key: PUSH_BACKEND

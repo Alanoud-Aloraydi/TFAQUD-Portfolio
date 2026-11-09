@@ -26,6 +26,7 @@ from app.clock import SystemClock
 from app.config import ConfigError, load_config
 from app.database import initialize_database, transaction
 from app.cors import register_development_cors
+from app.demo_routes import bp as demo_bp
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.home import bp as home_bp
@@ -153,6 +154,7 @@ def create_app(
     app.register_blueprint(prayer_times_bp)
     app.register_blueprint(push_bp)
     app.register_blueprint(tick_bp)
+    app.register_blueprint(demo_bp)
     if database_enabled and env != "production":
         # `flask --app wsgi demo-data`: demo circles, medicines and doses for
         # trying the app on a local server (app/demo_data.py).

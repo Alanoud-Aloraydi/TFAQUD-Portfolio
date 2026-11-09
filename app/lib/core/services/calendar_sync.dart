@@ -327,6 +327,8 @@ class CalendarSync {
     final DateTime now = DateTime.now();
     for (final appointment in appointments) {
       if (appointment.status != AppointmentStatus.scheduled) continue;
+      // The same people as its reminders: the patient and those going.
+      if (!circle.remindsOfAppointment(appointment.companionIds)) continue;
       // Built from the wall-clock fields directly (not [scheduledAt], which
       // is tagged UTC for ordering elsewhere) so the device's own calendar
       // shows it at the intended local time.

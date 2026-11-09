@@ -389,7 +389,13 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
     if (!mounted) return;
     setState(() => _open = false);
     if (minutes == null) return;
-    final ReminderCircle circle = ReminderCircle(id: widget.circleId, name: '');
+    // Only the reminder's words are needed, never who an appointment is for.
+    final ReminderCircle circle = ReminderCircle(
+      id: widget.circleId,
+      name: '',
+      viewerId: null,
+      viewerIsPatient: false,
+    );
     await GetIt.I<DoseReminders>().snooze(
       circleId: widget.circleId,
       task: SnoozedTask.dose,

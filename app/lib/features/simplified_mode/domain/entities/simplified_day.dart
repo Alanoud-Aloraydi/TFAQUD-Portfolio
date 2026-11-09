@@ -12,6 +12,8 @@ class SimplifiedDay extends Equatable {
   SimplifiedDay({
     required this.circleId,
     required this.circleName,
+    required this.accountId,
+    required this.isPatient,
     required this.displayName,
     required List<DoseOccurrence> doses,
     required List<MeasurementOccurrence> measurements,
@@ -30,6 +32,11 @@ class SimplifiedDay extends Equatable {
 
   /// The name reminders show for the circle.
   final String circleName;
+
+  /// The signed-in account, and whether it is the circle's patient: who an
+  /// appointment reminder is for.
+  final String accountId;
+  final bool isPatient;
   final String? displayName;
   final String? avatarCode;
 
@@ -55,6 +62,8 @@ class SimplifiedDay extends Equatable {
   List<Object?> get props => [
     circleId,
     circleName,
+    accountId,
+    isPatient,
     displayName,
     avatarCode,
     doses,

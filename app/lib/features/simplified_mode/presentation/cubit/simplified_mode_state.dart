@@ -1,4 +1,5 @@
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:equatable/equatable.dart';
 
@@ -13,6 +14,7 @@ class SimplifiedModeState extends Equatable {
     this.day,
     this.messageKey,
     this.saving = false,
+    this.snooze,
   });
 
   final SimplifiedModeStatus status;
@@ -29,6 +31,9 @@ class SimplifiedModeState extends Equatable {
 
   /// A dose is being recorded.
   final bool saving;
+
+  /// The task put off with «ذكّرني لاحقًا», until its reminder comes.
+  final SimplifiedSnooze? snooze;
 
   /// [day]'s tasks with their statuses at [now].
   late final TodaySchedule? schedule = switch (day) {
@@ -48,6 +53,8 @@ class SimplifiedModeState extends Equatable {
     String? messageKey,
     bool clearMessage = false,
     bool? saving,
+    SimplifiedSnooze? snooze,
+    bool clearSnooze = false,
   }) {
     return SimplifiedModeState(
       status: status ?? this.status,
@@ -55,9 +62,10 @@ class SimplifiedModeState extends Equatable {
       now: now ?? this.now,
       messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
       saving: saving ?? this.saving,
+      snooze: clearSnooze ? null : (snooze ?? this.snooze),
     );
   }
 
   @override
-  List<Object?> get props => [status, day, now, messageKey, saving];
+  List<Object?> get props => [status, day, now, messageKey, saving, snooze];
 }

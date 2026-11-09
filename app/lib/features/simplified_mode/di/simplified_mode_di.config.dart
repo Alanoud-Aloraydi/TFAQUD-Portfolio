@@ -50,6 +50,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i367.PrayerTimesRepository>(),
         gh<_i952.DoseReminders>(),
         gh<_i298.CalendarSync>(),
+        gh<_i662.SimplifiedPreferences>(),
       ),
     );
     return this;

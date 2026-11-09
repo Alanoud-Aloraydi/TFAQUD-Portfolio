@@ -169,6 +169,13 @@ def load_config(
         "APNS_BUNDLE_ID": os.environ.get("APNS_BUNDLE_ID"),
         "APNS_PRIVATE_KEY_PATH": os.environ.get("APNS_PRIVATE_KEY_PATH"),
         "APNS_ENVIRONMENT": os.environ.get("APNS_ENVIRONMENT", "sandbox"),
+        # The one code the demo accounts (app/demo_accounts.py) sign in
+        # with, six digits, so a shared test server with real SMS can show
+        # the demo: those made-up numbers get no SMS. Unset: no demo
+        # sign-in. Refused in production.
+        "DEMO_SIGN_IN_CODE": (
+            os.environ.get("DEMO_SIGN_IN_CODE", "").strip() or None
+        ),
         # Shared secret for the external scheduler's call to /internal/tick.
         # None (unset) keeps the endpoint refusing every request.
         "TICK_SECRET": os.environ.get("TICK_SECRET"),
@@ -207,6 +214,14 @@ def load_config(
 
     if overrides:
         config.update(overrides)
+
+    demo_code = config.get("DEMO_SIGN_IN_CODE")
+    if demo_code is not None:
+        if env_name == "production":
+            raise ConfigError("DEMO_SIGN_IN_CODE cannot be set in production.")
+        if not (len(demo_code) == 6 and demo_code.isascii()
+                and demo_code.isdigit()):
+            raise ConfigError("DEMO_SIGN_IN_CODE must be six digits.")
 
     uri = config.get("SQLALCHEMY_DATABASE_URI")
     if uri:

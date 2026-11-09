@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
@@ -10,6 +11,7 @@ import 'package:app/features/simplified_mode/presentation/cubit/simplified_measu
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_done_screen.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -158,13 +160,17 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
         return SimplifiedPage(
           title: context.tr('simplified_mode.measure_title'),
           backKey: 'simplified_mode.close',
-          listen: ready ? _listen(context, kind) : const <String>[],
+          listen: ready ? _listen(context, kind) : const <SpokenPart>[],
           footer: ready
-              ? SimplifiedButton(
-                  label: context.tr('simplified_mode.save_reading'),
-                  onPressed: state.saving || _reading() == null
-                      ? null
-                      : () => unawaited(_save()),
+              ? ListenTarget(
+                  id: _Part.save,
+                  radius: SimplifiedStyle.action / 2,
+                  child: SimplifiedButton(
+                    label: context.tr('simplified_mode.save_reading'),
+                    onPressed: state.saving || _reading() == null
+                        ? null
+                        : () => unawaited(_save()),
+                  ),
                 )
               : null,
           children: switch (state.status) {
@@ -200,11 +206,50 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
     );
   }
 
-  List<String> _listen(BuildContext context, MeasurementKind kind) => <String>[
-    context.tr('simplified_mode.measure_${kind.name}'),
-    context.tr(_hintKey(kind)),
-    context.tr('simplified_mode.save_reading'),
+  /// The form, part by part in the order it shows.
+  List<SpokenPart> _listen(
+    BuildContext context,
+    MeasurementKind kind,
+  ) => <SpokenPart>[
+    (id: _Part.kind, text: context.tr('simplified_mode.measure_${kind.name}')),
+    (id: _Part.value, text: sentences(_valueLines(context, kind))),
+    (id: _Part.hint, text: context.tr(_errorKey ?? _hintKey(kind))),
+    (
+      id: _Part.conditions,
+      text: sentences(<String>[
+        '${context.tr('simplified_mode.conditions')} '
+            '${context.tr('simplified_mode.optional')}',
+        context.tr('simplified_mode.choose_many'),
+        for (final String code in _conditionCodes(kind))
+          context.tr('measurements.condition.$code'),
+      ]),
+    ),
+    (id: _Part.save, text: context.tr('simplified_mode.save_reading')),
   ];
+
+  /// What is typed so far: «120 ملغ/دل», or each of the two pressure
+  /// numbers after its name.
+  List<String> _valueLines(BuildContext context, MeasurementKind kind) =>
+      kind == MeasurementKind.glucose
+      ? <String>[
+          '${_values[_Field.glucose]} '
+              '${context.tr('measurements.glucose_unit')}',
+        ]
+      : <String>[
+          '${context.tr('simplified_mode.upper')} ${_values[_Field.upper]}',
+          '${context.tr('simplified_mode.lower')} ${_values[_Field.lower]}',
+        ];
+
+  /// What the detailed mode offers for [kind], and any the task already
+  /// has that it no longer offers («قبل النوم»).
+  List<String> _conditionCodes(MeasurementKind kind) {
+    final List<String> offered = MeasurementConditions.offered(kind);
+    return <String>[
+      ...offered,
+      for (final String code in _conditions)
+        if (!offered.contains(code)) code,
+    ];
+  }
 
   String _hintKey(MeasurementKind kind) => kind == MeasurementKind.glucose
       ? 'simplified_mode.type_glucose'
@@ -218,148 +263,162 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
     MeasurementKind kind,
   ) {
     final bool glucose = kind == MeasurementKind.glucose;
-    // What the detailed mode offers for this kind, and any the task already
-    // has that it no longer offers («قبل النوم»).
-    final List<String> offered = MeasurementConditions.offered(kind);
-    final List<String> codes = <String>[
-      ...offered,
-      for (final String code in _conditions)
-        if (!offered.contains(code)) code,
-    ];
+    final List<String> codes = _conditionCodes(kind);
     return <Widget>[
       if (widget.lockedKind == null && state.kinds.length > 1)
-        SimplifiedSegmented<MeasurementKind>(
-          segments: <MeasurementKind, String>{
-            for (final MeasurementKind item in state.kinds)
-              item: context.tr('measurements.${item.name}'),
-          },
-          selected: kind,
-          onChanged: (value) => setState(() => _show(state, value)),
+        ListenTarget(
+          id: _Part.kind,
+          radius: 36,
+          child: SimplifiedSegmented<MeasurementKind>(
+            segments: <MeasurementKind, String>{
+              for (final MeasurementKind item in state.kinds)
+                item: context.tr('measurements.${item.name}'),
+            },
+            selected: kind,
+            onChanged: (value) => setState(() => _show(state, value)),
+          ),
         ),
       if (glucose)
-        _ValueCard(
-          value: _values[_Field.glucose]!,
-          unit: context.tr('measurements.glucose_unit'),
-          active: true,
+        ListenTarget(
+          id: _Part.value,
+          child: _ValueCard(
+            value: _values[_Field.glucose]!,
+            unit: context.tr('measurements.glucose_unit'),
+            active: true,
+          ),
         )
       else
-        Row(
-          children: <Widget>[
-            for (final (_Field field, String label) in <(_Field, String)>[
-              (_Field.upper, context.tr('simplified_mode.upper')),
-              (_Field.lower, context.tr('simplified_mode.lower')),
-            ]) ...<Widget>[
-              if (field == _Field.lower) const SizedBox(width: 12),
-              Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: _upperOrLower == field,
-                  label: label,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _upperOrLower = field),
-                    child: _ValueCard(
-                      value: _values[field]!,
-                      unit: label,
-                      active: _upperOrLower == field,
-                      small: true,
+        ListenTarget(
+          id: _Part.value,
+          child: Row(
+            children: <Widget>[
+              for (final (_Field field, String label) in <(_Field, String)>[
+                (_Field.upper, context.tr('simplified_mode.upper')),
+                (_Field.lower, context.tr('simplified_mode.lower')),
+              ]) ...<Widget>[
+                if (field == _Field.lower) const SizedBox(width: 12),
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    selected: _upperOrLower == field,
+                    label: label,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _upperOrLower = field),
+                      child: _ValueCard(
+                        value: _values[field]!,
+                        unit: label,
+                        active: _upperOrLower == field,
+                        small: true,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
-      Text(
-        context.tr(_errorKey ?? _hintKey(kind)),
-        textAlign: TextAlign.center,
-        style: SimplifiedStyle.text(
-          SimplifiedStyle.body,
-          color: _errorKey == null
-              ? SimplifiedStyle.muted
-              : SimplifiedStyle.danger,
-          weight: AppTextTheme.medium,
+      ListenTarget(
+        id: _Part.hint,
+        radius: 8,
+        child: Text(
+          context.tr(_errorKey ?? _hintKey(kind)),
+          textAlign: TextAlign.center,
+          style: SimplifiedStyle.text(
+            SimplifiedStyle.body,
+            color: _errorKey == null
+                ? SimplifiedStyle.muted
+                : SimplifiedStyle.danger,
+            weight: AppTextTheme.medium,
+          ),
         ),
       ),
       _Keypad(onDigit: _type, onErase: _erase),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text.rich(
-            TextSpan(
-              children: <InlineSpan>[
-                TextSpan(
-                  text: '${context.tr('simplified_mode.conditions')} ',
-                  style: SimplifiedStyle.head(SimplifiedStyle.body),
-                ),
-                TextSpan(
-                  text: context.tr('simplified_mode.optional'),
-                  style: SimplifiedStyle.text(SimplifiedStyle.caption),
-                ),
+      ListenTarget(
+        id: _Part.conditions,
+        radius: 8,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text.rich(
+              TextSpan(
+                children: <InlineSpan>[
+                  TextSpan(
+                    text: '${context.tr('simplified_mode.conditions')} ',
+                    style: SimplifiedStyle.head(SimplifiedStyle.body),
+                  ),
+                  TextSpan(
+                    text: context.tr('simplified_mode.optional'),
+                    style: SimplifiedStyle.text(SimplifiedStyle.caption),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              context.tr('simplified_mode.choose_many'),
+              style: SimplifiedStyle.text(SimplifiedStyle.caption),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final String code in codes)
+                  SimplifiedChip(
+                    context.tr('measurements.condition.$code'),
+                    selected: _conditions.contains(code),
+                    // A meal state replaces the one already chosen (fasting
+                    // and after a meal cannot both be true): the detailed
+                    // mode's rule.
+                    onTap: () => setState(
+                      () => _conditions = MeasurementConditions.toggle(
+                        _conditions,
+                        code,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
-          Text(
-            context.tr('simplified_mode.choose_many'),
-            style: SimplifiedStyle.text(SimplifiedStyle.caption),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              for (final String code in codes)
-                SimplifiedChip(
-                  context.tr('measurements.condition.$code'),
-                  selected: _conditions.contains(code),
-                  // A meal state replaces the one already chosen (fasting
-                  // and after a meal cannot both be true): the detailed
-                  // mode's rule.
-                  onTap: () => setState(
-                    () => _conditions = MeasurementConditions.toggle(
-                      _conditions,
-                      code,
+            if (_conditions.contains('other')) ...<Widget>[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _note,
+                maxLength: 250,
+                style: SimplifiedStyle.text(
+                  SimplifiedStyle.body,
+                  color: SimplifiedStyle.ink,
+                  weight: AppTextTheme.medium,
+                ),
+                decoration: InputDecoration(
+                  hintText: context.tr('simplified_mode.other_hint'),
+                  filled: true,
+                  fillColor: SimplifiedStyle.surface,
+                  contentPadding: const EdgeInsets.all(18),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: const BorderSide(
+                      color: SimplifiedStyle.ink,
+                      width: 2,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: const BorderSide(
+                      color: SimplifiedStyle.ink,
+                      width: 2,
                     ),
                   ),
                 ),
+              ),
             ],
-          ),
-          if (_conditions.contains('other')) ...<Widget>[
-            const SizedBox(height: 12),
-            TextField(
-              controller: _note,
-              maxLength: 250,
-              style: SimplifiedStyle.text(
-                SimplifiedStyle.body,
-                color: SimplifiedStyle.ink,
-                weight: AppTextTheme.medium,
-              ),
-              decoration: InputDecoration(
-                hintText: context.tr('simplified_mode.other_hint'),
-                filled: true,
-                fillColor: SimplifiedStyle.surface,
-                contentPadding: const EdgeInsets.all(18),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: const BorderSide(
-                    color: SimplifiedStyle.ink,
-                    width: 2,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: const BorderSide(
-                    color: SimplifiedStyle.ink,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     ];
   }
 }
+
+/// The parts of the form «استماع» reads and marks, in their order.
+enum _Part { kind, value, hint, conditions, save }
 
 class _ValueCard extends StatelessWidget {
   const _ValueCard({

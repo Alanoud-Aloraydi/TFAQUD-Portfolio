@@ -5,11 +5,14 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
@@ -17,6 +20,7 @@ import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_done_screen.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -47,6 +51,9 @@ class _SimplifiedModeFeatureScreenState
 
   /// A reminder tapped before the day was read; opened once it is.
   TodayTaskKind? _pendingReminder;
+
+  /// Whether this phone's push token was asked for in this run.
+  bool _pushStarted = false;
 
   @override
   void initState() {
@@ -97,6 +104,15 @@ class _SimplifiedModeFeatureScreenState
     unawaited(context.push(Routes.simplifiedReminder, extra: kind));
   }
 
+  /// Gives the server this phone's push token once the patient's day is
+  /// read, as the detailed home does: a missed dose or measurement, and
+  /// the circle's news, reach the patient in this mode too.
+  void _startPush() {
+    if (_pushStarted) return;
+    _pushStarted = true;
+    unawaited(GetIt.I<PushRegistration>().start());
+  }
+
   void _openPending(BuildContext context) {
     final TodayTaskKind? kind = _pendingReminder;
     if (kind == null) return;
@@ -111,7 +127,10 @@ class _SimplifiedModeFeatureScreenState
           (after.day != null && before.day == null) ||
           (after.messageKey != null && after.messageKey != before.messageKey),
       listener: (context, state) {
-        if (state.day != null) _openPending(context);
+        if (state.day != null) {
+          _startPush();
+          _openPending(context);
+        }
         final String? key = state.messageKey;
         if (key != null && state.status == SimplifiedModeStatus.ready) {
           ScaffoldMessenger.of(context)
@@ -131,6 +150,7 @@ class _SimplifiedModeFeatureScreenState
                     day: day,
                     schedule: schedule,
                     now: state.now,
+                    snooze: state.snooze,
                   ),
                 ),
               (SimplifiedModeStatus.failure, _, _) => _LoadFailed(
@@ -176,45 +196,76 @@ class _LoadFailed extends StatelessWidget {
   }
 }
 
+/// The parts of the home «استماع» reads and marks, in their order.
+enum _Part { greeting, focus, schedule, family, measure, emergency }
+
 class _HomeBody extends StatelessWidget {
   const _HomeBody({
     required this.day,
     required this.schedule,
     required this.now,
+    required this.snooze,
   });
 
   final SimplifiedDay day;
   final TodaySchedule schedule;
   final DateTime now;
 
-  List<String> _listen(BuildContext context) => <String>[
-    simplifiedGreeting(context, day.displayName, now, day.prayers),
-    simplifiedToday(context, now),
-    ..._focusSpeech(context),
-    context.tr(
-      'simplified_mode.schedule_summary',
-      args: <String>['${schedule.doneCount}', '${schedule.total}'],
+  /// The task put off with «ذكّرني لاحقًا», if any.
+  final SimplifiedSnooze? snooze;
+
+  /// The whole home, card by card, in the order it shows.
+  List<SpokenPart> _listen(BuildContext context) => <SpokenPart>[
+    (
+      id: _Part.greeting,
+      text: sentences(<String>[
+        simplifiedGreeting(context, day.displayName, now, day.prayers),
+        simplifiedToday(context, now),
+      ]),
     ),
-    context.tr('simplified_mode.record_measurement'),
-    context.tr('simplified_mode.emergency'),
+    (id: _Part.focus, text: sentences(_focusSpeech(context))),
+    (
+      id: _Part.schedule,
+      text: sentences(_ScheduleLink.lines(context, schedule)),
+    ),
+    if (day.family.isNotEmpty)
+      (
+        id: _Part.family,
+        text: sentences(_FamilyCard.lines(context, day.family)),
+      ),
+    (
+      id: _Part.measure,
+      text: sentences(<String>[
+        context.tr('simplified_mode.record_measurement'),
+        context.tr('simplified_mode.record_measurement_sub'),
+      ]),
+    ),
+    (
+      id: _Part.emergency,
+      text: sentences(<String>[
+        context.tr('simplified_mode.emergency'),
+        context.tr('simplified_mode.emergency_sub'),
+      ]),
+    ),
   ];
 
   List<String> _focusSpeech(BuildContext context) {
     final TodayTask? task = schedule.focusTask;
     return switch (schedule.focus) {
-      HomeFocus.lateDose => <String>[
-        context.tr('simplified_mode.late_question'),
-        simplifiedTaskTitle(context, task!),
-        context.tr(
-          'simplified_mode.was_due',
-          args: <String>[simplifiedTime(context, task.time)],
-        ),
-      ],
-      HomeFocus.task => <String>[
-        simplifiedTaskTitle(context, task!),
-        simplifiedTime(context, task.time),
-      ],
-      HomeFocus.allDone => <String>[context.tr('simplified_mode.all_done')],
+      HomeFocus.lateDose => _LateDoseCard.lines(
+        context,
+        task!,
+        day,
+        simplifiedSnoozed(context, snooze, task, now),
+      ),
+      HomeFocus.task => _NextCard.lines(
+        context,
+        task!,
+        day,
+        now,
+        simplifiedSnoozed(context, snooze, task, now),
+      ),
+      HomeFocus.allDone => _DoneCard.lines(context, schedule),
       HomeFocus.empty => <String>[context.tr('simplified_mode.nothing_today')],
     };
   }
@@ -253,51 +304,76 @@ class _HomeBody extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.end,
           runSpacing: 12,
           children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  simplifiedGreeting(
-                    context,
-                    day.displayName,
-                    now,
-                    day.prayers,
+            ListenTarget(
+              id: _Part.greeting,
+              radius: 8,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    simplifiedGreeting(
+                      context,
+                      day.displayName,
+                      now,
+                      day.prayers,
+                    ),
+                    style: SimplifiedStyle.head(SimplifiedStyle.display),
                   ),
-                  style: SimplifiedStyle.head(SimplifiedStyle.display),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  simplifiedToday(context, now),
-                  style: SimplifiedStyle.text(
-                    SimplifiedStyle.body,
-                    weight: AppTextTheme.medium,
+                  const SizedBox(height: 6),
+                  Text(
+                    simplifiedToday(context, now),
+                    style: SimplifiedStyle.text(
+                      SimplifiedStyle.body,
+                      weight: AppTextTheme.medium,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            ListenButton(segments: _listen(context)),
+            ListenButton(parts: _listen(context)),
           ],
         ),
         const SizedBox(height: SimplifiedStyle.pad),
-        switch (schedule.focus) {
-          HomeFocus.lateDose => _LateDoseCard(
-            task: schedule.focusTask!,
-            day: day,
-          ),
-          HomeFocus.task => _NextCard(
-            task: schedule.focusTask!,
-            day: day,
-            schedule: schedule,
-            now: now,
-          ),
-          HomeFocus.allDone => _DoneCard(schedule: schedule),
-          HomeFocus.empty => const _EmptyCard(),
-        },
+        ListenTarget(
+          id: _Part.focus,
+          child: switch (schedule.focus) {
+            HomeFocus.lateDose => _LateDoseCard(
+              task: schedule.focusTask!,
+              day: day,
+              snoozed: simplifiedSnoozed(
+                context,
+                snooze,
+                schedule.focusTask!,
+                now,
+              ),
+            ),
+            HomeFocus.task => _NextCard(
+              task: schedule.focusTask!,
+              day: day,
+              schedule: schedule,
+              now: now,
+              snoozed: simplifiedSnoozed(
+                context,
+                snooze,
+                schedule.focusTask!,
+                now,
+              ),
+            ),
+            HomeFocus.allDone => _DoneCard(schedule: schedule),
+            HomeFocus.empty => const _EmptyCard(),
+          },
+        ),
         const SizedBox(height: SimplifiedStyle.gap),
-        _ScheduleLink(schedule: schedule),
+        ListenTarget(
+          id: _Part.schedule,
+          child: _ScheduleLink(schedule: schedule),
+        ),
         if (day.family.isNotEmpty) ...<Widget>[
           const SizedBox(height: SimplifiedStyle.gap),
-          _FamilyCard(family: day.family, circleId: day.circleId),
+          ListenTarget(
+            id: _Part.family,
+            child: _FamilyCard(family: day.family, circleId: day.circleId),
+          ),
         ],
         const SizedBox(height: SimplifiedStyle.gap),
         _Squares(circleId: day.circleId),
@@ -329,6 +405,7 @@ class _NextCard extends StatelessWidget {
     required this.day,
     required this.schedule,
     required this.now,
+    required this.snoozed,
   });
 
   final TodayTask task;
@@ -336,19 +413,49 @@ class _NextCard extends StatelessWidget {
   final TodaySchedule schedule;
   final DateTime now;
 
+  /// «سأذكّرك 2:09 مساءً» when the task is put off.
+  final String? snoozed;
+
+  /// What the card says, in its order.
+  static List<String> lines(
+    BuildContext context,
+    TodayTask task,
+    SimplifiedDay day,
+    DateTime now,
+    String? snoozed,
+  ) {
+    final PrayerPeriod? period = _period(task, day);
+    return <String>[
+      snoozed ?? _when(context, task, now),
+      simplifiedTime(context, task.time),
+      if (period != null) simplifiedPeriod(context, period),
+      simplifiedTaskTitle(context, task),
+      if (task.dose case final dose?) ...<String>[
+        simplifiedDoseAmount(context, dose),
+        simplifiedStrength(context, dose),
+      ],
+      ..._taskChips(context, task, day),
+    ];
+  }
+
+  static PrayerPeriod? _period(TodayTask task, SimplifiedDay day) =>
+      day.prayers == null ? null : prayerPeriodOf(task.time, day.prayers!);
+
+  /// «التالي · بعد ساعتين», or «فات موعده».
+  static String _when(BuildContext context, TodayTask task, DateTime now) =>
+      task.status == TodayTaskStatus.late
+      ? context.tr('simplified_mode.status.late')
+      : context.tr(
+          'simplified_mode.next_in',
+          args: <String>[simplifiedUntil(context, task.scheduledAt, now)],
+        );
+
   @override
   Widget build(BuildContext context) {
     final bool recordable =
         task.kind != TodayTaskKind.appointment && schedule.canRecord(task);
-    final PrayerPeriod? period = day.prayers == null
-        ? null
-        : prayerPeriodOf(task.time, day.prayers!);
-    final String when = task.status == TodayTaskStatus.late
-        ? context.tr('simplified_mode.status.late')
-        : context.tr(
-            'simplified_mode.next_in',
-            args: <String>[simplifiedUntil(context, task.scheduledAt, now)],
-          );
+    final PrayerPeriod? period = _period(task, day);
+    final String when = snoozed ?? _when(context, task, now);
     return SimplifiedCard(
       padding: EdgeInsets.zero,
       side: const BorderSide(color: SimplifiedStyle.ink, width: 2),
@@ -513,10 +620,40 @@ List<String> _taskChips(
 
 /// A dose whose time passed unrecorded: ask, and offer to record it now.
 class _LateDoseCard extends StatelessWidget {
-  const _LateDoseCard({required this.task, required this.day});
+  const _LateDoseCard({
+    required this.task,
+    required this.day,
+    required this.snoozed,
+  });
 
   final TodayTask task;
   final SimplifiedDay day;
+
+  /// «سأذكّرك 2:09 مساءً» when the dose is put off.
+  final String? snoozed;
+
+  /// What the card says, in its order, its two answers last.
+  static List<String> lines(
+    BuildContext context,
+    TodayTask task,
+    SimplifiedDay day,
+    String? snoozed,
+  ) => <String>[
+    context.tr('simplified_mode.late_question'),
+    task.dose!.name,
+    simplifiedDoseAmount(context, task.dose!),
+    simplifiedStrength(context, task.dose!),
+    ..._taskChips(context, task, day),
+    _wasDue(context, task),
+    ?snoozed,
+    context.tr('simplified_mode.took_now'),
+    context.tr('simplified_mode.remind_later'),
+  ];
+
+  static String _wasDue(BuildContext context, TodayTask task) => context.tr(
+    'simplified_mode.was_due',
+    args: <String>[simplifiedTime(context, task.time)],
+  );
 
   Future<void> _take(BuildContext context) async {
     final SimplifiedModeCubit cubit = context.read<SimplifiedModeCubit>();
@@ -589,16 +726,22 @@ class _LateDoseCard extends StatelessWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            context.tr(
-              'simplified_mode.was_due',
-              args: <String>[simplifiedTime(context, task.time)],
-            ),
+            _wasDue(context, task),
             style: SimplifiedStyle.text(
               SimplifiedStyle.body,
               color: SimplifiedStyle.attentionInk,
               weight: AppTextTheme.bold,
             ),
           ),
+          if (snoozed case final String text)
+            Text(
+              text,
+              style: SimplifiedStyle.text(
+                SimplifiedStyle.body,
+                color: SimplifiedStyle.ink,
+                weight: AppTextTheme.medium,
+              ),
+            ),
           const SizedBox(height: 16),
           SimplifiedButton(
             label: context.tr('simplified_mode.took_now'),
@@ -625,19 +768,33 @@ class _DoneCard extends StatelessWidget {
 
   final TodaySchedule schedule;
 
-  @override
-  Widget build(BuildContext context) {
-    final String count = context.tr(
+  /// What the card says, in its order.
+  static List<String> lines(BuildContext context, TodaySchedule schedule) {
+    final (String count, String? tomorrow) = _counts(context, schedule);
+    return <String>[context.tr('simplified_mode.all_done'), count, ?tomorrow];
+  }
+
+  /// «3 من 3 اليوم», and the first dose of tomorrow when there is one.
+  static (String, String?) _counts(
+    BuildContext context,
+    TodaySchedule schedule,
+  ) => (
+    context.tr(
       'simplified_mode.done_count',
       args: <String>['${schedule.doneCount}', '${schedule.total}'],
-    );
-    final String? tomorrow = switch (schedule.firstDoseTomorrow) {
+    ),
+    switch (schedule.firstDoseTomorrow) {
       final dose? => context.tr(
         'simplified_mode.first_dose_tomorrow',
         args: <String>[simplifiedTime(context, dose.time)],
       ),
       null => null,
-    };
+    },
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final (String count, String? tomorrow) = _counts(context, schedule);
     return SimplifiedCard(
       child: Column(
         children: <Widget>[
@@ -691,8 +848,19 @@ class _ScheduleLink extends StatelessWidget {
 
   final TodaySchedule schedule;
 
+  /// What the card says: its title, then how the day stands.
+  static List<String> lines(BuildContext context, TodaySchedule schedule) =>
+      <String>[
+        context.tr('simplified_mode.schedule_title'),
+        context.tr(
+          'simplified_mode.schedule_summary',
+          args: <String>['${schedule.doneCount}', '${schedule.total}'],
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
+    final List<String> texts = lines(context, schedule);
     return SimplifiedCard(
       padding: const EdgeInsets.symmetric(
         horizontal: SimplifiedStyle.pad,
@@ -706,17 +874,11 @@ class _ScheduleLink extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  context.tr('simplified_mode.schedule_title'),
+                  texts[0],
                   style: SimplifiedStyle.head(SimplifiedStyle.title),
                 ),
                 Text(
-                  context.tr(
-                    'simplified_mode.schedule_summary',
-                    args: <String>[
-                      '${schedule.doneCount}',
-                      '${schedule.total}',
-                    ],
-                  ),
+                  texts[1],
                   style: SimplifiedStyle.text(SimplifiedStyle.caption),
                 ),
               ],
@@ -737,20 +899,30 @@ class _FamilyCard extends StatelessWidget {
   final List<CircleMember> family;
   final String circleId;
 
+  /// What the card says: its title, then each person's name.
+  static List<String> lines(BuildContext context, List<CircleMember> family) =>
+      <String>[
+        _title(context, family),
+        for (final CircleMember member in family) member.name,
+      ];
+
+  /// More than three people scroll sideways, and the title says so.
+  static String _title(BuildContext context, List<CircleMember> family) =>
+      context.tr(
+        family.length > 3
+            ? 'simplified_mode.family_title_swipe'
+            : 'simplified_mode.family_title',
+      );
+
   @override
   Widget build(BuildContext context) {
-    final bool many = family.length > 3;
     return SimplifiedCard(
       padding: const EdgeInsets.all(SimplifiedStyle.gap),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            context.tr(
-              many
-                  ? 'simplified_mode.family_title_swipe'
-                  : 'simplified_mode.family_title',
-            ),
+            _title(context, family),
             style: SimplifiedStyle.head(SimplifiedStyle.body),
           ),
           const SizedBox(height: 12),
@@ -858,24 +1030,30 @@ class _Squares extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
-            child: _Square(
-              dark: true,
-              icon: CareVisuals.measurementIcon,
-              iconColor: CareVisuals.measurementTile,
-              title: context.tr('simplified_mode.record_measurement'),
-              subtitle: context.tr('simplified_mode.record_measurement_sub'),
-              onTap: () => context.push(Routes.simplifiedMeasure(circleId)),
+            child: ListenTarget(
+              id: _Part.measure,
+              child: _Square(
+                dark: true,
+                icon: CareVisuals.measurementIcon,
+                iconColor: CareVisuals.measurementTile,
+                title: context.tr('simplified_mode.record_measurement'),
+                subtitle: context.tr('simplified_mode.record_measurement_sub'),
+                onTap: () => context.push(Routes.simplifiedMeasure(circleId)),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _Square(
-              icon: AppIcons.firstAid,
-              iconColor: SimplifiedStyle.danger,
-              title: context.tr('simplified_mode.emergency'),
-              subtitle: context.tr('simplified_mode.emergency_sub'),
-              onTap: () =>
-                  context.push(Routes.simplifiedEmergencyCard(circleId)),
+            child: ListenTarget(
+              id: _Part.emergency,
+              child: _Square(
+                icon: AppIcons.firstAid,
+                iconColor: SimplifiedStyle.danger,
+                title: context.tr('simplified_mode.emergency'),
+                subtitle: context.tr('simplified_mode.emergency_sub'),
+                onTap: () =>
+                    context.push(Routes.simplifiedEmergencyCard(circleId)),
+              ),
             ),
           ),
         ],

@@ -12,10 +12,12 @@ the app's own services (care, medical file, medication plans, dose records),
 with the clock set back where the story needs it, so every row is one the
 app could have made itself and the database rules check all of it.
 
-Not for production: it refuses to run there, and it refuses unless the
-fake SMS sender is on: the demo numbers are made up, so a real SMS to them
-could reach a stranger. A demo account signs in with the code that the fake
-sender writes in the server log.
+Not for production: it refuses to run there. The demo numbers are made up,
+so a real SMS to them could reach a stranger: it runs only with the fake SMS
+sender (a demo account signs in with the code it writes in the server log),
+or with DEMO_SIGN_IN_CODE set (the demo accounts sign in with that code and
+get no SMS; app/sms/demo.py), as on the shared test server on Render, where
+/internal/demo-data makes it fresh each morning.
 """
 
 import random
@@ -30,9 +32,12 @@ from flask.cli import with_appcontext
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.appointments.inputs import AppointmentRequest
+from app.appointments.service import AppointmentService
 from app.care import CareService
 from app.circles.inputs import MedicalProfileInput
 from app.database import transaction
+from app.demo_accounts import DEMO_ACCOUNTS, DEMO_PHONES
 from app.extensions import get_clock
 from app.medical import MedicalService
 from app.medications.doses import MedicationDoseService
@@ -43,19 +48,14 @@ from app.medications.inputs import (
 )
 from app.medications.plans import MedicationPlanService
 from app.medications.queries import MedicationQueries
+from app.measurements.inputs import PlanRequest as MeasurementPlanRequest
+from app.measurements.inputs import ReadingRequest
+from app.measurements.service import MeasurementService
 from app.models import Account, CareCircle, CareCircleManager, MedicationPlan
 
 RIYADH = ZoneInfo("Asia/Riyadh")
 EVERY_DAY = [1, 2, 3, 4, 5, 6, 7]
 
-# (phone, first name, last name, display name). The first one is the
-# account to sign in with; the second invites it to her circle.
-# Phone, names, and the birth date and city that onboarding asks for.
-DEMO_ACCOUNTS = (
-    ("+966500000001", "لينا", "العتيبي", "لينا", date(1994, 3, 12), "الرياض"),
-    ("+966500000002", "سارة", "القحطاني", "سارة", date(1990, 9, 2), "جدة"),
-)
-DEMO_PHONES = tuple(phone for phone, *_ in DEMO_ACCOUNTS)
 # A number with no account: the main demo account asks it for a circle.
 REQUEST_PHONE = "+966500000003"
 # A number with no account: the main demo account invites it to help with
@@ -245,10 +245,215 @@ class DemoBuilder:
             DoseRecordRequest.model_validate(body),
         )
 
+    # ---- today's tasks ----------------------------------------------------
+
+    def clock_in(self, minutes: int) -> str:
+        """The «HH:MM» time `minutes` from now, on a five-minute mark and
+        kept within today, so a task falls where the story wants it: done,
+        late, next or later."""
+        moment = self.now + timedelta(minutes=minutes)
+        start = datetime.combine(self.today, time(0, 5), tzinfo=RIYADH)
+        end = datetime.combine(self.today, time(23, 55), tzinfo=RIYADH)
+        moment = min(max(moment, start), end)
+        return f"{moment.hour:02d}:{moment.minute - moment.minute % 5:02d}"
+
+    def measure(self, actor, circle, body) -> None:
+        MeasurementService(self.session, self.now).create(
+            circle.id, actor.id, MeasurementPlanRequest.model_validate(body)
+        )
+
+    def appointment(self, actor, circle, body) -> None:
+        AppointmentService(self.session, self.now).create(
+            circle.id, actor.id, AppointmentRequest.model_validate(body)
+        )
+
+    def uncle(self, lina, sara, khaled) -> CareCircle:
+        """5. Lina's uncle Khaled, the patient of his own circle in the
+        simplified mode, cared for by Lina and Sara. His day has a dose of
+        each status (done, late, next, later), a weekly, a monthly and an
+        every-other-day medicine, two measurements with their targets, and
+        three appointments: one Lina goes to, one only Sara goes to (Lina's
+        phone is not reminded of it), and one both go to.
+        """
+        care = CareService(self.session, self.at(-10))
+        request = care.request_creation(
+            lina.id, khaled.phone_number, None, "simplified"
+        )
+        care.respond_creation(khaled.id, request.id, True)
+        circle = care.complete_creation(
+            khaled.id,
+            request.id,
+            khaled.birth_date,
+            khaled.city,
+            *RIYADH_POINT,
+            name="صحتي",
+        )
+        invitation = care.invite_manager(
+            lina.id, circle.id, sara.phone_number
+        )
+        care.respond_invitation(sara.id, invitation.id, True)
+        self.medical(
+            lina,
+            circle,
+            {
+                "blood_type": "B+",
+                "conditions": {
+                    "status": "listed",
+                    "codes": ["hypertension", "diabetes"],
+                },
+                "allergies": {
+                    "status": "listed",
+                    "medication": [],
+                    "food": ["nuts"],
+                },
+            },
+        )
+        MedicalService(self.session, self.at(-10)).add_contact(
+            lina.id, circle.id, "فهد العتيبي", "son", "+966500000021"
+        )
+
+        week = self.day(-7)
+        medicines = (
+            # Taken this morning.
+            (
+                "أملوديبين", "5", "mg",
+                _schedule(self.clock_in(-240), "1", "tablet"),
+                "الضغط",
+            ),
+            # Its time passed and nobody recorded it: late.
+            (
+                "ميتفورمين", "500", "mg",
+                _schedule(
+                    self.clock_in(-40), "1", "tablet",
+                    instructions="مع الأكل",
+                ),
+                "السكر",
+            ),
+            # The next one.
+            (
+                "أتورفاستاتين", "20", "mg",
+                _schedule(
+                    self.clock_in(45), "1", "tablet",
+                    instructions="بعد العشاء",
+                ),
+                "الكوليسترول",
+            ),
+            # Once a month, on today's date: later today.
+            (
+                "فيتامين ب12", "1000", "mcg",
+                {
+                    **_schedule("21:00", "1", "tablet"),
+                    "repeat": "monthly",
+                    "weekdays": [],
+                    "month_days": [min(self.today.day, 28)],
+                },
+                "نقص فيتامين ب12",
+            ),
+            # Every other day, from a week ago.
+            (
+                "أسبرين", "81", "mg",
+                {
+                    **_schedule("08:00", "1", "tablet"),
+                    "repeat": "interval",
+                    "weekdays": [],
+                    "interval_days": 2,
+                },
+                "حماية القلب",
+            ),
+        )
+        for name, strength, unit, schedule, reason in medicines:
+            self.create(
+                lina,
+                circle,
+                _plan(
+                    name, strength, unit, "tablet", [schedule], week,
+                    reason_for_use=reason,
+                ),
+                self.at(-8),
+            )
+
+        self.measure(lina, circle, {
+            "kind": "bp",
+            "times": [{"time_of_day": self.clock_in(20), "conditions": []}],
+            "weekdays": list(EVERY_DAY),
+            "starts_on": self.today,
+            "systolic_limit": 140,
+            "diastolic_limit": 90,
+        })
+        self.measure(lina, circle, {
+            "kind": "glucose",
+            "times": [
+                {"time_of_day": "07:00", "conditions": ["fasting"]},
+                {
+                    "time_of_day": self.clock_in(90),
+                    "conditions": ["after_meal"],
+                },
+            ],
+            "weekdays": list(EVERY_DAY),
+            "starts_on": self.today,
+            "glucose_low": 70,
+            "glucose_high": 180,
+        })
+        # A reading Khaled took himself an hour ago, outside the plan.
+        MeasurementService(self.session, self.now).record(
+            circle.id,
+            khaled.id,
+            ReadingRequest.model_validate({
+                "kind": "glucose",
+                "outcome": "read",
+                "measured_at": self.now - timedelta(hours=1),
+                "value_one": 135,
+                "conditions": ["after_meal"],
+            }),
+        )
+
+        visits = (
+            (
+                0, self.clock_in(180), "القلب", "follow_up",
+                "مستشفى الملك فيصل التخصصي", [lina.id],
+            ),
+            (1, "10:00", "تحاليل السكر", "test", "مختبر البرج", [sara.id]),
+            (5, "11:30", "العيون", "remote", None, [lina.id, sara.id]),
+        )
+        for day, clock, specialty, kind, place, going in visits:
+            self.appointment(lina, circle, {
+                "specialty": specialty,
+                "kind": kind,
+                "scheduled_on": self.day(day),
+                "time_of_day": clock,
+                "place": place,
+                "remote_method": "video" if kind == "remote" else None,
+                "companion_account_ids": going,
+            })
+        return circle
+
+    def mother_checks(self, lina, mother) -> None:
+        """The detailed mode's measurement and appointment: Noura's blood
+        pressure twice a day, and a visit Lina takes her to."""
+        self.measure(lina, mother, {
+            "kind": "bp",
+            "times": [
+                {"time_of_day": "08:00", "conditions": []},
+                {"time_of_day": "20:00", "conditions": []},
+            ],
+            "weekdays": list(EVERY_DAY),
+            "starts_on": self.today,
+            "systolic_limit": 140,
+            "diastolic_limit": 90,
+        })
+        self.appointment(lina, mother, {
+            "specialty": "الغدد الصماء",
+            "kind": "follow_up",
+            "scheduled_on": self.day(2),
+            "time_of_day": "16:30",
+            "place": "مستشفى الملك فهد",
+            "companion_account_ids": [lina.id],
+        })
+
     # ---- the story --------------------------------------------------------
 
     def build(self) -> Summary:
-        lina, sara = self.accounts()
+        lina, sara, khaled = self.accounts()
         care = CareService(self.session, self.at(-60))
 
         # 1. Lina's own care: two simple medicines.
@@ -547,12 +752,21 @@ class DemoBuilder:
         plan, later = revise_metformin
         self.revise(lina, mother, plan, 1, later, self.day(5), self.now)
 
+        self.mother_checks(lina, mother)
+        uncle = self.uncle(lina, sara, khaled)
+
         # The doses of the past month.
         self.history(lina, own)
         self.history(lina, mother)
         self.history(sara, grandfather)
+        self.history(lina, uncle)
 
-        self.summary.circles = ["رعايتي", "دائرة نورة", "دائرة عبدالله"]
+        self.summary.circles = [
+            "رعايتي",
+            "دائرة نورة",
+            "دائرة عبدالله",
+            "دائرة خالد",
+        ]
         return self.summary
 
 
@@ -608,6 +822,33 @@ def remove_demo_accounts(session: Session, now: datetime) -> int:
     return len(accounts)
 
 
+def demo_allowed(config) -> bool:
+    """Whether the demo accounts can be made here: never in production,
+    and only where no real SMS can reach their made-up numbers."""
+    return config["APP_ENV"] != "production" and (
+        config.get("SMS_BACKEND") == "fake"
+        or config.get("DEMO_SIGN_IN_CODE") is not None
+    )
+
+
+def rebuild_demo(now: datetime, *, reset: bool) -> tuple[bool, Summary]:
+    """Make the demo story at `now`; with `reset`, delete it first.
+
+    Returns whether an old one was deleted, and what was made. Raises
+    LookupError when it is already there and `reset` is not set.
+    """
+    now = now.astimezone(RIYADH)
+    with transaction() as session:
+        exists = session.scalar(
+            select(Account.id).where(Account.phone_number.in_(DEMO_PHONES))
+        )
+        if exists and not reset:
+            raise LookupError("The demo data is already there.")
+        removed = remove_demo_accounts(session, now) > 0 if reset else False
+        summary = DemoBuilder(session, now).build()
+    return removed, summary
+
+
 @click.command("demo-data")
 @click.option(
     "--reset",
@@ -624,36 +865,31 @@ def demo_data_command(reset: bool, if_missing: bool) -> None:
     """Fill the local database with demo circles, medicines and doses."""
     config = current_app.config
     if config["APP_ENV"] == "production":
-        raise click.ClickException("Demo data is for a local server only.")
-    if config.get("SMS_BACKEND") != "fake":
+        raise click.ClickException("Demo data is never made in production.")
+    if not demo_allowed(config):
         if if_missing:
             # The server's start (DEMO_DATA=true) must not stop because real
             # SMS was switched on: it only leaves the demo data out.
             click.echo(
-                "The demo data is skipped: real SMS is on, and the demo "
-                "numbers are made up."
+                "The demo data is skipped: real SMS is on, the demo numbers "
+                "are made up, and DEMO_SIGN_IN_CODE is not set."
             )
             return
         raise click.ClickException(
             "The demo numbers are made up, so they must not get a real SMS. "
-            "Set SMS_BACKEND=fake in backend/.env, restart the server, and "
-            "run this again."
+            "Set SMS_BACKEND=fake, or DEMO_SIGN_IN_CODE, restart the server, "
+            "and run this again."
         )
-    now = get_clock().now().astimezone(RIYADH)
-    with transaction() as session:
-        exists = session.scalar(
-            select(Account.id).where(Account.phone_number.in_(DEMO_PHONES))
-        )
-        if exists and if_missing and not reset:
+    try:
+        removed, summary = rebuild_demo(get_clock().now(), reset=reset)
+    except LookupError:
+        if if_missing:
             click.echo("The demo data is already there.")
             return
-        if exists and not reset:
-            raise click.ClickException(
-                "The demo data is already there. Run with --reset to make "
-                "it fresh."
-            )
-        removed = remove_demo_accounts(session, now) if reset else 0
-        summary = DemoBuilder(session, now).build()
+        raise click.ClickException(
+            "The demo data is already there. Run with --reset to make it "
+            "fresh."
+        ) from None
     if removed:
         click.echo("The old demo data was deleted.")
     click.echo("Demo data is ready.")
@@ -666,6 +902,7 @@ def demo_data_command(reset: bool, if_missing: bool) -> None:
         f"{summary.open_doses} due now, the rest missed or to come"
     )
     click.echo(
-        "Sign in on the phone with 0500000001. The code is in the server "
-        "log (FAKE SMS ... Your code is ...)."
+        "Sign in on the phone with 0500000001 (detailed mode) or "
+        "0500000004 (simplified mode). The code is DEMO_SIGN_IN_CODE when "
+        "it is set, else in the server log (FAKE SMS ... Your code is ...)."
     )

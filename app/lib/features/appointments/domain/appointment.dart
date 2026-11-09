@@ -34,6 +34,10 @@ class CareAppointment extends Equatable {
   final String? place;
   final String? remoteMethod;
   final List<AppointmentCompanion> companions;
+
+  /// The accounts going with the patient.
+  Iterable<String> get companionIds =>
+      companions.map((AppointmentCompanion companion) => companion.id);
   final AppointmentStatus status;
   final DateTime updatedAt;
 

@@ -426,8 +426,8 @@ class DoseReminders {
     return run;
   }
 
-  /// Reminds of one dose or measurement again [after] from now — the
-  /// simplified mode's "ذكّرني لاحقًا". Local-only: no plan or record
+  /// Reminds of one dose or measurement again [after] from now: «ذكّرني
+  /// لاحقًا» in either mode. Local-only: no plan or record
   /// changes, so nothing to undo if the app is never reopened before it
   /// fires.
   Future<void> snooze({
@@ -436,17 +436,23 @@ class DoseReminders {
     required String title,
     required String body,
     required Duration after,
-  }) => _phone.schedule(
-    ScheduledNotification(
-      id: doseSnoozeId,
-      at: _now().toUtc().add(after),
-      title: title,
-      body: body,
-      // It can be put off again, the same as the reminder it came from.
-      payload: payloadWithText('${task.payloadPrefix}$circleId', title, body),
-      snoozable: true,
-    ),
-  );
+  }) async {
+    // A snooze can be the first reminder this phone sets (a day whose tasks
+    // have all passed asks nothing), and without the permission iOS drops
+    // it in silence. iOS asks the person only the first time.
+    await _phone.requestPermission();
+    await _phone.schedule(
+      ScheduledNotification(
+        id: doseSnoozeId,
+        at: _now().toUtc().add(after),
+        title: title,
+        body: body,
+        // It can be put off again, the same as the reminder it came from.
+        payload: payloadWithText('${task.payloadPrefix}$circleId', title, body),
+        snoozable: true,
+      ),
+    );
+  }
 
   /// «ذكّرني لاحقًا» from a notification: [tap] is the snooze action of a
   /// reminder, which carries its words; it comes again in
@@ -526,7 +532,10 @@ class DoseReminders {
               .appointments(circle.id);
           if (session != _session) return;
           for (final CareAppointment visit in visits) {
-            appointments.add((circle, visit));
+            // Only the patient and the members going with them.
+            if (circle.remindsOfAppointment(visit.companionIds)) {
+              appointments.add((circle, visit));
+            }
           }
         }
       } on Exception {

@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/services/simplified_voice.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -90,20 +95,26 @@ class SimplifiedButton extends StatelessWidget {
   }
 }
 
-/// «استماع»: reads [segments] aloud, in order; «إيقاف» while it reads.
-/// Hidden when the person turned reading off in «حسابي». On a phone without
-/// an Arabic voice it says where to add one, instead of staying silent.
+/// «استماع»: reads the screen's [parts] aloud, in the order they show, each
+/// as it is said rather than written ([toSpeech]); «إيقاف» while it reads.
+/// The part being read is marked by its [ListenTarget]. Hidden when the
+/// person turned reading off in «حسابي». On a phone without an Arabic voice
+/// it says where to add one, instead of staying silent.
 class ListenButton extends StatelessWidget {
-  const ListenButton({super.key, required this.segments, this.onDark = false});
+  const ListenButton({super.key, required this.parts, this.onDark = false});
 
-  final List<String> segments;
+  final List<SpokenPart> parts;
   final bool onDark;
 
   Future<void> _listen(BuildContext context, SimplifiedVoice voice) async {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     final String missing = context.tr('simplified_mode.no_arabic_voice');
-    if (await voice.speak(segments)) return;
-    messenger.showSnackBar(SnackBar(content: Text(missing)));
+    final SpeechWords words = SpeechWords.of(context);
+    final bool spoken = await voice.speak(<SpokenPart>[
+      for (final SpokenPart part in parts)
+        (id: part.id, text: toSpeech(part.text, words)),
+    ]);
+    if (!spoken) messenger.showSnackBar(SnackBar(content: Text(missing)));
   }
 
   @override
@@ -157,6 +168,76 @@ class ListenButton extends StatelessWidget {
   }
 }
 
+/// A part of a screen that «استماع» reads as the [SpokenPart] with [id]: it
+/// is outlined while it is read, and scrolled into view, so the person sees
+/// what they hear.
+class ListenTarget extends StatefulWidget {
+  const ListenTarget({
+    super.key,
+    required this.id,
+    required this.child,
+    this.radius = SimplifiedStyle.radius,
+  });
+
+  final Object id;
+  final Widget child;
+
+  /// The corners of the outline, those of [child]'s own shape.
+  final double radius;
+
+  @override
+  State<ListenTarget> createState() => _ListenTargetState();
+}
+
+class _ListenTargetState extends State<ListenTarget> {
+  final ValueListenable<Object?> _reading = GetIt.I<SimplifiedVoice>().reading;
+  bool _read = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _read = _reading.value == widget.id;
+    _reading.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    _reading.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    final bool read = _reading.value == widget.id;
+    if (read == _read) return;
+    setState(() => _read = read);
+    if (!read) return;
+    unawaited(
+      Scrollable.ensureVisible(
+        context,
+        alignment: .2,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : AppMotion.formScroll,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(widget.radius),
+        border: Border.all(
+          color: _read ? SimplifiedStyle.accent : SimplifiedStyle.clear,
+          width: 4,
+        ),
+      ),
+      child: widget.child,
+    );
+  }
+}
+
 /// A sub-screen: «رجوع» and «استماع» on top, a big title, the body
 /// scrolling, and an optional action pinned at the bottom.
 class SimplifiedPage extends StatelessWidget {
@@ -173,8 +254,12 @@ class SimplifiedPage extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  /// What «استماع» reads, after the title.
-  final List<String> listen;
+  /// What «استماع» reads after the title, part by part in the order the
+  /// screen shows them; each part's [ListenTarget] is in [children].
+  final List<SpokenPart> listen;
+
+  /// The [SpokenPart.id] of the title.
+  static const Object titlePart = #title;
 
   /// «رجوع», or «إغلاق» for a screen that saves something.
   final String backKey;
@@ -211,7 +296,12 @@ class SimplifiedPage extends StatelessWidget {
                       minimumSize: const Size(0, SimplifiedStyle.touch),
                     ),
                   ),
-                  ListenButton(segments: <String>[title, ...listen]),
+                  ListenButton(
+                    parts: <SpokenPart>[
+                      (id: titlePart, text: title),
+                      ...listen,
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -229,9 +319,13 @@ class SimplifiedPage extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   runSpacing: 12,
                   children: <Widget>[
-                    Text(
-                      title,
-                      style: SimplifiedStyle.head(SimplifiedStyle.display),
+                    ListenTarget(
+                      id: titlePart,
+                      radius: 8,
+                      child: Text(
+                        title,
+                        style: SimplifiedStyle.head(SimplifiedStyle.display),
+                      ),
                     ),
                     ?titleTrailing,
                   ],

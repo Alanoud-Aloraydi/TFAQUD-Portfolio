@@ -1,6 +1,8 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/phone_notifications.dart'
+    show notificationSnooze;
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
@@ -14,7 +16,10 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
+import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -32,6 +37,7 @@ class SimplifiedModeUseCase {
     this._prayers,
     this._reminders,
     this._calendar,
+    this._preferences,
   );
 
   final HomeUseCase _home;
@@ -42,6 +48,7 @@ class SimplifiedModeUseCase {
   final PrayerTimesRepository _prayers;
   final DoseReminders _reminders;
   final CalendarSync _calendar;
+  final SimplifiedPreferences _preferences;
 
   /// Reads the patient's day at [now].
   ///
@@ -82,6 +89,8 @@ class SimplifiedModeUseCase {
       SimplifiedDay(
         circleId: circle.id,
         circleName: circle.name,
+        accountId: account.accountId,
+        isPatient: circle.isPatient,
         displayName: account.displayName,
         avatarCode: account.avatarCode,
         doses: doses.tryGetSuccess()!,
@@ -111,7 +120,12 @@ class SimplifiedModeUseCase {
   /// set for [day]'s circle, as the detailed home does for its circles.
   Future<void> keepReminding(SimplifiedDay day) {
     final List<ReminderCircle> circles = <ReminderCircle>[
-      ReminderCircle(id: day.circleId, name: day.circleName),
+      ReminderCircle(
+        id: day.circleId,
+        name: day.circleName,
+        viewerId: day.accountId,
+        viewerIsPatient: day.isPatient,
+      ),
     ];
     return (_reminders.sync(circles), _calendar.sync(circles)).wait;
   }
@@ -131,28 +145,65 @@ class SimplifiedModeUseCase {
       dose,
       DoseRecordDraft(outcome: DoseOutcome.taken, takenAt: takenAt),
     );
-    if (result.isSuccess()) await _reminders.cancelSnooze();
+    if (result.isSuccess()) await _dropSnooze();
     return result;
   }
 
-  /// Reminds of a dose or measurement again [after] from now.
-  Future<void> snooze({
+  /// Reminds of a [kind] of task again [after] from [now], and keeps
+  /// [task] as put off, so the screens say when. Null when there is no
+  /// [task] to show it on (the reminder is still set).
+  Future<SimplifiedSnooze?> snooze({
     required String circleId,
-    required SnoozedTask task,
+    required TodayTaskKind kind,
+    required TodayTask? task,
     required String title,
     required String body,
     required Duration after,
-  }) => _reminders.snooze(
-    circleId: circleId,
-    task: task,
-    title: title,
-    body: body,
-    after: after,
-  );
+    required DateTime now,
+  }) async {
+    await _reminders.snooze(
+      circleId: circleId,
+      task: kind == TodayTaskKind.measurement
+          ? SnoozedTask.measurement
+          : SnoozedTask.dose,
+      title: title,
+      body: body,
+      after: after,
+    );
+    if (task == null) {
+      await _preferences.clearSnooze();
+      return null;
+    }
+    final SimplifiedSnooze snooze = SimplifiedSnooze.of(task, now, after);
+    await _preferences.saveSnooze(snooze);
+    return snooze;
+  }
 
-  /// «ذكّرني لاحقًا» pressed in a notification: the reminder comes again,
-  /// the same dose or measurement. False when [tap] is not that button.
-  Future<bool> snoozeFromNotification(String tap) => _reminders.snoozeTap(tap);
+  /// «ذكّرني لاحقًا» pressed in a notification at [now]: the reminder comes
+  /// again, the same dose or measurement, and the task kept as put off
+  /// moves with it. False when [tap] is not that button.
+  Future<bool> snoozeFromNotification(String tap, DateTime now) async {
+    if (!await _reminders.snoozeTap(tap)) return false;
+    final SimplifiedSnooze? saved = await _preferences.snooze();
+    if (saved != null) {
+      await _preferences.saveSnooze(saved.again(now, notificationSnooze));
+    }
+    return true;
+  }
+
+  /// The task put off and not yet reminded of again at [now], or null. A
+  /// snooze whose time came is forgotten.
+  Future<SimplifiedSnooze?> pendingSnooze(DateTime now) async {
+    final SimplifiedSnooze? saved = await _preferences.snooze();
+    if (saved == null || !saved.isOver(now)) return saved;
+    await _preferences.clearSnooze();
+    return null;
+  }
+
+  /// The task put off got recorded: its reminder and its mark go.
+  Future<void> _dropSnooze() async {
+    await (_reminders.cancelSnooze(), _preferences.clearSnooze()).wait;
+  }
 
   /// The saved targets (the server refuses a free reading of a kind with
   /// none) and today's measurement tasks.
@@ -180,9 +231,7 @@ class SimplifiedModeUseCase {
     final Result<MeasurementReading, Failure> result = await _attempt(
       () => _measurements.record(circleId, draft, occurrence: occurrence),
     );
-    if (result.isSuccess() && occurrence != null) {
-      await _reminders.cancelSnooze();
-    }
+    if (result.isSuccess() && occurrence != null) await _dropSnooze();
     return result;
   }
 

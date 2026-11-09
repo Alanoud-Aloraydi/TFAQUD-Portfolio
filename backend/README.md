@@ -121,9 +121,11 @@ To try the app with something in it, fill the local database with demo data:
 docker compose exec api flask --app wsgi demo-data
 ```
 
-It makes two demo accounts. Sign in on the phone with **0500000001**
-(«لينا»); the code is in the API log (`docker compose logs api`, the line
-`FAKE SMS ... Your code is ...`). The account has:
+It makes three demo accounts. Sign in on the phone with **0500000001**
+(«لينا», the detailed mode) or **0500000004** («خالد», the simplified mode);
+the code is in the API log (`docker compose logs api`, the line
+`FAKE SMS ... Your code is ...`), or `DEMO_SIGN_IN_CODE` when it is set.
+Lina's account has:
 
 - «رعايتي», her own care, with two medicines;
 - «دائرة نورة», her mother's care (no account), with every kind of medicine:
@@ -136,7 +138,17 @@ It makes two demo accounts. Sign in on the phone with **0500000001**
 - an invitation she sent 2 days ago to 0559876543 (her sister) to help with
   «دائرة نورة», still waiting;
 - an invitation from «سارة» (0500000002) to manage «دائرة عبدالله» in Jeddah;
-- a request she sent to 0500000003 (her father) that still waits.
+- a request she sent to 0500000003 (her father) that still waits;
+- «دائرة خالد», her uncle's care, which Sara also manages: Khaled is its
+  patient and uses the simplified mode. Today he has a dose taken, one late,
+  the next one and one later (weekly, monthly and every-other-day
+  medicines), a blood pressure and a glucose plan with their targets, a
+  reading of his own, and three appointments: one Lina goes to, one only
+  Sara goes to (Lina's phone is not reminded of it) and one both go to;
+- a blood pressure plan and an appointment in «دائرة نورة».
+
+The day is built around the moment the demo is made, so make it fresh
+before showing it.
 
 | What | Command |
 |---|---|
@@ -145,8 +157,8 @@ It makes two demo accounts. Sign in on the phone with **0500000001**
 Everything is made through the app's own services and checked by the
 database rules, as if a family had used the app. It only touches the demo
 accounts; `--reset` deletes them as the app deletes an account. It refuses to
-run in production, and it refuses unless `SMS_BACKEND=fake`: the demo numbers
-are made up, and a real SMS to them could reach a stranger.
+run in production, and it refuses unless no real SMS can reach the demo
+numbers, which are made up: `SMS_BACKEND=fake`, or `DEMO_SIGN_IN_CODE` set.
 
 Sign-in codes: after each code to a number the next one waits 30 s, then 1, 2,
 5 and 10 minutes (`OTP_RESEND_WAITS`); a number gets at most 20 codes a day,
@@ -294,8 +306,17 @@ The first time:
 
 Signing in: the code comes by SMS through Authentica (`SMS_BACKEND` is
 `authentica`); add `AUTHENTICA_API_KEY` in **Environment** before the first
-deploy that uses it, or the server cannot start. Do not sign in with the demo
-numbers (`0500000001` …): they are made up and could belong to a stranger.
+deploy that uses it, or the server cannot start.
+
+The demo on Render: add `DEMO_SIGN_IN_CODE` (six digits) in **Environment**.
+The demo numbers (`0500000001` detailed, `0500000004` simplified) then get no
+SMS and sign in with that code; every other number gets its real SMS as
+before. The start makes the demo when it is missing (`DEMO_DATA` is
+`"true"`), and the workflow **Demo refresh** makes it fresh every morning
+and from **Actions**, **Run workflow**, before showing it (it calls
+`POST /internal/demo-data` with `TICK_SECRET`). Never set the code in
+production: the server refuses to start with it.
+
 For a test server without SMS, set `SMS_BACKEND` to `fake`,
 `FAKE_SMS_LOG_CODES` to `"true"` and `DEMO_DATA` to `"true"` in
 `render.yaml`: the code is then in the API's **Logs** (search for

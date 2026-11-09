@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -13,6 +14,7 @@ import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_done_screen.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -89,9 +91,16 @@ class SimplifiedReminderScreen extends StatelessWidget {
               gradient: SimplifiedStyle.reminderGround,
             ),
             child: SafeArea(
-              child: content == null
-                  ? const _NothingWaiting()
-                  : _ReminderBody(content: content),
+              child: Column(
+                children: <Widget>[
+                  const _CloseBar(),
+                  Expanded(
+                    child: content == null
+                        ? const _NothingWaiting()
+                        : _ReminderBody(content: content),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -225,6 +234,9 @@ class SimplifiedReminderScreen extends StatelessWidget {
   }
 }
 
+/// The parts of a reminder «استماع» reads and marks, in their order.
+enum _Part { brand, task, yes, later }
+
 class _ReminderBody extends StatelessWidget {
   const _ReminderBody({required this.content});
 
@@ -241,12 +253,16 @@ class _ReminderBody extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 44),
               child: Column(
                 children: <Widget>[
-                  Text(
-                    content.brand,
-                    style: SimplifiedStyle.text(
-                      SimplifiedStyle.caption,
-                      color: SimplifiedStyle.onDarkMuted,
-                      weight: AppTextTheme.medium,
+                  ListenTarget(
+                    id: _Part.brand,
+                    radius: 8,
+                    child: Text(
+                      content.brand,
+                      style: SimplifiedStyle.text(
+                        SimplifiedStyle.caption,
+                        color: SimplifiedStyle.onDarkMuted,
+                        weight: AppTextTheme.medium,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -265,50 +281,69 @@ class _ReminderBody extends StatelessWidget {
                     child: Center(child: content.hero),
                   ),
                   const SizedBox(height: 28),
-                  Text(
-                    content.lead,
-                    style: SimplifiedStyle.text(
-                      28,
-                      color: SimplifiedStyle.surface,
-                    ),
-                  ),
-                  Text(
-                    content.name,
-                    textAlign: TextAlign.center,
-                    style: SimplifiedStyle.head(
-                      SimplifiedStyle.hero,
-                      color: SimplifiedStyle.surface,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    content.line,
-                    textAlign: TextAlign.center,
-                    style: SimplifiedStyle.head(
-                      SimplifiedStyle.headline,
-                      color: SimplifiedStyle.surface,
-                    ),
-                  ),
-                  if (content.chips.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
+                  ListenTarget(
+                    id: _Part.task,
+                    child: Column(
                       children: <Widget>[
-                        for (final String chip in content.chips)
-                          SimplifiedChip(chip, onDark: true),
+                        Text(
+                          content.lead,
+                          style: SimplifiedStyle.text(
+                            28,
+                            color: SimplifiedStyle.surface,
+                          ),
+                        ),
+                        Text(
+                          content.name,
+                          textAlign: TextAlign.center,
+                          style: SimplifiedStyle.head(
+                            SimplifiedStyle.hero,
+                            color: SimplifiedStyle.surface,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          content.line,
+                          textAlign: TextAlign.center,
+                          style: SimplifiedStyle.head(
+                            SimplifiedStyle.headline,
+                            color: SimplifiedStyle.surface,
+                          ),
+                        ),
+                        if (content.chips.isNotEmpty) ...<Widget>[
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: <Widget>[
+                              for (final String chip in content.chips)
+                                SimplifiedChip(chip, onDark: true),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
-                  ],
+                  ),
                   const SizedBox(height: 20),
                   ListenButton(
                     onDark: true,
-                    segments: <String>[
-                      content.lead,
-                      content.name,
-                      content.line,
-                      ...content.chips,
+                    parts: <SpokenPart>[
+                      (id: _Part.brand, text: content.brand),
+                      (
+                        id: _Part.task,
+                        text: sentences(<String>[
+                          content.lead,
+                          content.name,
+                          content.line,
+                          ...content.chips,
+                        ]),
+                      ),
+                      (id: _Part.yes, text: content.yesLabel),
+                      if (content.onLater != null)
+                        (
+                          id: _Part.later,
+                          text: context.tr('simplified_mode.remind_later'),
+                        ),
                     ],
                   ),
                   const Spacer(),
@@ -317,22 +352,30 @@ class _ReminderBody extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      _RoundAnswer(
-                        label: content.yesLabel,
-                        icon: AppIcons.check,
-                        fill: SimplifiedStyle.accent,
-                        ink: SimplifiedStyle.ink,
-                        onTap: content.onYes,
+                      ListenTarget(
+                        id: _Part.yes,
+                        child: _RoundAnswer(
+                          label: content.yesLabel,
+                          icon: AppIcons.check,
+                          fill: SimplifiedStyle.accent,
+                          ink: SimplifiedStyle.ink,
+                          onTap: content.onYes,
+                        ),
                       ),
                       if (content.onLater
                           case final VoidCallback later) ...<Widget>[
                         const SizedBox(width: 16),
-                        _RoundAnswer(
-                          label: context.tr('simplified_mode.remind_later'),
-                          icon: AppIcons.clock,
-                          fill: SimplifiedStyle.surface.withValues(alpha: .24),
-                          ink: SimplifiedStyle.surface,
-                          onTap: later,
+                        ListenTarget(
+                          id: _Part.later,
+                          child: _RoundAnswer(
+                            label: context.tr('simplified_mode.remind_later'),
+                            icon: AppIcons.clock,
+                            fill: SimplifiedStyle.surface.withValues(
+                              alpha: .24,
+                            ),
+                            ink: SimplifiedStyle.surface,
+                            onTap: later,
+                          ),
                         ),
                       ],
                     ],
@@ -340,6 +383,39 @@ class _ReminderBody extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// «إغلاق» at the top: back to where the reminder opened over, answering
+/// nothing, so the task stays as it was.
+class _CloseBar extends StatelessWidget {
+  const _CloseBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 12, top: 4),
+        child: TextButton.icon(
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go(Routes.simplifiedMode),
+          icon: const Icon(AppIcons.x, size: 26),
+          label: Text(
+            context.tr('simplified_mode.close'),
+            style: SimplifiedStyle.label(
+              SimplifiedStyle.body,
+              color: SimplifiedStyle.surface,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: SimplifiedStyle.surface,
+            minimumSize: const Size(0, SimplifiedStyle.touch),
           ),
         ),
       ),

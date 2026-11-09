@@ -3,6 +3,7 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
@@ -13,6 +14,7 @@ import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
@@ -65,100 +67,165 @@ class SimplifiedAccountScreen extends StatelessWidget {
           final account = state.account;
           return SimplifiedPage(
             title: context.tr('simplified_mode.account_title'),
-            listen: <String>[
-              ?account?.displayName,
-              context.tr('simplified_mode.display_sound'),
-              context.tr('simplified_mode.calendar_title'),
-              context.tr('simplified_mode.my_info'),
-              context.tr('simplified_mode.sign_out'),
-              context.tr('simplified_mode.delete_account'),
+            listen: <SpokenPart>[
+              if (account != null)
+                (
+                  id: _Part.profile,
+                  text: sentences(<String>[
+                    account.displayName,
+                    account.phoneNumber,
+                  ]),
+                ),
+              (
+                id: _Part.textSize,
+                text: sentences(<String>[
+                  context.tr('simplified_mode.display_sound'),
+                  context.tr('simplified_mode.text_size'),
+                  for (final SimplifiedTextSize size
+                      in SimplifiedTextSize.values)
+                    context.tr('simplified_mode.size.${size.name}'),
+                ]),
+              ),
+              (
+                id: _Part.voice,
+                text: sentences(<String>[
+                  context.tr('simplified_mode.voice_title'),
+                  context.tr('simplified_mode.voice_text'),
+                ]),
+              ),
+              if (circleId != null) ...<SpokenPart>[
+                (
+                  id: _Part.calendar,
+                  text: sentences(<String>[
+                    context.tr('simplified_mode.calendar_title'),
+                    context.tr('simplified_mode.calendar_text'),
+                    for (final CalendarSyncCategory category
+                        in CalendarSyncCategory.values)
+                      context.tr('simplified_mode.calendar.${category.name}'),
+                  ]),
+                ),
+                (
+                  id: _Part.medicalFile,
+                  text: sentences(<String>[
+                    context.tr('simplified_mode.my_info'),
+                    context.tr('simplified_mode.my_medical_file'),
+                    context.tr('simplified_mode.my_medical_file_sub'),
+                  ]),
+                ),
+              ],
+              (id: _Part.signOut, text: context.tr('simplified_mode.sign_out')),
+              (
+                id: _Part.delete,
+                text: context.tr('simplified_mode.delete_account'),
+              ),
             ],
             children: <Widget>[
               if (account != null)
-                Row(
-                  children: <Widget>[
-                    PersonPhoto(
-                      name: account.displayName,
-                      photoPath: ApiEndpoints.accountPhoto,
-                      avatarCode: account.avatarCode,
-                      size: 72,
-                    ),
-                    const SizedBox(width: SimplifiedStyle.gap),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            account.displayName,
-                            style: SimplifiedStyle.head(
-                              SimplifiedStyle.headline,
-                            ),
-                          ),
-                          Directionality(
-                            textDirection: TextDirection.ltr,
-                            child: Text(
-                              account.phoneNumber,
-                              style: SimplifiedStyle.text(
-                                SimplifiedStyle.caption,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              else if (state.status == AccountStatus.loading)
-                const Center(child: CircularProgressIndicator()),
-              _SectionTitle(context.tr('simplified_mode.display_sound')),
-              const _TextSizeCard(),
-              const _VoiceSwitch(),
-              if (circleId != null) ...<Widget>[
-                _SectionTitle(context.tr('simplified_mode.calendar_title')),
-                _CalendarSyncCard(circleId: circleId),
-                _SectionTitle(context.tr('simplified_mode.my_info')),
-                SimplifiedCard(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: SimplifiedStyle.pad,
-                    vertical: SimplifiedStyle.gap,
-                  ),
-                  onTap: () =>
-                      context.push(Routes.simplifiedMedicalFile(circleId)),
+                ListenTarget(
+                  id: _Part.profile,
                   child: Row(
                     children: <Widget>[
+                      PersonPhoto(
+                        name: account.displayName,
+                        photoPath: ApiEndpoints.accountPhoto,
+                        avatarCode: account.avatarCode,
+                        size: 72,
+                      ),
+                      const SizedBox(width: SimplifiedStyle.gap),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              context.tr('simplified_mode.my_medical_file'),
-                              style: SimplifiedStyle.head(SimplifiedStyle.body),
+                              account.displayName,
+                              style: SimplifiedStyle.head(
+                                SimplifiedStyle.headline,
+                              ),
                             ),
-                            Text(
-                              context.tr('simplified_mode.my_medical_file_sub'),
-                              style: SimplifiedStyle.text(
-                                SimplifiedStyle.caption,
+                            Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: Text(
+                                account.phoneNumber,
+                                style: SimplifiedStyle.text(
+                                  SimplifiedStyle.caption,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(
-                        AppIcons.next,
-                        size: 28,
-                        color: SimplifiedStyle.ink,
-                      ),
                     ],
+                  ),
+                )
+              else if (state.status == AccountStatus.loading)
+                const Center(child: CircularProgressIndicator()),
+              _SectionTitle(context.tr('simplified_mode.display_sound')),
+              const ListenTarget(id: _Part.textSize, child: _TextSizeCard()),
+              const ListenTarget(id: _Part.voice, child: _VoiceSwitch()),
+              if (circleId != null) ...<Widget>[
+                _SectionTitle(context.tr('simplified_mode.calendar_title')),
+                ListenTarget(
+                  id: _Part.calendar,
+                  child: _CalendarSyncCard(circleId: circleId),
+                ),
+                _SectionTitle(context.tr('simplified_mode.my_info')),
+                ListenTarget(
+                  id: _Part.medicalFile,
+                  child: SimplifiedCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SimplifiedStyle.pad,
+                      vertical: SimplifiedStyle.gap,
+                    ),
+                    onTap: () =>
+                        context.push(Routes.simplifiedMedicalFile(circleId)),
+                    child: Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                context.tr('simplified_mode.my_medical_file'),
+                                style: SimplifiedStyle.head(
+                                  SimplifiedStyle.body,
+                                ),
+                              ),
+                              Text(
+                                context.tr(
+                                  'simplified_mode.my_medical_file_sub',
+                                ),
+                                style: SimplifiedStyle.text(
+                                  SimplifiedStyle.caption,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          AppIcons.next,
+                          size: 28,
+                          color: SimplifiedStyle.ink,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
               const SizedBox(height: 8),
-              const _SignOutButton(),
-              _OutlinedDanger(
-                label: context.tr('simplified_mode.delete_account'),
-                busy: state.deleting,
-                filled: false,
-                onPressed: context.read<AccountCubit>().startDelete,
+              const ListenTarget(
+                id: _Part.signOut,
+                radius: SimplifiedStyle.action / 2,
+                child: _SignOutButton(),
+              ),
+              ListenTarget(
+                id: _Part.delete,
+                radius: SimplifiedStyle.action / 2,
+                child: _OutlinedDanger(
+                  label: context.tr('simplified_mode.delete_account'),
+                  busy: state.deleting,
+                  filled: false,
+                  onPressed: context.read<AccountCubit>().startDelete,
+                ),
               ),
             ],
           );
@@ -214,6 +281,9 @@ class SimplifiedAccountScreen extends StatelessWidget {
     );
   }
 }
+
+/// The parts of the account «استماع» reads and marks, in their order.
+enum _Part { profile, textSize, voice, calendar, medicalFile, signOut, delete }
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);

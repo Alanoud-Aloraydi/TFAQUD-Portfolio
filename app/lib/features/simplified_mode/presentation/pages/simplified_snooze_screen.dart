@@ -1,8 +1,8 @@
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart';
+import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -10,6 +10,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// The [SpokenPart.id]s of the question and of «رجوع»; each choice's is
+/// its translation key.
+const Object _questionPart = #question;
+const Object _backPart = #back;
 
 /// «متى أذكّرك؟»: three big choices, each with the clock time it means.
 class SimplifiedSnoozeScreen extends StatelessWidget {
@@ -31,9 +36,7 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
         ? context.tr('simplified_mode.kind.${kind.name}')
         : simplifiedTaskTitle(context, task);
     await cubit.snooze(
-      task: kind == TodayTaskKind.measurement
-          ? SnoozedTask.measurement
-          : SnoozedTask.dose,
+      kind: kind,
       title: context.tr('simplified_mode.snooze_title', args: <String>[name]),
       body: context.tr('simplified_mode.snooze_body'),
       after: after,
@@ -46,13 +49,7 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
     final DateTime now = context.select<SimplifiedModeCubit, DateTime>(
       (cubit) => cubit.state.now,
     );
-    String clock(Duration after) {
-      final DateTime at = riyadhNow(now.add(after));
-      return simplifiedTime(
-        context,
-        '${at.hour}:${at.minute.toString().padLeft(2, '0')}',
-      );
-    }
+    String clock(Duration after) => simplifiedClockAt(context, now.add(after));
 
     return Scaffold(
       body: DecoratedBox(
@@ -64,56 +61,75 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
             child: Column(
               children: <Widget>[
-                Text(
-                  context.tr('simplified_mode.when_remind'),
-                  style: SimplifiedStyle.head(
-                    28,
-                    color: SimplifiedStyle.surface,
+                ListenTarget(
+                  id: _questionPart,
+                  radius: 8,
+                  child: Text(
+                    context.tr('simplified_mode.when_remind'),
+                    style: SimplifiedStyle.head(
+                      28,
+                      color: SimplifiedStyle.surface,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 ListenButton(
                   onDark: true,
-                  segments: <String>[
-                    context.tr('simplified_mode.when_remind'),
-                    for (final (String key, Duration _) in _choices)
-                      context.tr(key),
+                  parts: <SpokenPart>[
+                    (
+                      id: _questionPart,
+                      text: context.tr('simplified_mode.when_remind'),
+                    ),
+                    for (final (String key, Duration after) in _choices)
+                      (
+                        id: key,
+                        text: sentences(<String>[
+                          context.tr(key),
+                          clock(after),
+                        ]),
+                      ),
+                    (id: _backPart, text: context.tr('simplified_mode.back')),
                   ],
                 ),
                 const SizedBox(height: 28),
                 for (final (String key, Duration after)
                     in _choices) ...<Widget>[
-                  Material(
-                    color: SimplifiedStyle.surface.withValues(alpha: .1),
-                    borderRadius: BorderRadius.circular(SimplifiedStyle.radius),
-                    child: InkWell(
+                  ListenTarget(
+                    id: key,
+                    child: Material(
+                      color: SimplifiedStyle.surface.withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(
                         SimplifiedStyle.radius,
                       ),
-                      onTap: () => _choose(context, after),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 92),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Text(
-                                  context.tr(key),
-                                  style: SimplifiedStyle.head(
-                                    SimplifiedStyle.headline,
-                                    color: SimplifiedStyle.surface,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(
+                          SimplifiedStyle.radius,
+                        ),
+                        onTap: () => _choose(context, after),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 92),
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Text(
+                                    context.tr(key),
+                                    style: SimplifiedStyle.head(
+                                      SimplifiedStyle.headline,
+                                      color: SimplifiedStyle.surface,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  clock(after),
-                                  style: SimplifiedStyle.text(
-                                    SimplifiedStyle.caption,
-                                    color: SimplifiedStyle.onDarkMuted,
+                                  Text(
+                                    clock(after),
+                                    style: SimplifiedStyle.text(
+                                      SimplifiedStyle.caption,
+                                      color: SimplifiedStyle.onDarkMuted,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -123,23 +139,31 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                 ],
                 const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => context.go(Routes.simplifiedMode),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(60),
-                      shape: const StadiumBorder(),
-                      side: const BorderSide(
-                        color: SimplifiedStyle.onDarkMuted,
-                        width: 1.5,
+                ListenTarget(
+                  id: _backPart,
+                  radius: 30,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => context.go(Routes.simplifiedMode),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(60),
+                        shape: const StadiumBorder(),
+                        // The app's outlined buttons are white; on this dark
+                        // ground the button is only its edge and its words.
+                        backgroundColor: SimplifiedStyle.clear,
+                        foregroundColor: SimplifiedStyle.surface,
+                        side: const BorderSide(
+                          color: SimplifiedStyle.onDarkMuted,
+                          width: 1.5,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      context.tr('simplified_mode.back'),
-                      style: SimplifiedStyle.head(
-                        SimplifiedStyle.body,
-                        color: SimplifiedStyle.surface,
+                      child: Text(
+                        context.tr('simplified_mode.back'),
+                        style: SimplifiedStyle.head(
+                          SimplifiedStyle.body,
+                          color: SimplifiedStyle.surface,
+                        ),
                       ),
                     ),
                   ),

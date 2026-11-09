@@ -1,10 +1,11 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
@@ -16,16 +17,19 @@ import 'package:multiple_result/multiple_result.dart';
 /// 12:00 in Riyadh on 9 November 2026.
 final DateTime _noon = DateTime.utc(2026, 11, 9, 9);
 
-SimplifiedDay _day() => SimplifiedDay(
-  circleId: 'c-1',
-  circleName: 'دائرتي',
-  displayName: 'مريم',
-  doses: const <DoseOccurrence>[],
-  measurements: const <MeasurementOccurrence>[],
-  appointments: const [],
-  family: const [],
-  reasons: const <String, String>{},
-);
+SimplifiedDay _day({List<DoseOccurrence> doses = const <DoseOccurrence>[]}) =>
+    SimplifiedDay(
+      circleId: 'c-1',
+      circleName: 'دائرتي',
+      accountId: 'a-1',
+      isPatient: true,
+      displayName: 'مريم',
+      doses: doses,
+      measurements: const <MeasurementOccurrence>[],
+      appointments: const [],
+      family: const [],
+      reasons: const <String, String>{},
+    );
 
 final DoseOccurrence _dose = DoseOccurrence(
   planId: 'p',
@@ -92,20 +96,31 @@ class _UseCase implements SimplifiedModeUseCase {
     DateTime takenAt,
   ) async {
     taken.add(dose);
+    if (doseResult.isSuccess()) saved = null;
     return doseResult;
   }
 
+  /// The task put off, as the phone keeps it.
+  SimplifiedSnooze? saved;
+
   @override
-  Future<void> snooze({
+  Future<SimplifiedSnooze?> snooze({
     required String circleId,
-    required SnoozedTask task,
+    required TodayTaskKind kind,
+    required TodayTask? task,
     required String title,
     required String body,
     required Duration after,
-  }) async {}
+    required DateTime now,
+  }) async =>
+      saved = task == null ? null : SimplifiedSnooze.of(task, now, after);
 
   @override
-  Future<bool> snoozeFromNotification(String tap) async => false;
+  Future<bool> snoozeFromNotification(String tap, DateTime now) async => false;
+
+  @override
+  Future<SimplifiedSnooze?> pendingSnooze(DateTime now) async =>
+      saved == null || saved!.isOver(now) ? null : saved;
 
   @override
   Future<
@@ -150,6 +165,43 @@ void main() {
       expect(cubit.state.status, SimplifiedModeStatus.ready);
       expect(cubit.state.schedule, isNotNull);
       expect(useCase.remindings, 1);
+    });
+
+    test('a task put off shows as put off until its reminder comes, also '
+        'after the day is read again', () async {
+      useCase.days.add(Success(_day(doses: <DoseOccurrence>[_dose])));
+      await cubit.load();
+
+      await cubit.snooze(
+        kind: TodayTaskKind.medication,
+        title: 'حان وقت ميتفورمين',
+        body: 'افتح تفقد وسجّله.',
+        after: const Duration(minutes: 15),
+      );
+      final TodayTask task = cubit.state.schedule!.taskToRecord(
+        TodayTaskKind.medication,
+      )!;
+      expect(cubit.state.snooze?.covers(task), isTrue);
+      expect(cubit.state.snooze?.until, _noon.add(const Duration(minutes: 15)));
+
+      await cubit.load();
+      expect(cubit.state.snooze?.covers(task), isTrue);
+    });
+
+    test('a dose taken is no longer put off', () async {
+      useCase.days.add(Success(_day(doses: <DoseOccurrence>[_dose])));
+      await cubit.load();
+      await cubit.snooze(
+        kind: TodayTaskKind.medication,
+        title: 'حان وقت ميتفورمين',
+        body: 'افتح تفقد وسجّله.',
+        after: const Duration(minutes: 15),
+      );
+
+      await cubit.takeDose(_dose);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.snooze, isNull);
     });
 
     test('a first read that fails is a failure with its reason', () async {

@@ -5,6 +5,7 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -19,6 +20,32 @@ String simplifiedTime(BuildContext context, String time) {
     hour < 12 ? 'simplified_mode.am' : 'simplified_mode.pm',
   );
   return '${hour % 12 == 0 ? 12 : hour % 12}:$minute $period';
+}
+
+/// The Riyadh clock time of the instant [at]: «2:09 مساءً».
+String simplifiedClockAt(BuildContext context, DateTime at) {
+  final DateTime wall = riyadhNow(at);
+  return simplifiedTime(
+    context,
+    '${wall.hour}:${wall.minute.toString().padLeft(2, '0')}',
+  );
+}
+
+/// «سأذكّرك 2:09 مساءً» on [task] while [snooze] puts it off at [now];
+/// null for any other task, or once its reminder came.
+String? simplifiedSnoozed(
+  BuildContext context,
+  SimplifiedSnooze? snooze,
+  TodayTask task,
+  DateTime now,
+) {
+  if (snooze == null || snooze.isOver(now) || !snooze.covers(task)) {
+    return null;
+  }
+  return context.tr(
+    'simplified_mode.snoozed_until',
+    args: <String>[simplifiedClockAt(context, snooze.until)],
+  );
 }
 
 /// The app's one greeting, the detailed mode's too: «صباح الخير، مريم»

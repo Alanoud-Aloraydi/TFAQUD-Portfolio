@@ -1,3 +1,4 @@
+import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
@@ -5,6 +6,7 @@ import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -45,12 +47,40 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
         ];
         return SimplifiedPage(
           title: context.tr('simplified_mode.schedule_title'),
-          listen: <String>[
-            summary,
-            for (final TodayTask task in shown)
-              '${simplifiedTime(context, task.time)} '
-                  '${simplifiedTaskTitle(context, task)} '
-                  '${context.tr('simplified_mode.status.${task.status.name}')}',
+          listen: <SpokenPart>[
+            (
+              id: _summaryPart,
+              text: sentences(<String>[
+                summary,
+                if (shown.isEmpty)
+                  context.tr('simplified_mode.nothing_to_show'),
+              ]),
+            ),
+            if (day != null)
+              for (final (PrayerPeriod?, List<TodayTask>) group
+                  in groupByPeriod(shown, day.prayers)) ...<SpokenPart>[
+                if (group.$1 case final PrayerPeriod period)
+                  (
+                    id: period,
+                    text: sentences(_PeriodHeader.lines(context, period)),
+                  ),
+                for (final TodayTask task in group.$2)
+                  (
+                    id: _TaskRow.part(context, task),
+                    text: sentences(
+                      _TaskRow.lines(
+                        context,
+                        task,
+                        simplifiedSnoozed(
+                          context,
+                          state.snooze,
+                          task,
+                          state.now,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
           ],
           children: <Widget>[
             if (day == null)
@@ -60,11 +90,15 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      summary,
-                      style: SimplifiedStyle.text(
-                        SimplifiedStyle.caption,
-                        weight: AppTextTheme.semibold,
+                    ListenTarget(
+                      id: _summaryPart,
+                      radius: 8,
+                      child: Text(
+                        summary,
+                        style: SimplifiedStyle.text(
+                          SimplifiedStyle.caption,
+                          weight: AppTextTheme.semibold,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -83,10 +117,27 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                         in groupByPeriod(shown, day.prayers)) ...<Widget>[
                       if (group.$1 case final PrayerPeriod period) ...<Widget>[
                         const SizedBox(height: SimplifiedStyle.gap),
-                        _PeriodHeader(period: period),
+                        ListenTarget(
+                          id: period,
+                          radius: 16,
+                          child: _PeriodHeader(period: period),
+                        ),
                       ],
                       for (final TodayTask task in group.$2)
-                        _TaskRow(task: task, circleId: day.circleId),
+                        ListenTarget(
+                          id: _TaskRow.part(context, task),
+                          radius: 12,
+                          child: _TaskRow(
+                            task: task,
+                            circleId: day.circleId,
+                            snoozed: simplifiedSnoozed(
+                              context,
+                              state.snooze,
+                              task,
+                              state.now,
+                            ),
+                          ),
+                        ),
                     ],
                   ],
                 ),
@@ -97,6 +148,9 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
     );
   }
 }
+
+/// The [SpokenPart.id] of the day's count at the top.
+const Object _summaryPart = #summary;
 
 class _Filters extends StatelessWidget {
   const _Filters({required this.selected, required this.onChanged});
@@ -163,6 +217,13 @@ class _PeriodHeader extends StatelessWidget {
 
   final PrayerPeriod period;
 
+  /// What the header says: «بعد المغرب. المساء».
+  static List<String> lines(BuildContext context, PrayerPeriod period) =>
+      <String>[
+        simplifiedPeriod(context, period),
+        simplifiedPeriodHint(context, period),
+      ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -191,10 +252,41 @@ class _PeriodHeader extends StatelessWidget {
 }
 
 class _TaskRow extends StatelessWidget {
-  const _TaskRow({required this.task, required this.circleId});
+  const _TaskRow({
+    required this.task,
+    required this.circleId,
+    required this.snoozed,
+  });
 
   final TodayTask task;
   final String circleId;
+
+  /// «سأذكّرك 2:09 مساءً» in place of the status while the task is put off.
+  final String? snoozed;
+
+  /// The row's [SpokenPart.id]: the same for the same task when the day is
+  /// read again, so the mark stays on it.
+  static Object part(BuildContext context, TodayTask task) =>
+      (task.kind, task.time, simplifiedTaskTitle(context, task));
+
+  /// What the row says: the name, the time and kind, where it stands.
+  static List<String> lines(
+    BuildContext context,
+    TodayTask task,
+    String? snoozed,
+  ) => <String>[
+    simplifiedTaskTitle(context, task),
+    _when(context, task),
+    snoozed ?? _status(context, task),
+  ];
+
+  /// «6:00 مساءً · دواء».
+  static String _when(BuildContext context, TodayTask task) =>
+      '${simplifiedTime(context, task.time)} · '
+      '${context.tr('simplified_mode.kind.${task.kind.name}')}';
+
+  static String _status(BuildContext context, TodayTask task) =>
+      context.tr('simplified_mode.status.${task.status.name}');
 
   @override
   Widget build(BuildContext context) {
@@ -216,9 +308,7 @@ class _TaskRow extends StatelessWidget {
         '○',
       ),
     };
-    final String status = context.tr(
-      'simplified_mode.status.${task.status.name}',
-    );
+    final String status = snoozed ?? _status(context, task);
     return Semantics(
       label:
           '${simplifiedTaskTitle(context, task)}، '
@@ -272,8 +362,7 @@ class _TaskRow extends StatelessWidget {
                     style: SimplifiedStyle.head(SimplifiedStyle.body),
                   ),
                   Text(
-                    '${simplifiedTime(context, task.time)} · '
-                    '${context.tr('simplified_mode.kind.${task.kind.name}')}',
+                    _when(context, task),
                     style: SimplifiedStyle.text(
                       SimplifiedStyle.body,
                       weight: AppTextTheme.medium,

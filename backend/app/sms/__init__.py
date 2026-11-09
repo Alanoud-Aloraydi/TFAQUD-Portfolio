@@ -1,10 +1,23 @@
 from app.config import ConfigError
+from app.demo_accounts import DEMO_PHONES
 from app.sms.authentica import AuthenticaSmsSender
 from app.sms.base import CODE_LENGTH, SmsDeliveryError, SmsSender
+from app.sms.demo import DemoSmsSender
 from app.sms.fake import FakeSmsSender, SentSms
 
 
 def create_sms_sender(config: dict, clock) -> SmsSender:
+    """The sender named by `SMS_BACKEND`, and with DEMO_SIGN_IN_CODE set,
+    the demo accounts' numbers kept away from it (DemoSmsSender).
+    """
+    sender = _create_sender(config, clock)
+    code = config.get("DEMO_SIGN_IN_CODE")
+    if code is None:
+        return sender
+    return DemoSmsSender(sender, DEMO_PHONES, code)
+
+
+def _create_sender(config: dict, clock) -> SmsSender:
     """Pick the sender named by `SMS_BACKEND`: "fake" or "authentica".
 
     Two rules protect against sending by mistake:
@@ -46,6 +59,7 @@ def create_sms_sender(config: dict, clock) -> SmsSender:
 __all__ = [
     "AuthenticaSmsSender",
     "CODE_LENGTH",
+    "DemoSmsSender",
     "FakeSmsSender",
     "SentSms",
     "SmsDeliveryError",

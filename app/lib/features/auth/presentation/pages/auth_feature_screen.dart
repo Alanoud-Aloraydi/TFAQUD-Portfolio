@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/intro_memory.dart';
+import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -12,11 +12,9 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/auth/presentation/widgets/intro_previews.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 /// One welcome page: the two soft glows behind it, and its words: the step
@@ -85,9 +83,8 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
   void initState() {
     super.initState();
     // Nobody is signed in on the welcome (after a sign-out, an ended sign-in
-    // or a deleted account): the dose reminders of the last person go.
-    unawaited(GetIt.I<DoseReminders>().clear());
-    CareVoice.clear();
+    // or a deleted account): what was the last person's goes.
+    unawaited(forgetSignedOutPerson());
   }
 
   @override

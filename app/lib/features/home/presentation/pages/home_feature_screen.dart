@@ -6,6 +6,7 @@ import 'package:app/features/appointments/presentation/cubit/appointments_cubit.
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
@@ -153,7 +154,12 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     _remindedCircles = data.circles;
     final circles = <ReminderCircle>[
       for (final CareCircleSummary circle in data.circles)
-        ReminderCircle(id: circle.id, name: circle.name),
+        ReminderCircle(
+          id: circle.id,
+          name: circle.name,
+          viewerId: data.accountId,
+          viewerIsPatient: circle.isPatient,
+        ),
     ];
     unawaited(_reminders.sync(circles));
     unawaited(_calendar.sync(circles));
@@ -195,9 +201,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
       if (tap != null) _openTap(tap);
     }
     if (state.status == HomeStatus.signIn) {
-      // The sign-in ended: no reminders for a person who is not signed in.
-      unawaited(_reminders.clear());
-      unawaited(_calendar.clear());
+      // The sign-in ended: nothing stays for a person who is not signed in.
+      unawaited(forgetSignedOutPerson());
       context.go(Routes.auth);
     } else if (state.status == HomeStatus.onboarding) {
       context.go(Routes.onboarding);

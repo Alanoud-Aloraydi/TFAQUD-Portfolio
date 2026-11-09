@@ -19,8 +19,30 @@ import 'support/phone_fakes.dart';
 /// 08:00 in Riyadh on 3 November 2026.
 final DateTime _now = DateTime.utc(2026, 11, 3, 5);
 
-const ReminderCircle _noura = ReminderCircle(id: 'c-noura', name: 'أمي نورة');
-const ReminderCircle _me = ReminderCircle(id: 'c-me', name: 'صحتي');
+/// The account of the person on this phone.
+const String _meId = 'a-me';
+
+/// Noura's circle, where the person on this phone cares for her.
+const ReminderCircle _noura = ReminderCircle(
+  id: 'c-noura',
+  name: 'أمي نورة',
+  viewerId: _meId,
+  viewerIsPatient: false,
+);
+
+/// The circle of the person on this phone's own care.
+const ReminderCircle _me = ReminderCircle(
+  id: 'c-me',
+  name: 'صحتي',
+  viewerId: _meId,
+  viewerIsPatient: true,
+);
+
+/// A member going with the patient who is not the person on this phone.
+const AppointmentCompanion _khaled = AppointmentCompanion(
+  id: 'a-khaled',
+  name: 'خالد',
+);
 
 final DoseReminderTexts _texts = DoseReminderTexts(
   title: (ReminderCircle circle, DoseOccurrence dose) => 'دواء ${circle.name}',
@@ -57,12 +79,16 @@ MeasurementOccurrence _measurement(
   status: status,
 );
 
-/// An appointment on [day] (of November 2026) at [time] in Riyadh.
+/// An appointment on [day] (of November 2026) at [time] in Riyadh, by
+/// default with the person on this phone going.
 CareAppointment _appointment(
   int day,
   String time, {
   AppointmentStatus status = AppointmentStatus.scheduled,
   DateTime? savedAt,
+  List<AppointmentCompanion> companions = const <AppointmentCompanion>[
+    AppointmentCompanion(id: _meId, name: 'ريم'),
+  ],
 }) => CareAppointment(
   id: 'appointment-$day',
   specialty: 'القلب',
@@ -72,7 +98,7 @@ CareAppointment _appointment(
   time: time,
   place: 'مستشفى',
   remoteMethod: null,
-  companions: const <AppointmentCompanion>[],
+  companions: companions,
   status: status,
   updatedAt: savedAt ?? DateTime.utc(2026, 11),
 );
@@ -511,6 +537,22 @@ void main() {
       },
     );
 
+    test('putting a task off asks for the permission first: it may be the '
+        'only reminder this phone sets', () async {
+      await reminders.snooze(
+        circleId: _me.id,
+        task: SnoozedTask.dose,
+        title: 'حان وقت فيتامين د',
+        body: 'حبة واحدة',
+        after: const Duration(minutes: 15),
+      );
+
+      expect(phone.permissionRequests, 1);
+      final ScheduledNotification again = phone.scheduled[doseSnoozeId]!;
+      expect(again.at, _now.add(const Duration(minutes: 15)));
+      expect(again.title, 'حان وقت فيتامين د');
+    });
+
     test('sets the reminders of every circle and asks once', () async {
       medications.doses[_noura.id] = <DoseOccurrence>[_dose(3, '21:00')];
       medications.doses[_me.id] = <DoseOccurrence>[
@@ -718,6 +760,39 @@ void main() {
       await settle();
 
       expect(phone.scheduled, isEmpty);
+    });
+
+    test('a member who does not go with the patient is not reminded of '
+        'the appointment', () async {
+      appointments.visits[_noura.id] = <CareAppointment>[
+        _appointment(
+          5,
+          '16:30',
+          companions: const <AppointmentCompanion>[_khaled],
+        ),
+      ];
+
+      await reminders.sync(<ReminderCircle>[_noura]);
+
+      expect(phone.scheduled, isEmpty);
+    });
+
+    test('the patient is reminded of every appointment, whoever goes with '
+        'them', () async {
+      appointments.visits[_me.id] = <CareAppointment>[
+        _appointment(
+          5,
+          '16:30',
+          companions: const <AppointmentCompanion>[_khaled],
+        ),
+      ];
+
+      await reminders.sync(<ReminderCircle>[_me]);
+
+      expect(
+        phone.inOrder.map((ScheduledNotification n) => _plain(n.payload)),
+        <String>['appointment:c-me', 'appointment:c-me', keepRemindersPayload],
+      );
     });
 
     test('a failed measurement reading keeps what is set', () async {

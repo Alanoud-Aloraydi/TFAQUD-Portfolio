@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/intro_memory.dart';
+import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
@@ -57,7 +57,6 @@ import 'package:app/features/measurements/presentation/cubit/measurement_plans_c
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/pages/measurement_plan_form_page.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
@@ -614,15 +613,14 @@ class AppRouter {
   );
 
   /// The welcome shows once per install ([IntroMemory]). After it, a
-  /// signed-out phone opens on the phone number page, and the reminders of
-  /// the last person go, as the welcome would have removed them.
+  /// signed-out phone opens on the phone number page, and what was the last
+  /// person's goes, as the welcome would have removed it.
   static Future<String?> _welcomeOnce(
     BuildContext context,
     GoRouterState state,
   ) async {
     if (!await IntroMemory.seen()) return null;
-    unawaited(GetIt.I<DoseReminders>().clear());
-    CareVoice.clear();
+    unawaited(forgetSignedOutPerson());
     return Routes.authPhone;
   }
 
