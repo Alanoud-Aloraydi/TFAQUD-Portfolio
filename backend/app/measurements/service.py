@@ -130,11 +130,17 @@ class MeasurementService:
         if latest.number != body.expected_version_number:
             raise Conflict(code="measurement_plan_changed")
         if latest.effective_from_on > today:
-            if len(versions) != 1:
-                raise Conflict(code="measurement_plan_changed")
-            effective = body.effective_from_on or today
+            # Not started yet, or an edit that starts later: it has no
+            # reading, so this edit changes it in place, and a plan can
+            # always be edited again.
+            effective = body.effective_from_on or latest.effective_from_on
             if effective < today:
                 raise ValidationFailed(code="measurement_effective_date")
+            if len(versions) > 1:
+                previous = versions[-2]
+                if effective <= previous.effective_from_on:
+                    raise ValidationFailed(code="measurement_effective_date")
+                previous.effective_until_on = effective
             self._replace(latest, effective, body, actor_id)
             return plan
         effective = body.effective_from_on or today
@@ -265,6 +271,7 @@ class MeasurementService:
             conditions=body.codes,
             glucose_context=body.stored_context,
             condition=body.stored_condition,
+            other_condition=body.other_condition,
             note=body.note,
             glucose_low=target.glucose_low if target else None,
             glucose_high=target.glucose_high if target else None,

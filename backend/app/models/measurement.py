@@ -219,6 +219,12 @@ class MeasurementRecord(db.Model):
             "note IS NULL OR char_length(note) <= 250",
             name="note_length",
         ),
+        # The words of «أخرى», only with it (migration 0028).
+        CheckConstraint(
+            "other_condition IS NULL OR (char_length(other_condition) "
+            "BETWEEN 1 AND 60 AND 'other' = ANY(conditions))",
+            name="other_condition",
+        ),
         CheckConstraint(
             "(plan_version_id IS NULL AND scheduled_on IS NULL "
             "AND scheduled_time IS NULL) OR "
@@ -282,6 +288,8 @@ class MeasurementRecord(db.Model):
     )
     glucose_context: Mapped[str | None] = mapped_column(Text)
     condition: Mapped[str | None] = mapped_column(Text)
+    # What «أخرى» was, in the reader's words: «بعد القهوة».
+    other_condition: Mapped[str | None] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text)
     glucose_low: Mapped[int | None] = mapped_column(SmallInteger)
     glucose_high: Mapped[int | None] = mapped_column(SmallInteger)

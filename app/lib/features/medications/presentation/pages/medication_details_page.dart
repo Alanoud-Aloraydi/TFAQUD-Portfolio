@@ -98,9 +98,7 @@ class _Content extends StatelessWidget {
         appBar: AppBar(
           title: Text(context.tr('medications.details')),
           actions: [
-            if (canManage &&
-                !plan.isPreviousOn(today) &&
-                plan.pendingVersion == null)
+            if (canManage && !plan.isPreviousOn(today))
               IconButton(
                 tooltip: context.tr('medications.edit_title'),
                 onPressed: () => _edit(context),

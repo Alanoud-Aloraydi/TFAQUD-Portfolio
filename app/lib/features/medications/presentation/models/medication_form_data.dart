@@ -18,22 +18,27 @@ class MedicationFormIssue {
 
 /// Holds medication form values for this workflow.
 class MedicationFormData {
+  /// Filled from [plan]'s latest version: a change waiting for later, when
+  /// there is one, so editing again starts from it.
   MedicationFormData(MedicationPlan? plan)
-    : name = TextEditingController(text: plan?.version.name),
+    : this._(plan?.pendingVersion ?? plan?.version);
+
+  MedicationFormData._(MedicationVersion? version)
+    : name = TextEditingController(text: version?.name),
       strength = TextEditingController(
-        text: plan == null ? null : _number(plan.version.strengthValue),
+        text: version == null ? null : _number(version.strengthValue),
       ),
-      strengthUnit = plan?.version.strengthUnit ?? StrengthUnit.milligram,
-      reason = TextEditingController(text: plan?.version.reason),
-      instructions = TextEditingController(text: plan?.version.instructions),
-      form = plan?.version.dosageForm ?? DosageForm.tablet,
-      missedAfterMinutes = plan?.version.missedAfterMinutes ?? 60,
-      startsOn = plan?.version.startsOn ?? riyadhToday(),
-      endsOn = plan?.version.endsOn,
-      effectiveFromOn = plan == null ? null : riyadhToday(),
-      schedules = plan == null
+      strengthUnit = version?.strengthUnit ?? StrengthUnit.milligram,
+      reason = TextEditingController(text: version?.reason),
+      instructions = TextEditingController(text: version?.instructions),
+      form = version?.dosageForm ?? DosageForm.tablet,
+      missedAfterMinutes = version?.missedAfterMinutes ?? 60,
+      startsOn = version?.startsOn ?? riyadhToday(),
+      endsOn = version?.endsOn,
+      effectiveFromOn = version == null ? null : riyadhToday(),
+      schedules = version == null
           ? [_newSchedule()]
-          : plan.version.schedules.map(_fromSchedule).toList();
+          : version.schedules.map(_fromSchedule).toList();
 
   final TextEditingController name;
   final TextEditingController strength;

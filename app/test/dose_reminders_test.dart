@@ -62,6 +62,7 @@ CareAppointment _appointment(
   int day,
   String time, {
   AppointmentStatus status = AppointmentStatus.scheduled,
+  DateTime? savedAt,
 }) => CareAppointment(
   id: 'appointment-$day',
   specialty: 'القلب',
@@ -73,7 +74,7 @@ CareAppointment _appointment(
   remoteMethod: null,
   companions: const <AppointmentCompanion>[],
   status: status,
-  updatedAt: DateTime.utc(2026, 11),
+  updatedAt: savedAt ?? DateTime.utc(2026, 11),
 );
 
 /// The measurement tasks of each circle.
@@ -324,6 +325,45 @@ void main() {
       expect(planned.first.at, DateTime.utc(2026, 11, 3, 10));
       expect(planned.first.title, 'موعد أمي نورة soon');
       expect(planned, hasLength(2));
+    });
+
+    test('an appointment saved today for today is said right away, once', () {
+      // Saved at 08:00 in Riyadh for 15:00 the same day: its day-before
+      // moment has passed.
+      final CareAppointment visit = _appointment(3, '15:00', savedAt: _now);
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[(_noura, visit)],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned[0].at, _now.add(appointmentSavedLead));
+      expect(planned[0].title, 'موعد أمي نورة today');
+      expect(planned[1].title, 'موعد أمي نورة soon');
+      expect(planned, hasLength(3));
+
+      // A later refresh does not say it again.
+      final List<ScheduledNotification> later = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[(_noura, visit)],
+        now: _now.add(const Duration(minutes: 5)),
+        texts: _texts,
+      );
+      expect(
+        later.map((ScheduledNotification item) => item.title),
+        isNot(contains('موعد أمي نورة today')),
+      );
+    });
+
+    test('an appointment saved days before is not said right away', () {
+      expect(
+        appointmentAnnouncedAt(_appointment(6, '10:00', savedAt: _now)),
+        isNull,
+      );
+      // Saved two hours and five minutes before: the two-hour one comes.
+      expect(
+        appointmentAnnouncedAt(_appointment(3, '10:05', savedAt: _now)),
+        isNull,
+      );
     });
 
     test('doses, measurements and appointments share one order', () {

@@ -14,6 +14,7 @@ import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_visuals.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -349,6 +350,9 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                           : '${context.tr('measurements.target')}: '
                                 '${reading.systolicLimit}/${reading.diastolicLimit}',
                     ),
+                  // «بعد جهد، بعد القهوة».
+                  if (!skipped && reading.conditions.isNotEmpty)
+                    Text(readingConditionsText(context, reading)),
                   if (reading.note != null) Text(reading.note!),
                   if (reading.recordedByName case final name?) ...[
                     const SizedBox(height: AppSpacing.xs),

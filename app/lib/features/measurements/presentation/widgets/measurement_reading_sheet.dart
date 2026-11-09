@@ -2,6 +2,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
@@ -71,6 +72,12 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   final _diastolic = TextEditingController();
   final _glucose = TextEditingController();
   final _note = TextEditingController();
+
+  /// What «أخرى» was, in the reader's words.
+  final _otherCondition = TextEditingController();
+
+  /// The longest words «أخرى» takes, as the server keeps them.
+  static const int _otherConditionLength = 60;
   final _targetLow = TextEditingController();
   final _targetHigh = TextEditingController();
   bool _saving = false;
@@ -98,6 +105,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
     _diastolic.dispose();
     _glucose.dispose();
     _note.dispose();
+    _otherCondition.dispose();
     _targetLow.dispose();
     _targetHigh.dispose();
     super.dispose();
@@ -155,6 +163,11 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       valueOne: one,
       valueTwo: two,
       conditions: _conditions,
+      otherCondition:
+          _conditions.contains('other') &&
+              _otherCondition.text.trim().isNotEmpty
+          ? _otherCondition.text.trim()
+          : null,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
       glucoseLow: useTarget && _kind == MeasurementKind.glucose
           ? targetLow
@@ -374,6 +387,21 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                           ),
                         ],
                       ),
+                      // «أخرى» in the reader's own words, as the medical
+                      // file's «أخرى» takes them.
+                      if (_conditions.contains('other')) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        LabeledTextField(
+                          label: context.tr('measurements.other_condition'),
+                          helperText: context.tr(
+                            'measurements.other_condition_hint',
+                          ),
+                          controller: _otherCondition,
+                          maxLength: _otherConditionLength,
+                          textInputAction: TextInputAction.done,
+                          onChanged: (_) {},
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                       InsetGroup(
                         children: [

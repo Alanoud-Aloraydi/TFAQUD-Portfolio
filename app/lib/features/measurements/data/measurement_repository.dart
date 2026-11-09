@@ -66,7 +66,10 @@ class MeasurementRepository {
   ) async {
     final response = await _client.put(
       ApiEndpoints.measurementPlan(circleId, plan.id),
-      data: draft.toJson(expectedVersion: plan.version.number),
+      // The latest version: a change waiting for later is the one changed.
+      data: draft.toJson(
+        expectedVersion: (plan.pendingVersion ?? plan.version).number,
+      ),
     );
     _changes.add(circleId);
     return _plan(response.data);

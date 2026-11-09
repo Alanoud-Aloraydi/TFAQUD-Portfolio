@@ -83,13 +83,26 @@ class MedicationPlanService:
         if current.version_number != body.expected_version_number:
             raise Conflict(code="medication_version_conflict")
         today = self.now.astimezone(RIYADH).date()
-        if current.effective_from_on > today:
-            raise Conflict(code="medication_pending_revision")
         normalized_name = normalize_medication_name(body.name)
         if same_definition(
             self.session, current, body, normalized_name
         ):
             return plan
+        if current.effective_from_on > today:
+            # Not started yet, or an edit that starts later: this edit takes
+            # its place, so a medicine can always be edited again. The one
+            # replaced is kept, cancelled, for the audit, as cancel_pending
+            # keeps it.
+            previous = self._version_before(plan.id, current)
+            current.cancelled_at = self.now
+            self.session.flush()
+            if previous is None:
+                return self._start_again(
+                    plan, actor_id, body, normalized_name, today
+                )
+            previous.effective_until_on = None
+            self.session.flush()
+            current = previous
         effective_from_on = body.effective_from_on or today
         if effective_from_on < today:
             raise ValidationFailed(
@@ -148,6 +161,56 @@ class MedicationPlanService:
             next_number,
             normalized_name,
             effective_from_on,
+        )
+        return plan
+
+    def _version_before(
+        self, plan_id: UUID, version: MedicationPlanVersion
+    ) -> MedicationPlanVersion | None:
+        """The version in effect until [version] starts, or None when
+        [version] is the first."""
+        return self.session.scalar(
+            select(MedicationPlanVersion).where(
+                MedicationPlanVersion.medication_plan_id == plan_id,
+                MedicationPlanVersion.effective_until_on
+                == version.effective_from_on,
+                MedicationPlanVersion.cancelled_at.is_(None),
+            )
+        )
+
+    def _start_again(
+        self,
+        plan: MedicationPlan,
+        actor_id: UUID,
+        body: RevisePlanRequest,
+        normalized_name: str,
+        today,
+    ) -> MedicationPlan:
+        """A medicine that has not started yet, edited: its new version
+        starts when the treatment does, as a new medicine would."""
+        if body.treatment_starts_on < today:
+            raise ValidationFailed(code="medication_start_in_past")
+        require_available_name(
+            self.session,
+            plan.patient_id,
+            normalized_name,
+            body,
+            exclude_plan_id=plan.id,
+            effective_from_on=body.treatment_starts_on,
+        )
+        next_number = self.session.scalar(
+            select(func.max(MedicationPlanVersion.version_number)).where(
+                MedicationPlanVersion.medication_plan_id == plan.id
+            )
+        ) + 1
+        add_plan_version(
+            self.session,
+            plan,
+            actor_id,
+            body,
+            next_number,
+            normalized_name,
+            body.treatment_starts_on,
         )
         return plan
 

@@ -1,5 +1,6 @@
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -177,11 +178,39 @@ class MeasurementTaskRow extends StatelessWidget {
       MeasurementStatus.due => 'measurements.due',
       MeasurementStatus.upcoming => 'measurements.upcoming',
     };
+    // The same pill as a dose's: green once read, red when missed, honey
+    // while it is due.
+    final bool read =
+        task.status == MeasurementStatus.read ||
+        task.status == MeasurementStatus.readLate;
+    final (Color statusBackground, Color statusColor) = switch (task.status) {
+      MeasurementStatus.missed => (
+        Theme.of(context).colorScheme.errorContainer,
+        context.tokens.errorText,
+      ),
+      MeasurementStatus.due => (
+        AppSemanticColors.surfaceAttention,
+        context.tokens.warningText,
+      ),
+      _ when read => (
+        AppSemanticColors.selectedSurface,
+        context.tokens.successText,
+      ),
+      _ => (AppSemanticColors.surfaceContent, context.tokens.textSecondary),
+    };
+    final MeasurementReading? record = task.record?.outcome == 'read'
+        ? task.record
+        : null;
     return TodayRowCard(
       isAttention: task.status == MeasurementStatus.missed,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // As a dose row: the time, then everything about it in one column
+          // from the start (title, conditions, the value, when and who),
+          // and the status pill at the end.
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_time(context, task.time)),
               const SizedBox(width: AppSpacing.sm),
@@ -202,62 +231,61 @@ class MeasurementTaskRow extends StatelessWidget {
                     ),
                     if (task.conditions.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.xs),
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: CompactStatusBadge(
-                          text: conditionsText(context, task.conditions),
-                          background: AppSemanticColors.surfaceContent,
-                          foreground: AppSemanticColors.textSupporting,
-                        ),
+                      CompactStatusBadge(
+                        text: conditionsText(context, task.conditions),
+                        background: AppSemanticColors.surfaceContent,
+                        foreground: AppSemanticColors.textSupporting,
                       ),
+                    ],
+                    if (record != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        record.valueText,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      Text(
+                        context.tr(
+                          'measurements.recorded_at',
+                          args: [
+                            _time(context, _hhmm(riyadhNow(record.recordedAt))),
+                          ],
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      if (record.recordedByName case final name?) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PersonPhoto(
+                              name: name,
+                              photoPath: personPhotoPath(
+                                circleId,
+                                record.recordedByAccountId,
+                              ),
+                              avatarCode: record.recordedByAvatarCode,
+                              size: AppSizes.iconSmall,
+                            ),
+                            const SizedBox(width: AppSpacing.tight),
+                            Text(
+                              name,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ],
                 ),
               ),
+              const SizedBox(width: AppSpacing.sm),
               CompactStatusBadge(
                 text: context.tr(status),
-                background: task.status == MeasurementStatus.missed
-                    ? Theme.of(context).colorScheme.errorContainer
-                    : AppSemanticColors.surfaceContent,
-                foreground: task.status == MeasurementStatus.missed
-                    ? AppSemanticColors.statusError
-                    : AppSemanticColors.textSupporting,
+                background: statusBackground,
+                foreground: statusColor,
               ),
             ],
           ),
-          if (task.record case final record?)
-            if (record.outcome == 'read') ...[
-              Text(
-                record.valueText,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              Text(
-                context.tr(
-                  'measurements.recorded_at',
-                  args: [_time(context, _hhmm(riyadhNow(record.recordedAt)))],
-                ),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              if (record.recordedByName case final name?) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    PersonPhoto(
-                      name: name,
-                      photoPath: personPhotoPath(
-                        circleId,
-                        record.recordedByAccountId,
-                      ),
-                      avatarCode: record.recordedByAvatarCode,
-                      size: AppSizes.iconSmall,
-                    ),
-                    const SizedBox(width: AppSpacing.tight),
-                    Text(name, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ],
-            ],
           if (canRecord)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),

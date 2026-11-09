@@ -163,4 +163,32 @@ void main() {
     expect(selected, ['exertion', 'after_meal']);
     expect(MeasurementConditions.toggle(selected, 'exertion'), ['after_meal']);
   });
+
+  test('«أخرى» sends its words, and only with «أخرى»', () {
+    const other = MeasurementReadingDraft(
+      kind: MeasurementKind.bp,
+      outcome: 'read',
+      conditions: ['other'],
+      otherCondition: 'بعد القهوة',
+    );
+    expect(other.toJson()['other_condition'], 'بعد القهوة');
+
+    const without = MeasurementReadingDraft(
+      kind: MeasurementKind.bp,
+      outcome: 'read',
+      conditions: ['stress'],
+      otherCondition: 'بعد القهوة',
+    );
+    expect(without.toJson().containsKey('other_condition'), isFalse);
+
+    final reading = MeasurementReading.fromJson({
+      'id': 'r',
+      'kind': 'bp',
+      'outcome': 'read',
+      'recorded_at': '2026-11-09T10:00:00+03:00',
+      'conditions': ['other'],
+      'other_condition': 'بعد القهوة',
+    });
+    expect(reading.otherCondition, 'بعد القهوة');
+  });
 }

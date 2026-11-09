@@ -286,8 +286,10 @@ class AppointmentCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: AppSpacing.sm),
                 child: Wrap(
                   spacing: AppSpacing.sm,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    TextButton.icon(
+                    // The outlined capsule with a pencil, as every edit.
+                    OutlinedButton.icon(
                       onPressed: () async {
                         final changed = await context.push<bool>(
                           Routes.editAppointment(circleId, value.id),

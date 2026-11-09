@@ -93,6 +93,7 @@ def reading_response(
         "glucose_context": record.glucose_context,
         "condition": record.condition,
         "conditions": list(record.conditions),
+        "other_condition": record.other_condition,
         "note": record.note,
         "outside_target": outside,
         "glucose_low": record.glucose_low,

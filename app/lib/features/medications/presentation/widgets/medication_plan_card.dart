@@ -132,9 +132,10 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                         ],
                       ),
                     ),
-                    if (canManage &&
-                        status == _PlanState.current &&
-                        plan.pendingVersion == null)
+                    // Always editable while it is in use or yet to start,
+                    // a change waiting for later too, as a measurement plan
+                    // and an appointment are.
+                    if (canManage && status != _PlanState.previous)
                       IconButton(
                         onPressed: () => _edit(context),
                         icon: const Icon(AppIcons.pencil),
@@ -266,15 +267,17 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                   label: context.tr('medications.instructions'),
                   value: instructions,
                 ),
+              // The same pair as a measurement plan's: the edit as an
+              // outlined capsule with a pencil, the stop in red text.
               Wrap(
                 spacing: AppSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  if (canManage &&
-                      status == _PlanState.current &&
-                      plan.pendingVersion == null)
-                    TextButton(
+                  if (canManage && status != _PlanState.previous)
+                    OutlinedButton.icon(
                       onPressed: () => _edit(context),
-                      child: Text(context.tr('medications.edit_title')),
+                      icon: const Icon(AppIcons.pencil),
+                      label: Text(context.tr('medications.edit_title')),
                     ),
                   if (canManage && status != _PlanState.previous)
                     TextButton(

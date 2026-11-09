@@ -279,23 +279,19 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
               if (widget.canManage)
                 Row(
                   children: [
+                    // Always editable, a change waiting for later too.
                     OutlinedButton.icon(
-                      onPressed: plan.pendingVersion != null
-                          ? null
-                          : () async {
-                              final saved = await context.push<bool>(
-                                Routes.editMeasurement(
-                                  widget.circleId,
-                                  plan.id,
-                                ),
-                              );
-                              if (saved == true && context.mounted) {
-                                context.read<MeasurementPlansCubit>().load(
-                                  widget.circleId,
-                                );
-                                context.read<MeasurementTasksCubit>().reload();
-                              }
-                            },
+                      onPressed: () async {
+                        final saved = await context.push<bool>(
+                          Routes.editMeasurement(widget.circleId, plan.id),
+                        );
+                        if (saved == true && context.mounted) {
+                          context.read<MeasurementPlansCubit>().load(
+                            widget.circleId,
+                          );
+                          context.read<MeasurementTasksCubit>().reload();
+                        }
+                      },
                       icon: const Icon(AppIcons.pencil),
                       label: Text(context.tr('measurements.edit_plan')),
                     ),

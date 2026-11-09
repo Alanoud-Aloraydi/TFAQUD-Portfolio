@@ -229,6 +229,56 @@ def test_a_same_day_edit_after_a_reading_starts_tomorrow(
     ).isoformat()
 
 
+def test_an_edit_that_starts_tomorrow_can_be_edited_again(
+    database_app, database, account
+):
+    """A plan stays editable: the edit waiting for tomorrow changes in
+    place."""
+    owner = account()
+    circle = offline_circle(database, owner)
+    client = database_app.test_client()
+    headers = signed_in(database_app, owner)
+    base = f"/api/v1/circles/{circle.id}"
+    now, day, body, plan = _todays_glucose_plan(client, headers, base)
+    version_id = plan["version"]["id"]
+    assert client.put(
+        f"{base}/measurement-records/{version_id}/{day.isoformat()}",
+        headers=headers,
+        json={
+            "kind": "glucose",
+            "outcome": "read",
+            "measured_at": (now - timedelta(minutes=1)).isoformat(),
+            "value_one": 120,
+            "glucose_context": "fasting",
+        },
+    ).status_code == 200
+    path = f"{base}/measurement-plans/{plan['id']}"
+    tomorrow = (day + timedelta(days=1)).isoformat()
+    assert client.put(
+        path,
+        headers=headers,
+        json={**body, "glucose_high": 130, "expected_version_number": 1},
+    ).status_code == 200
+
+    again = client.put(
+        path,
+        headers=headers,
+        json={
+            **body,
+            "glucose_high": 120,
+            "effective_from_on": tomorrow,
+            "expected_version_number": 2,
+        },
+    )
+
+    assert again.status_code == 200, again.json
+    answer = again.json["measurement_plan"]
+    assert answer["version"]["glucose_high"] == 140
+    assert answer["pending_version"]["glucose_high"] == 120
+    assert answer["pending_version"]["number"] == 2
+    assert answer["pending_version"]["effective_from_on"] == tomorrow
+
+
 def test_concurrent_task_records_keep_one_outcome(
     database_app, database, account
 ):

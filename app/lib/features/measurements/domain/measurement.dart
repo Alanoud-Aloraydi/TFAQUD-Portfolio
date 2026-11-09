@@ -255,6 +255,7 @@ class MeasurementReading extends Equatable {
     this.valueOne,
     this.valueTwo,
     this.conditions = const <String>[],
+    this.otherCondition,
     this.note,
     this.outsideTarget,
     this.glucoseLow,
@@ -280,6 +281,9 @@ class MeasurementReading extends Equatable {
 
   /// «ظروف القياس» ([MeasurementConditions]), none or more.
   final List<String> conditions;
+
+  /// What «أخرى» was, in the reader's words; null without it.
+  final String? otherCondition;
   final String? note;
   final bool? outsideTarget;
   final int? glucoseLow;
@@ -313,6 +317,7 @@ class MeasurementReading extends Equatable {
         valueOne: json['value_one'] as int?,
         valueTwo: json['value_two'] as int?,
         conditions: MeasurementConditions.fromJson(json),
+        otherCondition: json['other_condition'] as String?,
         note: json['note'] as String?,
         outsideTarget: json['outside_target'] as bool?,
         glucoseLow: json['glucose_low'] as int?,
@@ -347,6 +352,7 @@ class MeasurementReading extends Equatable {
     valueOne,
     valueTwo,
     conditions,
+    otherCondition,
     note,
     outsideTarget,
     glucoseLow,
@@ -481,6 +487,7 @@ class MeasurementReadingDraft {
     this.valueOne,
     this.valueTwo,
     this.conditions = const <String>[],
+    this.otherCondition,
     this.note,
     this.glucoseLow,
     this.glucoseHigh,
@@ -496,6 +503,9 @@ class MeasurementReadingDraft {
 
   /// «ظروف القياس» ([MeasurementConditions]), none or more.
   final List<String> conditions;
+
+  /// What «أخرى» was, in the reader's words; sent only with «أخرى».
+  final String? otherCondition;
   final String? note;
   final int? glucoseLow;
   final int? glucoseHigh;
@@ -519,6 +529,8 @@ class MeasurementReadingDraft {
       'condition': MeasurementConditions.legacyCondition(kind, conditions),
     } else
       'conditions': conditions,
+    if (otherCondition != null && conditions.contains('other'))
+      'other_condition': otherCondition,
     'note': note,
     'glucose_low': glucoseLow,
     'glucose_high': glucoseHigh,

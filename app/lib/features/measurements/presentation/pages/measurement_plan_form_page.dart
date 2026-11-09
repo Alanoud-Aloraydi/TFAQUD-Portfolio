@@ -105,7 +105,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   void _fill(MeasurementPlan plan) {
     if (_initialized) return;
     _initialized = true;
-    final version = plan.version;
+    // The latest version: a change waiting for later, when there is one,
+    // so editing again starts from it.
+    final version = plan.pendingVersion ?? plan.version;
     _kind = plan.kind;
     _readings
       ..clear()

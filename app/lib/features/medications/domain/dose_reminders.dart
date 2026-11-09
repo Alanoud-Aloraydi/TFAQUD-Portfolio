@@ -12,9 +12,10 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 
 export 'package:app/core/services/reminder_circle.dart';
 
-/// Which of an appointment's two reminders: the day before, or shortly
-/// before it.
-enum AppointmentLead { dayBefore, soon }
+/// Which of an appointment's reminders: the day before, shortly before it,
+/// or right after it was saved for today or tomorrow, when the day-before
+/// moment had already passed.
+enum AppointmentLead { dayBefore, soon, today }
 
 /// The words of the reminders. They are given from outside, so this file
 /// needs no translations and the tests can use plain words.
@@ -107,6 +108,27 @@ const Duration appointmentSoonLead = Duration(hours: 2);
 /// moment may have passed. Short, so a medicine saved a minute before its
 /// dose is still reminded.
 const Duration reminderMargin = Duration(seconds: 10);
+
+/// How long after an appointment is saved its «اليوم» reminder comes, when
+/// it was saved after its day-before moment: right away, with time for the
+/// phone to set it.
+const Duration appointmentSavedLead = Duration(seconds: 30);
+
+/// When an appointment saved after its day-before moment is said right
+/// away ([AppointmentLead.today]): [appointmentSavedLead] after it was
+/// saved, once (a later refresh finds that moment gone). Null when it was
+/// saved earlier, or when its two-hour reminder comes within ten minutes
+/// anyway.
+DateTime? appointmentAnnouncedAt(CareAppointment visit) {
+  final DateTime moment = riyadhMoment(visit.scheduledOn, visit.time);
+  final DateTime saved = visit.updatedAt.toUtc();
+  if (!saved.isAfter(moment.subtract(const Duration(days: 1)))) return null;
+  final DateTime at = saved.add(appointmentSavedLead);
+  final DateTime soon = moment.subtract(appointmentSoonLead);
+  final bool soonComes =
+      soon.isAfter(at) && soon.difference(at) < const Duration(minutes: 10);
+  return at.isBefore(moment) && !soonComes ? at : null;
+}
 
 /// Whether a scheduled notification is one of the reminders.
 bool isReminderPayload(String payload) =>
@@ -258,6 +280,20 @@ List<ScheduledNotification> planDoseReminders({
               body: texts.appointmentBody(visit),
               prefix: appointmentReminderPayload,
             ),
+    // Saved for today or tomorrow after its day-before moment: said once,
+    // right away, so a change made today is not silent until two hours
+    // before.
+    for (final (ReminderCircle circle, CareAppointment visit) in appointments)
+      if (visit.status == AppointmentStatus.scheduled)
+        if (appointmentAnnouncedAt(visit) case final DateTime at
+            when inWindow(at))
+          _Reminder(
+            at: at,
+            circle: circle,
+            title: texts.appointmentTitle(circle, AppointmentLead.today, visit),
+            body: texts.appointmentBody(visit),
+            prefix: appointmentReminderPayload,
+          ),
   ]..sort((_Reminder a, _Reminder b) => a.at.compareTo(b.at));
   final List<_Reminder> kept = upcoming.take(maxDoseReminders).toList();
   return <ScheduledNotification>[

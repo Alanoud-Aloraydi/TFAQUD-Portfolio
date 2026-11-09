@@ -100,10 +100,11 @@ class MedicationsCubit extends Cubit<MedicationsState> {
       return false;
     }
     emit(state.copyWith(status: MedicationsStatus.saving, clearMessage: true));
+    // The latest version: a change waiting for later is the one replaced.
     final result = await _medications.revisePlan(
       circleId,
       plan.id,
-      plan.version.number,
+      (plan.pendingVersion ?? plan.version).number,
       draft,
     );
     return _replace(result);

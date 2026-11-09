@@ -188,3 +188,40 @@ def test_a_reading_sends_one_shape_only(circle_api):
     )
 
     assert both.status_code == 422
+
+
+def test_other_says_what_it_was(circle_api):
+    reading = {
+        "kind": "bp",
+        "outcome": "read",
+        "measured_at": "2026-10-28T16:00:00+00:00",
+        "value_one": 128,
+        "value_two": 82,
+        "systolic_limit": 130,
+        "diastolic_limit": 80,
+    }
+
+    saved = circle_api(
+        "post",
+        "/measurement-readings",
+        json={
+            **reading,
+            "conditions": ["other"],
+            "other_condition": "  بعد القهوة ",
+        },
+    )
+
+    assert saved.status_code == 201, saved.json
+    answer = saved.json["measurement_reading"]
+    assert answer["conditions"] == ["other"]
+    assert answer["other_condition"] == "بعد القهوة"
+    # Words without «أخرى» are refused.
+    assert circle_api(
+        "post",
+        "/measurement-readings",
+        json={
+            **reading,
+            "conditions": ["stress"],
+            "other_condition": "بعد القهوة",
+        },
+    ).status_code == 422
