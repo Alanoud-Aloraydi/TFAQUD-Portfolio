@@ -7,21 +7,28 @@ import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 /// The Arabic words of the reminders, read when they are set (the
-/// translations are loaded by then), speaking to the signed-in person by
-/// name: «يا ياسر، لا تنسى ميلبون». For a circle they care for, the
-/// patient's name follows: «يا ياسر، لا تنسى ميلبون لـمحمود».
+/// translations are loaded by then). A dose: «حان موعد الدواء» over the
+/// signed-in person called by name, «يا ياسر، لا ننسى ميلبون», then the dose
+/// and its time. For a circle they care for, the patient's name follows:
+/// «يا ياسر، لا ننسى ميلبون لـمحمود». «لا ننسى» (we) is the same for a man
+/// and a woman, as «لا تنسى» and «لا تنسي» are not.
 final DoseReminderTexts doseReminderTexts = DoseReminderTexts(
   title: (ReminderCircle circle, DoseOccurrence dose) =>
-      _named('reminders.dose_title', circle, <String>[dose.name]),
-  // «1 حبة · الساعة 9:00 م».
-  body: (ReminderCircle circle, DoseOccurrence dose) =>
-      'reminders.dose_body'.tr(
-        args: <String>[
-          '${formatMedicationNumber(dose.doseValue)} '
-              '${'medications.unit.${dose.doseUnit.name}'.tr()}',
-          _clock(dose.time),
-        ],
-      ),
+      'reminders.dose_title'.tr(),
+  // «يا ياسر، لا ننسى ميلبون» over «1 حبة · الساعة 9:00 م».
+  body: (ReminderCircle circle, DoseOccurrence dose) {
+    final String call = _named('reminders.dose_call', circle, <String>[
+      dose.name,
+    ]);
+    final String details = 'reminders.dose_body'.tr(
+      args: <String>[
+        '${formatMedicationNumber(dose.doseValue)} '
+            '${'medications.unit.${dose.doseUnit.name}'.tr()}',
+        _clock(dose.time),
+      ],
+    );
+    return '$call\n$details';
+  },
   // «ياسر، وقت القياس الحين».
   measurementTitle: (ReminderCircle circle) {
     final String? name = _viewer();

@@ -67,6 +67,11 @@ class Appointment(db.Model):
     created_by_account_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("account.id", ondelete="SET NULL")
     )
+    # Who last edited it or set its status (migration 0027); empty until
+    # then.
+    updated_by_account_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("account.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )

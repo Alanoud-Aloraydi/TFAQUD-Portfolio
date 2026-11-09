@@ -30,10 +30,10 @@ class DoseReminderTexts {
     required this.keepBody,
   });
 
-  /// «يا ياسر، لا تنسى ميتفورمين».
+  /// «حان موعد الدواء».
   final String Function(ReminderCircle circle, DoseOccurrence dose) title;
 
-  /// The dose, «1 حبة · 9:00 م».
+  /// «يا ياسر، لا ننسى ميتفورمين» over the dose, «1 حبة · الساعة 9:00 م».
   final String Function(ReminderCircle circle, DoseOccurrence dose) body;
 
   /// «ياسر، وقت القياس الحين».

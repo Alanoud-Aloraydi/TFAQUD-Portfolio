@@ -7,8 +7,8 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
+import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/features/medications/domain/dose_reminders.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
@@ -85,18 +85,10 @@ class DoseRecordControls extends StatelessWidget {
               if (isToday && canSnooze) const SizedBox(width: AppSpacing.sm),
               if (canSnooze)
                 Expanded(
-                  child: FilledButton.tonalIcon(
-                    style: compact.copyWith(
-                      backgroundColor: const WidgetStatePropertyAll<Color>(
-                        AppSemanticColors.surfaceContent,
-                      ),
-                      foregroundColor: const WidgetStatePropertyAll<Color>(
-                        AppSemanticColors.textPrimary,
-                      ),
-                    ),
-                    onPressed: () => _snooze(context),
-                    icon: const Icon(CupertinoIcons.bell, size: 16),
-                    label: Text(context.tr('reminders.snooze')),
+                  child: _SnoozeButton(
+                    occurrence: occurrence,
+                    circleId: circleId!,
+                    style: compact,
                   ),
                 ),
               if (!isToday)
@@ -171,39 +163,6 @@ class DoseRecordControls extends StatelessWidget {
 
   Future<void> _takeNow(BuildContext context) =>
       _recordTaken(context, DateTime.now());
-
-  /// «ذكّرني لاحقًا»: the dose's own reminder again in 15 minutes, half an
-  /// hour or an hour, with the same words as its notification.
-  Future<void> _snooze(BuildContext context) async {
-    final String? circle = circleId;
-    if (circle == null) return;
-    final int? minutes = await showOptionSheet<int>(
-      context,
-      title: context.tr('reminders.snooze_title'),
-      options: const <int>[15, 30, 60],
-      labelOf: (int value) => afterDuration(context, value),
-    );
-    if (minutes == null || !context.mounted) return;
-    final ReminderCircle reminderCircle = ReminderCircle(id: circle, name: '');
-    await GetIt.I<DoseReminders>().snooze(
-      circleId: circle,
-      task: SnoozedTask.dose,
-      title: doseReminderTexts.title(reminderCircle, occurrence),
-      body: doseReminderTexts.body(reminderCircle, occurrence),
-      after: Duration(minutes: minutes),
-    );
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr(
-            'reminders.snoozed',
-            args: <String>[afterDuration(context, minutes)],
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _takeAtDifferentTime(BuildContext context) async {
     final takenAt = await selectTakenTime(
@@ -360,5 +319,116 @@ class _RecordedStatus extends StatelessWidget {
         '${local.hour.toString().padLeft(2, '0')}:'
         '${local.minute.toString().padLeft(2, '0')}';
     return formatMedicationTime(context, time);
+  }
+}
+
+/// «ذكّرني لاحقًا»: the dose's own reminder again in 15 minutes, half an
+/// hour or an hour, with the same words as its notification. The choices
+/// open as a small Liquid Glass menu out of the button, like the circle
+/// switcher, not a sheet from the bottom.
+class _SnoozeButton extends StatefulWidget {
+  const _SnoozeButton({
+    required this.occurrence,
+    required this.circleId,
+    required this.style,
+  });
+
+  final DoseOccurrence occurrence;
+  final String circleId;
+  final ButtonStyle style;
+
+  @override
+  State<_SnoozeButton> createState() => _SnoozeButtonState();
+}
+
+class _SnoozeButtonState extends State<_SnoozeButton> {
+  /// While the menu is open the button hides: the menu grows out of it, so
+  /// there is one piece of glass.
+  bool _open = false;
+
+  static const List<int> _choices = <int>[15, 30, 60];
+
+  Widget _content(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: <Widget>[
+      const Icon(
+        CupertinoIcons.bell,
+        size: 16,
+        color: AppSemanticColors.textPrimary,
+      ),
+      const SizedBox(width: AppSpacing.sm),
+      Flexible(
+        child: Text(
+          context.tr('reminders.snooze'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: AppSemanticColors.textPrimary),
+        ),
+      ),
+    ],
+  );
+
+  Future<void> _snooze(BuildContext anchor) async {
+    setState(() => _open = true);
+    final int? minutes = await showGlassMenu<int>(
+      anchorContext: anchor,
+      semanticLabel: context.tr('reminders.snooze_title'),
+      anchorContent: _content(context),
+      sections: <List<GlassMenuItem<int>>>[
+        <GlassMenuItem<int>>[
+          for (final int value in _choices)
+            GlassMenuItem<int>(
+              value: value,
+              label: afterDuration(context, value),
+              icon: CupertinoIcons.clock,
+            ),
+        ],
+      ],
+    );
+    if (!mounted) return;
+    setState(() => _open = false);
+    if (minutes == null) return;
+    final ReminderCircle circle = ReminderCircle(id: widget.circleId, name: '');
+    await GetIt.I<DoseReminders>().snooze(
+      circleId: widget.circleId,
+      task: SnoozedTask.dose,
+      title: doseReminderTexts.title(circle, widget.occurrence),
+      body: doseReminderTexts.body(circle, widget.occurrence),
+      after: Duration(minutes: minutes),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.tr(
+            'reminders.snoozed',
+            args: <String>[afterDuration(context, minutes)],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: _open ? 0 : 1,
+      child: Builder(
+        builder: (BuildContext anchor) => FilledButton.tonalIcon(
+          style: widget.style.copyWith(
+            backgroundColor: const WidgetStatePropertyAll<Color>(
+              AppSemanticColors.surfaceContent,
+            ),
+            foregroundColor: const WidgetStatePropertyAll<Color>(
+              AppSemanticColors.textPrimary,
+            ),
+          ),
+          onPressed: () => _snooze(anchor),
+          icon: const Icon(CupertinoIcons.bell, size: 16),
+          label: Text(context.tr('reminders.snooze')),
+        ),
+      ),
+    );
   }
 }

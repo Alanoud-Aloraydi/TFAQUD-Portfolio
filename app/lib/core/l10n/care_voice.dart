@@ -18,7 +18,7 @@ abstract final class CareVoice {
   static final Map<String, String> _patients = <String, String>{};
 
   /// The signed-in person's display name, for «صباح الخير، ياسر» and the
-  /// reminders («يا ياسر، لا تنسى …»); null before `/home` is read.
+  /// reminders («يا ياسر، لا ننسى …»); null before `/home` is read.
   static String? viewerName;
 
   /// Called each time the account's circles are read (`/home`): the
