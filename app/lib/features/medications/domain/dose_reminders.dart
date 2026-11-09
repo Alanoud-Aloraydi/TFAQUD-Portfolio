@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/services/phone_notifications.dart';
@@ -9,6 +10,8 @@ import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:app/core/services/reminder_circle.dart';
 
@@ -94,7 +97,8 @@ String payloadWithText(String payload, String title, String body) =>
 /// iOS keeps at most 64 scheduled notifications for an app (the 64 set
 /// last). The reminders of doses, measurements and appointments share
 /// [maxDoseReminders] of them, the nearest first; the note after them takes
-/// one more, and a snooze one more.
+/// one more, and a snooze one more. A dose put off from its card takes the
+/// place of one of the reminders ([maxCardSnoozes]).
 const int maxDoseReminders = 60;
 
 /// The ids of the reminders: [reminderIdBase] to [reminderIdBase] + 60.
@@ -167,6 +171,30 @@ enum SnoozedTask {
 /// The one slot a snooze uses; a new snooze replaces any pending one.
 const int doseSnoozeId = reminderIdBase + maxDoseReminders + 10;
 
+/// The slots of the doses put off from their cards («ذكّرني لاحقًا» on
+/// «اليوم»), after the note's: each dose has its own, so two doses put off
+/// both come again.
+const int cardSnoozeIdBase = reminderIdBase + maxDoseReminders + 1;
+
+/// At most this many doses put off from their cards at once. The reminders
+/// to come give up as many places, so the phone's 64 are never passed.
+const int maxCardSnoozes = 5;
+
+/// A dose put off from its card: its circle, its time of the plan, and its
+/// day.
+String doseSnoozeKey(String circleId, DoseOccurrence dose) {
+  final DateTime day = dose.scheduledOn;
+  return '$circleId|${dose.scheduleId}|${day.year}-${day.month}-${day.day}';
+}
+
+/// A dose put off from its card: when it comes again, in which slot.
+class _CardSnooze {
+  const _CardSnooze(this.at, this.slot);
+
+  final DateTime at;
+  final int slot;
+}
+
 /// The circle a tapped reminder is about, or null for the note and for
 /// notifications that are not reminders.
 String? reminderCircleId(String payload) {
@@ -210,7 +238,7 @@ DateTime riyadhMoment(DateTime day, String time) {
 DateTime doseMoment(DoseOccurrence dose) =>
     riyadhMoment(dose.scheduledOn, dose.time);
 
-/// The reminders after [now], the nearest first, at most [maxDoseReminders]:
+/// The reminders after [now], the nearest first, at most [limit]:
 ///
 /// * one at each dose not recorded yet (taken or skipped);
 /// * one at each measurement not recorded yet;
@@ -232,6 +260,7 @@ List<ScheduledNotification> planDoseReminders({
   required DateTime now,
   required DoseReminderTexts texts,
   DateTime? until,
+  int limit = maxDoseReminders,
 }) {
   // A moment in the next few seconds is too close to set: by the time the
   // phone has it, it may have passed.
@@ -295,7 +324,7 @@ List<ScheduledNotification> planDoseReminders({
             prefix: appointmentReminderPayload,
           ),
   ]..sort((_Reminder a, _Reminder b) => a.at.compareTo(b.at));
-  final List<_Reminder> kept = upcoming.take(maxDoseReminders).toList();
+  final List<_Reminder> kept = upcoming.take(limit).toList();
   return <ScheduledNotification>[
     for (int i = 0; i < kept.length; i++)
       ScheduledNotification(
@@ -400,6 +429,24 @@ class DoseReminders {
   /// nothing.
   int _session = 0;
 
+  static const String _snoozesKey = 'dose_card_snoozes';
+
+  /// The doses put off from their cards, by [doseSnoozeKey], the first put
+  /// off first. Kept on the phone, so a card still shows its time after the
+  /// app is opened again.
+  final Map<String, _CardSnooze> _cardSnoozes = <String, _CardSnooze>{};
+  Future<void>? _snoozesRead;
+  final ValueNotifier<Map<String, DateTime>> _snoozed =
+      ValueNotifier<Map<String, DateTime>>(const <String, DateTime>{});
+  Timer? _snoozeEnds;
+
+  /// When each dose put off from its card comes again, by [doseSnoozeKey]:
+  /// the card shows «بنذكّرك 2:36 م» until then.
+  ValueListenable<Map<String, DateTime>> get snoozedDoses {
+    unawaited(_readSnoozes());
+    return _snoozed;
+  }
+
   /// Reminds of the doses of [circles] from now on. Called when the home
   /// data loads with the person's circles.
   Future<void> sync(List<ReminderCircle> circles) {
@@ -477,12 +524,155 @@ class DoseReminders {
   /// Cancels a pending snooze: the task it was for got recorded another way.
   Future<void> cancelSnooze() => _phone.cancel(doseSnoozeId);
 
+  /// «ذكّرني لاحقًا» on a dose's card: its reminder again [after] from now,
+  /// in the dose's own slot, and its card shows the new time
+  /// ([snoozedDoses]). Recording the dose takes it off. Put off again, the
+  /// dose keeps one reminder, at the new time.
+  Future<void> snoozeDose({
+    required String circleId,
+    required DoseOccurrence dose,
+    required String title,
+    required String body,
+    required Duration after,
+  }) async {
+    await _readSnoozes();
+    final DateTime now = _now().toUtc();
+    _cardSnoozes.removeWhere(
+      (String key, _CardSnooze snooze) => !snooze.at.isAfter(now),
+    );
+    final String key = doseSnoozeKey(circleId, dose);
+    final _CardSnooze? earlier = _cardSnoozes.remove(key);
+    final int slot = earlier?.slot ?? _freeSlot();
+    final DateTime at = now.add(after);
+    _cardSnoozes[key] = _CardSnooze(at, slot);
+    // As [snooze]: without the permission iOS drops it in silence.
+    await _phone.requestPermission();
+    await _phone.schedule(
+      ScheduledNotification(
+        id: cardSnoozeIdBase + slot,
+        at: at,
+        title: title,
+        body: body,
+        payload: payloadWithText('$doseSnoozePayload$circleId', title, body),
+        thread: circleId,
+        snoozable: true,
+      ),
+    );
+    await _saveSnoozes();
+  }
+
+  /// A slot no dose put off uses; with all of them used, the one put off
+  /// first gives up its slot (its reminder is replaced).
+  int _freeSlot() {
+    final Set<int> used = <int>{
+      for (final _CardSnooze snooze in _cardSnoozes.values) snooze.slot,
+    };
+    for (int slot = 0; slot < maxCardSnoozes; slot++) {
+      if (!used.contains(slot)) return slot;
+    }
+    final String first = _cardSnoozes.keys.first;
+    return _cardSnoozes.remove(first)!.slot;
+  }
+
+  /// Takes off the snoozes of doses recorded since, and forgets those that
+  /// came.
+  Future<void> _settleSnoozes(
+    List<(ReminderCircle, DoseOccurrence)> doses,
+  ) async {
+    await _readSnoozes();
+    if (_cardSnoozes.isEmpty) return;
+    final DateTime now = _now().toUtc();
+    final Set<String> recorded = <String>{
+      for (final (ReminderCircle circle, DoseOccurrence dose) in doses)
+        if (dose.record != null) doseSnoozeKey(circle.id, dose),
+    };
+    bool changed = false;
+    for (final String key in _cardSnoozes.keys.toList()) {
+      final _CardSnooze snooze = _cardSnoozes[key]!;
+      if (recorded.contains(key)) {
+        await _phone.cancel(cardSnoozeIdBase + snooze.slot);
+      } else if (snooze.at.isAfter(now)) {
+        continue;
+      }
+      _cardSnoozes.remove(key);
+      changed = true;
+    }
+    if (changed) await _saveSnoozes();
+  }
+
+  /// Reads the doses put off from their cards once, when first needed.
+  Future<void> _readSnoozes() => _snoozesRead ??= _loadSnoozes();
+
+  Future<void> _loadSnoozes() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? raw = prefs.getString(_snoozesKey);
+    if (raw == null) return;
+    try {
+      final Object? decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return;
+      for (final MapEntry<String, dynamic> entry in decoded.entries) {
+        final Object? value = entry.value;
+        if (value is! Map<String, dynamic>) continue;
+        final Object? at = value['at'];
+        final Object? slot = value['slot'];
+        final DateTime? moment = at is String ? DateTime.tryParse(at) : null;
+        if (moment == null || slot is! int) continue;
+        if (slot < 0 || slot >= maxCardSnoozes) continue;
+        _cardSnoozes.putIfAbsent(entry.key, () => _CardSnooze(moment, slot));
+      }
+    } on FormatException {
+      return;
+    }
+    _publishSnoozes();
+  }
+
+  Future<void> _saveSnoozes() async {
+    _publishSnoozes();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_cardSnoozes.isEmpty) {
+      await prefs.remove(_snoozesKey);
+      return;
+    }
+    await prefs.setString(
+      _snoozesKey,
+      jsonEncode(<String, Object>{
+        for (final MapEntry<String, _CardSnooze> entry in _cardSnoozes.entries)
+          entry.key: <String, Object>{
+            'at': entry.value.at.toUtc().toIso8601String(),
+            'slot': entry.value.slot,
+          },
+      }),
+    );
+  }
+
+  /// Tells the cards when their doses come again, each until it came.
+  void _publishSnoozes() {
+    final DateTime now = _now().toUtc();
+    _snoozed.value = Map<String, DateTime>.unmodifiable(<String, DateTime>{
+      for (final MapEntry<String, _CardSnooze> entry in _cardSnoozes.entries)
+        if (entry.value.at.isAfter(now)) entry.key: entry.value.at,
+    });
+    _snoozeEnds?.cancel();
+    _snoozeEnds = null;
+    if (_snoozed.value.isEmpty) return;
+    final DateTime next = _snoozed.value.values.reduce(
+      (DateTime a, DateTime b) => a.isBefore(b) ? a : b,
+    );
+    _snoozeEnds = Timer(
+      next.difference(now) + const Duration(seconds: 1),
+      _publishSnoozes,
+    );
+  }
+
   /// Removes every reminder: the person signed out, or the sign-in ended.
   Future<void> clear() async {
     _session++;
     _circles = const <ReminderCircle>[];
     _again = false;
     await _phone.cancelAll();
+    await _readSnoozes();
+    _cardSnoozes.clear();
+    await _saveSnoozes();
   }
 
   Future<void> _run() async {
@@ -543,6 +733,8 @@ class DoseReminders {
         return;
       }
     }
+    await _settleSnoozes(doses);
+    if (session != _session) return;
     final List<ScheduledNotification> planned = planDoseReminders(
       doses: doses,
       measurements: measurements,
@@ -552,6 +744,8 @@ class DoseReminders {
       now: _now(),
       texts: texts,
       until: until,
+      // The doses put off from their cards have their own slots.
+      limit: maxDoseReminders - _cardSnoozes.length,
     );
     // The question comes when there is something to remind of, once per run
     // of the app; iOS shows it only the first time.

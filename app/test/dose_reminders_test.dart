@@ -13,6 +13,7 @@ import 'package:app/features/medications/domain/repositories/medications_reposit
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/phone_fakes.dart';
 
@@ -293,6 +294,31 @@ void main() {
       expect(planned.last.payload, keepRemindersPayload);
     });
 
+    test('the doses put off from their cards take places of reminders', () {
+      final List<(ReminderCircle, DoseOccurrence)> many =
+          <(ReminderCircle, DoseOccurrence)>[
+            for (int day = 4; day <= 10; day++)
+              for (int hour = 9; hour < 19; hour++)
+                (_noura, _dose(day, '$hour:00', name: 'دواء $day $hour')),
+          ];
+
+      final List<ScheduledNotification> planned = planDoseReminders(
+        doses: many,
+        now: _now,
+        texts: _texts,
+        limit: maxDoseReminders - 2,
+      );
+
+      // 58 reminders and the note; with the two snoozes and the one of a
+      // notification, 62 of the phone's 64.
+      expect(planned, hasLength(59));
+      expect(planned.last.payload, keepRemindersPayload);
+      expect(
+        planned.every((ScheduledNotification n) => n.id < cardSnoozeIdBase),
+        isTrue,
+      );
+    });
+
     test('a measurement to come is reminded at its time', () {
       final List<ScheduledNotification> planned = planDoseReminders(
         measurements: <(ReminderCircle, MeasurementOccurrence)>[
@@ -485,6 +511,7 @@ void main() {
     late DoseReminders reminders;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
       medications = _Medications();
       useCase = MedicationsUseCase(medications);
       phone = FakePhoneNotifications();
@@ -615,6 +642,130 @@ void main() {
       ]);
     });
 
+    test('a dose put off from its card comes again, and says when', () async {
+      // Due an hour ago.
+      final DoseOccurrence dose = _dose(3, '07:00');
+      medications.doses[_me.id] = <DoseOccurrence>[dose];
+      await reminders.sync(<ReminderCircle>[_me]);
+      final DateTime half = _now.add(const Duration(minutes: 30));
+
+      await reminders.snoozeDose(
+        circleId: _me.id,
+        dose: dose,
+        title: 'حان موعد الدواء',
+        body: 'لا ننسى الميتفورمين',
+        after: const Duration(minutes: 30),
+      );
+
+      final ScheduledNotification again = phone.scheduled[cardSnoozeIdBase]!;
+      expect(again.at, half);
+      expect(again.title, 'حان موعد الدواء');
+      expect(again.body, 'لا ننسى الميتفورمين');
+      expect(again.snoozable, isTrue);
+      expect(again.payload, startsWith(doseSnoozePayload));
+      expect(reminderCircleId(again.payload), 'c-me');
+      expect(reminders.snoozedDoses.value, <String, DateTime>{
+        doseSnoozeKey(_me.id, dose): half,
+      });
+
+      // A reading again leaves it: it is not one of the planned reminders.
+      await reminders.refresh();
+      expect(phone.scheduled[cardSnoozeIdBase]?.at, half);
+
+      // Put off again: still one reminder, at the new time.
+      await reminders.snoozeDose(
+        circleId: _me.id,
+        dose: dose,
+        title: 'حان موعد الدواء',
+        body: 'لا ننسى الميتفورمين',
+        after: const Duration(hours: 1),
+      );
+      expect(
+        phone.scheduled.keys.where(
+          (int id) =>
+              id >= cardSnoozeIdBase && id < cardSnoozeIdBase + maxCardSnoozes,
+        ),
+        <int>[cardSnoozeIdBase],
+      );
+      expect(
+        reminders.snoozedDoses.value.values.single,
+        _now.add(const Duration(hours: 1)),
+      );
+    });
+
+    test('two doses put off both come again', () async {
+      final DoseOccurrence first = _dose(3, '07:00');
+      final DoseOccurrence second = _dose(3, '07:30', name: 'فيتامين د');
+      medications.doses[_me.id] = <DoseOccurrence>[first, second];
+      await reminders.sync(<ReminderCircle>[_me]);
+
+      for (final DoseOccurrence dose in <DoseOccurrence>[first, second]) {
+        await reminders.snoozeDose(
+          circleId: _me.id,
+          dose: dose,
+          title: 'حان موعد الدواء',
+          body: dose.name,
+          after: const Duration(minutes: 15),
+        );
+      }
+
+      expect(phone.scheduled[cardSnoozeIdBase]?.body, 'ميتفورمين');
+      expect(phone.scheduled[cardSnoozeIdBase + 1]?.body, 'فيتامين د');
+      expect(reminders.snoozedDoses.value, hasLength(2));
+    });
+
+    test('recording a dose put off takes its reminder off', () async {
+      final DoseOccurrence dose = _dose(3, '07:00');
+      medications.doses[_me.id] = <DoseOccurrence>[dose];
+      await reminders.sync(<ReminderCircle>[_me]);
+      await reminders.snoozeDose(
+        circleId: _me.id,
+        dose: dose,
+        title: 'حان موعد الدواء',
+        body: 'لا ننسى الميتفورمين',
+        after: const Duration(minutes: 30),
+      );
+
+      medications.doses[_me.id] = <DoseOccurrence>[
+        _dose(3, '07:00', record: _taken),
+      ];
+      await useCase.recordDose(
+        _me.id,
+        dose,
+        const DoseRecordDraft(outcome: DoseOutcome.taken),
+      );
+      await settle();
+      await settle();
+
+      expect(phone.scheduled, isNot(contains(cardSnoozeIdBase)));
+      expect(reminders.snoozedDoses.value, isEmpty);
+    });
+
+    test('a card still shows its time when the app opens again', () async {
+      final DoseOccurrence dose = _dose(3, '07:00');
+      medications.doses[_me.id] = <DoseOccurrence>[dose];
+      await reminders.snoozeDose(
+        circleId: _me.id,
+        dose: dose,
+        title: 'حان موعد الدواء',
+        body: 'لا ننسى الميتفورمين',
+        after: const Duration(minutes: 30),
+      );
+
+      final DoseReminders opened = DoseReminders(
+        useCase,
+        phone,
+        texts: _texts,
+        clock: () => _now,
+      );
+      await opened.sync(<ReminderCircle>[_me]);
+
+      expect(opened.snoozedDoses.value, <String, DateTime>{
+        doseSnoozeKey(_me.id, dose): _now.add(const Duration(minutes: 30)),
+      });
+      expect(phone.scheduled, contains(cardSnoozeIdBase));
+    });
+
     test('a failed reading keeps the reminders already set', () async {
       medications.doses[_noura.id] = <DoseOccurrence>[_dose(3, '21:00')];
       await reminders.sync(<ReminderCircle>[_noura]);
@@ -637,6 +788,7 @@ void main() {
 
       expect(phone.cancelAlls, 1);
       expect(phone.scheduled, isEmpty);
+      expect(reminders.snoozedDoses.value, isEmpty);
     });
 
     test('a call during a reading makes one more reading after it', () async {
@@ -687,6 +839,7 @@ void main() {
     late DoseReminders reminders;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
       medications = _Medications();
       measurements = _Measurements();
       appointments = _Appointments();
