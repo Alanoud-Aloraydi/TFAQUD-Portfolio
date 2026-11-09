@@ -237,13 +237,39 @@ class SimplifiedReminderScreen extends StatelessWidget {
 /// The parts of a reminder «استماع» reads and marks, in their order.
 enum _Part { brand, task, yes, later }
 
+/// The reminder itself; it reads itself aloud as it opens ([ReadOnOpen]).
 class _ReminderBody extends StatelessWidget {
   const _ReminderBody({required this.content});
 
   final _ReminderContent content;
 
+  List<SpokenPart> _parts(BuildContext context) {
+    return <SpokenPart>[
+      (id: _Part.brand, text: content.brand),
+      (
+        id: _Part.task,
+        text: sentences(<String>[
+          content.lead,
+          content.name,
+          content.line,
+          ...content.chips,
+        ]),
+      ),
+      (id: _Part.yes, text: content.yesLabel),
+      if (content.onLater != null)
+        (id: _Part.later, text: context.tr('simplified_mode.remind_later')),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    return ListenScope(
+      parts: _parts(context),
+      child: ReadOnOpen(child: _body(context)),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     return LayoutBuilder(
       builder: (context, box) => SingleChildScrollView(
         child: ConstrainedBox(
@@ -325,27 +351,7 @@ class _ReminderBody extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ListenButton(
-                    onDark: true,
-                    parts: <SpokenPart>[
-                      (id: _Part.brand, text: content.brand),
-                      (
-                        id: _Part.task,
-                        text: sentences(<String>[
-                          content.lead,
-                          content.name,
-                          content.line,
-                          ...content.chips,
-                        ]),
-                      ),
-                      (id: _Part.yes, text: content.yesLabel),
-                      if (content.onLater != null)
-                        (
-                          id: _Part.later,
-                          text: context.tr('simplified_mode.remind_later'),
-                        ),
-                    ],
-                  ),
+                  const ListenButton(onDark: true),
                   const Spacer(),
                   const SizedBox(height: 24),
                   Row(

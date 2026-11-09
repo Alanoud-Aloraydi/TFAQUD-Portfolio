@@ -93,6 +93,7 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                     ListenTarget(
                       id: _summaryPart,
                       radius: 8,
+                      speaker: ListenSpeaker.beside,
                       child: Text(
                         summary,
                         style: SimplifiedStyle.text(
@@ -120,6 +121,7 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                         ListenTarget(
                           id: period,
                           radius: 16,
+                          speaker: ListenSpeaker.beside,
                           child: _PeriodHeader(period: period),
                         ),
                       ],
@@ -127,6 +129,7 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                         ListenTarget(
                           id: _TaskRow.part(context, task),
                           radius: 12,
+                          speaker: ListenSpeaker.beside,
                           child: _TaskRow(
                             task: task,
                             circleId: day.circleId,

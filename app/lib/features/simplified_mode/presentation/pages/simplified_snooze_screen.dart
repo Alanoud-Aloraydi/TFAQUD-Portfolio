@@ -51,6 +51,18 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
     );
     String clock(Duration after) => simplifiedClockAt(context, now.add(after));
 
+    return ListenScope(
+      parts: <SpokenPart>[
+        (id: _questionPart, text: context.tr('simplified_mode.when_remind')),
+        for (final (String key, Duration after) in _choices)
+          (id: key, text: sentences(<String>[context.tr(key), clock(after)])),
+        (id: _backPart, text: context.tr('simplified_mode.back')),
+      ],
+      child: _screen(context, clock),
+    );
+  }
+
+  Widget _screen(BuildContext context, String Function(Duration) clock) {
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(
@@ -73,24 +85,7 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ListenButton(
-                  onDark: true,
-                  parts: <SpokenPart>[
-                    (
-                      id: _questionPart,
-                      text: context.tr('simplified_mode.when_remind'),
-                    ),
-                    for (final (String key, Duration after) in _choices)
-                      (
-                        id: key,
-                        text: sentences(<String>[
-                          context.tr(key),
-                          clock(after),
-                        ]),
-                      ),
-                    (id: _backPart, text: context.tr('simplified_mode.back')),
-                  ],
-                ),
+                const ListenButton(onDark: true),
                 const SizedBox(height: 28),
                 for (final (String key, Duration after)
                     in _choices) ...<Widget>[

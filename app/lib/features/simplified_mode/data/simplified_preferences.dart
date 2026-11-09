@@ -1,17 +1,21 @@
 import 'dart:convert';
 
 import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_speech_rate.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Keeps the simplified mode's text size, whether «استماع» shows, and the
-/// task put off with «ذكّرني لاحقًا», on this phone: they belong to the
-/// device, not the account (its reminder is set on the phone too).
+/// Keeps the simplified mode's text size, whether «استماع» shows, how fast
+/// it reads, whether a reminder reads itself, and the task put off with
+/// «ذكّرني لاحقًا», on this phone: they belong to the device, not the
+/// account (its reminder is set on the phone too).
 @lazySingleton
 class SimplifiedPreferences {
   static const String _textSizeKey = 'simplified_text_size';
   static const String _voiceKey = 'simplified_voice_enabled';
+  static const String _speechRateKey = 'simplified_speech_rate';
+  static const String _autoReadKey = 'simplified_auto_read';
   static const String _snoozeKey = 'simplified_snooze';
 
   /// Where the earlier simplified mode kept its text size
@@ -48,6 +52,32 @@ class SimplifiedPreferences {
   Future<void> saveVoiceEnabled(bool enabled) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_voiceKey, enabled);
+  }
+
+  Future<SimplifiedSpeechRate> speechRate() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? saved = prefs.getString(_speechRateKey);
+    for (final SimplifiedSpeechRate rate in SimplifiedSpeechRate.values) {
+      if (rate.name == saved) return rate;
+    }
+    return SimplifiedSpeechRate.normal;
+  }
+
+  Future<void> saveSpeechRate(SimplifiedSpeechRate rate) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_speechRateKey, rate.name);
+  }
+
+  /// Whether a full-screen reminder reads itself once it opens; on until
+  /// the person turns it off.
+  Future<bool> autoRead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoReadKey) ?? true;
+  }
+
+  Future<void> saveAutoRead(bool enabled) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoReadKey, enabled);
   }
 
   /// The task put off, or null; one at a time, like its reminder.

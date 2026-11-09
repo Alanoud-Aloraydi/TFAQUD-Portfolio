@@ -8,7 +8,7 @@ import 'package:app/features/simplified_mode/presentation/simplified_speech.dart
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -95,27 +95,57 @@ class SimplifiedButton extends StatelessWidget {
   }
 }
 
-/// «استماع»: reads the screen's [parts] aloud, in the order they show, each
-/// as it is said rather than written ([toSpeech]); «إيقاف» while it reads.
-/// The part being read is marked by its [ListenTarget]. Hidden when the
-/// person turned reading off in «حسابي». On a phone without an Arabic voice
-/// it says where to add one, instead of staying silent.
-class ListenButton extends StatelessWidget {
-  const ListenButton({super.key, required this.parts, this.onDark = false});
+/// What a screen reads aloud, part by part in the order it shows them, for
+/// its «استماع» and for the speaker of each [ListenTarget] under it.
+class ListenScope extends InheritedWidget {
+  const ListenScope({super.key, required this.parts, required super.child});
 
   final List<SpokenPart> parts;
-  final bool onDark;
 
-  Future<void> _listen(BuildContext context, SimplifiedVoice voice) async {
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    final String missing = context.tr('simplified_mode.no_arabic_voice');
-    final SpeechWords words = SpeechWords.of(context);
-    final bool spoken = await voice.speak(<SpokenPart>[
-      for (final SpokenPart part in parts)
-        (id: part.id, text: toSpeech(part.text, words)),
-    ]);
-    if (!spoken) messenger.showSnackBar(SnackBar(content: Text(missing)));
+  /// The parts of the screen [context] is in; none outside a screen that
+  /// reads aloud.
+  static List<SpokenPart> of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ListenScope>()?.parts ??
+      const <SpokenPart>[];
+
+  @override
+  bool updateShouldNotify(ListenScope oldWidget) =>
+      !listEquals(oldWidget.parts, parts);
+}
+
+/// Reads [parts] aloud at the pace chosen in «حسابي», each as it is said
+/// rather than written ([toSpeech]). On a phone without an Arabic voice it
+/// says where to add one, unless [quietWithoutVoice]: a reading nobody
+/// asked for then stays silent rather than show a message each time.
+Future<void> readAloud(
+  BuildContext context,
+  List<SpokenPart> parts, {
+  bool quietWithoutVoice = false,
+}) async {
+  final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
+  final String missing = context.tr('simplified_mode.no_arabic_voice');
+  final SpeechWords words = SpeechWords.of(context);
+  final double rate = context
+      .read<SimplifiedSettingsCubit>()
+      .state
+      .speechRate
+      .rate;
+  final bool spoken = await GetIt.I<SimplifiedVoice>().speak(<SpokenPart>[
+    for (final SpokenPart part in parts)
+      (id: part.id, text: toSpeech(part.text, words)),
+  ], rate: rate);
+  if (!spoken && !quietWithoutVoice) {
+    messenger?.showSnackBar(SnackBar(content: Text(missing)));
   }
+}
+
+/// «استماع»: reads the whole screen (its [ListenScope]) aloud, in the order
+/// it shows; «إيقاف» while it reads. The part being read is marked by its
+/// [ListenTarget]. Hidden when the person turned reading off in «حسابي».
+class ListenButton extends StatelessWidget {
+  const ListenButton({super.key, this.onDark = false});
+
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +153,7 @@ class ListenButton extends StatelessWidget {
       (cubit) => cubit.state.voiceEnabled,
     );
     if (!enabled) return const SizedBox.shrink();
+    final List<SpokenPart> parts = ListenScope.of(context);
     final SimplifiedVoice voice = GetIt.I<SimplifiedVoice>();
     final Color foreground = onDark
         ? SimplifiedStyle.surface
@@ -132,7 +163,7 @@ class ListenButton extends StatelessWidget {
       builder: (context, speaking, _) => SizedBox(
         height: SimplifiedStyle.touch,
         child: OutlinedButton.icon(
-          onPressed: () => speaking ? voice.stop() : _listen(context, voice),
+          onPressed: () => speaking ? voice.stop() : readAloud(context, parts),
           icon: Icon(
             speaking ? CupertinoIcons.stop_fill : CupertinoIcons.speaker_2_fill,
             size: 24,
@@ -168,15 +199,76 @@ class ListenButton extends StatelessWidget {
   }
 }
 
+/// Reads its screen (its [ListenScope]) aloud once, as the screen opens,
+/// while the person keeps «قراءة التذكير تلقائيًا» on; and stops whatever
+/// is being read when the screen closes. For a full-screen reminder, which
+/// the person may hear before they read it.
+class ReadOnOpen extends StatefulWidget {
+  const ReadOnOpen({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<ReadOnOpen> createState() => _ReadOnOpenState();
+}
+
+class _ReadOnOpenState extends State<ReadOnOpen> {
+  final SimplifiedVoice _voice = GetIt.I<SimplifiedVoice>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _read());
+  }
+
+  @override
+  void dispose() {
+    unawaited(_voice.stop());
+    super.dispose();
+  }
+
+  Future<void> _read() async {
+    // Opened from a notification, the app may still be reading the
+    // settings: their defaults must not speak for someone who chose
+    // silence.
+    final SimplifiedSettingsState settings = await context
+        .read<SimplifiedSettingsCubit>()
+        .whenLoaded();
+    if (!mounted || !settings.voiceEnabled || !settings.autoRead) return;
+    final List<SpokenPart> parts =
+        context.getInheritedWidgetOfExactType<ListenScope>()?.parts ??
+        const <SpokenPart>[];
+    await readAloud(context, parts, quietWithoutVoice: true);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// Where a [ListenTarget] shows the speaker that reads it alone.
+enum ListenSpeaker {
+  /// No speaker: a title, a button or a control, whose words are short or
+  /// are its own label; «استماع» still reads it with the screen.
+  none,
+
+  /// At the end of a row inside a card, beside it.
+  beside,
+
+  /// On the top corner of a card, half over its edge, so it covers none
+  /// of the card's own content.
+  corner,
+}
+
 /// A part of a screen that «استماع» reads as the [SpokenPart] with [id]: it
 /// is outlined while it is read, and scrolled into view, so the person sees
-/// what they hear.
+/// what they hear. With a [speaker], a tap on it reads this part alone.
 class ListenTarget extends StatefulWidget {
   const ListenTarget({
     super.key,
     required this.id,
     required this.child,
     this.radius = SimplifiedStyle.radius,
+    this.speaker = ListenSpeaker.none,
   });
 
   final Object id;
@@ -184,6 +276,7 @@ class ListenTarget extends StatefulWidget {
 
   /// The corners of the outline, those of [child]'s own shape.
   final double radius;
+  final ListenSpeaker speaker;
 
   @override
   State<ListenTarget> createState() => _ListenTargetState();
@@ -224,7 +317,7 @@ class _ListenTargetState extends State<ListenTarget> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    final Widget outlined = DecoratedBox(
       position: DecorationPosition.foreground,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.radius),
@@ -234,6 +327,87 @@ class _ListenTargetState extends State<ListenTarget> {
         ),
       ),
       child: widget.child,
+    );
+    if (widget.speaker == ListenSpeaker.none) return outlined;
+    final bool enabled = context.select<SimplifiedSettingsCubit, bool>(
+      (cubit) => cubit.state.voiceEnabled,
+    );
+    SpokenPart? part;
+    for (final SpokenPart each in ListenScope.of(context)) {
+      if (each.id == widget.id) {
+        part = each;
+        break;
+      }
+    }
+    if (!enabled || part == null) return outlined;
+    final Widget speaker = _PartSpeaker(part: part, reading: _read);
+    return switch (widget.speaker) {
+      ListenSpeaker.none => outlined,
+      ListenSpeaker.beside => Row(
+        children: <Widget>[
+          Expanded(child: outlined),
+          const SizedBox(width: 8),
+          speaker,
+        ],
+      ),
+      // The card moves down by half the speaker, which then sits over its
+      // top edge.
+      ListenSpeaker.corner => Stack(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(top: _PartSpeaker.size / 2),
+            child: outlined,
+          ),
+          PositionedDirectional(
+            top: 0,
+            end: SimplifiedStyle.pad,
+            child: speaker,
+          ),
+        ],
+      ),
+    };
+  }
+}
+
+/// The round speaker of a [ListenTarget]: reads its [part] alone, and turns
+/// into «إيقاف» while that part is being read.
+class _PartSpeaker extends StatelessWidget {
+  const _PartSpeaker({required this.part, required this.reading});
+
+  /// The size Apple and Google ask of anything tapped.
+  static const double size = 48;
+
+  final SpokenPart part;
+  final bool reading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: context.tr(
+        reading ? 'simplified_mode.stop' : 'simplified_mode.listen_part',
+      ),
+      excludeSemantics: true,
+      child: SizedBox.square(
+        dimension: size,
+        child: IconButton(
+          onPressed: () => reading
+              ? GetIt.I<SimplifiedVoice>().stop()
+              : readAloud(context, <SpokenPart>[part]),
+          style: IconButton.styleFrom(
+            backgroundColor: reading
+                ? SimplifiedStyle.accentTint
+                : SimplifiedStyle.surface,
+            foregroundColor: SimplifiedStyle.ink,
+            side: const BorderSide(color: SimplifiedStyle.control, width: 1.5),
+            padding: EdgeInsets.zero,
+          ),
+          icon: Icon(
+            reading ? CupertinoIcons.stop_fill : CupertinoIcons.speaker_2_fill,
+            size: 22,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -268,6 +442,13 @@ class SimplifiedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenScope(
+      parts: <SpokenPart>[(id: titlePart, text: title), ...listen],
+      child: _scaffold(context),
+    );
+  }
+
+  Widget _scaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: SimplifiedStyle.canvas,
       body: SafeArea(
@@ -296,12 +477,7 @@ class SimplifiedPage extends StatelessWidget {
                       minimumSize: const Size(0, SimplifiedStyle.touch),
                     ),
                   ),
-                  ListenButton(
-                    parts: <SpokenPart>[
-                      (id: titlePart, text: title),
-                      ...listen,
-                    ],
-                  ),
+                  const ListenButton(),
                 ],
               ),
             ),

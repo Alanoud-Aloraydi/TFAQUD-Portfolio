@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:app/features/circles/presentation/widgets/birth_date_city_fields.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
@@ -62,8 +67,30 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
     if (saved && mounted) context.push(Routes.onboardingStart);
   }
 
+  /// The sign-in is already made with the code, so going back to the phone
+  /// number (to correct it) ends it first; nothing of this page is saved
+  /// yet.
+  void _signedOut(BuildContext context, AuthState state) {
+    if (state is AuthErrorState) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey))));
+      return;
+    }
+    if (state is AuthSignedOutState) {
+      unawaited(forgetSignedOutPerson());
+      context.go(Routes.authPhone);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    return BlocListener<AuthCubit, AuthState>(
+      listener: _signedOut,
+      child: _page(context),
+    );
+  }
+
+  Widget _page(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -94,11 +121,8 @@ class _OnboardingFeatureScreenState extends State<OnboardingFeatureScreen> {
                             totalSteps: 2,
                             title: context.tr('onboarding.name_title'),
                             subtitle: context.tr('onboarding.name_subtitle'),
-                            // After the code page there is nothing to go back
-                            // to, so the link is hidden.
-                            onBack: context.canPop()
-                                ? () => context.pop()
-                                : null,
+                            // Back to the phone number, signed out.
+                            onBack: context.read<AuthCubit>().signOut,
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           LabeledTextField(

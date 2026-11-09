@@ -18,7 +18,7 @@ import 'package:go_router/go_router.dart';
 
 /// Last page of the account setup: "لديك دعوة؟ أم تبدأ دائرتك؟". The "+" next to the
 /// circles opens it again, to add another circle ([addingCircle]). That page
-/// has a back link and no "تخطي الآن", because the account is already set up.
+/// has no "تخطي الآن", because the account is already set up.
 ///
 /// Above the choice, a brand-new person's own pending invitations show up
 /// right away ([PendingInvitesSection]): someone may have invited them
@@ -73,9 +73,9 @@ class StartScreen extends StatelessWidget {
                             step: addingCircle ? null : 2,
                             totalSteps: addingCircle ? null : 2,
                             title: context.tr('onboarding.start_title'),
-                            // After the name page the link is hidden, as in the
-                            // design. From the "+" it takes the user back.
-                            onBack: addingCircle && context.canPop()
+                            // Back to the name page, whose answers stay, or
+                            // from the "+" back to the circles.
+                            onBack: context.canPop()
                                 ? () => context.pop()
                                 : null,
                           ),

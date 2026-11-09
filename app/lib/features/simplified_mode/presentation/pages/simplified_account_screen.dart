@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -11,6 +13,7 @@ import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_speech_rate.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
@@ -24,7 +27,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-/// «حسابي»: the patient's name and number, the text size and «استماع»,
+/// «حسابي»: the patient's name and number, the text size and reading,
 /// the calendar copy of appointments, the medical file, signing out and
 /// deleting the account. Needs an [AccountCubit] and an [AuthCubit].
 class SimplifiedAccountScreen extends StatelessWidget {
@@ -34,6 +37,9 @@ class SimplifiedAccountScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final String? circleId = context.select<SimplifiedModeCubit, String?>(
       (cubit) => cubit.state.day?.circleId,
+    );
+    final bool voiceEnabled = context.select<SimplifiedSettingsCubit, bool>(
+      (cubit) => cubit.state.voiceEnabled,
     );
     return BlocListener<AccountCubit, AccountState>(
       listenWhen: (before, after) =>
@@ -93,6 +99,24 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   context.tr('simplified_mode.voice_text'),
                 ]),
               ),
+              if (voiceEnabled) ...<SpokenPart>[
+                (
+                  id: _Part.speechRate,
+                  text: sentences(<String>[
+                    context.tr('simplified_mode.speech_rate'),
+                    for (final SimplifiedSpeechRate rate
+                        in SimplifiedSpeechRate.values)
+                      context.tr('simplified_mode.rate.${rate.name}'),
+                  ]),
+                ),
+                (
+                  id: _Part.autoRead,
+                  text: sentences(<String>[
+                    context.tr('simplified_mode.auto_read_title'),
+                    context.tr('simplified_mode.auto_read_text'),
+                  ]),
+                ),
+              ],
               if (circleId != null) ...<SpokenPart>[
                 (
                   id: _Part.calendar,
@@ -123,6 +147,7 @@ class SimplifiedAccountScreen extends StatelessWidget {
               if (account != null)
                 ListenTarget(
                   id: _Part.profile,
+                  speaker: ListenSpeaker.beside,
                   child: Row(
                     children: <Widget>[
                       PersonPhoto(
@@ -162,6 +187,10 @@ class SimplifiedAccountScreen extends StatelessWidget {
               _SectionTitle(context.tr('simplified_mode.display_sound')),
               const ListenTarget(id: _Part.textSize, child: _TextSizeCard()),
               const ListenTarget(id: _Part.voice, child: _VoiceSwitch()),
+              if (voiceEnabled) ...const <Widget>[
+                ListenTarget(id: _Part.speechRate, child: _SpeechRateCard()),
+                ListenTarget(id: _Part.autoRead, child: _AutoReadSwitch()),
+              ],
               if (circleId != null) ...<Widget>[
                 _SectionTitle(context.tr('simplified_mode.calendar_title')),
                 ListenTarget(
@@ -283,7 +312,17 @@ class SimplifiedAccountScreen extends StatelessWidget {
 }
 
 /// The parts of the account «استماع» reads and marks, in their order.
-enum _Part { profile, textSize, voice, calendar, medicalFile, signOut, delete }
+enum _Part {
+  profile,
+  textSize,
+  voice,
+  speechRate,
+  autoRead,
+  calendar,
+  medicalFile,
+  signOut,
+  delete,
+}
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
@@ -453,6 +492,74 @@ class _VoiceSwitch extends StatelessWidget {
       subtitle: context.tr('simplified_mode.voice_text'),
       value: enabled,
       onChanged: context.read<SimplifiedSettingsCubit>().setVoiceEnabled,
+    );
+  }
+}
+
+/// How fast the mode reads: three choices in one capsule. A choice reads a
+/// short sentence at its pace, so the person hears what they picked.
+class _SpeechRateCard extends StatelessWidget {
+  const _SpeechRateCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final SimplifiedSpeechRate selected = context
+        .select<SimplifiedSettingsCubit, SimplifiedSpeechRate>(
+          (cubit) => cubit.state.speechRate,
+        );
+    return SimplifiedCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SimplifiedStyle.pad,
+        vertical: SimplifiedStyle.gap,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr('simplified_mode.speech_rate'),
+            style: SimplifiedStyle.head(SimplifiedStyle.body),
+          ),
+          const SizedBox(height: 12),
+          SimplifiedSegmented<SimplifiedSpeechRate>(
+            segments: <SimplifiedSpeechRate, String>{
+              for (final SimplifiedSpeechRate rate
+                  in SimplifiedSpeechRate.values)
+                rate: context.tr('simplified_mode.rate.${rate.name}'),
+            },
+            selected: selected,
+            onChanged: (rate) {
+              unawaited(
+                context.read<SimplifiedSettingsCubit>().setSpeechRate(rate),
+              );
+              unawaited(
+                readAloud(context, <SpokenPart>[
+                  (
+                    id: _Part.speechRate,
+                    text: context.tr('simplified_mode.speech_rate_sample'),
+                  ),
+                ]),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AutoReadSwitch extends StatelessWidget {
+  const _AutoReadSwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled = context.select<SimplifiedSettingsCubit, bool>(
+      (cubit) => cubit.state.autoRead,
+    );
+    return _SwitchCard(
+      title: context.tr('simplified_mode.auto_read_title'),
+      subtitle: context.tr('simplified_mode.auto_read_text'),
+      value: enabled,
+      onChanged: context.read<SimplifiedSettingsCubit>().setAutoRead,
     );
   }
 }

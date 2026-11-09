@@ -454,7 +454,8 @@ class AppRouter {
       // Name page and start page share one OnboardingCubit. The page that adds
       // another circle is the start page again, so it shares the cubit too.
       // The start page also needs an InboxCubit: a brand-new person may
-      // already have an invitation waiting, answered right there.
+      // already have an invitation waiting, answered right there. «رجوع»
+      // on the name page signs out (AuthCubit), back to the phone number.
       ShellRoute(
         pageBuilder: _iosShellPage(
           (context, state, child) => MultiBlocProvider(
@@ -462,6 +463,9 @@ class AppRouter {
               BlocProvider(
                 create: (context) =>
                     OnboardingCubit(GetIt.I<OnboardingUseCase>()),
+              ),
+              BlocProvider(
+                create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
               ),
               BlocProvider(
                 create: (context) => InboxCubit(

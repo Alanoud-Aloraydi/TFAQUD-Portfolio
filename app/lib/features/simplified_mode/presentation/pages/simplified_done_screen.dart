@@ -81,31 +81,33 @@ class SimplifiedDoneScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String saved = message.text(context);
+    return ListenScope(
+      parts: <SpokenPart>[
+        (
+          id: _Part.message,
+          text: sentences(<String>[
+            context.tr('simplified_mode.done_title'),
+            saved,
+          ]),
+        ),
+        (id: _Part.home, text: context.tr('simplified_mode.back_home')),
+      ],
+      child: _screen(context, saved),
+    );
+  }
+
+  Widget _screen(BuildContext context, String saved) {
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: SimplifiedStyle.doneGround),
         child: SafeArea(
           child: Column(
             children: <Widget>[
-              Align(
+              const Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: Padding(
-                  padding: const EdgeInsets.all(SimplifiedStyle.page),
-                  child: ListenButton(
-                    parts: <SpokenPart>[
-                      (
-                        id: _Part.message,
-                        text: sentences(<String>[
-                          context.tr('simplified_mode.done_title'),
-                          saved,
-                        ]),
-                      ),
-                      (
-                        id: _Part.home,
-                        text: context.tr('simplified_mode.back_home'),
-                      ),
-                    ],
-                  ),
+                  padding: EdgeInsets.all(SimplifiedStyle.page),
+                  child: ListenButton(),
                 ),
               ),
               Expanded(

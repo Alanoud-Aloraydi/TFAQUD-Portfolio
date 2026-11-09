@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -109,6 +110,18 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
     _targetLow.dispose();
     _targetHigh.dispose();
     super.dispose();
+  }
+
+  /// Closes the sheet, saving nothing, and opens the plan whose target it
+  /// shows.
+  void _editPlan(String planId) {
+    final GoRouter router = GoRouter.of(context);
+    final String path = Routes.editMeasurement(
+      context.read<MeasurementReadingsCubit>().circleId!,
+      planId,
+    );
+    Navigator.of(context).pop(false);
+    router.push(path);
   }
 
   Future<void> _save() async {
@@ -268,9 +281,11 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                         else ...[
                           InsetGroup(
                             header: context.tr('measurements.target'),
-                            footer: _targetFor(_kind)?.planId == null
-                                ? context.tr('measurements.free_target_hint')
-                                : null,
+                            footer: context.tr(
+                              _targetFor(_kind)?.planId == null
+                                  ? 'measurements.free_target_hint'
+                                  : 'measurements.plan_target_hint',
+                            ),
                             children: [
                               InsetBlock(
                                 child: Row(
@@ -303,28 +318,19 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                                   ],
                                 ),
                               ),
+                              // A target from a plan is changed in the plan:
+                              // an action row, as «إضافة قراءة» is.
+                              if (_targetFor(_kind)?.planId case final planId?)
+                                InsetRow(
+                                  label: context.tr(
+                                    'measurements.edit_plan_target',
+                                  ),
+                                  leading: const Icon(AppIcons.pencil),
+                                  showChevron: true,
+                                  onTap: () => _editPlan(planId),
+                                ),
                             ],
                           ),
-                          if (_targetFor(_kind)?.planId case final planId?)
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: TextButton(
-                                onPressed: () {
-                                  final router = GoRouter.of(context);
-                                  final path = Routes.editMeasurement(
-                                    context
-                                        .read<MeasurementReadingsCubit>()
-                                        .circleId!,
-                                    planId,
-                                  );
-                                  Navigator.of(context).pop(false);
-                                  router.push(path);
-                                },
-                                child: Text(
-                                  context.tr('measurements.edit_plan_target'),
-                                ),
-                              ),
-                            ),
                         ],
                         const SizedBox(height: AppSpacing.lg),
                       ],

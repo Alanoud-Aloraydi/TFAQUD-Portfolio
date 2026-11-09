@@ -127,20 +127,23 @@ class SimplifiedVoice {
         await _tts.setLanguage(arabic);
       }
     }
-    await _tts.setSpeechRate(0.45);
   }
 
-  /// Reads [parts] one after another as one speech, stopping whatever it
+  /// Reads [parts] one after another as one speech at [rate] (the speech
+  /// plugin's, 0.5 being the phone's own pace on iOS), stopping whatever it
   /// was saying, and marks each part in [reading] as it reaches it. False,
   /// saying nothing, on a phone without an Arabic voice.
-  Future<bool> speak(List<SpokenPart> parts) async {
+  Future<bool> speak(List<SpokenPart> parts, {required double rate}) async {
     await _ready;
     if (!_hasArabic) return false;
     await _tts.stop();
     final (String text, List<(int, Object?)> starts) = joinParts(parts);
     if (text.isEmpty) return true;
     _starts = starts;
-    // Set before every reading, not once: recording a visit sets the phone's
+    // Set before every reading, so a pace chosen in «حسابي» is heard at
+    // the next one.
+    await _tts.setSpeechRate(rate);
+    // Also set before every reading: recording a visit sets the phone's
     // audio for the microphone, which plays speech faintly through the
     // earpiece. The playback category also keeps speech audible while the
     // silent switch is on.

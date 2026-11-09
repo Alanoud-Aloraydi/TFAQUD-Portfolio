@@ -133,6 +133,7 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
                       ListenTarget(
                         id: rows[index].$1,
                         radius: 8,
+                        speaker: ListenSpeaker.beside,
                         child: _Row(
                           label: rows[index].$1,
                           value: rows[index].$2,
@@ -154,6 +155,7 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
                   in file?.contacts ?? const <EmergencyContact>[])
                 ListenTarget(
                   id: _ContactCard.part(contact),
+                  speaker: ListenSpeaker.corner,
                   child: _ContactCard(contact: contact),
                 ),
               ..._addContact(context, state, file),

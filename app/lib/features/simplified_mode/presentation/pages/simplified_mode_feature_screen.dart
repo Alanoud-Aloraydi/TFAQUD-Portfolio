@@ -272,6 +272,10 @@ class _HomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenScope(parts: _listen(context), child: _cards(context));
+  }
+
+  Widget _cards(BuildContext context) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
@@ -330,12 +334,13 @@ class _HomeBody extends StatelessWidget {
                 ],
               ),
             ),
-            ListenButton(parts: _listen(context)),
+            const ListenButton(),
           ],
         ),
         const SizedBox(height: SimplifiedStyle.pad),
         ListenTarget(
           id: _Part.focus,
+          speaker: ListenSpeaker.corner,
           child: switch (schedule.focus) {
             HomeFocus.lateDose => _LateDoseCard(
               task: schedule.focusTask!,
@@ -366,12 +371,14 @@ class _HomeBody extends StatelessWidget {
         const SizedBox(height: SimplifiedStyle.gap),
         ListenTarget(
           id: _Part.schedule,
+          speaker: ListenSpeaker.corner,
           child: _ScheduleLink(schedule: schedule),
         ),
         if (day.family.isNotEmpty) ...<Widget>[
           const SizedBox(height: SimplifiedStyle.gap),
           ListenTarget(
             id: _Part.family,
+            speaker: ListenSpeaker.corner,
             child: _FamilyCard(family: day.family, circleId: day.circleId),
           ),
         ],

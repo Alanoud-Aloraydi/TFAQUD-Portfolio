@@ -320,6 +320,7 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
       ListenTarget(
         id: _Part.hint,
         radius: 8,
+        speaker: ListenSpeaker.beside,
         child: Text(
           context.tr(_errorKey ?? _hintKey(kind)),
           textAlign: TextAlign.center,
@@ -336,6 +337,7 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
       ListenTarget(
         id: _Part.conditions,
         radius: 8,
+        speaker: ListenSpeaker.beside,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
