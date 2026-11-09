@@ -53,13 +53,18 @@ def _companion_fk(ondelete: str) -> None:
 
 def _companion_rule(gone_account_allowed: bool) -> None:
     """The «at least one companion» rule; with `gone_account_allowed`, a
-    companion removed with its deleted account does not count against it."""
+    companion removed with its deleted account does not count against it.
+
+    The two IFs stay nested: PL/pgSQL plans a whole condition at once, and
+    OLD.account_id only exists when the row is a companion's."""
     allowance = """
             IF TG_TABLE_NAME = 'appointment_companion' AND TG_OP = 'DELETE'
-                AND NOT EXISTS (
+            THEN
+                IF NOT EXISTS (
                     SELECT 1 FROM account WHERE id = OLD.account_id
                 ) THEN
-                RETURN NULL;
+                    RETURN NULL;
+                END IF;
             END IF;""" if gone_account_allowed else ""
     op.execute(f"""
         CREATE OR REPLACE FUNCTION require_appointment_companion()
