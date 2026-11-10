@@ -1,6 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
@@ -42,8 +43,14 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final DateTime fiveDaysAgo = DateTime.now().subtract(
-      const Duration(days: 5, hours: 1),
+    // Noon five days ago on the patient's (Riyadh's) calendar. The page
+    // counts calendar days there, on the real clock: «now minus 5 days» read
+    // six days between 00:00 and 01:00 in Riyadh.
+    final PatientClock riyadh = PatientClock(defaultPatientZone);
+    final DateTime today = riyadh.today();
+    final DateTime fiveDaysAgo = riyadh.momentOf(
+      DateTime.utc(today.year, today.month, today.day - 5),
+      '12:00',
     );
 
     testWidgets('shows the names, the phone number and the sign-out rows', (

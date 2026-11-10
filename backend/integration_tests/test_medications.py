@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from threading import Barrier
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -13,6 +14,11 @@ from app.medications.inputs import PlanRequest
 from app.medications.plans import MedicationPlanService
 from app.models import MedicationDoseRecord, MedicationPlanVersion
 from integration_tests.helpers import offline_circle
+
+# The test circle's patient lives in Riyadh (the default zone). A test on
+# the real clock reads the day there, as the server does: in UTC it would
+# still be yesterday after 21:00 UTC, a start date the server refuses.
+PATIENT_ZONE = ZoneInfo("Asia/Riyadh")
 
 
 def signed_in(app, account):
@@ -57,7 +63,7 @@ def test_manager_creates_and_lists_a_complete_plan(
 ):
     owner = account()
     circle = offline_circle(database, owner)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(PATIENT_ZONE)
     client = database_app.test_client()
     headers = signed_in(database_app, owner)
 
@@ -78,7 +84,7 @@ def test_overlapping_current_name_is_rejected_but_later_period_is_allowed(
 ):
     owner = account()
     circle = offline_circle(database, owner)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(PATIENT_ZONE)
     client = database_app.test_client()
     headers = signed_in(database_app, owner)
     first = plan_body(
@@ -102,7 +108,7 @@ def test_recording_a_dose_is_idempotent_and_conflicting_change_is_rejected(
 ):
     owner = account()
     circle = offline_circle(database, owner)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(PATIENT_ZONE)
     client = database_app.test_client()
     headers = signed_in(database_app, owner)
     plan = create_plan(client, circle, headers, plan_body(now)).json[
