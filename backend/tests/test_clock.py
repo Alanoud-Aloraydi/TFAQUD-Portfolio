@@ -7,6 +7,7 @@ import pytest
 
 from app.clock import (
     DEFAULT_ZONE,
+    as_utc,
     is_zone,
     latest_today,
     local_moment,
@@ -91,3 +92,12 @@ def test_latest_today_is_the_day_at_utc_plus_14():
 
     assert latest_today(now) == date(2026, 10, 15)
     assert latest_today(now + timedelta(minutes=1)) == date(2026, 10, 16)
+
+
+def test_a_sent_time_is_saved_as_the_same_instant_in_utc():
+    """A phone's `+03:00` becomes the UTC the database reads back."""
+    sent = datetime(2026, 11, 11, 0, 18, tzinfo=timezone(timedelta(hours=3)))
+    saved = as_utc(sent)
+    assert saved == sent
+    assert saved.isoformat() == "2026-11-10T21:18:00+00:00"
+    assert as_utc(None) is None

@@ -76,6 +76,16 @@ def local_moment(day: date, time_of_day: time, zone: ZoneInfo) -> datetime:
     )
 
 
+def as_utc(moment: datetime | None) -> datetime | None:
+    """`moment` (with its offset) as the same instant in UTC.
+
+    A time a phone sends keeps the phone's offset (`+03:00`); the database
+    hands it back in UTC. Saving it in UTC makes the answer to a save equal
+    to every later read of the same record.
+    """
+    return moment.astimezone(timezone.utc) if moment is not None else None
+
+
 class SystemClock:
     """The real time, always in UTC."""
 

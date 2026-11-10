@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.clock import local_moment, patient_today, patient_zone
+from app.clock import as_utc, local_moment, patient_today, patient_zone
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.measurements.inputs import PlanRequest, ReadingRequest
 from app.models import MeasurementPlan, MeasurementPlanTime
@@ -283,7 +283,7 @@ class MeasurementService:
             scheduled_time=scheduled_time if version_id is not None else None,
             kind=body.kind,
             outcome=body.outcome,
-            measured_at=body.measured_at,
+            measured_at=as_utc(body.measured_at),
             value_one=body.value_one,
             value_two=body.value_two,
             conditions=body.codes,

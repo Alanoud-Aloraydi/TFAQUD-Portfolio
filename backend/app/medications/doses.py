@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.clock import local_moment, patient_today, patient_zone
+from app.clock import as_utc, local_moment, patient_today, patient_zone
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.medications.inputs import DoseRecordRequest
 from app.medications.schedule_days import load_days
@@ -77,7 +77,7 @@ class MedicationDoseService:
             schedule_id=schedule_id,
             scheduled_on=scheduled_on,
             outcome=body.outcome,
-            taken_at=body.taken_at,
+            taken_at=as_utc(body.taken_at),
             skip_reason_code=body.skip_reason_code,
             skip_reason_note=body.skip_reason_note,
             recorded_by_account_id=actor_id,
