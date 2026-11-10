@@ -12,6 +12,8 @@ from datetime import timedelta
 from flask import Flask
 
 from app.auth.otp_store import InMemoryOtpStore, OtpStore
+from app.appointments.routes import bp as appointments_bp
+from app.appointments.visit_routes import bp as appointment_visits_bp
 from app.auth.routes import bp as auth_bp
 from app.auth.service import SessionService
 from app.auth.sign_in import SignInService
@@ -24,10 +26,18 @@ from app.clock import SystemClock
 from app.config import ConfigError, load_config
 from app.database import initialize_database, transaction
 from app.cors import register_development_cors
+from app.demo_routes import bp as demo_bp
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.home import bp as home_bp
 from app.medications.routes import bp as medications_bp
+from app.photo_routes import bp as photos_bp
+from app.measurements.routes import bp as measurements_bp
+from app.prayer_times.routes import bp as prayer_times_bp
+from app.push import PushSender, create_push_sender
+from app.push.routes import bp as push_bp
+from app.push.tick_routes import bp as tick_bp
+from app.snoozes.routes import bp as snoozes_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
 from app.users.routes import bp as users_bp
@@ -44,7 +54,14 @@ def create_app(
     otp_store: OtpStore | None = None,
     user_store: UserStore | None = None,
     circle_access: CircleAccess | None = None,
+    push_sender: PushSender | None = None,
 ) -> Flask:
+    """Build the Flask app for one environment: read the settings, choose the
+    SMS, session, code, user and push services (the PostgreSQL ones when a
+    database is set, the in-memory ones otherwise), and register every error
+    handler and endpoint. Tests pass their own fakes through the keyword
+    arguments.
+    """
     app = Flask(__name__, static_folder=None)
     app.config.update(load_config(env_name, overrides))
     env = app.config["APP_ENV"]
@@ -96,12 +113,15 @@ def create_app(
 
     app.extensions["clock"] = clock
     app.extensions["sms_sender"] = sms_sender
+    # Push notifications to signed-in phones; "none" unless set up.
+    app.extensions["push_sender"] = push_sender or create_push_sender(
+        app.config
+    )
     app.extensions["circle_access"] = circle_access or DenyAllCircleAccess()
     session_service = SessionService(
         store=session_store,
         secret_key=app.config["SECRET_KEY"],
         access_ttl=timedelta(minutes=app.config["ACCESS_TOKEN_MINUTES"]),
-        refresh_ttl=timedelta(days=app.config["REFRESH_TOKEN_DAYS"]),
         clock=clock,
     )
     app.extensions["session_service"] = session_service
@@ -114,7 +134,10 @@ def create_app(
         clock=clock,
         otp_valid_seconds=app.config["OTP_VALID_SECONDS"],
         max_wrong_tries=app.config["OTP_MAX_WRONG_TRIES"],
-        max_sends_per_hour=app.config["OTP_MAX_SENDS_PER_HOUR"],
+        max_sends_per_day=app.config["OTP_MAX_SENDS_PER_DAY"],
+        resend_waits=app.config["OTP_RESEND_WAITS"],
+        max_sends_per_device_hour=app.config["OTP_MAX_SENDS_PER_DEVICE_HOUR"],
+        max_sends_per_ip_hour=app.config["OTP_MAX_SENDS_PER_IP_HOUR"],
         transaction=transaction if database_enabled else nullcontext,
     )
 
@@ -130,11 +153,29 @@ def create_app(
     app.register_blueprint(creation_requests_bp)
     app.register_blueprint(invitations_bp)
     app.register_blueprint(medications_bp)
+    app.register_blueprint(photos_bp)
+    app.register_blueprint(measurements_bp)
+    app.register_blueprint(appointments_bp)
+    app.register_blueprint(appointment_visits_bp)
+    app.register_blueprint(prayer_times_bp)
+    app.register_blueprint(push_bp)
+    app.register_blueprint(tick_bp)
+    app.register_blueprint(snoozes_bp)
+    app.register_blueprint(demo_bp)
+    if database_enabled and env != "production":
+        # `flask --app wsgi demo-data`: demo circles, medicines and doses for
+        # trying the app on a local server (app/demo_data.py).
+        from app.demo_data import demo_data_command
+
+        app.cli.add_command(demo_data_command)
 
     return app
 
 
 def _refuse_in_production(env: str, what: str) -> None:
+    """Stop the start-up when production would keep `what` only in memory: it
+    would be lost on every restart.
+    """
     if env == "production":
         raise ConfigError(
             f"The in-memory {what} store cannot be used in production. "
@@ -143,6 +184,7 @@ def _refuse_in_production(env: str, what: str) -> None:
 
 
 def _warn_in_staging(app: Flask, env: str, what: str, lost: str) -> None:
+    """Warn once at start-up when staging keeps `what` only in memory."""
     if env == "staging":
         app.logger.warning(
             "Using the in-memory %s store: %s are lost on restart "

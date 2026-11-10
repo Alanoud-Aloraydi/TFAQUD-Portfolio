@@ -6,6 +6,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:injectable/injectable.dart';
 
+/// Sends base medications requests to the API.
 abstract class BaseMedicationsRemoteDataSource {
   Future<List<MedicationPlanModel>> getPlans(String circleId);
   Future<MedicationPlanModel> getPlan(String circleId, String planId);
@@ -20,6 +21,11 @@ abstract class BaseMedicationsRemoteDataSource {
     MedicationPlanDraft draft,
   );
   Future<MedicationPlanModel> discontinuePlan(String circleId, String planId);
+  Future<MedicationPlanModel> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  );
   Future<List<DoseOccurrenceModel>> getOccurrences(
     String circleId,
     DateTime from,
@@ -34,6 +40,7 @@ abstract class BaseMedicationsRemoteDataSource {
 }
 
 @LazySingleton(as: BaseMedicationsRemoteDataSource)
+/// Sends medications requests to the API.
 class MedicationsRemoteDataSource implements BaseMedicationsRemoteDataSource {
   MedicationsRemoteDataSource(this._client);
 
@@ -92,6 +99,19 @@ class MedicationsRemoteDataSource implements BaseMedicationsRemoteDataSource {
   ) async {
     final response = await _client.post(
       ApiEndpoints.discontinueMedication(circleId, planId),
+    );
+    return _plan(response.data);
+  }
+
+  @override
+  Future<MedicationPlanModel> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  ) async {
+    final response = await _client.post(
+      ApiEndpoints.cancelPendingMedication(circleId, planId),
+      data: {'expected_version_number': expectedVersion},
     );
     return _plan(response.data);
   }

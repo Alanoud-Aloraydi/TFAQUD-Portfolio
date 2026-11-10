@@ -1,18 +1,23 @@
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Code entry: [length] boxes drawn left to right, filled from the left.
 /// One invisible text field on top receives the keyboard, so typing, delete,
-/// and paste all work.
+/// and paste all work. iOS offers the code from the SMS above the keyboard
+/// (one-time code autofill), and the last digit sends it: [onCompleted].
 class OtpField extends StatefulWidget {
   const OtpField({
     super.key,
     required this.length,
     required this.value,
     required this.onChanged,
+    this.onCompleted,
     this.hasError = false,
   });
 
@@ -21,6 +26,11 @@ class OtpField extends StatefulWidget {
   /// The digits typed so far, written 0-9.
   final String value;
   final ValueChanged<String> onChanged;
+
+  /// Called once the last digit is in (typed, pasted or filled from the
+  /// SMS), so the user does not have to press «تأكيد».
+  final ValueChanged<String>? onCompleted;
+
   final bool hasError;
 
   @override
@@ -61,6 +71,11 @@ class _OtpFieldState extends State<OtpField> {
     super.dispose();
   }
 
+  void _changed(String digits) {
+    widget.onChanged(digits);
+    if (digits.length == widget.length) widget.onCompleted?.call(digits);
+  }
+
   @override
   Widget build(BuildContext context) {
     final TextStyle? digitStyle = Theme.of(context).textTheme.headlineMedium;
@@ -75,7 +90,7 @@ class _OtpFieldState extends State<OtpField> {
             Row(
               children: <Widget>[
                 for (int i = 0; i < widget.length; i++) ...<Widget>[
-                  if (i > 0) const SizedBox(width: 8),
+                  if (i > 0) const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _OtpBox(
                       digit: i < filled ? widget.value[i] : '',
@@ -94,14 +109,17 @@ class _OtpFieldState extends State<OtpField> {
                 autofocus: true,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
+                // iOS reads the code from the SMS and offers it above the
+                // keyboard; one tap fills every box.
+                autofillHints: const <String>[AutofillHints.oneTimeCode],
                 showCursor: false,
                 enableInteractiveSelection: false,
-                style: const TextStyle(color: Colors.transparent),
-                cursorColor: Colors.transparent,
+                style: const TextStyle(color: AppSemanticColors.transparent),
+                cursorColor: AppSemanticColors.transparent,
                 inputFormatters: <TextInputFormatter>[
                   _DigitsFormatter(widget.length),
                 ],
-                onChanged: widget.onChanged,
+                onChanged: _changed,
                 decoration: const InputDecoration(
                   filled: false,
                   border: InputBorder.none,
@@ -141,6 +159,7 @@ class _DigitsFormatter extends TextInputFormatter {
   }
 }
 
+/// Renders the otp box element of otp field.
 class _OtpBox extends StatelessWidget {
   const _OtpBox({
     required this.digit,
@@ -156,15 +175,16 @@ class _OtpBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Control borders use fieldBorder (3:1 contrast), as the other fields do.
+    // Control borders use stone (3.98:1), as the other fields do; the active
+    // box shows the focus color.
     final Color border = hasError
-        ? AppColors.danger
-        : (isActive ? AppColors.brand : AppColors.fieldBorder);
+        ? AppSemanticColors.statusError
+        : (isActive ? context.tokens.focus : context.tokens.borderControl);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
+      duration: AppMotion.fieldFeedback,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppSemanticColors.surfaceContent,
         borderRadius: BorderRadius.circular(AppRadius.field),
         border: Border.all(
           color: border,

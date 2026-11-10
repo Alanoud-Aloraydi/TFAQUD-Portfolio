@@ -23,11 +23,20 @@ class Patient(db.Model):
             name="name_source",
         ),
         CheckConstraint("length(btrim(city)) > 0", name="city_nonblank"),
+        CheckConstraint(
+            "length(btrim(time_zone)) > 0", name="time_zone_nonblank"
+        ),
         CheckConstraint("latitude BETWEEN -90 AND 90", name="latitude"),
         CheckConstraint("longitude BETWEEN -180 AND 180", name="longitude"),
         CheckConstraint(
             "blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')",
             name="blood_type",
+        ),
+        CheckConstraint(
+            "avatar_code IS NULL OR avatar_code IN "
+            "('w1_1', 'w1_3', 'w6_1', 'w6_3', 'w7_1', 'w7_3', "
+            "'m1_1', 'm1_3', 'm2_1', 'm2_3', 'm6_1', 'm6_3')",
+            name="avatar_code",
         ),
     )
 
@@ -45,8 +54,12 @@ class Patient(db.Model):
     )
     first_name: Mapped[str | None] = mapped_column(Text)
     last_name: Mapped[str | None] = mapped_column(Text)
+    avatar_code: Mapped[str | None] = mapped_column(Text)
     birth_date: Mapped[date]
     city: Mapped[str] = mapped_column(Text)
+    # The IANA zone where the patient lives (e.g. "Asia/Riyadh"): every
+    # schedule and "today" of the circle follows it (`app.clock`).
+    time_zone: Mapped[str] = mapped_column(Text)
     latitude: Mapped[float | None]
     longitude: Mapped[float | None]
     blood_type: Mapped[str | None] = mapped_column(Text)

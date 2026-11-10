@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: MedicationsRepositoryDomain)
+/// Provides medications repository operations.
 class MedicationsRepositoryData implements MedicationsRepositoryDomain {
   MedicationsRepositoryData(this._remote);
 
@@ -60,6 +61,20 @@ class MedicationsRepositoryData implements MedicationsRepositoryDomain {
     String planId,
   ) => _guard(() async {
     final model = await _remote.discontinuePlan(circleId, planId);
+    return model.toEntity();
+  });
+
+  @override
+  Future<Result<MedicationPlan, Failure>> cancelPendingPlan(
+    String circleId,
+    String planId,
+    int expectedVersion,
+  ) => _guard(() async {
+    final model = await _remote.cancelPendingPlan(
+      circleId,
+      planId,
+      expectedVersion,
+    );
     return model.toEntity();
   });
 

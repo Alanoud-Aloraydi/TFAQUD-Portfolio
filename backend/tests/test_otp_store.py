@@ -79,9 +79,9 @@ def test_claim_is_refused_after_the_maximum_and_says_when_to_come_back(store):
 
     assert not refused.granted
     assert refused.request_id is None and refused.send_id is None
-    assert (
-        refused.oldest_send_at == NOW
-    )  # the first send leaves the window first
+    # Back when the first send leaves the window.
+    assert refused.retry_at == NOW + HOUR
+    assert refused.reason == "phone"
     assert first.granted
 
 

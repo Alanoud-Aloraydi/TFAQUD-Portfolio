@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 /// Digit helpers for Arabic screens.
 ///
 /// An Arabic keyboard can type Arabic-Indic digits or Persian digits. The app
@@ -28,5 +30,45 @@ abstract class ArabicDigits {
   /// Only the digits of [input], written as 0-9.
   static String digitsOnly(String input) {
     return toWestern(input).replaceAll(RegExp(r'[^0-9]'), '');
+  }
+
+  static String toWesternDecimal(String input) =>
+      toWestern(input).replaceAll(RegExp(r'[\u066B,\u060C]'), '.');
+}
+
+/// Turns Arabic-Indic and Persian digits into 0-9 while the user types, so
+/// every number field takes both keyboards and keeps English digits. With
+/// [decimal], the Arabic decimal separator «٫» and a comma also become «.».
+///
+/// Every character is replaced by exactly one character, so the cursor and
+/// the selection stay where they were. Put it first, before any formatter
+/// that keeps only 0-9.
+class WesternDigitsFormatter extends TextInputFormatter {
+  const WesternDigitsFormatter({this.decimal = false});
+
+  final bool decimal;
+
+  // \u066B is the Arabic decimal separator; \u060C is the Arabic comma.
+  static const String _separators = '\u066B,\u060C';
+
+  String _convert(String text) {
+    final String western = ArabicDigits.toWestern(text);
+    if (!decimal) return western;
+    final StringBuffer out = StringBuffer();
+    for (final int rune in western.runes) {
+      final String character = String.fromCharCode(rune);
+      out.write(_separators.contains(character) ? '.' : character);
+    }
+    return out.toString();
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final String text = _convert(newValue.text);
+    if (text == newValue.text) return newValue;
+    return newValue.copyWith(text: text);
   }
 }

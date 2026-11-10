@@ -61,14 +61,24 @@ def test_self_care_circle_is_created_and_listed(
         "last_name": "Family",
         "birth_date": "1954-06-05",
         "city": "Riyadh",
+        "time_zone": "Asia/Riyadh",
         "latitude": 24.7136,
         "longitude": 46.6753,
         "has_account": True,
         "app_mode": "detailed",
         "is_you": True,
+        "avatar_code": None,
     }
     assert circle["members"] == [
-        {"display_name": "Nora", "is_you": True, "role": "manager"}
+        {
+            "account_id": str(owner.id),
+            "display_name": "Nora",
+            "is_you": True,
+            "is_patient": True,
+            "role": "manager",
+            "avatar_code": None,
+            "phone_number": owner.phone_number,
+        }
     ]
     assert circle["pending_invitations"] == []
     home = api.get("/api/v1/home")
@@ -77,6 +87,10 @@ def test_self_care_circle_is_created_and_listed(
             "id": circle["id"],
             "name": "My care",
             "can_manage_medications": True,
+            "is_patient": True,
+            "patient_name": "Nora",
+            "patient_avatar_code": None,
+            "time_zone": "Asia/Riyadh",
         }
     ]
     with Session(database) as session:
@@ -118,6 +132,39 @@ def test_a_second_self_care_circle_is_refused(database_app, database, account):
 
     assert error_code(response, 422) == "already_has_circle"
     assert count(database, CareCircle) == 1
+
+
+def test_a_self_care_circle_needs_only_its_name_after_onboarding(
+    database_app, database, account
+):
+    api = Api(database_app, account())
+    api.put(
+        "/api/v1/accounts/me/profile",
+        {
+            "first_name": "Nora",
+            "last_name": "Family",
+            "display_name": "Nora",
+            "birth_date": "1960-07-08",
+            "city": "Jeddah",
+        },
+    )
+
+    response = api.post("/api/v1/circles/self", {"name": "My care"})
+
+    assert response.status_code == 201
+    patient = response.json["circle"]["patient"]
+    assert (patient["birth_date"], patient["city"]) == ("1960-07-08", "Jeddah")
+
+
+def test_a_self_care_circle_without_a_saved_birth_date_asks_for_it(
+    database_app, database, account
+):
+    api = Api(database_app, account())
+
+    response = api.post("/api/v1/circles/self", {"name": "My care"})
+
+    assert error_code(response, 422) == "birth_date_required"
+    assert count(database, CareCircle) == 0
 
 
 def test_an_account_without_a_profile_cannot_create_a_circle(
@@ -174,13 +221,22 @@ def test_circle_for_a_patient_without_an_account(
 
     assert response.status_code == 201
     circle = response.json["circle"]
-    assert circle["name"] == "Mother Nora"
+    # Named for everyone after the patient: the typed name is not used.
+    assert circle["name"] == "دائرة Nora"
     assert circle["patient"]["has_account"] is False
     assert circle["patient"]["is_you"] is False
     assert circle["patient"]["app_mode"] is None
     assert circle["patient"]["first_name"] == "Nora"
     assert circle["members"] == [
-        {"display_name": "Nora", "is_you": True, "role": "manager"}
+        {
+            "account_id": str(owner.id),
+            "display_name": "Nora",
+            "is_you": True,
+            "is_patient": False,
+            "role": "manager",
+            "avatar_code": None,
+            "phone_number": owner.phone_number,
+        }
     ]
     with Session(database) as session:
         patient = session.scalar(select(Patient))
@@ -251,23 +307,28 @@ def test_a_simplified_patient_sees_the_circle_without_invitations(
     assert "pending_invitations" not in view
     assert view["patient"]["is_you"] is True
     assert view["patient"]["app_mode"] == "simplified"
-    assert len(view["members"]) == 1
+    # The patient is listed first, then the one manager.
+    assert [(m["role"], m["is_you"]) for m in view["members"]] == [
+        ("patient", True),
+        ("manager", False),
+    ]
 
 
 # ---- rename and patient data ---------------------------------------------
 
 
-def test_a_manager_renames_the_circle(database_app, database, account):
+def test_a_manager_cannot_rename_an_automatic_name(
+    database_app, database, account
+):
     owner = account()
     circle = offline_circle(database, owner)
     api = Api(database_app, owner)
 
-    response = api.patch(circle_url(circle.id), {"name": "  Grandma Noura "})
+    response = api.patch(circle_url(circle.id), {"name": "Grandma Noura"})
 
-    assert response.status_code == 200
-    assert response.json["circle"]["name"] == "Grandma Noura"
+    assert error_code(response, 403) == "patient_names_circle"
     with Session(database) as session:
-        assert session.get(CareCircle, circle.id).name == "Grandma Noura"
+        assert session.get(CareCircle, circle.id).name == "دائرة Nora"
 
 
 def test_a_blank_circle_name_is_refused(database_app, database, account):
@@ -281,17 +342,21 @@ def test_a_blank_circle_name_is_refused(database_app, database, account):
     assert error_code(response, 422) == "validation_error"
 
 
-def test_a_simplified_patient_cannot_rename_the_circle(
+def test_a_simplified_patient_renames_their_own_circle(
     database_app, database, account
 ):
     owner, patient = account(), account()
     circle = simplified_circle(database, owner, patient)
 
     response = Api(database_app, patient).patch(
-        circle_url(circle.id), {"name": "Mine now"}
+        circle_url(circle.id), {"name": "  Mine now "}
     )
 
-    assert error_code(response, 403) == "forbidden"
+    assert response.status_code == 200
+    assert response.json["circle"]["name"] == "Mine now"
+    # The manager still sees «دائرة» and the patient's name.
+    seen = Api(database_app, owner).get(circle_url(circle.id))
+    assert seen.json["circle"]["name"] == "دائرة Nora"
 
 
 def test_a_manager_edits_the_data_of_a_patient_without_an_account(

@@ -14,14 +14,25 @@ _SAFE_REQUEST_ID = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 
 def register_request_id(app: Flask) -> None:
+    """Give every request an id, the one the app sent when it is safe, so a log
+    line and an error answer can be matched.
+    """
     @app.before_request
     def assign_request_id():
+        """Keep the app's X-Request-ID when it is a short safe value; make a
+        new one otherwise.
+        """
         supplied = request.headers.get("X-Request-ID", "")
-        # fullmatch: the whole value must fit the pattern. (`$` would also accept
-        # a value that ends with a newline.)
-        g.request_id = supplied if _SAFE_REQUEST_ID.fullmatch(supplied) else uuid.uuid4().hex
+        # fullmatch: the whole value must fit the pattern. (`$` would also
+        # accept a value that ends with a newline.)
+        g.request_id = (
+            supplied
+            if _SAFE_REQUEST_ID.fullmatch(supplied)
+            else uuid.uuid4().hex
+        )
 
     @app.after_request
     def return_request_id(response):
+        """Send the request's id back in the X-Request-ID header."""
         response.headers["X-Request-ID"] = g.get("request_id", "")
         return response

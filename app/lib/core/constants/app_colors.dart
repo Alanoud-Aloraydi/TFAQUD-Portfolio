@@ -1,45 +1,45 @@
 import 'package:flutter/material.dart';
 
-/// Raw palette, light theme only. Derived by rule (OKLCH, brand hue 224.5),
-/// not copied from Figma. Contrast ratios were computed, not estimated.
+/// Raw palette values. UI roles are defined by the theme, not by consumers.
 class AppColors {
   AppColors._();
 
-  // Surfaces
-  static const Color background = Color(0xFFF3F8FA);
+  /// Main ink for high-contrast text and navigation.
+  static const Color ink = Color(0xFF202734);
+
+  /// Secondary ink for supporting text and icons.
+  static const Color slate = Color(0xFF36415A);
+
+  /// Primary brand green for actions and success emphasis: a calm sage,
+  /// a blue-leaning green that reads as health and calm with the logo's
+  /// navy, instead of the earlier yellow-leaning leaf. Ink text on it is
+  /// 9.2:1, and 13:1 on its tint (WCAG AA asks 4.5:1).
+  static const Color leaf = Color(0xFFA8D5BA);
+  static const Color leafHover = Color(0xFF9DCDAF);
+  static const Color leafPressed = Color(0xFF91C4A4);
+  static const Color leafTint = Color(0xFFE3F3EA);
+
+  /// Warm accent for prayer and attention states.
+  static const Color honey = Color(0xFFEEC86B);
+  static const Color honeyLight = Color(0xFFFDF3D6);
+  static const Color honeyBorder = Color(0xFFFAEBC6);
+  static const Color slatePale = Color(0xFFDFE2EA);
+  static const Color honeyDeep = Color(0xFFB9860F);
+
+  /// Shared canvas behind every app screen.
+  static const Color canvas = Color(0xFFF6F8F7);
+
+  /// Foreground surface for cards, sheets, and controls.
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color sunken = Color(0xFFE3EBEF);
-
-  // Lines
-  /// Decorative only (1.32:1 on surface). Never the only boundary of a control.
-  static const Color line = Color(0xFFD8E2E6);
-
-  /// Control borders: 3.34:1 on surface, 3.12:1 on background.
-  static const Color fieldBorder = Color(0xFF808F95);
-
-  // Ink
-  static const Color ink = Color(0xFF021F2A); // 17.05:1 on surface
-  static const Color ink2 = Color(0xFF354F59); // 8.7:1 on surface
-  static const Color ink3 = Color(0xFF546A73); // 5.7:1 surface, 5.32:1 background
-
-  // Brand
-  static const Color brand = Color(0xFF03607A); // 7.1:1 with white
-  static const Color brandTint = Color(0xFFE1F4FB); // brand on it: 6.27:1
-  static const Color onBrand = Color(0xFFFFFFFF);
-
-  // Status: never rely on color alone (add an icon or a label).
-  static const Color success = Color(0xFF1D865A); // 4.56:1 on surface
-  static const Color successInk = Color(0xFF155D3E); // 7.01:1 on successTint
-  static const Color successTint = Color(0xFFDAF9E7);
-  static const Color danger = Color(0xFFC94D45); // 4.53:1 on surface, 4.24:1 on background
-  static const Color dangerInk = Color(0xFF8A332D); // 8.1:1 on surface
-  static const Color dangerTint = Color(0xFFFEEBE9); // dangerInk on it: 7.05:1
-  static const Color warningInk = Color(0xFF6F4806); // 7.05:1 on warningTint
-  static const Color warningTint = Color(0xFFFFEDD9);
-
-  // Overlay (ink with 40% alpha)
-  static const Color scrim = Color(0x66021F2A);
-
-  /// Kept only because loading_widget.dart still reads it.
-  static const Color secondary = ink2;
+  static const Color line = Color(0xFFDBE3DF);
+  static const Color stone = Color(0xFF74817A);
+  static const Color success = Color(0xFF286344);
+  static const Color warning = Color(0xFF795713);
+  static const Color error = Color(0xFFA53636);
+  // The emergency card's allergy box and the segmented switch (handoff
+  // red-100, red-300, navy-100 and navy-300).
+  static const Color errorLight = Color(0xFFFDECEA);
+  static const Color errorBorder = Color(0xFFF3B4AE);
+  static const Color slateMist = Color(0xFFEEF0F4);
+  static const Color slateSoft = Color(0xFFC3C8D5);
 }

@@ -10,6 +10,9 @@ class AccountSummary extends Equatable {
     this.displayName = '',
     this.phoneNumber = '',
     this.patientCircleId,
+    this.birthDate,
+    this.city,
+    this.avatarCode,
   });
 
   final String firstName;
@@ -25,6 +28,16 @@ class AccountSummary extends Equatable {
   /// can be the patient of one circle only.
   final String? patientCircleId;
 
+  /// The birth date and city that onboarding saved, or null for an account
+  /// made before onboarding asked for them.
+  final DateTime? birthDate;
+  final String? city;
+  final String? avatarCode;
+
+  /// True when a circle for this account's own care needs only its name: the
+  /// server reads the birth date and city from the account.
+  bool get hasBasics => birthDate != null && city != null;
+
   /// The first name and the last name together, as the "Name" field shows it.
   String get fullName => '$firstName $lastName'.trim();
 
@@ -38,5 +51,8 @@ class AccountSummary extends Equatable {
     displayName,
     phoneNumber,
     patientCircleId,
+    birthDate,
+    city,
+    avatarCode,
   ];
 }

@@ -9,8 +9,15 @@ from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from app import create_app
+from app import create_app, metrics, resilience
 from app.database import db
+
+
+@pytest.fixture(autouse=True)
+def closed_breakers_and_no_counts():
+    """Each test starts with every circuit breaker closed and no counts."""
+    resilience.reset_all()
+    metrics.reset()
 
 
 @pytest.fixture(scope="session")
@@ -52,9 +59,14 @@ def database_app():
 def database(database_app):
     """Clear application tables only in the dedicated test database."""
     with db.engine.begin() as connection:
+        # The 15 s statement limit catches a hung query in a test; this
+        # wipe of every table is slow by nature on a busy Docker disk and
+        # is still bounded by the lock limit.
+        connection.execute(text("SET LOCAL statement_timeout = '120s'"))
         connection.execute(
             text(
-                "TRUNCATE otp_challenge, account, care_circle, patient, care_circle_manager, "
+                "TRUNCATE otp_challenge, account, care_circle, patient, "
+                "care_circle_manager, "
                 "care_circle_creation_request, care_circle_manager_invitation "
                 "CASCADE"
             )

@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.database import db
 from app.errors import Forbidden, NotFound, ValidationFailed
 from app.models import Account, CareCircle, CareCircleCreationRequest
-from app.models import CareCircleManager, CareCircleManagerInvitation, Patient
+from app.models import CareCircleManager, CareCircleManagerInvitation
 from app.users.postgres import PostgresUserStore
 from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run
@@ -47,8 +47,10 @@ def test_simplified_patient_can_edit_own_profile(database, account):
     )
     assert saved.city == "Buraidah"
     assert count(database, CareCircleManager) == 1
+    # The patient names their own circle; the manager cannot.
+    run(database, "rename_circle", patient.id, circle.id, "New name")
     with pytest.raises(Forbidden):
-        run(database, "rename_circle", patient.id, circle.id, "New name")
+        run(database, "rename_circle", owner.id, circle.id, "Other name")
     with pytest.raises(Forbidden):
         run(
             database,
@@ -109,8 +111,9 @@ def test_failed_creation_rolls_back_mode_assignment(database, account):
     assert count(database, CareCircle) == 0
 
 
-def test_canceling_consent_does_not_change_assigned_mode(database, account):
-    """Canceling a request does not undo the patient's immutable mode."""
+def test_canceling_consent_leaves_the_mode_unset(database, account):
+    """Accepting a request sets no mode (only a created circle does), so
+    canceling it leaves the patient free to accept another mode later."""
     owner, patient = account(), account()
     request = run(
         database,
@@ -123,7 +126,7 @@ def test_canceling_consent_does_not_change_assigned_mode(database, account):
     run(database, "respond_creation", patient.id, request.id, True)
     run(database, "cancel_creation", patient.id, request.id)
     with Session(database) as session:
-        assert session.get(Account, patient.id).app_mode == "simplified"
+        assert session.get(Account, patient.id).app_mode is None
         assert (
             session.get(CareCircleCreationRequest, request.id).status
             == "canceled"

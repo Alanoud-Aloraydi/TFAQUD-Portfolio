@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -17,6 +21,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @lazySingleton
+/// Exposes circles domain operations.
 class CirclesUseCase {
   CirclesUseCase(this._repository);
 
@@ -24,6 +29,29 @@ class CirclesUseCase {
 
   Future<Result<AccountSummary, Failure>> getAccount() =>
       _repository.getAccount();
+
+  Future<Result<CircleOverview, Failure>> getCircleOverview(String circleId) =>
+      _repository.getCircleOverview(circleId);
+
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  ) => _repository.inviteManager(circleId, phoneNumber);
+
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) => _repository.resendManagerInvitation(circleId, invitationId);
+
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) => _repository.cancelManagerInvitation(circleId, invitationId);
+
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) => _repository.leaveCircle(circleId, confirmDelete: confirmDelete);
 
   Future<Result<CareCircleSummary, Failure>> createSelfCircle(
     NewSelfCircle circle,
@@ -49,7 +77,7 @@ class CirclesUseCase {
     required bool accept,
   }) => _repository.respondToInvitation(id, accept: accept);
 
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) => _repository.completeRequest(id, request);
@@ -62,6 +90,23 @@ class CirclesUseCase {
 
   Future<Result<MedicalFile, Failure>> getMedicalFile(String circleId) =>
       _repository.getMedicalFile(circleId);
+
+  /// The medical files saved on one page, for the other pages of the same
+  /// circle that are open under it (the medical file page and the circle
+  /// tab), so they show the new answers at once instead of reading the file
+  /// from the server again.
+  final StreamController<(String, MedicalFile)> _savedFiles =
+      StreamController<(String, MedicalFile)>.broadcast();
+
+  /// Each medical file of [circleId] saved from now on, the newest last.
+  Stream<MedicalFile> medicalFileSaves(String circleId) => _savedFiles.stream
+      .where(((String, MedicalFile) saved) => saved.$1 == circleId)
+      .map(((String, MedicalFile) saved) => saved.$2);
+
+  /// Tells the open pages that [file] is now the saved medical file of
+  /// [circleId]. Called after the server accepted the change.
+  void medicalFileSaved(String circleId, MedicalFile file) =>
+      _savedFiles.add((circleId, file));
 
   Future<Result<MedicalProfileDraft, Failure>> updateMedicalProfile(
     String circleId,

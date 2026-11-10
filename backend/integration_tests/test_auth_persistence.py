@@ -2,13 +2,16 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from pathlib import Path
 from uuid import UUID
 
 import pytest
-from sqlalchemy import func, select
+from flask_migrate import downgrade, upgrade
+from sqlalchemy import func, inspect, select, text
 from sqlalchemy.orm import Session
 
 from app import create_app
+from app.auth.otp_store import SendRules
 from app.auth.postgres_otp import PostgresOtpStore
 from app.clock import ManualClock
 from app.models import Account, AccountSession, OtpChallenge, OtpSendAttempt
@@ -30,6 +33,8 @@ def auth_app(database, database_app):
             "SQLALCHEMY_ENGINE_OPTIONS": database_app.config[
                 "SQLALCHEMY_ENGINE_OPTIONS"
             ],
+            # These tests were written for three codes per number.
+            "OTP_MAX_SENDS_PER_DAY": 3,
         },
     )
     yield app
@@ -47,7 +52,8 @@ def restarted(app):
         clock=app.extensions["clock"],
         sms_sender=app.extensions["sms_sender"],
         overrides={
-            "SQLALCHEMY_DATABASE_URI": app.config["SQLALCHEMY_DATABASE_URI"]
+            "SQLALCHEMY_DATABASE_URI": app.config["SQLALCHEMY_DATABASE_URI"],
+            "OTP_MAX_SENDS_PER_DAY": 3,
         },
     )
 
@@ -279,19 +285,64 @@ def test_concurrent_success_creates_one_session(
         )
 
 
-def test_refresh_expiry_ends_access_even_before_jwt_expiry(auth_app):
+def test_a_stored_session_lasts_until_it_is_signed_out(auth_app):
     body = verify(auth_app, start(auth_app.test_client())).json
-    auth_app.extensions["clock"].advance(days=29, hours=23, minutes=59)
-    client = auth_app.test_client()
+    # Long past the 30 days a refresh token used to have.
+    auth_app.extensions["clock"].advance(days=400)
+    client = restarted(auth_app).test_client()
     refreshed = client.post(
         "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
     )
     assert refreshed.status_code == 200
-    auth_app.extensions["clock"].advance(minutes=1)
-    result = client.get(
+    assert client.get(
         "/api/v1/auth/session", headers=headers(refreshed.json)
+    ).status_code == 200
+
+    client.post("/api/v1/auth/sign-out", headers=headers(refreshed.json))
+
+    again = client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
     )
-    assert result.status_code == 401
+    assert again.status_code == 401
+
+
+def test_migration_0031_ends_only_the_sessions_that_had_ended(
+    database_app, database, account
+):
+    """Before 0031 a refresh token ended after 30 days. A session past that
+    date stays ended (signed out when it ended); a live one goes on with no
+    end date."""
+    owner = account()
+    directory = str(Path(__file__).resolve().parents[1] / "migrations")
+    downgrade(directory=directory, revision="0030")
+    try:
+        with database.begin() as connection:
+            for digit, created, ends in (
+                ("a", "now() - interval '40 days'",
+                 "now() - interval '10 days'"),
+                ("b", "now() - interval '5 days'",
+                 "now() + interval '25 days'"),
+            ):
+                connection.execute(text(f"""
+                    INSERT INTO account_session (id, account_id,
+                        refresh_token_hash, created_at, refresh_expires_at)
+                    VALUES (gen_random_uuid(), :account, :hash,
+                        {created}, {ends})
+                """), {"account": owner.id, "hash": digit * 64})
+    finally:
+        upgrade(directory=directory)
+
+    columns = {
+        c["name"] for c in inspect(database).get_columns("account_session")
+    }
+    assert "refresh_expires_at" not in columns
+    with Session(database) as session:
+        ended = {
+            row.refresh_token_hash[0]: row.revoked_at
+            for row in session.scalars(select(AccountSession))
+        }
+    assert ended["a"] is not None
+    assert ended["b"] is None
 
 
 def test_account_deletion_removes_sessions(auth_app, database):
@@ -359,3 +410,75 @@ def test_delivery_uncertainty_retains_quota(
         assert set(session.scalars(select(OtpSendAttempt.status))) == {
             expected
         }
+
+
+def test_postgres_applies_the_waits_and_the_caps_of_the_asker(auth_app):
+    clock = auth_app.extensions["clock"]
+    now = clock.now()
+    day = now - timedelta(hours=24)
+    rules = SendRules(
+        waits=(30,),
+        device_id="device-aaaa",
+        client_ip="203.0.113.7",
+        max_device_sends=2,
+    )
+    with auth_app.app_context():
+        store = PostgresOtpStore()
+        first = store.claim_send(None, PHONE, now, day, 20, rules=rules)
+        assert first.granted
+        assert first.next_send_at == now + timedelta(seconds=30)
+
+        soon = now + timedelta(seconds=10)
+        too_soon = store.claim_send(None, PHONE, soon, day, 20, rules=rules)
+        assert (too_soon.granted, too_soon.reason) == (False, "wait")
+        assert too_soon.retry_at == now + timedelta(seconds=30)
+
+        other = store.claim_send(None, "+966512345678", now, day, 20,
+                                 rules=rules)
+        assert other.granted
+        third = store.claim_send(None, "+966500000003", now, day, 20,
+                                 rules=rules)
+        assert (third.granted, third.reason) == (False, "device")
+
+        # A sign-in starts the count of the number again: no wait after it.
+        store.mark_sent(first.send_id, now, now + timedelta(minutes=5))
+        assert store.mark_verified(
+            first.request_id, now + timedelta(seconds=5)
+        )
+        fresh = SendRules(waits=(30,), device_id="device-bbbb")
+        later = now + timedelta(seconds=6)
+        assert store.claim_send(None, PHONE, later, day, 20,
+                                rules=fresh).granted
+
+
+def test_postgres_lets_the_owners_known_phone_past_a_stranger(auth_app):
+    clock = auth_app.extensions["clock"]
+    now = clock.now()
+    day = now - timedelta(hours=24)
+    network = {"client_ip": "203.0.113.7", "max_ip_sends": 1}
+    owner = SendRules(waits=(30,), device_id="device-owner", **network)
+    stranger = SendRules(waits=(30,), device_id="device-stranger")
+    new_phone = SendRules(waits=(30,), device_id="device-newphone")
+    with auth_app.app_context():
+        store = PostgresOtpStore()
+        # The owner signs in on their phone: it becomes known.
+        signed = store.claim_send(None, PHONE, now, day, 20, rules=owner)
+        store.mark_sent(signed.send_id, now, now + timedelta(minutes=5))
+        assert store.mark_verified(
+            signed.request_id, now + timedelta(seconds=5)
+        )
+
+        later = now + timedelta(seconds=6)
+        assert store.claim_send(None, PHONE, later, day, 20,
+                                rules=stranger).granted
+        soon = later + timedelta(seconds=1)
+        held = store.claim_send(None, PHONE, soon, day, 20, rules=stranger)
+        assert (held.granted, held.reason) == (False, "wait")
+        held = store.claim_send(None, PHONE, soon, day, 20, rules=new_phone)
+        assert (held.granted, held.reason) == (False, "wait")
+
+        # The owner's phone counts only its own codes, and its network's
+        # cap (one code an hour, already used) does not hold it back.
+        mine = store.claim_send(None, PHONE, soon, day, 20, rules=owner)
+        assert mine.granted
+        assert mine.next_send_at == soon + timedelta(seconds=30)

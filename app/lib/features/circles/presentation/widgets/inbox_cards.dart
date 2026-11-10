@@ -1,10 +1,14 @@
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:app/features/circles/presentation/widgets/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -37,13 +41,9 @@ class _InboxCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppSurfaces.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -51,8 +51,8 @@ class _InboxCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                width: 40,
-                height: 40,
+                width: AppSizes.avatar,
+                height: AppSizes.avatar,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: avatarBackground,
@@ -63,7 +63,7 @@ class _InboxCard extends StatelessWidget {
                   style: text.titleMedium?.copyWith(color: avatarForeground),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,20 +72,28 @@ class _InboxCard extends StatelessWidget {
                       header: true,
                       child: Text(title, style: text.titleMedium),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       body,
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              if (pill != null) ...<Widget>[const SizedBox(width: 8), pill!],
+              if (pill != null) ...<Widget>[
+                const SizedBox(width: AppSpacing.sm),
+                pill!,
+              ],
             ],
           ),
-          if (extra != null) ...<Widget>[const SizedBox(height: 8), extra!],
+          if (extra != null) ...<Widget>[
+            const SizedBox(height: AppSpacing.sm),
+            extra!,
+          ],
           if (actions != null) ...<Widget>[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             actions!,
           ],
         ],
@@ -101,10 +109,10 @@ String _initial(String name) {
 }
 
 StatusPill _needsReplyPill(BuildContext context) => StatusPill(
-  icon: Icons.schedule,
+  icon: AppIcons.clock,
   text: context.tr('circles.needs_reply_pill'),
-  background: AppColors.warningTint,
-  foreground: AppColors.warningInk,
+  background: AppSemanticColors.background,
+  foreground: context.tokens.textSecondary,
 );
 
 /// Accept and decline side by side. While [busy] the buttons are off.
@@ -134,25 +142,27 @@ class _ReplyButtons extends StatelessWidget {
             ),
             child: busy
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: AppSpacing.space5,
+                    height: AppSpacing.space5,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppColors.onBrand,
+                      color: AppSemanticColors.onActionPrimary,
                     ),
                   )
                 : Text(acceptLabel),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: OutlinedButton(
             onPressed: busy ? null : onDecline,
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(),
               minimumSize: const Size.fromHeight(44),
-              foregroundColor: AppColors.dangerInk,
-              side: const BorderSide(color: AppColors.danger),
+              foregroundColor: AppSemanticColors.textPrimary,
+              side: const BorderSide(
+                color: AppSemanticColors.borderControlBase,
+              ),
             ),
             child: Text(context.tr('circles.decline')),
           ),
@@ -183,8 +193,8 @@ class InvitationCard extends StatelessWidget {
     final String name = by ?? '';
     return _InboxCard(
       avatarText: _initial(name),
-      avatarBackground: AppColors.successTint,
-      avatarForeground: AppColors.successInk,
+      avatarBackground: AppSemanticColors.selectedSurface,
+      avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.invitation_title'),
       body: by == null || by.trim().isEmpty
           ? context.tr(
@@ -218,8 +228,8 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
-      avatarBackground: AppColors.brandTint,
-      avatarForeground: AppColors.brand,
+      avatarBackground: AppSemanticColors.selectedSurface,
+      avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.request_card_title'),
       body: context.tr(
         'circles.request_card_body',
@@ -261,12 +271,13 @@ class AcceptedRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
-      avatarBackground: AppColors.brandTint,
-      avatarForeground: AppColors.brand,
+      avatarBackground: AppSemanticColors.selectedSurface,
+      avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.complete_card_title'),
+      // The patient names the circle on the next page.
       body: context.tr(
         'circles.complete_card_body',
-        args: <String>[request.requesterName, request.circleName],
+        args: <String>[request.requesterName],
       ),
       pill: _needsReplyPill(context),
       actions: Row(
@@ -281,15 +292,18 @@ class AcceptedRequestCard extends StatelessWidget {
               child: Text(context.tr('common.continue')),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: OutlinedButton(
               onPressed: busy ? null : onCancel,
+              // Cancelling a request cannot be undone: the error red.
               style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(),
                 minimumSize: const Size.fromHeight(44),
-                foregroundColor: AppColors.dangerInk,
-                side: const BorderSide(color: AppColors.danger),
+                foregroundColor: AppSemanticColors.statusError,
+                side: const BorderSide(
+                  color: AppSemanticColors.borderControlBase,
+                ),
               ),
               child: Text(context.tr('circles.cancel_request')),
             ),
@@ -312,17 +326,15 @@ class DeclinedRequestCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return _InboxCard(
       avatarText: '!',
-      avatarBackground: AppColors.dangerTint,
-      avatarForeground: AppColors.dangerInk,
+      avatarBackground: AppSemanticColors.borderSubtle,
+      avatarForeground: context.tokens.textSecondary,
       title: context.tr('circles.declined_title'),
-      body: context.tr(
-        'circles.declined_body',
-        args: <String>[request.circleLabel],
-      ),
+      // The number below says which request it was.
+      body: context.tr('circles.declined_body'),
       extra: Text(
-        RequestSentView.displayPhone(request.patientPhoneNumber),
+        SaudiMobile.display(request.patientPhoneNumber),
         textDirection: TextDirection.ltr,
-        style: text.bodyMedium?.copyWith(color: AppColors.ink3),
+        style: text.bodyMedium?.copyWith(color: context.tokens.textSecondary),
       ),
     );
   }

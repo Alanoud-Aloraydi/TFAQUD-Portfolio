@@ -58,17 +58,14 @@ class AllergiesDraft extends Equatable {
   ];
 }
 
-/// The health answers given while a circle is created. A part that the user
-/// did not answer is null, and the API then keeps it as "unknown".
+/// The health answers of a patient's medical file. A part that was not
+/// answered is null, which the API keeps as "unknown".
 class MedicalProfileDraft extends Equatable {
   const MedicalProfileDraft({this.bloodType, this.conditions, this.allergies});
 
   final String? bloodType;
   final ConditionsDraft? conditions;
   final AllergiesDraft? allergies;
-
-  bool get isEmpty =>
-      bloodType == null && conditions == null && allergies == null;
 
   @override
   List<Object?> get props => [bloodType, conditions, allergies];

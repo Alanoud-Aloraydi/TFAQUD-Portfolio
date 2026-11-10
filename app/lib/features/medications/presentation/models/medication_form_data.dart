@@ -1,10 +1,13 @@
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:flutter/material.dart';
 
+/// Defines the supported medication form field values.
 enum MedicationFormField { name, strength, period, dose, weekdays }
 
+/// Describes one medication form validation issue.
 class MedicationFormIssue {
   const MedicationFormIssue(this.field, {this.scheduleIndex});
 
@@ -12,24 +15,30 @@ class MedicationFormIssue {
   final int? scheduleIndex;
 }
 
+/// Holds medication form values for this workflow.
 class MedicationFormData {
-  MedicationFormData(MedicationPlan? plan)
-    : name = TextEditingController(text: plan?.version.name),
+  /// Filled from [plan]'s latest version: a change waiting for later, when
+  /// there is one, so editing again starts from it. [today] is the
+  /// patient's, where a new medicine and an edit start.
+  MedicationFormData(MedicationPlan? plan, {required DateTime today})
+    : this._(plan?.pendingVersion ?? plan?.version, today);
+
+  MedicationFormData._(MedicationVersion? version, DateTime today)
+    : name = TextEditingController(text: version?.name),
       strength = TextEditingController(
-        text: plan == null ? null : _number(plan.version.strengthValue),
+        text: version == null ? null : _number(version.strengthValue),
       ),
-      strengthUnit = plan?.version.strengthUnit ?? StrengthUnit.milligram,
-      reason = TextEditingController(text: plan?.version.reason),
-      instructions = TextEditingController(text: plan?.version.instructions),
-      form = plan?.version.dosageForm ?? DosageForm.tablet,
-      startsOn = plan?.version.startsOn ?? DateUtils.dateOnly(DateTime.now()),
-      endsOn = plan?.version.endsOn,
-      effectiveFromOn = plan == null
-          ? null
-          : DateUtils.dateOnly(DateTime.now().add(const Duration(days: 1))),
-      schedules = plan == null
+      strengthUnit = version?.strengthUnit ?? StrengthUnit.milligram,
+      reason = TextEditingController(text: version?.reason),
+      instructions = TextEditingController(text: version?.instructions),
+      form = version?.dosageForm ?? DosageForm.tablet,
+      missedAfterMinutes = version?.missedAfterMinutes ?? 60,
+      startsOn = version?.startsOn ?? today,
+      endsOn = version?.endsOn,
+      effectiveFromOn = version == null ? null : today,
+      schedules = version == null
           ? [_newSchedule()]
-          : plan.version.schedules.map(_fromSchedule).toList();
+          : version.schedules.map(_fromSchedule).toList();
 
   final TextEditingController name;
   final TextEditingController strength;
@@ -40,12 +49,19 @@ class MedicationFormData {
   final FocusNode strengthFocus = FocusNode();
   final FocusNode periodFocus = FocusNode();
   DosageForm form;
+  int missedAfterMinutes;
   DateTime startsOn;
   DateTime? endsOn;
   DateTime? effectiveFromOn;
   final List<ScheduleFormData> schedules;
 
-  void addSchedule() => schedules.add(_newSchedule());
+  void addSchedule() {
+    final previousUnit = schedules.isEmpty ? null : schedules.last.doseUnit;
+    final unit = form.doseUnits.contains(previousUnit)
+        ? previousUnit!
+        : form.defaultDoseUnit;
+    schedules.add(_newSchedule(doseUnit: unit));
+  }
 
   void removeSchedule(int index) => schedules.removeAt(index).dispose();
 
@@ -53,7 +69,7 @@ class MedicationFormData {
     if (name.text.trim().isEmpty) {
       return const MedicationFormIssue(MedicationFormField.name);
     }
-    final strengthText = strength.text.trim();
+    final strengthText = ArabicDigits.toWesternDecimal(strength.text.trim());
     final strengthValue = _decimal(strengthText)
         ? double.tryParse(strengthText)
         : null;
@@ -68,7 +84,9 @@ class MedicationFormData {
     }
     for (var index = 0; index < schedules.length; index++) {
       final schedule = schedules[index];
-      final doseText = schedule.doseController.text.trim();
+      final doseText = ArabicDigits.toWesternDecimal(
+        schedule.doseController.text.trim(),
+      );
       final dose = _decimal(doseText) ? double.tryParse(doseText) : null;
       if (dose == null || dose <= 0) {
         return MedicationFormIssue(
@@ -76,7 +94,7 @@ class MedicationFormData {
           scheduleIndex: index,
         );
       }
-      if (schedule.weekdays.isEmpty) {
+      if (!schedule.hasDays) {
         return MedicationFormIssue(
           MedicationFormField.weekdays,
           scheduleIndex: index,
@@ -88,18 +106,26 @@ class MedicationFormData {
 
   MedicationPlanDraft? toDraft() {
     if (firstIssue() != null) return null;
-    final strengthText = strength.text.trim();
+    final strengthText = ArabicDigits.toWesternDecimal(strength.text.trim());
     final strengthValue = double.parse(strengthText);
     final scheduleDrafts = <MedicationScheduleDraft>[];
     for (final item in schedules) {
-      final doseText = item.doseController.text.trim();
+      final doseText = ArabicDigits.toWesternDecimal(
+        item.doseController.text.trim(),
+      );
       final dose = double.parse(doseText);
       scheduleDrafts.add(
         MedicationScheduleDraft(
           time: _time(item.time),
           doseValue: dose,
           doseUnit: item.doseUnit,
-          weekdays: item.weekdays.toList()..sort(),
+          repeat: item.repeat,
+          weekdays: item.repeat == ScheduleRepeat.weekly
+              ? (item.weekdays.toList()..sort())
+              : const <int>[],
+          intervalDays: item.repeat == ScheduleRepeat.interval
+              ? item.intervalDays
+              : null,
           instructions: _optional(item.instructionsController.text),
         ),
       );
@@ -111,6 +137,7 @@ class MedicationFormData {
       dosageForm: form,
       reason: _optional(reason.text),
       instructions: _optional(instructions.text),
+      missedAfterMinutes: missedAfterMinutes,
       startsOn: startsOn,
       endsOn: endsOn,
       effectiveFromOn: effectiveFromOn,
@@ -131,20 +158,34 @@ class MedicationFormData {
     }
   }
 
-  static ScheduleFormData _newSchedule() => ScheduleFormData(
-    time: const TimeOfDay(hour: 8, minute: 0),
-    dose: 0.5,
-    doseUnit: DoseUnit.tablet,
-    weekdays: {1, 2, 3, 4, 5, 6, 7},
-  );
+  // A new dose starts on the most common answer (one tablet at 8:00, every
+  // day), so most people only check it.
+  static ScheduleFormData _newSchedule({DoseUnit doseUnit = DoseUnit.tablet}) =>
+      ScheduleFormData(
+        time: const TimeOfDay(hour: 8, minute: 0),
+        dose: 1,
+        doseUnit: doseUnit,
+        weekdays: {1, 2, 3, 4, 5, 6, 7},
+      );
 
   static ScheduleFormData _fromSchedule(MedicationSchedule value) {
     final parts = value.time.split(':');
+    // The form offers «كل كم يوم» in place of «شهري»: a monthly dose comes
+    // in as every 30 days, and the editor says what it was.
+    final bool monthly = value.repeat == ScheduleRepeat.monthly;
     return ScheduleFormData(
       time: TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
       dose: value.doseValue,
       doseUnit: value.doseUnit,
-      weekdays: value.weekdays.toSet(),
+      repeat: monthly ? ScheduleRepeat.interval : value.repeat,
+      // A dose switched to weekly starts on every day, as a new one.
+      weekdays: value.weekdays.isEmpty
+          ? <int>{1, 2, 3, 4, 5, 6, 7}
+          : value.weekdays.toSet(),
+      intervalDays: monthly
+          ? ScheduleFormData.monthlyIntervalDays
+          : value.intervalDays ?? ScheduleFormData.defaultIntervalDays,
+      formerMonthDays: monthly ? value.monthDays : const <int>[],
       instructions: value.instructions,
     );
   }

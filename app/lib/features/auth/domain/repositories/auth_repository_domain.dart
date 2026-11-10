@@ -1,15 +1,18 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// Provides auth domain operations.
 abstract class AuthRepositoryDomain {
   /// Sends the SMS code to [phone] (international form, +9665XXXXXXXX) and
-  /// returns the verification id of the request.
+  /// returns the verification id of the request, with the wait before the
+  /// next code.
   ///
   /// Pass the id of an earlier call as [verificationId] to send another SMS for
   /// the same request (a resend): the wrong tries already used stay used.
   /// Without it a new request starts, with its own tries.
-  Future<Result<String, Failure>> requestCode(
+  Future<Result<CodeRequest, Failure>> requestCode(
     String phone, {
     String? verificationId,
   });

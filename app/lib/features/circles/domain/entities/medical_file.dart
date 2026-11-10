@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:equatable/equatable.dart';
@@ -13,6 +14,7 @@ class PatientBasics extends Equatable {
     required this.hasAccount,
     this.latitude,
     this.longitude,
+    this.timeZone = defaultPatientZone,
   });
 
   /// While the patient has an account the names are the account's names, and
@@ -29,6 +31,10 @@ class PatientBasics extends Equatable {
   final double? latitude;
   final double? longitude;
 
+  /// The IANA zone where the patient lives; every time of the circle is
+  /// wall clock there.
+  final String timeZone;
+
   String get fullName => '$firstName $lastName'.trim();
 
   @override
@@ -40,8 +46,12 @@ class PatientBasics extends Equatable {
     hasAccount,
     latitude,
     longitude,
+    timeZone,
   ];
 }
+
+/// A medical answer that is still unknown (see [MedicalFile.gaps]).
+enum MedicalGap { bloodType, conditions, allergies }
 
 /// The whole medical file page: the patient, the health answers and the
 /// emergency contacts.
@@ -64,6 +74,18 @@ class MedicalFile extends Equatable {
   final List<EmergencyContact> contacts;
 
   bool get canAddContact => contacts.length < maxContacts;
+
+  /// The medical answers nobody has given yet: the blood type, the chronic
+  /// conditions and the allergies. A circle is created without them, so the
+  /// circle page and the file mark them with «!» until they are filled.
+  /// "None" is an answer, so it does not count.
+  List<MedicalGap> get gaps => <MedicalGap>[
+    if (profile.bloodType == null) MedicalGap.bloodType,
+    if (profile.conditions == null) MedicalGap.conditions,
+    if (profile.allergies == null) MedicalGap.allergies,
+  ];
+
+  bool get needsFilling => gaps.isNotEmpty;
 
   MedicalFile copyWith({
     PatientBasics? patient,

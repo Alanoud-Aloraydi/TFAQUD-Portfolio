@@ -1,23 +1,47 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Coordinates home actions and UI state.
+///
+/// [shownClock], when given, follows the selected circle, so every page
+/// reads that patient's clock (see [ShownCircleClock]).
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit(this._home) : super(const HomeState()) {
+  HomeCubit(this._home, [Listenable? photoChanges, this._shownClock])
+    : _photoChanges = photoChanges,
+      super(const HomeState()) {
     _changes = _home.changes.listen((select) => refresh(select: select));
+    // The circle switcher shows the patient's avatar; a saved photo or
+    // avatar anywhere reloads it too, not just the screen that saved it.
+    _photoChanges?.addListener(_onPhotoChanged);
   }
 
   final HomeUseCase _home;
+  final Listenable? _photoChanges;
+  final ShownCircleClock? _shownClock;
   late final StreamSubscription<String?> _changes;
   int _revision = 0;
   bool _selecting = false;
 
+  void _onPhotoChanged() => unawaited(refresh());
+
+  /// Every state with a selected circle shows that patient's clock.
+  @override
+  void emit(HomeState state) {
+    super.emit(state);
+    final String? zone = state.selectedCircle?.timeZone;
+    if (zone != null) _shownClock?.show(zone);
+  }
+
   @override
   Future<void> close() async {
+    _photoChanges?.removeListener(_onPhotoChanged);
     await _changes.cancel();
     return super.close();
   }
@@ -29,19 +53,18 @@ class HomeCubit extends Cubit<HomeState> {
     emit(const HomeState());
     final result = await _home.getHome();
     if (isClosed || revision != _revision) return;
-    await result.when(
-      (data) => _loaded(data, revision, select),
-      (failure) async {
-        final ended =
-            failure is UnauthorizedFailure || failure is SessionExpiredFailure;
-        emit(
-          HomeState(
-            status: ended ? HomeStatus.signIn : HomeStatus.failure,
-            messageKey: failure.messageKey,
-          ),
-        );
-      },
-    );
+    await result.when((data) => _loaded(data, revision, select), (
+      failure,
+    ) async {
+      final ended =
+          failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+      emit(
+        HomeState(
+          status: ended ? HomeStatus.signIn : HomeStatus.failure,
+          messageKey: failure.messageKey,
+        ),
+      );
+    });
   }
 
   /// Loads the home data again without leaving the screen the user is on.
@@ -60,28 +83,20 @@ class HomeCubit extends Cubit<HomeState> {
     final revision = ++_revision;
     final result = await _home.getHome();
     if (isClosed || revision != _revision) return;
-    await result.when(
-      (data) => _loaded(data, revision, select),
-      (failure) async {
-        final ended =
-            failure is UnauthorizedFailure || failure is SessionExpiredFailure;
-        if (ended) {
-          emit(
-            HomeState(
-              status: HomeStatus.signIn,
-              messageKey: failure.messageKey,
-            ),
-          );
-        }
-      },
-    );
+    await result.when((data) => _loaded(data, revision, select), (
+      failure,
+    ) async {
+      final ended =
+          failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+      if (ended) {
+        emit(
+          HomeState(status: HomeStatus.signIn, messageKey: failure.messageKey),
+        );
+      }
+    });
   }
 
-  Future<void> _loaded(
-    HomeEntity data,
-    int revision,
-    String? preferred,
-  ) async {
+  Future<void> _loaded(HomeEntity data, int revision, String? preferred) async {
     if (!data.profileComplete) {
       emit(const HomeState(status: HomeStatus.onboarding));
       return;

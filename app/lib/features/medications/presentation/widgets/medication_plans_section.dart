@@ -1,41 +1,89 @@
-import 'package:app/core/widgets/loading_widget.dart';
+import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+/// Displays the medication plans section UI.
 class MedicationPlansSection extends StatelessWidget {
-  const MedicationPlansSection({super.key, required this.circleId});
+  const MedicationPlansSection({
+    super.key,
+    required this.circleId,
+    required this.canManage,
+    required this.header,
+  });
 
   final String circleId;
+  final bool canManage;
+  final Widget header;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MedicationsCubit, MedicationsState>(
-      builder: (context, state) {
-        if (state.status == MedicationsStatus.loading) {
-          return const LoadingWidget();
-        }
-        if (state.status == MedicationsStatus.failure) {
-          return MedicationFailureView(
-            messageKey: state.messageKey!,
-            onRetry: () => context.read<MedicationsCubit>().load(circleId),
-          );
-        }
-        final today = DateUtils.dateOnly(DateTime.now());
-        final current = state.plans
-            .where((plan) => !plan.isPreviousOn(today))
-            .toList();
-        return MedicationPlanList(
-          title: context.tr('medications.current'),
-          emptyText: context.tr('medications.no_current'),
-          plans: current,
-          circleId: circleId,
-        );
-      },
+      builder: (context, state) => ContentSwitcher(
+        // Only loading, error and content fade; saving a change does not.
+        stateKey: switch (state.status) {
+          MedicationsStatus.initial || MedicationsStatus.loading => 'loading',
+          MedicationsStatus.failure => 'failure',
+          _ => 'content',
+        },
+        child: _content(context, state),
+      ),
     );
+  }
+
+  Widget _content(BuildContext context, MedicationsState state) {
+    if (state.status == MedicationsStatus.initial ||
+        state.status == MedicationsStatus.loading) {
+      return const PlansSkeleton();
+    }
+    if (state.status == MedicationsStatus.failure) {
+      return MedicationFailureView(
+        messageKey: state.messageKey!,
+        onRetry: () => context.read<MedicationsCubit>().load(circleId),
+      );
+    }
+    final today = PatientClockScope.of(context).today();
+    final current = state.plans
+        .where((plan) => !plan.isPreviousOn(today))
+        .toList();
+    final activeCount = current
+        .where((plan) => !plan.isScheduledOn(today))
+        .length;
+    final laterCount = current.length - activeCount;
+    return MedicationPlanList(
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          header,
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+      title: current.isEmpty
+          ? null
+          : context.tr(
+              'medications.plan_summary',
+              args: [activeCount.toString(), laterCount.toString()],
+            ),
+      emptyText: CareVoice.tr(context, circleId, 'medications.no_current'),
+      plans: current,
+      circleId: circleId,
+      canManage: canManage,
+      onAdd: () => _addMedication(context),
+    );
+  }
+
+  /// The cubit reads the list again by itself when the form saves.
+  Future<void> _addMedication(BuildContext context) async {
+    await context.push<bool>(Routes.newMedication(circleId));
   }
 }

@@ -30,7 +30,6 @@ def offline_circle(engine, owner):
         engine,
         "create_without_account",
         owner.id,
-        "Mother Nora",
         "Nora",
         "Family",
         BIRTH,

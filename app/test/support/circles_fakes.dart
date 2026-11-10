@@ -3,6 +3,7 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -114,6 +115,20 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     ),
   );
 
+  /// The circle of [nouraFile] as the Circle tab reads it: the signed-in
+  /// person is its only manager, and nobody is invited.
+  static final CircleOverview nouraOverview = CircleOverview(
+    name: 'أمي نورة',
+    patientName: 'نورة العتيبي',
+    patientIsYou: false,
+    patientUsesApp: false,
+    patientBirthDate: DateTime(1954, 6, 5),
+    city: 'بريدة',
+    canManage: true,
+    members: const <CircleMember>[CircleMember(name: 'Reem', isYou: true)],
+    pendingInvitations: const <CirclePendingInvitation>[],
+  );
+
   static final EmergencyCard nouraCard = EmergencyCard(
     firstName: 'نورة',
     lastName: 'العتيبي',
@@ -123,9 +138,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
 
   Result<AccountSummary, Failure> account = const Success(reem);
   Result<CareCircleSummary, Failure> created = const Success(newCircle);
-  Result<CareCircleSummary, Failure> createdPatient = const Success(
-    newCircle,
-  );
+  Result<CareCircleSummary, Failure> createdPatient = const Success(newCircle);
   Result<SentCircleRequest, Failure> sent = const Success(waitingRequest);
 
   Result<CircleInbox, Failure> inbox = const Success(CircleInbox.empty());
@@ -135,15 +148,31 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Result<String?, Failure> invitationReplied = const Success<String?, Failure>(
     'circle-from-invitation',
   );
-  Result<CareCircleSummary, Failure> completed = const Success(newCircle);
+  Result<(CareCircleSummary, CircleAppMode), Failure> completed = const Success(
+    (newCircle, CircleAppMode.detailed),
+  );
   Result<void, Failure> canceled = const Success(null);
   Result<void, Failure> deleted = const Success(null);
 
-  // The medical file, the emergency contacts and the emergency card.
+  // The circle, the medical file, the emergency contacts and the emergency
+  // card.
+  Result<CircleOverview, Failure> circleOverview = Success(nouraOverview);
   Result<MedicalFile, Failure> medicalFile = Success(nouraFile);
   Result<EmergencyCard, Failure> emergencyCard = Success(nouraCard);
   Result<void, Failure> patientUpdated = const Success(null);
   Result<void, Failure> contactDeleted = const Success(null);
+
+  // The changes of the members on the Circle tab.
+  Result<void, Failure> invited = const Success(null);
+  Result<void, Failure> invitationChanged = const Success(null);
+  Result<void, Failure> left = const Success(null);
+
+  /// When set, an invitation, a resend, a cancel or a leave waits for it.
+  Future<Result<void, Failure>>? pendingMemberChange;
+
+  /// The calls of the member changes, in order: `invite:+9665…`,
+  /// `resend:<id>`, `cancel:<id>`, `leave:<confirmDelete>`.
+  final List<String> memberCalls = <String>[];
 
   /// When set, saving the health answers answers with it. Otherwise the
   /// answers are given back as sent, like the server does.
@@ -153,8 +182,13 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   /// contact is given back as sent.
   Result<EmergencyContact, Failure>? contactSaved;
 
-  /// When set, a create call waits for it, so a test can act in between.
+  /// When set, a create or patient-circle call waits for it, so a test can
+  /// act in between.
   Future<Result<CareCircleSummary, Failure>>? pending;
+
+  /// The same, for [completeRequest] specifically: its result shape differs
+  /// (it also carries the account's app mode), so it needs its own field.
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>>? pendingCompleted;
 
   /// When set, adding or changing a contact waits for it.
   Future<Result<EmergencyContact, Failure>>? pendingContact;
@@ -179,6 +213,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
 
   int medicalFileReads = 0;
   int emergencyCardReads = 0;
+  int circleOverviewReads = 0;
 
   /// The calls that save the medical file, in order: `patient`, `profile`,
   /// `add`, `change` and `delete`.
@@ -199,10 +234,13 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     sent = const Success(waitingRequest);
     inbox = const Success(CircleInbox.empty());
     replied = const Success(CircleRequestStatus.accepted);
-    invitationReplied = const Success<String?, Failure>('circle-from-invitation');
-    completed = const Success(newCircle);
+    invitationReplied = const Success<String?, Failure>(
+      'circle-from-invitation',
+    );
+    completed = const Success((newCircle, CircleAppMode.detailed));
     canceled = const Success(null);
     deleted = const Success(null);
+    circleOverview = Success(nouraOverview);
     medicalFile = Success(nouraFile);
     emergencyCard = Success(nouraCard);
     patientUpdated = const Success(null);
@@ -210,6 +248,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     profileSaved = null;
     contactSaved = null;
     pending = null;
+    pendingCompleted = null;
     pendingContact = null;
     queuedFileReads.clear();
     requests.clear();
@@ -224,6 +263,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     deletions.clear();
     medicalFileReads = 0;
     emergencyCardReads = 0;
+    circleOverviewReads = 0;
     saveCalls.clear();
     patientUpdates.clear();
     profileUpdates.clear();
@@ -284,13 +324,13 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   }
 
   @override
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) async {
     completedIds.add(id);
     completions.add(request);
-    return pending ?? completed;
+    return pendingCompleted ?? completed;
   }
 
   @override
@@ -303,6 +343,50 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Future<Result<void, Failure>> deleteAccount(AccountDeletion deletion) async {
     deletions.add(deletion);
     return deleted;
+  }
+
+  @override
+  Future<Result<CircleOverview, Failure>> getCircleOverview(
+    String circleId,
+  ) async {
+    circleOverviewReads++;
+    return circleOverview;
+  }
+
+  @override
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  ) async {
+    memberCalls.add('invite:$phoneNumber');
+    return await pendingMemberChange ?? invited;
+  }
+
+  @override
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    memberCalls.add('resend:$invitationId');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    memberCalls.add('cancel:$invitationId');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) async {
+    memberCalls.add('leave:$confirmDelete');
+    return await pendingMemberChange ?? left;
   }
 
   @override
@@ -319,8 +403,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   ) async {
     saveCalls.add('profile');
     profileUpdates.add(profile);
-    return profileSaved ??
-        Success<MedicalProfileDraft, Failure>(profile);
+    return profileSaved ?? Success<MedicalProfileDraft, Failure>(profile);
   }
 
   @override

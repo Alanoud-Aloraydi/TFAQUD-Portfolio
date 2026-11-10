@@ -28,8 +28,29 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>&#x064A;&#x062A;&#x0635;&#x0644; &#x062A;&#x0641;&#x0642;&#x0651;&#x064F;&#x062F; &#x0628;&#x062E;&#x0627;&#x062F;&#x0645; &#x0627;&#x0644;&#x062A;&#x062C;&#x0631;&#x0628;&#x0629; &#x0639;&#x0644;&#x0649; &#x0634;&#x0628;&#x0643;&#x062A;&#x0643; &#x0627;&#x0644;&#x0645;&#x062D;&#x0644;&#x064A;&#x0629;.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يستخدم تفقّد الميكروفون لتسجيل ملاحظات صوتية لورقة الزيارة بموافقتك.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>يستخدم تفقّد الكاميرا لالتقاط صورة الدواء أو صورة الحساب عند اختيارك.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يتيح تفقّد اختيار صورة الدواء أو صورة الحساب من مكتبة الصور عند اختيارك.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

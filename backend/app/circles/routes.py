@@ -23,6 +23,8 @@ from app.circles.inputs import (
     RenameCircleInput,
 )
 from app.circles.support import answer, care_work, parse_id, save_medical
+from app.push.messages import invitation_push
+from app.push.notify import notify
 from app.validation import parse_json_body, parse_optional_json_body
 
 bp = Blueprint("circles", __name__, url_prefix="/api/v1/circles")
@@ -48,6 +50,7 @@ def create_self_circle():
             body.city,
             body.latitude,
             body.longitude,
+            body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
         view = views.circle_view(work.session, circle.id, work.actor, MANAGER)
@@ -62,13 +65,13 @@ def create_offline_circle():
     with care_work() as work:
         circle = work.care.create_without_account(
             work.actor,
-            body.name,
             body.patient_first_name,
             body.patient_last_name,
             body.birth_date,
             body.city,
             body.latitude,
             body.longitude,
+            body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
         view = views.circle_view(work.session, circle.id, work.actor, MANAGER)
@@ -81,6 +84,9 @@ def create_offline_circle():
 @bp.get("/<circle_id>")
 @require_circle_role(*MEMBER)
 def get_circle(circle_id):
+    """One circle as its member sees it: the patient, the managers, the
+    invitations, and what the asker may do.
+    """
     with care_work() as work:
         view = views.circle_view(
             work.session,
@@ -92,21 +98,27 @@ def get_circle(circle_id):
 
 
 @bp.patch("/<circle_id>")
-@require_circle_role(MANAGER)
+@require_circle_role(*MEMBER)
 def rename_circle(circle_id):
+    """The patient's own name for their circle. Only the patient with an
+    account names it; the others see «دائرة» and the patient's name."""
     body = parse_json_body(RenameCircleInput)
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
         work.care.rename_circle(work.actor, cid, body.name)
-        view = views.circle_view(work.session, cid, work.actor, MANAGER)
+        view = views.circle_view(
+            work.session, cid, work.actor, current_circle_role()
+        )
     return answer({"circle": view})
 
 
 @bp.put("/<circle_id>/patient")
 @require_circle_role(*MEMBER)
 def update_patient(circle_id):
-    """Birth date, city, location; names too when the patient has no account."""
+    """Birth date, city, zone, location; the names too when the patient
+    has no account."""
     body = parse_json_body(PatientUpdateInput)
+    # Save the details, and answer the circle as the asker sees it.
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
         work.care.update_patient_profile(
@@ -118,6 +130,7 @@ def update_patient(circle_id):
             last_name=body.last_name,
             latitude=body.latitude,
             longitude=body.longitude,
+            time_zone=body.time_zone,
         )
         view = views.circle_view(
             work.session, cid, work.actor, current_circle_role()
@@ -128,7 +141,8 @@ def update_patient(circle_id):
 @bp.post("/<circle_id>/leave")
 @require_circle_role(MANAGER)
 def leave_circle(circle_id):
-    """Leave as a manager. The last manager must confirm deleting the circle."""
+    """Leave as a manager; the last manager must confirm deleting the
+    circle."""
     body = parse_optional_json_body(LeaveCircleInput)
     with care_work() as work:
         work.care.leave_circle(
@@ -166,12 +180,16 @@ def invite_manager(circle_id):
             body.invitee_phone_number,
         )
         view = views.invitation_view(invitation)
+        push = invitation_push(work.session, invitation)
+    # After the commit: the invited person's phone, if they have the app.
+    notify(push)
     return answer({"invitation": view}, 201)
 
 
 @bp.post("/<circle_id>/invitations/<invitation_id>/resend")
 @require_circle_role(MANAGER)
 def resend_invitation(circle_id, invitation_id):
+    """Send a pending invitation again."""
     with care_work() as work:
         invitation = work.care.resend_invitation(
             work.actor,
@@ -179,12 +197,15 @@ def resend_invitation(circle_id, invitation_id):
             parse_id(invitation_id, "invitation"),
         )
         view = views.invitation_view(invitation)
+        push = invitation_push(work.session, invitation)
+    notify(push)
     return answer({"invitation": view})
 
 
 @bp.delete("/<circle_id>/invitations/<invitation_id>")
 @require_circle_role(MANAGER)
 def cancel_invitation(circle_id, invitation_id):
+    """Withdraw a pending invitation."""
     with care_work() as work:
         work.care.cancel_invitation(
             work.actor,
@@ -244,6 +265,7 @@ def update_medical_profile(circle_id):
 @bp.post("/<circle_id>/emergency-contacts")
 @require_circle_role(*MEMBER)
 def add_emergency_contact(circle_id):
+    """Add an emergency contact to the patient's card."""
     body = parse_json_body(EmergencyContactInput)
     with care_work() as work:
         contact = work.medical.add_contact(
@@ -260,6 +282,7 @@ def add_emergency_contact(circle_id):
 @bp.put("/<circle_id>/emergency-contacts/<contact_id>")
 @require_circle_role(*MEMBER)
 def update_emergency_contact(circle_id, contact_id):
+    """Change one emergency contact."""
     body = parse_json_body(EmergencyContactInput)
     with care_work() as work:
         contact = work.medical.update_contact(
@@ -277,6 +300,7 @@ def update_emergency_contact(circle_id, contact_id):
 @bp.delete("/<circle_id>/emergency-contacts/<contact_id>")
 @require_circle_role(*MEMBER)
 def delete_emergency_contact(circle_id, contact_id):
+    """Remove one emergency contact."""
     with care_work() as work:
         work.medical.delete_contact(
             work.actor,

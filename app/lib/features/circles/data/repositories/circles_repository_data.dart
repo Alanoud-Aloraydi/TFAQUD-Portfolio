@@ -1,14 +1,18 @@
+import 'package:app/core/constants/saudi_cities.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_error_body.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
+import 'package:app/features/circles/data/datasources/device_zone.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/data/models/new_patient_circle_model.dart';
 import 'package:app/features/circles/data/models/new_self_circle_model.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
@@ -26,10 +30,20 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: CirclesRepositoryDomain)
+/// Provides circles repository operations.
 class CirclesRepositoryData implements CirclesRepositoryDomain {
-  CirclesRepositoryData(this._remote);
+  CirclesRepositoryData(this._remote, this._deviceZone);
 
   final BaseCirclesRemoteDataSource _remote;
+  final DeviceZone _deviceZone;
+
+  /// A new patient's zone: Saudi Arabia's for a city of the list; for a
+  /// city typed by hand, this phone's zone. For a self circle or a completed
+  /// request the patient is the person on this phone; for a patient without
+  /// the app it is the best first guess of the person who cares for them.
+  /// Either can be changed later on the medical file.
+  Future<String> _newPatientZone(String city) async =>
+      SaudiCities.zoneOf(city) ?? await _deviceZone.current();
 
   @override
   Future<Result<AccountSummary, Failure>> getAccount() async {
@@ -41,12 +55,82 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   }
 
   @override
+  Future<Result<CircleOverview, Failure>> getCircleOverview(
+    String circleId,
+  ) async {
+    try {
+      return Success((await _remote.getCircleOverview(circleId)).overview);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  ) async {
+    try {
+      await _remote.inviteManager(circleId, phoneNumber);
+      return const Success(null);
+    } catch (error) {
+      return Error(switch (apiErrorCodeOf(error)) {
+        ApiErrorCodes.selfInvitation => const SelfInvitationFailure(),
+        ApiErrorCodes.alreadyManager => const AlreadyManagerFailure(),
+        _ => FailureExceptions.getException(error),
+      });
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    try {
+      await _remote.resendManagerInvitation(circleId, invitationId);
+      return const Success(null);
+    } catch (error) {
+      return Error(_invitationFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    try {
+      await _remote.cancelManagerInvitation(circleId, invitationId);
+      return const Success(null);
+    } catch (error) {
+      return Error(_invitationFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) async {
+    try {
+      await _remote.leaveCircle(circleId, confirmDelete: confirmDelete);
+      return const Success(null);
+    } catch (error) {
+      return Error(switch (apiErrorCodeOf(error)) {
+        ApiErrorCodes.confirmationRequired => const LeaveDeletesCircleFailure(),
+        _ => FailureExceptions.getException(error),
+      });
+    }
+  }
+
+  @override
   Future<Result<CareCircleSummary, Failure>> createSelfCircle(
     NewSelfCircle circle,
   ) async {
     try {
       final created = await _remote.createSelfCircle(
-        NewSelfCircleModel(circle),
+        NewSelfCircleModel(circle, await _newPatientZone(circle.city)),
       );
       return Success(created.toEntity());
     } catch (error) {
@@ -60,7 +144,7 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   ) async {
     try {
       final created = await _remote.createPatientCircle(
-        NewPatientCircleModel(circle),
+        NewPatientCircleModel(circle, await _newPatientZone(circle.city)),
       );
       return Success(created.toEntity());
     } catch (error) {
@@ -131,16 +215,19 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   }
 
   @override
-  Future<Result<CareCircleSummary, Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) async {
     try {
       final created = await _remote.completeRequest(
         id,
-        CompleteCircleRequestModel(request),
+        CompleteCircleRequestModel(
+          request,
+          await _newPatientZone(request.city),
+        ),
       );
-      return Success(created.toEntity());
+      return Success((created.toEntity(), created.accountAppMode));
     } catch (error) {
       return Error(_replyFailure(error));
     }
@@ -162,14 +249,12 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
       await _remote.deleteAccount(deletion);
       return const Success(null);
     } catch (error) {
-      return Error(
-        switch (apiErrorCodeOf(error)) {
-          ApiErrorCodes.patientChoiceRequired =>
-            const PatientChoiceRequiredFailure(),
-          ApiErrorCodes.lastManager => const LastManagerFailure(),
-          _ => FailureExceptions.getException(error),
-        },
-      );
+      return Error(switch (apiErrorCodeOf(error)) {
+        ApiErrorCodes.patientChoiceRequired =>
+          const PatientChoiceRequiredFailure(),
+        ApiErrorCodes.lastManager => const LastManagerFailure(),
+        _ => FailureExceptions.getException(error),
+      });
     }
   }
 
@@ -262,9 +347,21 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
     return switch (apiErrorCodeOf(error)) {
       ApiErrorCodes.alreadyHasCircle => const AlreadyHasCircleFailure(),
       ApiErrorCodes.profileIncomplete => const ProfileIncompleteFailure(),
-      ApiErrorCodes.invalidBirthDate => const InvalidBirthDateFailure(),
       ApiErrorCodes.modeConflict => const ModeConflictFailure(),
       _ => FailureExceptions.getException(error),
+    };
+  }
+
+  /// The same for sending a manager invitation again or canceling it: one
+  /// that is no longer pending (or no longer exists) is gone either way.
+  Failure _invitationFailure(Object error) {
+    final Failure failure = FailureExceptions.getException(error);
+    return switch (apiErrorCodeOf(error)) {
+      ApiErrorCodes.invitationNotPending ||
+      ApiErrorCodes.invitationNotCancelable =>
+        const InvitationUnavailableFailure(),
+      _ when failure is NotFoundFailure => const InvitationUnavailableFailure(),
+      _ => failure,
     };
   }
 
@@ -286,7 +383,6 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
       ApiErrorCodes.tooManyContacts => const TooManyContactsFailure(),
       ApiErrorCodes.duplicateContact => const DuplicateContactFailure(),
       ApiErrorCodes.profileIncomplete => const ProfileIncompleteFailure(),
-      ApiErrorCodes.invalidBirthDate => const InvalidBirthDateFailure(),
       _ => FailureExceptions.getException(error),
     };
   }
@@ -305,7 +401,6 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
         const AcceptedRequestExistsFailure(),
       ApiErrorCodes.modeConflict => const ReplyModeConflictFailure(),
       ApiErrorCodes.profileIncomplete => const ProfileIncompleteFailure(),
-      ApiErrorCodes.invalidBirthDate => const InvalidBirthDateFailure(),
       _ => FailureExceptions.getException(error),
     };
   }

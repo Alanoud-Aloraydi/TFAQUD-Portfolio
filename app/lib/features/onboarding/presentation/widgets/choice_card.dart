@@ -1,9 +1,12 @@
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// One option of a single-choice question: icon, title, hint, and a radio mark.
-/// The whole card is the tap target.
+/// One option of a single-choice question on the start step: an icon, a
+/// title, a hint and a radio mark. The whole card is the tap target, and
+/// screen readers hear it as a checked or unchecked option of one group.
 class ChoiceCard extends StatelessWidget {
   const ChoiceCard({
     super.key,
@@ -28,42 +31,48 @@ class ChoiceCard extends StatelessWidget {
       inMutuallyExclusiveGroup: true,
       checked: selected,
       child: Material(
-        color: AppColors.surface,
+        color: AppSemanticColors.surfaceContent,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.card),
+        shape: AppRadius.shape(
+          AppRadius.card,
           side: BorderSide(
-            color: selected ? AppColors.brand : AppColors.line,
+            color: selected
+                ? AppSemanticColors.textPrimary
+                : AppSemanticColors.borderSubtle,
             width: selected ? 2 : 1,
           ),
         ),
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: <Widget>[
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: AppSizes.avatar,
+                  height: AppSizes.avatar,
                   decoration: const BoxDecoration(
-                    color: AppColors.brandTint,
+                    color: AppSemanticColors.selectedSurface,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 20, color: AppColors.brand),
+                  child: Icon(
+                    icon,
+                    size: AppSizes.iconSmall,
+                    color: AppSemanticColors.textPrimary,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(title, style: text.titleLarge),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(hint, style: text.bodySmall),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 _RadioMark(selected: selected),
               ],
             ),
@@ -74,6 +83,8 @@ class ChoiceCard extends StatelessWidget {
   }
 }
 
+/// The radio mark at the end of a [ChoiceCard]: a ring, filled when
+/// selected.
 class _RadioMark extends StatelessWidget {
   const _RadioMark({required this.selected});
 
@@ -88,8 +99,10 @@ class _RadioMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? AppColors.brand : AppColors.fieldBorder,
-          width: 2,
+          color: selected
+              ? AppSemanticColors.textPrimary
+              : AppSemanticColors.borderControlBase,
+          width: AppSizes.borderEmphasis,
         ),
       ),
       child: selected
@@ -97,7 +110,7 @@ class _RadioMark extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: const BoxDecoration(
-                color: AppColors.brand,
+                color: AppSemanticColors.textPrimary,
                 shape: BoxShape.circle,
               ),
             )

@@ -1,0 +1,124 @@
+# The checks every change must pass: the server's style and all of its tests
+# (the PostgreSQL ones included), and the app's format, analysis and tests.
+#
+# When it runs:
+#   - on every push, on any branch. Render deploys the server only when
+#     these checks pass on the commit (autoDeployTrigger: checksPass in
+#     render.yaml), and the main branch accepts a pull request only when
+#     they pass (see the branch protection steps below).
+#   - from testflight.yml, before a TestFlight build: the build starts only
+#     when these checks pass on its own run.
+#   - from the Actions tab ("Run workflow").
+#
+# Branch protection of main (repository Settings, Branches, Add rule):
+#   1. Branch name pattern: main
+#   2. Require a pull request before merging
+#   3. Require status checks to pass before merging, then search for and
+#      add "Backend" and "App" (they are listed after this workflow ran
+#      once), and tick "Require branches to be up to date before merging"
+#   4. Do not allow bypassing the above settings, then Create
+
+name: CI
+
+on:
+  push:
+  workflow_call:
+  workflow_dispatch:
+
+# A newer push to the same branch makes an older run of it pointless.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+
+    # The same PostgreSQL major version as the database on Render.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tfaqud
+          POSTGRES_PASSWORD: tfaqud
+          # The integration tests refuse a database whose name does not end
+          # in _test, because they empty its tables.
+          POSTGRES_DB: tfaqud_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tfaqud -d tfaqud_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      # The same Python as the server's image (backend/Dockerfile).
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install the requirements
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Check the style
+        run: python -m pycodestyle app tests integration_tests migrations
+
+      - name: Run the tests
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://tfaqud:tfaqud@localhost:5432/tfaqud_test
+        run: python -m pytest
+
+  app:
+    name: App
+    # Windows, where the golden images in app/test/goldens are made: text is
+    # drawn a little differently on each system, so they match only there.
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      # The version the team works with, so the format and the golden images
+      # are the same here as on a laptop.
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
+          cache: true
+
+      # .env is bundled as an asset (pubspec.yaml) and is not in Git. The
+      # example holds no secrets, only the API address, which the tests do
+      # not call.
+      - name: Create .env
+        run: Copy-Item .env.example .env
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Check the format
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run the tests
+        run: flutter test

@@ -1,17 +1,24 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/back_link.dart';
-import 'package:app/core/widgets/loading_widget.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/back_link.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
+import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_tile.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,11 +33,11 @@ class MedicalFileScreen extends StatelessWidget {
 
   final String circleId;
 
-  Future<void> _edit(BuildContext context, MedicalFileCubit cubit) async {
-    final bool? saved = await context.push<bool>(
-      Routes.medicalFileEdit(circleId),
-    );
-    if (saved == true && !cubit.isClosed) cubit.load();
+  /// Opens the edit page with the file this page shows, so it opens at
+  /// once. «حفظ» there goes on to the circle tab, which shows the saved
+  /// answers at once.
+  void _edit(BuildContext context, MedicalFileCubit cubit) {
+    context.push(Routes.medicalFileEdit(circleId), extra: cubit.state.file);
   }
 
   Future<void> _delete(
@@ -56,7 +63,12 @@ class MedicalFileScreen extends StatelessWidget {
           builder: (BuildContext context, MedicalFileState state) {
             final MedicalFile? file = state.file;
             return Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -65,7 +77,7 @@ class MedicalFileScreen extends StatelessWidget {
                         ? () => context.pop()
                         : () => context.go(Routes.circle),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: <Widget>[
                       Expanded(
@@ -80,19 +92,25 @@ class MedicalFileScreen extends StatelessWidget {
                       if (file != null)
                         ActionChip(
                           avatar: const Icon(
-                            Icons.edit_outlined,
-                            size: 16,
-                            color: AppColors.brand,
+                            AppIcons.pencil,
+                            size: AppSizes.iconSmall,
+                            color: AppSemanticColors.textPrimary,
                           ),
                           label: Text(context.tr('circles.file_edit')),
-                          backgroundColor: AppColors.brandTint,
+                          backgroundColor: AppSemanticColors.selectedSurface,
                           side: BorderSide.none,
                           onPressed: () => _edit(context, cubit),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -110,7 +128,7 @@ class MedicalFileScreen extends StatelessWidget {
     final MedicalFile? file = state.file;
     switch (state.status) {
       case MedicalFileStatus.loading:
-        return const LoadingWidget();
+        return const MedicalFileSkeleton();
       case MedicalFileStatus.failure:
         return Center(
           child: Column(
@@ -120,7 +138,7 @@ class MedicalFileScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -142,8 +160,18 @@ class MedicalFileScreen extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final ContactForm? form = state.form;
     return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       children: <Widget>[
+        // A new circle has no medical answers yet: the yellow «!» says what
+        // is missing and opens the edit page.
+        if (file.needsFilling) ...<Widget>[
+          MedicalFileAlert(
+            gaps: file.gaps,
+            onFill: () => _edit(context, cubit),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
         SettingsCard(
           children: <Widget>[
             InfoRow(
@@ -172,20 +200,29 @@ class MedicalFileScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 24),
-        Semantics(
-          header: true,
-          child: Text(
-            context.tr('circles.file_contacts_title'),
-            style: text.titleMedium,
+        const SizedBox(height: AppSpacing.xl),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
+          child: Semantics(
+            header: true,
+            child: Text(
+              context.tr('circles.file_contacts_title'),
+              style: text.titleMedium,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        if (file.contacts.isEmpty && form == null)
-          Text(
+        const SizedBox(height: AppSpacing.labelGap),
+        // Notes outside the cards start 16 in, lined up with the header and
+        // the text inside the cards; the cards and the button reach the edge.
+        if (file.contacts.isEmpty && form == null) ...<Widget>[
+          InsetText(
             context.tr('circles.file_contacts_empty'),
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(
+              color: context.tokens.textSecondary,
+            ),
           ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         for (final EmergencyContact contact in file.contacts) ...<Widget>[
           if (form != null && form.contactId == contact.id)
             _form(context, cubit, form, contact.name)
@@ -195,22 +232,24 @@ class MedicalFileScreen extends StatelessWidget {
               // One form is open at a time.
               onEdit: form == null ? () => cubit.startEdit(contact.id) : null,
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
         ],
         if (form != null && form.isNew) _form(context, cubit, form, null),
         if (form == null && file.canAddContact)
+          // In the middle, like the other add buttons of an empty list.
           Align(
-            alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
               onPressed: cubit.startAdd,
-              icon: const Icon(Icons.add),
+              icon: const Icon(AppIcons.plus),
               label: Text(context.tr('circles.contact_add')),
             ),
           ),
         if (form == null && !file.canAddContact)
-          Text(
+          InsetText(
             context.tr('circles.contact_max'),
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(
+              color: context.tokens.textSecondary,
+            ),
           ),
       ],
     );

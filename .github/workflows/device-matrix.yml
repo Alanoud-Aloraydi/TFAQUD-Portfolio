@@ -1,0 +1,244 @@
+# Builds the app for both stores' oldest and newest phones and runs the
+# device smoke flow (app/integration_test/smoke_test.dart) on emulators and
+# simulators, since the team has no test phones.
+#
+# When it runs: only from the Actions tab (Actions, device-matrix, Run
+# workflow), so it costs nothing until someone asks for it.
+#
+# What it covers, with few jobs: each OS version is paired with one screen
+# size instead of running every combination.
+#   Android (Linux emulators, x86_64 Google APIs images):
+#     API 24 (Android 7.0, the app's minSdk) on a small phone (Nexus 4,
+#       4.7", 768x1280), API 29 (Android 10, the first with Vulkan) on a
+#       standard phone (Pixel 5), API 33 (Android 13, notification
+#       permission) on a tablet (Pixel Tablet), API 35 (Android 15, forced
+#       edge to edge) on a large phone (Pixel 7 Pro).
+#   iOS (simulators on the Mac):
+#     the oldest iOS runtime the Mac offers on the small iPhone SE, and the
+#     newest one on the largest Pro Max it supports.
+#   Builds: a release APK and a release iOS build without signing.
+#
+# The smoke flow opens each tab from the bottom bar, opens the add sheet,
+# closes it with the system back, and schedules one local notification.
+
+name: device-matrix
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: device-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The version the team works with (ci.yml).
+  FLUTTER_VERSION: 3.47.8
+
+jobs:
+  build-android:
+    name: Build the release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      # The Android Gradle Plugin 9 needs Java 17.
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # .env is bundled as an asset and is not in Git; the example holds no
+      # secrets.
+      - name: Create .env
+        run: cp .env.example .env
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Build the APK
+        run: flutter build apk --release
+
+      - name: Keep the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfaqud-release-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+  build-ios:
+    name: Build iOS (not signed)
+    # The same Mac as ios-build.yml. If this label is not available,
+    # macos-26 has Xcode 26.6.
+    runs-on: xcode-27
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Create .env
+        run: cp .env.example .env
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Build the iPhone app
+        run: flutter build ios --release --no-codesign
+
+  android:
+    name: Android API ${{ matrix.api }} (${{ matrix.size }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api: 24
+            profile: Nexus 4
+            size: small phone
+          - api: 29
+            profile: pixel_5
+            size: phone
+          - api: 33
+            profile: pixel_tablet
+            size: tablet
+          - api: 35
+            profile: pixel_7_pro
+            size: large phone
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Create .env
+        working-directory: app
+        run: cp .env.example .env
+
+      - name: Get packages
+        working-directory: app
+        run: flutter pub get
+
+      # Hardware acceleration for the emulator on GitHub's Linux machines.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the smoke flow on the emulator
+        uses: reactivecircus/android-emulator-runner@v2.33.0
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          working-directory: app
+          script: flutter test integration_test/smoke_test.dart -d emulator-5554
+
+  ios:
+    name: iOS ${{ matrix.runtime }} runtime (${{ matrix.size }})
+    runs-on: xcode-27
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime: oldest
+            device: iPhone SE
+            size: small phone
+          - runtime: newest
+            device: Pro Max
+            size: large phone
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Create .env
+        run: cp .env.example .env
+
+      - name: Get packages
+        run: flutter pub get
+
+      # Picks the oldest or newest iOS runtime installed on this Mac (the
+      # app needs iOS 15 or later), and the last device of that runtime
+      # whose name contains the matrix's device ("iPhone SE": the newest SE
+      # generation the runtime has; "Pro Max": the newest Pro Max), then
+      # creates and boots a simulator of it.
+      - name: Boot the simulator
+        id: simulator
+        env:
+          WHICH: ${{ matrix.runtime }}
+          DEVICE: ${{ matrix.device }}
+        run: |
+          RUNTIMES=$(xcrun simctl list runtimes --json)
+          RUNTIME=$(printf '%s' "$RUNTIMES" | python3 -c '
+          import json, os, sys
+          runtimes = [r for r in json.load(sys.stdin)["runtimes"]
+                      if r["platform"] == "iOS" and r["isAvailable"]
+                      and tuple(map(int, r["version"].split(".")[:2])) >= (15, 0)]
+          runtimes.sort(key=lambda r: tuple(map(int, r["version"].split("."))))
+          chosen = runtimes[0] if os.environ["WHICH"] == "oldest" else runtimes[-1]
+          print(chosen["identifier"])
+          ')
+          DEVICE_TYPE=$(printf '%s' "$RUNTIMES" | RUNTIME="$RUNTIME" python3 -c '
+          import json, os, sys
+          runtime = next(r for r in json.load(sys.stdin)["runtimes"]
+                         if r["identifier"] == os.environ["RUNTIME"])
+          names = [d for d in runtime["supportedDeviceTypes"]
+                   if os.environ["DEVICE"] in d["name"]]
+          print(names[-1]["identifier"])
+          ')
+          echo "Runtime: $RUNTIME, device: $DEVICE_TYPE"
+          UDID=$(xcrun simctl create smoke "$DEVICE_TYPE" "$RUNTIME")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Run the smoke flow on the simulator
+        run: flutter test integration_test/smoke_test.dart -d "${{ steps.simulator.outputs.udid }}"

@@ -1,22 +1,22 @@
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:equatable/equatable.dart';
 
-/// What the patient types after agreeing to a request (PROFILE-01C, PROFILE-02
-/// and PROFILE-03). The name comes from the account and the circle name from
-/// the request, so neither is here. Sending this creates the circle.
+/// What the patient sends after agreeing to a request (PROFILE-01C). The
+/// patient's name comes from the account. The birth date and city are the
+/// account's when onboarding saved them, sent anyway like a circle of the
+/// person's own care. Sending this creates the circle.
 class CompleteCircleRequest extends Equatable {
   const CompleteCircleRequest({
+    required this.name,
     required this.birthDate,
     required this.city,
-    this.medicalProfile,
   });
 
+  /// The patient's own name for the circle («رعايتي», «صحتي»...). Only they
+  /// see it; the others see «دائرة» and the patient's name.
+  final String name;
   final DateTime birthDate;
   final String city;
 
-  /// Null when the patient answered no health question.
-  final MedicalProfileDraft? medicalProfile;
-
   @override
-  List<Object?> get props => [birthDate, city, medicalProfile];
+  List<Object?> get props => [name, birthDate, city];
 }

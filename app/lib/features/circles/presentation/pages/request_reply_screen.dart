@@ -1,14 +1,18 @@
-import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
-import 'package:app/core/widgets/inline_error.dart';
-import 'package:app/core/widgets/pill_button.dart';
-import 'package:app/core/widgets/step_header.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/presentation/cubit/request_reply_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/request_reply_state.dart';
-import 'package:app/features/circles/presentation/widgets/status_pill.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,7 +32,12 @@ class RequestReplyScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<RequestReplyCubit, RequestReplyState>(
             listenWhen: (RequestReplyState before, RequestReplyState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -60,30 +69,30 @@ class RequestReplyScreen extends StatelessWidget {
                                 ? () => context.pop()
                                 : () => context.go(Routes.notifications),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           _RequestDetails(request: request),
-                          const SizedBox(height: 16),
-                          Text(
+                          const SizedBox(height: AppSpacing.lg),
+                          InsetText(
                             context.tr('circles.reply_decline_note'),
                             style: text.bodyMedium?.copyWith(
-                              color: AppColors.ink2,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                           if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),
                           ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.accept_request'),
                     isLoading: state.sending,
                     onPressed: cubit.accept,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
@@ -91,8 +100,10 @@ class RequestReplyScreen extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         shape: const StadiumBorder(),
                         minimumSize: const Size.fromHeight(48),
-                        foregroundColor: AppColors.dangerInk,
-                        side: const BorderSide(color: AppColors.danger),
+                        foregroundColor: AppSemanticColors.textPrimary,
+                        side: const BorderSide(
+                          color: AppSemanticColors.borderControlBase,
+                        ),
                       ),
                       child: Text(context.tr('circles.decline')),
                     ),
@@ -121,31 +132,29 @@ class _RequestDetails extends StatelessWidget {
     final String name = request.requesterName.trim();
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppSurfaces.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
               Container(
-                width: 56,
-                height: 56,
+                width: AppSizes.avatarLarge,
+                height: AppSizes.avatarLarge,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
-                  color: AppColors.brandTint,
+                  color: AppSemanticColors.selectedSurface,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   name.isEmpty ? '؟' : name.characters.first,
-                  style: text.titleLarge?.copyWith(color: AppColors.brand),
+                  style: text.titleLarge?.copyWith(
+                    color: AppSemanticColors.textPrimary,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,41 +165,38 @@ class _RequestDetails extends StatelessWidget {
                     ),
                     Text(
                       context.tr('circles.reply_subtitle'),
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
+          // No circle name here: the patient names the circle when they
+          // complete the request.
           const Divider(height: 32),
-          _Row(
-            label: context.tr('circles.approved_circle_name'),
-            child: StatusPill(
-              text: request.circleName,
-              background: AppColors.sunken,
-              foreground: AppColors.ink,
-            ),
-          ),
-          const SizedBox(height: 12),
           _Row(
             label: context.tr('circles.reply_mode'),
             child: StatusPill(
               text: context.tr(
                 detailed ? 'circles.mode_detailed' : 'circles.mode_simplified',
               ),
-              background: AppColors.brandTint,
-              foreground: AppColors.brand,
+              background: AppSemanticColors.selectedSurface,
+              foreground: AppSemanticColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.tr(
               detailed
                   ? 'circles.reply_body_detailed'
                   : 'circles.reply_body_simplified',
             ),
-            style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: text.bodyMedium?.copyWith(
+              color: context.tokens.textSecondary,
+            ),
           ),
         ],
       ),
@@ -198,6 +204,7 @@ class _RequestDetails extends StatelessWidget {
   }
 }
 
+/// Renders the row element of request reply screen.
 class _Row extends StatelessWidget {
   const _Row({required this.label, required this.child});
 
@@ -211,9 +218,8 @@ class _Row extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.ink2),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.tokens.textSecondary),
           ),
         ),
         child,

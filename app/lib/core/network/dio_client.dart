@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+
 import 'api_options.dart';
 import 'auth_interceptor.dart';
 
 @lazySingleton
+/// Configures the authenticated HTTP client.
 class DioClient {
   late final Dio _dio;
 
@@ -18,8 +20,8 @@ class DioClient {
     return _dio.get(path, queryParameters: queryParameters);
   }
 
-  Future<Response> post(String path, {dynamic data}) {
-    return _dio.post(path, data: data);
+  Future<Response> post(String path, {dynamic data, Options? options}) {
+    return _dio.post(path, data: data, options: options);
   }
 
   Future<Response> put(String path, {dynamic data}) {

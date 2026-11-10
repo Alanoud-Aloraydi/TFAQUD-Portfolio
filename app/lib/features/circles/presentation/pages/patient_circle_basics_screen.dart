@@ -1,22 +1,27 @@
-import 'package:app/core/widgets/labeled_text_field.dart';
-import 'package:app/core/widgets/pill_button.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
-import 'package:app/features/circles/presentation/circle_flow_routes.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/constants/name_limits.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/core/widgets/forms/picker_field.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
+import 'package:app/core/widgets/pickers/city_sheet.dart';
+import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/circle_label_picker.dart';
-import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
-import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 1 of 3 of the circle for a patient who does not use the app
-/// (PROFILE-01B): the names of the patient, the birth date, the word the circle
-/// is named with, and the city. Needs a [CreateCircleCubit] of the patient flow
+/// The circle for a patient who does not use the app (PROFILE-01B) on one
+/// page: the names of the patient, the birth date and the city. Nobody names
+/// the circle: everyone sees «دائرة» and the patient's first name, and the
+/// page shows it as it is typed. The health condition and allergies are filled
+/// later in the medical file. Needs a [CreateCircleCubit] of the patient flow
 /// above it.
 class PatientCircleBasicsScreen extends StatefulWidget {
   const PatientCircleBasicsScreen({super.key});
@@ -29,7 +34,6 @@ class PatientCircleBasicsScreen extends StatefulWidget {
 class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
   late final TextEditingController _firstName;
   late final TextEditingController _lastName;
-  late final TextEditingController _customLabel;
 
   @override
   void initState() {
@@ -37,14 +41,12 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     final CreateCircleState state = context.read<CreateCircleCubit>().state;
     _firstName = TextEditingController(text: state.patientFirstName);
     _lastName = TextEditingController(text: state.patientLastName);
-    _customLabel = TextEditingController(text: state.customLabel);
   }
 
   @override
   void dispose() {
     _firstName.dispose();
     _lastName.dispose();
-    _customLabel.dispose();
     super.dispose();
   }
 
@@ -73,44 +75,42 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     if (picked != null) cubit.cityChanged(picked);
   }
 
-  void _next(BuildContext context, CreateCircleCubit cubit) {
-    final CircleLabel label = cubit.state.label;
-    final bool ok = cubit.continueFromPatientBasics(
-      labelName: context.tr('circles.label.${label.name}'),
-    );
-    if (ok) context.push(cubit.flow.healthRoute);
-  }
-
   @override
   Widget build(BuildContext context) {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
-              final String requiredText = context.tr('circles.field_required');
+              final String requiredText = context.tr('common.field_required');
               return Column(
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          CircleStepHeader(
-                            step: 1,
-                            stepTitle: context.tr('circles.step_basics'),
+                          StepHeader(
                             title: context.tr('circles.patient_title'),
+                            subtitle: context.tr('circles.patient_subtitle'),
                             onBack: context.canPop()
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           LabeledTextField(
                             label: context.tr('circles.patient_first_name'),
                             controller: _firstName,
-                            maxLength: CreateCircleCubit.maxNameLength,
+                            maxLength: NameLimits.name,
                             onChanged: cubit.patientFirstNameChanged,
                             errorText:
                                 state.showErrors &&
@@ -118,11 +118,11 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           LabeledTextField(
                             label: context.tr('circles.patient_last_name'),
                             controller: _lastName,
-                            maxLength: CreateCircleCubit.maxNameLength,
+                            maxLength: NameLimits.name,
                             textInputAction: TextInputAction.done,
                             onChanged: cubit.patientLastNameChanged,
                             errorText:
@@ -131,61 +131,63 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           PickerField(
                             label: context.tr('circles.birth_date'),
                             hint: context.tr('circles.birth_date_hint'),
-                            icon: Icons.calendar_today_outlined,
+                            icon: AppIcons.calendar,
                             value: state.birthDate == null
                                 ? null
                                 : formatBirthDate(context, state.birthDate!),
-                            onTap: () => _pickBirthDate(
-                              context,
-                              cubit,
-                              state.birthDate,
-                            ),
+                            onTap: () =>
+                                _pickBirthDate(context, cubit, state.birthDate),
                             errorText:
                                 state.showErrors && state.birthDate == null
                                 ? requiredText
                                 : null,
                           ),
-                          const SizedBox(height: 24),
-                          CircleLabelPicker(
-                            selected: state.label,
-                            onSelected: cubit.chooseLabel,
-                            customController: _customLabel,
-                            onCustomChanged: cubit.customLabelChanged,
-                            hint: circleLabelHint(
-                              context,
-                              label: state.label,
-                              customLabel: state.customLabel,
-                              firstName: state.patientFirstName,
-                            ),
-                            customError:
-                                state.showErrors &&
-                                    state.customLabel.trim().isEmpty
-                                ? requiredText
-                                : null,
+                          const SizedBox(height: AppSpacing.xl),
+                          InsetText.header(context.tr('circles.circle_name')),
+                          const SizedBox(height: AppSpacing.sm),
+                          InsetText.note(
+                            state.patientFirstName.trim().isEmpty
+                                ? context.tr('circles.shared_name_hint')
+                                : context.tr(
+                                    'circles.name_preview',
+                                    args: <String>[
+                                      context.tr(
+                                        'circles.shared_name',
+                                        args: <String>[
+                                          state.patientFirstName.trim(),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           PickerField(
                             label: context.tr('circles.city'),
                             hint: context.tr('circles.patient_city_hint'),
-                            icon: Icons.location_on_outlined,
+                            icon: AppIcons.mapPin,
                             value: state.city,
                             onTap: () => _pickCity(context, cubit, state.city),
                             errorText: state.showErrors && state.city == null
                                 ? requiredText
                                 : null,
                           ),
+                          if (state.errorKey != null) ...<Widget>[
+                            const SizedBox(height: AppSpacing.lg),
+                            InlineError(messageKey: state.errorKey!),
+                          ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
-                    label: context.tr('circles.next'),
-                    onPressed: () => _next(context, cubit),
+                    label: context.tr('circles.create'),
+                    isLoading: state.busy,
+                    onPressed: () => createCircleAndOpen(context, cubit),
                   ),
                 ],
               );

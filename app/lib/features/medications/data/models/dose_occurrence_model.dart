@@ -1,6 +1,8 @@
+import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 
+/// Maps dose occurrence data between the API and app.
 class DoseOccurrenceModel {
   const DoseOccurrenceModel(this._entity);
 
@@ -23,6 +25,7 @@ class DoseOccurrenceModel {
         dosageForm: DosageForm.values.byName(json['dosage_form'] as String),
         doseValue: double.parse(json['dose_value'] as String),
         doseUnit: unit,
+        missedAfterMinutes: json['missed_after_minutes'] as int? ?? 60,
         instructions: json['instructions'] as String?,
         timingState: json['timing_state'] == null
             ? null
@@ -30,6 +33,7 @@ class DoseOccurrenceModel {
         record: recordJson == null
             ? null
             : DoseRecordModel.fromJson(recordJson).toEntity(),
+        snooze: SharedSnooze.fromJson(json['snooze']),
       ),
     );
   }
@@ -37,6 +41,7 @@ class DoseOccurrenceModel {
   DoseOccurrence toEntity() => _entity;
 }
 
+/// Maps dose record data between the API and app.
 class DoseRecordModel {
   const DoseRecordModel(this._entity);
 
@@ -44,6 +49,7 @@ class DoseRecordModel {
 
   factory DoseRecordModel.fromJson(Map<String, dynamic> json) {
     final takenAt = json['taken_at'] as String?;
+    final recordedBy = json['recorded_by'] as Map<String, dynamic>?;
     return DoseRecordModel(
       DoseRecord(
         id: json['id'] as String,
@@ -52,6 +58,9 @@ class DoseRecordModel {
         skipReasonCode: json['skip_reason_code'] as String?,
         skipReasonNote: json['skip_reason_note'] as String?,
         recordedAt: DateTime.parse(json['recorded_at'] as String).toLocal(),
+        recordedByAccountId: recordedBy?['account_id'] as String?,
+        recordedByName: recordedBy?['name'] as String?,
+        recordedByAvatarCode: recordedBy?['avatar_code'] as String?,
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:app/features/auth/data/models/account_status_response.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 
 /// Tokens and profile state returned by POST /api/v1/auth/verify-code.
 class VerifyCodeResponse {
@@ -6,7 +7,7 @@ class VerifyCodeResponse {
     required this.accessToken,
     required this.refreshToken,
     required this.profileComplete,
-    this.appMode,
+    this.appMode = CircleAppMode.detailed,
   });
 
   final String accessToken;
@@ -14,7 +15,9 @@ class VerifyCodeResponse {
 
   /// Whether the account has all required profile names.
   final bool profileComplete;
-  final String? appMode;
+
+  /// The mode the account opens in.
+  final CircleAppMode appMode;
 
   /// Parses the API response or throws [FormatException] for invalid fields.
   factory VerifyCodeResponse.fromJson(Object? json) {

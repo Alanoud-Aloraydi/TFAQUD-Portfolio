@@ -9,8 +9,10 @@ services:
       # Test caches are excluded from the source bind mount.
       PYTEST_ADDOPTS: "-p no:cacheprovider"
     ports:
-      # Published services are reachable only through the host loopback.
-      - "127.0.0.1:${API_PORT:-5000}:5000"
+      # Published only on the host loopback by default. To test the app on an
+      # iPhone over Wi-Fi, set API_BIND=0.0.0.0 in your own .env: the API then
+      # listens on your Wi-Fi address too. The database stays on loopback.
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-5000}:5000"
     volumes:
       # Source changes trigger the development server's reloader.
       - .:/app

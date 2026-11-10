@@ -1,30 +1,120 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
 
-/// System font, sizes from the iOS "Large" type scale. Minimum size is 12.
-/// Line-height multipliers for Arabic are a design choice not yet validated on a device.
+/// Type scale of the design system, set in IBM Plex Sans Arabic: five
+/// sizes only, so every page reads as one system (34 · 22 · 17 · 15 · 13).
+/// Line heights sit on the 4-point grid (48 · 32 · 28 · 24 · 20), about 1.5
+/// to 1.6 times the size, because Arabic needs room for dots and marks.
+/// Weights 400 to 700 only. Nothing is smaller than 13.
+///
+/// Material slot -> design style:
+///   displaySmall large-title 34 ·
+///   headlineLarge / headlineMedium title 22 bold · headlineSmall title 22
+///   semibold (sections, sheets, cards) ·
+///   titleLarge / titleMedium headline 17 semibold · titleSmall 15 semibold ·
+///   bodyLarge body 17 · bodyMedium subheadline 15 · bodySmall footnote 13 ·
+///   labelLarge button 17 · labelMedium 13 semibold · labelSmall 13 medium
 abstract class AppTextTheme {
   AppTextTheme._();
 
-  static const double _headingHeight = 1.3;
-  static const double _textHeight = 1.5;
+  /// Family name declared in pubspec.yaml.
+  static const String fontFamily = 'IBMPlexSansArabic';
 
-  static const TextTheme textTheme = TextTheme(
-    // Title 1, Title 2, Title 3
-    headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, height: _headingHeight, color: AppColors.ink),
-    headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, height: _headingHeight, color: AppColors.ink),
-    headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: _headingHeight, color: AppColors.ink),
-    // Headline, Callout, Subhead
-    titleLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    // Body, Subhead, Footnote
-    bodyLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w400, height: _textHeight, color: AppColors.ink),
-    bodyMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w400, height: _textHeight, color: AppColors.ink2),
-    bodySmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: _textHeight, color: AppColors.ink3),
-    // Buttons and chips: Headline, Footnote, Caption 1
-    labelLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    labelMedium: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink),
-    labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: _textHeight, color: AppColors.ink3),
+  static const FontWeight regular = FontWeight.w400;
+  static const FontWeight medium = FontWeight.w500;
+  static const FontWeight semibold = FontWeight.w600;
+  static const FontWeight bold = FontWeight.w700;
+
+  /// Typography shared by date and time wheels.
+  static const TextStyle picker = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 22,
+    height: 1.2,
+    fontWeight: FontWeight.w400,
+    color: AppSemanticColors.textPrimary,
   );
+
+  /// The five sizes of the scale, largest first.
+  static const List<double> sizes = <double>[34, 22, 17, 15, 13];
+
+  static TextStyle _style(
+    double size,
+    double lineHeight,
+    FontWeight weight,
+    Color color,
+  ) {
+    return TextStyle(
+      fontSize: size,
+      height: lineHeight / size,
+      fontWeight: weight,
+      color: color,
+      leadingDistribution: TextLeadingDistribution.even,
+    );
+  }
+
+  /// [secondary] is slate in the light theme and ink with Increased Contrast.
+  static TextTheme build({Color secondary = AppSemanticColors.textSupporting}) {
+    return TextTheme(
+      displaySmall: _style(
+        34,
+        48,
+        FontWeight.w700,
+        AppSemanticColors.textPrimary,
+      ),
+      headlineLarge: _style(
+        22,
+        32,
+        FontWeight.w700,
+        AppSemanticColors.textPrimary,
+      ),
+      headlineMedium: _style(
+        22,
+        32,
+        FontWeight.w700,
+        AppSemanticColors.textPrimary,
+      ),
+      headlineSmall: _style(
+        22,
+        32,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      titleLarge: _style(
+        17,
+        28,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      titleMedium: _style(
+        17,
+        28,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      titleSmall: _style(
+        15,
+        24,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      bodyLarge: _style(17, 28, FontWeight.w400, AppSemanticColors.textPrimary),
+      bodyMedium: _style(15, 24, FontWeight.w400, secondary),
+      bodySmall: _style(13, 20, FontWeight.w400, secondary),
+      labelLarge: _style(
+        17,
+        28,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      labelMedium: _style(
+        13,
+        20,
+        FontWeight.w600,
+        AppSemanticColors.textPrimary,
+      ),
+      labelSmall: _style(13, 20, FontWeight.w500, secondary),
+    );
+  }
+
+  static final TextTheme textTheme = build();
 }

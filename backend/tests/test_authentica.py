@@ -1,8 +1,8 @@
 """The Authentica sender. No test opens a network connection.
 
-The answers below are the ones recorded in docs/api-contracts.md, section 8. A fake
-`transport` plays Authentica and keeps every call, so a test can read what would
-have been sent.
+The answers below are the ones recorded in docs/api-contracts.md, section 8.
+A fake `transport` plays Authentica and keeps every call, so a test can read
+what would have been sent.
 """
 
 import http.client
@@ -21,21 +21,29 @@ KEY = "test-key-0123456789-abcdef"
 PHONE = "+966500000001"
 CODE = "482915"
 
-SEND_OK = (200, {"success": True, "data": None, "message": "OTP sent successfully."})
+SEND_OK = (
+    200,
+    {"success": True, "data": None, "message": "OTP sent successfully."},
+)
 VERIFY_OK = (200, {"status": True, "message": "OTP verified successfully"})
 VERIFY_REFUSED = (422, {"status": False, "message": "Failed to verify OTP"})
 WRONG_KEY = (401, {"errors": [{"message": "Unauthorized"}]})
 
 
 class FakeTransport:
-    """Plays Authentica: returns the prepared answers, one per call, in order."""
+    """Plays Authentica: the prepared answers, one per call, in order."""
 
     def __init__(self, *answers):
         self._answers = list(answers)
         self.calls = []
 
     def __call__(self, url, headers, body, timeout):
-        self.calls.append({"url": url, "headers": headers, "body": body, "timeout": timeout})
+        self.calls.append({
+            "url": url,
+            "headers": headers,
+            "body": body,
+            "timeout": timeout,
+        })
         answer = self._answers.pop(0)
         if isinstance(answer, BaseException):
             raise answer
@@ -47,7 +55,7 @@ def make_sender(*answers, **kwargs):
     return AuthenticaSmsSender(KEY, transport=transport, **kwargs), transport
 
 
-# --- send_code ---------------------------------------------------------------------
+# --- send_code ---------------------------------------------------------
 
 
 def test_send_code_asks_for_template_5_by_sms_and_sends_no_code_of_its_own():
@@ -99,7 +107,7 @@ def test_a_wrong_key_says_where_to_look():
         sender.send_code(PHONE)
 
 
-# --- check_code ----------------------------------------------------------------------
+# --- check_code --------------------------------------------------------
 
 
 def test_check_code_sends_the_phone_and_the_code_to_verify_otp():
@@ -117,7 +125,8 @@ def test_a_refused_code_is_false_whatever_the_reason():
     # Wrong, wrong length, expired and used all get this one answer.
     sender, _ = make_sender(VERIFY_REFUSED, VERIFY_REFUSED, VERIFY_REFUSED)
 
-    assert [sender.check_code(PHONE, c) for c in ("000000", "123", CODE)] == [False] * 3
+    answers = [sender.check_code(PHONE, c) for c in ("000000", "123", CODE)]
+    assert answers == [False] * 3
 
 
 def test_a_refusal_is_decided_by_the_status_even_if_the_body_cannot_be_read():
@@ -135,7 +144,8 @@ def test_status_false_with_http_200_is_a_refusal_too():
 @pytest.mark.parametrize(
     "answer",
     [
-        (200, {"verified": True}),  # a field of the vendor's examples, not the real one
+        # A field of the vendor's examples, not the real one.
+        (200, {"verified": True}),
         (200, {"success": True}),
         (200, {"status": "true"}),
         (200, {}),
@@ -150,7 +160,9 @@ def test_an_answer_we_do_not_know_never_grants_access(answer):
         sender.check_code(PHONE, CODE)
 
 
-@pytest.mark.parametrize("answer", [WRONG_KEY, (429, None), (500, None), (503, None)])
+@pytest.mark.parametrize(
+    "answer", [WRONG_KEY, (429, None), (500, None), (503, None)]
+)
 def test_a_failure_of_the_provider_is_an_error_and_not_a_wrong_code(answer):
     # If it were False, the user would lose one of the 3 tries because of us.
     sender, _ = make_sender(answer)
@@ -161,7 +173,7 @@ def test_a_failure_of_the_provider_is_an_error_and_not_a_wrong_code(answer):
     assert problem.value.status == answer[0]
 
 
-# --- no answer -------------------------------------------------------------------------
+# --- no answer ---------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -169,12 +181,16 @@ def test_a_failure_of_the_provider_is_an_error_and_not_a_wrong_code(answer):
     [
         TimeoutError("timed out"),
         ConnectionResetError("reset"),
-        urllib.error.URLError("https://api.authentica.sa could not be reached"),
+        urllib.error.URLError(
+            "https://api.authentica.sa could not be reached"
+        ),
         http.client.RemoteDisconnected("closed"),
         http.client.IncompleteRead(b"abc"),
     ],
 )
-def test_no_answer_is_an_error_that_does_not_repeat_the_text_of_the_failure(failure):
+def test_no_answer_is_an_error_that_does_not_repeat_the_text_of_the_failure(
+    failure,
+):
     sender, _ = make_sender(failure, failure)
 
     for action in (
@@ -190,11 +206,13 @@ def test_no_answer_is_an_error_that_does_not_repeat_the_text_of_the_failure(fail
         assert problem.value.status is None
 
 
-# --- the key, the phone number and the code stay out of the logs -----------------------
+# --- the key, the phone number and the code stay out of the logs -------
 
 
 def test_nothing_secret_is_logged(caplog):
-    sender, _ = make_sender(SEND_OK, VERIFY_OK, VERIFY_REFUSED, WRONG_KEY, TimeoutError("x"))
+    sender, _ = make_sender(
+        SEND_OK, VERIFY_OK, VERIFY_REFUSED, WRONG_KEY, TimeoutError("x")
+    )
 
     with caplog.at_level("DEBUG"):
         sender.send_code(PHONE)
@@ -210,7 +228,7 @@ def test_nothing_secret_is_logged(caplog):
         assert secret not in caplog.text
 
 
-# --- how the sender is built -------------------------------------------------------------
+# --- how the sender is built -------------------------------------------
 
 
 def test_an_empty_key_is_refused():
@@ -224,14 +242,16 @@ def test_the_address_must_be_https_so_the_key_never_travels_in_clear():
 
 
 def test_a_slash_at_the_end_of_the_address_is_harmless():
-    sender, transport = make_sender(SEND_OK, base_url="https://example.test/v2/")
+    sender, transport = make_sender(
+        SEND_OK, base_url="https://example.test/v2/"
+    )
 
     sender.send_code(PHONE)
 
     assert transport.calls[0]["url"] == "https://example.test/v2/send-otp"
 
 
-# --- the default HTTP function (the opener is replaced, so there is no network) ------------
+# --- the default HTTP function (the opener is replaced: no network) ----
 
 
 class FakeResponse:
@@ -249,7 +269,9 @@ class FakeResponse:
         return False
 
 
-def test_the_default_function_sends_json_with_the_key_in_the_header(monkeypatch):
+def test_the_default_function_sends_json_with_the_key_in_the_header(
+    monkeypatch,
+):
     seen = {}
 
     def fake_open(request, timeout=None):
@@ -275,14 +297,18 @@ def test_the_default_function_sends_json_with_the_key_in_the_header(monkeypatch)
     assert seen["timeout"] == 7.5
 
 
-def test_the_default_function_returns_a_422_answer_instead_of_raising(monkeypatch):
+def test_the_default_function_returns_a_422_answer_instead_of_raising(
+    monkeypatch,
+):
     def fake_open(request, timeout=None):
         raise urllib.error.HTTPError(
             request.full_url,
             422,
             "Unprocessable",
             {},
-            io.BytesIO(b'{"status": false, "message": "Failed to verify OTP"}'),
+            io.BytesIO(
+                b'{"status": false, "message": "Failed to verify OTP"}'
+            ),
         )
 
     monkeypatch.setattr(authentica._opener, "open", fake_open)
@@ -292,7 +318,9 @@ def test_the_default_function_returns_a_422_answer_instead_of_raising(monkeypatc
     assert (status, body["status"]) == (422, False)
 
 
-def test_the_default_function_copes_with_an_answer_that_is_not_json(monkeypatch):
+def test_the_default_function_copes_with_an_answer_that_is_not_json(
+    monkeypatch,
+):
     def fake_open(request, timeout=None):
         return FakeResponse(200, b"<html>gateway</html>")
 
@@ -304,4 +332,46 @@ def test_the_default_function_copes_with_an_answer_that_is_not_json(monkeypatch)
 def test_a_redirect_is_never_followed_because_the_key_would_follow_it():
     handler = authentica._NoRedirect()
 
-    assert handler.redirect_request(None, None, 302, "Found", {}, "https://evil.test/") is None
+    redirected = handler.redirect_request(
+        None, None, 302, "Found", {}, "https://evil.test/"
+    )
+    assert redirected is None
+
+
+# --- a sick Authentica -------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "failure", [(500, None), (503, None), (429, None), TimeoutError("slow")]
+)
+def test_after_three_failures_authentica_is_not_called_for_a_while(failure):
+    sender, transport = make_sender(failure, failure, failure)
+    for _ in range(3):
+        with pytest.raises(SmsDeliveryError):
+            sender.send_code(PHONE)
+
+    with pytest.raises(SmsDeliveryError) as problem:
+        sender.check_code(PHONE, CODE)
+
+    # Answered at once, without a call: nothing can have been sent.
+    assert len(transport.calls) == 3
+    assert problem.value.not_sent
+    assert problem.value.delivery_rejected
+
+
+def test_a_wrong_key_or_a_wrong_code_is_an_answer_and_opens_nothing():
+    sender, transport = make_sender(
+        WRONG_KEY, VERIFY_REFUSED, WRONG_KEY, VERIFY_REFUSED, SEND_OK
+    )
+    for answer in range(4):
+        try:
+            if answer % 2:
+                sender.check_code(PHONE, CODE)
+            else:
+                sender.send_code(PHONE)
+        except SmsDeliveryError:
+            pass
+
+    sender.send_code(PHONE)
+
+    assert len(transport.calls) == 5

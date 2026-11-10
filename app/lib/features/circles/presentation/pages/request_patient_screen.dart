@@ -1,16 +1,20 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/widgets/inline_error.dart';
-import 'package:app/core/widgets/pill_button.dart';
-import 'package:app/core/widgets/step_header.dart';
-import 'package:app/features/auth/presentation/widgets/phone_field.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/phone_field.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/circle_label.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
-import 'package:app/features/circles/presentation/widgets/circle_label_picker.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +22,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// The page that asks a patient who uses the app for a circle (CREAT-04): the
-/// patient's phone number, the word the circle is named with, and the mode
-/// proposed for the patient's app. Once the request is sent, the same page shows
+/// patient's phone number and the mode proposed for the patient's app. The
+/// circle is not named here: the patient names it for themself, and the
+/// sender sees «دائرة» and the patient's name. Once the request is sent, the same page shows
 /// the waiting state (CREAT-05). Needs a [SendCircleRequestCubit] above it.
 class RequestPatientScreen extends StatefulWidget {
   const RequestPatientScreen({super.key});
@@ -30,18 +35,11 @@ class RequestPatientScreen extends StatefulWidget {
 
 class _RequestPatientScreenState extends State<RequestPatientScreen> {
   final TextEditingController _phone = TextEditingController();
-  final TextEditingController _customLabel = TextEditingController();
 
   @override
   void dispose() {
     _phone.dispose();
-    _customLabel.dispose();
     super.dispose();
-  }
-
-  Future<void> _send(BuildContext context, SendCircleRequestCubit cubit) async {
-    final CircleLabel label = cubit.state.label;
-    await cubit.send(labelName: context.tr('circles.label.${label.name}'));
   }
 
   @override
@@ -50,11 +48,17 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocConsumer<SendCircleRequestCubit, SendCircleRequestState>(
-            listenWhen:
-                (SendCircleRequestState before, SendCircleRequestState after) =>
-                    after.sessionEnded && !before.sessionEnded,
+            listenWhen: (
+              SendCircleRequestState before,
+              SendCircleRequestState after,
+            ) => after.sessionEnded && !before.sessionEnded,
             listener: (BuildContext context, SendCircleRequestState state) =>
                 context.go(Routes.auth),
             builder: (BuildContext context, SendCircleRequestState state) {
@@ -73,12 +77,11 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
     SendCircleRequestCubit cubit,
     SendCircleRequestState state,
   ) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final String requiredText = context.tr('circles.field_required');
     return Column(
       children: <Widget>[
         Expanded(
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -86,92 +89,55 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   title: context.tr('circles.request_title'),
                   onBack: context.canPop() ? () => context.pop() : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 PhoneField(
                   controller: _phone,
                   label: context.tr('circles.patient_phone_label'),
                   autofocus: false,
-                  showError: state.showErrors && !cubit.isPhoneValid,
+                  showError: state.showErrors && !state.phoneValid,
                   onChanged: (String typed) =>
                       cubit.phoneChanged(ArabicDigits.digitsOnly(typed)),
                 ),
-                const SizedBox(height: 24),
-                CircleLabelPicker(
-                  selected: state.label,
-                  onSelected: cubit.chooseLabel,
-                  customController: _customLabel,
-                  onCustomChanged: cubit.customLabelChanged,
-                  hint: circleLabelHint(
-                    context,
-                    label: state.label,
-                    customLabel: state.customLabel,
-                  ),
-                  customError:
-                      state.showErrors && state.customLabel.trim().isEmpty
-                      ? requiredText
-                      : null,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  context.tr('circles.proposed_mode'),
-                  style: text.titleSmall?.copyWith(color: AppColors.ink2),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<CircleAppMode>(
-                    // In a right-to-left language the first segment is on the
-                    // right: detailed, then simplified, as in the design.
-                    segments: <ButtonSegment<CircleAppMode>>[
-                      ButtonSegment<CircleAppMode>(
-                        value: CircleAppMode.detailed,
-                        label: Text(context.tr('circles.mode_detailed')),
-                      ),
-                      ButtonSegment<CircleAppMode>(
-                        value: CircleAppMode.simplified,
-                        label: Text(context.tr('circles.mode_simplified')),
-                      ),
-                    ],
-                    selected: <CircleAppMode>{state.mode},
-                    showSelectedIcon: false,
-                    onSelectionChanged: (Set<CircleAppMode> modes) =>
-                        cubit.chooseMode(modes.first),
-                    style: SegmentedButton.styleFrom(
-                      foregroundColor: AppColors.ink2,
-                      selectedForegroundColor: AppColors.brand,
-                      selectedBackgroundColor: AppColors.brandTint,
-                      side: const BorderSide(color: AppColors.fieldBorder),
-                    ).copyWith(
-                      minimumSize: const WidgetStatePropertyAll<Size>(
-                        Size.fromHeight(48),
-                      ),
+                const SizedBox(height: AppSpacing.sm),
+                InsetText.note(context.tr('circles.request_name_note')),
+                const SizedBox(height: AppSpacing.xl),
+                InsetText.header(context.tr('circles.proposed_mode')),
+                const SizedBox(height: AppSpacing.sm),
+                // In a right-to-left language the first segment is on the
+                // right: detailed, then simplified, as in the design.
+                GlassSegmentedControl<CircleAppMode>(
+                  segments: <CircleAppMode, String>{
+                    CircleAppMode.detailed: context.tr('circles.mode_detailed'),
+                    CircleAppMode.simplified: context.tr(
+                      'circles.mode_simplified',
                     ),
-                  ),
+                  },
+                  selected: state.mode,
+                  onChanged: cubit.chooseMode,
                 ),
-                const SizedBox(height: 8),
-                Text(
+                const SizedBox(height: AppSpacing.sm),
+                InsetText.note(
                   context.tr(
                     state.mode == CircleAppMode.simplified
                         ? 'circles.mode_simplified_hint'
                         : 'circles.mode_detailed_hint',
                   ),
-                  style: text.bodySmall?.copyWith(color: AppColors.ink3),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 _Notice(text: context.tr('circles.request_notice')),
                 if (state.errorKey != null) ...<Widget>[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   InlineError(messageKey: state.errorKey!),
                 ],
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         PillButton(
           label: context.tr('circles.send_request'),
           isLoading: state.status == SendStatus.sending,
-          onPressed: () => _send(context, cubit),
+          onPressed: () => cubit.send(),
         ),
       ],
     );
@@ -190,22 +156,25 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.inset),
       decoration: BoxDecoration(
-        color: AppColors.warningTint,
+        color: AppSemanticColors.background,
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(Icons.info_outline, size: 20, color: AppColors.warningInk),
-          const SizedBox(width: 8),
+          Icon(
+            AppIcons.info,
+            size: AppSizes.iconSmall,
+            color: context.tokens.textSecondary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.warningInk,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.tokens.textSecondary),
             ),
           ),
         ],

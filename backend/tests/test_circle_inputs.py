@@ -34,6 +34,7 @@ ENDPOINTS = [
     ("post", f"/api/v1/circles/{CIRCLE}/invitations/{OTHER}/resend"),
     ("delete", f"/api/v1/circles/{CIRCLE}/invitations/{OTHER}"),
     ("get", f"/api/v1/circles/{CIRCLE}/medical-profile"),
+    ("get", f"/api/v1/circles/{CIRCLE}/prayer-times"),
     ("patch", f"/api/v1/circles/{CIRCLE}/medical-profile"),
     ("post", f"/api/v1/circles/{CIRCLE}/emergency-contacts"),
     ("put", f"/api/v1/circles/{CIRCLE}/emergency-contacts/{OTHER}"),
@@ -81,8 +82,9 @@ def test_a_simplified_patient_cannot_manage_the_circle(
     )
     headers = bearer(signed_in.access_token)
 
+    # Renaming is not here: the patient names their own circle, so a
+    # simplified patient may (integration_tests/test_circle_naming.py).
     for method, url, body in [
-        ("patch", f"/api/v1/circles/{CIRCLE}", {"name": "New"}),
         ("post", f"/api/v1/circles/{CIRCLE}/leave", {}),
         (
             "post",

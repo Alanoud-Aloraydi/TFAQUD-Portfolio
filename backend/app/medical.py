@@ -33,6 +33,7 @@ class _Unset:
     """Marks a part of the profile that the request did not mention."""
 
     def __repr__(self):
+        """Show as UNSET in logs and tests."""
         return "UNSET"
 
 
@@ -110,6 +111,7 @@ def _ordered(chosen, allowed) -> list[str]:
 
 
 def _check_codes(field_name: str, chosen, allowed) -> None:
+    """422 when a code is chosen twice or is not in `allowed`."""
     if len(set(chosen)) != len(chosen):
         raise _invalid(
             field_name, "duplicate_choice", "Choose each item once."
@@ -121,6 +123,8 @@ def _check_codes(field_name: str, chosen, allowed) -> None:
 def _check_other(field_name: str, chosen, text: str | None) -> str | None:
     """'other' needs the typed text; the text needs 'other'."""
     text = text.strip() if text else None
+    # «أخرى» needs 1 to 100 characters of words; words without «أخرى» are
+    # refused.
     if "other" in chosen:
         if not text or len(text) > 100:
             raise _invalid(
@@ -169,7 +173,11 @@ class MedicalService(CareService):
         return patient, self._read_profile(patient), self._contacts(patient)
 
     def _read_profile(self, patient: Patient) -> MedicalProfile:
+        """The patient's blood type, conditions and allergies, as saved."""
         profile = MedicalProfile(blood_type=patient.blood_type)
+        # Conditions: no rows means not answered yet; one «none» row means
+        # none; otherwise the codes in the app's order, with the words for
+        # «أخرى».
         conditions = self.session.scalars(
             select(PatientCondition).where(
                 PatientCondition.patient_id == patient.id
@@ -193,6 +201,8 @@ class MedicalService(CareService):
                     "codes": _ordered(codes, CONDITION_CODES),
                     "other": other,
                 }
+        # Allergies: the same, with medication and food apart, each with its
+        # own words for «أخرى».
         allergies = self.session.scalars(
             select(PatientAllergy).where(
                 PatientAllergy.patient_id == patient.id
@@ -251,6 +261,8 @@ class MedicalService(CareService):
             raise _invalid(
                 "blood_type", "unknown_choice", "Unknown blood type."
             )
+        # Lock the patient, then replace only the parts the request named: a
+        # part's old rows go and its new rows come, in one transaction.
         patient = self._open_for(actor_id, circle_id, lock=True)
         if update.blood_type is not UNSET:
             patient.blood_type = update.blood_type
@@ -299,6 +311,10 @@ class MedicalService(CareService):
 
     @staticmethod
     def _condition_rows(value: Conditions) -> list[tuple]:
+        """The rows to save for the conditions; «none» cannot come with any
+        condition.
+        """
+        # «None» is one row, alone.
         if value.status == "none":
             if value.codes or value.other:
                 raise _invalid(
@@ -307,6 +323,8 @@ class MedicalService(CareService):
                     "'No conditions' cannot be combined with other choices.",
                 )
             return [("none", None)]
+        # A list needs one item at least, known codes each once, and words when
+        # «أخرى» is chosen; the rows in the app's order.
         if value.status != "listed":
             raise _invalid("conditions", "unknown_choice", "Unknown status.")
         if not value.codes:
@@ -322,6 +340,10 @@ class MedicalService(CareService):
 
     @staticmethod
     def _allergy_rows(value: Allergies) -> list[tuple]:
+        """The rows to save for the allergies; «none» cannot come with any
+        allergy.
+        """
+        # «None» is one row, alone.
         if value.status == "none":
             if (
                 value.medication
@@ -335,6 +357,8 @@ class MedicalService(CareService):
                     "'No allergies' cannot be combined with other choices.",
                 )
             return [("none", "none", None)]
+        # A list needs one item at least, known codes each once, and words for
+        # each «أخرى» chosen.
         if value.status != "listed":
             raise _invalid("allergies", "unknown_choice", "Unknown status.")
         if not value.medication and not value.food:
@@ -353,6 +377,7 @@ class MedicalService(CareService):
         other_food = _check_other(
             "allergies.other_food", value.food, value.other_food
         )
+        # The rows in the app's order: medication first, then food.
         rows = [
             ("medication", code, other_medication if code == "other" else None)
             for code in _ordered(value.medication, MEDICATION_ALLERGY_CODES)
@@ -366,6 +391,7 @@ class MedicalService(CareService):
     # ---- emergency contacts ------------------------------------------
 
     def _contacts(self, patient: Patient) -> list[EmergencyContact]:
+        """The patient's emergency contacts, the first added first."""
         return list(
             self.session.scalars(
                 select(EmergencyContact)
@@ -383,6 +409,8 @@ class MedicalService(CareService):
         phone: str,
     ) -> EmergencyContact:
         """Add a contact. At most MAX_EMERGENCY_CONTACTS per patient."""
+        # Check the contact, then lock the patient: at most five contacts, each
+        # number once.
         name = self._check_contact(name, relation)
         patient = self._open_for(actor_id, circle_id, lock=True)
         contacts = self._contacts(patient)
@@ -418,6 +446,8 @@ class MedicalService(CareService):
         phone: str,
     ) -> EmergencyContact:
         """Replace name, relation and phone of one contact."""
+        # Check the contact, lock the patient; the new number must not be
+        # another contact's.
         name = self._check_contact(name, relation)
         patient = self._open_for(actor_id, circle_id, lock=True)
         contact = self._get_contact(patient, contact_id)
@@ -459,6 +489,9 @@ class MedicalService(CareService):
 
     @staticmethod
     def _check_contact(name: str, relation: str) -> str:
+        """The contact's trimmed name (1 to 50 characters), after checking the
+        relation is one the app offers.
+        """
         name = name.strip()
         if not name or len(name) > 50:
             raise _invalid(

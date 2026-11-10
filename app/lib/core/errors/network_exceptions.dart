@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 
 import 'failure.dart';
 
+/// Maps network failures to app error types.
 class FailureExceptions {
   static Failure getException(Object error) {
     return switch (error) {
@@ -48,6 +49,7 @@ class FailureExceptions {
       ApiErrorCodes.validationError ||
       ApiErrorCodes.badRequest ||
       ApiErrorCodes.invalidJson => const ValidationFailure(),
+      ApiErrorCodes.invalidBirthDate => const InvalidBirthDateFailure(),
       ApiErrorCodes.medicationPeriodConflict => const ConflictFailure(
         'medications.period_conflict',
       ),
@@ -60,8 +62,69 @@ class FailureExceptions {
       ApiErrorCodes.medicationRevisionDate => const ValidationFailure(
         'medications.revision_date',
       ),
+      ApiErrorCodes.medicationStartInPast => const ValidationFailure(
+        'medications.start_in_past',
+      ),
+      ApiErrorCodes.measurementActivePlanExists => const ConflictFailure(
+        'measurements.active_plan_exists',
+      ),
+      ApiErrorCodes.measurementStartInPast => const ValidationFailure(
+        'measurements.start_in_past',
+      ),
+      ApiErrorCodes.measurementPlanChanged => const ConflictFailure(
+        'measurements.plan_changed',
+      ),
+      ApiErrorCodes.measurementEffectiveDate => const ValidationFailure(
+        'measurements.effective_date',
+      ),
+      ApiErrorCodes.measurementTargetRequired => const ValidationFailure(
+        'measurements.target_required',
+      ),
+      ApiErrorCodes.measurementTargetFromPlan => const ConflictFailure(
+        'measurements.target_from_plan',
+      ),
+      ApiErrorCodes.measurementRecordConflict => const ConflictFailure(
+        'measurements.record_conflict',
+      ),
+      ApiErrorCodes.futureMeasurement => const ValidationFailure(
+        'measurements.future_reading',
+      ),
+      ApiErrorCodes.futureMeasurementTask => const ValidationFailure(
+        'measurements.future_task',
+      ),
+      ApiErrorCodes.measurementWithinTarget ||
+      ApiErrorCodes.measurementNoTarget => const ValidationFailure(
+        'measurements.no_follow_up',
+      ),
       ApiErrorCodes.doseRecordConflict => const ConflictFailure(
         'medications.dose_record_conflict',
+      ),
+      ApiErrorCodes.futureDoseRecord => const ValidationFailure(
+        'medications.future_dose',
+      ),
+      ApiErrorCodes.futureTakenTime => const ValidationFailure(
+        'medications.future_taken_time',
+      ),
+      ApiErrorCodes.appointmentTimeInPast => const ValidationFailure(
+        'appointments.time_in_past',
+      ),
+      ApiErrorCodes.appointmentNotStarted => const ValidationFailure(
+        'appointments.not_started',
+      ),
+      ApiErrorCodes.appointmentChanged => const ConflictFailure(
+        'appointments.changed',
+      ),
+      ApiErrorCodes.appointmentAlreadyClosed => const ConflictFailure(
+        'appointments.already_closed',
+      ),
+      ApiErrorCodes.appointmentInvalidCompanion => const ValidationFailure(
+        'appointments.invalid_companion',
+      ),
+      ApiErrorCodes.appointmentInvalidAudio => const ValidationFailure(
+        'appointments.invalid_audio',
+      ),
+      ApiErrorCodes.appointmentVisitNotCompleted => const ConflictFailure(
+        'appointments.visit_not_completed',
       ),
       ApiErrorCodes.dataConflict => const ConflictFailure(),
       ApiErrorCodes.internalError => const ServerFailure(),

@@ -1,20 +1,31 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/loading_widget.dart';
-import 'package:app/core/widgets/step_header.dart';
+import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
+import 'package:app/features/account/presentation/widgets/account_skeleton.dart';
+import 'package:app/features/account/presentation/widgets/calendar_sync_section.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
-import 'package:app/features/account/presentation/widgets/profile_edit_sheet.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
-import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/request_age.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:app/features/circles/presentation/widgets/status_pill.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,37 +37,9 @@ import 'package:go_router/go_router.dart';
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
-  /// Asks the question of the delete flow that the cubit is waiting on.
-  Future<void> _ask(
-    BuildContext context,
-    AccountCubit cubit,
-    DeletePrompt prompt,
-  ) async {
-    switch (prompt) {
-      case DeletePrompt.none:
-        return;
-      case DeletePrompt.confirm:
-        final bool? agreed = await showDeleteConfirmDialog(context);
-        if (agreed == true) {
-          await cubit.confirmDelete();
-        } else {
-          cubit.cancelDelete();
-        }
-      case DeletePrompt.patientChoice:
-        final PatientChoice? choice = await showPatientChoiceDialog(context);
-        if (choice == null) {
-          cubit.cancelDelete();
-        } else {
-          await cubit.choosePatient(choice);
-        }
-      case DeletePrompt.lastManager:
-        final bool? agreedToAll = await showLastManagerDialog(context);
-        if (agreedToAll == true) {
-          await cubit.confirmLastManager();
-        } else {
-          cubit.cancelDelete();
-        }
-    }
+  Future<void> _edit(BuildContext context, AccountCubit cubit) async {
+    final saved = await context.push<bool>(Routes.accountEdit);
+    if (saved == true && !cubit.isClosed) await cubit.load();
   }
 
   @override
@@ -65,7 +48,12 @@ class AccountScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            0,
+          ),
           child: BlocConsumer<AccountCubit, AccountState>(
             listenWhen: (AccountState before, AccountState after) =>
                 (after.sessionEnded && !before.sessionEnded) ||
@@ -82,13 +70,12 @@ class AccountScreen extends StatelessWidget {
               }
               final String? key = state.errorKey ?? state.noticeKey;
               if (key != null) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(context.tr(key))));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(context.tr(key))));
                 cubit.messagesShown();
               }
               if (state.deletePrompt != DeletePrompt.none) {
-                _ask(context, cubit, state.deletePrompt);
+                answerDeletePrompt(context, cubit, state.deletePrompt);
               }
             },
             builder: (BuildContext context, AccountState state) {
@@ -97,12 +84,28 @@ class AccountScreen extends StatelessWidget {
                 children: <Widget>[
                   StepHeader(
                     title: context.tr('account.title'),
-                    onBack: context.canPop()
+                    // The page is a modal: the close button takes it down.
+                    onClose: context.canPop()
                         ? () => context.pop()
                         : () => context.go(Routes.today),
+                    // One edit button, in the corner: a pencil without a word,
+                    // like the close button. VoiceOver reads «تعديل».
+                    trailing: state.status == AccountStatus.ready
+                        ? GlassIconButton(
+                            tooltip: context.tr('account.edit'),
+                            icon: const Icon(AppIcons.pencil),
+                            onPressed: () => _edit(context, cubit),
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _body(context, cubit, state)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    // Loading, error and content fade into each other.
+                    child: ContentSwitcher(
+                      stateKey: state.status,
+                      child: _body(context, cubit, state),
+                    ),
+                  ),
                 ],
               );
             },
@@ -115,7 +118,7 @@ class AccountScreen extends StatelessWidget {
   Widget _body(BuildContext context, AccountCubit cubit, AccountState state) {
     switch (state.status) {
       case AccountStatus.loading:
-        return const LoadingWidget();
+        return const AccountSkeleton();
       case AccountStatus.failure:
         return Center(
           child: Column(
@@ -125,7 +128,7 @@ class AccountScreen extends StatelessWidget {
                 context.tr(state.messageKey ?? 'error.unknown'),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: cubit.load,
                 child: Text(context.tr('auth.retry')),
@@ -152,71 +155,75 @@ class AccountScreen extends StatelessWidget {
       onRefresh: cubit.load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
         children: <Widget>[
-          SettingsCard(
+          Column(
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: 48,
-                      height: 48,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: AppColors.brandTint,
-                        shape: BoxShape.circle,
+              Semantics(
+                button: true,
+                label: context.tr('photos.edit_your_photo'),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => showPersonPhotoSheet(
+                    context,
+                    title: context.tr('photos.your_photo'),
+                    name: shown,
+                    photoPath: ApiEndpoints.accountPhoto,
+                    avatarPath: ApiEndpoints.accountAvatar,
+                    avatarCode: account.avatarCode,
+                    frontCamera: true,
+                    onSaved: cubit.load,
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      PersonPhoto(
+                        name: shown,
+                        photoPath: ApiEndpoints.accountPhoto,
+                        avatarCode: account.avatarCode,
+                        size: AppSizes.avatarLarge,
                       ),
-                      child: Text(
-                        shown.isEmpty ? '؟' : shown.characters.first,
-                        style: text.titleLarge?.copyWith(
-                          color: AppColors.brand,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(account.fullName, style: text.titleLarge),
-                    ),
-                  ],
+                      const PhotoEditBadge(),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(account.fullName, style: text.titleLarge),
+              Text(
+                SaudiMobile.display(account.phoneNumber),
+                textDirection: TextDirection.ltr,
+                style: text.bodySmall?.copyWith(
+                  color: context.tokens.textSecondary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           SettingsSection(
             title: context.tr('account.my_data'),
             children: <Widget>[
               InfoRow(
                 label: context.tr('account.display_name'),
                 value: account.displayName,
-                editLabel: context.tr('account.edit_display_title'),
-                onEdit: () => showProfileEditSheet(
-                  context,
-                  cubit: cubit,
-                  field: ProfileField.displayName,
-                ),
               ),
               InfoRow(
                 label: context.tr('account.full_name'),
                 value: account.fullName,
-                editLabel: context.tr('account.edit_full_title'),
-                onEdit: () => showProfileEditSheet(
-                  context,
-                  cubit: cubit,
-                  field: ProfileField.fullName,
-                ),
               ),
               InfoRow(
                 label: context.tr('account.phone'),
-                value: RequestSentView.displayPhone(account.phoneNumber),
+                value: SaudiMobile.display(account.phoneNumber),
                 ltr: true,
               ),
             ],
           ),
+          if (state.circles.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.xl),
+            _CalendarSyncCard(circles: state.circles),
+          ],
           if (state.sent.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             SettingsSection(
               title: context.tr('account.awaiting_title'),
               children: <Widget>[
@@ -232,18 +239,15 @@ class AccountScreen extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 12),
-          Text(
-            context.tr('account.medical_note'),
-            style: text.bodySmall?.copyWith(color: AppColors.ink3),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.md),
+          InsetText.note(context.tr('account.medical_note')),
+          const SizedBox(height: AppSpacing.xl),
           SettingsCard(
             children: <Widget>[
               const SignOutRow(),
               ActionRow(
                 label: context.tr('account.delete_account'),
-                color: AppColors.dangerInk,
+                color: AppSemanticColors.statusError,
                 busy: state.deleting,
                 onPressed: cubit.startDelete,
               ),
@@ -255,8 +259,53 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-/// One circle that waits for the patient: the word it is named with, how long
-/// ago the request was sent, and where it stands.
+/// «مزامنة مع تقويم الجهاز» the way iOS Settings lays out a list of
+/// switches. One circle: its three switches. Several (a manager may be in
+/// many): one group with a row per circle, its patient's photo and how many
+/// switches are on, closed until tapped, so the page stays short. One
+/// shared explanation below.
+class _CalendarSyncCard extends StatelessWidget {
+  const _CalendarSyncCard({required this.circles});
+
+  final List<CareCircleSummary> circles;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionTitle(context.tr('circle_overview.calendar_sync_title')),
+        if (circles.length == 1)
+          CalendarSyncToggles(circleId: circles.single.id)
+        else
+          CalendarSyncCircleList(
+            circles: <CalendarSyncCircle>[
+              for (final CareCircleSummary circle in circles)
+                (
+                  id: circle.id,
+                  name: circle.name,
+                  leading: PersonPhoto(
+                    name: circle.patientName ?? circle.name,
+                    // The patient with their own account has one photo:
+                    // the account's.
+                    photoPath: circle.isPatient
+                        ? ApiEndpoints.accountPhoto
+                        : ApiEndpoints.patientPhoto(circle.id),
+                    avatarCode: circle.patientAvatarCode,
+                    size: SettingsIconTile.size,
+                  ),
+                ),
+            ],
+          ),
+        const CalendarSyncHint(),
+      ],
+    );
+  }
+}
+
+/// One circle that waits for the patient: the number it was sent to, how
+/// long ago, and where it stands. The circle has no name yet: the patient
+/// names it when they complete the request.
 class _SentRequestRow extends StatelessWidget {
   const _SentRequestRow({required this.request, required this.onTap});
 
@@ -267,60 +316,69 @@ class _SentRequestRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final bool accepted = request.status == CircleRequestStatus.accepted;
-    final int? days = RequestAge.days(request.createdAt, DateTime.now());
+    final int? days = RequestAge.days(
+      request.createdAt,
+      PatientClockScope.of(context),
+    );
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: Row(
           children: <Widget>[
             Container(
-              width: 40,
-              height: 40,
+              width: AppSizes.avatar,
+              height: AppSizes.avatar,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                color: AppColors.warningTint,
+                color: AppSemanticColors.selectedSurface,
                 shape: BoxShape.circle,
               ),
-              child: Text(
-                request.circleLabel.isEmpty
-                    ? '؟'
-                    : request.circleLabel.characters.first,
-                style: text.titleMedium?.copyWith(color: AppColors.warningInk),
+              child: const Icon(
+                AppIcons.phone,
+                size: AppSizes.iconSmall,
+                color: AppSemanticColors.textPrimary,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(request.circleLabel, style: text.titleMedium),
+                  Text(
+                    SaudiMobile.display(request.patientPhoneNumber),
+                    textDirection: TextDirection.ltr,
+                    style: text.titleMedium,
+                  ),
                   if (days != null)
                     Text(
                       _ageText(context, days),
-                      style: text.bodySmall?.copyWith(color: AppColors.ink3),
+                      style: text.bodySmall?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             StatusPill(
-              icon: accepted ? Icons.check : Icons.schedule,
+              icon: accepted ? AppIcons.check : AppIcons.clock,
               text: context.tr(
                 accepted
                     ? 'account.status_accepted_short'
                     : 'circles.request_status_pending',
               ),
-              background: accepted
-                  ? AppColors.successTint
-                  : AppColors.warningTint,
+              background: AppSemanticColors.background,
               foreground: accepted
-                  ? AppColors.successInk
-                  : AppColors.warningInk,
+                  ? AppSemanticColors.statusSuccess
+                  : context.tokens.textSecondary,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             // Mirrored on a right-to-left screen: it points to the end of the row.
-            const Icon(Icons.chevron_right, color: AppColors.ink3),
+            Icon(AppIcons.forward, color: context.tokens.textSecondary),
           ],
         ),
       ),

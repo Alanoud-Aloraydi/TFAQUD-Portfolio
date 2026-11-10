@@ -1,7 +1,10 @@
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/theme/app_component_themes.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -21,43 +24,50 @@ class ContactTile extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.line),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
       ),
+      decoration: AppSurfaces.card(),
       child: Row(
         children: <Widget>[
           ExcludeSemantics(
             child: CircleAvatar(
-              backgroundColor: AppColors.successTint,
-              foregroundColor: AppColors.successInk,
+              backgroundColor: AppSemanticColors.selectedSurface,
+              foregroundColor: AppSemanticColors.textPrimary,
               child: Text(
                 contact.initial,
-                style: text.titleMedium?.copyWith(color: AppColors.successInk),
+                style: text.titleMedium?.copyWith(
+                  color: AppSemanticColors.textPrimary,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(contact.name, style: text.titleMedium),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.xs),
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 8,
                   children: <Widget>[
                     Text(
                       MedicalTexts.relation(context, contact),
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
                     ),
                     Text(
                       MedicalTexts.phone(contact),
                       textDirection: TextDirection.ltr,
-                      style: text.bodyMedium?.copyWith(color: AppColors.ink2),
+                      style: text.bodyMedium?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -67,7 +77,10 @@ class ContactTile extends StatelessWidget {
           if (onEdit != null)
             IconButton(
               onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, color: AppColors.brand),
+              icon: const Icon(
+                AppIcons.pencil,
+                color: AppSemanticColors.textPrimary,
+              ),
               tooltip: context.tr(
                 'circles.contact_edit_action',
                 args: <String>[contact.name],

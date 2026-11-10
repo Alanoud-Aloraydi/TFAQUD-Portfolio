@@ -1,19 +1,35 @@
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+/// Displays the dose occurrence card UI.
 class DoseOccurrenceCard extends StatelessWidget {
   const DoseOccurrenceCard({
     super.key,
     required this.occurrence,
     this.showDate = false,
+    this.showControls = true,
+    this.historyLayout = false,
+    this.timingState,
+    this.circleId,
   });
 
   final DoseOccurrence occurrence;
   final bool showDate;
+  final bool showControls;
+  final bool historyLayout;
+  final DoseTimingState? timingState;
+
+  /// Needed to show who recorded it; null hides that line.
+  final String? circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -24,16 +40,39 @@ class DoseOccurrenceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _TimeBadge(occurrence: occurrence, showDate: showDate),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: _DoseDetails(occurrence: occurrence)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            DoseRecordControls(occurrence: occurrence),
+            if (historyLayout) ...[
+              Row(
+                children: [
+                  Text(
+                    clockText(occurrence.time),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: AppTextTheme.bold,
+                      color: AppSemanticColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  _TimingState(state: timingState ?? occurrence.timingState),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _DoseDetails(occurrence: occurrence, compact: true),
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TimeBadge(
+                    occurrence: occurrence,
+                    showDate: showDate,
+                    timingState: timingState ?? occurrence.timingState,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _DoseDetails(occurrence: occurrence)),
+                ],
+              ),
+            if (showControls || occurrence.record != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              DoseRecordControls(occurrence: occurrence, circleId: circleId),
+            ],
           ],
         ),
       ),
@@ -41,15 +80,21 @@ class DoseOccurrenceCard extends StatelessWidget {
   }
 }
 
+/// Renders the time badge element of dose occurrence card.
 class _TimeBadge extends StatelessWidget {
-  const _TimeBadge({required this.occurrence, required this.showDate});
+  const _TimeBadge({
+    required this.occurrence,
+    required this.showDate,
+    required this.timingState,
+  });
 
   final DoseOccurrence occurrence;
   final bool showDate;
+  final DoseTimingState? timingState;
 
   @override
   Widget build(BuildContext context) {
-    final value = formatMedicationTime(context, occurrence.time);
+    final value = clockText(occurrence.time);
     return DecoratedBox(
       decoration: BoxDecoration(
         border: BorderDirectional(
@@ -68,9 +113,15 @@ class _TimeBadge extends StatelessWidget {
                 formatMedicationDate(context, occurrence.scheduledOn),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
-            Text(value, style: Theme.of(context).textTheme.labelMedium),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: AppTextTheme.bold,
+                color: AppSemanticColors.textPrimary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
-            _TimingState(state: occurrence.timingState),
+            _TimingState(state: timingState),
           ],
         ),
       ),
@@ -86,54 +137,57 @@ class _TimingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state == null) return const SizedBox.shrink();
-    final icon = switch (state!) {
-      DoseTimingState.upcoming => Icons.schedule_outlined,
-      DoseTimingState.due => Icons.notifications_active_outlined,
-      DoseTimingState.late => Icons.warning_amber_rounded,
-      DoseTimingState.missed => Icons.event_busy_outlined,
-    };
     final label = context.tr('medications.timing.${state!.name}');
-    final color = Theme.of(context).colorScheme.primary;
-    return Semantics(
-      label: label,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-            ),
-          ),
-        ],
+    final tokens = context.tokens;
+    final (Color background, Color foreground) colors = switch (state!) {
+      DoseTimingState.upcoming => (
+        AppSemanticColors.surfaceContent,
+        tokens.textSecondary,
       ),
+      DoseTimingState.due => (
+        AppSemanticColors.surfaceContent,
+        AppSemanticColors.textPrimary,
+      ),
+      // Timing needs attention, but is not a medical error or proof of omission.
+      DoseTimingState.late || DoseTimingState.missed => (
+        AppSemanticColors.surfaceAttention,
+        tokens.warningText,
+      ),
+    };
+    return CompactStatusBadge(
+      text: label,
+      background: colors.$1,
+      foreground: colors.$2,
     );
   }
 }
 
+/// Renders the dose details element of dose occurrence card.
 class _DoseDetails extends StatelessWidget {
-  const _DoseDetails({required this.occurrence});
+  const _DoseDetails({required this.occurrence, this.compact = false});
 
   final DoseOccurrence occurrence;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final dose = context.tr(
-      'medications.dose',
-      args: [
-        formatMedicationNumber(occurrence.doseValue),
-        context.tr('medications.unit.${occurrence.doseUnit.name}'),
-      ],
+    final dose = formatMedicationDose(
+      context,
+      occurrence.doseValue,
+      occurrence.doseUnit,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(occurrence.name, style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          occurrence.name,
+          style: compact
+              ? Theme.of(context).textTheme.titleMedium
+              : Theme.of(context).textTheme.titleLarge,
+        ),
         Text(
           '${formatMedicationNumber(occurrence.strengthValue)} '
-          '${occurrence.strengthUnit.apiValue}',
+          '${context.tr('medications.strength_display.${occurrence.strengthUnit.name}')}',
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(dose, style: Theme.of(context).textTheme.bodySmall),

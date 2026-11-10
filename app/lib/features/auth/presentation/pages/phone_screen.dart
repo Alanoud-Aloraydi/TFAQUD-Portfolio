@@ -1,11 +1,13 @@
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/inline_error.dart';
-import 'package:app/core/widgets/pill_button.dart';
-import 'package:app/core/widgets/step_header.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/phone_field.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
-import 'package:app/features/auth/presentation/widgets/phone_field.dart';
-import 'package:app/core/utils/arabic_digits.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,9 +29,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     super.initState();
     // Shows the number again when the user comes back from the code page.
     _controller = TextEditingController(
-      text: PhoneNumberFormatter.display(
-        context.read<SignInCubit>().state.phone,
-      ),
+      text: SaudiMobile.group(context.read<SignInCubit>().state.phone),
     );
   }
 
@@ -37,14 +37,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  void _back() {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(Routes.auth);
-    }
   }
 
   Future<void> _send() async {
@@ -57,22 +49,33 @@ class _PhoneScreenState extends State<PhoneScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<SignInCubit, SignInState>(
             builder: (BuildContext context, SignInState state) {
               return Column(
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           StepHeader(
                             title: context.tr('auth.phone_title'),
                             subtitle: context.tr('auth.phone_subtitle'),
-                            onBack: _back,
+                            // No back link when this is the first page:
+                            // the welcome was already shown on this install.
+                            onBack: context.canPop()
+                                ? () => context.pop()
+                                : null,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.xl),
                           PhoneField(
                             controller: _controller,
                             showError: state.showPhoneError,
@@ -81,14 +84,14 @@ class _PhoneScreenState extends State<PhoneScreen> {
                                 .phoneChanged(ArabicDigits.digitsOnly(text)),
                           ),
                           if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             InlineError(messageKey: state.errorKey!),
                           ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('auth.send_code'),
                     isLoading: state.status == SignInStatus.sendingCode,

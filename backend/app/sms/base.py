@@ -30,20 +30,35 @@ class SmsDeliveryError(Exception):
     This is not the same as a wrong code. A wrong code is the answer False of
     `check_code`. This error means that we do not know: the provider could not
     be reached, refused our key, or gave an answer we cannot trust. `status` is
-    the HTTP status when there was one.
+    the HTTP status when there was one. `not_sent` says the provider was not
+    called at all (its circuit breaker is open), so nothing can have left.
     """
 
-    def __init__(self, message: str, status: int | None = None):
+    def __init__(
+        self,
+        message: str,
+        status: int | None = None,
+        *,
+        not_sent: bool = False,
+    ):
+        """Keep the message, the HTTP status (when there was one) and whether
+        the provider was not called at all.
+        """
         super().__init__(message)
         self.status = status
+        self.not_sent = not_sent
 
     @property
     def delivery_rejected(self) -> bool:
-        """A definite client rejection permits releasing delivery quota."""
-        return self.status in {400, 401, 403, 404, 422, 429}
+        """Nothing was sent for sure, so the delivery quota is given back:
+        the provider refused, or was not called."""
+        return self.not_sent or self.status in {400, 401, 403, 404, 422, 429}
 
 
 class SmsSender(ABC):
+    """What every code sender does: send a code to a phone number, and check a
+    code typed for it.
+    """
     @abstractmethod
     def send_code(self, phone: str) -> None:
         """Make a code and send it to `phone` (international format, +966...).

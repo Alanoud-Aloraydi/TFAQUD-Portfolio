@@ -53,7 +53,8 @@ Every error has this shape and nothing else:
 - `message` is English, for developers and logs. It is not shown to the user.
 - `details` appears only for `validation_error`.
 - `retry_after_seconds` appears only when the app can be told how long to wait. Today
-  that is `too_many_codes` only. The same number is sent in the header `Retry-After`.
+  that is `too_many_codes` and `resend_wait`. The same number is sent in the header
+  `Retry-After`.
 - A 500 never contains a traceback or any internal detail.
 
 | Status | `code` | When | What the app does | Label |
@@ -74,7 +75,8 @@ Every error has this shape and nothing else:
 | 422 | `code_expired` | The code is older than 300 seconds. No try is used. | Offer to send a new code (a resend). | Built |
 | 422 | `code_already_used` | The request is finished: its code was accepted before. | Start again. | Built |
 | 429 | `too_many_attempts` | The request used its 3 wrong tries. | Tell the user; start a new request. | Built |
-| 429 | `too_many_codes` | 3 codes were already sent to this phone number in the last hour. Carries `retry_after_seconds`. | Show how long to wait. | Built |
+| 429 | `too_many_codes` | The phone number had its 20 codes for the day (counted since its last sign-in), or the asking device (10) or network (30) had its codes for the hour. Carries `retry_after_seconds`. | Show how long to wait. | Built |
+| 429 | `resend_wait` | A code went to this phone number a moment ago. The wait grows with each code: 30 s, 1, 2, 5, then 10 minutes. Carries `retry_after_seconds`. | Show the countdown. | Built |
 | 409 | `data_conflict` | The database refused a write that broke one of its rules, for example two requests at the same time. | Reload the data and try once more. | Built |
 | 500 | `internal_error` | An unexpected error on the server. | Show a general error. Keep the `request_id`. | Built |
 | 503 | `sms_unavailable` | The SMS provider could not send or check the code. Nothing was counted. | Show "try again". | Built |
@@ -152,7 +154,7 @@ Authorization: Bearer <access token>
 | | Access token | Refresh token |
 |---|---|---|
 | What it is | A signed token (JWT, HS256) holding the user id, the session id and the expiry time | A random string with nothing inside |
-| Lifetime | 15 minutes (**Decided**) | 30 days (**Decided**) |
+| Lifetime | 15 minutes (**Decided**) | None: it works until the session is signed out (**Decided** on 10 November 2026) |
 | Sent to | Every protected endpoint | `POST /api/v1/auth/refresh` only |
 | The server keeps | Nothing. It checks the signature and the session record. | Only the SHA-256 hash of it, in the session record |
 
@@ -166,6 +168,19 @@ and from that moment:
 Signing out one session does not end the user's other sessions (**Decided**).
 There is no endpoint that ends all the sessions at once, because no story asks
 for it. Deleting an account (F05) ends every session of that user.
+
+**A session ends only by a sign-out (Rule, 10 November 2026).** A refresh token
+has no end date. A session ends in one of three ways, and each is a sign-out:
+
+- the person signs out (`POST /api/v1/auth/sign-out`);
+- the account is deleted (F05);
+- the app was deleted from the phone: Apple then answers 410 for the phone's
+  push token, and the server signs out the session that token belongs to
+  (section 6, push-device). Apple's answer can come days later.
+
+The app also signs out by itself when it is installed again: iOS keeps the
+tokens in the Keychain after the app is deleted, so the app checks on its
+first start and signs the old session out instead of using it.
 
 **Order of the checks on a protected request (Built).** First the signature,
 then the expiry, then the session record. This is why an expired token gives
@@ -242,7 +257,9 @@ Needs a valid access token. Tells the app who the token belongs to.
     "last_name": null,
     "display_name": null,
     "profile_complete": false,
-    "app_mode": null
+    "app_mode": null,
+    "birth_date": null,
+    "city": null
   }
 }
 ```
@@ -272,21 +289,29 @@ first answer:
 200:
 
 ```json
-{ "verification_id": "10648d8694f64637be154c66408900ba" }
+{ "verification_id": "10648d8694f64637be154c66408900ba", "resend_after_seconds": 30 }
 ```
+
+`resend_after_seconds` is the wait before this number may get one more code; the
+app shows it as the countdown of «إعادة إرسال الرمز». The app also sends the header
+`X-Device-Id`: a random id of the install (8 to 64 letters, digits or `-`;
+anything else is ignored).
 
 | Rule | Contract | Label |
 |---|---|---|
 | Phone number | `+966`, then 9 digits that start with 5 (`+9665XXXXXXXX`), English digits only. The app builds it from what the user types. Anything else is 422 `validation_error` with the detail code `invalid_phone`, and no SMS is sent. | Built |
 | New request | Without `verification_id` a new request starts, with its own 3 tries. | Built |
 | Resend | With `verification_id` another SMS is sent for the same request. The wrong tries already used stay used. | Built |
-| Codes per phone number | At most 3 SMS per phone number in any 60 minutes. A resend is an SMS. The 4th is refused with 429 `too_many_codes` and nothing is sent. `retry_after_seconds` (and the header `Retry-After`) says how long to wait: until the oldest SMS of the hour is one hour old. | Built |
+| Wait between codes | After each SMS to a number the next one waits 30 s, then 1, 2, 5, and 10 minutes for every one after (`OTP_RESEND_WAITS`). Too soon is 429 `resend_wait` and nothing is sent. | Built |
+| The owner's known phone | A device (`X-Device-Id`) that already signed in with this number (it asked for a code that was accepted) counts only its own codes for the wait and the codes of the day, and the cap of its network does not apply to it. So someone who types another person's number cannot lock its owner out on the owner's phone. Every other device, a new phone of the owner too, counts all the number's codes. Since 6 November 2026. | Built |
+| Codes per phone number | At most 20 SMS per number in 24 hours (`OTP_MAX_SENDS_PER_DAY`), counted only since its last successful sign-in. A resend is an SMS. The next one is 429 `too_many_codes`; `retry_after_seconds` (and `Retry-After`) says when the oldest one leaves the 24 hours. | Built |
+| Codes per device and network | At most 10 codes per hour from one device (`X-Device-Id`, `OTP_MAX_SENDS_PER_DEVICE_HOUR`) and 30 from one IP (`OTP_MAX_SENDS_PER_IP_HOUR`), for any numbers. Behind Render the IP is read from `CLIENT_IP_HEADER` (`CF-Connecting-IP`). The next one is 429 `too_many_codes`. | Built |
 | Request without tries | A resend into a request that already used its 3 wrong tries is refused with 429 `too_many_attempts`. Nothing is sent. The app starts a new request. | Built |
 | Same answer for every number | A phone number with an account and one without get the same answer, so the answer does not tell whether an account exists. | Built |
-| The provider fails | 503 `sms_unavailable`. A send that failed is not counted in the limit of 3, and a request that only had that send is removed. | Built |
+| The provider fails | 503 `sms_unavailable`. A send that failed is not counted in any limit, and a request that only had that send is removed. | Built |
 
 Errors: 400 `invalid_json`, 404 `verification_not_found`, 422 `validation_error`,
-429 `too_many_codes`, 429 `too_many_attempts`, 503 `sms_unavailable`.
+429 `too_many_codes`, 429 `resend_wait`, 429 `too_many_attempts`, 503 `sms_unavailable`.
 
 Real answers:
 
@@ -294,8 +319,8 @@ Real answers:
 POST /api/v1/auth/request-code   {"phone_number": "0501234567"}
 -> 422  validation_error, details: [{"field": "phone_number", "code": "invalid_phone", ...}]
 
-4th code in one hour
--> 429  too_many_codes, "retry_after_seconds": 3239, header Retry-After: 3239
+A second code 10 seconds after the first
+-> 429  resend_wait, "retry_after_seconds": 20, header Retry-After: 20
 ```
 
 ### POST /api/v1/auth/verify-code
@@ -318,7 +343,6 @@ Body:
   "access_token": "<access token>",
   "access_token_expires_at": "2026-10-15T12:15:00+00:00",
   "refresh_token": "<refresh token>",
-  "refresh_token_expires_at": "2026-11-14T12:00:00+00:00",
   "account": {
     "id": "1840809a6c1b4814b9d1ecc779b8241b",
     "phone_number": "+966501234567",
@@ -326,7 +350,9 @@ Body:
     "last_name": null,
     "display_name": null,
     "profile_complete": false,
-    "app_mode": null
+    "app_mode": null,
+    "birth_date": null,
+    "city": null
   }
 }
 ```
@@ -362,10 +388,21 @@ Feature F01, the page after the first sign-in. Needs a valid access token. Saves
 the three names of the account that the token belongs to and replaces the earlier
 values. It is `PUT` because the app sends all three names every time.
 
+Onboarding also sends the person's birth date and city (Built, 2 November 2026).
+They are kept on the account, so a circle for your own care needs only its name
+(see "Creating a circle"). The account page sends only the names; a birth date or
+city that is left out keeps the saved one.
+
 Body:
 
 ```json
-{ "first_name": "Leen", "last_name": "Algraawi", "display_name": "Leen" }
+{
+  "first_name": "Leen",
+  "last_name": "Algraawi",
+  "display_name": "Leen",
+  "birth_date": "1990-03-04",
+  "city": "Riyadh"
+}
 ```
 
 200:
@@ -379,7 +416,9 @@ Body:
     "last_name": "Algraawi",
     "display_name": "Leen",
     "profile_complete": true,
-    "app_mode": null
+    "app_mode": null,
+    "birth_date": "1990-03-04",
+    "city": "Riyadh"
   }
 }
 ```
@@ -390,6 +429,8 @@ Body:
 | `first_name`, `last_name` | 1 to 50 characters after the spaces at both ends are removed. | To confirm |
 | `display_name` | 1 to 30 characters, the same way. | To confirm |
 | One line | A name cannot contain a line break or another control character (detail code `invalid_name`). | To confirm |
+| `birth_date` | Optional. `YYYY-MM-DD`, not before 1900 and not in the future (`invalid_birth_date`). | Built |
+| `city` | Optional. 1 to 60 characters, one line. | Built |
 
 Errors: 400 `invalid_json`, 401 (`missing_token`, `invalid_token`,
 `access_token_expired`, `session_revoked`), 404 `user_not_found`, 422
@@ -419,6 +460,63 @@ optional; an account with no circles sends no body):
 204, empty body. Errors: 400 `invalid_json`, 401, 422 `patient_choice_required`,
 `last_manager`, `validation_error`.
 
+### PUT /api/v1/accounts/me/push-device (Built)
+
+The app sends its phone's Apple push token after the person signs in. Needs a valid
+access token. Body:
+
+```json
+{ "token": "a1b2...(64 hexadecimal characters)" }
+```
+
+The token (64 to 200 hexadecimal characters, any case) is kept with the sign-in
+(session) that sent it: after a sign-out that phone gets no push, and deleting the
+account or the session deletes it. A token that belonged to another sign-in moves to
+this one. A sign-in keeps only the last token it sent: the app sends its token every
+time it opens, and a new one replaces the old. When Apple answers 410 for a token
+(the app was deleted), the token is deleted and its sign-in is signed out; a token
+that is only wrong for the app (`BadDeviceToken`, often a sandbox token on the
+production server) is deleted and the sign-in stays. 204, empty body. Errors: 400 `invalid_json`, 401, 422 `validation_error`,
+503 without a database.
+
+The server sends a push (title and one line, in Arabic) for: a new or resent
+invitation (to the invited number's account), a circle request (to the patient's
+account), the patient's answer (to the sender), and a completed request (to the
+sender). The push carries `kind`: `invitation`, `circle_request`, `request_answer`
+or `circle_ready`. Pushes go out after the commit and never fail the request.
+Apple sends them only to an app signed with a paid Apple Developer account; until
+then `PUSH_BACKEND=none` and nothing is sent (backend README, "Push
+notifications").
+
+### PUT /api/v1/circles/{circle_id}/task-snoozes (Built)
+
+«ذكّرني لاحقًا», shared by the circle (migration 0033). Any member (a manager, or
+the patient in Simplified Mode) puts one dose or reading time off for some
+minutes. Body:
+
+```json
+{ "task": "dose", "task_id": "<schedule id>", "scheduled_on": "2026-11-11", "minutes": 15 }
+```
+
+A reading time is `"task": "measurement"` with its plan version as `task_id` and
+its `"time_of_day": "08:00"` (a version can read more than once a day). `minutes`
+is 1 to 240. Put off again, the same task moves to the new time.
+
+200:
+
+```json
+{ "snooze": { "remind_at": "2026-11-11T05:20:00+00:00", "minutes": 15,
+  "snoozed_by": { "account_id": "…", "name": "Reem", "avatar_code": null } } }
+```
+
+Every occurrence of `GET …/medication-occurrences` and `GET
+…/measurement-occurrences` carries the same `snooze` while it waits (null
+otherwise, and once the task is recorded). At `remind_at` every member except
+the one who put it off gets a push (`kind`: `dose_snoozed` or
+`measurement_snoozed`); that person's own phone reminds them. A task put off is
+not called missed until its grace has passed after `remind_at`. Errors: 404 (no
+such task that day), 409 `task_already_recorded`, 422 `validation_error`.
+
 ### Circles, requests, invitations and the medical file
 
 Built on 26 October 2026 for the circle creation, circle management and profile
@@ -432,6 +530,7 @@ the team has not approved them yet.
 | Ids | Text with hyphens, like the circle ids of `GET /api/v1/home`. The sign-in endpoints still return the account id without hyphens (section 10, point 9). |
 | Dates | `birth_date` is written `YYYY-MM-DD` and cannot be in the future or before 1900. |
 | Location | `latitude` and `longitude` are numbers, sent together or not at all. The city is always required; the location is what "use my location" adds. |
+| Time zone | `time_zone` is the IANA zone where the patient lives (`Asia/Riyadh`, `Europe/London`). Every time of a circle (doses, readings, visits, "today", the birth-date check, prayer times) is wall clock in it, whoever records and wherever their phone is. The app sends it with the city: `Asia/Riyadh` for a city of its Saudi list, the phone's zone for a city typed by hand. Left out, an edit keeps the saved zone and a creation gets `Asia/Riyadh` (an app older than zones offers only Saudi cities). A name that is not an IANA zone gives 422 `invalid_time_zone`. Built 10 November 2026, migration 0030. |
 | One transaction | A request is saved completely or not at all. A circle is never half created: if the medical part of a creation request is wrong, no circle, no patient and no mode change is saved. |
 | Answers | Circle data carries `Cache-Control: no-store`. |
 | Hidden ids | A circle that you are not in and a circle that does not exist both give 403 `forbidden`. A request, an invitation or an emergency contact that is not yours and one that does not exist both give 404 `not_found`. |
@@ -444,7 +543,7 @@ the team has not approved them yet.
 | `POST /api/v1/circles/self` | any signed-in account with a profile | 201 `circle` |
 | `POST /api/v1/circles/patient-without-account` | the same | 201 `circle` |
 | `GET /api/v1/circles/{circle_id}` | manager, simplified patient | 200 `circle` |
-| `PATCH /api/v1/circles/{circle_id}` (rename) | manager | 200 `circle` |
+| `PATCH /api/v1/circles/{circle_id}` (rename) | the patient with an account (the rule below) | 200 `circle` |
 | `PUT /api/v1/circles/{circle_id}/patient` | manager, simplified patient | 200 `circle` |
 | `POST /api/v1/circles/{circle_id}/leave` | manager | 204 |
 | `DELETE /api/v1/circles/{circle_id}?confirm=true` | manager, simplified patient (the rule below) | 204 |
@@ -472,7 +571,12 @@ manages nothing.
 #### Creating a circle
 
 Self-care (PROFILE-01). The account is the patient and the manager. The name of the
-patient is read from the account.
+patient is read from the account. Since 2 November 2026 the app sends only `name`:
+`birth_date` and `city` are optional and, when left out, are read from the account
+(onboarding saves them). An account that has neither saved nor sent them gets 422
+`birth_date_required` or `city_required`. The same holds for
+`POST /api/v1/circle-requests/{request_id}/complete`, whose body can now be `{}`.
+The health condition and allergies are filled later in the medical file.
 
 ```json
 POST /api/v1/circles/self
@@ -480,6 +584,7 @@ POST /api/v1/circles/self
   "name": "My care",
   "birth_date": "1954-06-05",
   "city": "Riyadh",
+  "time_zone": "Asia/Riyadh",
   "latitude": 24.7136,
   "longitude": 46.6753,
   "medical_profile": { "blood_type": "O+" }
@@ -487,10 +592,29 @@ POST /api/v1/circles/self
 ```
 
 A patient without an account (PROFILE-01B). The caller manages the circle. Same
-body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each).
-In both bodies `latitude`, `longitude` and `medical_profile` are optional, and
-`name` is 1 to 60 characters. The app builds `name` from the chip the user chose,
-for example `Mother Noura`.
+body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each),
+and without `name`: the circle is named automatically (see "Circle names" below).
+An older app still sends `name`; it is accepted and not used. In both bodies
+`time_zone`, `latitude`, `longitude` and `medical_profile` are optional. For self-care `name`
+is 1 to 60 characters: the patient's own name for the circle, for example
+`رعايتي`, `صحتي` or `دائرتي`.
+
+#### Circle names
+
+Since 6 November 2026 a circle has a name that depends on who reads it
+(`app/circles/naming.py`). Every answer that carries a circle name follows it:
+the circle page, `GET /api/v1/home`, `GET /api/v1/invitations` and the push
+texts.
+
+| Circle | The patient sees | Everyone else sees |
+|---|---|---|
+| Self-care | the name they typed or chose | «دائرة» and the patient's display name, for example `دائرة نورة` |
+| From a request (the patient has an account) | the name they chose when they completed the request | the same: «دائرة» and the patient's display name |
+| A patient without an account | (not an account) | «دائرة» and the patient's first name, for everyone |
+
+The automatic name is worked out when it is read, so a new display name, or a
+corrected first name of a patient without an account, shows at once. The
+patient's own choice is never shown to the others.
 
 201:
 
@@ -505,6 +629,7 @@ for example `Mother Noura`.
       "last_name": "Algraawi",
       "birth_date": "1954-06-05",
       "city": "Riyadh",
+      "time_zone": "Asia/Riyadh",
       "latitude": 24.7136,
       "longitude": 46.6753,
       "has_account": true,
@@ -512,7 +637,7 @@ for example `Mother Noura`.
       "is_you": true
     },
     "members": [
-      { "display_name": "Leen", "is_you": true, "role": "manager" }
+      { "display_name": "Leen", "is_you": true, "is_patient": true, "role": "manager" }
     ],
     "pending_invitations": []
   }
@@ -526,13 +651,15 @@ for example `Mother Noura`.
 | Profile first | The account needs its three names (422 `profile_incomplete`). |
 
 Errors: 400, 401, 422 (`validation_error`, `profile_incomplete`, `already_has_circle`,
-`mode_conflict`, `patient_name_required`, `invalid_birth_date`, the medical codes),
-503.
+`mode_conflict`, `patient_name_required`, `invalid_birth_date`, `birth_date_required`,
+`city_required`, the medical codes), 503.
 
 #### The circle page
 
 `GET /api/v1/circles/{circle_id}` returns the same `circle` object. The members are
-listed with you first, then by name. A phone number of a member is never returned.
+listed with you first, then by name. `is_patient` is true for the manager who is
+also the patient (a self-care circle, or a patient who manages their own circle).
+A phone number of a member is never returned.
 `pending_invitations` is present for a manager only; a simplified patient does not
 get the key.
 
@@ -548,10 +675,12 @@ get the key.
 ]
 ```
 
-`PATCH` takes `{ "name": "Grandma Noura" }` (1 to 60 characters) and returns the
-circle. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
+`PATCH` takes `{ "name": "صحتي" }` (1 to 60 characters) and returns the circle.
+Only the patient with an account may call it, as a manager or as a simplified
+patient: it changes their own name for the circle. Anyone else, and anyone in a
+circle of a patient without an account, gets 403 `patient_names_circle`. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
 `birth_date` and `city` are required; `latitude`/`longitude` are replaced (sending
-none clears them). A patient without an account also needs `first_name` and
+none clears them); `time_zone` is optional and, left out, the saved zone stays. A patient without an account also needs `first_name` and
 `last_name`; for a patient with an account those two fields are an error
 (422 `linked_patient_name`), because the names come from the account.
 
@@ -572,7 +701,7 @@ marked as sent again and the same invitation is returned. The invited person see
 in `GET /api/v1/invitations` after signing in with that number:
 
 ```json
-{ "invitations": [ { "id": "...", "circle_name": "Mother Noura",
+{ "invitations": [ { "id": "...", "circle_name": "دائرة نورة",
     "invited_by": { "display_name": "Reem" },
     "created_at": "...", "last_sent_at": "..." } ] }
 ```
@@ -593,20 +722,23 @@ The patient's answer is the story US-03 (section 7).
 The flow has three steps. The circle exists only after step 3.
 
 1. The sender calls `POST /api/v1/circle-requests` with
-   `{ "patient_phone_number": "+9665XXXXXXXX", "circle_label": "Mother", "proposed_app_mode": "simplified" }`.
-   The label is 1 to 30 characters. The number need not have an account yet; the
-   request waits for it. If the sender already has an open request to that number,
+   `{ "patient_phone_number": "+9665XXXXXXXX", "proposed_app_mode": "simplified" }`.
+   `circle_label` (1 to 30 characters) is optional and no longer names the circle;
+   an older app still sends it, and it is kept (`دائرة` when left out). The number
+   need not have an account yet; the request waits for it. If the sender already has an open request to that number,
    it is returned instead of a second one.
 2. The patient sees it in `GET /api/v1/circle-requests` under `received`, and calls
    `POST .../{request_id}/respond` with `{ "accept": true }` or `false`. Accepting
    is consent only. It does not create the circle.
 3. The patient calls `POST .../{request_id}/complete` with the basic data
-   (PROFILE-01C): `birth_date`, `city`, optional `latitude`, `longitude` and
-   `medical_profile`. This creates the circle (201 `circle`). Calling it again
-   returns the same circle.
+   (PROFILE-01C): `name` (their own name for the circle, 1 to 60 characters),
+   `birth_date`, `city`, optional `time_zone`, `latitude`, `longitude` and `medical_profile`.
+   This creates the circle (201 `circle`). Calling it again returns the same
+   circle. An older app sends no `name`; the circle is then `دائرتي`.
 
-The circle name is the label and the first name of the patient, for example
-`Mother Noura`. The sender becomes a manager. The patient becomes a manager too if
+Only the patient sees their `name`. The sender and the other managers see
+«دائرة» and the patient's display name ("Circle names" above). The sender
+becomes a manager. The patient becomes a manager too if
 the proposed mode is `detailed`; with `simplified` the patient is only the patient.
 Accepting sets the mode of the patient's account, once.
 
@@ -618,7 +750,7 @@ Accepting sets the mode of the patient's account, once.
     {
       "id": "7c054a73-e522-4d1d-ae65-8fac8cf01e85",
       "patient_phone_number": "+966506666663",
-      "circle_label": "Mother",
+      "circle_label": "دائرة",
       "proposed_app_mode": "simplified",
       "status": "pending",
       "created_at": "2026-10-26T08:03:19.816997+00:00",
@@ -630,8 +762,8 @@ Accepting sets the mode of the patient's account, once.
     {
       "id": "...",
       "status": "pending",
-      "circle_label": "Mother",
-      "circle_name": "Mother Noura",
+      "circle_label": "دائرة",
+      "circle_name": null,
       "proposed_app_mode": "simplified",
       "requested_by": { "display_name": "Reem", "first_name": "Reem", "last_name": "Family" },
       "created_at": "..."
@@ -756,17 +888,18 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 
 | Table | What it holds | Rules the database enforces |
 |---|---|---|
-| `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. |
-| `account_session` | One row per sign-in: the hash of the refresh token, the times, `revoked_at`. | Deleted with the account. The hash is unique. No device and no IP address are stored. |
+| `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `birth_date`, `city`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. `birth_date` (not before 1900) and `city` (1 to 60 characters) are optional; onboarding fills them (migration 0009). |
+| `account_session` | One row per sign-in: the hash of the refresh token, `created_at`, `revoked_at` (no end date since migration 0031). | Deleted with the account. The hash is unique. No device and no IP address are stored. |
 | `otp_challenge`, `otp_send_attempt` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
 | `care_circle` | A circle: `name`. | A circle always has exactly one patient and at least one manager (checked when the transaction commits). |
-| `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `latitude`, `longitude`, `blood_type`. | One per circle. An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
+| `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `time_zone` (IANA), `latitude`, `longitude`, `blood_type`. | One per circle. `time_zone` is not blank (the server checks it is a real zone). An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
 | `care_circle_manager` | Who manages a circle. | Once per account and circle. A manager has a complete account in `detailed` mode. A detailed patient manages their own circle. |
 | `care_circle_creation_request` | A request to create a circle for a patient: status `pending`, `accepted`, `completed`, `declined`, `canceled` or `superseded`. | One open request per sender and number. A patient can have one accepted request at a time. A completed request points to its circle. |
 | `care_circle_manager_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `canceled`. | One pending invitation per circle and number. |
 | `patient_condition` | Chronic conditions of a patient (`code`, and `other_text` for `other`). | Codes from the official list; `other_text` exactly when the code is `other`; a code once per patient. |
 | `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or one row `none`. | The same rules; the code must belong to the kind. |
 | `emergency_contact` | Contacts of a patient: `name`, `relation`, `phone_number`. | Phone format, relation from the list, a number once per patient. The limit of 5 is checked by the server, not by the database. |
+| `push_device` | A phone's Apple push `token`, its `account_id` and `session_id` (migration 0010). | The token is hexadecimal (64 to 200 characters) and unique. Deleted with its sign-in and with its account. |
 
 The medical tables (`patient.blood_type`, `patient_condition`, `patient_allergy`,
 `emergency_contact`) are **To confirm**: they are the design of 26 October 2026,
@@ -793,8 +926,8 @@ time for `last_sent_at`, `responded_at` and `completed_at`.
 **Two requests at the same time (Built).** Every write that changes a circle locks
 the account and then the circle, always in this order, so two requests wait for each
 other and cannot deadlock. The sign-in operations use the same ideas: `INSERT ...
-ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limit
-of 3 codes per hour.
+ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limits
+on its codes.
 
 The phone number is personal data. Rows of `otp_challenge` and `otp_send_attempt`
 older than 24 hours serve no purpose and can be deleted by a cleanup job (not built
@@ -1008,7 +1141,7 @@ one real SMS. The steps are tests 8, 9 and 6 in `docs/authentica-test-guide.md`.
 | An expired code | Send, wait 5 minutes and 10 seconds, verify. The code must be refused. This shows that the 300 seconds of the dashboard are applied, and gives the answer for an expired code. |
 | Sending twice quickly | Whether the second send is refused, and whether the first code still works after the second send. |
 | A phone number in the wrong format | Our server checks the number before it calls Authentica. The answer of Authentica for a number it cannot deliver to is recorded in the F01 tests. |
-| The limit on `send-otp` calls | Our own limit (3 codes per phone number per hour) comes first. The limit of Authentica (60 calls per minute) is far above it. |
+| The limit on `send-otp` calls | Our own limits (growing waits, and 20 codes per phone number a day) come first. The limit of Authentica (60 calls per minute) is far above it. |
 
 ### Decision: Authentica makes and checks the code (Decided)
 
@@ -1024,7 +1157,7 @@ tries and it limits the codes per hour.
 | Keep the code for 300 seconds | Authentica (dashboard setting) |
 | Check the code, and accept it once | Authentica (`verify-otp`) |
 | Stop after 3 wrong tries | Our server |
-| At most 3 codes per phone number per hour | Our server |
+| Growing waits between codes, at most 20 codes per phone number a day, 10 per device and 30 per IP an hour | Our server |
 | Check the format of the phone number before any call | Our server |
 | Create the session after a correct code | Our server (section 4) |
 
@@ -1050,8 +1183,9 @@ Sending a code (`request-code`):
 
 1. The server checks the format of the phone number. A resend must name a request
    that exists, is open and belongs to this phone number.
-2. The server takes one place in the limit of 3 codes per hour, in one step. If the
-   count is already 3, it refuses and does not call Authentica. Taking the place and
+2. The server takes one place in the limits (the wait since the number's last code,
+   its 20 codes a day, the device's 10 and the network's 30 an hour), in one step.
+   If one is full, it refuses and does not call Authentica. Taking the place and
    counting are one step, so two requests at the same time cannot both take the last
    place.
 3. The server calls `send-otp` with `method` `sms`, `template_id` 5 and the phone
@@ -1095,8 +1229,9 @@ Checking a code (`verify-code`):
   block after wrong tries. It keeps only the latest code of a number. Whether
   Authentica does the same is test 9.
 - Settings: `SMS_BACKEND` (`fake` or `authentica`), `AUTHENTICA_API_KEY`,
-  `AUTHENTICA_TEMPLATE_ID` (5), `OTP_VALID_SECONDS` (300), `OTP_MAX_WRONG_TRIES` (3)
-  and `OTP_MAX_SENDS_PER_HOUR` (3).
+  `AUTHENTICA_TEMPLATE_ID` (5), `OTP_VALID_SECONDS` (300), `OTP_MAX_WRONG_TRIES` (3),
+  and the code limits `OTP_RESEND_WAITS`, `OTP_MAX_SENDS_PER_DAY` (20),
+  `OTP_MAX_SENDS_PER_DEVICE_HOUR` (10) and `OTP_MAX_SENDS_PER_IP_HOUR` (30).
 - The sign-in endpoints (section 5) call the sender that `SMS_BACKEND` selects.
 - `scripts/try_authentica_sender.py` tries the real sender once, with one SMS.
   Not run yet (To confirm).
@@ -1110,9 +1245,9 @@ hour was confirmed on 18 October 2026.
 | Code | 6 digits, made by Authentica (template 5) | **Decided** |
 | Valid for | 300 seconds (5 minutes), set in the Authentica dashboard | **Decided** |
 | Wrong tries | 3 per verification request, counted by our server (`OTP_MAX_WRONG_TRIES`) | TFQD-13 |
-| Codes per phone number | At most 3 per hour (`OTP_MAX_SENDS_PER_HOUR`), a resend counts as a code | **Decided** |
+| Codes per phone number | Growing waits between codes and at most 20 a day (section 3, `request-code`); the owner's known phone counts only its own. Replaced the earlier 3 per hour on 6 November 2026. | **Decided** |
 | Counters | A new code for the same request (a resend) does not reset them | TFQD-13 |
-| A new request | A request started without a `verification_id` has its own 3 tries. The limit of 3 codes per hour still counts every SMS, so at most 9 tries per hour per phone number. | To confirm |
+| A new request | A request started without a `verification_id` has its own 3 tries. Every SMS still counts toward the waits and the 20 codes of the day. | To confirm |
 | Not used | A device identifier, an IP address. No phone lock in V1.0. | TFQD-13 |
 
 ## 9. Definition of Done
@@ -1146,12 +1281,12 @@ change in the pull request review.
 
 | # | Point | Decision |
 |---|---|---|
-| 1 | Token lifetimes | 15 minutes (access) and 30 days (refresh). Confirmed. |
-| 2 | Refresh token replacement | Not replaced. The same token works until day 30 or sign-out (section 4). |
+| 1 | Token lifetimes | 15 minutes (access). The refresh token has no end date: only a sign-out ends it (changed on 10 November 2026; it was 30 days). |
+| 2 | Refresh token replacement | Not replaced. The same token works until sign-out (section 4). |
 | 3 | Patients and Simplified Mode | Decided per story in section 7. |
 | 4 | The bell endpoint | `GET /api/v1/notifications` and `POST /api/v1/notifications/{notification_id}/read` (section 6). |
 | 5 | Who makes and checks the OTP code | Authentica, with template 5: a 6-digit code, Arabic text, valid 300 seconds (dashboard setting). Our server counts the 3 wrong tries (section 8). Decided on 19 October 2026. |
-| 6 | Codes per phone number | At most 3 per hour (section 8). |
+| 6 | Codes per phone number | Growing waits and at most 20 a day; the owner's known phone counts only its own (section 3). |
 | 7 | Sign-out of all sessions (F05) | Not in V1.0, because no story asks for it. Sign-out ends one session. Deleting an account ends every session of the user (section 4). |
 
 **Still open**

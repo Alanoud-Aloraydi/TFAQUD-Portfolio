@@ -35,10 +35,14 @@ def test_api_error_uses_the_error_format(app, client):
 
     @app.get("/boom/forbidden")
     def forbidden():
-        raise Forbidden(code="custom_code", details=[{"field": "x", "message": "y"}])
+        raise Forbidden(
+            code="custom_code", details=[{"field": "x", "message": "y"}]
+        )
 
     assert_error_shape(client.get("/boom/not-found"), 404, "not_found")
-    error = assert_error_shape(client.get("/boom/forbidden"), 403, "custom_code")
+    error = assert_error_shape(
+        client.get("/boom/forbidden"), 403, "custom_code"
+    )
     assert error["details"] == [{"field": "x", "message": "y"}]
 
 
@@ -70,18 +74,29 @@ def test_every_response_has_a_request_id(client):
 
 
 def test_a_safe_client_request_id_is_kept(client):
-    response = client.get("/api/v1/health", headers={"X-Request-ID": "abc-123_XYZ"})
+    response = client.get(
+        "/api/v1/health", headers={"X-Request-ID": "abc-123_XYZ"}
+    )
 
     assert response.headers["X-Request-ID"] == "abc-123_XYZ"
 
 
 @pytest.mark.parametrize(
-    "unsafe", ["has space", "x" * 65, "line\nbreak", "ends-with-newline\n", "<script>"]
+    "unsafe",
+    [
+        "has space",
+        "x" * 65,
+        "line\nbreak",
+        "ends-with-newline\n",
+        "<script>",
+    ],
 )
 def test_an_unsafe_client_request_id_is_replaced(client, unsafe):
     # The header is sent directly through the WSGI environ so that characters a
     # real HTTP client would refuse can still be tested.
-    response = client.get("/api/v1/health", environ_overrides={"HTTP_X_REQUEST_ID": unsafe})
+    response = client.get(
+        "/api/v1/health", environ_overrides={"HTTP_X_REQUEST_ID": unsafe}
+    )
 
     assert response.headers["X-Request-ID"] != unsafe
     assert len(response.headers["X-Request-ID"]) == 32
@@ -117,3 +132,39 @@ def test_service_unavailable_is_a_503(app, client):
         raise ServiceUnavailable(code="sms_unavailable")
 
     assert_error_shape(client.get("/boom/down"), 503, "sms_unavailable")
+
+
+def test_a_database_past_its_deadline_is_a_503_and_counted(app, client):
+    from sqlalchemy.exc import OperationalError
+    from sqlalchemy.exc import TimeoutError as PoolTimeout
+
+    from app import metrics
+
+    @app.get("/boom/slow-query")
+    def slow_query():
+        raise OperationalError(
+            "SELECT", {}, Exception("canceling statement due to timeout")
+        )
+
+    @app.get("/boom/busy-pool")
+    def busy_pool():
+        raise PoolTimeout("QueuePool limit reached")
+
+    assert_error_shape(
+        client.get("/boom/slow-query"), 503, "database_unavailable"
+    )
+    assert_error_shape(
+        client.get("/boom/busy-pool"), 503, "database_unavailable"
+    )
+    assert metrics.count("database.unavailable") == 2
+
+
+def test_an_unexpected_error_is_counted(app, client):
+    from app import metrics
+
+    @app.get("/boom/bug")
+    def bug():
+        raise RuntimeError("a bug")
+
+    assert_error_shape(client.get("/boom/bug"), 500, "internal_error")
+    assert metrics.count("errors.internal") == 1

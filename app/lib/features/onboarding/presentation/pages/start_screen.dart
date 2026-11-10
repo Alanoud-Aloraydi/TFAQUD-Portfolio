@@ -1,7 +1,13 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/pill_button.dart';
-import 'package:app/core/widgets/step_header.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
+import 'package:app/features/circles/presentation/widgets/pending_invites_section.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:app/features/onboarding/presentation/widgets/choice_card.dart';
@@ -10,20 +16,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Last page of the account setup: "كيف تريد أن تبدأ؟". The "+" next to the
-/// circles opens it again, to add another circle ([addingCircle]). That page
-/// has a back link and no "تخطي الآن", because the account is already set up.
+/// Step 2 of 2 of the first account set-up («كيف تحب تستخدم تفقّد؟»), and
+/// the page the "+" next to the circles opens to add another circle
+/// ([addingCircle]: no steps, no «تخطي الآن», no invitations).
 ///
-/// "أدير رعايتي بنفسي" continues to the three steps that create your own circle.
-/// "أرعى شخصًا آخر" asks whether the patient uses the app. If the patient does,
-/// the next page asks for the patient's phone number and sends a request. If the
-/// patient does not, the next pages create the circle directly. The choice is
-/// kept in [OnboardingCubit].
+/// In the first set-up, the person's own pending invitations show above the
+/// choice ([PendingInvitesSection]): someone may have invited them before
+/// they opened the app. Accepting one leaves for «اليوم» with that circle,
+/// with no need to choose below. [InboxCubit] and [PendingInvitesSection]
+/// stay in the circles feature on purpose: invitations are circle logic,
+/// shared with the notifications page and the home bell.
+///
+/// The choice is kept in [OnboardingCubit] and decides the next page:
+/// «أتابع رعايتي بنفسي» opens the page that creates the person's own circle;
+/// «أتابع رعاية شخص آخر» then asks whether that person uses the app — if so,
+/// the next page sends them a request by phone number, otherwise it creates
+/// the circle directly.
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key, this.addingCircle = false});
 
+  /// True when opened from the "+" to add another circle.
   final bool addingCircle;
 
+  /// Opens the page that matches the complete choice in [state].
   void _continue(BuildContext context, OnboardingState state) {
     if (state.careTarget == CareTarget.self) {
       context.push(Routes.createSelfCircle);
@@ -40,7 +55,12 @@ class StartScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.sm,
+          ),
           child: BlocBuilder<OnboardingCubit, OnboardingState>(
             builder: (BuildContext context, OnboardingState state) {
               final OnboardingCubit cubit = context.read<OnboardingCubit>();
@@ -52,35 +72,73 @@ class StartScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           StepHeader(
+                            // Step 2 of the first set-up; from the "+" it is
+                            // one page, with no steps.
+                            step: addingCircle ? null : 2,
+                            totalSteps: addingCircle ? null : 2,
                             title: context.tr('onboarding.start_title'),
-                            // After the name page the link is hidden, as in the
-                            // design. From the "+" it takes the user back.
-                            onBack: addingCircle && context.canPop()
+                            // Back to the name page, whose answers stay, or
+                            // from the "+" back to the circles.
+                            onBack: context.canPop()
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          // The steps and the question first, then any
+                          // invitation waiting, then the two choices.
+                          if (!addingCircle)
+                            BlocBuilder<InboxCubit, InboxState>(
+                              builder:
+                                  (
+                                    BuildContext context,
+                                    InboxState inboxState,
+                                  ) {
+                                    // Nothing waiting: no gap either.
+                                    if (inboxState.status !=
+                                            InboxStatus.ready ||
+                                        inboxState.inbox.needsReply == 0) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: AppSpacing.lg,
+                                      ),
+                                      // Capped to a short teaser so many
+                                      // pending invitations don't push the
+                                      // choice below out of reach; "عرض
+                                      // الكل" opens the full notifications
+                                      // list for the rest.
+                                      child: PendingInvitesSection(
+                                        cubit: context.read<InboxCubit>(),
+                                        state: inboxState,
+                                        maxItems: 2,
+                                        // The circle is chosen: no reason
+                                        // to stay and pick "self/other".
+                                        onAccepted: () =>
+                                            context.go(Routes.today),
+                                      ),
+                                    );
+                                  },
+                            ),
+                          const SizedBox(height: AppSpacing.lg),
                           ChoiceCard(
-                            icon: Icons.favorite_border,
+                            icon: AppIcons.heart,
                             title: context.tr('onboarding.self_title'),
                             hint: context.tr('onboarding.self_hint'),
                             selected: state.careTarget == CareTarget.self,
-                            onTap: () => cubit.selectCareTarget(
-                              CareTarget.self,
-                            ),
+                            onTap: () =>
+                                cubit.selectCareTarget(CareTarget.self),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.md),
                           ChoiceCard(
-                            icon: Icons.people_outline,
+                            icon: AppIcons.users,
                             title: context.tr('onboarding.other_title'),
                             hint: context.tr('onboarding.other_hint'),
                             selected: state.careTarget == CareTarget.other,
-                            onTap: () => cubit.selectCareTarget(
-                              CareTarget.other,
-                            ),
+                            onTap: () =>
+                                cubit.selectCareTarget(CareTarget.other),
                           ),
                           AnimatedSize(
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppMotion.formScroll,
                             alignment: Alignment.topCenter,
                             child: state.careTarget == CareTarget.other
                                 ? _PatientQuestion(state: state)
@@ -90,7 +148,7 @@ class StartScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('common.continue'),
                     onPressed: state.canContinueStart
@@ -102,7 +160,9 @@ class StartScreen extends StatelessWidget {
                       onPressed: () => context.go(Routes.today),
                       child: Text(
                         context.tr('onboarding.skip'),
-                        style: text.labelLarge?.copyWith(color: AppColors.ink2),
+                        style: text.labelLarge?.copyWith(
+                          color: context.tokens.textSecondary,
+                        ),
                       ),
                     ),
                 ],
@@ -115,8 +175,9 @@ class StartScreen extends StatelessWidget {
   }
 }
 
-/// The follow-up question, shown under "another person", with a thin rail on
-/// the start side that ties it to the option above.
+/// The follow-up question under «أتابع رعاية شخص آخر»: whether the
+/// cared-for person uses the app, as two [ChoiceCard]s the width of the
+/// cards above.
 class _PatientQuestion extends StatelessWidget {
   const _PatientQuestion({required this.state});
 
@@ -127,39 +188,36 @@ class _PatientQuestion extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final OnboardingCubit cubit = context.read<OnboardingCubit>();
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 16, top: 16),
-      child: Container(
-        padding: const EdgeInsetsDirectional.only(start: 12),
-        decoration: const BoxDecoration(
-          border: BorderDirectional(
-            start: BorderSide(color: AppColors.brandTint, width: 3),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
+      padding: const EdgeInsets.only(top: AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
+            child: Text(
               context.tr('onboarding.patient_question'),
-              style: text.bodyMedium,
+              style: text.titleSmall?.copyWith(
+                color: context.tokens.textSecondary,
+              ),
             ),
-            const SizedBox(height: 12),
-            ChoiceCard(
-              icon: Icons.people_outline,
-              title: context.tr('onboarding.patient_uses_title'),
-              hint: context.tr('onboarding.patient_uses_hint'),
-              selected: state.patientUsesApp == true,
-              onTap: () => cubit.selectPatientUsesApp(usesApp: true),
-            ),
-            const SizedBox(height: 12),
-            ChoiceCard(
-              icon: Icons.person_outline,
-              title: context.tr('onboarding.patient_no_title'),
-              hint: context.tr('onboarding.patient_no_hint'),
-              selected: state.patientUsesApp == false,
-              onTap: () => cubit.selectPatientUsesApp(usesApp: false),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.labelGap),
+          ChoiceCard(
+            icon: AppIcons.users,
+            title: context.tr('onboarding.patient_uses_title'),
+            hint: context.tr('onboarding.patient_uses_hint'),
+            selected: state.patientUsesApp == true,
+            onTap: () => cubit.selectPatientUsesApp(usesApp: true),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ChoiceCard(
+            icon: AppIcons.user,
+            title: context.tr('onboarding.patient_no_title'),
+            hint: context.tr('onboarding.patient_no_hint'),
+            selected: state.patientUsesApp == false,
+            onTap: () => cubit.selectPatientUsesApp(usesApp: false),
+          ),
+        ],
       ),
     );
   }

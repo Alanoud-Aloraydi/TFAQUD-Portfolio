@@ -18,6 +18,12 @@ from app.circles.inputs import (
 from app.circles.support import answer, care_work, parse_id, save_medical
 from app.errors import NotFound
 from app.models import Account
+from app.push.messages import (
+    circle_ready_push,
+    circle_request_push,
+    request_answer_push,
+)
+from app.push.notify import notify
 from app.validation import parse_json_body
 
 bp = Blueprint(
@@ -32,8 +38,8 @@ _NOT_FOUND = "The circle request does not exist."
 def send_request():
     """Ask a person to be the patient of a new circle.
 
-    If an open request from you to the same number already exists, that
-    request is returned instead of a second one.
+    If an open request from the caller to the same number already exists,
+    that request is returned instead of a second one.
     """
     body = parse_json_body(CreationRequestInput)
     with care_work() as work:
@@ -44,13 +50,17 @@ def send_request():
             body.proposed_app_mode,
         )
         view = views.sent_request_view(row)
+        push = circle_request_push(work.session, row)
+    # After the commit: the patient's phone, if they have the app.
+    notify(push)
     return answer({"request": view}, 201)
 
 
 @bp.get("")
 @require_auth
 def list_requests():
-    """Requests you sent (open ones) and requests addressed to your number."""
+    """The caller's open sent requests, and requests to the caller's
+    number."""
     with care_work() as work:
         account = work.session.get(Account, work.actor)
         if account is None:
@@ -62,13 +72,16 @@ def list_requests():
 @bp.post("/<request_id>/respond")
 @require_auth
 def respond(request_id):
-    """The patient accepts or declines. Accepting does not create the circle."""
+    """The patient accepts or declines; accepting does not create the
+    circle."""
     body = parse_json_body(RespondInput)
     with care_work(hide_forbidden=_NOT_FOUND) as work:
         row = work.care.respond_creation(
             work.actor, parse_id(request_id, "circle request"), body.accept
         )
         view = views.sent_request_view(row)
+        push = request_answer_push(work.session, row)
+    notify(push)
     return answer({"request": view})
 
 
@@ -77,14 +90,19 @@ def respond(request_id):
 def complete(request_id):
     """After accepting, the patient gives the basic data. This creates it."""
     body = parse_json_body(CompleteRequestInput)
+    # Make the circle, save the medical profile sent with it, and answer the
+    # circle as its patient sees it.
     with care_work(hide_forbidden=_NOT_FOUND) as work:
+        request_uuid = parse_id(request_id, "circle request")
         circle = work.care.complete_creation(
             work.actor,
-            parse_id(request_id, "circle request"),
+            request_uuid,
             body.birth_date,
             body.city,
             body.latitude,
             body.longitude,
+            name=body.name,
+            time_zone=body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
         mode = work.session.get(Account, work.actor).app_mode
@@ -98,7 +116,10 @@ def complete(request_id):
                 else CircleRole.SIMPLIFIED_PATIENT
             ),
         )
-    return answer({"circle": view}, 201)
+        # Tell the sender the circle is ready, after the commit.
+        push = circle_ready_push(work.session, request_uuid, circle)
+    notify(push)
+    return answer({"circle": view, "account_app_mode": mode}, 201)
 
 
 @bp.delete("/<request_id>")

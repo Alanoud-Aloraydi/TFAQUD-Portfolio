@@ -1,0 +1,36 @@
+# Pings the API's scheduled notification scan every 10 minutes, free: the
+# repository is public, so GitHub Actions minutes are unlimited here.
+#
+# This stands in for a paid Render Cron Job. Switching later needs no code
+# change: Render would call the same POST /internal/tick with the same
+# X-Tick-Secret header, and this workflow can be removed.
+#
+# GitHub disables a scheduled workflow after 60 days with no commit to the
+# repository; a commit (any commit) re-enables it. Scheduled runs can also
+# be delayed a few minutes under GitHub's own load, which is fine for a
+# "due" reminder but not for anything needing second-level precision.
+#
+# Secret it needs (repository Settings, Secrets and variables, Actions):
+#   TICK_SECRET   the same value as the server's TICK_SECRET (Render env var)
+
+name: Notification tick
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call /internal/tick
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "X-Tick-Secret: ${{ secrets.TICK_SECRET }}" \
+            "https://tfaqud-api.onrender.com/internal/tick")
+          echo "Response status: $status"
+          if [ "$status" != "204" ]; then
+            echo "::warning::tick endpoint returned $status"
+          fi

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart' show DioException;
 
 /// Error codes returned by the Flask API (backend/app/errors.py,
-/// backend/app/auth and backend/app/care.py).
+/// backend/app/auth, backend/app/care.py and the feature services).
 abstract class ApiErrorCodes {
   ApiErrorCodes._();
 
@@ -21,16 +21,43 @@ abstract class ApiErrorCodes {
   static const String medicationVersionConflict = 'medication_version_conflict';
   static const String medicationDiscontinued = 'medication_discontinued';
   static const String medicationRevisionDate = 'medication_revision_date';
+  static const String medicationStartInPast = 'medication_start_in_past';
   static const String doseRecordConflict = 'dose_record_conflict';
+  static const String futureDoseRecord = 'future_dose_record';
+  static const String futureTakenTime = 'future_taken_time';
+  static const String appointmentTimeInPast = 'appointment_time_in_past';
+  static const String appointmentNotStarted = 'appointment_not_started';
+  static const String appointmentChanged = 'appointment_changed';
+  static const String appointmentAlreadyClosed = 'appointment_already_closed';
+  static const String appointmentInvalidCompanion =
+      'appointment_invalid_companion';
+  static const String appointmentInvalidAudio = 'appointment_invalid_audio';
+  static const String appointmentVisitNotCompleted =
+      'appointment_visit_not_completed';
+
+  // Measurements (backend/app/measurements/service.py).
+  static const String measurementActivePlanExists =
+      'measurement_active_plan_exists';
+  static const String measurementStartInPast = 'measurement_start_in_past';
+  static const String measurementPlanChanged = 'measurement_plan_changed';
+  static const String measurementEffectiveDate = 'measurement_effective_date';
+  static const String measurementTargetRequired = 'measurement_target_required';
+  static const String measurementTargetFromPlan =
+      'measurement_target_from_plan';
+  static const String measurementRecordConflict = 'measurement_record_conflict';
+  static const String futureMeasurement = 'future_measurement';
+  static const String futureMeasurementTask = 'future_measurement_task';
+  static const String measurementWithinTarget = 'measurement_within_target';
+  static const String measurementNoTarget = 'measurement_no_target';
 
   // Sign-in (backend/app/auth/sign_in.py) and the profile.
   static const String verificationNotFound = 'verification_not_found';
-  static const String userNotFound = 'user_not_found';
   static const String invalidCode = 'invalid_code';
   static const String codeExpired = 'code_expired';
   static const String codeAlreadyUsed = 'code_already_used';
   static const String tooManyAttempts = 'too_many_attempts';
   static const String tooManyCodes = 'too_many_codes';
+  static const String resendWait = 'resend_wait';
   static const String smsUnavailable = 'sms_unavailable';
 
   // Circle creation (backend/app/care.py).
@@ -48,7 +75,12 @@ abstract class ApiErrorCodes {
 
   // Invitations to manage a circle (backend/app/care.py).
   static const String invitationNotPending = 'invitation_not_pending';
+  static const String invitationNotCancelable = 'invitation_not_cancelable';
   static const String alreadyManager = 'already_manager';
+  static const String selfInvitation = 'self_invitation';
+
+  // Leaving a circle that the leave would delete (backend/app/care.py).
+  static const String confirmationRequired = 'confirmation_required';
 
   // Deleting the account (backend/app/users).
   static const String patientChoiceRequired = 'patient_choice_required';
@@ -76,3 +108,18 @@ String? apiErrorCode(Object? body) {
 /// response has the API error body. Returns null for any other error.
 String? apiErrorCodeOf(Object error) =>
     error is DioException ? apiErrorCode(error.response?.data) : null;
+
+/// The `error.retry_after_seconds` of an API error inside [error], when the
+/// server says how long to wait. Null otherwise.
+int? apiRetryAfterOf(Object error) {
+  if (error is! DioException) return null;
+  final Object? body = error.response?.data;
+  if (body is Map) {
+    final Object? inner = body['error'];
+    if (inner is Map) {
+      final Object? seconds = inner['retry_after_seconds'];
+      if (seconds is int && seconds > 0) return seconds;
+    }
+  }
+  return null;
+}

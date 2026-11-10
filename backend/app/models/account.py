@@ -1,6 +1,6 @@
 """Phone-verified accounts, including incomplete onboarding profiles."""
 
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, DateTime, Text, text
@@ -10,7 +10,14 @@ from app.database import db
 
 
 class Account(db.Model):
-    """An authenticated identity; management is a separate membership."""
+    """The ``account`` table: one row per phone-verified person.
+
+    Created at the first sign-in with the phone number only; onboarding then
+    fills the names, birth date and city through PUT
+    /api/v1/accounts/me/profile. The names are all null or all set, with the
+    lengths the API checks (``profile_names``). Caring for a circle is a
+    separate membership row, not a column here.
+    """
 
     __tablename__ = "account"
     __table_args__ = (
@@ -32,6 +39,20 @@ class Account(db.Model):
             "AND length(btrim(display_name)) BETWEEN 1 AND 30)",
             name="profile_names",
         ),
+        CheckConstraint(
+            "birth_date IS NULL OR birth_date >= DATE '1900-01-01'",
+            name="birth_date",
+        ),
+        CheckConstraint(
+            "city IS NULL OR length(btrim(city)) BETWEEN 1 AND 60",
+            name="city",
+        ),
+        CheckConstraint(
+            "avatar_code IS NULL OR avatar_code IN "
+            "('w1_1', 'w1_3', 'w6_1', 'w6_3', 'w7_1', 'w7_3', "
+            "'m1_1', 'm1_3', 'm2_1', 'm2_3', 'm6_1', 'm6_3')",
+            name="avatar_code",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -42,7 +63,13 @@ class Account(db.Model):
     first_name: Mapped[str | None] = mapped_column(Text)
     last_name: Mapped[str | None] = mapped_column(Text)
     display_name: Mapped[str | None] = mapped_column(Text)
+    avatar_code: Mapped[str | None] = mapped_column(Text)
     app_mode: Mapped[str | None] = mapped_column(Text)
+    # Asked once at onboarding, so a circle for the person's own care needs
+    # only its name. A circle copies them into its patient when it is
+    # created.
+    birth_date: Mapped[date | None]
+    city: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

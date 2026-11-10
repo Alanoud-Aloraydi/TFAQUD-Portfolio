@@ -6,6 +6,7 @@ clock is the manual one, so "one hour later" costs nothing.
 
 import pytest
 
+from app import create_app, metrics
 from app.sms.base import SmsDeliveryError
 from tests.conftest import bearer
 
@@ -25,7 +26,8 @@ def request_code(client, phone=PHONE, verification_id=None):
 
 def verify_code(client, verification_id, code):
     return client.post(
-        "/api/v1/auth/verify-code", json={"verification_id": verification_id, "code": code}
+        "/api/v1/auth/verify-code",
+        json={"verification_id": verification_id, "code": code},
     )
 
 
@@ -76,7 +78,9 @@ def provider_calls(sms, monkeypatch):
 
 def provider_is_down(sms, monkeypatch, *, send=False, check=False, status=503):
     def down(*args, **kwargs):
-        raise SmsDeliveryError("provider rejected the operation", status=status)
+        raise SmsDeliveryError(
+            "provider rejected the operation", status=status
+        )
 
     if send:
         monkeypatch.setattr(sms, "send_code", down)
@@ -92,14 +96,16 @@ def test_request_code_sends_one_sms_and_returns_a_verification_id(client, sms):
 
     assert response.status_code == 200
     body = response.get_json()
-    assert set(body) == {"verification_id"}
+    assert set(body) == {"verification_id", "resend_after_seconds"}
     assert isinstance(body["verification_id"], str) and body["verification_id"]
     assert len(sms.outbox) == 1
     assert sms.outbox[0].to == PHONE
     assert len(sms.outbox[0].code) == 6
 
 
-def test_request_code_without_a_verification_id_starts_a_new_request_each_time(client):
+def test_request_code_without_a_verification_id_starts_a_new_request_each_time(
+    client,
+):
     first = start(client)
     second = start(client)
 
@@ -115,7 +121,9 @@ def test_a_resend_keeps_the_same_request_and_sends_another_sms(client, sms):
     assert len(sms.outbox) == 2
 
 
-def test_the_answer_is_the_same_for_a_new_and_a_known_phone_number(client, sms):
+def test_the_answer_is_the_same_for_a_new_and_a_known_phone_number(
+    client, sms
+):
     # Sign one phone number in, then ask for a code for it and for a new one.
     # Nothing in the answer tells them apart (no account enumeration).
     vid = start(client)
@@ -124,7 +132,9 @@ def test_the_answer_is_the_same_for_a_new_and_a_known_phone_number(client, sms):
     known = request_code(client, PHONE).get_json()
     new = request_code(client, OTHER_PHONE).get_json()
 
-    assert set(known) == set(new) == {"verification_id"}
+    expected = {"verification_id", "resend_after_seconds"}
+    assert set(known) == set(new) == expected
+    assert known["resend_after_seconds"] == new["resend_after_seconds"]
 
 
 # ---- request-code: input checks -------------------------------------------
@@ -141,7 +151,8 @@ def test_the_answer_is_the_same_for_a_new_and_a_known_phone_number(client, sms):
         "+9665012345678",  # one digit too many
         "+966 50 123 4567",  # spaces inside
         "+96650123456a",
-        "+9665" + arabic_indic("01234567"),  # Arabic digits are not accepted for the phone
+        # Arabic digits are not accepted for the phone.
+        "+9665" + arabic_indic("01234567"),
         "+971501234567",  # another country
     ],
 )
@@ -176,7 +187,8 @@ def test_request_code_needs_a_phone_number(client):
 
 def test_request_code_refuses_unknown_fields(client, sms):
     response = client.post(
-        "/api/v1/auth/request-code", json={"phone_number": PHONE, "country": "SA"}
+        "/api/v1/auth/request-code",
+        json={"phone_number": PHONE, "country": "SA"},
     )
 
     error_of(response, 422, "validation_error")
@@ -192,73 +204,295 @@ def test_request_code_needs_a_json_body(client):
 # ---- request-code: the limit of 3 codes per phone number per hour ---------
 
 
-def test_the_fourth_code_in_an_hour_is_refused_and_nothing_is_sent(client, sms):
-    for _ in range(3):
+DAY = 24 * 3600
+
+
+def test_the_21st_code_of_a_day_is_refused_and_nothing_is_sent(client, sms):
+    for _ in range(20):
         start(client)
 
     response = request_code(client)
 
     error = error_of(response, 429, "too_many_codes")
-    assert error["retry_after_seconds"] == 3600
-    assert response.headers["Retry-After"] == "3600"
-    assert len(sms.outbox) == 3
+    assert error["retry_after_seconds"] == DAY
+    assert response.headers["Retry-After"] == str(DAY)
+    assert len(sms.outbox) == 20
 
 
 def test_resends_count_toward_the_same_limit(client, sms):
     vid = start(client)
-    start(client, verification_id=vid)
-    start(client, verification_id=vid)
+    for _ in range(19):
+        start(client, verification_id=vid)
 
     response = request_code(client, verification_id=vid)
 
     error_of(response, 429, "too_many_codes")
-    assert len(sms.outbox) == 3
+    assert len(sms.outbox) == 20
 
 
 def test_the_limit_belongs_to_the_phone_number(client):
-    for _ in range(3):
+    for _ in range(20):
         start(client)
 
     assert request_code(client, OTHER_PHONE).status_code == 200
 
 
-def test_the_window_slides_and_the_answer_says_when_to_come_back(client, clock):
-    start(client)  # 12:00
-    clock.advance(minutes=10)
-    start(client)  # 12:10
-    clock.advance(minutes=10)
-    start(client)  # 12:20
-    clock.advance(minutes=10)  # 12:30
+def test_the_window_slides_and_the_answer_says_when_to_come_back(
+    client, clock
+):
+    for _ in range(20):
+        start(client)  # 12:00, 12:01, ... 12:19
+        clock.advance(minutes=1)  # 12:20 after the last
 
     refused = request_code(client)
 
-    # The first code (12:00) leaves the window at 13:00, which is 30 minutes away.
+    # The first code (12:00) leaves the day at 12:00 tomorrow.
+    wait = DAY - 20 * 60
     error = error_of(refused, 429, "too_many_codes")
-    assert error["retry_after_seconds"] == 1800
-    assert refused.headers["Retry-After"] == "1800"
+    assert error["retry_after_seconds"] == wait
+    assert refused.headers["Retry-After"] == str(wait)
 
-    clock.advance(seconds=1799)
+    clock.advance(seconds=wait - 1)
     error_of(request_code(client), 429, "too_many_codes")
     clock.advance(seconds=1)
     assert request_code(client).status_code == 200
 
 
 def test_a_refused_request_is_not_counted_again(client, clock):
-    for _ in range(3):
+    for _ in range(20):
         start(client)
     for _ in range(5):
         error_of(request_code(client), 429, "too_many_codes")
 
-    clock.advance(hours=1)
+    clock.advance(hours=24)
 
-    # Only the three real codes mattered, so the phone number is free again.
+    # Only the twenty real codes mattered, so the phone number is free again.
     assert request_code(client).status_code == 200
+
+
+def test_a_sign_in_starts_the_count_of_the_number_again(client, sms):
+    # Someone asked nineteen codes for the number; its owner then signs in
+    # with the twentieth. The owner is not punished for them later.
+    for _ in range(19):
+        start(client)
+    vid = start(client)
+    assert verify_code(client, vid, last_code(sms)).status_code == 200
+
+    assert request_code(client).status_code == 200
+
+
+# ---- request-code: waits and the caps of the asker -------------------------
+
+
+@pytest.fixture
+def guarded(monkeypatch, clock, circle_access, otp_store, user_store):
+    """An app with the real waits and small device and IP caps."""
+    monkeypatch.setenv("OTP_RESEND_WAITS", "30,60,120")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_DEVICE_HOUR", "3")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_IP_HOUR", "5")
+    monkeypatch.setenv("CLIENT_IP_HEADER", "CF-Connecting-IP")
+    app = create_app(
+        "testing",
+        clock=clock,
+        circle_access=circle_access,
+        otp_store=otp_store,
+        user_store=user_store,
+    )
+    return app.test_client()
+
+
+def outbox(client):
+    """The SMS the guarded app sent."""
+    return client.application.extensions["sms_sender"].outbox
+
+
+def ask(client, phone=PHONE, device="device-aaaa", ip="203.0.113.7", vid=None):
+    body = {"phone_number": phone}
+    if vid is not None:
+        body["verification_id"] = vid
+    return client.post(
+        "/api/v1/auth/request-code",
+        json=body,
+        headers={"X-Device-Id": device, "CF-Connecting-IP": ip},
+    )
+
+
+def test_the_answer_says_when_the_next_code_may_come(guarded):
+    first = ask(guarded)
+
+    assert first.status_code == 200
+    assert first.get_json()["resend_after_seconds"] == 30
+
+
+def test_the_wait_grows_with_each_code_and_then_stays(guarded, clock):
+    vid = ask(guarded).get_json()["verification_id"]
+
+    error = error_of(ask(guarded, vid=vid), 429, "resend_wait")
+    assert error["retry_after_seconds"] == 30
+
+    for wait, after in ((30, 60), (60, 120), (120, 120)):
+        clock.advance(seconds=wait - 1)
+        error_of(ask(guarded, vid=vid, device=f"device-{wait:04d}"), 429,
+                 "resend_wait")
+        clock.advance(seconds=1)
+        answer = ask(guarded, vid=vid, device=f"device-{wait:04d}")
+        assert answer.status_code == 200, answer.get_json()
+        assert answer.get_json()["resend_after_seconds"] == after
+
+
+def test_a_refused_wait_sends_nothing(guarded):
+    ask(guarded)
+    for _ in range(5):
+        error_of(ask(guarded), 429, "resend_wait")
+
+    assert len(outbox(guarded)) == 1
+
+
+def test_one_device_cannot_ask_codes_for_many_numbers(guarded):
+    for n in range(3):
+        assert ask(guarded, phone=f"+96650000000{n}").status_code == 200
+
+    refused = ask(guarded, phone="+966500000009")
+
+    error = error_of(refused, 429, "too_many_codes")
+    assert error["retry_after_seconds"] == 3600
+    assert len(outbox(guarded)) == 3
+    # Another phone on another network may still ask.
+    assert ask(guarded, phone="+966500000009", device="device-bbbb",
+               ip="198.51.100.2").status_code == 200
+
+
+def test_one_network_cannot_ask_codes_for_many_numbers(guarded):
+    for n in range(5):
+        assert ask(guarded, phone=f"+96650000000{n}",
+                   device=f"device-{n:04d}").status_code == 200
+
+    refused = ask(guarded, phone="+966500000009", device="device-9999")
+
+    error_of(refused, 429, "too_many_codes")
+    assert len(outbox(guarded)) == 5
+
+
+def test_a_strange_device_id_is_ignored(guarded):
+    # Too short or with other characters: the device is unknown, and only
+    # the caps of the number and the network apply.
+    for n in range(4):
+        assert ask(guarded, phone=f"+96650000000{n}",
+                   device="x!").status_code == 200
+
+
+# ---- request-code: the owner's known phone ----------------------------------
+
+
+def sms_code(client, phone=PHONE):
+    return client.application.extensions["sms_sender"].last_message_to(
+        phone
+    ).code
+
+
+def sign_in_on(client, device, phone=PHONE):
+    """Sign in with `phone` on `device`: it becomes a known phone."""
+    answer = ask(client, phone=phone, device=device)
+    assert answer.status_code == 200, answer.get_json()
+    vid = answer.get_json()["verification_id"]
+    done = verify_code(client, vid, sms_code(client, phone))
+    assert done.status_code == 200, done.get_json()
+
+
+STRANGER = {"device": "device-stranger", "ip": "198.51.100.9"}
+
+
+def test_a_stranger_does_not_make_the_owners_phone_wait(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    # Someone else asks for codes for the owner's number on another phone.
+    assert ask(guarded, **STRANGER).status_code == 200
+    error_of(ask(guarded, **STRANGER), 429, "resend_wait")
+
+    mine = ask(guarded, device="device-owner")
+
+    assert mine.status_code == 200, mine.get_json()
+    assert mine.get_json()["resend_after_seconds"] == 30
+
+
+def test_the_owners_code_makes_a_stranger_wait(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    assert ask(guarded, device="device-owner").status_code == 200
+
+    error_of(ask(guarded, **STRANGER), 429, "resend_wait")
+
+
+def test_a_known_phone_still_waits_for_its_own_codes(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    vid = ask(guarded, device="device-owner").get_json()["verification_id"]
+
+    error_of(ask(guarded, device="device-owner", vid=vid), 429, "resend_wait")
+
+
+def test_a_new_phone_waits_like_a_stranger(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    assert ask(guarded, **STRANGER).status_code == 200
+
+    # A phone that never signed in with this number is not known.
+    error_of(ask(guarded, device="device-newphone"), 429, "resend_wait")
+
+
+def test_a_phone_is_known_only_for_the_number_it_signed_in_with(
+    guarded, clock
+):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    assert ask(guarded, phone=OTHER_PHONE, **STRANGER).status_code == 200
+
+    error_of(ask(guarded, phone=OTHER_PHONE, device="device-owner"), 429,
+             "resend_wait")
+
+
+def test_a_stranger_cannot_use_up_the_owners_codes_of_the_day(client, clock):
+    sign_in_on(client, "device-owner")
+    clock.advance(seconds=1)
+    for _ in range(20):
+        assert ask(client, **STRANGER).status_code == 200
+    error_of(ask(client, **STRANGER), 429, "too_many_codes")
+    error_of(ask(client, device="device-newphone"), 429, "too_many_codes")
+
+    assert ask(client, device="device-owner").status_code == 200
+
+
+def test_a_busy_network_does_not_hold_back_the_owners_phone(guarded, clock):
+    sign_in_on(guarded, "device-owner")
+    clock.advance(seconds=1)
+    # Four more codes from the same network: its five of the hour are used.
+    for n in range(4):
+        assert ask(guarded, phone=f"+96650000000{n}",
+                   device=f"device-{n:04d}").status_code == 200
+    error_of(ask(guarded, phone="+966500000009", device="device-9999"), 429,
+             "too_many_codes")
+
+    assert ask(guarded, device="device-owner").status_code == 200
+
+
+def test_a_rejected_send_does_not_count_toward_the_limit(
+    client, sms, monkeypatch
+):
+    with monkeypatch.context() as down:
+        provider_is_down(sms, down, send=True, status=422)
+        for _ in range(5):
+            error_of(request_code(client), 503, "sms_unavailable")
+
+    # The provider is back. All twenty codes of the day are still available.
+    for _ in range(20):
+        assert request_code(client).status_code == 200
+    error_of(request_code(client), 429, "too_many_codes")
 
 
 # ---- request-code: the verification id -------------------------------------
 
 
-def test_an_unknown_verification_id_is_refused(client, sms):
+def test_a_resend_for_an_unknown_verification_id_is_refused(client, sms):
     response = request_code(client, verification_id="does-not-exist")
 
     error_of(response, 404, "verification_not_found")
@@ -306,18 +540,6 @@ def test_a_provider_failure_gives_503(client, sms, monkeypatch):
     error_of(response, 503, "sms_unavailable")
 
 
-def test_a_rejected_send_does_not_count_toward_the_hourly_limit(client, sms, monkeypatch):
-    with monkeypatch.context() as down:
-        provider_is_down(sms, down, send=True, status=422)
-        for _ in range(5):
-            error_of(request_code(client), 503, "sms_unavailable")
-
-    # The provider is back. All three codes of the hour are still available.
-    for _ in range(3):
-        assert request_code(client).status_code == 200
-    error_of(request_code(client), 429, "too_many_codes")
-
-
 def test_a_rejected_first_send_retains_history_without_otp_expiration(
     client, sms, monkeypatch, otp_store
 ):
@@ -337,7 +559,9 @@ def test_a_failed_resend_keeps_the_request_so_the_user_can_try_again(
     first_code = last_code(sms)
     with monkeypatch.context() as down:
         provider_is_down(sms, down, send=True)
-        error_of(request_code(client, verification_id=vid), 503, "sms_unavailable")
+        error_of(
+            request_code(client, verification_id=vid), 503, "sms_unavailable"
+        )
 
     # The first SMS is still good, and the request is still open.
     assert verify_code(client, vid, first_code).status_code == 200
@@ -357,7 +581,6 @@ def test_the_right_code_signs_the_user_in(client, sms):
         "access_token",
         "access_token_expires_at",
         "refresh_token",
-        "refresh_token_expires_at",
         "account",
     }
     assert body["account"]["phone_number"] == PHONE
@@ -369,7 +592,9 @@ def test_the_access_token_from_verify_code_works(client, sms):
     vid = start(client)
     body = verify_code(client, vid, last_code(sms)).get_json()
 
-    response = client.get("/api/v1/auth/session", headers=bearer(body["access_token"]))
+    response = client.get(
+        "/api/v1/auth/session", headers=bearer(body["access_token"])
+    )
 
     assert response.status_code == 200
     assert response.get_json()["account_id"] == body["account"]["id"]
@@ -397,7 +622,9 @@ def test_the_same_phone_number_is_the_same_user_every_time(client, sms):
 
 
 def test_different_phone_numbers_are_different_users(client, sms):
-    first = verify_code(client, start(client, PHONE), last_code(sms, PHONE)).get_json()
+    first = verify_code(
+        client, start(client, PHONE), last_code(sms, PHONE)
+    ).get_json()
     second = verify_code(
         client, start(client, OTHER_PHONE), last_code(sms, OTHER_PHONE)
     ).get_json()
@@ -409,7 +636,11 @@ def test_the_profile_of_a_returning_user_is_returned(client, sms):
     first = verify_code(client, start(client), last_code(sms)).get_json()
     client.put(
         "/api/v1/accounts/me/profile",
-        json={"first_name": "Leen", "last_name": "Algraawi", "display_name": "Leen"},
+        json={
+            "first_name": "Leen",
+            "last_name": "Algraawi",
+            "display_name": "Leen",
+        },
         headers=bearer(first["access_token"]),
     )
 
@@ -438,11 +669,15 @@ def test_spaces_around_the_code_are_ignored(client, sms):
 # ---- verify-code: wrong codes and the limit of 3 tries ---------------------
 
 
-def test_a_wrong_code_is_refused_and_the_request_stays_open(client, sms, otp_store):
+def test_a_wrong_code_is_refused_and_the_request_stays_open(
+    client, sms, otp_store
+):
     vid = start(client)
     real = last_code(sms)
 
-    error_of(verify_code(client, vid, wrong_code_for(real)), 422, "invalid_code")
+    error_of(
+        verify_code(client, vid, wrong_code_for(real)), 422, "invalid_code"
+    )
 
     assert otp_store.get_request(vid).wrong_tries == 1
     assert verify_code(client, vid, real).status_code == 200
@@ -471,7 +706,8 @@ def test_after_three_wrong_tries_even_the_right_code_is_refused(
     response = verify_code(client, vid, real)
 
     error_of(response, 429, "too_many_attempts")
-    assert provider_calls["check"] == checks_before  # the provider was not asked
+    # The provider was not asked.
+    assert provider_calls["check"] == checks_before
 
 
 def test_a_resend_does_not_give_new_tries(client, sms):
@@ -482,7 +718,11 @@ def test_a_resend_does_not_give_new_tries(client, sms):
 
     start(client, verification_id=vid)  # a new SMS, same request
     new_code = last_code(sms)
-    error_of(verify_code(client, vid, wrong_code_for(new_code)), 422, "invalid_code")
+    error_of(
+        verify_code(client, vid, wrong_code_for(new_code)),
+        422,
+        "invalid_code",
+    )
 
     # Three wrong tries in total: the new, right code is now refused too.
     error_of(verify_code(client, vid, new_code), 429, "too_many_attempts")
@@ -519,7 +759,9 @@ def test_a_code_works_until_300_seconds_after_it_was_sent(client, sms, clock):
     assert verify_code(client, vid, last_code(sms)).status_code == 200
 
 
-def test_a_wrong_code_is_expired_only_after_300_seconds(client, sms, clock, otp_store):
+def test_a_wrong_code_is_expired_only_after_300_seconds(
+    client, sms, clock, otp_store
+):
     vid = start(client)
     wrong = wrong_code_for(last_code(sms))
     clock.advance(seconds=300)
@@ -563,7 +805,8 @@ def test_a_resend_restarts_the_five_minutes_of_the_request(client, sms, clock):
     vid = start(client)
     clock.advance(minutes=4)
     start(client, verification_id=vid)
-    clock.advance(minutes=4)  # 8 minutes after the first SMS, 4 after the second
+    # 8 minutes after the first SMS, 4 after the second.
+    clock.advance(minutes=4)
 
     assert verify_code(client, vid, last_code(sms)).status_code == 200
 
@@ -596,14 +839,18 @@ def test_after_signing_in_a_new_request_works(client, sms):
 # ---- verify-code: input checks ---------------------------------------------
 
 
-def test_an_unknown_verification_id_is_refused(client, provider_calls):
+def test_a_code_for_an_unknown_verification_id_is_refused(
+    client, provider_calls
+):
     response = verify_code(client, "does-not-exist", "123456")
 
     error_of(response, 404, "verification_not_found")
     assert provider_calls["check"] == 0
 
 
-@pytest.mark.parametrize("code", ["", "12345", "1234567", "abcdef", "12 456", "1234.6"])
+@pytest.mark.parametrize(
+    "code", ["", "12345", "1234567", "abcdef", "12 456", "1234.6"]
+)
 def test_a_badly_formed_code_is_refused_without_costing_a_try(
     client, sms, provider_calls, otp_store, code
 ):
@@ -629,7 +876,9 @@ def test_a_badly_formed_code_is_never_repeated_in_the_answer(client, sms):
 def test_verify_code_needs_both_fields_and_refuses_unknown_ones(client, sms):
     vid = start(client)
 
-    missing = client.post("/api/v1/auth/verify-code", json={"verification_id": vid})
+    missing = client.post(
+        "/api/v1/auth/verify-code", json={"verification_id": vid}
+    )
     extra = client.post(
         "/api/v1/auth/verify-code",
         json={"verification_id": vid, "code": "123456", "phone_number": PHONE},
@@ -654,3 +903,39 @@ def test_a_provider_failure_while_checking_gives_503_and_costs_no_try(
 
     assert otp_store.get_request(vid).wrong_tries == 0
     assert verify_code(client, vid, real).status_code == 200
+
+
+# ---- counters, and a provider that was not called --------------------------
+
+
+def test_the_codes_sent_and_the_sign_ins_are_counted(client, sms):
+    verification_id = start(client)
+
+    signed_in = verify_code(client, verification_id, last_code(sms))
+
+    assert signed_in.status_code == 200
+    assert metrics.count("sign_in.code_sent") == 1
+    assert metrics.count("sign_in.completed") == 1
+
+
+def test_a_wrong_code_is_counted(client, sms):
+    verification_id = start(client)
+
+    verify_code(client, verification_id, wrong_code_for(last_code(sms)))
+
+    assert metrics.count("sign_in.invalid_code") == 1
+
+
+def test_a_provider_not_called_gives_the_code_back_to_the_quota(
+    client, sms, monkeypatch
+):
+    def not_called(phone):
+        raise SmsDeliveryError("breaker open", not_sent=True)
+
+    monkeypatch.setattr(sms, "send_code", not_called)
+
+    error_of(request_code(client), 503, "sms_unavailable")
+    assert metrics.count("sign_in.code_not_sent") == 1
+    # Nothing was used, so there is no wait before the next try.
+    monkeypatch.undo()
+    assert request_code(client).status_code == 200

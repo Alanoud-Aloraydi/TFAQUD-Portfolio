@@ -72,6 +72,8 @@ test/
 - When the API answers `401` with the code `access_token_expired`, the client requests a new access token with the stored refresh token and retries the original request once.
 - The codes `missing_token`, `invalid_token`, `session_revoked` and `invalid_refresh_token` end the session: the tokens are removed and the `sessionEnded` stream emits.
 - Tokens are kept in the platform secure storage (Keychain on iOS).
+- The refresh token has no end date: only a sign-out ends the session. iOS keeps the Keychain when the app is deleted, so the first start of a new install takes the old tokens out and signs that session out on the server (`lib/core/services/fresh_install.dart`). The server also signs out a phone whose app Apple says was deleted.
+- Calendar sync puts its events in the app's own «تفقّد» calendar. Signing out deletes that calendar with all its events, and repeating events repeat only two weeks ahead (renewed while the app is used), so after the app is deleted their alerts stop within two weeks.
 
 ## Status
 

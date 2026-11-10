@@ -1,5 +1,6 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/features/home/data/datasources/home_local_data_source.dart';
 import 'package:app/features/home/data/datasources/home_remote_data_source.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -8,6 +9,7 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @LazySingleton(as: HomeRepositoryDomain)
+/// Provides home repository operations.
 class HomeRepositoryData implements HomeRepositoryDomain {
   HomeRepositoryData(this._remote, this._local);
 
@@ -17,7 +19,14 @@ class HomeRepositoryData implements HomeRepositoryDomain {
   @override
   Future<Result<HomeEntity, Failure>> getHome() async {
     try {
-      return Success((await _remote.getHome()).toEntity());
+      final HomeEntity home = (await _remote.getHome()).toEntity();
+      // The words of each circle follow who is reading it.
+      CareVoice.viewerName = home.displayName;
+      CareVoice.update(<String, String?>{
+        for (final CareCircleSummary circle in home.circles)
+          circle.id: circle.isPatient ? null : circle.patientName,
+      });
+      return Success(home);
     } catch (error) {
       return Error(FailureExceptions.getException(error));
     }
@@ -28,6 +37,8 @@ class HomeRepositoryData implements HomeRepositoryDomain {
     try {
       return _local.selectedCircle(accountId);
     } catch (_) {
+      // The phone's storage could not be read: no saved choice, so the
+      // first circle shows, as on a new install.
       return null;
     }
   }

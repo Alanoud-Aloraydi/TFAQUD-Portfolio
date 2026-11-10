@@ -1,7 +1,9 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:dio/dio.dart' show Response;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -23,23 +25,23 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   bool _apiBusy = false;
 
   static const List<IconData> _icons = <IconData>[
-    Icons.chevron_left,
-    Icons.check,
-    Icons.add,
-    Icons.notifications_none,
-    Icons.person_outline,
-    Icons.people_outline,
-    Icons.info_outline,
-    Icons.warning_amber,
-    Icons.schedule,
-    Icons.calendar_today,
-    Icons.medication,
-    Icons.favorite_border,
-    Icons.water_drop,
-    Icons.search,
-    Icons.delete_outline,
-    Icons.edit,
-    Icons.share,
+    AppIcons.back,
+    AppIcons.check,
+    AppIcons.plus,
+    AppIcons.bell,
+    AppIcons.user,
+    AppIcons.users,
+    AppIcons.info,
+    AppIcons.warning,
+    AppIcons.clock,
+    AppIcons.calendar,
+    AppIcons.pill,
+    AppIcons.heart,
+    AppIcons.drop,
+    AppIcons.search,
+    AppIcons.trash,
+    AppIcons.pencil,
+    AppIcons.export,
   ];
 
   /// Calls GET /health and shows the address used and the result.
@@ -83,7 +85,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
               TextButton(onPressed: () {}, child: const Text('Text link')),
               FilledButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.add),
+                icon: const Icon(AppIcons.plus),
                 label: const Text('With icon'),
               ),
             ],
@@ -91,9 +93,24 @@ class _ComponentGalleryState extends State<ComponentGallery> {
           _Section(
             title: 'Text fields',
             children: const <Widget>[
-              TextField(decoration: InputDecoration(labelText: 'Label', hintText: 'Hint')),
-              TextField(decoration: InputDecoration(labelText: 'Label', errorText: 'Required field')),
-              TextField(decoration: InputDecoration(labelText: '\u0627\u0644\u0627\u0633\u0645', hintText: '\u0645\u0631\u062D\u0628\u0627')),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Label',
+                  hintText: 'Hint',
+                ),
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Label',
+                  errorText: 'Required field',
+                ),
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: '\u0627\u0644\u0627\u0633\u0645',
+                  hintText: '\u0645\u0631\u062D\u0628\u0627',
+                ),
+              ),
             ],
           ),
           _Section(
@@ -165,7 +182,8 @@ class _ComponentGalleryState extends State<ComponentGallery> {
                 spacing: 16,
                 runSpacing: 16,
                 children: <Widget>[
-                  for (final IconData icon in _icons) Icon(icon, size: 28),
+                  for (final IconData icon in _icons)
+                    Icon(icon, size: AppSizes.icon),
                 ],
               ),
             ],
@@ -186,6 +204,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   }
 }
 
+/// Renders the section element of component gallery.
 class _Section extends StatelessWidget {
   const _Section({required this.title, required this.children});
 

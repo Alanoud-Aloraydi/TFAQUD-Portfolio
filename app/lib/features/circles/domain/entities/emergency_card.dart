@@ -4,8 +4,8 @@ import 'package:equatable/equatable.dart';
 
 /// The read-only emergency card: GET /api/v1/circles/{id}/emergency-card.
 /// It carries only what a helper needs: the name, the blood type, the
-/// allergies, the chronic conditions and the people to call. The current
-/// medicines are added when the medication feature exists.
+/// allergies, the chronic conditions and the people to call. The page adds
+/// the current medicines from the medication plans it reads itself.
 class EmergencyCard extends Equatable {
   EmergencyCard({
     required this.firstName,

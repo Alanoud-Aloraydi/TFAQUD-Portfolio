@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 
 /// Maps the home API payload without retaining clinical or session data.
@@ -14,6 +15,7 @@ class HomeModel {
         accountId: account['id'] as String,
         displayName: account['display_name'] as String?,
         profileComplete: account['profile_complete'] as bool,
+        avatarCode: account['avatar_code'] as String?,
         circles: circles.map((item) {
           final circle = item as Map<String, dynamic>;
           return CareCircleSummary(
@@ -21,6 +23,10 @@ class HomeModel {
             name: circle['name'] as String,
             canManageMedications:
                 circle['can_manage_medications'] as bool? ?? false,
+            patientAvatarCode: circle['patient_avatar_code'] as String?,
+            isPatient: circle['is_patient'] as bool? ?? true,
+            patientName: circle['patient_name'] as String?,
+            timeZone: circle['time_zone'] as String? ?? defaultPatientZone,
           );
         }).toList(),
       ),

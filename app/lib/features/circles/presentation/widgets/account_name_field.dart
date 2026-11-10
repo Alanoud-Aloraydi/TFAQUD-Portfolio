@@ -1,4 +1,5 @@
-import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -18,36 +19,57 @@ class AccountNameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
     final Widget content = switch (state.accountLoad) {
-      AccountLoad.loaded => Text(
+      AccountLoad.loaded || AccountLoad.notNeeded => Text(
         state.fullName ?? '',
-        style: text.bodyLarge,
+        style: Theme.of(context).textTheme.bodyLarge,
       ),
       AccountLoad.loading => const Align(
         alignment: AlignmentDirectional.centerStart,
         child: SizedBox(
-          width: 20,
-          height: 20,
+          width: AppSpacing.space5,
+          height: AppSpacing.space5,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      AccountLoad.failed => Row(
-        children: <Widget>[
-          Flexible(
-            child: Text(
-              context.tr('circles.name_failed'),
-              style: text.bodyMedium?.copyWith(color: AppColors.dangerInk),
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: Text(context.tr('auth.retry'))),
-        ],
+      AccountLoad.failed => AccountLoadFailed(
+        messageKey: 'circles.name_failed',
+        onRetry: onRetry,
       ),
     };
     return ReadOnlyField(
       label: context.tr('circles.name'),
       note: context.tr('circles.from_account'),
       child: content,
+    );
+  }
+}
+
+/// The account could not be read: [messageKey] says so, beside a retry
+/// link. The page still works without the account.
+class AccountLoadFailed extends StatelessWidget {
+  const AccountLoadFailed({
+    super.key,
+    this.messageKey = 'circles.account_failed',
+    required this.onRetry,
+  });
+
+  final String messageKey;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Flexible(
+          child: Text(
+            context.tr(messageKey),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: AppSemanticColors.statusError),
+          ),
+        ),
+        TextButton(onPressed: onRetry, child: Text(context.tr('auth.retry'))),
+      ],
     );
   }
 }

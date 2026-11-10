@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 
 @Singleton(order: 1)
+/// Provides local keys operations.
 class LocalKeysService {
   LocalKeysService();
 

@@ -1,36 +1,35 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
+import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
-import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 /// The account page (F05): the names, the phone number, the requests sent that
 /// wait for the patient, changing the names, and deleting the account.
 class AccountCubit extends Cubit<AccountState> {
-  AccountCubit(this._circles, this._onboarding, this._auth, this._home)
+  AccountCubit(this._circles, this._profile, this._auth, this._home)
     : super(const AccountState());
 
   final CirclesUseCase _circles;
-  final OnboardingUseCase _onboarding;
+  final ProfileUseCase _profile;
   final AuthUseCase _auth;
   final HomeUseCase _home;
-
-  /// The longest names the API accepts (docs/api-contracts.md, section 5).
-  static const int maxNameLength = 50;
-  static const int maxDisplayNameLength = 30;
 
   int _revision = 0;
 
   /// Reads the account and the requests this account sent. The account is
   /// needed; when only the requests fail the page still shows the account.
+  /// A failed first read is [AccountStatus.failure] (the page offers a
+  /// retry); a failed refresh keeps the page and sets [AccountState.errorKey].
   Future<void> load() async {
     final int revision = ++_revision;
     if (state.status != AccountStatus.ready) {
@@ -39,27 +38,37 @@ class AccountCubit extends Cubit<AccountState> {
     final List<Object> answers = await Future.wait<Object>(<Future<Object>>[
       _circles.getAccount(),
       _circles.getInbox(),
+      _home.getHome(),
     ]);
     if (isClosed || revision != _revision) return;
     final account = answers[0] as Result<AccountSummary, Failure>;
     final inbox = answers[1] as Result<CircleInbox, Failure>;
+    final home = answers[2] as Result<HomeEntity, Failure>;
     account.when(
       (AccountSummary summary) => emit(
-        AccountState(
+        // copyWith keeps a delete flow that is running, and the messages.
+        state.copyWith(
           status: AccountStatus.ready,
           account: summary,
+          circles: home.when(
+            (HomeEntity read) => read.circles,
+            (Failure _) => state.circles,
+          ),
           sent: inbox.when(
             (CircleInbox read) => _waiting(read),
             (Failure _) => state.sent,
           ),
-          errorKey: state.errorKey,
-          noticeKey: state.noticeKey,
-          busyIds: state.busyIds,
         ),
       ),
       (Failure failure) {
         if (state.status == AccountStatus.ready) {
-          if (_ended(failure)) emit(state.copyWith(sessionEnded: true));
+          // A refresh that fails keeps the page and says so once.
+          emit(
+            state.copyWith(
+              errorKey: failure.messageKey,
+              sessionEnded: _ended(failure),
+            ),
+          );
           return;
         }
         emit(
@@ -94,16 +103,16 @@ class AccountCubit extends Cubit<AccountState> {
     final String last = lastName.trim();
     final String display = displayName.trim();
     if (current == null || first.isEmpty || last.isEmpty || display.isEmpty) {
-      return 'circles.field_required';
+      return 'common.field_required';
     }
-    final result = await _onboarding.saveProfile(
+    final result = await _profile.saveProfile(
       firstName: first,
       lastName: last,
       displayName: display,
     );
     if (isClosed) return null;
     return result.when(
-      (bool _) {
+      (_) {
         emit(
           state.copyWith(
             account: AccountSummary(
@@ -112,6 +121,8 @@ class AccountCubit extends Cubit<AccountState> {
               displayName: display,
               phoneNumber: current.phoneNumber,
               patientCircleId: current.patientCircleId,
+              birthDate: current.birthDate,
+              city: current.city,
             ),
             noticeKey: 'account.saved',
           ),

@@ -14,7 +14,24 @@ from app.models.medication_plan import MedicationPlan, MedicationPlanVersion
 from app.models.medication_schedule import (
     MedicationSchedule,
     MedicationScheduleDay,
+    MedicationScheduleMonthDay,
 )
+from app.models.measurement import (
+    MeasurementPlan,
+    MeasurementPlanTime,
+    MeasurementPlanVersion,
+    MeasurementRecord,
+    MeasurementTarget,
+)
+from app.models.appointment import (
+    Appointment,
+    AppointmentCompanion,
+    AppointmentVisit,
+)
+from app.models.push import PushDevice
+from app.models.notification_log import NotificationLog
+from app.models.photo import Photo
+from app.models.task_snooze import TaskSnooze
 
 __all__ = [
     "Account",
@@ -33,5 +50,18 @@ __all__ = [
     "MedicationPlanVersion",
     "MedicationSchedule",
     "MedicationScheduleDay",
+    "MedicationScheduleMonthDay",
     "MedicationDoseRecord",
+    "MeasurementPlan",
+    "MeasurementPlanTime",
+    "MeasurementPlanVersion",
+    "MeasurementRecord",
+    "MeasurementTarget",
+    "Appointment",
+    "AppointmentCompanion",
+    "AppointmentVisit",
+    "PushDevice",
+    "NotificationLog",
+    "Photo",
+    "TaskSnooze",
 ]

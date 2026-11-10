@@ -1,24 +1,27 @@
-import 'package:app/core/constants/app_colors.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/labeled_text_field.dart';
-import 'package:app/core/widgets/pill_button.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/birth_date_city_fields.dart';
+import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/account_name_field.dart';
 import 'package:app/features/circles/presentation/widgets/already_has_circle_view.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
-import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/option_chips.dart';
-import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 1 of 3 of the circle for your own care (PROFILE-01): the name of the
-/// circle, the birth date and the city. Needs a [CreateCircleCubit] of the
-/// self flow above it.
+/// The circle for the person's own care (PROFILE-01) on one page: only its
+/// name. Their name, birth date and city come from the account (onboarding
+/// saved them); an account made before onboarding asked for them is asked
+/// here.
+/// The health condition and allergies are filled later in the medical file.
+/// Needs a [CreateCircleCubit] of the self flow above it.
 class SelfCircleBasicsScreen extends StatefulWidget {
   const SelfCircleBasicsScreen({super.key});
 
@@ -43,70 +46,48 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
     super.dispose();
   }
 
-  Future<void> _pickBirthDate(
-    BuildContext context,
-    CreateCircleCubit cubit,
-    DateTime? current,
-  ) async {
-    final DateTime? picked = await showBirthDateSheet(
-      context,
-      selected: current,
-    );
-    if (picked != null) cubit.birthDateChanged(picked);
-  }
-
-  Future<void> _pickCity(
-    BuildContext context,
-    CreateCircleCubit cubit,
-    String? current,
-  ) async {
-    final String? picked = await showCitySheet(context, selected: current);
-    if (picked != null) cubit.cityChanged(picked);
-  }
-
-  void _next(BuildContext context, CreateCircleCubit cubit) {
-    final NamePreset preset = cubit.state.namePreset;
-    final bool ok = cubit.continueFromBasics(
-      presetName: context.tr('circles.preset.${preset.name}'),
-    );
-    if (ok) context.push(Routes.createSelfCircleHealth);
-  }
+  Future<void> _create(BuildContext context, CreateCircleCubit cubit) =>
+      createCircleAndOpen(
+        context,
+        cubit,
+        presetName: context.tr('circles.preset.${cubit.state.namePreset.name}'),
+      );
 
   @override
   Widget build(BuildContext context) {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
-    final TextTheme text = Theme.of(context).textTheme;
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
-              final String requiredText = context.tr('circles.field_required');
+              final String requiredText = context.tr('common.field_required');
               return Column(
                 children: <Widget>[
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          CircleStepHeader(
-                            step: 1,
-                            stepTitle: context.tr('circles.step_basics'),
+                          StepHeader(
                             title: context.tr('circles.self_title'),
+                            subtitle: context.tr('circles.self_subtitle'),
                             onBack: context.canPop()
                                 ? () => context.pop()
                                 : null,
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            context.tr('circles.circle_name'),
-                            style: text.titleSmall?.copyWith(
-                              color: AppColors.ink2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.xl),
+                          InsetText.header(context.tr('circles.circle_name')),
+                          const SizedBox(height: AppSpacing.sm),
                           OptionChips(
                             options: <ChipOption>[
                               for (final NamePreset preset in NamePreset.values)
@@ -121,72 +102,54 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                               NamePreset.values.byName(code),
                             ),
                           ),
-                          if (state.namePreset == NamePreset.other)
-                            ...<Widget>[
-                              const SizedBox(height: 12),
-                              LabeledTextField(
-                                label: context.tr('circles.custom_name'),
-                                controller: _customName,
-                                maxLength:
-                                    CreateCircleCubit.maxCustomNameLength,
-                                textInputAction: TextInputAction.done,
-                                onChanged: cubit.customNameChanged,
-                                errorText:
-                                    state.showErrors &&
-                                        state.customName.trim().isEmpty
-                                    ? requiredText
-                                    : null,
-                              ),
-                            ],
-                          const SizedBox(height: 8),
-                          Text(
-                            context.tr('circles.name_hint'),
-                            style: text.bodySmall?.copyWith(
-                              color: AppColors.ink3,
+                          if (state.namePreset == NamePreset.other) ...<Widget>[
+                            const SizedBox(height: AppSpacing.md),
+                            LabeledTextField(
+                              label: context.tr('circles.custom_name'),
+                              controller: _customName,
+                              maxLength: CreateCircleCubit.maxCustomNameLength,
+                              textInputAction: TextInputAction.done,
+                              onChanged: cubit.customNameChanged,
+                              errorText:
+                                  state.showErrors &&
+                                      state.customName.trim().isEmpty
+                                  ? requiredText
+                                  : null,
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          AccountNameField(
-                            state: state,
-                            onRetry: cubit.loadAccount,
-                          ),
-                          const SizedBox(height: 16),
-                          PickerField(
-                            label: context.tr('circles.birth_date'),
-                            hint: context.tr('circles.birth_date_hint'),
-                            icon: Icons.calendar_today_outlined,
-                            value: state.birthDate == null
-                                ? null
-                                : formatBirthDate(context, state.birthDate!),
-                            onTap: () => _pickBirthDate(
-                              context,
-                              cubit,
-                              state.birthDate,
+                          ],
+                          // The one line under the title says who sees the
+                          // name; nothing more here.
+                          if (state.accountLoad ==
+                              AccountLoad.failed) ...<Widget>[
+                            const SizedBox(height: AppSpacing.lg),
+                            AccountLoadFailed(onRetry: cubit.loadAccount),
+                          ],
+                          // Only an account that has not saved them yet:
+                          // onboarding asks for both now.
+                          if (state.asksBasics &&
+                              !state.waitingForAccount) ...<Widget>[
+                            const SizedBox(height: AppSpacing.xl),
+                            BirthDateCityFields(
+                              birthDate: state.birthDate,
+                              city: state.city,
+                              onBirthDate: cubit.birthDateChanged,
+                              onCity: cubit.cityChanged,
+                              showErrors: state.showErrors,
                             ),
-                            errorText:
-                                state.showErrors && state.birthDate == null
-                                ? requiredText
-                                : null,
-                          ),
-                          const SizedBox(height: 16),
-                          PickerField(
-                            label: context.tr('circles.city'),
-                            hint: context.tr('circles.city_hint'),
-                            icon: Icons.location_on_outlined,
-                            value: state.city,
-                            onTap: () => _pickCity(context, cubit, state.city),
-                            errorText: state.showErrors && state.city == null
-                                ? requiredText
-                                : null,
-                          ),
+                          ],
+                          if (state.errorKey != null) ...<Widget>[
+                            const SizedBox(height: AppSpacing.lg),
+                            InlineError(messageKey: state.errorKey!),
+                          ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   PillButton(
-                    label: context.tr('circles.next'),
-                    onPressed: () => _next(context, cubit),
+                    label: context.tr('circles.create'),
+                    isLoading: state.busy,
+                    onPressed: () => _create(context, cubit),
                   ),
                 ],
               );

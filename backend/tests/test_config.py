@@ -8,18 +8,20 @@ from app.config import ConfigError, load_config
 from app.sms import FakeSmsSender
 
 
-def test_default_token_lifetimes_are_the_proposal_of_tfqd_11(app):
+def test_the_default_access_token_lifetime_is_the_proposal_of_tfqd_11(app):
     assert app.config["ACCESS_TOKEN_MINUTES"] == 15
-    assert app.config["REFRESH_TOKEN_DAYS"] == 30
+    # A refresh token has no lifetime to set: it ends only at sign-out.
+    assert "REFRESH_TOKEN_DAYS" not in app.config
 
 
-def test_token_lifetimes_can_be_changed_by_environment_variable(monkeypatch):
+def test_the_access_token_lifetime_can_be_changed_by_environment_variable(
+    monkeypatch,
+):
     monkeypatch.setenv("ACCESS_TOKEN_MINUTES", "5")
-    monkeypatch.setenv("REFRESH_TOKEN_DAYS", "7")
 
     config = load_config("testing")
 
-    assert (config["ACCESS_TOKEN_MINUTES"], config["REFRESH_TOKEN_DAYS"]) == (5, 7)
+    assert config["ACCESS_TOKEN_MINUTES"] == 5
 
 
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
@@ -61,7 +63,8 @@ def test_development_works_without_any_setup(monkeypatch):
 
     app = create_app("development")
 
-    assert app.config["FAKE_SMS_LOG_BODY"] is True  # developer reads the OTP in the log
+    # The developer reads the code in the log.
+    assert app.config["FAKE_SMS_LOG_BODY"] is True
 
 
 def test_production_refuses_the_in_memory_session_store(monkeypatch):
@@ -74,7 +77,9 @@ def test_production_refuses_the_in_memory_session_store(monkeypatch):
         create_app("production", sms_sender=sender)
 
 
-def test_staging_starts_with_a_warning_about_the_in_memory_store(monkeypatch, caplog):
+def test_staging_starts_with_a_warning_about_the_in_memory_store(
+    monkeypatch, caplog
+):
     monkeypatch.setenv("SECRET_KEY", "x" * 40)
 
     with caplog.at_level("WARNING"):
@@ -94,7 +99,9 @@ def test_a_given_session_store_is_used_without_warning(monkeypatch, caplog):
     assert "in-memory session store" not in caplog.text
 
 
-def test_default_code_validity_is_300_seconds_like_the_authentica_dashboard(app):
+def test_default_code_validity_is_300_seconds_like_the_authentica_dashboard(
+    app,
+):
     assert app.config["OTP_VALID_SECONDS"] == 300
 
 
@@ -104,7 +111,9 @@ def test_code_validity_can_be_changed_by_environment_variable(monkeypatch):
     assert load_config("testing")["OTP_VALID_SECONDS"] == 120
 
 
-@pytest.mark.parametrize("name", ["OTP_VALID_SECONDS", "AUTHENTICA_TEMPLATE_ID"])
+@pytest.mark.parametrize(
+    "name", ["OTP_VALID_SECONDS", "AUTHENTICA_TEMPLATE_ID"]
+)
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
 def test_bad_otp_numbers_are_refused(monkeypatch, name, value):
     monkeypatch.setenv(name, value)
@@ -117,13 +126,17 @@ def test_default_authentica_template_is_5(app):
     assert app.config["AUTHENTICA_TEMPLATE_ID"] == 5
 
 
-def test_authentica_template_can_be_changed_by_environment_variable(monkeypatch):
+def test_authentica_template_can_be_changed_by_environment_variable(
+    monkeypatch,
+):
     monkeypatch.setenv("AUTHENTICA_TEMPLATE_ID", "31")
 
     assert load_config("testing")["AUTHENTICA_TEMPLATE_ID"] == 31
 
 
-def test_the_authentica_key_is_read_from_the_environment_outside_tests(monkeypatch):
+def test_the_authentica_key_is_read_from_the_environment_outside_tests(
+    monkeypatch,
+):
     monkeypatch.setenv("AUTHENTICA_API_KEY", "k" * 30)
 
     assert load_config("development")["AUTHENTICA_API_KEY"] == "k" * 30
@@ -137,19 +150,22 @@ def test_the_testing_environment_never_reads_the_authentica_key(monkeypatch):
 
 def test_default_sign_in_limits_are_the_ones_of_tfqd_13(app):
     assert app.config["OTP_MAX_WRONG_TRIES"] == 3
-    assert app.config["OTP_MAX_SENDS_PER_HOUR"] == 3
+    assert app.config["OTP_MAX_SENDS_PER_DAY"] == 20
 
 
 def test_sign_in_limits_can_be_changed_by_environment_variable(monkeypatch):
     monkeypatch.setenv("OTP_MAX_WRONG_TRIES", "5")
-    monkeypatch.setenv("OTP_MAX_SENDS_PER_HOUR", "10")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_DAY", "10")
 
     config = load_config("testing")
 
-    assert (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_HOUR"]) == (5, 10)
+    limits = (config["OTP_MAX_WRONG_TRIES"], config["OTP_MAX_SENDS_PER_DAY"])
+    assert limits == (5, 10)
 
 
-@pytest.mark.parametrize("name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_HOUR"])
+@pytest.mark.parametrize(
+    "name", ["OTP_MAX_WRONG_TRIES", "OTP_MAX_SENDS_PER_DAY"]
+)
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])
 def test_bad_sign_in_limits_are_refused(monkeypatch, name, value):
     monkeypatch.setenv(name, value)
@@ -183,3 +199,50 @@ def test_staging_warns_about_every_in_memory_store(monkeypatch, caplog):
 
     assert "in-memory sign-in code store" in caplog.text
     assert "in-memory user store" in caplog.text
+
+
+def test_staging_logs_the_fake_codes_only_when_asked(monkeypatch):
+    # Render runs the team's test server in staging: the fake sender writes
+    # its codes in the log only with FAKE_SMS_LOG_CODES=true.
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    monkeypatch.delenv("FAKE_SMS_LOG_CODES", raising=False)
+    assert load_config("staging")["FAKE_SMS_LOG_BODY"] is False
+
+    monkeypatch.setenv("FAKE_SMS_LOG_CODES", "true")
+    assert load_config("staging")["FAKE_SMS_LOG_BODY"] is True
+    assert load_config("production")["FAKE_SMS_LOG_BODY"] is False
+
+
+def test_the_real_servers_wait_between_codes_and_cap_the_askers(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "x" * 40)
+    for name in ("OTP_RESEND_WAITS", "OTP_MAX_SENDS_PER_DEVICE_HOUR",
+                 "OTP_MAX_SENDS_PER_IP_HOUR"):
+        monkeypatch.delenv(name, raising=False)
+
+    config = load_config("staging")
+
+    assert config["OTP_RESEND_WAITS"] == (30, 60, 120, 300, 600)
+    assert config["OTP_MAX_SENDS_PER_DEVICE_HOUR"] == 10
+    assert config["OTP_MAX_SENDS_PER_IP_HOUR"] == 30
+    # The tests send many codes in a row, so there are none there.
+    testing = load_config("testing")
+    assert testing["OTP_RESEND_WAITS"] == ()
+    assert testing["OTP_MAX_SENDS_PER_DEVICE_HOUR"] is None
+
+
+@pytest.mark.parametrize("value", ["abc", "30,x", "30,-1"])
+def test_bad_waits_are_refused(monkeypatch, value):
+    monkeypatch.setenv("OTP_RESEND_WAITS", value)
+
+    with pytest.raises(ConfigError, match="OTP_RESEND_WAITS"):
+        load_config("testing")
+
+
+def test_zero_turns_a_wait_or_a_cap_off(monkeypatch):
+    monkeypatch.setenv("OTP_RESEND_WAITS", "0")
+    monkeypatch.setenv("OTP_MAX_SENDS_PER_IP_HOUR", "0")
+
+    config = load_config("testing")
+
+    assert config["OTP_RESEND_WAITS"] == ()
+    assert config["OTP_MAX_SENDS_PER_IP_HOUR"] is None

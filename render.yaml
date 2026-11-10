@@ -1,0 +1,88 @@
+# Render Blueprint: the TFAQUD API and its PostgreSQL database, as the team's
+# shared test server (APP_ENV=staging), with real sign-in codes by SMS
+# (Authentica).
+#
+# In Render: New, then Blueprint, then pick this repository and the branch to
+# deploy. Render reads this file, asks for the values marked `sync: false`,
+# and creates both. A push to that branch deploys the API again by itself
+# once every GitHub check on the commit has passed (.github/workflows/ci.yml);
+# a failed check, or a commit with no checks, deploys nothing. The start
+# command runs the new database migrations first.
+#
+# backend/README.md ("Deploy to Render") has the steps.
+
+databases:
+  - name: tfaqud-db
+    plan: free
+    # The region nearest to Saudi Arabia that Render has.
+    region: frankfurt
+    databaseName: tfaqud
+    user: tfaqud
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    runtime: docker
+    name: tfaqud-api
+    plan: free
+    region: frankfurt
+    # The paths are from the top of the repository (no rootDir, so they mean
+    # the same in every Render setting). Only changes to the server deploy it.
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    buildFilter:
+      paths:
+        - backend/**
+    healthCheckPath: /api/v1/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: SECRET_KEY
+        generateValue: true
+      # Cloudflare in front of Render puts the caller's address here; the
+      # server caps the sign-in codes one network may ask for with it.
+      - key: CLIENT_IP_HEADER
+        value: CF-Connecting-IP
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tfaqud-db
+          property: connectionString
+      # Real sign-in codes by SMS through Authentica. The key is typed in
+      # Render (Environment), never in git. For codes in Render's log instead,
+      # set SMS_BACKEND to fake and FAKE_SMS_LOG_CODES to "true".
+      - key: SMS_BACKEND
+        value: authentica
+      - key: AUTHENTICA_API_KEY
+        sync: false
+      - key: FAKE_SMS_LOG_CODES
+        value: "false"
+      # The demo accounts (0500000001 detailed, 0500000004 simplified):
+      # their numbers are made up, so they get no SMS and sign in with
+      # DEMO_SIGN_IN_CODE, six digits typed in Render (Environment), never
+      # in git. The start makes the demo when it is missing, and
+      # .github/workflows/demo-refresh.yml makes it fresh each morning.
+      # Without the code, nothing of the demo runs.
+      - key: DEMO_DATA
+        value: "true"
+      - key: DEMO_SIGN_IN_CODE
+        sync: false
+      # Apple push. Type "none" first; after the key file is added as the
+      # secret file apns_key.p8, change it to "apns".
+      - key: PUSH_BACKEND
+        sync: false
+      - key: APNS_KEY_ID
+        sync: false
+      - key: APNS_TEAM_ID
+        sync: false
+      - key: APNS_BUNDLE_ID
+        value: com.tfaqud.tfaqud
+      - key: APNS_PRIVATE_KEY_PATH
+        value: /etc/secrets/apns_key.p8
+      # TestFlight and the App Store use Apple's production push service.
+      - key: APNS_ENVIRONMENT
+        value: production
+      # The scheduler (a GitHub Actions cron, see .github/workflows) calls
+      # POST /internal/tick with this value as the X-Tick-Secret header.
+      - key: TICK_SECRET
+        sync: false

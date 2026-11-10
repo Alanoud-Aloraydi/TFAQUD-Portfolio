@@ -9,9 +9,10 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import and_, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.authz.roles import CircleRole
+from app.circles import naming
 from app.models import Account, CareCircle, CareCircleCreationRequest
 from app.models import CareCircleManager, CareCircleManagerInvitation
 from app.models import EmergencyContact, Patient
@@ -22,11 +23,15 @@ DECLINED_VISIBLE_DAYS = 7
 
 
 def _time(value: datetime | None) -> str | None:
+    """A time as ISO 8601 text, or None."""
     return value.isoformat() if value else None
 
 
 def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
-    """Basic data of the patient. Names come from the account while linked."""
+    """Basic data of the patient. Names and avatar come from the account
+    while linked: one person, one picture, like their photo."""
+    # A patient with an account shows the account's names and picture; one
+    # without shows the circle's.
     linked = (
         session.get(Account, patient.account_id)
         if patient.account_id
@@ -38,11 +43,14 @@ def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
         "last_name": source.last_name,
         "birth_date": patient.birth_date.isoformat(),
         "city": patient.city,
+        # Every time of the circle is wall clock in this IANA zone.
+        "time_zone": patient.time_zone,
         "latitude": patient.latitude,
         "longitude": patient.longitude,
         "has_account": linked is not None,
         "app_mode": linked.app_mode if linked else None,
         "is_you": linked is not None and linked.id == viewer,
+        "avatar_code": source.avatar_code,
     }
 
 
@@ -54,25 +62,70 @@ def circle_view(
     patient = session.scalar(
         select(Patient).where(Patient.care_circle_id == circle_id)
     )
+    # `is_patient` marks the manager who is also the patient, so the app
+    # can show who the file belongs to.
+    patient_account = patient.account_id if patient is not None else None
     members = [
         {
+            "account_id": str(account_id),
             "display_name": name,
             "is_you": account_id == viewer,
+            "is_patient": account_id == patient_account,
             "role": "manager",
+            # Already the account's own avatar; a patient who manages their
+            # own circle shares it, like their photo.
+            "avatar_code": avatar_code,
+            # So any circle member can call another, the same as an
+            # emergency contact's number.
+            "phone_number": phone_number,
         }
-        for account_id, name in sorted(
+        for account_id, name, avatar_code, phone_number in sorted(
             session.execute(
-                select(CareCircleManager.account_id, Account.display_name)
+                select(CareCircleManager.account_id, Account.display_name,
+                       Account.avatar_code, Account.phone_number)
                 .join(Account, Account.id == CareCircleManager.account_id)
                 .where(CareCircleManager.care_circle_id == circle_id)
             ).all(),
-            # You first, then by name, so the order never jumps around.
-            key=lambda row: (row[0] != viewer, row[1] or "", str(row[0])),
+            key=lambda row: (row[0] != patient_account,
+                             row[0] != viewer, row[1] or "", str(row[0])),
         )
     ]
+    if patient_account is not None and not any(
+        member["is_patient"] for member in members
+    ):
+        linked = (
+            session.get(Account, patient_account)
+            if patient_account else None
+        )
+        patient_name = (
+            f"{linked.first_name} {linked.last_name}" if linked
+            else f"{patient.first_name} {patient.last_name}"
+        )
+        members.insert(0, {
+            "account_id": str(patient_account) if patient_account else None,
+            "display_name": patient_name.strip(),
+            "is_you": patient_account == viewer,
+            "is_patient": True,
+            "role": "patient",
+            "avatar_code": (
+                linked.avatar_code if linked else patient.avatar_code
+            ),
+            "phone_number": linked.phone_number if linked else None,
+        })
+    linked_patient = (
+        session.get(Account, patient_account) if patient_account else None
+    )
     view = {
         "id": str(circle.id),
-        "name": circle.name,
+        # The patient sees their own name for it; the others «دائرة» and
+        # the patient's name (`app.circles.naming`).
+        "name": naming.name_for(
+            viewer,
+            own_name=circle.name,
+            patient_account_id=patient_account,
+            patient_account_name=naming.account_name(linked_patient),
+            patient_first_name=patient.first_name if patient else None,
+        ),
         "role": role.value,
         "patient": patient_view(session, patient, viewer),
         "members": members,
@@ -107,6 +160,7 @@ def invitation_view(invitation: CareCircleManagerInvitation) -> dict:
 
 
 def contact_view(contact: EmergencyContact) -> dict:
+    """One emergency contact, as the app reads it."""
     return {
         "id": str(contact.id),
         "name": contact.name,
@@ -116,6 +170,7 @@ def contact_view(contact: EmergencyContact) -> dict:
 
 
 def medical_view(profile: MedicalProfile) -> dict:
+    """The medical profile, as the app reads it."""
     return {
         "blood_type": profile.blood_type,
         "conditions": profile.conditions,
@@ -169,17 +224,19 @@ def sent_request_view(request: CareCircleCreationRequest) -> dict:
 
 
 def received_request_view(
-    request: CareCircleCreationRequest, requester: Account, patient: Account
+    request: CareCircleCreationRequest, requester: Account
 ) -> dict:
-    """A request as the person it is about (the future patient) sees it."""
-    circle_name = None
-    if patient.first_name:
-        circle_name = f"{request.proposed_circle_label} {patient.first_name}"
+    """A request as the person it is about (the future patient) sees it.
+
+    The patient names the circle themself when they complete the request,
+    so there is no circle name yet (`circle_name` is null). `circle_label`
+    is kept for older apps.
+    """
     return {
         "id": str(request.id),
         "status": request.status,
         "circle_label": request.proposed_circle_label,
-        "circle_name": circle_name,
+        "circle_name": None,
         "proposed_app_mode": request.proposed_app_mode,
         "requested_by": {
             "display_name": requester.display_name,
@@ -196,6 +253,8 @@ def creation_requests_view(
     """Requests the account sent, and requests that name its phone number."""
     request = CareCircleCreationRequest
     recent = now - timedelta(days=DECLINED_VISIBLE_DAYS)
+    # Sent: the open ones, and the declined ones for a few days so the sender
+    # sees the answer.
     sent = session.scalars(
         select(request)
         .where(
@@ -209,6 +268,7 @@ def creation_requests_view(
         )
         .order_by(request.created_at.desc(), request.id)
     ).all()
+    # Received: the open ones naming this account's number, with who sent each.
     received = session.execute(
         select(request, Account)
         .join(Account, Account.id == request.requested_by_account_id)
@@ -221,7 +281,7 @@ def creation_requests_view(
     return {
         "sent": [sent_request_view(row) for row in sent],
         "received": [
-            received_request_view(row, requester, account)
+            received_request_view(row, requester)
             for row, requester in received
         ],
     }
@@ -235,10 +295,22 @@ def received_invitations_view(
 ) -> list[dict]:
     """Pending invitations addressed to this account's phone number."""
     invitation = CareCircleManagerInvitation
+    inviter = aliased(Account)
+    patient_account = aliased(Account)
     rows = session.execute(
-        select(invitation, CareCircle.name, Account.display_name)
+        select(
+            invitation,
+            CareCircle.name,
+            inviter.display_name,
+            Patient.account_id,
+            Patient.first_name,
+            patient_account.display_name.label("patient_display_name"),
+            patient_account.first_name.label("patient_account_first_name"),
+        )
         .join(CareCircle, CareCircle.id == invitation.care_circle_id)
-        .outerjoin(Account, Account.id == invitation.invited_by_account_id)
+        .join(Patient, Patient.care_circle_id == CareCircle.id)
+        .outerjoin(inviter, inviter.id == invitation.invited_by_account_id)
+        .outerjoin(patient_account, patient_account.id == Patient.account_id)
         .where(
             invitation.invitee_phone_number == account.phone_number,
             invitation.status == "pending",
@@ -247,13 +319,25 @@ def received_invitations_view(
     ).all()
     return [
         {
-            "id": str(row.id),
-            "circle_name": circle_name,
-            "invited_by": (
-                {"display_name": inviter_name} if inviter_name else None
+            "id": str(row[0].id),
+            # As the invited person will see it: «دائرة» and the patient's
+            # name, never the patient's own choice.
+            "circle_name": naming.name_for(
+                account.id,
+                own_name=row.name,
+                patient_account_id=row.account_id,
+                patient_account_name=(
+                    row.patient_display_name or row.patient_account_first_name
+                ),
+                patient_first_name=row.first_name,
             ),
-            "created_at": _time(row.created_at),
-            "last_sent_at": _time(row.last_sent_at),
+            "invited_by": (
+                {"display_name": row.display_name}
+                if row.display_name
+                else None
+            ),
+            "created_at": _time(row[0].created_at),
+            "last_sent_at": _time(row[0].last_sent_at),
         }
-        for row, circle_name, inviter_name in rows
+        for row in rows
     ]

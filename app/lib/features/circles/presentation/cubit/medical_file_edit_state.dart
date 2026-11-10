@@ -1,7 +1,9 @@
+import 'package:app/core/constants/saudi_cities.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:equatable/equatable.dart';
 
+/// Defines the supported medical file edit status values.
 enum MedicalFileEditStatus { loading, ready, failure }
 
 /// What the edit page of the medical file shows: the answers as the user is
@@ -16,6 +18,7 @@ class MedicalFileEditState extends Equatable {
     this.lastName = '',
     this.birthDate,
     this.city,
+    this.timeZone,
     this.form = const MedicalForm(),
     this.showErrors = false,
     this.saving = false,
@@ -36,6 +39,9 @@ class MedicalFileEditState extends Equatable {
   final DateTime? birthDate;
   final String? city;
 
+  /// The IANA zone where the patient lives.
+  final String? timeZone;
+
   // The health answers.
   final MedicalForm form;
 
@@ -55,13 +61,19 @@ class MedicalFileEditState extends Equatable {
   bool get namesComplete =>
       firstName.trim().isNotEmpty && lastName.trim().isNotEmpty;
 
+  /// The «المنطقة الزمنية» row shows only for a city outside the Saudi
+  /// list: a listed city brings Saudi Arabia's zone ([SaudiCities.zoneOf]).
+  bool get zoneEditable => timeZone != null && SaudiCities.zoneOf(city) == null;
+
   MedicalFileEditState copyWith({
     MedicalFileEditStatus? status,
     MedicalFile? file,
+    String? messageKey,
     String? firstName,
     String? lastName,
     DateTime? birthDate,
     String? city,
+    String? timeZone,
     MedicalForm? form,
     bool? showErrors,
     bool? saving,
@@ -72,11 +84,12 @@ class MedicalFileEditState extends Equatable {
     return MedicalFileEditState(
       status: status ?? this.status,
       file: file ?? this.file,
-      messageKey: messageKey,
+      messageKey: messageKey ?? this.messageKey,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       birthDate: birthDate ?? this.birthDate,
       city: city ?? this.city,
+      timeZone: timeZone ?? this.timeZone,
       form: form ?? this.form,
       showErrors: showErrors ?? this.showErrors,
       saving: saving ?? this.saving,
@@ -94,6 +107,7 @@ class MedicalFileEditState extends Equatable {
     lastName,
     birthDate,
     city,
+    timeZone,
     form,
     showErrors,
     saving,

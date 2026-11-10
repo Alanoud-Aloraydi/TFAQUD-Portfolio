@@ -5,7 +5,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index
-from sqlalchemy import Integer, Numeric, String, Text, UniqueConstraint, text
+from sqlalchemy import Integer, Numeric, SmallInteger, String, Text
+from sqlalchemy import UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
@@ -81,21 +82,29 @@ class MedicationPlanVersion(db.Model):
         ),
         CheckConstraint("strength_value > 0", name="positive_strength"),
         CheckConstraint(
+            "missed_after_minutes IN (30, 60, 120)",
+            name="missed_after_minutes",
+        ),
+        CheckConstraint(
             "strength_unit IN ('mg', 'mcg', 'mg/mL', 'mg/5mL', "
             "'mcg/dose', 'unit/mL', '%')",
             name="strength_unit",
         ),
         UniqueConstraint("medication_plan_id", "version_number"),
-        UniqueConstraint(
+        Index(
+            "uq_medication_plan_version_effective_from_on",
             "medication_plan_id",
             "effective_from_on",
-            name="uq_medication_plan_version_effective_from_on",
+            unique=True,
+            postgresql_where=text("cancelled_at IS NULL"),
         ),
         Index(
             "uq_medication_plan_version_open",
             "medication_plan_id",
             unique=True,
-            postgresql_where=text("effective_until_on IS NULL"),
+            postgresql_where=text(
+                "effective_until_on IS NULL AND cancelled_at IS NULL"
+            ),
         ),
     )
 
@@ -114,10 +123,14 @@ class MedicationPlanVersion(db.Model):
     dosage_form: Mapped[str] = mapped_column(Text)
     reason_for_use: Mapped[str | None] = mapped_column(String(100))
     instructions: Mapped[str | None] = mapped_column(String(250))
+    missed_after_minutes: Mapped[int] = mapped_column(SmallInteger)
     treatment_starts_on: Mapped[date] = mapped_column(Date)
     treatment_ends_on: Mapped[date | None] = mapped_column(Date)
     effective_from_on: Mapped[date] = mapped_column(Date)
     effective_until_on: Mapped[date | None] = mapped_column(Date)
+    cancelled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     created_by_account_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("account.id", ondelete="SET NULL"),
         index=True,

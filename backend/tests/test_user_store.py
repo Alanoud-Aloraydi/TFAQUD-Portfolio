@@ -25,7 +25,8 @@ def test_a_new_phone_number_creates_a_user_without_a_profile(store):
     assert created is True
     assert user.phone == PHONE
     assert user.created_at == NOW
-    assert (user.first_name, user.last_name, user.display_name) == (None, None, None)
+    names = (user.first_name, user.last_name, user.display_name)
+    assert names == (None, None, None)
     assert user.profile_complete is False
 
 
@@ -80,6 +81,8 @@ def test_the_public_form_of_a_user_has_no_secret_fields(store):
         "display_name",
         "profile_complete",
         "app_mode",
+        "birth_date",
+        "city",
     }
 
 

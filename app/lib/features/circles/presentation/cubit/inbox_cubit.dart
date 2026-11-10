@@ -13,11 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// home screen keeps one ([followCircleChanges] on) and the notifications page
 /// has its own.
 class InboxCubit extends Cubit<InboxState> {
-  InboxCubit(
-    this._circles,
-    this._home, {
-    this.followCircleChanges = false,
-  }) : super(const InboxState()) {
+  InboxCubit(this._circles, this._home, {this.followCircleChanges = false})
+    : super(const InboxState()) {
     if (followCircleChanges) {
       _changes = _home.changes.listen((_) => load());
     }
@@ -80,7 +77,9 @@ class InboxCubit extends Cubit<InboxState> {
   /// home screen loads the circles again and selects it.
   Future<bool> respondToInvitation(String id, {required bool accept}) async {
     if (state.busyIds.contains(id)) return false;
-    emit(state.copyWith(busyIds: <String>{...state.busyIds, id}, clearError: true));
+    emit(
+      state.copyWith(busyIds: <String>{...state.busyIds, id}, clearError: true),
+    );
     final result = await _circles.respondToInvitation(id, accept: accept);
     if (isClosed) return false;
     final Set<String> busy = <String>{...state.busyIds}..remove(id);
@@ -123,7 +122,9 @@ class InboxCubit extends Cubit<InboxState> {
   /// the cancellation.
   Future<bool> cancelRequest(String id) async {
     if (state.busyIds.contains(id)) return false;
-    emit(state.copyWith(busyIds: <String>{...state.busyIds, id}, clearError: true));
+    emit(
+      state.copyWith(busyIds: <String>{...state.busyIds, id}, clearError: true),
+    );
     final result = await _circles.cancelRequest(id);
     if (isClosed) return false;
     final Set<String> busy = <String>{...state.busyIds}..remove(id);
