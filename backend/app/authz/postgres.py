@@ -15,11 +15,13 @@ class PostgresCircleAccess(CircleAccess):
 
     def role_in(self, user_id: str, circle_id: str) -> CircleRole | None:
         """Return effective access only within the requested circle."""
+        # An id that is not a UUID is no member.
         try:
             account_id, care_circle_id = UUID(user_id), UUID(circle_id)
         except (ValueError, TypeError, AttributeError):
             return None
         with transaction():
+            # A manager (a patient in the full app manages their own circle).
             manager = db.session.scalar(
                 select(CareCircleManager.id).where(
                     CareCircleManager.account_id == account_id,
@@ -28,6 +30,7 @@ class PostgresCircleAccess(CircleAccess):
             )
             if manager is not None:
                 return CircleRole.MANAGER
+            # Else the circle's patient in the simplified mode.
             mode = db.session.scalar(
                 select(Account.app_mode)
                 .join(

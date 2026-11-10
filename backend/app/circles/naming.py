@@ -59,6 +59,7 @@ def name_for(
 
 def circle_name(session: Session, circle_id: UUID, viewer: UUID) -> str:
     """Read one circle's name for `viewer`."""
+    # The circle's own name, and its patient's account and names, in one read.
     row = session.execute(
         select(
             CareCircle.name,

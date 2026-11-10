@@ -39,6 +39,10 @@ class PostgresOtpStore(OtpStore):
     """Own short transactions; no provider call holds a database lock."""
 
     def get_request(self, request_id):
+        """The request with this id, or None (also for an id that is not a
+        UUID).
+        """
+        # An id that is not a UUID is no request.
         key = _key(request_id)
         if key is None:
             return None
@@ -67,14 +71,21 @@ class PostgresOtpStore(OtpStore):
         max_tries=None,
         rules=None
     ):
+        """See OtpStore.claim_send: with the phone number locked (an advisory
+        lock, so it works for a number without an account), judge the limits,
+        then reserve the send, and create the request when there is none.
+        """
         judged = rules or SendRules()
         with transaction() as session:
+            # One claim per number at a time; a resend must name this number's
+            # open request with tries left.
             _lock_phone(session, phone)
             row = (
                 self._challenge(session, request_id, phone, now, max_tries)
                 if request_id is not None
                 else None
             )
+            # The number's codes count only after its last accepted code.
             since = window_start
             known = False
             if rules is not None:
@@ -86,6 +97,7 @@ class PostgresOtpStore(OtpStore):
                 if verified is not None:
                     since = max(since, verified)
                 known = self._is_known_phone(session, phone, rules.device_id)
+            # The number's codes that count: in the window, not failed.
             counted = select(OtpSendAttempt.created_at).join(
                 OtpChallenge,
                 OtpChallenge.id == OtpSendAttempt.challenge_id,
@@ -100,6 +112,8 @@ class PostgresOtpStore(OtpStore):
                     OtpSendAttempt.device_id == rules.device_id
                 )
             phone_times = list(session.scalars(counted))
+            # The asking device's and IP's codes in the last hour, for any
+            # number (no IP cap for a known phone).
             device_times = self._asker_times(
                 session,
                 OtpSendAttempt.device_id,
@@ -112,6 +126,7 @@ class PostgresOtpStore(OtpStore):
                 judged.client_ip if rules is not None and not known else None,
                 now - judged.requester_window,
             )
+            # Judge every limit at once.
             window = now - window_start
             retry_at, reason = judge_send(
                 now, phone_times, window, max_sends, judged,
@@ -120,10 +135,11 @@ class PostgresOtpStore(OtpStore):
             if retry_at is not None:
                 return SendClaim(
                     granted=False,
-                    oldest_send_at=min(phone_times) if phone_times else None,
                     retry_at=retry_at,
                     reason=reason,
                 )
+            # Make the request when there is none, reserve the send, and say
+            # when the next code may come.
             if row is None:
                 row = self._challenge(session, None, phone, now, max_tries)
             send = OtpSendAttempt(
@@ -181,6 +197,7 @@ class PostgresOtpStore(OtpStore):
     @staticmethod
     def _challenge(session, request_id, phone, now, max_tries):
         """Recheck a resend under lock, or supersede older open requests."""
+        # A resend: this number's open request, locked, with tries left.
         if request_id is not None:
             key = _key(request_id)
             row = (
@@ -197,6 +214,7 @@ class PostgresOtpStore(OtpStore):
             if max_tries is not None and row.attempt_count >= max_tries:
                 raise AttemptsExhausted()
             return row
+        # A new request replaces the number's open one.
         session.execute(
             update(OtpChallenge)
             .where(
@@ -211,6 +229,11 @@ class PostgresOtpStore(OtpStore):
         return row
 
     def mark_sent(self, send_id, at, expires_at):
+        """Mark the reserved send as sent, and keep the request open until the
+        newest code's end.
+        """
+        # Only a reserved send becomes sent; the open request then lasts until
+        # this code's end, never shorter.
         with transaction() as session:
             send = session.get(
                 OtpSendAttempt, _key(send_id), with_for_update=True
@@ -230,6 +253,8 @@ class PostgresOtpStore(OtpStore):
             )
 
     def release_send(self, send_id):
+        """Give a reserved place back: the provider refused, so no code left.
+        """
         key = _key(send_id)
         if key is None:
             return
@@ -244,6 +269,7 @@ class PostgresOtpStore(OtpStore):
             )
 
     def latest_send_at(self, request_id):
+        """When the request's last code was sent, or None."""
         key = _key(request_id)
         if key is None:
             return None
@@ -256,6 +282,9 @@ class PostgresOtpStore(OtpStore):
             )
 
     def claim_try(self, request_id, max_tries):
+        """Count one try on an open request with tries left, in one statement;
+        False otherwise.
+        """
         return self._update_request(
             request_id,
             OtpChallenge.attempt_count < max_tries,
@@ -263,6 +292,7 @@ class PostgresOtpStore(OtpStore):
         )
 
     def release_try(self, request_id):
+        """Take back a try the provider could not decide, never below zero."""
         self._update_request(
             request_id,
             OtpChallenge.attempt_count > 0,
@@ -270,6 +300,9 @@ class PostgresOtpStore(OtpStore):
         )
 
     def mark_verified(self, request_id, at):
+        """Close an open request as accepted; False when it was already closed
+        or unknown.
+        """
         return self._update_request(
             request_id,
             OtpChallenge.verified_at.is_(None),
@@ -283,6 +316,8 @@ class PostgresOtpStore(OtpStore):
         key = _key(request_id)
         if key is None:
             return False
+        # One statement checks and changes, so two calls at once cannot both
+        # pass; True when a row changed.
         with transaction() as session:
             return (
                 session.execute(

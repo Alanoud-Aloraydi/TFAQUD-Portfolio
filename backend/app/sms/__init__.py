@@ -1,3 +1,8 @@
+"""Sending and checking sign-in codes: `create_sms_sender` picks the sender
+named by SMS_BACKEND (Authentica, or the fake one for tests and local work),
+and keeps the demo numbers away from it.
+"""
+
 from app.config import ConfigError
 from app.demo_accounts import DEMO_PHONES
 from app.sms.authentica import AuthenticaSmsSender
@@ -29,6 +34,7 @@ def _create_sender(config: dict, clock) -> SmsSender:
     backend = config["SMS_BACKEND"]
     env = config["APP_ENV"]
 
+    # The fake sender, anywhere but production.
     if backend == "fake":
         if env == "production":
             raise ConfigError(
@@ -40,6 +46,7 @@ def _create_sender(config: dict, clock) -> SmsSender:
             valid_seconds=config["OTP_VALID_SECONDS"],
         )
 
+    # The real one needs its key, and tests never get it.
     if env == "testing":
         raise ConfigError("Tests may only use the fake SMS sender.")
     if backend == "authentica":

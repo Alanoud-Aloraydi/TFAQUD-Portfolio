@@ -91,6 +91,9 @@ def _cap_from_env(name: str, default: int | None) -> int | None:
 
 
 def _int_from_env(name: str, default: int) -> int:
+    """A whole number above zero from the environment variable `name`, or
+    `default` when it is not set or empty.
+    """
     raw = os.environ.get(name)
     if raw is None or raw == "":
         return default

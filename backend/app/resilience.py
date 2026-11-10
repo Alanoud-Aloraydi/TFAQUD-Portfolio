@@ -37,6 +37,9 @@ class CircuitBreaker:
         cool_down: float = DEFAULT_COOL_DOWN_SECONDS,
         clock=time.monotonic,
     ):
+        """A closed breaker for the service `name`, kept in the list
+        `reset_all` closes.
+        """
         self.name = name
         self._threshold = failures
         self._cool_down = cool_down
@@ -77,6 +80,7 @@ class CircuitBreaker:
         )
 
     def reset(self) -> None:
+        """Close the breaker and forget its failures."""
         self.record_success()
 
 

@@ -51,6 +51,7 @@ def outside_target(
     record: MeasurementRecord, version: MeasurementPlanVersion | None
 ) -> bool | None:
     """Compare a reading with the target active for its occurrence."""
+    # Glucose: below the low or above the high. None when there is no target.
     if record.kind == "glucose":
         low = version.glucose_low if version else record.glucose_low
         high = version.glucose_high if version else record.glucose_high
@@ -60,6 +61,7 @@ def outside_target(
             record.value_one < low
             or record.value_one > high
         )
+    # Blood pressure: at or above either upper limit.
     systolic = version.systolic_limit if version else record.systolic_limit
     diastolic = version.diastolic_limit if version else record.diastolic_limit
     if systolic is None or diastolic is None:
@@ -74,6 +76,7 @@ class MeasurementService:
     """Own plan revisions and explicit readings in the caller's transaction."""
 
     def __init__(self, session: Session, now: datetime):
+        """Work inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
@@ -81,6 +84,8 @@ class MeasurementService:
         self, circle_id: UUID, actor_id: UUID, body: PlanRequest
     ) -> MeasurementPlan:
         """Create a plan from its first effective day."""
+        # Not in the past; the patient is locked, and has no other plan of this
+        # kind in use.
         if body.starts_on < self.now.astimezone(RIYADH).date():
             raise ValidationFailed(code="measurement_start_in_past")
         patient = self.session.scalar(
@@ -98,6 +103,8 @@ class MeasurementService:
         )
         if existing is not None:
             raise Conflict(code="measurement_active_plan_exists")
+        # The plan, its first version, and its target saved for readings
+        # without a plan.
         plan = MeasurementPlan(
             patient_id=patient.id,
             kind=body.kind,
@@ -164,6 +171,8 @@ class MeasurementService:
     def stop(self, circle_id: UUID, plan_id: UUID) -> MeasurementPlan:
         """Stop future tasks immediately and retain every recorded reading."""
         plan = self._plan(circle_id, plan_id)
+        # Stop it once; the target of its version in force is kept for readings
+        # without a plan.
         if plan.stopped_at is None:
             plan.stopped_at = self.now
             version = self.session.scalar(
@@ -196,19 +205,24 @@ class MeasurementService:
         time, which is fine while the version has one.
         """
         patient = patient_for_circle(self.session, circle_id)
+        # A reading's time carries its offset and is not in the future.
         if body.measured_at is not None:
             if body.measured_at.tzinfo is None:
                 raise ValidationFailed(code="measurement_time_offset_required")
             if body.measured_at > self.now:
                 raise ValidationFailed(code="future_measurement")
         target = None
+        # A standalone reading: only «read», with no day of a plan.
         if version_id is None:
             if scheduled_on is not None or body.outcome != "read":
                 raise ValidationFailed(code="measurement_link_required")
+            # Lock the patient, so two first readings cannot save two targets.
             self.session.scalar(
                 select(Patient.id).where(Patient.id == patient.id)
                 .with_for_update()
             )
+            # A plan in force sets the target; a reading cannot send another
+            # one.
             target = self._active_target(patient.id, body.kind)
             supplied = any(value is not None for value in (
                 body.glucose_low, body.glucose_high,
@@ -222,6 +236,8 @@ class MeasurementService:
                 )
             ):
                 raise Conflict(code="measurement_target_from_plan")
+            # Without a plan: the target sent with the reading is saved, or the
+            # saved one is used; one is needed.
             if target is None:
                 if supplied:
                     target = self._save_target(patient.id, body.kind, body)
@@ -236,6 +252,8 @@ class MeasurementService:
                         raise ValidationFailed(
                             code="measurement_target_required"
                         )
+        # A reading of a plan's task: the plan sets the target, the task must
+        # exist that day, and it is recorded once.
         else:
             if any(value is not None for value in (
                 body.glucose_low, body.glucose_high,
@@ -258,6 +276,8 @@ class MeasurementService:
             )
             if existing is not None:
                 raise Conflict(code="measurement_record_conflict")
+        # Save the outcome with a copy of the target it was judged by, so a
+        # later target change keeps old readings as they were.
         record = MeasurementRecord(
             patient_id=patient.id,
             plan_version_id=version_id,
@@ -288,6 +308,8 @@ class MeasurementService:
         self, patient_id: UUID, kind: str
     ) -> MeasurementPlanVersion | None:
         """Use the active plan target when a schedule exists."""
+        # The newest version in force today of the kind's plan in use, else its
+        # version still to start.
         versions = list(self.session.scalars(
             select(MeasurementPlanVersion)
             .join(MeasurementPlan,
@@ -311,6 +333,8 @@ class MeasurementService:
         source: PlanRequest | ReadingRequest | MeasurementPlanVersion,
     ) -> MeasurementTarget:
         """Keep one durable target without changing prior reading snapshots."""
+        # The kind's saved target, locked, made when there is none; then the
+        # four limits copied from `source`.
         target = self.session.scalar(
             select(MeasurementTarget).where(
                 MeasurementTarget.patient_id == patient_id,
@@ -330,6 +354,7 @@ class MeasurementService:
 
     def follow_up(self, circle_id: UUID, record_id: UUID) -> MeasurementRecord:
         """Acknowledge a saved reading without changing its numeric result."""
+        # The patient's reading (not a skip), locked.
         patient = patient_for_circle(self.session, circle_id)
         record = self.session.scalar(
             select(MeasurementRecord)
@@ -342,6 +367,8 @@ class MeasurementService:
         )
         if record is None:
             raise NotFound()
+        # Only a reading outside its target is followed up; marking it again
+        # keeps the first time.
         version = (
             self.session.get(MeasurementPlanVersion, record.plan_version_id)
             if record.plan_version_id
@@ -357,6 +384,9 @@ class MeasurementService:
         return record
 
     def _plan(self, circle_id: UUID, plan_id: UUID) -> MeasurementPlan:
+        """The patient's measurement plan with this id; 404 for a plan of
+        another patient.
+        """
         patient = patient_for_circle(self.session, circle_id)
         plan = self.session.scalar(
             select(MeasurementPlan)
@@ -381,6 +411,8 @@ class MeasurementService:
         """The reading time this task is, after checking the task exists."""
         if scheduled_on > self.now.astimezone(RIYADH).date():
             raise ValidationFailed(code="future_measurement_task")
+        # The patient's plan of this kind with this version, its plan row
+        # locked so the task is recorded once.
         row = self.session.execute(
             select(MeasurementPlan, MeasurementPlanVersion)
             .join(
@@ -397,6 +429,8 @@ class MeasurementService:
         if row is None:
             raise NotFound()
         plan, version = row
+        # An older app names no time: fine while the version has one reading
+        # time.
         times = [
             item.time_of_day
             for item in plan_times(self.session, [version.id])[version.id]
@@ -405,6 +439,8 @@ class MeasurementService:
             if len(times) != 1:
                 raise ValidationFailed(code="measurement_time_required")
             scheduled_time = times[0]
+        # The task exists only at one of the version's times, on a day it is in
+        # force and one of its weekdays, and before the plan was stopped.
         if (
             scheduled_time not in times
             or scheduled_on < version.effective_from_on
@@ -431,6 +467,7 @@ class MeasurementService:
         actor_id: UUID | None = None,
     ) -> None:
         """Change a version that has no history yet, in place."""
+        # Take every field of the edit onto the version itself.
         replacement = self._version(
             version.plan_id, version.number, effective, body
         )
@@ -444,6 +481,7 @@ class MeasurementService:
         version.glucose_high = replacement.glucose_high
         version.systolic_limit = replacement.systolic_limit
         version.diastolic_limit = replacement.diastolic_limit
+        # Its reading times are replaced too.
         for item in plan_times(self.session, [version.id])[version.id]:
             self.session.delete(item)
         self.session.flush()
@@ -473,6 +511,7 @@ class MeasurementService:
         return version
 
     def _add_times(self, version_id: UUID, body: PlanRequest) -> None:
+        """Save the version's reading times with their conditions."""
         self.session.add_all(
             MeasurementPlanTime(
                 version_id=version_id,
@@ -492,6 +531,9 @@ class MeasurementService:
         body: PlanRequest,
         actor_id: UUID | None = None,
     ) -> MeasurementPlanVersion:
+        """A new version of the plan from the request: its days, reading time,
+        grace minutes and target, from `effective` on.
+        """
         return MeasurementPlanVersion(
             plan_id=plan_id,
             number=number,

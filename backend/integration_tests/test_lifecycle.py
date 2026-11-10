@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.database import db
 from app.errors import Forbidden, NotFound, ValidationFailed
 from app.models import Account, CareCircle, CareCircleCreationRequest
-from app.models import CareCircleManager, CareCircleManagerInvitation, Patient
+from app.models import CareCircleManager, CareCircleManagerInvitation
 from app.users.postgres import PostgresUserStore
 from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run

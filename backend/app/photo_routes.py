@@ -17,10 +17,7 @@ from app.photos import AVATAR_CODES, MAX_PHOTO_BYTES, PhotoService
 from app.validation import Dto, parse_json_body
 
 bp = Blueprint("photos", __name__, url_prefix="/api/v1")
-MEMBERS = (
-    CircleRole.MANAGER, CircleRole.PATIENT,
-    CircleRole.SIMPLIFIED_PATIENT,
-)
+MEMBERS = (CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
 
 
 class AvatarRequest(Dto):
@@ -31,12 +28,14 @@ class AvatarRequest(Dto):
     @field_validator("avatar_code")
     @classmethod
     def valid_code(cls, value: str) -> str:
+        """Accept only an avatar the app offers."""
         if value not in AVATAR_CODES:
             raise ValueError("Unknown avatar code.")
         return value
 
 
 def _uuid(value: str) -> UUID:
+    """An id from the URL; 404 when it is not a UUID."""
     try:
         return UUID(value)
     except (TypeError, ValueError, AttributeError):
@@ -44,18 +43,23 @@ def _uuid(value: str) -> UUID:
 
 
 def _png() -> bytes:
+    """The uploaded PNG's bytes, read one byte past the limit so a larger file
+    is caught; 422 for another type.
+    """
     if request.mimetype != "image/png":
         raise ValidationFailed(code="invalid_photo")
     return request.stream.read(MAX_PHOTO_BYTES + 1)
 
 
 def _image(data: bytes) -> Response:
+    """Answer a PNG that no cache keeps."""
     response = Response(data, mimetype="image/png")
     response.headers["Cache-Control"] = "private, no-store"
     return response
 
 
 def _account(session, account_id: UUID) -> Account:
+    """The account; 404 when there is none."""
     account = session.get(Account, account_id)
     if account is None:
         raise NotFound()
@@ -63,6 +67,7 @@ def _account(session, account_id: UUID) -> Account:
 
 
 def _patient(session, circle_id: UUID) -> Patient:
+    """The circle's patient; 404 when there is none."""
     patient = session.scalar(select(Patient).where(
         Patient.care_circle_id == circle_id
     ))
@@ -146,6 +151,8 @@ def clear_my_avatar():
 @require_circle_role(*MEMBERS)
 def member_photo(circle_id, account_id):
     """Read only a current member's account photo."""
+    # Only a member of this circle (a manager, or its patient) has a picture to
+    # see here.
     circle = _uuid(circle_id)
     member = _uuid(account_id)
     with transaction() as session:
@@ -225,6 +232,7 @@ def clear_patient_avatar(circle_id):
 
 
 def _plan(session, circle_id: UUID, plan_id: UUID) -> MedicationPlan:
+    """The circle's medicine with this id; 404 for another circle's."""
     plan = session.scalar(select(MedicationPlan).join(
         Patient, Patient.id == MedicationPlan.patient_id
     ).where(

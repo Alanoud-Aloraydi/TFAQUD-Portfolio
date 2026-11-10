@@ -39,6 +39,7 @@ def version_response(
             else None
         ),
         "time_of_day": version.time_of_day.strftime("%H:%M"),
+        # The weekdays as numbers, 1 (Monday) to 7, read from the bit mask.
         "weekdays": [
             day
             for day in range(1, 8)
@@ -46,6 +47,8 @@ def version_response(
         ],
         "grace_minutes": version.grace_minutes,
         "glucose_context": version.glucose_context,
+        # Every reading time of the day; `time_of_day` and `glucose_context`
+        # above are the first one's, for an older app.
         "times": [
             {
                 "time_of_day": item.time_of_day.strftime("%H:%M"),
@@ -67,6 +70,8 @@ def reading_response(
     accounts: dict | None = None,
 ) -> dict:
     """Return a saved outcome and its linked target comparison."""
+    # Whether a reading is outside the target it was saved with (a skip has no
+    # answer).
     outside = None
     if record.outcome == "read":
         outside = outside_target(record, version)
@@ -90,12 +95,14 @@ def reading_response(
         ),
         "value_one": record.value_one,
         "value_two": record.value_two,
+        # The two single fields are for an older app; `conditions` is the list.
         "glucose_context": record.glucose_context,
         "condition": record.condition,
         "conditions": list(record.conditions),
         "other_condition": record.other_condition,
         "note": record.note,
         "outside_target": outside,
+        # The target the reading was judged by, saved with it.
         "glucose_low": record.glucose_low,
         "glucose_high": record.glucose_high,
         "systolic_limit": record.systolic_limit,
@@ -116,12 +123,15 @@ class MeasurementQueries:
     """Read only data belonging to the selected circle's patient."""
 
     def __init__(self, session: Session, now: datetime):
+        """Read inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
     def targets(self, circle_id: UUID) -> list[dict]:
         """Return saved goals and the current active-plan override."""
         patient = patient_for_circle(self.session, circle_id)
+        # The targets saved with readings, and the versions of the plans not
+        # stopped, newest first.
         stored = list(self.session.scalars(
             select(MeasurementTarget).where(
                 MeasurementTarget.patient_id == patient.id
@@ -137,6 +147,8 @@ class MeasurementQueries:
             )
             .order_by(MeasurementPlanVersion.number.desc())
         ))
+        # Per kind: the newest version in force today, else the next one to
+        # start.
         active = {}
         future = {}
         today = self.now.astimezone(RIYADH).date()
@@ -146,6 +158,8 @@ class MeasurementQueries:
                 active.setdefault(plan.kind, (plan, version))
         for kind, value in future.items():
             active.setdefault(kind, value)
+        # A plan's target wins over a saved one; a kind with neither is left
+        # out.
         result = []
         for kind in ("glucose", "bp"):
             source = active[kind][1] if kind in active else next(
@@ -262,6 +276,7 @@ class MeasurementQueries:
     ) -> list[dict]:
         """Calculate expected tasks instead of persisting pending rows."""
         patient = patient_for_circle(self.session, circle_id)
+        # The patient's plan versions in force on some day of the range.
         rows = list(
             self.session.execute(
                 select(MeasurementPlan, MeasurementPlanVersion)
@@ -279,6 +294,8 @@ class MeasurementQueries:
                 )
             )
         )
+        # Their reading times, and the readings already recorded for them in
+        # the range.
         version_ids = [version.id for _, version in rows]
         times = plan_times(self.session, version_ids)
         saved: dict[tuple[UUID, date, object], MeasurementRecord] = {}
@@ -297,6 +314,7 @@ class MeasurementQueries:
                 ): item
                 for item in records
             }
+        # Who recorded those readings, read once for all of them.
         accounts = accounts_by_id(
             self.session,
             {
@@ -305,6 +323,8 @@ class MeasurementQueries:
                 if item.recorded_by_account_id is not None
             },
         )
+        # Each day: each version in force that day, on one of its weekdays,
+        # gives one task per reading time.
         result = []
         day = start
         while day <= end:
@@ -336,11 +356,14 @@ class MeasurementQueries:
     ) -> dict | None:
         """One reading time of a version on a day, as a task, or None when
         the plan stopped before it."""
+        # The task's time and its deadline (its time plus the grace minutes).
         scheduled = datetime.combine(day, reading_time.time_of_day, RIYADH)
         if plan.stopped_at is not None and scheduled >= plan.stopped_at:
             return None
         record = saved.get((version.id, day, reading_time.time_of_day))
         deadline = scheduled + timedelta(minutes=version.grace_minutes)
+        # Its status: skipped, read, or read late when recorded; otherwise
+        # upcoming, due until the deadline, then missed.
         if record is not None:
             status = (
                 "skipped"
@@ -375,6 +398,8 @@ class MeasurementQueries:
     def readings(self, circle_id: UUID, start: date, end: date) -> list[dict]:
         """Return recorded readings and skips in the requested date range."""
         patient = patient_for_circle(self.session, circle_id)
+        # Readings measured in the range (Riyadh days), and skips of tasks in
+        # it, the last recorded first.
         lower = datetime.combine(start, datetime.min.time(), RIYADH)
         upper = datetime.combine(
             end + timedelta(days=1), datetime.min.time(), RIYADH
@@ -404,6 +429,7 @@ class MeasurementQueries:
                 .order_by(MeasurementRecord.recorded_at.desc())
             )
         )
+        # Who recorded them, read once for all.
         accounts = accounts_by_id(
             self.session,
             {
@@ -420,6 +446,8 @@ class MeasurementQueries:
     def all_readings(self, circle_id: UUID) -> list[dict]:
         """Return all saved outcomes for the circle's PDF export."""
         patient = patient_for_circle(self.session, circle_id)
+        # Every outcome of the patient, the last recorded first, and who
+        # recorded each.
         rows = list(
             self.session.execute(
                 select(MeasurementRecord, MeasurementPlanVersion)

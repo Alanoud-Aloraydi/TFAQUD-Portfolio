@@ -1,3 +1,7 @@
+"""Who may do what in a circle: the roles, the service that finds an account's
+role, and the decorator endpoints use to require one.
+"""
+
 from app.authz.circle_access import (
     CircleAccess,
     DenyAllCircleAccess,

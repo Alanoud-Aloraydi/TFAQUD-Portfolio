@@ -46,6 +46,9 @@ def notify(push: Push | None) -> None:
 
 
 def _deliver(accounts: set[UUID], message: PushMessage) -> None:
+    """The background job: send `message` to the signed-in phones of
+    `accounts`, and never raise.
+    """
     try:
         _send(get_push_sender(), accounts, message)
     except Exception:  # noqa: BLE001 - see the module docstring
@@ -54,6 +57,10 @@ def _deliver(accounts: set[UUID], message: PushMessage) -> None:
 
 
 def _send(sender, accounts: Iterable[UUID], message: PushMessage) -> None:
+    """Find the push tokens of the accounts' live sign-ins, send to each phone,
+    count every result, and forget the tokens Apple no longer knows.
+    """
+    # The phones of the accounts' sign-ins that are still live.
     now = get_clock().now()
     with transaction() as session:
         tokens = list(
@@ -71,6 +78,7 @@ def _send(sender, accounts: Iterable[UUID], message: PushMessage) -> None:
                 .order_by(PushDevice.token)
             )
         )
+    # Send to each, counting every result.
     gone = []
     for token in tokens:
         result = sender.send(token, message)
@@ -81,6 +89,7 @@ def _send(sender, accounts: Iterable[UUID], message: PushMessage) -> None:
             else "push.gone" if result == GONE
             else "push.failed"
         )
+    # Tokens Apple no longer knows are deleted.
     if gone:
         with transaction() as session:
             session.execute(

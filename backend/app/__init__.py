@@ -55,6 +55,12 @@ def create_app(
     circle_access: CircleAccess | None = None,
     push_sender: PushSender | None = None,
 ) -> Flask:
+    """Build the Flask app for one environment: read the settings, choose the
+    SMS, session, code, user and push services (the PostgreSQL ones when a
+    database is set, the in-memory ones otherwise), and register every error
+    handler and endpoint. Tests pass their own fakes through the keyword
+    arguments.
+    """
     app = Flask(__name__, static_folder=None)
     app.config.update(load_config(env_name, overrides))
     env = app.config["APP_ENV"]
@@ -166,6 +172,9 @@ def create_app(
 
 
 def _refuse_in_production(env: str, what: str) -> None:
+    """Stop the start-up when production would keep `what` only in memory: it
+    would be lost on every restart.
+    """
     if env == "production":
         raise ConfigError(
             f"The in-memory {what} store cannot be used in production. "
@@ -174,6 +183,7 @@ def _refuse_in_production(env: str, what: str) -> None:
 
 
 def _warn_in_staging(app: Flask, env: str, what: str, lost: str) -> None:
+    """Warn once at start-up when staging keeps `what` only in memory."""
     if env == "staging":
         app.logger.warning(
             "Using the in-memory %s store: %s are lost on restart "

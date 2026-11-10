@@ -29,6 +29,7 @@ class MedicationPlanService:
     """Create immutable revisions while locking their patient and plan."""
 
     def __init__(self, session: Session, now):
+        """Work inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
@@ -38,6 +39,11 @@ class MedicationPlanService:
         actor_id: UUID,
         body: PlanRequest,
     ) -> MedicationPlan:
+        """Add a medicine to the circle's patient, starting today or later,
+        with a name the patient has no other medicine under.
+        """
+        # Not in the past; the patient is locked, and has no other medicine of
+        # that name on the same days.
         if body.treatment_starts_on < self.now.astimezone(RIYADH).date():
             raise ValidationFailed(code="medication_start_in_past")
         patient = self._patient(circle_id, lock=True)
@@ -49,6 +55,7 @@ class MedicationPlanService:
             body,
             effective_from_on=body.treatment_starts_on,
         )
+        # The medicine, and its first version from its start.
         plan = MedicationPlan(
             patient_id=patient.id,
             created_by_account_id=actor_id,
@@ -73,6 +80,11 @@ class MedicationPlanService:
         actor_id: UUID,
         body: RevisePlanRequest,
     ) -> MedicationPlan:
+        """Edit a medicine. A version that starts later is replaced. Otherwise
+        the edit starts on the chosen day (today when none) and the current
+        version ends then; an edit on the current version's own first day
+        replaces it, or starts tomorrow when doses were already recorded.
+        """
         plan = self._plan(circle_id, plan_id)
         if plan.discontinued_at is not None:
             raise ValidationFailed(
@@ -188,6 +200,8 @@ class MedicationPlanService:
     ) -> MedicationPlan:
         """A medicine that has not started yet, edited: its new version
         starts when the treatment does, as a new medicine would."""
+        # Like adding the medicine again: not in the past, and no other
+        # medicine of that name on the same days.
         if body.treatment_starts_on < today:
             raise ValidationFailed(code="medication_start_in_past")
         require_available_name(
@@ -198,6 +212,7 @@ class MedicationPlanService:
             exclude_plan_id=plan.id,
             effective_from_on=body.treatment_starts_on,
         )
+        # The next version number counts every version, cancelled ones too.
         next_number = self.session.scalar(
             select(func.max(MedicationPlanVersion.version_number)).where(
                 MedicationPlanVersion.medication_plan_id == plan.id
@@ -221,6 +236,8 @@ class MedicationPlanService:
         expected_version_number: int,
     ) -> MedicationPlan:
         """Cancel a future revision while retaining its audit version."""
+        # Only a medicine in use, whose version read by the app is the one
+        # waiting to start.
         plan = self._plan(circle_id, plan_id)
         if plan.discontinued_at is not None:
             raise Conflict(code="medication_discontinued")
@@ -229,6 +246,8 @@ class MedicationPlanService:
         if (pending.version_number != expected_version_number
                 or pending.effective_from_on <= today):
             raise Conflict(code="medication_version_conflict")
+        # Cancel it (it stays, for the history), and the version before goes on
+        # with no end.
         previous = self.session.scalar(
             select(MedicationPlanVersion).where(
                 MedicationPlanVersion.medication_plan_id == plan.id,
@@ -251,6 +270,9 @@ class MedicationPlanService:
         plan_id: UUID,
         actor_id: UUID,
     ) -> MedicationPlan:
+        """Stop a medicine now, and say who stopped it; a medicine already
+        stopped stays as it is.
+        """
         plan = self._plan(circle_id, plan_id)
         if plan.discontinued_at is not None:
             return plan
@@ -260,6 +282,9 @@ class MedicationPlanService:
         return plan
 
     def _patient(self, circle_id: UUID, *, lock: bool) -> Patient:
+        """The circle's patient, locked when `lock` (so two changes to their
+        medicines run one after the other); 404 when there is none.
+        """
         statement = select(Patient).where(
             Patient.care_circle_id == circle_id
         )
@@ -271,6 +296,9 @@ class MedicationPlanService:
         return patient
 
     def _plan(self, circle_id: UUID, plan_id: UUID) -> MedicationPlan:
+        """The patient's medicine with this id, its patient row locked; 404 for
+        a medicine of another patient.
+        """
         patient = self._patient(circle_id, lock=True)
         plan = self.session.scalar(
             select(MedicationPlan)
@@ -297,6 +325,7 @@ class MedicationPlanService:
         ) is not None
 
     def _current_version(self, plan_id: UUID) -> MedicationPlanVersion:
+        """The version in force: not ended, not cancelled."""
         version = self.session.scalar(
             select(MedicationPlanVersion).where(
                 MedicationPlanVersion.medication_plan_id == plan_id,

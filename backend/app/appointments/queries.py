@@ -12,6 +12,8 @@ from app.models.appointment import Appointment, AppointmentCompanion
 
 def appointments_for_circle(session: Session, circle_id: UUID) -> list[dict]:
     """Return scheduled and historical visits for one patient."""
+    # The patient's appointments in date order, with their companions and who
+    # made and last changed each, read once for all.
     appointments = list(session.scalars(
         select(Appointment)
         .join(Patient, Patient.id == Appointment.patient_id)
@@ -57,6 +59,7 @@ def appointment_view(
         "companions": companions,
         "status": appointment.status,
         "updated_at": appointment.updated_at.isoformat(),
+        # Who made it and who last changed it (null when never changed).
         "created_by": recorder_response(
             accounts.get(appointment.created_by_account_id)
         ),
@@ -70,6 +73,8 @@ def companions_for_appointments(
     session: Session, appointment_ids: list[UUID]
 ) -> dict[UUID, list[dict]]:
     """Resolve selected members in one query, including past companions."""
+    # Every appointment gets a list, even an empty one; one read for all their
+    # companions.
     result: dict[UUID, list[dict]] = {
         appointment_id: [] for appointment_id in appointment_ids
     }
@@ -99,6 +104,8 @@ def companions_for_circle(session: Session, circle_id: UUID) -> list[dict]:
     """Offer current circle managers as visit companions, other than the
     patient themselves: a patient who manages their own circle is not their
     own companion."""
+    # The circle's managers, by name, but not the patient (a patient in the
+    # full app manages their own circle, and does not go with themself).
     patient_account_id = session.scalar(
         select(Patient.account_id).where(Patient.care_circle_id == circle_id)
     )

@@ -26,6 +26,7 @@ _APNS_SETTINGS = (
 
 def create_push_sender(config: dict) -> PushSender:
     """"none" sends nothing; "apns" needs every APNS_* setting and the key."""
+    # "none", or "apns" with every setting and a readable key file.
     backend = config.get("PUSH_BACKEND", "none")
     if backend == "none":
         return NoPushSender()

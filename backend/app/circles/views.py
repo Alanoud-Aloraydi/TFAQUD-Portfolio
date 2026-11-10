@@ -23,12 +23,15 @@ DECLINED_VISIBLE_DAYS = 7
 
 
 def _time(value: datetime | None) -> str | None:
+    """A time as ISO 8601 text, or None."""
     return value.isoformat() if value else None
 
 
 def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
     """Basic data of the patient. Names and avatar come from the account
     while linked: one person, one picture, like their photo."""
+    # A patient with an account shows the account's names and picture; one
+    # without shows the circle's.
     linked = (
         session.get(Account, patient.account_id)
         if patient.account_id
@@ -155,6 +158,7 @@ def invitation_view(invitation: CareCircleManagerInvitation) -> dict:
 
 
 def contact_view(contact: EmergencyContact) -> dict:
+    """One emergency contact, as the app reads it."""
     return {
         "id": str(contact.id),
         "name": contact.name,
@@ -164,6 +168,7 @@ def contact_view(contact: EmergencyContact) -> dict:
 
 
 def medical_view(profile: MedicalProfile) -> dict:
+    """The medical profile, as the app reads it."""
     return {
         "blood_type": profile.blood_type,
         "conditions": profile.conditions,
@@ -217,7 +222,7 @@ def sent_request_view(request: CareCircleCreationRequest) -> dict:
 
 
 def received_request_view(
-    request: CareCircleCreationRequest, requester: Account, patient: Account
+    request: CareCircleCreationRequest, requester: Account
 ) -> dict:
     """A request as the person it is about (the future patient) sees it.
 
@@ -246,6 +251,8 @@ def creation_requests_view(
     """Requests the account sent, and requests that name its phone number."""
     request = CareCircleCreationRequest
     recent = now - timedelta(days=DECLINED_VISIBLE_DAYS)
+    # Sent: the open ones, and the declined ones for a few days so the sender
+    # sees the answer.
     sent = session.scalars(
         select(request)
         .where(
@@ -259,6 +266,7 @@ def creation_requests_view(
         )
         .order_by(request.created_at.desc(), request.id)
     ).all()
+    # Received: the open ones naming this account's number, with who sent each.
     received = session.execute(
         select(request, Account)
         .join(Account, Account.id == request.requested_by_account_id)
@@ -271,7 +279,7 @@ def creation_requests_view(
     return {
         "sent": [sent_request_view(row) for row in sent],
         "received": [
-            received_request_view(row, requester, account)
+            received_request_view(row, requester)
             for row, requester in received
         ],
     }

@@ -16,6 +16,7 @@ class VisitService:
     """Store one visit paper while retaining appointment ownership."""
 
     def __init__(self, session: Session, now: datetime):
+        """Work inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
@@ -73,6 +74,8 @@ class VisitService:
         return visit
 
     def _visit(self, appointment_id: UUID) -> AppointmentVisit:
+        """The appointment's visit notes, made empty when there are none yet.
+        """
         visit = self.session.get(AppointmentVisit, appointment_id)
         if visit is None:
             visit = AppointmentVisit(
@@ -83,6 +86,9 @@ class VisitService:
         return visit
 
     def _completed(self, circle_id: UUID, appointment_id: UUID) -> None:
+        """Lock the appointment; 409 unless it is marked done (notes come after
+        the visit).
+        """
         appointment = self._appointment(circle_id, appointment_id, lock=True)
         if appointment.status != "completed":
             raise Conflict(code="appointment_visit_not_completed")
@@ -90,6 +96,9 @@ class VisitService:
     def _appointment(
         self, circle_id: UUID, appointment_id: UUID, *, lock: bool
     ) -> Appointment:
+        """The circle's appointment with this id, locked when `lock`; 404 for
+        another circle's.
+        """
         query = select(Appointment).join(
             Patient, Patient.id == Appointment.patient_id
         ).where(
@@ -105,6 +114,7 @@ class VisitService:
 
     @staticmethod
     def _clean(value: str | None) -> str | None:
+        """Trimmed text, or None for none or only spaces."""
         if value is None:
             return None
         return value.strip() or None

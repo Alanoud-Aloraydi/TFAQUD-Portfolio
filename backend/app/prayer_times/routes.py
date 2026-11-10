@@ -21,6 +21,8 @@ _RIYADH = timezone(timedelta(hours=3))
 @require_circle_role(CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
 def prayer_times(circle_id: str):
     """Read the stored city before contacting the timetable provider."""
+    # The patient's city first, without holding the transaction while Aladhan
+    # answers.
     with transaction() as session:
         city = session.scalar(
             select(Patient.city).where(
@@ -29,6 +31,7 @@ def prayer_times(circle_id: str):
         )
     if city is None:
         raise NotFound(code="circle_not_found")
+    # Today's five times in Riyadh's day, not kept by any cache on the way.
     day = datetime.now(_RIYADH).date()
     response = jsonify(
         date=day.isoformat(),

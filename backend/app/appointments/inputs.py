@@ -24,6 +24,8 @@ class AppointmentRequest(Dto):
     @model_validator(mode="after")
     def valid_location(self):
         """Remote visits have a method; physical visits have a place."""
+        # A specialty; a type of its own only for «أخرى»; a local time; each
+        # companion once.
         if not self.specialty.strip():
             raise ValueError("A specialty is required.")
         if self.kind == "other":
@@ -37,6 +39,7 @@ class AppointmentRequest(Dto):
             set(self.companion_account_ids)
         ):
             raise ValueError("Appointment companions must be unique.")
+        # A remote visit has its method and no place; any other has a place.
         if self.kind == "remote":
             if self.remote_method is None or self.place is not None:
                 raise ValueError("A remote method is required.")

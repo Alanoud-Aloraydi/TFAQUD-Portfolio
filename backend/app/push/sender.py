@@ -46,6 +46,7 @@ class PushMessage:
 
 
 class PushSender(Protocol):
+    """What every push sender has: `enabled`, and `send` to one phone."""
     enabled: bool
 
     def send(self, token: str, message: PushMessage) -> str:
@@ -58,6 +59,7 @@ class NoPushSender:
     enabled = False
 
     def send(self, token: str, message: PushMessage) -> str:
+        """Send nothing."""
         return FAILED
 
 
@@ -70,12 +72,14 @@ class RecordingPushSender:
     gone: set = field(default_factory=set)
 
     def send(self, token: str, message: PushMessage) -> str:
+        """Keep the message, or answer GONE for a token in `gone`."""
         if token in self.gone:
             return GONE
         self.sent.append((token, message))
         return SENT
 
     def to(self, token: str) -> list:
+        """The messages kept for one token."""
         return [message for sent, message in self.sent if sent == token]
 
 
@@ -103,6 +107,9 @@ class ApnsPushSender:
         client=None,
         breaker: CircuitBreaker | None = None,
     ):
+        """Keep the team's key and ids, choose Apple's sandbox or production
+        server, and make the circuit breaker.
+        """
         if environment not in _HOSTS:
             raise ValueError("environment must be sandbox or production")
         self._key_id = key_id
@@ -118,6 +125,7 @@ class ApnsPushSender:
         self._lock = threading.Lock()
 
     def _http(self):
+        """The HTTP/2 client to Apple, made once and shared by the threads."""
         with self._lock:
             if self._client is None:
                 import httpx
@@ -126,6 +134,10 @@ class ApnsPushSender:
             return self._client
 
     def _provider_token(self) -> str:
+        """The signed token Apple asks for, made again before it is an hour
+        old.
+        """
+        # One token for every thread, made again before Apple's hour ends.
         with self._lock:
             now = time.time()
             if (
@@ -144,6 +156,9 @@ class ApnsPushSender:
             return self._token
 
     def payload(self, message: PushMessage) -> dict:
+        """What Apple delivers to the phone: the title, the line, our sound,
+        and the kind (so the phone groups them).
+        """
         return {
             "aps": {
                 "alert": {"title": message.title, "body": message.body},
@@ -158,8 +173,12 @@ class ApnsPushSender:
         }
 
     def send(self, token: str, message: PushMessage) -> str:
+        """Send `message` to one phone: SENT, GONE when Apple no longer knows
+        the token, or FAILED (the token is kept).
+        """
         if not self._breaker.allow():
             return FAILED
+        # One POST per phone, signed with the provider token.
         try:
             response = self._http().post(
                 f"{self._host}/3/device/{token}",
@@ -182,6 +201,8 @@ class ApnsPushSender:
             self._breaker.record_success()
         if response.status_code == 200:
             return SENT
+        # Apple says why: a token it no longer knows is GONE; anything else is
+        # FAILED and the token is kept.
         reason = ""
         try:
             reason = response.json().get("reason", "")

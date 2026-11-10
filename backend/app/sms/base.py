@@ -41,6 +41,9 @@ class SmsDeliveryError(Exception):
         *,
         not_sent: bool = False,
     ):
+        """Keep the message, the HTTP status (when there was one) and whether
+        the provider was not called at all.
+        """
         super().__init__(message)
         self.status = status
         self.not_sent = not_sent
@@ -53,6 +56,9 @@ class SmsDeliveryError(Exception):
 
 
 class SmsSender(ABC):
+    """What every code sender does: send a code to a phone number, and check a
+    code typed for it.
+    """
     @abstractmethod
     def send_code(self, phone: str) -> None:
         """Make a code and send it to `phone` (international format, +966...).

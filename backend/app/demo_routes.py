@@ -26,6 +26,8 @@ def refresh_demo():
     """
     from app.demo_data import demo_allowed, rebuild_demo
 
+    # Like the tick: a plain 404 without the secret, and only where the demo is
+    # allowed.
     config = current_app.config
     secret = config.get("TICK_SECRET")
     if (
@@ -38,5 +40,6 @@ def refresh_demo():
         raise NotFound()
     if "sqlalchemy" not in current_app.extensions:
         raise ServiceUnavailable()
+    # Delete the demo and build it again, for today's dates.
     _, summary = rebuild_demo(get_clock().now(), reset=True)
     return jsonify(circles=summary.circles, medicines=summary.plans)

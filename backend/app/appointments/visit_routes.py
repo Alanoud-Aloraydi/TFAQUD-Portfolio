@@ -24,7 +24,6 @@ bp = Blueprint(
 )
 MEMBERS = (
     CircleRole.MANAGER,
-    CircleRole.PATIENT,
     CircleRole.SIMPLIFIED_PATIENT,
 )
 

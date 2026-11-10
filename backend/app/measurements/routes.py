@@ -25,7 +25,6 @@ bp = Blueprint(
 )
 MEMBERS = (
     CircleRole.MANAGER,
-    CircleRole.PATIENT,
     CircleRole.SIMPLIFIED_PATIENT,
 )
 
@@ -98,6 +97,7 @@ def list_targets(circle_id):
 def create_plan(circle_id):
     """Add a scheduled measurement plan."""
     body = parse_json_body(PlanRequest)
+    # Save the plan, and answer it as the list shows it.
     with transaction() as session:
         plan = MeasurementService(session, get_clock().now()).create(
             _uuid(circle_id), _uuid(current_auth().user_id), body
@@ -120,6 +120,7 @@ def create_plan(circle_id):
 def revise_plan(circle_id, plan_id):
     """Apply a plan revision from a future date."""
     body = parse_json_body(RevisePlanRequest)
+    # Save the edit, and answer the plan as the list shows it.
     with transaction() as session:
         plan = MeasurementService(session, get_clock().now()).revise(
             _uuid(circle_id),
@@ -222,6 +223,7 @@ def record_task(circle_id, version_id, scheduled_on):
     reading time (`?time=HH:MM`) on a day. Without `time`, the version's
     only reading time (an older app)."""
     body = parse_json_body(ReadingRequest)
+    # The reading time comes in the query (an older app sends none).
     scheduled_time = _time(request.args.get("time"))
     with transaction() as session:
         record = MeasurementService(session, get_clock().now()).record(
@@ -232,6 +234,7 @@ def record_task(circle_id, version_id, scheduled_on):
             scheduled_on=_date(scheduled_on),
             scheduled_time=scheduled_time,
         )
+        # Answer the reading with its target comparison and who recorded it.
         version = session.get(MeasurementPlanVersion, record.plan_version_id)
         accounts = accounts_by_id(
             session,
@@ -247,6 +250,8 @@ def record_task(circle_id, version_id, scheduled_on):
 @require_circle_role(*MEMBERS)
 def follow_up(circle_id, reading_id):
     """Mark an out-of-range reading as reviewed."""
+    # Mark the reading followed up, and answer it with its target comparison
+    # and who recorded it.
     with transaction() as session:
         record = MeasurementService(session, get_clock().now()).follow_up(
             _uuid(circle_id), _uuid(reading_id)

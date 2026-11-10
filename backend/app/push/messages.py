@@ -23,12 +23,16 @@ from app.push.sender import PushMessage
 
 
 def _account_with_phone(session: Session, phone: str) -> UUID | None:
+    """The id of the account that signs in with `phone`, or None."""
     return session.scalar(
         select(Account.id).where(Account.phone_number == phone)
     )
 
 
 def _display_name(session: Session, account_id: UUID | None) -> str | None:
+    """The name to show for an account: its display name, else its first name;
+    None when there is no such account.
+    """
     if account_id is None:
         return None
     account = session.get(Account, account_id)
@@ -83,10 +87,12 @@ def request_answer_push(
 ) -> Push | None:
     """To the person who asked: the patient accepted or declined. The
     patient answered, so their name can be told."""
+    # The patient's name when the number has an account (the sender knows it).
     patient = _display_name(
         session, _account_with_phone(session, request.patient_phone_number)
     )
     whom = f"لرعاية {patient}" if patient else "للرعاية"
+    # Only an answer is announced: accepted or declined.
     if request.status == "accepted":
         message = PushMessage(
             "تم قبول طلبك",

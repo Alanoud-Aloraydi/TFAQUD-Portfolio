@@ -24,11 +24,15 @@ class MedicationQueries:
     """Read plans and derive scheduled occurrences without storing them."""
 
     def __init__(self, session: Session, now: datetime):
+        """Read inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
     def plans(self, circle_id: UUID) -> list[dict]:
+        """Every medicine of the circle's patient, as the app reads them."""
         patient = self._patient(circle_id)
+        # Every version of each medicine (cancelled ones left out), grouped by
+        # medicine.
         rows = self.session.execute(
             select(MedicationPlan, MedicationPlanVersion)
             .join(
@@ -44,6 +48,8 @@ class MedicationQueries:
         grouped = {}
         for plan, version in rows:
             grouped.setdefault(plan.id, (plan, []))[1].append(version)
+        # Each medicine as the app reads it, with its latest dose; the ones in
+        # use first, by name.
         result = [
             self._plan_response(plan, versions)
             for plan, versions in grouped.values()
@@ -62,6 +68,9 @@ class MedicationQueries:
 
     def _latest_records(self, patient_id: UUID) -> dict[str, dict]:
         """Find the latest explicit dose outcome for each medication plan."""
+        # Number each plan's dose records from the latest (by day, then dose
+        # time, then when it was recorded), across all its versions, every
+        # record counting (this is history).
         ranked = (
             select(
                 MedicationPlan.id.label("plan_id"),
@@ -97,6 +106,7 @@ class MedicationQueries:
             .where(MedicationPlan.patient_id == patient_id)
             .subquery()
         )
+        # Keep the first of each plan, and who recorded it.
         rows = list(self.session.execute(
             select(ranked).where(ranked.c.position == 1)
         ))
@@ -108,6 +118,7 @@ class MedicationQueries:
                 if row.recorded_by_account_id is not None
             },
         )
+        # As the app reads it, by plan id.
         latest = {}
         for row in rows:
             latest[str(row.plan_id)] = {
@@ -126,6 +137,11 @@ class MedicationQueries:
         return latest
 
     def plan(self, circle_id: UUID, plan_id: UUID) -> dict:
+        """One medicine of the circle's patient, as the app reads it; 404 for
+        another patient's.
+        """
+        # The medicine's versions (cancelled ones left out), only for this
+        # circle's patient.
         patient = self._patient(circle_id)
         rows = self.session.execute(
             select(MedicationPlan, MedicationPlanVersion)
@@ -194,7 +210,12 @@ class MedicationQueries:
         to_date: date,
         plan_id: UUID | None = None,
     ) -> list[dict]:
+        """The doses due from `from_date` to `to_date`, with their records and
+        their timing (to come, due, missed), optionally for one medicine.
+        """
         patient = self._patient(circle_id)
+        # Every dose time of the patient's versions (not cancelled) whose
+        # treatment overlaps the range.
         statement = (
             select(
                 MedicationPlan,
@@ -227,6 +248,8 @@ class MedicationQueries:
         if plan_id is not None:
             statement = statement.where(MedicationPlan.id == plan_id)
         rows = list(self.session.execute(statement))
+        # Their days, their records in the range, and who recorded them; then
+        # the doses themselves (occurrence_builder.py).
         schedule_ids = {row[2].id for row in rows}
         days = load_days(self.session, [row[2] for row in rows])
         records = self._records(schedule_ids, from_date, to_date)
@@ -243,6 +266,7 @@ class MedicationQueries:
         )
 
     def _patient(self, circle_id: UUID) -> Patient:
+        """The circle's patient; 404 when there is none."""
         patient = self.session.scalar(
             select(Patient).where(Patient.care_circle_id == circle_id)
         )
@@ -256,6 +280,9 @@ class MedicationQueries:
         from_date: date,
         to_date: date,
     ) -> dict[tuple[UUID, date], MedicationDoseRecord]:
+        """The dose records of these schedules between the two dates, by
+        schedule and day.
+        """
         if not schedule_ids:
             return {}
         rows = self.session.scalars(

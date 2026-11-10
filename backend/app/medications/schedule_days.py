@@ -38,6 +38,8 @@ class ScheduleDays:
     interval_days: int | None = None
 
     def applies_on(self, day: date, treatment_starts_on: date) -> bool:
+        """Whether this dose time has a dose on `day`, by its kind of repeat.
+        """
         return applies_on(
             self.repeat,
             self.weekdays,
@@ -73,6 +75,8 @@ def applies_on(
 
 def load_days(session: Session, schedules) -> dict[UUID, ScheduleDays]:
     """The days of each of `schedules`, read in two queries."""
+    # Two reads for all the dose times at once: their weekdays, and their days
+    # of the month.
     ids = [schedule.id for schedule in schedules]
     weekdays: dict[UUID, set[int]] = defaultdict(set)
     month_days: dict[UUID, set[int]] = defaultdict(set)
@@ -91,6 +95,7 @@ def load_days(session: Session, schedules) -> dict[UUID, ScheduleDays]:
             ).where(MedicationScheduleMonthDay.schedule_id.in_(ids))
         ):
             month_days[schedule_id].add(month_day)
+    # Each dose time's days, with its kind of repeat and its interval.
     return {
         schedule.id: ScheduleDays(
             schedule.repeat,

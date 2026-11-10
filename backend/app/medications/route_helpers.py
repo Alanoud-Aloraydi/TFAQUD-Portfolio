@@ -38,6 +38,7 @@ def occurrence_query() -> OccurrenceQuery:
 
 def dose_record_response(session: Session, record) -> dict:
     """Serialize the outcome returned after an idempotent write."""
+    # Who recorded it (null when their account was deleted).
     recorder = (
         session.get(Account, record.recorded_by_account_id)
         if record.recorded_by_account_id

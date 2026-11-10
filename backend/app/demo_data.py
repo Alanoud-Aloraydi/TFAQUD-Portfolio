@@ -93,6 +93,9 @@ class Summary:
 
 
 def _schedule(clock, dose, unit, days=EVERY_DAY, instructions=None):
+    """One dose time of a demo medicine, in the shape the medicine request
+    takes.
+    """
     return {
         "time_of_day": clock,
         "dose_value": dose,
@@ -103,6 +106,7 @@ def _schedule(clock, dose, unit, days=EVERY_DAY, instructions=None):
 
 
 def _plan(name, strength, unit, form, schedules, starts, ends=None, **more):
+    """One demo medicine, in the shape the medicine request takes."""
     return {
         "name": name,
         "strength_value": strength,
@@ -119,6 +123,9 @@ class DemoBuilder:
     """Make the demo story in one session, at `now` (Asia/Riyadh)."""
 
     def __init__(self, session: Session, now: datetime):
+        """Build inside the caller's session, with Riyadh's time and date as
+        the story's «now».
+        """
         self.session = session
         self.now = now.astimezone(RIYADH)
         self.today = self.now.date()
@@ -127,9 +134,11 @@ class DemoBuilder:
     # ---- time -------------------------------------------------------------
 
     def day(self, offset: int) -> date:
+        """The date `offset` days from today."""
         return self.today + timedelta(days=offset)
 
     def at(self, offset: int, hour: int = 9, minute: int = 0) -> datetime:
+        """Riyadh time on the day `offset` days from today."""
         return datetime.combine(
             self.day(offset), time(hour, minute), tzinfo=RIYADH
         )
@@ -137,6 +146,7 @@ class DemoBuilder:
     # ---- people and circles ---------------------------------------------
 
     def accounts(self) -> list[Account]:
+        """Make the demo accounts (Lina, Sara and Khaled)."""
         rows = [
             Account(
                 phone_number=phone,
@@ -153,6 +163,7 @@ class DemoBuilder:
         return rows
 
     def medical(self, actor: Account, circle: CareCircle, profile: dict):
+        """Fill a demo patient's medical profile, as written two months ago."""
         MedicalService(self.session, self.at(-60)).update_profile(
             actor.id,
             circle.id,
@@ -162,6 +173,7 @@ class DemoBuilder:
     # ---- medicines --------------------------------------------------------
 
     def create(self, actor, circle, body, when) -> MedicationPlan:
+        """Add a demo medicine, as added at `when`."""
         plan = MedicationPlanService(self.session, when).create(
             circle.id, actor.id, PlanRequest.model_validate(body)
         )
@@ -169,6 +181,7 @@ class DemoBuilder:
         return plan
 
     def revise(self, actor, circle, plan, version, body, effective, when):
+        """Edit a demo medicine, as edited at `when`, from `effective` on."""
         MedicationPlanService(self.session, when).revise(
             circle.id,
             plan.id,
@@ -203,6 +216,13 @@ class DemoBuilder:
             start = end + timedelta(days=1)
 
     def _record(self, actor: Account, circle: CareCircle, item: dict):
+        """Record a past demo dose the way a family would: most taken a few
+        minutes late, some skipped with a reason, a few never recorded; the
+        same dose always gets the same story. Doses still open are left for the
+        app.
+        """
+        # Only a past dose with no record, and not one still open (the app
+        # shows those as due).
         if item.get("record") is not None:
             return
         scheduled_on = date.fromisoformat(item["scheduled_on"])
@@ -216,11 +236,14 @@ class DemoBuilder:
         if due > self.now - OPEN_WINDOW:
             self.summary.open_doses += 1
             return
+        # The same dose always rolls the same number.
         chance = random.Random(
             f"{item['name']}|{item['scheduled_on']}|{item['time_of_day']}"
         )
         roll = chance.random()
         today = scheduled_on == self.today
+        # Taken (every dose of today, and 80% of the others): up to 10 minutes
+        # early or 45 late, recorded a few minutes after.
         if today or roll < 0.80:
             taken_at = due + timedelta(minutes=chance.randint(-10, 45))
             recorded_at = min(
@@ -228,6 +251,7 @@ class DemoBuilder:
             )
             body = {"outcome": "taken", "taken_at": min(taken_at, recorded_at)}
             self.summary.taken += 1
+        # Skipped (12%), with a reason; the rest (8%) stay unrecorded.
         elif roll < 0.92:
             reason = chance.choice(SKIP_REASONS)
             recorded_at = min(due + timedelta(minutes=45), self.now)
@@ -237,6 +261,7 @@ class DemoBuilder:
             self.summary.skipped += 1
         else:
             return
+        # Record it as the app would, at the time it was recorded.
         MedicationDoseService(self.session, recorded_at).record(
             circle.id,
             UUID(item["schedule_id"]),
@@ -258,11 +283,13 @@ class DemoBuilder:
         return f"{moment.hour:02d}:{moment.minute - moment.minute % 5:02d}"
 
     def measure(self, actor, circle, body) -> None:
+        """Add a demo measurement plan."""
         MeasurementService(self.session, self.now).create(
             circle.id, actor.id, MeasurementPlanRequest.model_validate(body)
         )
 
     def appointment(self, actor, circle, body) -> None:
+        """Add a demo appointment."""
         AppointmentService(self.session, self.now).create(
             circle.id, actor.id, AppointmentRequest.model_validate(body)
         )
@@ -430,6 +457,8 @@ class DemoBuilder:
     def mother_checks(self, lina, mother) -> None:
         """The detailed mode's measurement and appointment: Noura's blood
         pressure twice a day, and a visit Lina takes her to."""
+        # Blood pressure twice a day, and an endocrinology visit in two days
+        # that Lina takes her to.
         self.measure(lina, mother, {
             "kind": "bp",
             "times": [
@@ -453,6 +482,11 @@ class DemoBuilder:
     # ---- the story --------------------------------------------------------
 
     def build(self) -> Summary:
+        """Make the whole demo: Lina's own care; her mother's circle (no
+        account, every kind of medicine); Sara's grandfather's circle, which
+        Sara invites Lina to manage; a request waiting for Lina's father; and
+        her uncle Khaled's circle in simplified mode.
+        """
         lina, sara, khaled = self.accounts()
         care = CareService(self.session, self.at(-60))
 
@@ -785,6 +819,7 @@ def remove_demo_accounts(session: Session, now: datetime) -> int:
     its medicine gone, and refuses the whole reset ("Dose date does not
     belong to this schedule").
     """
+    # The demo accounts, and the circles they manage.
     accounts = session.scalars(
         select(Account)
         .where(Account.phone_number.in_(DEMO_PHONES))
@@ -800,6 +835,7 @@ def remove_demo_accounts(session: Session, now: datetime) -> int:
             )
         )
     ).all()
+    # First the circles that only demo accounts manage, whole (see above).
     for circle in managed:
         managers = set(
             session.scalars(
@@ -811,6 +847,7 @@ def remove_demo_accounts(session: Session, now: datetime) -> int:
         if managers <= demo_ids:
             session.delete(circle)
     session.flush()
+    # Then each demo account, as the app deletes an account.
     care = CareService(session, now)
     for account in accounts:
         care.delete_account(

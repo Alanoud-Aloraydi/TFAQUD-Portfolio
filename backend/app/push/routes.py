@@ -27,6 +27,9 @@ PushToken = Annotated[
 
 
 class PushDeviceInput(Dto):
+    """The body of PUT /accounts/me/push-device: the phone's Apple push token.
+    """
+
     token: PushToken
 
 
@@ -38,6 +41,8 @@ def register_push_device():
     body = parse_json_body(PushDeviceInput)
     if "sqlalchemy" not in current_app.extensions:
         raise ServiceUnavailable()
+    # The token belongs to this sign-in: a token seen before moves to it (a
+    # phone that signed in again).
     auth = current_auth()
     now = get_clock().now()
     values = {

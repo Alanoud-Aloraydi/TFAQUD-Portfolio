@@ -26,6 +26,7 @@ def increment(name: str, by: int = 1) -> None:
 
 
 def count(name: str) -> int:
+    """The counter `name` now (tests read it)."""
     with _lock:
         return _counts[name]
 

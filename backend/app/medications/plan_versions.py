@@ -23,6 +23,8 @@ def add_plan_version(
     effective_from_on: date,
 ) -> MedicationPlanVersion:
     """Persist one complete plan version and its dose schedules."""
+    # The version: the medicine's fields, from `effective_from_on` on, and who
+    # made it.
     version = MedicationPlanVersion(
         medication_plan_id=plan.id,
         version_number=number,
@@ -41,6 +43,8 @@ def add_plan_version(
     )
     session.add(version)
     session.flush()
+    # Each dose time, then its weekdays and its days of the month (an interval
+    # dose keeps its number of days on the dose time itself).
     for item in body.schedules:
         schedule = MedicationSchedule(
             plan_version_id=version.id,
@@ -78,6 +82,7 @@ def same_definition(
     normalized_name: str,
 ) -> bool:
     """Return whether a request exactly matches a stored version."""
+    # First the medicine's own fields, which need no extra reading.
     fields_match = (
         version.normalized_name == normalized_name
         and version.name == body.name
@@ -92,6 +97,8 @@ def same_definition(
     )
     if not fields_match:
         return False
+    # Then the dose times: each one as a set of (time, dose, unit,
+    # instructions, repeat, kind of day, day), so their order does not matter.
     schedules = list(
         session.scalars(
             select(MedicationSchedule).where(

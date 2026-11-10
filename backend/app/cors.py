@@ -28,8 +28,14 @@ _PREFLIGHT_CACHE_SECONDS = "600"
 
 
 def register_development_cors(app: Flask) -> None:
+    """In development only, let a page served from this computer (Flutter in
+    Chrome) call the API.
+    """
     @app.after_request
     def add_cors_headers(response):
+        """Add the CORS headers to an answer to a local page, and nothing for
+        any other origin.
+        """
         origin = request.headers.get("Origin", "")
         # The answer depends on the Origin header, so caches must know it.
         response.vary.add("Origin")

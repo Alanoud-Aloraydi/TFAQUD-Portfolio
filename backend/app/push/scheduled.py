@@ -80,7 +80,12 @@ def _circle_recipients(session: Session, circle_id: UUID) -> tuple[UUID, ...]:
 
 
 def _scan_doses(circle_id: UUID, now: datetime) -> None:
+    """Send «جرعة ما تسجّلت» once for each of the circle's doses of today whose
+    time passed with nothing recorded.
+    """
     today = now.astimezone(RIYADH).date()
+    # Today's doses and who to tell, read in one short transaction; the pushes
+    # go after it.
     with transaction() as session:
         occurrences = MedicationQueries(session, now).occurrences(
             circle_id, today, today
@@ -92,6 +97,8 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
             or occurrence["timing_state"] != "missed"
         ):
             continue
+        # `_claim` writes the dose's key once; a scan that finds it written
+        # sent it already.
         key = (
             f"dose_missed:{occurrence['schedule_id']}:"
             f"{occurrence['scheduled_on']}"
@@ -115,7 +122,11 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
 
 
 def _scan_measurements(circle_id: UUID, now: datetime) -> None:
+    """Send «قياس ما تسجّل» once for each of the circle's reading times of
+    today that passed with nothing recorded.
+    """
     today = now.astimezone(RIYADH).date()
+    # Today's reading times and who to tell, read in one short transaction.
     with transaction() as session:
         occurrences = MeasurementQueries(session, now).occurrences(
             circle_id, today, today

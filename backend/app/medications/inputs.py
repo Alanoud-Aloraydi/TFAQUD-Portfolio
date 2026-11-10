@@ -78,15 +78,24 @@ class ScheduleRequest(Dto):
     @field_validator("dose_value", mode="before")
     @classmethod
     def valid_dose_number(cls, value):
+        """Accept the dose only in English digits, with a zero before the
+        decimal point (0.5, not .5).
+        """
         return _english_decimal(value)
 
     @model_validator(mode="after")
     def valid_days(self):
+        """Each kind of repeat has its own days: weekdays for weekly, days of
+        the month for monthly, a number of days for interval.
+        """
         if (self.repeat == "interval") != (self.interval_days is not None):
             raise ValueError("Only an interval dose has interval days.")
+        # Every few days: only its number of days.
         if self.repeat == "interval":
             if self.weekdays or self.month_days:
                 raise ValueError("An interval dose has no other days.")
+        # Weekly: one weekday at least, 1 to 7, each once, and no days of the
+        # month.
         elif self.repeat == "weekly":
             if not self.weekdays:
                 raise ValueError("Choose at least one weekday.")
@@ -96,6 +105,8 @@ class ScheduleRequest(Dto):
                 raise ValueError("Weekdays cannot repeat.")
             if any(day < 1 or day > 7 for day in self.weekdays):
                 raise ValueError("Weekdays must be between 1 and 7.")
+        # Monthly: one day of the month at least, 1 to 28 (every month has
+        # them), each once, and no weekdays.
         else:
             if not self.month_days:
                 raise ValueError("Choose at least one day of the month.")
@@ -109,6 +120,8 @@ class ScheduleRequest(Dto):
 
 
 class PlanRequest(Dto):
+    """The body of adding a medicine."""
+
     name: Text50
     strength_value: StrengthValue
     strength_unit: StrengthUnit
@@ -126,10 +139,16 @@ class PlanRequest(Dto):
     @field_validator("strength_value", mode="before")
     @classmethod
     def valid_strength_number(cls, value):
+        """Accept the strength only in English digits, with a zero before the
+        decimal point (0.5, not .5).
+        """
         return _english_decimal(value)
 
     @model_validator(mode="after")
     def valid_definition(self):
+        """The treatment cannot end before it starts, and the strength's unit
+        must fit the dosage form.
+        """
         if (
             self.treatment_ends_on is not None
             and self.treatment_ends_on < self.treatment_starts_on
@@ -177,15 +196,27 @@ class PlanRequest(Dto):
 
 
 class RevisePlanRequest(PlanRequest):
+    """The body of editing a medicine: the same as adding one, plus the version
+    it was read from and the day the edit starts.
+    """
+
     expected_version_number: Annotated[int, Field(ge=1)]
     effective_from_on: date | None = None
 
 
 class CancelPendingRequest(Dto):
+    """The body of cancelling an edit that has not started: the version it was
+    read from.
+    """
+
     expected_version_number: Annotated[int, Field(ge=1)]
 
 
 class DoseRecordRequest(Dto):
+    """The body of recording a dose: taken (at a time) or skipped (with an
+    optional reason).
+    """
+
     outcome: Literal["taken", "skipped"]
     taken_at: datetime | None = None
     skip_reason_code: SkipReason | None = None
@@ -193,6 +224,9 @@ class DoseRecordRequest(Dto):
 
     @model_validator(mode="after")
     def valid_outcome(self):
+        """A taken dose has its time and no skip reason; a skipped dose has no
+        taken time.
+        """
         if self.outcome == "taken":
             if self.taken_at is None:
                 raise ValueError("Taken doses require the actual time.")
@@ -206,12 +240,16 @@ class DoseRecordRequest(Dto):
 
 
 class OccurrenceQuery(Dto):
+    """The query of listing doses: from and to dates, optionally one medicine.
+    """
+
     from_date: date = Field(validation_alias="from")
     to_date: date = Field(validation_alias="to")
     plan_id: str | None = None
 
     @model_validator(mode="after")
     def valid_range(self):
+        """The range runs forward and covers at most 32 days."""
         if self.to_date < self.from_date:
             raise ValueError("The end date cannot precede the start date.")
         if (self.to_date - self.from_date).days > 31:

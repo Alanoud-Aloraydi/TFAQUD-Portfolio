@@ -73,12 +73,16 @@ class ReadingTime(Dto):
 
     @model_validator(mode="after")
     def one_shape(self):
+        """Send the conditions, or the older single field, not both."""
         if self.conditions is not None and self.glucose_context is not None:
             raise ValueError("Send conditions, or the older field.")
         return self
 
     @property
     def codes(self) -> list[str]:
+        """The reading time's conditions, from the list or from an older app's
+        single field.
+        """
         if self.conditions is not None:
             return list(self.conditions)
         return from_legacy(self.glucose_context)
@@ -110,6 +114,9 @@ class PlanRequest(Dto):
     @model_validator(mode="before")
     @classmethod
     def one_time_from_an_older_app(cls, data):
+        """An older app sends one reading time as top-level fields: read it as
+        a list of one.
+        """
         if isinstance(data, dict) and "times" not in data and (
             "time_of_day" in data
         ):
@@ -124,6 +131,7 @@ class PlanRequest(Dto):
 
     @property
     def sorted_times(self) -> list[ReadingTime]:
+        """The reading times from the earliest of the day."""
         return sorted(self.times, key=lambda item: item.time_of_day)
 
     @property
@@ -133,6 +141,7 @@ class PlanRequest(Dto):
 
     @property
     def glucose_context(self) -> str | None:
+        """The first reading time's glucose context, kept for an older app."""
         return self.context_of(self.sorted_times[0])
 
     def context_of(self, item: ReadingTime) -> str | None:
@@ -144,6 +153,8 @@ class PlanRequest(Dto):
     @model_validator(mode="after")
     def valid_plan(self):
         """Require only the targets appropriate to the selected kind."""
+        # Weekdays 1 to 7, each once; reading times without a time zone, each
+        # once.
         if len(set(self.weekdays)) != len(self.weekdays) or any(
             day < 1 or day > 7 for day in self.weekdays
         ):
@@ -153,6 +164,8 @@ class PlanRequest(Dto):
             raise ValueError("Reading times have no time zone.")
         if len(set(moments)) != len(moments):
             raise ValueError("Reading times cannot repeat.")
+        # Glucose has a low and a high, in order; blood pressure has both upper
+        # limits, systolic above diastolic, and no glucose context.
         if self.kind == "glucose":
             if (
                 self.glucose_low is None
@@ -171,13 +184,16 @@ class PlanRequest(Dto):
             or any(item.glucose_context is not None for item in self.times)
         ):
             raise ValueError("Blood pressure needs both upper limits.")
+        # Each reading time's conditions fit the kind.
         for item in self.times:
             check_conditions(self.kind, item.codes)
         return self
 
 
 class RevisePlanRequest(PlanRequest):
-    """An optimistic revision effective no earlier than tomorrow."""
+    """The body of editing a measurement plan: the same as adding one, plus
+    the version it was read from and the day the edit starts (today when
+    none)."""
 
     expected_version_number: Annotated[int, Field(ge=1)]
     effective_from_on: date | None = None
@@ -215,6 +231,8 @@ class ReadingRequest(Dto):
     @model_validator(mode="after")
     def valid_values(self):
         """A skip has no reading; a reading has the right number of values."""
+        # The values fit the outcome and the kind: none for a skip; one for
+        # glucose; two for blood pressure.
         if self.outcome == "skipped":
             if (
                 self.measured_at is not None
@@ -229,6 +247,8 @@ class ReadingRequest(Dto):
             or (self.kind == "bp" and self.value_two is None)
         ):
             raise ValueError("A reading needs values for its kind.")
+        # The conditions fit the kind, and come in one shape only; words for
+        # «أخرى» need «أخرى».
         if self.kind == "bp" and self.glucose_context is not None:
             raise ValueError("Blood pressure has no glucose context.")
         if self.conditions is not None:
@@ -237,11 +257,13 @@ class ReadingRequest(Dto):
             check_conditions(self.kind, list(self.conditions))
         if self.other_condition is not None and "other" not in self.codes:
             raise ValueError("Words for «أخرى» need «أخرى».")
+        # A blood pressure's systolic is above its diastolic.
         if (
             self.outcome == "read" and self.kind == "bp"
             and self.value_one <= self.value_two
         ):
             raise ValueError("Systolic must exceed diastolic.")
+        # A target sent with a reading fits its kind.
         target = (
             self.glucose_low, self.glucose_high,
             self.systolic_limit, self.diastolic_limit,
@@ -269,6 +291,9 @@ class ReadingRequest(Dto):
 
     @property
     def codes(self) -> list[str]:
+        """The reading's conditions, from the list or from an older app's two
+        single fields.
+        """
         if self.conditions is not None:
             return list(self.conditions)
         return from_legacy(self.glucose_context, self.condition)

@@ -22,6 +22,7 @@ bp = Blueprint("users", __name__, url_prefix="/api/v1/accounts")
 
 
 def _one_line(value: str) -> str:
+    """Refuse a name with a line break or another control character."""
     # Control characters are invalid in displayed names.
     if any(unicodedata.category(ch) == "Cc" for ch in value):
         raise PydanticCustomError(
@@ -32,6 +33,7 @@ def _one_line(value: str) -> str:
 
 
 def _name(max_length: int):
+    """A name of 1 to `max_length` characters on one line."""
     # DTO normalization removes surrounding whitespace before validation.
     return Annotated[
         str,
@@ -41,6 +43,8 @@ def _name(max_length: int):
 
 
 class ProfileRequest(Dto):
+    """The body of PUT /accounts/me/profile."""
+
     first_name: _name(50)
     last_name: _name(50)
     display_name: _name(30)
@@ -53,6 +57,11 @@ class ProfileRequest(Dto):
 @bp.put("/me/profile")
 @require_auth
 def save_profile():
+    """Save the signed-in account's names, and the birth date and city sent at
+    onboarding; a birth date in the future is refused.
+    """
+    # A birth date in the future is refused; then the account's profile is
+    # saved.
     body = parse_json_body(ProfileRequest)
     if body.birth_date and body.birth_date > get_clock().now().date():
         raise ValidationFailed(

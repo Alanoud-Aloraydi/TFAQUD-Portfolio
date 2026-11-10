@@ -50,7 +50,8 @@ def run_later(job, *args) -> None:
 
 
 def _executor() -> ThreadPoolExecutor:
-    # Made on first use, after gunicorn has started the worker process.
+    """The pool of background threads, made on first use: after gunicorn
+    has started the worker process, never before."""
     global _pool
     with _lock:
         if _pool is None:
@@ -61,6 +62,9 @@ def _executor() -> ThreadPoolExecutor:
 
 
 def _run(app, job, args, counted: bool = True) -> None:
+    """Run one job inside its own app context; count and log a failure instead
+    of raising it, and free its place in the queue.
+    """
     global _pending
     try:
         with app.app_context():

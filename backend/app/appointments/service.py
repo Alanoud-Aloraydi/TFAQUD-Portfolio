@@ -20,6 +20,7 @@ class AppointmentService:
     """Keep appointment writes within one authorized circle."""
 
     def __init__(self, session: Session, now: datetime):
+        """Work inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
@@ -27,6 +28,7 @@ class AppointmentService:
         self, circle_id: UUID, actor_id: UUID, body: AppointmentRequest
     ) -> Appointment:
         """Create a visit for the circle patient."""
+        # In the future, with valid companions; saved with who made it.
         patient = self._patient(circle_id)
         self._future(body)
         self._companions(circle_id, body.companion_account_ids)
@@ -48,6 +50,8 @@ class AppointmentService:
         body: ReviseAppointmentRequest,
     ) -> Appointment:
         """Revise a scheduled visit without replacing its identity."""
+        # Only an open appointment the app read as it is now, still in the
+        # future, with valid companions.
         appointment = self._appointment(circle_id, appointment_id)
         if appointment.status != "scheduled":
             raise Conflict(code="appointment_already_closed")
@@ -55,6 +59,8 @@ class AppointmentService:
             raise Conflict(code="appointment_changed")
         self._future(body)
         self._companions(circle_id, body.companion_account_ids)
+        # Save the edit, say who, and move its change time forward (so the next
+        # edit sees it changed).
         self._fill(appointment, body)
         self._replace_companions(appointment.id, body.companion_account_ids)
         appointment.updated_by_account_id = actor_id
@@ -69,6 +75,8 @@ class AppointmentService:
         status: str, expected_updated_at: datetime,
     ) -> Appointment:
         """Record an explicit attended or cancelled outcome."""
+        # Only an open appointment the app read as it is now; one cannot be
+        # marked done before its time.
         appointment = self._appointment(circle_id, appointment_id)
         if appointment.status != "scheduled":
             raise Conflict(code="appointment_already_closed")
@@ -80,6 +88,8 @@ class AppointmentService:
             tzinfo=RIYADH,
         ) > self.now.astimezone(RIYADH):
             raise ValidationFailed(code="appointment_not_started")
+        # Close it, say who, and move its change time forward (so the next edit
+        # sees it changed).
         appointment.status = status
         appointment.updated_by_account_id = actor_id
         appointment.updated_at = max(
@@ -89,6 +99,7 @@ class AppointmentService:
         return appointment
 
     def _patient(self, circle_id: UUID) -> Patient:
+        """The circle's patient; 404 when there is none."""
         patient = self.session.scalar(
             select(Patient).where(Patient.care_circle_id == circle_id)
         )
@@ -99,6 +110,8 @@ class AppointmentService:
     def _appointment(
         self, circle_id: UUID, appointment_id: UUID
     ) -> Appointment:
+        """The patient's appointment with this id; 404 for another patient's.
+        """
         patient = self._patient(circle_id)
         appointment = self.session.scalar(
             select(Appointment)
@@ -113,6 +126,9 @@ class AppointmentService:
         return appointment
 
     def _companions(self, circle_id: UUID, account_ids: list[UUID]) -> None:
+        """422 unless every companion is a manager of the circle with an
+        account (their rows are locked meanwhile).
+        """
         members = set(self.session.scalars(
             select(CareCircleManager.account_id)
             .join(Account, Account.id == CareCircleManager.account_id)
@@ -128,6 +144,7 @@ class AppointmentService:
     def _replace_companions(
         self, appointment_id: UUID, account_ids: list[UUID]
     ) -> None:
+        """Make the appointment's companions exactly these accounts."""
         self.session.execute(
             delete(AppointmentCompanion).where(
                 AppointmentCompanion.appointment_id == appointment_id
@@ -143,6 +160,7 @@ class AppointmentService:
 
     @staticmethod
     def _fill(appointment: Appointment, body: AppointmentRequest) -> None:
+        """Copy the request into the appointment, with the texts trimmed."""
         appointment.specialty = body.specialty.strip()
         appointment.kind = body.kind
         appointment.other_kind = (

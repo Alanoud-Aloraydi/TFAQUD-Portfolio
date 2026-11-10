@@ -21,6 +21,7 @@ class MedicationDoseService:
     """Record one outcome after validating its schedule and date."""
 
     def __init__(self, session: Session, now):
+        """Work inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
 
@@ -32,6 +33,11 @@ class MedicationDoseService:
         actor_id: UUID,
         body: DoseRecordRequest,
     ) -> MedicationDoseRecord:
+        """Record one dose of today or before, once: the same record again is
+        accepted as it is, a different one is a conflict.
+        """
+        # Not a future dose, and not a taken time in the future or without its
+        # offset.
         if scheduled_on > self.now.astimezone(RIYADH).date():
             raise ValidationFailed(
                 "A future dose cannot be recorded.",
@@ -48,6 +54,8 @@ class MedicationDoseService:
                     "The taken time cannot be in the future.",
                     code="future_taken_time",
                 )
+        # The dose must exist; its record is read locked, so two people
+        # recording it at once get one record.
         self._require_occurrence(circle_id, schedule_id, scheduled_on)
         existing = self.session.scalar(
             select(MedicationDoseRecord)
@@ -81,6 +89,9 @@ class MedicationDoseService:
         schedule_id: UUID,
         scheduled_on: date,
     ) -> None:
+        """404 unless the schedule belongs to the circle's patient and has a
+        dose on that day.
+        """
         row = self.session.execute(
             select(
                 MedicationPlan,
@@ -141,6 +152,7 @@ class MedicationDoseService:
 
     @staticmethod
     def _same(record, body: DoseRecordRequest) -> bool:
+        """Whether `body` says the same as the saved record."""
         return (
             record.outcome == body.outcome
             and record.taken_at == body.taken_at
