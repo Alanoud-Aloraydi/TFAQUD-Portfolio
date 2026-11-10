@@ -1,9 +1,10 @@
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,22 +12,11 @@ import 'package:flutter/services.dart';
 // easy_localization also exports a TextDirection (from intl); hide it so the
 // name means Flutter's TextDirection.
 
-/// Keeps what the user types as a Saudi mobile number: digits only (an Arabic
-/// keyboard may type Arabic-Indic digits), no leading zero, at most nine
-/// digits, grouped like "50 123 4567" and shown in English digits.
+/// Keeps what the user types as a Saudi mobile number ([SaudiMobile]):
+/// digits only (an Arabic keyboard may type Arabic-Indic digits), no leading
+/// zero, at most nine digits, grouped like "50 123 4567" and shown in English
+/// digits.
 class PhoneNumberFormatter extends TextInputFormatter {
-  static const int maxDigits = 9;
-
-  /// "501234567" becomes "50 123 4567".
-  static String display(String digits) {
-    final StringBuffer out = StringBuffer();
-    for (int i = 0; i < digits.length; i++) {
-      if (i == 2 || i == 5) out.write(' ');
-      out.write(digits[i]);
-    }
-    return out.toString();
-  }
-
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -34,8 +24,10 @@ class PhoneNumberFormatter extends TextInputFormatter {
   ) {
     String digits = ArabicDigits.digitsOnly(newValue.text);
     digits = digits.replaceFirst(RegExp(r'^0+'), '');
-    if (digits.length > maxDigits) digits = digits.substring(0, maxDigits);
-    final String text = display(digits);
+    if (digits.length > SaudiMobile.digits) {
+      digits = digits.substring(0, SaudiMobile.digits);
+    }
+    final String text = SaudiMobile.group(digits);
     return TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
@@ -43,7 +35,7 @@ class PhoneNumberFormatter extends TextInputFormatter {
   }
 }
 
-/// Label, the number field and the fixed "+966" box. The number is always
+/// Label, the number field and the fixed country code box. The number is always
 /// written left to right, even on an Arabic page.
 class PhoneField extends StatelessWidget {
   const PhoneField({
@@ -117,7 +109,7 @@ class PhoneField extends StatelessWidget {
   }
 }
 
-/// Renders the country code box element of phone field.
+/// The fixed country code beside the number.
 class _CountryCodeBox extends StatelessWidget {
   const _CountryCodeBox();
 
@@ -133,7 +125,7 @@ class _CountryCodeBox extends StatelessWidget {
         border: Border.all(color: AppSemanticColors.borderControlBase),
       ),
       child: Text(
-        '+966',
+        SaudiMobile.countryCode,
         textDirection: TextDirection.ltr,
         style: Theme.of(context).textTheme.bodyLarge,
       ),

@@ -1,8 +1,17 @@
+import 'package:app/core/utils/patient_clock.dart';
+
 /// The cities the city sheet offers. The first seven are the cities of the
 /// design (CREAT-01B), in its order. Add a city by adding its name here. The
-/// name is saved as written, so it is also what the circle shows later.
+/// name is saved as written, so it is also what the circle shows later. A
+/// city outside the list is typed by hand in the same sheet.
 abstract class SaudiCities {
   SaudiCities._();
+
+  /// The IANA zone of [city] when it is in the list (all of Saudi Arabia
+  /// keeps [defaultPatientZone], with no DST); null for a city typed by
+  /// hand, whose zone the person gives (`DeviceZone` at creation).
+  static String? zoneOf(String? city) =>
+      all.contains(city) ? defaultPatientZone : null;
 
   static const List<String> all = <String>[
     'الرياض',

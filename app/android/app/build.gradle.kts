@@ -12,6 +12,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications uses java.time on every Android
+        // version, which needs desugaring below API 26.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -19,7 +22,9 @@ android {
         applicationId = "com.tfaqud.tfaqud"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Android 7.0: the lowest every plugin supports (notifications,
+        // calendar, recording, speech, secure storage all need 24).
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
@@ -46,4 +51,8 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

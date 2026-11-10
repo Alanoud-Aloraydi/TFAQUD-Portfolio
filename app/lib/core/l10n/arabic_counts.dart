@@ -52,19 +52,20 @@ String afterDuration(BuildContext context, int minutes) {
   );
 }
 
-/// Whether [now] (Riyadh's wall time) is morning: from Fajr until Asr.
-/// [fajr] and [asr] are today's times («HH:mm»); before they are loaded,
-/// [fallbackFajr] and [fallbackAsr], about where they are in Riyadh.
+/// Whether [now] (the patient's wall time) is morning: from Fajr until
+/// Asr. [fajr] and [asr] are today's times («HH:mm»); before they are
+/// loaded, [_fallbackFajr] and [_fallbackAsr], a rough middle of the year
+/// at mid latitudes.
 bool isMorning(DateTime now, {String? fajr, String? asr}) {
   final int minute = now.hour * 60 + now.minute;
-  final int morning = _minuteOf(fajr) ?? _minuteOf(fallbackFajr)!;
-  final int evening = _minuteOf(asr) ?? _minuteOf(fallbackAsr)!;
+  final int morning = _minuteOf(fajr) ?? _minuteOf(_fallbackFajr)!;
+  final int evening = _minuteOf(asr) ?? _minuteOf(_fallbackAsr)!;
   return minute >= morning && minute < evening;
 }
 
 /// Where morning and evening start while today's prayer times load.
-const String fallbackFajr = '04:30';
-const String fallbackAsr = '15:15';
+const String _fallbackFajr = '04:30';
+const String _fallbackAsr = '15:15';
 
 /// «HH:mm» in minutes from midnight, or null.
 int? _minuteOf(String? time) {
@@ -75,9 +76,9 @@ int? _minuteOf(String? time) {
   return hour == null || minute == null ? null : hour * 60 + minute;
 }
 
-/// «صباح الخير، ياسر» from Fajr until Asr in Riyadh ([now] is Riyadh's wall
-/// time), «مساء الخير، ياسر» from Asr until the next Fajr ([isMorning]);
-/// without a name, the greeting alone.
+/// «صباح الخير، ياسر» from Fajr until Asr where the patient lives ([now]
+/// is the patient's wall time), «مساء الخير، ياسر» from Asr until the next
+/// Fajr ([isMorning]); without a name, the greeting alone.
 String greeting(
   BuildContext context,
   DateTime now,

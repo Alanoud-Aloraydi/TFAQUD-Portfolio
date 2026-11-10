@@ -55,6 +55,19 @@ class ScheduledNotification extends Equatable {
 const String reminderCategory = 'tafaqod.reminder';
 const String snoozeAction = 'snooze';
 
+/// The words of [snoozeAction], fixed: the translations are not loaded
+/// when the plugin starts.
+const String _snoozeLabel = 'ذكّرني بعد 15 دقيقة';
+
+/// The Android channel of the reminders. Android 8+ shows nothing without
+/// a channel; the person can tune its sound and importance in Settings.
+const AndroidNotificationChannel reminderChannel = AndroidNotificationChannel(
+  'tafaqod.reminders',
+  'التذكيرات',
+  description: 'تذكير الجرعات والقياسات والمواعيد',
+  importance: Importance.high,
+);
+
 /// How long «ذكّرني لاحقًا» puts a reminder off from the notification.
 const Duration notificationSnooze = Duration(minutes: 15);
 
@@ -65,16 +78,29 @@ const String snoozeTapPrefix = 'snooze-action:';
 /// Whether [tap] is the snooze action of a reminder, not a plain tap.
 bool isSnoozeTap(String tap) => tap.startsWith(snoozeTapPrefix);
 
+/// What [PhoneNotifications.taps] gives for a tapped server push (iOS):
+/// this, then the push's `kind` (backend `app/push`).
+const String pushTapPrefix = 'push:';
+
+/// The server's `kind` of a tapped push, or null for a reminder's tap.
+String? pushKind(String tap) =>
+    tap.startsWith(pushTapPrefix) ? tap.substring(pushTapPrefix.length) : null;
+
+/// The push kinds whose news waits in the notifications page (an invitation
+/// or a request to answer); every other kind opens «اليوم».
+const Set<String> inboxPushKinds = <String>{'invitation', 'circle_request'};
+
 /// The notifications the app sets on the phone itself (no server and no
-/// Apple push needed). Behind an interface, so the tests run without the
-/// iOS plugin.
+/// push needed), on iOS and Android. Behind an interface, so the tests run
+/// without the plugin.
 abstract interface class PhoneNotifications {
   /// Prepares the plugin without asking for permission, and keeps the tap
   /// that opened the app, if any.
   Future<void> initialize();
 
-  /// Asks whether the app may show notifications. iOS shows its question
-  /// only the first time; later calls answer at once. True when allowed.
+  /// Asks whether the app may show notifications. iOS and Android 13+
+  /// show their question only the first time; later calls answer at once
+  /// (older Android allows without asking). True when allowed.
   Future<bool> requestPermission();
 
   /// The scheduled notifications that have not shown yet: id to payload.
@@ -95,21 +121,38 @@ abstract interface class PhoneNotifications {
   String? takeLaunchTap();
 }
 
-/// [PhoneNotifications] with the flutter_local_notifications plugin. The app
-/// is for iPhone, so on other platforms nothing is shown.
+/// [PhoneNotifications] with the flutter_local_notifications plugin, on
+/// iOS and Android; on the web and desktop nothing is shown.
 class PluginPhoneNotifications implements PhoneNotifications {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   final StreamController<String> _taps = StreamController<String>.broadcast();
   String? _launchTap;
+
+  /// Taps on the server's pushes, which the plugin ignores: the iOS app
+  /// delegate (AppDelegate.swift) sends their `kind` here.
+  static const MethodChannel _pushTaps = MethodChannel('tafaqod/push_taps');
   bool _ready = false;
+
+  static bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// The plugin's Android side; null on iOS.
+  AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
 
   @override
   Future<void> initialize() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.iOS &&
+            defaultTargetPlatform != TargetPlatform.android)) {
+      return;
+    }
     await _plugin.initialize(
       // Permission is asked later, when there is something to remind.
       settings: InitializationSettings(
+        android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
@@ -123,7 +166,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
               actions: <DarwinNotificationAction>[
                 DarwinNotificationAction.plain(
                   snoozeAction,
-                  'ذكّرني بعد 15 دقيقة',
+                  _snoozeLabel,
                   options: <DarwinNotificationActionOption>{
                     DarwinNotificationActionOption.foreground,
                   },
@@ -145,8 +188,40 @@ class PluginPhoneNotifications implements PhoneNotifications {
     if ((launch?.didNotificationLaunchApp ?? false) && tap != null) {
       _launchTap = tap;
     }
+    await _android?.createNotificationChannel(reminderChannel);
+    if (_isIOS) await listenToPushTaps();
     _ready = true;
-    unawaited(_installSound());
+    // Android plays the channel's sound; the chime is iOS's.
+    if (_isIOS) unawaited(_installSound());
+  }
+
+  /// Joins the taps on server pushes to [taps] and [takeLaunchTap]. iOS
+  /// keeps a tap that came before Dart listened (the push that launched the
+  /// app) and gives it to `launchTap`; later taps arrive as `tap`. Android
+  /// pushes need FCM, which the app does not have yet.
+  @visibleForTesting
+  Future<void> listenToPushTaps() async {
+    _pushTaps.setMethodCallHandler((MethodCall call) async {
+      final Object? kind = call.arguments;
+      if (call.method != 'tap' || kind is! String || kind.isEmpty) return;
+      // A tap that comes while no page listens yet (the app is still
+      // starting) waits as the launch tap.
+      if (_taps.hasListener) {
+        _taps.add('$pushTapPrefix$kind');
+      } else {
+        _launchTap ??= '$pushTapPrefix$kind';
+      }
+    });
+    try {
+      final String? kind = await _pushTaps.invokeMethod<String>('launchTap');
+      if (kind != null && kind.isNotEmpty) {
+        _launchTap ??= '$pushTapPrefix$kind';
+      }
+    } on PlatformException {
+      // No launch tap to give.
+    } on MissingPluginException {
+      // An app build without the channel.
+    }
   }
 
   /// The payload of a tap, or [snoozeTapPrefix] and the payload for the
@@ -183,6 +258,10 @@ class PluginPhoneNotifications implements PhoneNotifications {
   @override
   Future<bool> requestPermission() async {
     if (!_ready) return false;
+    final AndroidFlutterLocalNotificationsPlugin? android = _android;
+    if (android != null) {
+      return await android.requestNotificationsPermission() ?? false;
+    }
     final IOSFlutterLocalNotificationsPlugin? ios = _plugin
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
@@ -219,11 +298,38 @@ class PluginPhoneNotifications implements PhoneNotifications {
           sound: notificationSound,
           categoryIdentifier: notification.snoozable ? reminderCategory : null,
         ),
+        android: AndroidNotificationDetails(
+          reminderChannel.id,
+          reminderChannel.name,
+          channelDescription: reminderChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.reminder,
+          groupKey: notification.thread,
+          // The snooze opens the app, which sets the reminder again.
+          actions: notification.snoozable
+              ? const <AndroidNotificationAction>[
+                  AndroidNotificationAction(
+                    snoozeAction,
+                    _snoozeLabel,
+                    showsUserInterface: true,
+                  ),
+                ]
+              : null,
+        ),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: await _androidMode(),
       payload: notification.payload,
     );
   }
+
+  /// At the exact minute when Android allows exact alarms (granted by
+  /// default before Android 14; a setting after); otherwise Android may
+  /// delay it a few minutes to save battery, which beats not showing it.
+  Future<AndroidScheduleMode> _androidMode() async =>
+      (await _android?.canScheduleExactNotifications() ?? false)
+      ? AndroidScheduleMode.exactAllowWhileIdle
+      : AndroidScheduleMode.inexactAllowWhileIdle;
 
   @override
   Future<void> cancel(int id) async {

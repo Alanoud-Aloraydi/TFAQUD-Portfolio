@@ -17,12 +17,16 @@ class Routes {
   static const String authPhone = '/auth/phone';
   static const String authCode = '/auth/code';
 
-  // Account setup after the first sign-in: name, how to start.
+  /// Step 1 of the first account set-up (`ProfileStepScreen`): names, birth
+  /// date and city. The code page opens it when the account has no names.
   static const String onboarding = '/onboarding';
+
+  /// Step 2 of the first account set-up (`StartScreen`): who the care is
+  /// for.
   static const String onboardingStart = '/onboarding/start';
 
-  // The same "how do you want to start?" page, opened by the "+" next to the
-  // circles to add another circle.
+  /// The start step again (`StartScreen(addingCircle: true)`), opened by the
+  /// "+" next to the circles to add another circle.
   static const String addCircle = '/circles/new';
   static const String home = '/home';
 

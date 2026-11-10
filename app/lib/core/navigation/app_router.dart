@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/fading_branches.dart';
-import 'package:app/core/services/intro_memory.dart';
+import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/dev/component_gallery.dart';
+import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
@@ -17,6 +18,7 @@ import 'package:app/features/appointments/presentation/cubit/appointments_cubit.
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_page.dart';
 import 'package:app/features/appointments/presentation/pages/visit_page.dart';
+import 'package:app/features/auth/data/datasources/intro_memory.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
@@ -53,6 +55,7 @@ import 'package:app/features/home/presentation/pages/plan_page.dart';
 import 'package:app/features/home/presentation/pages/record_page.dart';
 import 'package:app/features/home/presentation/pages/today_page.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
@@ -62,14 +65,14 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/pages/medication_details_page.dart';
 import 'package:app/features/medications/presentation/pages/medication_form_page.dart';
-import 'package:app/features/onboarding/domain/use_cases/onboarding_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
-import 'package:app/features/onboarding/presentation/pages/onboarding_feature_screen.dart';
+import 'package:app/features/onboarding/presentation/pages/profile_step_screen.dart';
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
@@ -83,17 +86,23 @@ import 'package:app/features/simplified_mode/presentation/pages/simplified_remin
 import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_snooze_screen.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, visibleForTesting;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import 'routers.dart';
+
+part 'routes/auth_routes.dart';
+part 'routes/care_routes.dart';
+part 'routes/circle_routes.dart';
+part 'routes/home_routes.dart';
+part 'routes/page_builders.dart';
+part 'routes/simplified_routes.dart';
 
 /// Defines page routes and navigation behavior.
 class AppRouter {
@@ -143,469 +152,12 @@ class AppRouter {
       ),
       GoRoute(path: Routes.home, redirect: (context, state) => Routes.today),
       _simplifiedShell(),
-      StatefulShellRoute(
-        // The tabs fade into each other instead of swapping at once.
-        navigatorContainerBuilder: (context, navigationShell, children) =>
-            FadingBranches(
-              currentIndex: navigationShell.currentIndex,
-              children: children,
-            ),
-        // The home cubit loads the circles. The inbox cubit counts what waits
-        // for an answer, for the dot on the bell; it loads again whenever the
-        // circles change.
-        pageBuilder: _iosShellRootPage(
-          (context, state, navigationShell) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => HomeCubit(
-                  GetIt.I<HomeUseCase>(),
-                  GetIt.I<PrivatePhotoRepository>().changes,
-                )..load(),
-              ),
-              BlocProvider(
-                create: (context) => InboxCubit(
-                  GetIt.I<CirclesUseCase>(),
-                  GetIt.I<HomeUseCase>(),
-                  followCircleChanges: true,
-                )..load(),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    MedicationsCubit(GetIt.I<MedicationsUseCase>()),
-              ),
-              BlocProvider(
-                create: (context) => MedicationOccurrencesCubit(
-                  GetIt.I<MedicationsUseCase>(),
-                  GetIt.I<PrivatePhotoRepository>().changes,
-                ),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    MeasurementPlansCubit(GetIt.I<MeasurementRepository>()),
-              ),
-              BlocProvider(
-                create: (context) => MeasurementTasksCubit(
-                  GetIt.I<MeasurementRepository>(),
-                  GetIt.I<PrivatePhotoRepository>().changes,
-                ),
-              ),
-              BlocProvider(
-                create: (context) => MeasurementReadingsCubit(
-                  GetIt.I<MeasurementRepository>(),
-                  GetIt.I<PrivatePhotoRepository>().changes,
-                ),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    AppointmentsCubit(GetIt.I<AppointmentRepository>()),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    PrayerTimesCubit(GetIt.I<PrayerTimesRepository>()),
-              ),
-            ],
-            child: HomeFeatureScreen(navigationShell: navigationShell),
-          ),
-        ),
-        branches: <StatefulShellBranch>[
-          _branch(Routes.today, builder: (context, state) => const TodayPage()),
-          _branch(Routes.plan, builder: (context, state) => const PlanPage()),
-          _branch(
-            Routes.record,
-            builder: (context, state) => const RecordPage(),
-          ),
-          // The circle tab shows the selected circle with the buttons of its
-          // medical file and its emergency card.
-          _branch(
-            Routes.circle,
-            builder: (context, state) => const CircleTabScreen(),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: Routes.medicationNewPath,
-        pageBuilder: _iosPage((context, state) {
-          final String circleId = state.pathParameters['circleId']!;
-          return BlocProvider(
-            create: (context) =>
-                MedicationsCubit(GetIt.I<MedicationsUseCase>())..bind(circleId),
-            child: MedicationFormPage(circleId: circleId),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.measurementNewPath,
-        pageBuilder: _iosPage((context, state) {
-          final circleId = state.pathParameters['circleId']!;
-          return BlocProvider(
-            create: (_) =>
-                MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
-                  ..load(circleId),
-            child: MeasurementPlanFormPage(circleId: circleId),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.measurementEditPath,
-        pageBuilder: _iosPage((context, state) {
-          final circleId = state.pathParameters['circleId']!;
-          return BlocProvider(
-            create: (_) =>
-                MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
-                  ..load(circleId),
-            child: MeasurementPlanFormPage(
-              circleId: circleId,
-              planId: state.pathParameters['planId']!,
-            ),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.appointmentNewPath,
-        pageBuilder: _iosPage((context, state) {
-          final circleId = state.pathParameters['circleId']!;
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (_) =>
-                    AppointmentsCubit(GetIt.I<AppointmentRepository>())
-                      ..load(circleId),
-              ),
-              BlocProvider(
-                create: (_) =>
-                    AppointmentCompanionsCubit(GetIt.I<AppointmentRepository>())
-                      ..load(circleId),
-              ),
-            ],
-            child: AppointmentFormPage(circleId: circleId),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.appointmentEditPath,
-        pageBuilder: _iosPage((context, state) {
-          final circleId = state.pathParameters['circleId']!;
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (_) =>
-                    AppointmentsCubit(GetIt.I<AppointmentRepository>())
-                      ..load(circleId),
-              ),
-              BlocProvider(
-                create: (_) =>
-                    AppointmentCompanionsCubit(GetIt.I<AppointmentRepository>())
-                      ..load(circleId),
-              ),
-            ],
-            child: AppointmentFormPage(
-              circleId: circleId,
-              appointmentId: state.pathParameters['appointmentId'],
-            ),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.appointmentVisitPath,
-        pageBuilder: _iosPage((context, state) {
-          final circleId = state.pathParameters['circleId']!;
-          final appointmentId = state.pathParameters['appointmentId']!;
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (_) =>
-                    AppointmentsCubit(GetIt.I<AppointmentRepository>())
-                      ..load(circleId),
-              ),
-              BlocProvider(
-                create: (_) => VisitCubit(
-                  GetIt.I<VisitRepository>(),
-                  VisitAudioService(),
-                  circleId,
-                  appointmentId,
-                )..load(),
-              ),
-            ],
-            child: VisitPage(
-              appointmentId: appointmentId,
-              canManage: state.extra == true,
-            ),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.medicationDetailsPath,
-        pageBuilder: _iosPage((context, state) {
-          final String circleId = state.pathParameters['circleId']!;
-          final String planId = state.pathParameters['planId']!;
-          Widget details(bool canManage) => BlocProvider(
-            create: (context) =>
-                MedicationsCubit(GetIt.I<MedicationsUseCase>())
-                  ..loadPlan(circleId, planId),
-            child: MedicationDetailsPage(
-              circleId: circleId,
-              planId: planId,
-              canManage: canManage,
-            ),
-          );
-          if (state.extra case final bool canManage) {
-            return details(canManage);
-          }
-          // A direct link has no tab context, so it resolves permission here.
-          return BlocProvider(
-            create: (context) => HomeCubit(
-              GetIt.I<HomeUseCase>(),
-              GetIt.I<PrivatePhotoRepository>().changes,
-            )..load(),
-            child: Builder(
-              builder: (context) {
-                final canManage = context.select<HomeCubit, bool>(
-                  (cubit) =>
-                      cubit.state.data?.circles.any(
-                        (circle) =>
-                            circle.id == circleId &&
-                            circle.canManageMedications,
-                      ) ??
-                      false,
-                );
-                return details(canManage);
-              },
-            ),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.medicationEditPath,
-        pageBuilder: _iosModalPage((context, state) {
-          final String circleId = state.pathParameters['circleId']!;
-          final String planId = state.pathParameters['planId']!;
-          return BlocProvider(
-            create: (context) =>
-                MedicationsCubit(GetIt.I<MedicationsUseCase>())
-                  ..loadPlan(circleId, planId),
-            child: MedicationFormPage(circleId: circleId, planId: planId),
-          );
-        }),
-      ),
-      // The account page: names, phone number, requests that wait for the
-      // patient, sign-out (AuthCubit) and deleting the account.
-      GoRoute(
-        path: Routes.account,
-        pageBuilder: _iosModalPage(
-          (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => AccountCubit(
-                  GetIt.I<CirclesUseCase>(),
-                  GetIt.I<OnboardingUseCase>(),
-                  GetIt.I<AuthUseCase>(),
-                  GetIt.I<HomeUseCase>(),
-                )..load(),
-              ),
-              BlocProvider(
-                create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
-              ),
-            ],
-            child: const AccountScreen(),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.accountEdit,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) => AccountCubit(
-              GetIt.I<CirclesUseCase>(),
-              GetIt.I<OnboardingUseCase>(),
-              GetIt.I<AuthUseCase>(),
-              GetIt.I<HomeUseCase>(),
-            )..load(),
-            child: const AccountEditScreen(),
-          ),
-        ),
-      ),
-      // Welcome, phone number and code share one SignInCubit, so the code page
-      // knows the number. The cubit is closed when the user leaves these pages.
-      ShellRoute(
-        pageBuilder: _iosShellPage(
-          (context, state, child) => BlocProvider(
-            create: (context) => SignInCubit(GetIt.I<AuthUseCase>()),
-            child: child,
-          ),
-        ),
-        routes: <RouteBase>[
-          GoRoute(
-            path: Routes.auth,
-            redirect: _welcomeOnce,
-            pageBuilder: _iosPage(
-              (context, state) => const AuthFeatureScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.authPhone,
-            pageBuilder: _iosPage((context, state) => const PhoneScreen()),
-          ),
-          GoRoute(
-            path: Routes.authCode,
-            pageBuilder: _iosPage((context, state) => const CodeScreen()),
-          ),
-        ],
-      ),
-      // Name page and start page share one OnboardingCubit. The page that adds
-      // another circle is the start page again, so it shares the cubit too.
-      // The start page also needs an InboxCubit: a brand-new person may
-      // already have an invitation waiting, answered right there. «رجوع»
-      // on the name page signs out (AuthCubit), back to the phone number.
-      ShellRoute(
-        pageBuilder: _iosShellPage(
-          (context, state, child) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) =>
-                    OnboardingCubit(GetIt.I<OnboardingUseCase>()),
-              ),
-              BlocProvider(
-                create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
-              ),
-              BlocProvider(
-                create: (context) => InboxCubit(
-                  GetIt.I<CirclesUseCase>(),
-                  GetIt.I<HomeUseCase>(),
-                )..load(),
-              ),
-            ],
-            child: child,
-          ),
-        ),
-        routes: <RouteBase>[
-          GoRoute(
-            path: Routes.onboarding,
-            pageBuilder: _iosPage(
-              (context, state) => const OnboardingFeatureScreen(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.onboardingStart,
-            pageBuilder: _iosPage((context, state) => const StartScreen()),
-          ),
-          GoRoute(
-            path: Routes.addCircle,
-            pageBuilder: _iosPage(
-              (context, state) => const StartScreen(addingCircle: true),
-            ),
-          ),
-        ],
-      ),
-      // A circle is created on one page with its own CreateCircleCubit. The
-      // circle for the signed-in person's own care loads the account at the
-      // start, to learn whether it already has a circle and holds the birth
-      // date and city.
-      // When the server says the sign-in ended, the page sends the user to
-      // sign-in.
-      _createCircleShell(
-        flow: CircleFlow.self,
-        routes: <RouteBase>[
-          GoRoute(
-            path: Routes.createSelfCircle,
-            pageBuilder: _iosPage(
-              (context, state) => const SelfCircleBasicsScreen(),
-            ),
-          ),
-        ],
-      ),
-      // The same for a patient who does not use the app. The names
-      // of the patient are typed, so no account is loaded.
-      _createCircleShell(
-        flow: CircleFlow.patient,
-        routes: <RouteBase>[
-          GoRoute(
-            path: Routes.createPatientCircle,
-            pageBuilder: _iosPage(
-              (context, state) => const PatientCircleBasicsScreen(),
-            ),
-          ),
-        ],
-      ),
-      // A request to a patient who uses the app: the phone number, then the
-      // waiting state on the same page.
-      GoRoute(
-        path: Routes.requestPatient,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) =>
-                SendCircleRequestCubit(GetIt.I<CirclesUseCase>()),
-            child: const RequestPatientScreen(),
-          ),
-        ),
-      ),
-      // What waits for an answer: invitations and requests. The page of a
-      // request takes the patient's answer; "agree" leads to the basic data.
-      GoRoute(
-        path: Routes.notifications,
-        pageBuilder: _iosModalPage(
-          (context, state) => BlocProvider(
-            create: (context) =>
-                InboxCubit(GetIt.I<CirclesUseCase>(), GetIt.I<HomeUseCase>())
-                  ..load(),
-            child: const NotificationsScreen(),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.replyRequest,
-        redirect: _requireRequest,
-        pageBuilder: _iosPage(
-          (context, state) => BlocProvider(
-            create: (context) => RequestReplyCubit(
-              GetIt.I<CirclesUseCase>(),
-              state.extra! as ReceivedCircleRequest,
-            ),
-            child: const RequestReplyScreen(),
-          ),
-        ),
-      ),
-      // The page after the patient agreed: it creates the circle. The request
-      // travels with the page.
-      _createCircleShell(
-        flow: CircleFlow.approved,
-        routes: <RouteBase>[
-          GoRoute(
-            path: Routes.completeRequest,
-            redirect: _requireRequest,
-            pageBuilder: _iosPage(
-              (context, state) => const ApprovedCircleBasicsScreen(),
-            ),
-          ),
-        ],
-      ),
-      // The medical file of a circle, its edit page and its emergency card.
-      // Each page loads what it shows from the server for the circle in the
-      // address.
-      GoRoute(
-        path: Routes.medicalFilePath,
-        pageBuilder: _iosPage((context, state) {
-          final String circleId = state.pathParameters['circleId']!;
-          return BlocProvider(
-            create: (context) =>
-                MedicalFileCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
-            child: MedicalFileScreen(circleId: circleId),
-          );
-        }),
-      ),
-      GoRoute(
-        path: Routes.medicalFileEditPath,
-        pageBuilder: _iosPage(
-          (context, state) =>
-              _medicalFileEdit(state, const MedicalFileEditScreen()),
-        ),
-      ),
-      GoRoute(
-        path: Routes.emergencyCardPath,
-        pageBuilder: _iosPage(
-          (context, state) =>
-              _emergencyCard(state.pathParameters['circleId']!, Routes.circle),
-        ),
-      ),
+      _homeShell(),
+      ..._careRoutes(),
+      ..._accountRoutes(),
+      _signInShell(),
+      _onboardingShell(),
+      ..._circleRoutes(),
       if (kDebugMode)
         GoRoute(
           path: Routes.gallery,
@@ -616,333 +168,19 @@ class AppRouter {
         Scaffold(body: Center(child: Text(context.tr('error.not_found')))),
   );
 
-  /// The welcome shows once per install ([IntroMemory]). After it, a
-  /// signed-out phone opens on the phone number page, and what was the last
-  /// person's goes, as the welcome would have removed it.
-  static Future<String?> _welcomeOnce(
-    BuildContext context,
-    GoRouterState state,
-  ) async {
-    if (!await IntroMemory.seen()) return null;
-    unawaited(forgetSignedOutPerson());
-    return Routes.authPhone;
-  }
-
   /// The page a phone is sent to instead of [location], or null when it may
-  /// open [location]. The splash page, the sign-in pages and the debug
-  /// gallery are open to everyone. Every other page needs the tokens
-  /// ([hasTokens]); without them the phone is sent to the sign-in page.
+  /// open [location]. The splash page and the sign-in pages are open to
+  /// everyone, and in a debug build the component gallery too (it exists
+  /// only there). Every other page needs the tokens ([hasTokens]); without
+  /// them the phone is sent to the sign-in page.
   @visibleForTesting
   static String? signInRedirect(String location, {required bool hasTokens}) {
     if (hasTokens) return null;
     final bool open =
         location == Routes.splash ||
-        location == Routes.gallery ||
+        (kDebugMode && location == Routes.gallery) ||
         location == Routes.auth ||
         location.startsWith('${Routes.auth}/');
     return open ? null : Routes.auth;
   }
-
-  /// The simplified mode's screens share one day ([SimplifiedModeCubit]),
-  /// so a reminder, the day's list and the home always agree, and one text
-  /// size. The medical file's edit page and the emergency card are the
-  /// detailed mode's pages, routed inside this shell so the size holds and
-  /// leaving them returns here, never to the detailed mode.
-  static ShellRoute _simplifiedShell() {
-    return ShellRoute(
-      pageBuilder: _iosShellPage(
-        (context, state, child) => MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (context) => SimplifiedModeCubit(
-                GetIt.I<SimplifiedModeUseCase>(),
-                photoChanges: GetIt.I<PrivatePhotoRepository>().changes,
-              )..load(),
-            ),
-            BlocProvider(
-              create: (context) =>
-                  SimplifiedSettingsCubit(GetIt.I<SimplifiedPreferences>())
-                    ..load(),
-            ),
-          ],
-          child: SimplifiedTextScale(child: child),
-        ),
-      ),
-      routes: <RouteBase>[
-        GoRoute(
-          path: Routes.simplifiedMode,
-          pageBuilder: _iosPage(
-            (context, state) => const SimplifiedModeFeatureScreen(),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedSchedule,
-          pageBuilder: _iosPage(
-            (context, state) => const SimplifiedScheduleScreen(),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedReminder,
-          redirect: _requireExtra<TodayTaskKind>,
-          pageBuilder: _iosModalPage(
-            (context, state) =>
-                SimplifiedReminderScreen(kind: state.extra! as TodayTaskKind),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedSnooze,
-          redirect: _requireExtra<TodayTaskKind>,
-          pageBuilder: _iosPage(
-            (context, state) =>
-                SimplifiedSnoozeScreen(kind: state.extra! as TodayTaskKind),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedDone,
-          redirect: _requireExtra<SimplifiedDoneMessage>,
-          pageBuilder: _iosPage(
-            (context, state) => SimplifiedDoneScreen(
-              message: state.extra! as SimplifiedDoneMessage,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedMeasurePath,
-          pageBuilder: _iosPage(
-            (context, state) => BlocProvider(
-              create: (context) => SimplifiedMeasurementCubit(
-                GetIt.I<SimplifiedModeUseCase>(),
-                state.pathParameters['circleId']!,
-              )..load(),
-              child: SimplifiedMeasureScreen(
-                lockedKind: state.extra is MeasurementKind
-                    ? state.extra! as MeasurementKind
-                    : null,
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedAccount,
-          pageBuilder: _iosPage(
-            (context, state) => MultiBlocProvider(
-              providers: [
-                BlocProvider(
-                  create: (context) => AccountCubit(
-                    GetIt.I<CirclesUseCase>(),
-                    GetIt.I<OnboardingUseCase>(),
-                    GetIt.I<AuthUseCase>(),
-                    GetIt.I<HomeUseCase>(),
-                  )..load(),
-                ),
-                BlocProvider(
-                  create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
-                ),
-              ],
-              child: const SimplifiedAccountScreen(),
-            ),
-          ),
-        ),
-        // The same card as the detailed mode's, but inside this shell: the
-        // text size holds, and «رجوع» never lands in the detailed mode.
-        GoRoute(
-          path: Routes.simplifiedEmergencyCardPath,
-          pageBuilder: _iosPage(
-            (context, state) => _emergencyCard(
-              state.pathParameters['circleId']!,
-              Routes.simplifiedMode,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: Routes.simplifiedMedicalFilePath,
-          pageBuilder: _iosPage((context, state) {
-            final String circleId = state.pathParameters['circleId']!;
-            return BlocProvider(
-              create: (context) =>
-                  MedicalFileCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
-              child: SimplifiedMedicalFileScreen(circleId: circleId),
-            );
-          }),
-        ),
-        // The detailed mode's edit page inside this shell, at this mode's
-        // size: «حفظ» and «رجوع» return to the simplified medical file.
-        GoRoute(
-          path: Routes.simplifiedMedicalFileEditPath,
-          pageBuilder: _iosPage(
-            (context, state) => _medicalFileEdit(
-              state,
-              SimplifiedDetailScale(
-                child: MedicalFileEditScreen(
-                  savedTo: null,
-                  closeTo: Routes.simplifiedMedicalFile(
-                    state.pathParameters['circleId']!,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// The medical file's edit page [screen] with its cubit. It starts from
-  /// the file the medical file page passes (no second read); opened from its
-  /// address alone, it reads the file.
-  static Widget _medicalFileEdit(GoRouterState state, Widget screen) {
-    return BlocProvider(
-      create: (context) {
-        final MedicalFileEditCubit cubit = MedicalFileEditCubit(
-          GetIt.I<CirclesUseCase>(),
-          state.pathParameters['circleId']!,
-        );
-        final Object? file = state.extra;
-        if (file is MedicalFile) {
-          cubit.start(file);
-        } else {
-          cubit.load();
-        }
-        return cubit;
-      },
-      child: screen,
-    );
-  }
-
-  /// The emergency card of [circleId], with the medicines it lists;
-  /// [closeTo] is where «رجوع» goes when there is no page under it.
-  static Widget _emergencyCard(String circleId, String closeTo) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) =>
-              EmergencyCardCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
-        ),
-        BlocProvider(
-          create: (context) =>
-              MedicationsCubit(GetIt.I<MedicationsUseCase>())..load(circleId),
-        ),
-      ],
-      child: EmergencyCardScreen(closeTo: closeTo),
-    );
-  }
-
-  /// A simplified screen whose subject travels as the `extra` of the
-  /// navigation; without it (a restored or typed address) the home is the
-  /// way in.
-  static String? _requireExtra<T>(BuildContext context, GoRouterState state) {
-    return state.extra is T ? null : Routes.simplifiedMode;
-  }
-
-  static ShellRoute _createCircleShell({
-    required CircleFlow flow,
-    required List<RouteBase> routes,
-  }) {
-    return ShellRoute(
-      pageBuilder: _iosShellPage(
-        (context, state, child) => BlocProvider(
-          create: (context) {
-            final Object? extra = state.extra;
-            final CreateCircleCubit cubit = CreateCircleCubit(
-              GetIt.I<CirclesUseCase>(),
-              GetIt.I<HomeUseCase>(),
-              flow: flow,
-              request: extra is ReceivedCircleRequest ? extra : null,
-            );
-            // The name field reads the account, and the account says at once
-            // whether it already has a circle of its own care. The names of a
-            // patient without the app are typed, so nothing is loaded for them.
-            if (flow != CircleFlow.patient) cubit.loadAccount();
-            return cubit;
-          },
-          child: BlocListener<CreateCircleCubit, CreateCircleState>(
-            listenWhen: (before, after) =>
-                after.sessionEnded && !before.sessionEnded,
-            listener: (context, state) => context.go(Routes.auth),
-            child: child,
-          ),
-        ),
-      ),
-      routes: routes,
-    );
-  }
-
-  static StatefulShellBranch _branch(
-    String path, {
-    GoRouterWidgetBuilder? builder,
-  }) {
-    final GoRouterWidgetBuilder page =
-        builder ?? (context, state) => const SizedBox.expand();
-    return StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
-          path: path,
-          // A tab page is the first page of its own navigator and has no
-          // background of its own: the shell's canvas shows through it. An
-          // iOS page (CupertinoPage) draws a light shadow (9% black) under
-          // itself, which over a see-through page darkened the whole tab and
-          // left a lighter band under the top bar. A tab page never slides
-          // in (tabs fade, FadingBranches), so it is a plain page.
-          pageBuilder: (context, state) => NoTransitionPage<void>(
-            key: state.pageKey,
-            name: state.name ?? state.path,
-            restorationId: state.pageKey.value,
-            child: page(context, state),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// A page of the patient's side of a request needs the request, which
-  /// travels as the `extra` of the navigation. Without it (an address typed in
-  /// the browser, a restored page) the notifications page is the way in.
-  static String? _requireRequest(BuildContext context, GoRouterState state) {
-    return state.extra is ReceivedCircleRequest ? null : Routes.notifications;
-  }
 }
-
-// Detail pages change without a horizontal push animation.
-GoRouterPageBuilder _iosPage(GoRouterWidgetBuilder builder) =>
-    (BuildContext context, GoRouterState state) => NoTransitionPage<void>(
-      key: state.pageKey,
-      name: state.name ?? state.path,
-      restorationId: state.pageKey.value,
-      child: builder(context, state),
-    );
-
-// The notifications (the bell) and the account open as an iOS full-screen
-// modal: the page rises from the bottom and goes back down when closed, and
-// the page under it stays still. A modal has no back arrow and no edge
-// swipe; its top has the close button (✕) instead, on the leading side, as
-// Apple's guidelines ask for a modal view (Human Interface Guidelines,
-// Modality and Sheets).
-GoRouterPageBuilder _iosModalPage(GoRouterWidgetBuilder builder) =>
-    (BuildContext context, GoRouterState state) => CupertinoPage<void>(
-      key: state.pageKey,
-      name: state.name ?? state.path,
-      restorationId: state.pageKey.value,
-      fullscreenDialog: true,
-      child: builder(context, state),
-    );
-
-ShellRoutePageBuilder _iosShellPage(ShellRouteBuilder builder) =>
-    (BuildContext context, GoRouterState state, Widget child) =>
-        CupertinoPage<void>(
-          key: state.pageKey,
-          restorationId: state.pageKey.value,
-          child: builder(context, state, child),
-        );
-
-StatefulShellRoutePageBuilder _iosShellRootPage(
-  StatefulShellRouteBuilder builder,
-) =>
-    (
-      BuildContext context,
-      GoRouterState state,
-      StatefulNavigationShell navigationShell,
-    ) => CupertinoPage<void>(
-      key: state.pageKey,
-      restorationId: state.pageKey.value,
-      child: builder(context, state, navigationShell),
-    );

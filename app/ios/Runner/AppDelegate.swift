@@ -6,6 +6,11 @@ import UserNotifications
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var accessibilityChannel: FlutterMethodChannel?
   private var pushChannel: FlutterMethodChannel?
+  private var pushTapChannel: FlutterMethodChannel?
+  /// The kind of a push tapped before Dart listened (the push that launched
+  /// the app); Dart takes it once with "launchTap".
+  private var launchPushKind: String?
+  private var dartTakesPushTaps = false
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -60,6 +65,49 @@ import UserNotifications
         result(FlutterMethodNotImplemented)
       }
     }
+
+    // Taps on the server's pushes. flutter_local_notifications passes on
+    // only its own notifications, so userNotificationCenter(didReceive:)
+    // below sends a push's `kind` here, to the same Dart taps stream as the
+    // reminders (PhoneNotifications.taps).
+    let pushTaps = FlutterMethodChannel(
+      name: "tafaqod/push_taps",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    pushTapChannel = pushTaps
+    pushTaps.setMethodCallHandler { [weak self] call, result in
+      if call.method == "launchTap" {
+        self?.dartTakesPushTaps = true
+        result(self?.launchPushKind)
+        self?.launchPushKind = nil
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  /// A tap on a notification. A server push goes to Dart as its `kind`
+  /// (kept for "launchTap" until Dart listens); a reminder goes to the
+  /// plugins, as before.
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    let request = response.notification.request
+    guard request.trigger is UNPushNotificationTrigger,
+      let kind = request.content.userInfo["kind"] as? String
+    else {
+      super.userNotificationCenter(
+        center, didReceive: response, withCompletionHandler: completionHandler)
+      return
+    }
+    if dartTakesPushTaps {
+      pushTapChannel?.invokeMethod("tap", arguments: kind)
+    } else {
+      launchPushKind = kind
+    }
+    completionHandler()
   }
 
   override func application(

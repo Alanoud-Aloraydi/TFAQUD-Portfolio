@@ -3,16 +3,22 @@ import 'dart:convert';
 
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/services/reminder_circle.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart'
+    show TaskSnooze;
+import 'package:app/core/services/reminders/reminder_payloads.dart'
+    show SnoozedTask;
+import 'package:app/core/utils/coalescing_runner.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart'
-    show ReminderCircle;
-import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:device_calendar_plus/device_calendar_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// One kind of event this feature can mirror, switched on per circle.
@@ -105,6 +111,7 @@ class _DesiredEvent {
     required this.start,
     required this.end,
     required this.reminders,
+    required this.zone,
     this.note,
     this.place,
     this.recurrence,
@@ -114,6 +121,11 @@ class _DesiredEvent {
   final DateTime start;
   final DateTime end;
   final List<Duration> reminders;
+
+  /// The patient's IANA zone: the calendar keeps the event, and repeats
+  /// it, at the patient's wall clock there, across DST, wherever this
+  /// phone is.
+  final String zone;
   final String? note;
   final String? place;
   final RecurrenceRule? recurrence;
@@ -171,27 +183,45 @@ class _SavedEvent {
 /// discontinued plan is picked up automatically, never left stale. An event
 /// the calendar would not delete yet (no full access, say) stays in the map
 /// and is deleted at a later refresh.
+///
+/// A dose or measurement put off with «ذكّرني لاحقًا» ([snoozes]) gets one
+/// more event, once, at its new time, in a category that is turned on; it
+/// goes when the task is recorded or its time has come.
 class CalendarSync {
   CalendarSync(
     this._medications,
     this._measurements,
     this._appointments, {
+    ValueListenable<Map<String, TaskSnooze>>? snoozes,
     DeviceCalendar? calendar,
     CalendarEventTexts? texts,
-  }) : _calendar = calendar ?? DeviceCalendar.instance,
-       _texts = texts ?? calendarEventTexts {
+    DateTime Function()? clock,
+  }) : _snoozes = snoozes,
+       _calendar = calendar ?? DeviceCalendar.instance,
+       _texts = texts ?? calendarEventTexts,
+       _now = clock ?? DateTime.now {
     // Any accepted plan or appointment change reconciles the calendar right
     // away, not just on the next app resume.
     _medications.changes.listen((_) => unawaited(refresh()));
     _measurements.changes.listen((_) => unawaited(refresh()));
     _appointments.changes.listen((_) => unawaited(refresh()));
+    // As does a task put off, or one whose new time came.
+    snoozes?.addListener(() => unawaited(refresh()));
   }
 
   final MedicationsUseCase _medications;
   final MeasurementRepository _measurements;
   final AppointmentRepository _appointments;
+  final ValueListenable<Map<String, TaskSnooze>>? _snoozes;
   final DeviceCalendar _calendar;
   final CalendarEventTexts _texts;
+
+  /// The instant source; the system clock unless a test injects one.
+  final DateTime Function() _now;
+
+  /// What the rest of a put-off task's key starts with: its event is once,
+  /// not repeating.
+  static const String _snoozePart = 'snooze';
 
   static const String _selectionsKey = 'calendar_sync_selections';
   static const String _eventsKey = 'calendar_sync_events';
@@ -205,8 +235,7 @@ class CalendarSync {
   /// Whether [sync] gave the circles yet. Before it, a refresh would find no
   /// circle and delete every event, to make them again a moment later.
   bool _synced = false;
-  Future<void>? _running;
-  bool _again = false;
+  late final CoalescingRunner _runner = CoalescingRunner(_run);
   int _session = 0;
 
   /// Whether full calendar access was asked for in this run of the app.
@@ -259,22 +288,7 @@ class CalendarSync {
 
   /// Recomputes the desired events and reconciles the calendar to match.
   /// One reading runs at a time; a call during it makes one more right after.
-  Future<void> refresh() {
-    final Future<void>? running = _running;
-    if (running != null) {
-      _again = true;
-      return running;
-    }
-    final Future<void> run = _run().whenComplete(() {
-      _running = null;
-      if (_again) {
-        _again = false;
-        unawaited(refresh());
-      }
-    });
-    _running = run;
-    return run;
-  }
+  Future<void> refresh() => _runner.run();
 
   /// Removes every event this feature made: the person signed out. Also
   /// clears every selection — they are stored on the device, not the
@@ -285,7 +299,7 @@ class CalendarSync {
     _session++;
     _circles = const <ReminderCircle>[];
     _synced = false;
-    _again = false;
+    _runner.dropPending();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_selectionsKey);
     await _removeAll(prefs);
@@ -321,8 +335,59 @@ class CalendarSync {
         if (!read) unread.add(selection);
       }
     }
+    _collectSnoozes(circles, selections, desired);
     if (session != _session) return;
     await _reconcile(prefs, desired, unread, session);
+  }
+
+  /// One event at the new time of each dose or measurement put off, in a
+  /// circle and category that are turned on, in the words of that task's
+  /// own events.
+  void _collectSnoozes(
+    List<ReminderCircle> circles,
+    Set<String> selections,
+    Map<String, _DesiredEvent> desired,
+  ) {
+    final Map<String, TaskSnooze> snoozes =
+        _snoozes?.value ?? const <String, TaskSnooze>{};
+    for (final MapEntry<String, TaskSnooze> entry in snoozes.entries) {
+      final TaskSnooze snooze = entry.value;
+      final ReminderCircle? circle = circles
+          .where((ReminderCircle item) => item.id == snooze.circleId)
+          .firstOrNull;
+      final CalendarSyncCategory category = switch (snooze.task) {
+        SnoozedTask.dose => CalendarSyncCategory.doses,
+        SnoozedTask.measurement => CalendarSyncCategory.measurements,
+      };
+      if (circle == null ||
+          !selections.contains(_selectionKey(circle.id, category))) {
+        continue;
+      }
+      final String? title = switch (snooze.task) {
+        SnoozedTask.dose => _texts.dose(circle.id, snooze.subject),
+        SnoozedTask.measurement => switch (MeasurementKind.values
+            .where((MeasurementKind kind) => kind.name == snooze.subject)
+            .firstOrNull) {
+          final MeasurementKind kind => _texts.measurement(circle.id, kind),
+          null => null,
+        },
+      };
+      if (title == null) continue;
+      final DateTime start = snooze.at.toLocal();
+      // The moment is part of the key: put off again, the event moves.
+      desired[_eventKey(
+        circle,
+        category,
+        '$_snoozePart:${snooze.at.millisecondsSinceEpoch}:${entry.key}',
+      )] = _DesiredEvent(
+        title: title,
+        note: snooze.task == SnoozedTask.dose ? _texts.doseNote() : null,
+        zone: circle.timeZone,
+        start: start,
+        end: start.add(const Duration(minutes: 15)),
+        reminders: const <Duration>[Duration.zero],
+      );
+    }
   }
 
   Future<bool> _collectDoses(
@@ -332,13 +397,11 @@ class CalendarSync {
     final result = await _medications.getPlans(circle.id);
     final plans = result.tryGetSuccess();
     if (plans == null) return false;
-    final DateTime now = DateTime.now();
+    final PatientClock clock = circle.clock;
     for (final plan in plans) {
-      if (plan.isPreviousOn(now)) continue;
+      if (plan.isPreviousOn(clock.today())) continue;
       final version = plan.version;
-      final DateTime from = version.effectiveFromOn.isAfter(now)
-          ? version.effectiveFromOn
-          : now;
+      final DateTime from = _from(clock, version.effectiveFromOn, _now());
       for (final MedicationSchedule schedule in version.schedules) {
         // The time is part of the key: a dose moved to another time gets a
         // fresh event.
@@ -356,7 +419,7 @@ class CalendarSync {
           case ScheduleRepeat.monthly:
             final List<int> days = schedule.monthDays.toList()..sort();
             if (days.isEmpty) continue;
-            start = _nextMonthDay(from, schedule.time, days);
+            start = _nextMonthDay(clock, from, schedule.time, days);
             recurrence = MonthlyRecurrence(daysOfMonth: days);
           // A dose every few days as one event repeating every that many
           // days («FREQ=DAILY;INTERVAL=3»), from its first day on or after
@@ -365,6 +428,7 @@ class CalendarSync {
             final int? every = schedule.intervalDays;
             if (every == null || every < 1) continue;
             start = _nextIntervalDay(
+              clock,
               from,
               schedule.time,
               version.startsOn,
@@ -372,13 +436,19 @@ class CalendarSync {
             );
             recurrence = DailyRecurrence(interval: every);
           case ScheduleRepeat.weekly:
-            start = _nextOccurrence(from, schedule.time, schedule.weekdays);
+            start = _nextOccurrence(
+              clock,
+              from,
+              schedule.time,
+              schedule.weekdays,
+            );
             recurrence = WeeklyRecurrence(
               daysOfWeek: schedule.weekdays.map(_dayOfWeek).toList(),
             );
         }
         desired[key] = _DesiredEvent(
           title: title,
+          zone: circle.timeZone,
           note: _texts.doseNote(),
           start: start,
           end: start.add(const Duration(minutes: 15)),
@@ -400,17 +470,16 @@ class CalendarSync {
     } on Exception {
       return false;
     }
-    final DateTime now = DateTime.now();
+    final PatientClock clock = circle.clock;
     for (final plan in plans) {
       if (plan.stoppedAt != null) continue;
       final version = plan.version;
-      final DateTime from = version.effectiveFromOn.isAfter(now)
-          ? version.effectiveFromOn
-          : now;
+      final DateTime from = _from(clock, version.effectiveFromOn, _now());
       // One event per reading time.
       final List<MeasurementTime> readings = version.readingTimes;
       for (int index = 0; index < readings.length; index++) {
         final DateTime start = _nextOccurrence(
+          clock,
           from,
           readings[index].time,
           version.weekdays,
@@ -421,6 +490,7 @@ class CalendarSync {
           '${version.id}:$index:${readings[index].time}',
         )] = _DesiredEvent(
           title: _texts.measurement(circle.id, plan.kind),
+          zone: circle.timeZone,
           start: start,
           end: start.add(const Duration(minutes: 15)),
           reminders: const <Duration>[Duration.zero],
@@ -443,15 +513,17 @@ class CalendarSync {
     } on Exception {
       return false;
     }
-    final DateTime now = DateTime.now();
+    final DateTime now = _now();
     for (final appointment in appointments) {
       if (appointment.status != AppointmentStatus.scheduled) continue;
       // The same people as its reminders: the patient and those going.
       if (!circle.remindsOfAppointment(appointment.companionIds)) continue;
-      // Built from the wall-clock fields directly (not [scheduledAt], which
-      // is tagged UTC for ordering elsewhere) so the device's own calendar
-      // shows it at the intended local time.
-      final DateTime at = _wallClock(appointment.scheduledOn, appointment.time);
+      // The real moment of the patient's wall-clock time (not
+      // [CareAppointment.scheduledAt], a wall time for ordering), so a
+      // phone in any zone shows it at the right time.
+      final DateTime at = circle.clock
+          .momentOf(appointment.scheduledOn, appointment.time)
+          .toLocal();
       if (at.isBefore(now)) continue;
       // The date and time are part of the key: an edited appointment gets a
       // new key, so the stale event is deleted and a fresh one created,
@@ -465,6 +537,7 @@ class CalendarSync {
       final String place = appointment.place?.trim() ?? '';
       desired[key] = _DesiredEvent(
         title: _texts.appointment(circle.id, appointment),
+        zone: circle.timeZone,
         note: _texts.appointmentNote(appointment),
         place: place.isEmpty ? null : place,
         start: at,
@@ -541,11 +614,14 @@ class CalendarSync {
         : null;
   }
 
-  /// Whether the event of [key] repeats: everything but an appointment.
+  /// Whether the event of [key] repeats: everything but an appointment and
+  /// a task put off.
   static bool _repeats(String key) {
     final List<String> parts = key.split(':');
     return parts.first == _keyVersion
-        ? parts.length > 2 && parts[2] != CalendarSyncCategory.appointments.name
+        ? parts.length > 3 &&
+              parts[2] != CalendarSyncCategory.appointments.name &&
+              parts[3] != _snoozePart
         : !key.startsWith('appointment:');
   }
 
@@ -609,6 +685,7 @@ class CalendarSync {
         endDate: event.end,
         description: event.note,
         location: event.place,
+        timeZone: event.zone,
         availability: EventAvailability.free,
         recurrenceRule: event.recurrence,
         reminders: event.reminders,
@@ -668,79 +745,80 @@ DayOfWeek _dayOfWeek(int weekday) => switch (weekday) {
   _ => DayOfWeek.sunday,
 };
 
-/// The next moment on/after [from] that is [time] ("HH:mm") on one of the
-/// month [days] (1 .. 28) — only to seed a recurring event; the monthly
-/// rule itself repeats it.
-DateTime _nextMonthDay(DateTime from, String time, List<int> days) {
-  final List<String> parts = time.split(':');
-  final int hour = int.parse(parts[0]);
-  final int minute = int.parse(parts[1]);
-  for (int i = 0; i < 62; i++) {
-    final DateTime day = DateTime(
-      from.year,
-      from.month,
-      from.day + i,
-      hour,
-      minute,
-    );
-    if (days.contains(day.day) && !day.isBefore(from)) return day;
-  }
-  return DateTime(from.year, from.month, from.day, hour, minute);
+/// Where a plan's events start: now, or the patient's first day of the
+/// plan ([startsOn]) when it is later. A moment; [now] is the real instant.
+DateTime _from(PatientClock clock, DateTime startsOn, DateTime now) {
+  final DateTime first = clock.momentOf(startsOn, '00:00');
+  return first.isAfter(now) ? first : now;
 }
 
-/// The first moment on/after [from] that is [time] ("HH:mm") on a day
-/// [every] days apart from [startsOn] — only to seed a recurring event.
+/// The first moment on/after the moment [from] that is the patient's
+/// [time] («HH:mm», on [clock]) on a day of the patient's calendar where
+/// [applies] — only to seed a recurring event; its rule repeats it.
+/// Days are counted on the patient's calendar, so neither the phone's zone
+/// nor a DST change moves one. [limit] days are looked at.
+DateTime _nextOn(
+  PatientClock clock,
+  DateTime from,
+  String time,
+  int limit,
+  bool Function(DateTime day) applies,
+) {
+  final DateTime first = clock.today(from);
+  for (int i = 0; i < limit; i++) {
+    final DateTime day = DateTime(first.year, first.month, first.day + i);
+    final DateTime at = clock.momentOf(day, time);
+    if (applies(day) && !at.isBefore(from)) return at.toLocal();
+  }
+  return clock.momentOf(first, time).toLocal();
+}
+
+/// The next moment on/after [from] that is [time] on one of the month
+/// [days] (1 .. 28) of the patient's calendar.
+DateTime _nextMonthDay(
+  PatientClock clock,
+  DateTime from,
+  String time,
+  List<int> days,
+) => _nextOn(clock, from, time, 62, (DateTime day) => days.contains(day.day));
+
+/// The first moment on/after [from] that is [time] on a day [every] days
+/// apart from [startsOn], on the patient's calendar.
 DateTime _nextIntervalDay(
+  PatientClock clock,
   DateTime from,
   String time,
   DateTime startsOn,
   int every,
 ) {
-  final DateTime first = _wallClock(startsOn, time);
-  if (!first.isBefore(from)) return first;
-  // Whole days between the dates, counted on the calendar (UTC), so a
-  // clock change in between does not shift the count.
-  final int since = DateTime.utc(from.year, from.month, from.day)
-      .difference(DateTime.utc(startsOn.year, startsOn.month, startsOn.day))
-      .inDays;
-  final int ahead = (every - since % every) % every;
-  final DateTime day = _wallClock(
-    DateTime(from.year, from.month, from.day + ahead),
-    time,
+  // Whole days counted on the calendar (UTC), so a clock change in between
+  // does not shift the count.
+  final DateTime start = DateTime.utc(
+    startsOn.year,
+    startsOn.month,
+    startsOn.day,
   );
-  return day.isBefore(from)
-      ? _wallClock(DateTime(day.year, day.month, day.day + every), time)
-      : day;
+  return _nextOn(clock, from, time, every + 1, (DateTime day) {
+    final int since = DateTime.utc(
+      day.year,
+      day.month,
+      day.day,
+    ).difference(start).inDays;
+    return since >= 0 && since % every == 0;
+  });
 }
 
-/// [date] and [time] ("HH:mm") as a plain local [DateTime], not tagged UTC.
-DateTime _wallClock(DateTime date, String time) {
-  final List<String> parts = time.split(':');
-  return DateTime(
-    date.year,
-    date.month,
-    date.day,
-    int.parse(parts[0]),
-    int.parse(parts[1]),
-  );
-}
-
-/// The next moment on/after [from] that is [time] ("HH:mm") on one of
-/// [weekdays] (ISO: 1 Monday .. 7 Sunday) — only to seed a recurring event;
-/// the weekly rule itself repeats it.
-DateTime _nextOccurrence(DateTime from, String time, List<int> weekdays) {
-  final List<String> parts = time.split(':');
-  final int hour = int.parse(parts[0]);
-  final int minute = int.parse(parts[1]);
-  for (int i = 0; i < 7; i++) {
-    final DateTime day = DateTime(
-      from.year,
-      from.month,
-      from.day + i,
-      hour,
-      minute,
-    );
-    if (weekdays.contains(day.weekday) && !day.isBefore(from)) return day;
-  }
-  return DateTime(from.year, from.month, from.day, hour, minute);
-}
+/// The next moment on/after [from] that is [time] on one of [weekdays]
+/// (ISO: 1 Monday .. 7 Sunday) of the patient's calendar.
+DateTime _nextOccurrence(
+  PatientClock clock,
+  DateTime from,
+  String time,
+  List<int> weekdays,
+) => _nextOn(
+  clock,
+  from,
+  time,
+  7,
+  (DateTime day) => weekdays.contains(day.weekday),
+);

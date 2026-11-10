@@ -30,6 +30,9 @@ class ApiEndpoints {
   static const String session = '/auth/session';
   static const String requestCode = '/auth/request-code';
   static const String verifyCode = '/auth/verify-code';
+
+  /// PUT: the signed-in account's names, and the birth date and city when
+  /// sent (`ProfileRemoteDataSource`; `save_profile` on the server).
   static const String profile = '/accounts/me/profile';
   static const String account = '/accounts/me';
 

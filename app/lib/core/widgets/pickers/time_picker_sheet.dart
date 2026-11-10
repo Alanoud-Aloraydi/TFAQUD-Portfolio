@@ -5,6 +5,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+/// Asks for a time of day in a bottom sheet of 12-hour wheels; null when the
+/// sheet is dismissed.
 Future<TimeOfDay?> showTafaqodTimeSheet(
   BuildContext context, {
   required String title,
@@ -76,8 +78,9 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
   }
 }
 
-/// Renders the wheel element of time picker sheet.
-class _Wheel extends StatelessWidget {
+/// One wheel of the time picker sheet. It owns its scroll controller so a
+/// rebuild of the sheet never resets the wheel, and releases it on dispose.
+class _Wheel extends StatefulWidget {
   const _Wheel({
     required this.count,
     required this.initial,
@@ -93,15 +96,29 @@ class _Wheel extends StatelessWidget {
   final WheelPosition position;
 
   @override
+  State<_Wheel> createState() => _WheelState();
+}
+
+class _WheelState extends State<_Wheel> {
+  late final FixedExtentScrollController _controller =
+      FixedExtentScrollController(initialItem: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Expanded(
       child: CupertinoPicker.builder(
-        scrollController: FixedExtentScrollController(initialItem: initial),
+        scrollController: _controller,
         itemExtent: PickerWheelStyle.itemExtent,
-        childCount: count,
-        selectionOverlay: PickerWheelStyle.overlay(position),
-        onSelectedItemChanged: onSelected,
-        itemBuilder: (_, index) => PickerWheelStyle.item(label(index)),
+        childCount: widget.count,
+        selectionOverlay: PickerWheelStyle.overlay(widget.position),
+        onSelectedItemChanged: widget.onSelected,
+        itemBuilder: (_, index) => PickerWheelStyle.item(widget.label(index)),
       ),
     );
   }

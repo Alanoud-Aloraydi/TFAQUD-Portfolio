@@ -13,6 +13,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// The avatars the server accepts as a person's picture (`assets/avatars`).
 const avatarCodes = <String>[
   'w1_1',
   'w1_3',
@@ -28,7 +29,8 @@ const avatarCodes = <String>[
   'w7_3',
 ];
 
-/// Displays the person photo UI.
+/// A person's round photo: the uploaded photo, else their chosen avatar,
+/// else the first letter of [name].
 class PersonPhoto extends StatelessWidget {
   const PersonPhoto({
     super.key,
@@ -82,6 +84,8 @@ class PersonPhoto extends StatelessWidget {
   }
 }
 
+/// Opens the sheet where a person's photo or avatar is changed; saves through
+/// [PrivatePhotoRepository] to [photoPath] / [avatarPath] and calls [onSaved].
 Future<void> showPersonPhotoSheet(
   BuildContext context, {
   required String title,
@@ -105,7 +109,8 @@ Future<void> showPersonPhotoSheet(
   ),
 );
 
-/// Renders the person photo editor element of person photo.
+/// The sheet body: preview, avatar choices and save. Nothing is sent until
+/// the save button; a failed save keeps the sheet open with a message.
 class _PersonPhotoEditor extends StatefulWidget {
   const _PersonPhotoEditor({
     required this.title,

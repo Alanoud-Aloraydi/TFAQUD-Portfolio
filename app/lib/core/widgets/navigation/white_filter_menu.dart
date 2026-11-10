@@ -95,25 +95,30 @@ class _WhiteFilterMenuState<T extends Object>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
       ),
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final option in widget.options.entries)
-              ListTile(
-                title: Text(option.value),
-                trailing: option.key == widget.selected
-                    ? const Icon(CupertinoIcons.check_mark)
-                    : null,
-                onTap: () => Navigator.of(sheetContext).pop(option.key),
-              ),
-          ],
+      // The SafeArea keeps the last option above the home indicator and
+      // Android's navigation bar (`useSafeArea` leaves the bottom open), and
+      // the scroll keeps every option reachable at large text sizes.
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final option in widget.options.entries)
+                ListTile(
+                  title: Text(option.value),
+                  trailing: option.key == widget.selected
+                      ? const Icon(CupertinoIcons.check_mark)
+                      : null,
+                  onTap: () => Navigator.of(sheetContext).pop(option.key),
+                ),
+            ],
+          ),
         ),
       ),
     );

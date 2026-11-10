@@ -191,30 +191,9 @@ abstract class AppIcons {
     fontPackage: _package,
   );
 
-  /// An appointment. Phosphor `calendarCheck`.
-  static const IconData calendarCheck = IconData(
-    0xe712,
-    fontFamily: _family,
-    fontPackage: _package,
-  );
-
-  /// A missed dose. Phosphor `calendarX`.
-  static const IconData calendarX = IconData(
-    0xe10c,
-    fontFamily: _family,
-    fontPackage: _package,
-  );
-
   /// A time. Phosphor `clock`.
   static const IconData clock = IconData(
     0xe19a,
-    fontFamily: _family,
-    fontPackage: _package,
-  );
-
-  /// A dose that is due. Phosphor `alarm`.
-  static const IconData alarm = IconData(
-    0xe006,
     fontFamily: _family,
     fontPackage: _package,
   );
@@ -362,13 +341,6 @@ abstract class AppIcons {
   /// Tab «اليوم». Phosphor `houseSimple`.
   static const IconData house = IconData(
     0xe2c6,
-    fontFamily: _family,
-    fontPackage: _package,
-  );
-
-  /// Tab «السجل». Phosphor `notebook`.
-  static const IconData notebook = IconData(
-    0xe34e,
     fontFamily: _family,
     fontPackage: _package,
   );

@@ -1,5 +1,6 @@
+import 'package:app/core/utils/birth_date_rules.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
-import 'package:app/features/circles/domain/birth_date_rules.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -18,8 +19,13 @@ Future<DateTime?> showBirthDateSheet(
     useSafeArea: true,
     useRootNavigator: true,
     isScrollControlled: true,
-    builder: (BuildContext context) =>
-        BirthDateSheet(selected: selected, today: today ?? DateTime.now()),
+    builder: (BuildContext context) => BirthDateSheet(
+      selected: selected,
+      // The newest day anywhere on Earth: a birth date may be today
+      // where the person lives, whatever this phone's zone. The server
+      // checks a patient's again in the patient's own zone.
+      today: today ?? latestToday(),
+    ),
   );
 }
 

@@ -7,6 +7,21 @@ import 'package:flutter/services.dart';
 abstract class AppNavigationThemes {
   AppNavigationThemes._();
 
+  /// The phone's status bar over the app's light pages, on every page (the
+  /// root of `MainApp`, the app bars, the intro): transparent, with dark
+  /// time, signal and battery (`statusBarIconBrightness` on Android,
+  /// `statusBarBrightness` on iOS).
+  ///
+  /// It leaves the Android navigation bar to the native theme (`NormalTheme`
+  /// in `values-v27/styles.xml`): [SystemUiOverlayStyle.dark] would paint it
+  /// black on every page with an app bar, and dark buttons on a light bar
+  /// cannot be asked for below Android 8.1, where they would turn invisible.
+  static const SystemUiOverlayStyle systemBars = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+  );
+
   /// Bars carry no background or divider: glass controls float on canvas.
   static final AppBarThemeData appBar = AppBarThemeData(
     backgroundColor: AppSemanticColors.background,
@@ -15,9 +30,7 @@ abstract class AppNavigationThemes {
     elevation: 0,
     scrolledUnderElevation: 0,
     centerTitle: false,
-    // Dark status bar text (time, signal, battery) on the light canvas. A
-    // transparent bar would otherwise get white text that cannot be seen.
-    systemOverlayStyle: SystemUiOverlayStyle.dark,
+    systemOverlayStyle: systemBars,
     titleTextStyle: TextStyle(
       fontFamily: AppTextTheme.fontFamily,
       color: AppSemanticColors.textPrimary,

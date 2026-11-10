@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:equatable/equatable.dart';
 
 /// A circle whose schedule reminds the person on this phone: its id, the
@@ -14,6 +15,7 @@ class ReminderCircle extends Equatable {
     required this.name,
     required this.viewerId,
     required this.viewerIsPatient,
+    required this.timeZone,
   });
 
   final String id;
@@ -26,6 +28,13 @@ class ReminderCircle extends Equatable {
   /// Whether the person on this phone is the circle's patient.
   final bool viewerIsPatient;
 
+  /// The IANA zone where the circle's patient lives: its doses, readings
+  /// and visits happen at the patient's wall clock there ([clock]).
+  final String timeZone;
+
+  /// The patient's clock, for the moments of the reminders.
+  PatientClock get clock => PatientClock(timeZone);
+
   /// Whether an appointment going with [companionIds] (accounts) reminds
   /// the person on this phone: the patient always, anyone else only when
   /// they go with them.
@@ -33,5 +42,5 @@ class ReminderCircle extends Equatable {
       viewerIsPatient || (viewerId != null && companionIds.contains(viewerId));
 
   @override
-  List<Object?> get props => [id, name, viewerId, viewerIsPatient];
+  List<Object?> get props => [id, name, viewerId, viewerIsPatient, timeZone];
 }

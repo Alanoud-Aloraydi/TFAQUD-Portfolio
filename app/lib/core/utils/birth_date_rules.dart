@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
-/// What the birth date sheet allows: from 1900 up to today, never a day that
-/// has not come yet. Pure functions, so they can be tested without a screen.
+/// What the birth date sheet allows: from 1900 up to the `today` it is
+/// given (the newest day on Earth, `latestToday`, the bound the server
+/// uses too), never a day that has not come yet. Pure functions, so they
+/// can be tested without a screen.
 abstract class BirthDateRules {
   BirthDateRules._();
 
@@ -35,6 +37,15 @@ abstract class BirthDateRules {
     final int m = math.min(math.max(month, 1), lastMonth(y, today));
     final int d = math.min(math.max(day, 1), lastDay(y, m, today));
     return DateTime(y, m, d);
+  }
+
+  /// The full years lived by [birth] on [today]: the year difference, one
+  /// less until the birthday has come.
+  static int ageOn(DateTime birth, DateTime today) {
+    final bool beforeBirthday =
+        today.month < birth.month ||
+        (today.month == birth.month && today.day < birth.day);
+    return today.year - birth.year - (beforeBirthday ? 1 : 0);
   }
 
   /// The years the sheet lists, the latest first.

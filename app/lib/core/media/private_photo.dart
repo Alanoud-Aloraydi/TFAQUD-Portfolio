@@ -17,7 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Defines the supported photo source values.
+/// Where a new photo comes from, or [remove] to delete the current one.
 enum PhotoSource { camera, library, remove }
 
 /// Pencil badge pinned to a photo's bottom corner, marking it editable.
@@ -48,7 +48,11 @@ class PhotoEditBadge extends StatelessWidget {
   }
 }
 
-/// Displays the private photo UI.
+/// A photo behind the signed-in session, loaded through
+/// [PrivatePhotoRepository] (bearer token, in-memory cache cleared on
+/// sign-out) and never written to disk. Shows [fallback] while it loads, when
+/// there is none, or when the read fails; a tap opens it full screen when
+/// [openViewer] is true.
 class PrivatePhoto extends StatelessWidget {
   const PrivatePhoto({
     super.key,
@@ -102,6 +106,8 @@ class PrivatePhoto extends StatelessWidget {
   }
 }
 
+/// Asks where a photo comes from: camera, library, and (when [canRemove])
+/// remove. Returns null when closed.
 Future<PhotoSource?> showPhotoSourceSheet(
   BuildContext context, {
   required String title,
@@ -132,6 +138,9 @@ Future<PhotoSource?> showPhotoSourceSheet(
   ),
 );
 
+/// Picks a photo from [source] and opens the crop page; returns the cropped
+/// PNG bytes, or null when cancelled. A denied camera or library shows a
+/// message instead of throwing.
 Future<Uint8List?> pickAndCropPhoto(
   BuildContext context,
   PhotoSource source, {
@@ -169,7 +178,8 @@ Future<Uint8List?> pickAndCropPhoto(
   );
 }
 
-/// Displays the photo crop page UI.
+/// Full-screen page where the user moves and zooms [bytes] inside a square
+/// (or [circle]) frame; pops with the cropped PNG.
 class PhotoCropPage extends StatefulWidget {
   const PhotoCropPage({super.key, required this.bytes, this.circle = false});
 
@@ -375,6 +385,7 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
   }
 }
 
+/// Opens [bytes] full screen, zoomable.
 void openPhotoViewer(BuildContext context, Uint8List bytes) {
   Navigator.of(context).push<void>(
     CupertinoPageRoute(

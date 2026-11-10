@@ -1,14 +1,14 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/picker_field.dart';
+import 'package:app/core/widgets/forms/picker_field.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
+import 'package:app/core/widgets/pickers/city_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The birth date and the city, each a row that opens its sheet. Used by
-/// onboarding (the person's own) and by the circle pages that still ask for
-/// them.
+/// The person's own birth date and city, each a row that opens its sheet.
+/// Used by onboarding and by the circle pages of the person's own care when
+/// the account has not saved them.
 class BirthDateCityFields extends StatelessWidget {
   const BirthDateCityFields({
     super.key,
@@ -17,7 +17,6 @@ class BirthDateCityFields extends StatelessWidget {
     required this.onBirthDate,
     required this.onCity,
     this.showErrors = false,
-    this.citySheetTitleKey = 'circles.city_sheet_title',
   });
 
   final DateTime? birthDate;
@@ -28,9 +27,6 @@ class BirthDateCityFields extends StatelessWidget {
   /// After a tap on the main button with a field still empty.
   final bool showErrors;
 
-  /// The title of the city sheet, such as the patient's city.
-  final String citySheetTitleKey;
-
   Future<void> _pickBirthDate(BuildContext context) async {
     final DateTime? picked = await showBirthDateSheet(
       context,
@@ -40,17 +36,13 @@ class BirthDateCityFields extends StatelessWidget {
   }
 
   Future<void> _pickCity(BuildContext context) async {
-    final String? picked = await showCitySheet(
-      context,
-      selected: city,
-      titleKey: citySheetTitleKey,
-    );
+    final String? picked = await showCitySheet(context, selected: city);
     if (picked != null) onCity(picked);
   }
 
   @override
   Widget build(BuildContext context) {
-    final String requiredText = context.tr('circles.field_required');
+    final String requiredText = context.tr('common.field_required');
     final DateTime? date = birthDate;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

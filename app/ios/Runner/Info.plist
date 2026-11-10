@@ -49,6 +49,8 @@
 	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>يضيف تفقّد مواعيد الدواء والقياس والمواعيد الطبية لتقويم هاتفك، فقط عند تفعيلك المزامنة.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

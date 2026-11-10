@@ -48,5 +48,4 @@ abstract class AppSizes {
   static const double divider = 1;
   static const double border = 1;
   static const double borderEmphasis = 2;
-  static const double borderStrong = 3;
 }

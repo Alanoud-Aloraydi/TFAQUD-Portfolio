@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-/// Makes the native transparency preference available to custom materials.
+/// Makes the opaque-glass choice (`AppAccessibility.reduceTransparency`: the
+/// iOS Reduce Transparency setting, or an Android phone too old for a smooth
+/// blur) available to custom materials, with Increase Contrast.
 class GlassPreferences extends InheritedWidget {
   const GlassPreferences({
     super.key,

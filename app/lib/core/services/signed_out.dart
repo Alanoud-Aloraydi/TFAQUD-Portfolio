@@ -1,6 +1,6 @@
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:get_it/get_it.dart';
 
 /// Removes from this phone what belonged to the person whose sign-in ended

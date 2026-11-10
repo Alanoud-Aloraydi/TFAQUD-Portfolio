@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -38,6 +40,15 @@ Future<T?> showGlassSheet<T>(
   );
 }
 
+/// How far the glass sheet floats above the screen's bottom edge, before its
+/// own gap: over the keyboard while it is open, otherwise over the iPhone's
+/// home indicator or Android's navigation bar. `useSafeArea` keeps a sheet
+/// clear of the top and the sides only, and from Android 15 the app draws
+/// under the navigation bar, whose buttons would cover the last row.
+@visibleForTesting
+double glassSheetBottomInset(MediaQueryData media) =>
+    math.max(media.viewInsets.bottom, media.viewPadding.bottom);
+
 /// Renders the glass sheet element of glass sheet.
 class _GlassSheet extends StatelessWidget {
   const _GlassSheet({required this.title, this.message, required this.child});
@@ -52,13 +63,12 @@ class _GlassSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.sm,
         0,
         AppSpacing.sm,
-        AppSpacing.sm + keyboard,
+        AppSpacing.sm + glassSheetBottomInset(MediaQuery.of(context)),
       ),
       child: GlassSurface(
         // On top of everything: the tab bar does not show through.
