@@ -24,17 +24,20 @@ def build_occurrences(
     its `ScheduleDays`. A schedule's time is wall clock in the patient's
     `zone`, so a dose at 08:00 stays at 08:00 there across a DST change.
     """
+    # Group the rows by medicine.
     by_plan = defaultdict(list)
     for row in rows:
         by_plan[row[0].id].append(row)
     result = []
     current = from_date
+    # Each day, for each medicine, only its latest version in force that day
+    # gives doses.
     while current <= to_date:
         for plan_rows in by_plan.values():
             eligible = [
                 row
                 for row in plan_rows
-                if _version_applies(row[0], row[1], current)
+                if _version_applies(row[1], current)
             ]
             if not eligible:
                 continue
@@ -44,6 +47,7 @@ def build_occurrences(
                     schedule.id
                 ].applies_on(current, version.treatment_starts_on):
                     continue
+                # A dose after the medicine was stopped is not a dose.
                 scheduled_at = local_moment(
                     current, schedule.time_of_day, zone
                 )
@@ -52,6 +56,8 @@ def build_occurrences(
                     and scheduled_at >= plan.discontinued_at
                 ):
                     continue
+                # The dose, with its record and whether it is to come, due or
+                # missed.
                 record = records.get((schedule.id, current))
                 result.append(
                     occurrence_response(
@@ -80,7 +86,10 @@ def build_occurrences(
     )
 
 
-def _version_applies(plan, version, day: date) -> bool:
+def _version_applies(version, day: date) -> bool:
+    """Whether the medicine version is in force on `day`: inside its treatment
+    dates and its own start and end.
+    """
     if version.treatment_starts_on > day:
         return False
     if version.treatment_ends_on is not None:

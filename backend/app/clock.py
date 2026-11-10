@@ -77,21 +77,24 @@ def local_moment(day: date, time_of_day: time, zone: ZoneInfo) -> datetime:
 
 
 class SystemClock:
-    """The real time, in UTC."""
+    """The real time, always in UTC."""
 
     def now(self) -> datetime:
+        """The time now, in UTC."""
         return datetime.now(timezone.utc)
 
 
 class ManualClock:
-    """A time that moves only when told to; used by tests."""
+    """A clock that moves only when a test moves it."""
 
     def __init__(self, start: datetime | None = None):
+        """Start at `start`, or at 15 October 2026, 12:00 UTC."""
         self._now = start or datetime(
             2026, 10, 15, 12, 0, 0, tzinfo=timezone.utc
         )
 
     def now(self) -> datetime:
+        """The time the clock was set to."""
         return self._now
 
     def advance(self, **kwargs) -> None:

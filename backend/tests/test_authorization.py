@@ -19,7 +19,7 @@ from tests.conftest import bearer
 @pytest.fixture
 def circle_app(app):
     @app.get("/test/circles/<circle_id>/today")
-    @require_circle_role(CircleRole.MANAGER, CircleRole.PATIENT)
+    @require_circle_role(CircleRole.MANAGER)
     def today(circle_id):
         return {"circle_id": circle_id, "role": current_circle_role().value}
 

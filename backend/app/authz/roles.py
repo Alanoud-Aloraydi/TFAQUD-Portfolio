@@ -1,3 +1,5 @@
+"""The roles an account can have in a care circle."""
+
 from enum import Enum
 
 
@@ -8,7 +10,7 @@ class CircleRole(str, Enum):
     belongs to the (user, circle) pair, not to the user.
     """
 
+    # A manager; a patient in the full app manages their own circle too.
     MANAGER = "manager"
-    PATIENT = "patient"  # a patient who uses the full app for themselves
     # A patient using Simplified Mode.
     SIMPLIFIED_PATIENT = "simplified_patient"

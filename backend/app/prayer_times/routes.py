@@ -23,6 +23,8 @@ def prayer_times(circle_id: str):
     """Read the stored city and zone before contacting the provider.
 
     `date` is the patient's today and `timings` are wall clock there."""
+    # The patient's city and zone first, without holding the transaction
+    # while Aladhan answers.
     with transaction() as session:
         patient = session.scalar(
             select(Patient).where(
@@ -32,6 +34,8 @@ def prayer_times(circle_id: str):
         if patient is None:
             raise NotFound(code="circle_not_found")
         city, zone = patient.city, patient.time_zone
+        # Today's five times in the patient's own day, not kept by any cache
+        # on the way.
         day = patient_today(patient, get_clock().now())
     response = jsonify(
         date=day.isoformat(),

@@ -18,6 +18,9 @@ this file uses it:
   - Anything else (401 for a wrong key, 429 for too many calls, 5xx, no
     answer, an answer we do not know) is not a decision about the code. It
     raises `SmsDeliveryError`, so that it is never counted as a wrong try.
+  - After 3 calls in a row with no answer, a 5xx or a 429, Authentica is
+    not called for a minute (app/resilience.py): sign-in answers "try
+    again" at once instead of after 10 seconds each.
 
 The HTTP call is a small function (`transport`) that can be replaced. Tests
 give a fake one, so no test opens a network connection. The default one uses
@@ -34,6 +37,7 @@ import urllib.error
 import urllib.request
 
 from app.config import ConfigError
+from app.resilience import CircuitBreaker
 from app.sms.base import SmsDeliveryError, SmsSender
 
 logger = logging.getLogger(__name__)
@@ -47,6 +51,7 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
     """Never follow a redirect: the key would go to the next address too."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """Refuse every redirect."""
         return None
 
 
@@ -54,6 +59,7 @@ _opener = urllib.request.build_opener(_NoRedirect)
 
 
 def _parse_json(raw: bytes):
+    """The JSON of an answer, or None when it cannot be read."""
     try:
         return json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, ValueError):
@@ -66,6 +72,7 @@ def urllib_post(url: str, headers: dict, body: dict, timeout: float):
     A 4xx or 5xx answer is returned, not raised: it carries a status that the
     caller reads. A network problem is raised (OSError, HTTPException).
     """
+    # The body as JSON, with the caller's headers (the key).
     request = urllib.request.Request(
         url,
         data=json.dumps(body).encode("utf-8"),
@@ -76,6 +83,8 @@ def urllib_post(url: str, headers: dict, body: dict, timeout: float):
             "Accept": "application/json",
         },
     )
+    # Never follow a redirect (`_opener`); a 4xx or 5xx comes back as its
+    # status.
     try:
         with _opener.open(request, timeout=timeout) as response:
             return response.status, _parse_json(response.read())
@@ -85,10 +94,14 @@ def urllib_post(url: str, headers: dict, body: dict, timeout: float):
 
 
 def _field(body, name: str):
+    """One field of a JSON object, or None when the body is not an object."""
     return body.get(name) if isinstance(body, dict) else None
 
 
 class AuthenticaSmsSender(SmsSender):
+    """Sends and checks sign-in codes through Authentica's two calls, send-otp
+    and verify-otp.
+    """
     def __init__(
         self,
         api_key: str,
@@ -97,7 +110,11 @@ class AuthenticaSmsSender(SmsSender):
         template_id: int = DEFAULT_TEMPLATE_ID,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
         transport=None,
+        breaker: CircuitBreaker | None = None,
     ):
+        """Check the key and the https address, and keep the template, the time
+        limit, the HTTP function and the circuit breaker.
+        """
         if not api_key:
             raise ConfigError(
                 "AUTHENTICA_API_KEY is required to use Authentica."
@@ -111,8 +128,12 @@ class AuthenticaSmsSender(SmsSender):
         self._template_id = template_id
         self._timeout = timeout
         self._transport = transport or urllib_post
+        self._breaker = breaker or CircuitBreaker("authentica")
 
     def send_code(self, phone: str) -> None:
+        """Ask Authentica to make a code and send it to `phone` by SMS; raise
+        SmsDeliveryError unless it confirms.
+        """
         status, body = self._post(
             "send-otp",
             {
@@ -126,6 +147,9 @@ class AuthenticaSmsSender(SmsSender):
         raise self._error("send-otp", status)
 
     def check_code(self, phone: str, code: str) -> bool:
+        """Ask Authentica whether `code` is right for `phone`: True, False for
+        any refused code, or SmsDeliveryError when it cannot decide.
+        """
         status, body = self._post("verify-otp", {"phone": phone, "otp": code})
         if status == 200 and _field(body, "status") is True:
             return True
@@ -135,6 +159,14 @@ class AuthenticaSmsSender(SmsSender):
         raise self._error("verify-otp", status)
 
     def _post(self, call: str, body: dict):
+        """Make one call to Authentica through the circuit breaker, and answer
+        its HTTP status and JSON.
+        """
+        if not self._breaker.allow():
+            raise SmsDeliveryError(
+                f"Authentica failed several times; {call} was not called.",
+                not_sent=True,
+            )
         try:
             status, parsed = self._transport(
                 f"{self._base_url}/{call}",
@@ -147,14 +179,24 @@ class AuthenticaSmsSender(SmsSender):
             logger.warning(
                 "Authentica %s: no answer (%s)", call, type(error).__name__
             )
+            self._breaker.record_failure()
             raise SmsDeliveryError(
                 f"Authentica did not answer {call} ({type(error).__name__})."
             ) from None
         logger.info("Authentica %s: HTTP %s", call, status)
+        # Sick: a server error, or too many calls. A 401 (wrong key) or a
+        # 422 (wrong code) is an answer, so Authentica is up.
+        if status >= 500 or status == 429:
+            self._breaker.record_failure()
+        else:
+            self._breaker.record_success()
         return status, parsed
 
     @staticmethod
     def _error(call: str, status: int) -> SmsDeliveryError:
+        """The error for an answer that cannot be used, pointing at the key on
+        a 401.
+        """
         message = (
             f"Authentica answered {call} with HTTP {status}, "
             "which cannot be used."

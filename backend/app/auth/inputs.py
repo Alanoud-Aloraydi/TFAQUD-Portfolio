@@ -36,6 +36,7 @@ _DIGITS_TO_WESTERN = {
 
 
 def _check_phone(value: str) -> str:
+    """Accept only a Saudi mobile number in the form +9665XXXXXXXX."""
     if not _PHONE_PATTERN.fullmatch(value):
         raise PydanticCustomError(
             "invalid_phone",
@@ -46,6 +47,9 @@ def _check_phone(value: str) -> str:
 
 
 def _check_code(value: str) -> str:
+    """Accept a code of exactly six digits; Arabic-Indic or Persian digits
+    are read as Western ones.
+    """
     normalized = value.translate(_DIGITS_TO_WESTERN)
     if not _CODE_PATTERN.fullmatch(normalized):
         raise PydanticCustomError(

@@ -24,6 +24,8 @@ _ACCESS_TYPE = "access"
 
 @dataclass(frozen=True)
 class AccessClaims:
+    """What a valid access token says: the account and the session."""
+
     user_id: str
     session_id: str
 
@@ -35,6 +37,9 @@ def encode_access_token(
     issued_at: datetime,
     expires_at: datetime,
 ) -> str:
+    """Sign a short access token (a JWT) for the account and session, valid
+    until `expires_at`.
+    """
     payload = {
         "typ": _ACCESS_TYPE,
         "sub": user_id,
@@ -85,8 +90,12 @@ def decode_access_token(
 
 
 def new_refresh_token() -> str:
+    """A new random refresh token, long enough that it cannot be guessed."""
     return secrets.token_urlsafe(32)
 
 
 def hash_refresh_token(refresh_token: str) -> str:
+    """The SHA-256 of a refresh token: what the server keeps instead of the
+    token.
+    """
     return hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()

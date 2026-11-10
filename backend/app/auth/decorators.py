@@ -28,12 +28,15 @@ def authenticate_request() -> AccessClaims:
 
 
 def current_auth() -> AccessClaims:
+    """The account and session of the signed-in request."""
     return g.auth
 
 
 def require_auth(view):
+    """Allow the endpoint only with a valid access token of a live session."""
     @wraps(view)
     def wrapper(*args, **kwargs):
+        """Check the sign-in, then run the endpoint."""
         authenticate_request()
         return view(*args, **kwargs)
 

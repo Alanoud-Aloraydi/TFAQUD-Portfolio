@@ -6,7 +6,7 @@ clock is the manual one, so "one hour later" costs nothing.
 
 import pytest
 
-from app import create_app
+from app import create_app, metrics
 from app.sms.base import SmsDeliveryError
 from tests.conftest import bearer
 
@@ -492,7 +492,7 @@ def test_a_rejected_send_does_not_count_toward_the_limit(
 # ---- request-code: the verification id -------------------------------------
 
 
-def test_an_unknown_verification_id_is_refused(client, sms):
+def test_a_resend_for_an_unknown_verification_id_is_refused(client, sms):
     response = request_code(client, verification_id="does-not-exist")
 
     error_of(response, 404, "verification_not_found")
@@ -840,7 +840,7 @@ def test_after_signing_in_a_new_request_works(client, sms):
 # ---- verify-code: input checks ---------------------------------------------
 
 
-def test_verify_code_with_an_unknown_verification_id_is_refused(
+def test_a_code_for_an_unknown_verification_id_is_refused(
     client, provider_calls
 ):
     response = verify_code(client, "does-not-exist", "123456")
@@ -904,3 +904,39 @@ def test_a_provider_failure_while_checking_gives_503_and_costs_no_try(
 
     assert otp_store.get_request(vid).wrong_tries == 0
     assert verify_code(client, vid, real).status_code == 200
+
+
+# ---- counters, and a provider that was not called --------------------------
+
+
+def test_the_codes_sent_and_the_sign_ins_are_counted(client, sms):
+    verification_id = start(client)
+
+    signed_in = verify_code(client, verification_id, last_code(sms))
+
+    assert signed_in.status_code == 200
+    assert metrics.count("sign_in.code_sent") == 1
+    assert metrics.count("sign_in.completed") == 1
+
+
+def test_a_wrong_code_is_counted(client, sms):
+    verification_id = start(client)
+
+    verify_code(client, verification_id, wrong_code_for(last_code(sms)))
+
+    assert metrics.count("sign_in.invalid_code") == 1
+
+
+def test_a_provider_not_called_gives_the_code_back_to_the_quota(
+    client, sms, monkeypatch
+):
+    def not_called(phone):
+        raise SmsDeliveryError("breaker open", not_sent=True)
+
+    monkeypatch.setattr(sms, "send_code", not_called)
+
+    error_of(request_code(client), 503, "sms_unavailable")
+    assert metrics.count("sign_in.code_not_sent") == 1
+    # Nothing was used, so there is no wait before the next try.
+    monkeypatch.undo()
+    assert request_code(client).status_code == 200

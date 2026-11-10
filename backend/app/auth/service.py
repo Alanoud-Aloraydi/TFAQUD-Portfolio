@@ -29,18 +29,28 @@ from app.errors import Unauthorized
 
 @dataclass(frozen=True)
 class IssuedAccessToken:
+    """A new access token and when it ends."""
+
     access_token: str
     access_token_expires_at: datetime
 
 
 @dataclass(frozen=True)
 class IssuedSession(IssuedAccessToken):
+    """What a sign-in gives the app: the access token, the refresh token, both
+    end times, and the session id.
+    """
+
     refresh_token: str
     refresh_token_expires_at: datetime
     session_id: str
 
 
 class SessionService:
+    """Starts, refreshes and ends sign-in sessions: a short access token for
+    each request, and a long refresh token to get a new one.
+    """
+
     def __init__(
         self,
         store: SessionStore,
@@ -49,6 +59,7 @@ class SessionService:
         refresh_ttl: timedelta,
         clock,
     ):
+        """Keep the store, the signing key, the two lifetimes and the clock."""
         self._store = store
         self._secret = secret_key
         self._access_ttl = access_ttl
@@ -56,6 +67,11 @@ class SessionService:
         self._clock = clock
 
     def create_session(self, user_id: str) -> IssuedSession:
+        """Start a session for `user_id`: keep its record (with only the
+        refresh token's hash) and give both tokens.
+        """
+        # Keep the session with only the refresh token's hash; the token itself
+        # goes to the app once.
         now = self._clock.now()
         session_id = uuid.uuid4().hex
         refresh_token = new_refresh_token()
@@ -70,6 +86,7 @@ class SessionService:
                 refresh_expires_at=refresh_expires_at,
             )
         )
+        # And a first access token.
         access = self._issue_access_token(user_id, session_id, now)
         return IssuedSession(
             access_token=access.access_token,
@@ -99,6 +116,9 @@ class SessionService:
         return claims
 
     def refresh(self, refresh_token: str) -> IssuedAccessToken:
+        """A new access token for a live session's refresh token; the same
+        refusal for an unknown, signed-out or expired one.
+        """
         now = self._clock.now()
         record = self._store.get_by_refresh_hash(
             hash_refresh_token(refresh_token)
@@ -117,11 +137,15 @@ class SessionService:
         return self._issue_access_token(record.user_id, record.id, now)
 
     def sign_out(self, session_id: str) -> None:
+        """End the session; its tokens stop working."""
         self._store.revoke(session_id, self._clock.now())
 
     def _issue_access_token(
         self, user_id: str, session_id: str, now: datetime
     ) -> IssuedAccessToken:
+        """Sign an access token for the user and session, ending after the
+        access lifetime.
+        """
         expires_at = now + self._access_ttl
         token = encode_access_token(
             self._secret, user_id, session_id, now, expires_at

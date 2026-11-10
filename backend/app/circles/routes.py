@@ -84,6 +84,9 @@ def create_offline_circle():
 @bp.get("/<circle_id>")
 @require_circle_role(*MEMBER)
 def get_circle(circle_id):
+    """One circle as its member sees it: the patient, the managers, the
+    invitations, and what the asker may do.
+    """
     with care_work() as work:
         view = views.circle_view(
             work.session,
@@ -115,6 +118,7 @@ def update_patient(circle_id):
     """Birth date, city, zone, location; the names too when the patient
     has no account."""
     body = parse_json_body(PatientUpdateInput)
+    # Save the details, and answer the circle as the asker sees it.
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
         work.care.update_patient_profile(
@@ -185,6 +189,7 @@ def invite_manager(circle_id):
 @bp.post("/<circle_id>/invitations/<invitation_id>/resend")
 @require_circle_role(MANAGER)
 def resend_invitation(circle_id, invitation_id):
+    """Send a pending invitation again."""
     with care_work() as work:
         invitation = work.care.resend_invitation(
             work.actor,
@@ -200,6 +205,7 @@ def resend_invitation(circle_id, invitation_id):
 @bp.delete("/<circle_id>/invitations/<invitation_id>")
 @require_circle_role(MANAGER)
 def cancel_invitation(circle_id, invitation_id):
+    """Withdraw a pending invitation."""
     with care_work() as work:
         work.care.cancel_invitation(
             work.actor,
@@ -259,6 +265,7 @@ def update_medical_profile(circle_id):
 @bp.post("/<circle_id>/emergency-contacts")
 @require_circle_role(*MEMBER)
 def add_emergency_contact(circle_id):
+    """Add an emergency contact to the patient's card."""
     body = parse_json_body(EmergencyContactInput)
     with care_work() as work:
         contact = work.medical.add_contact(
@@ -275,6 +282,7 @@ def add_emergency_contact(circle_id):
 @bp.put("/<circle_id>/emergency-contacts/<contact_id>")
 @require_circle_role(*MEMBER)
 def update_emergency_contact(circle_id, contact_id):
+    """Change one emergency contact."""
     body = parse_json_body(EmergencyContactInput)
     with care_work() as work:
         contact = work.medical.update_contact(
@@ -292,6 +300,7 @@ def update_emergency_contact(circle_id, contact_id):
 @bp.delete("/<circle_id>/emergency-contacts/<contact_id>")
 @require_circle_role(*MEMBER)
 def delete_emergency_contact(circle_id, contact_id):
+    """Remove one emergency contact."""
     with care_work() as work:
         work.medical.delete_contact(
             work.actor,

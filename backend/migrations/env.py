@@ -65,12 +65,26 @@ def run_migrations_online():
     connectable = get_engine()
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=get_metadata(), **conf_args
-        )
+        # A migration may take longer than a request, so the statement
+        # deadline of app/config.py is lifted here (the lock one stays: a
+        # migration that cannot get its lock fails instead of stopping
+        # every request behind it). RESET gives the connection back to the
+        # pool with its usual deadline.
+        connection.exec_driver_sql("SET statement_timeout = 0")
+        connection.commit()
+        try:
+            context.configure(
+                connection=connection,
+                target_metadata=get_metadata(),
+                **conf_args,
+            )
 
-        with context.begin_transaction():
-            context.run_migrations()
+            with context.begin_transaction():
+                context.run_migrations()
+        finally:
+            connection.rollback()
+            connection.exec_driver_sql("RESET statement_timeout")
+            connection.commit()
 
 
 if context.is_offline_mode():

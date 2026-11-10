@@ -9,8 +9,15 @@ from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from app import create_app
+from app import create_app, metrics, resilience
 from app.database import db
+
+
+@pytest.fixture(autouse=True)
+def closed_breakers_and_no_counts():
+    """Each test starts with every circuit breaker closed and no counts."""
+    resilience.reset_all()
+    metrics.reset()
 
 
 @pytest.fixture(scope="session")

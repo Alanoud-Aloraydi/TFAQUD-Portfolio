@@ -132,3 +132,39 @@ def test_service_unavailable_is_a_503(app, client):
         raise ServiceUnavailable(code="sms_unavailable")
 
     assert_error_shape(client.get("/boom/down"), 503, "sms_unavailable")
+
+
+def test_a_database_past_its_deadline_is_a_503_and_counted(app, client):
+    from sqlalchemy.exc import OperationalError
+    from sqlalchemy.exc import TimeoutError as PoolTimeout
+
+    from app import metrics
+
+    @app.get("/boom/slow-query")
+    def slow_query():
+        raise OperationalError(
+            "SELECT", {}, Exception("canceling statement due to timeout")
+        )
+
+    @app.get("/boom/busy-pool")
+    def busy_pool():
+        raise PoolTimeout("QueuePool limit reached")
+
+    assert_error_shape(
+        client.get("/boom/slow-query"), 503, "database_unavailable"
+    )
+    assert_error_shape(
+        client.get("/boom/busy-pool"), 503, "database_unavailable"
+    )
+    assert metrics.count("database.unavailable") == 2
+
+
+def test_an_unexpected_error_is_counted(app, client):
+    from app import metrics
+
+    @app.get("/boom/bug")
+    def bug():
+        raise RuntimeError("a bug")
+
+    assert_error_shape(client.get("/boom/bug"), 500, "internal_error")
+    assert metrics.count("errors.internal") == 1

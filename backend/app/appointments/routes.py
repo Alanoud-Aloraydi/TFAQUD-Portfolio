@@ -25,7 +25,6 @@ bp = Blueprint(
 )
 MEMBERS = (
     CircleRole.MANAGER,
-    CircleRole.PATIENT,
     CircleRole.SIMPLIFIED_PATIENT,
 )
 
@@ -65,6 +64,7 @@ def list_companions(circle_id):
 def create_appointment(circle_id):
     """Save one appointment."""
     body = parse_json_body(AppointmentRequest)
+    # Save it, then answer it with its companions and who made it.
     with transaction() as session:
         appointment = AppointmentService(
             session, get_clock().now()
@@ -95,6 +95,8 @@ def create_appointment(circle_id):
 def revise_appointment(circle_id, appointment_id):
     """Change a scheduled appointment."""
     body = parse_json_body(ReviseAppointmentRequest)
+    # Save the edit, then answer the appointment with its companions and who
+    # made and last changed it.
     with transaction() as session:
         appointment = AppointmentService(
             session, get_clock().now()
@@ -128,6 +130,8 @@ def revise_appointment(circle_id, appointment_id):
 def set_appointment_status(circle_id, appointment_id):
     """Record attendance or cancellation explicitly."""
     body = parse_json_body(AppointmentStatusRequest)
+    # Change the status, then answer the appointment with its companions and
+    # who made and last changed it.
     with transaction() as session:
         appointment = AppointmentService(
             session, get_clock().now()

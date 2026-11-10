@@ -13,7 +13,9 @@ from datetime import date, datetime
 
 @dataclass(frozen=True)
 class User:
-    """An account as the API sees it, detached from the database row."""
+    """One account as the sign-in code sees it: the phone number and the
+    profile the person filled in.
+    """
 
     id: str
     phone: str  # international format, +9665XXXXXXXX
@@ -53,7 +55,8 @@ class User:
 
 
 class UserStore(ABC):
-    """Storage of accounts, read and written by the auth and users routes.
+    """Where accounts are found by phone number, made, read and given a
+    profile, by the auth and users routes.
 
     PostgresUserStore backs the app; InMemoryUserStore backs unit tests.
     The profile endpoint writes through update_profile.
@@ -69,6 +72,7 @@ class UserStore(ABC):
         the same time for the same phone number must give the same user.
         """
 
+    # The account with this id, or None.
     @abstractmethod
     def get(self, user_id: str) -> User | None: ...
 
@@ -90,7 +94,12 @@ class UserStore(ABC):
 
 
 class InMemoryUserStore(UserStore):
+    """The accounts in memory, behind one lock: for tests and for a local
+    server without a database.
+    """
+
     def __init__(self):
+        """No accounts yet; one map by id, one by phone number."""
         self._lock = threading.Lock()
         self._by_id: dict[str, User] = {}
         self._id_by_phone: dict[str, str] = {}
@@ -98,6 +107,9 @@ class InMemoryUserStore(UserStore):
     def get_or_create_by_phone(
         self, phone: str, now: datetime
     ) -> tuple[User, bool]:
+        """The account of `phone`, made now when there is none; True as the
+        second value when this call made it.
+        """
         with self._lock:
             existing_id = self._id_by_phone.get(phone)
             if existing_id is not None:
@@ -108,6 +120,7 @@ class InMemoryUserStore(UserStore):
             return user, True
 
     def get(self, user_id: str) -> User | None:
+        """The account with this id, or None."""
         with self._lock:
             return self._by_id.get(user_id)
 
@@ -120,6 +133,9 @@ class InMemoryUserStore(UserStore):
         birth_date: date | None = None,
         city: str | None = None,
     ) -> User | None:
+        """Save the names, and the birth date and city when given; None when
+        there is no such account.
+        """
         with self._lock:
             user = self._by_id.get(user_id)
             if user is None:

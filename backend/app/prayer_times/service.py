@@ -5,6 +5,12 @@ Umm al-Qura method. Any other city (typed by hand, anywhere) is asked for
 by its name as written, and the provider picks the calculation authority
 nearest to it. Either way the times come in the patient's own zone, and a
 timetable for another zone is refused.
+
+Aladhan is called at most once per place, zone and day (the cache keeps
+only answers that passed the checks). After 3 failed calls in a row it is
+not called for a minute (app/resilience.py), so the home page does not
+wait 8 seconds on every opening while Aladhan is down; the app shows its
+greeting without prayer times meanwhile.
 """
 
 import json
@@ -15,7 +21,9 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
+from app import metrics
 from app.errors import ServiceUnavailable
+from app.resilience import CircuitBreaker
 
 # The app's Saudi city list (`SaudiCities.all`), with the English name the
 # provider knows each by. Keep the two in step.
@@ -46,6 +54,7 @@ _SAUDI_CITIES = {
 }
 _UMM_AL_QURA = 4
 _PRAYERS = ("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha")
+_breaker = CircuitBreaker("aladhan")
 _TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
@@ -67,6 +76,11 @@ def _fetch_day(
     path: str, query: tuple[tuple[str, str], ...], zone: str, day: str
 ) -> dict[str, str]:
     """Keep a place-day's timetable until it leaves the bounded cache."""
+    # Inside the cached function: a day already kept is answered even
+    # while the breaker is open. A refusal (an exception) is never cached.
+    if not _breaker.allow():
+        metrics.increment("prayer_times.unavailable")
+        raise ServiceUnavailable(code="prayer_times_unavailable")
     formatted = date.fromisoformat(day).strftime("%d-%m-%Y")
     params = urlencode(query + (("timezonestring", zone),))
     url = f"https://api.aladhan.com/v1/{path}/{formatted}?{params}"
@@ -87,6 +101,9 @@ def _fetch_day(
         if not all(isinstance(value, str) and _TIME.fullmatch(value)
                    for value in times.values()):
             raise ValueError("Invalid prayer time")
-        return times
     except (URLError, OSError, ValueError, KeyError, TypeError) as error:
+        _breaker.record_failure()
+        metrics.increment("prayer_times.unavailable")
         raise ServiceUnavailable(code="prayer_times_unavailable") from error
+    _breaker.record_success()
+    return times

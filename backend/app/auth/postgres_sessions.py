@@ -27,6 +27,7 @@ class PostgresSessionStore(SessionStore):
     """Persist independent sessions and preserve the first revocation time."""
 
     def add(self, record):
+        """Keep a new session row."""
         with transaction() as session:
             session.add(
                 AccountSession(
@@ -41,6 +42,9 @@ class PostgresSessionStore(SessionStore):
             session.flush()
 
     def get(self, session_id):
+        """The session with this id, or None (also for an id that is not a
+        UUID).
+        """
         try:
             key = UUID(session_id)
         except (ValueError, TypeError, AttributeError):
@@ -49,6 +53,7 @@ class PostgresSessionStore(SessionStore):
             return _record(session.get(AccountSession, key))
 
     def get_by_refresh_hash(self, refresh_token_hash):
+        """The session whose refresh token has this hash, or None."""
         with transaction() as session:
             return _record(
                 session.scalar(
@@ -59,6 +64,11 @@ class PostgresSessionStore(SessionStore):
             )
 
     def revoke(self, session_id, at):
+        """End the session once, keeping the first time; False when it is
+        unknown.
+        """
+        # An id that is not a UUID is no session; a second sign-out keeps the
+        # first time.
         try:
             key = UUID(session_id)
         except (ValueError, TypeError, AttributeError):

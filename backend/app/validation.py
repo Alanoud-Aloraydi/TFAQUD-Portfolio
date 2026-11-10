@@ -30,6 +30,10 @@ T = TypeVar("T", bound=Dto)
 
 
 def parse_json_body(model: type[T]) -> T:
+    """Read the request's JSON body into `model`: 400 when it is not JSON, 422
+    listing the fields that are wrong (never their values).
+    """
+    # Not JSON: 400.
     data = request.get_json(silent=True)
     if data is None:
         raise BadRequest(
@@ -37,6 +41,7 @@ def parse_json_body(model: type[T]) -> T:
             "'Content-Type: application/json'.",
             code="invalid_json",
         )
+    # Wrong fields: 422, one detail per field, never the value sent.
     try:
         return model.model_validate(data)
     except ValidationError as exc:

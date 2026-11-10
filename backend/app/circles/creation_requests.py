@@ -90,6 +90,8 @@ def respond(request_id):
 def complete(request_id):
     """After accepting, the patient gives the basic data. This creates it."""
     body = parse_json_body(CompleteRequestInput)
+    # Make the circle, save the medical profile sent with it, and answer the
+    # circle as its patient sees it.
     with care_work(hide_forbidden=_NOT_FOUND) as work:
         request_uuid = parse_id(request_id, "circle request")
         circle = work.care.complete_creation(
@@ -114,6 +116,7 @@ def complete(request_id):
                 else CircleRole.SIMPLIFIED_PATIENT
             ),
         )
+        # Tell the sender the circle is ready, after the commit.
         push = circle_ready_push(work.session, request_uuid, circle)
     notify(push)
     return answer({"circle": view, "account_app_mode": mode}, 201)

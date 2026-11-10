@@ -36,6 +36,8 @@ class PostgresUserStore(UserStore):
         self, phone: str, now: datetime
     ) -> tuple[User, bool]:
         """Use database uniqueness, including concurrent first sign-ins."""
+        # Insert the account, or find it when the number has one; another
+        # sign-in can make it in between, so a few tries.
         with transaction():
             for _ in range(_CREATION_ATTEMPTS):
                 account = db.session.scalar(
@@ -80,6 +82,8 @@ class PostgresUserStore(UserStore):
 
         A birth date or city that is None keeps the saved one.
         """
+        # An id that is not a UUID is no account; the account is locked while
+        # its profile changes.
         try:
             account_id = UUID(user_id)
         except (ValueError, TypeError, AttributeError):
@@ -91,6 +95,8 @@ class PostgresUserStore(UserStore):
             account.first_name = first_name
             account.last_name = last_name
             account.display_name = display_name
+            # The birth date and city change only when sent (onboarding sends
+            # them, the account page does not).
             if birth_date is not None:
                 account.birth_date = birth_date
             if city is not None:

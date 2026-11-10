@@ -38,6 +38,7 @@ DEFAULT_VALID_SECONDS = 300
 
 @dataclass(frozen=True)
 class SentSms:
+    """One message the fake sender would have sent."""
     to: str
     message: str
     sent_at: datetime
@@ -45,12 +46,18 @@ class SentSms:
 
 
 class FakeSmsSender(SmsSender):
+    """Makes codes and keeps them in memory, so tests and local work sign in
+    without sending any SMS.
+    """
     def __init__(
         self,
         clock,
         log_body: bool = False,
         valid_seconds: int = DEFAULT_VALID_SECONDS,
     ):
+        """Use `clock` for the code's lifetime; `log_body` also prints the code
+        to the log (local work only).
+        """
         self._clock = clock
         self._log_body = log_body
         self._valid_for = timedelta(seconds=valid_seconds)
@@ -61,6 +68,9 @@ class FakeSmsSender(SmsSender):
         self._open_codes: dict[str, tuple[str, datetime]] = {}
 
     def send_code(self, phone: str) -> None:
+        """Make a random code for `phone`, keep it, and record the message in
+        the outbox.
+        """
         code = f"{secrets.randbelow(10**CODE_LENGTH):0{CODE_LENGTH}d}"
         message = f"Your code is {code}"
         now = self._clock.now()
@@ -76,6 +86,9 @@ class FakeSmsSender(SmsSender):
             logger.info("FAKE SMS (not sent) to=%s", phone)
 
     def check_code(self, phone: str, code: str) -> bool:
+        """True only for the last code sent to `phone`, still within its
+        lifetime; the code then cannot be used again.
+        """
         with self._lock:
             open_code = self._open_codes.get(phone)
             if open_code is None:
@@ -89,6 +102,9 @@ class FakeSmsSender(SmsSender):
             return True
 
     def last_message_to(self, to: str) -> SentSms | None:
+        """The last message sent to `to`, or None (tests read the code from
+        it).
+        """
         with self._lock:
             for sms in reversed(self.outbox):
                 if sms.to == to:

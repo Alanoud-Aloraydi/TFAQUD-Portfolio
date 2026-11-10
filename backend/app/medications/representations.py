@@ -28,6 +28,7 @@ def schedule_responses(session: Session, version_id: UUID) -> list[dict]:
     its month days and no weekdays; an interval one neither, and its
     `interval_days`. An older app reads only `weekdays`.
     """
+    # The version's dose times in time order, each with its days.
     schedules = list(
         session.scalars(
             select(MedicationSchedule)
@@ -62,6 +63,9 @@ def plan_response(plan, version) -> dict:
             if plan.discontinued_at
             else None
         ),
+        # The medicine as this version defines it, in force from
+        # `effective_from_on` until `effective_until_on` (open when none);
+        # numbers without trailing zeros (5, not 5.00).
         "version": {
             "version_number": version.version_number,
             "name": version.name,
@@ -107,6 +111,7 @@ def occurrence_response(
         "instructions": schedule.instructions,
         "missed_after_minutes": version.missed_after_minutes,
         "timing_state": timing_state,
+        # How the dose was recorded, and by whom; null until it is.
         "record": None if record is None else {
             "id": str(record.id),
             "outcome": record.outcome,

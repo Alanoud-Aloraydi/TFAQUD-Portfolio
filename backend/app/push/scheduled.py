@@ -20,6 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app import metrics
 from app.clock import patient_today
 from app.database import transaction
 from app.medications.queries import MedicationQueries
@@ -86,8 +87,11 @@ def _patient(session: Session, circle_id: UUID) -> Patient | None:
 
 
 def _scan_doses(circle_id: UUID, now: datetime) -> None:
-    """Tell the circle once about each dose of the patient's today that
-    was missed."""
+    """Send «جرعة ما تسجّلت» once for each of the circle's doses of the
+    patient's today whose time passed with nothing recorded.
+    """
+    # Today's doses and who to tell, read in one short transaction; the pushes
+    # go after it.
     with transaction() as session:
         patient = _patient(session, circle_id)
         if patient is None:
@@ -103,12 +107,15 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
             or occurrence["timing_state"] != "missed"
         ):
             continue
+        # `_claim` writes the dose's key once; a scan that finds it written
+        # sent it already.
         key = (
             f"dose_missed:{occurrence['schedule_id']}:"
             f"{occurrence['scheduled_on']}"
         )
         if not _claim(key):
             continue
+        metrics.increment("tick.missed_dose")
         # «ما تسجّلت» says only what the app knows: the dose may have been
         # taken and not recorded.
         notify(
@@ -125,8 +132,10 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
 
 
 def _scan_measurements(circle_id: UUID, now: datetime) -> None:
-    """Tell the circle once about each reading time of the patient's today
-    that was missed."""
+    """Send «قياس ما تسجّل» once for each of the circle's reading times of
+    the patient's today that passed with nothing recorded.
+    """
+    # Today's reading times and who to tell, read in one short transaction.
     with transaction() as session:
         patient = _patient(session, circle_id)
         if patient is None:
@@ -149,6 +158,7 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         )
         if not _claim(key):
             continue
+        metrics.increment("tick.missed_measurement")
         notify(
             Push(
                 recipients,

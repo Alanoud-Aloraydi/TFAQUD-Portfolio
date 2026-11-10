@@ -23,10 +23,12 @@ _OWNERS = {
 
 def valid_photo(data: bytes) -> bytes:
     """Accept a complete, bounded PNG produced by the app's cropper."""
+    # A size the app's cropper can make, and the PNG signature.
     if (not 33 <= len(data) <= MAX_PHOTO_BYTES
             or data[:8] != b"\x89PNG\r\n\x1a\n"):
         raise ValidationFailed(code="invalid_photo")
 
+    # Walk the chunks: each has a length, a kind, its data and a checksum.
     offset = 8
     width = height = channels = 0
     image_data = bytearray()
@@ -41,6 +43,8 @@ def valid_photo(data: bytes) -> bytes:
         checksum = int.from_bytes(data[end - 4:end], "big")
         if zlib.crc32(kind + chunk) != checksum:
             break
+        # The first chunk is the header: 64 to 2048 pixels each way, 8-bit
+        # colour (RGB or RGBA), standard compression, no interlacing.
         if not saw_header:
             if kind != b"IHDR" or length != 13:
                 break
@@ -52,6 +56,9 @@ def valid_photo(data: bytes) -> bytes:
                 break
             channels = 3 if chunk[9] == 2 else 4
             saw_header = True
+        # Keep the image data; the end chunk must close the file exactly; an
+        # unknown chunk the image needs (an upper-case first letter) is
+        # refused.
         elif kind == b"IDAT":
             image_data.extend(chunk)
         elif kind == b"IEND":
@@ -61,6 +68,8 @@ def valid_photo(data: bytes) -> bytes:
             break
         offset = end
 
+    # Unpack the image data, no more than the header promises: every row is
+    # there, nothing is left over, and each row's filter is a valid one.
     if not saw_header or not saw_end or not image_data:
         raise ValidationFailed(code="invalid_photo")
     expected = height * (1 + width * channels)
@@ -81,6 +90,7 @@ class PhotoService:
     """Store one image per owner with serialized replacements."""
 
     def __init__(self, session: Session):
+        """Work inside the caller's database session."""
         self.session = session
 
     def get(self, kind: str, owner_id: UUID) -> Photo | None:
@@ -113,6 +123,9 @@ class PhotoService:
             self.session.flush()
 
     def _lock_owner(self, kind: str, owner_id: UUID) -> None:
+        """Lock the owner's row (an account or a patient) so two uploads of one
+        photo cannot run at once; 404 when there is no such owner.
+        """
         model, _ = _OWNERS[kind]
         if self.session.get(model, owner_id, with_for_update=True) is None:
             raise NotFound()

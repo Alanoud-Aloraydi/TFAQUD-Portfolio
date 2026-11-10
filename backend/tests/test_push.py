@@ -217,3 +217,38 @@ def test_the_app_can_be_given_a_sender():
     sender = RecordingPushSender()
     app = create_app("testing", push_sender=sender)
     assert app.extensions["push_sender"] is sender
+
+
+# ---- a sick Apple -----------------------------------------------------------
+
+
+def test_after_three_failures_apple_is_not_called_for_a_while(key):
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            raise httpx.ConnectError("no route")
+        return httpx.Response(503, json={"reason": "ServiceUnavailable"})
+
+    sender = apns(key, handler)
+    for _ in range(3):
+        assert sender.send(TOKEN, MESSAGE) == FAILED
+
+    # Answered at once; the token is kept for the next time.
+    assert sender.send(TOKEN, MESSAGE) == FAILED
+    assert len(calls) == 3
+
+
+def test_an_answer_about_one_phone_opens_nothing(key):
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(410, json={"reason": "Unregistered"})
+
+    sender = apns(key, handler)
+    for _ in range(4):
+        assert sender.send(TOKEN, MESSAGE) == GONE
+
+    assert len(calls) == 4

@@ -277,6 +277,37 @@ server or paid plan required. On a paid Render plan, a Render Cron Job can
 call the same URL and header instead; nothing in the server changes either
 way, so switching is just turning one off and the other on.
 
+## Deadlines, breakers and counters
+
+How the server stays up when something it depends on does not.
+
+- **Every call has a deadline.** Authentica 10 seconds, Aladhan 8, Apple 10,
+  and the database too: 5 seconds per query, 3 seconds to wait for a lock,
+  30 seconds for a transaction left idle, 5 seconds to connect and 5 to get
+  a free connection (`DATABASE_*` settings in `.env.example`). A query past
+  its deadline answers 503 `database_unavailable`. Migrations lift the query
+  deadline for themselves only (`migrations/env.py`).
+- **A sick service is not called for a while.** After 3 failed calls in a row
+  to Authentica, Aladhan or Apple, that service is not called for 60 seconds
+  (`app/resilience.py`): sign-in answers `sms_unavailable` at once (and the
+  code is not counted against the number), the home page shows its greeting
+  without prayer times, and a push is kept for the next time. There is no
+  breaker around our own database.
+- **No one waits for a push.** Push notifications are sent after the answer,
+  on two background threads (`app/background.py`), so an invitation or the
+  scheduled scan never waits for Apple. A push still waiting when the server
+  stops is lost; the app shows the same thing when it is opened.
+- **Counters to alert on** (`app/metrics.py`), next to the log lines:
+  `sign_in.code_sent`, `sign_in.code_not_sent`, `sign_in.code_not_checked`,
+  `sign_in.invalid_code`, `sign_in.completed`, `push.sent`, `push.failed`,
+  `push.gone`, `prayer_times.unavailable`, `tick.missed_dose`,
+  `tick.missed_measurement`, `circuit.<service>.opened` and `.refused`,
+  `database.unavailable`, `errors.internal`, `background.failed` and
+  `background.dropped`. `GET /internal/metrics` with the `X-Tick-Secret`
+  header reads them. Each server process counts on its own from its start
+  (Render may run two), so read them as "this is happening now", not as
+  totals.
+
 ## Deploy to Render
 
 `render.yaml` (at the top of the repository) describes the team's shared test

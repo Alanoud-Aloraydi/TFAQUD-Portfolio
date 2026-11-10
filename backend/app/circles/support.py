@@ -20,6 +20,9 @@ class Work:
     """What one request needs: its transaction, the time, and who is asking."""
 
     def __init__(self, session: Session, now: datetime, actor: UUID):
+        """Keep the session, the time and the account asking, and build the
+        care service they share.
+        """
         self.session = session
         self.now = now
         self.actor = actor
@@ -27,6 +30,7 @@ class Work:
 
     @cached_property
     def medical(self) -> MedicalService:
+        """The medical profile service, made only when a request needs it."""
         return MedicalService(self.session, self.now)
 
 

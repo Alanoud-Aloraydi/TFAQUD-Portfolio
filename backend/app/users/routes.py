@@ -28,6 +28,7 @@ bp = Blueprint("users", __name__, url_prefix="/api/v1/accounts")
 
 def _one_line(value: str) -> str:
     """Refuse a name with a line break or another control character."""
+    # Control characters are invalid in displayed names.
     if any(unicodedata.category(ch) == "Cc" for ch in value):
         raise PydanticCustomError(
             "invalid_name",
@@ -52,7 +53,7 @@ def _name(max_length: int):
 
 
 class ProfileRequest(Dto):
-    """Body of PUT /api/v1/accounts/me/profile."""
+    """The body of PUT /api/v1/accounts/me/profile."""
 
     first_name: _name(50)
     last_name: _name(50)
@@ -72,6 +73,8 @@ def save_profile():
     only). A birth date in the future is refused with
     ``invalid_birth_date``. Returns the saved account.
     """
+    # A birth date in the future is refused; then the account's profile is
+    # saved.
     body = parse_json_body(ProfileRequest)
     # No patient, so no zone yet: only a day that is still ahead
     # everywhere is in the future. A circle checks it again in the

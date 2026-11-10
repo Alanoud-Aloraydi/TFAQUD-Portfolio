@@ -19,16 +19,22 @@ class DemoSmsSender(SmsSender):
 
     def __init__(self, sender: SmsSender, demo_phones: Iterable[str],
                  code: str):
+        """Wrap `sender`; the numbers in `demo_phones` sign in with `code`."""
         self._sender = sender
         self._demo_phones = frozenset(demo_phones)
         self._code = code
 
     def send_code(self, phone: str) -> None:
+        """A demo number gets no SMS; any other number goes to the real sender.
+        """
         if phone in self._demo_phones:
             return
         self._sender.send_code(phone)
 
     def check_code(self, phone: str, code: str) -> bool:
+        """A demo number is checked against the demo code; any other number by
+        the real sender.
+        """
         if phone in self._demo_phones:
             return hmac.compare_digest(code.encode(), self._code.encode())
         return self._sender.check_code(phone, code)
