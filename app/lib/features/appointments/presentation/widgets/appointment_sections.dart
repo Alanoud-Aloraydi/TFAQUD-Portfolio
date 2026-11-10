@@ -1,4 +1,3 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
@@ -11,6 +10,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
+import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
@@ -87,8 +87,11 @@ class AppointmentPlanSection extends StatelessWidget {
   }
 }
 
-/// Displays the appointment card UI.
-class AppointmentCard extends StatelessWidget {
+/// One appointment: its clinic, kind and status, with the pencil beside
+/// the status as on a medicine's and a measurement's card; when and where,
+/// and who goes; then «تفاصيل الموعد», which opens who added or changed it
+/// and its actions.
+class AppointmentCard extends StatefulWidget {
   const AppointmentCard({
     super.key,
     required this.value,
@@ -103,8 +106,22 @@ class AppointmentCard extends StatelessWidget {
   final bool showRelativeDate;
 
   @override
+  State<AppointmentCard> createState() => _AppointmentCardState();
+}
+
+class _AppointmentCardState extends State<AppointmentCard> {
+  bool _expanded = false;
+
+  CareAppointment get value => widget.value;
+  String get circleId => widget.circleId;
+  bool get canManage => widget.canManage;
+  bool get showRelativeDate => widget.showRelativeDate;
+
+  @override
   Widget build(BuildContext context) {
     final remote = value.kind == AppointmentKind.remote;
+    final bool open = value.status == AppointmentStatus.scheduled;
+    final bool hasDetails = value.createdByName != null || (canManage && open);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppSemanticColors.surfaceContent,
@@ -137,6 +154,13 @@ class AppointmentCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (canManage && open)
+                  PlanEditButton(
+                    onPressed: () => context.push<bool>(
+                      Routes.editAppointment(circleId, value.id),
+                    ),
+                    tooltip: context.tr('appointments.edit'),
+                  ),
                 CompactStatusBadge(
                   text: context.tr(
                     showRelativeDate
@@ -195,29 +219,9 @@ class AppointmentCard extends StatelessWidget {
                             avatarCode: companion.avatarCode,
                             size: 20,
                           ),
-                        Text(
-                          context.tr(
-                            'appointments.companion_name',
-                            args: [appointmentCompanionNames(context, value)],
-                          ),
-                        ),
+                        Text(appointmentCompanionLine(context, value)),
                       ],
                     ),
-                    if (value.createdByName case final name?) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        context.tr('appointments.added_by', args: [name]),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    if (value.updatedByName case final name?
-                        when name != value.createdByName) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        context.tr('appointments.last_edited_by', args: [name]),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -241,21 +245,36 @@ class AppointmentCard extends StatelessWidget {
                 icon: const Icon(CupertinoIcons.doc_text),
                 label: Text(context.tr('appointments.visit_title')),
               ),
-            if (canManage && value.status == AppointmentStatus.scheduled)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
-                child: Wrap(
+            if (hasDetails)
+              PlanDetailsToggle(
+                label: context.tr('appointments.details'),
+                expanded: _expanded,
+                onTap: () => setState(() => _expanded = !_expanded),
+              ),
+            if (hasDetails && _expanded) ...[
+              const Divider(),
+              if (value.createdByName case final name?) ...[
+                Text(
+                  context.tr('appointments.added_by', args: [name]),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+              ],
+              if (value.updatedByName case final name?
+                  when name != value.createdByName) ...[
+                Text(
+                  context.tr('appointments.last_edited_by', args: [name]),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+              ],
+              // The close actions, the cancel in red text, as a medicine's
+              // stop; the edit is the pencil at the top.
+              if (canManage && open)
+                Wrap(
                   spacing: AppSpacing.sm,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    // The outlined capsule with a pencil, as every edit.
-                    OutlinedButton.icon(
-                      onPressed: () => context.push<bool>(
-                        Routes.editAppointment(circleId, value.id),
-                      ),
-                      icon: const Icon(AppIcons.pencil),
-                      label: Text(context.tr('appointments.edit')),
-                    ),
                     if (!value.scheduledAt.isAfter(
                       PatientClockScope.of(context).now(),
                     ))
@@ -276,7 +295,7 @@ class AppointmentCard extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
+            ],
           ],
         ),
       ),
@@ -423,12 +442,7 @@ class AppointmentTodayRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(appointmentTitle(context, value)),
-              Text(
-                context.tr(
-                  'appointments.companion_name',
-                  args: [appointmentCompanionNames(context, value)],
-                ),
-              ),
+              Text(appointmentCompanionLine(context, value)),
             ],
           ),
         ),

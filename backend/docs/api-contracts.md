@@ -488,6 +488,35 @@ Apple sends them only to an app signed with a paid Apple Developer account; unti
 then `PUSH_BACKEND=none` and nothing is sent (backend README, "Push
 notifications").
 
+### PUT /api/v1/circles/{circle_id}/task-snoozes (Built)
+
+«ذكّرني لاحقًا», shared by the circle (migration 0033). Any member (a manager, or
+the patient in Simplified Mode) puts one dose or reading time off for some
+minutes. Body:
+
+```json
+{ "task": "dose", "task_id": "<schedule id>", "scheduled_on": "2026-11-11", "minutes": 15 }
+```
+
+A reading time is `"task": "measurement"` with its plan version as `task_id` and
+its `"time_of_day": "08:00"` (a version can read more than once a day). `minutes`
+is 1 to 240. Put off again, the same task moves to the new time.
+
+200:
+
+```json
+{ "snooze": { "remind_at": "2026-11-11T05:20:00+00:00", "minutes": 15,
+  "snoozed_by": { "account_id": "…", "name": "Reem", "avatar_code": null } } }
+```
+
+Every occurrence of `GET …/medication-occurrences` and `GET
+…/measurement-occurrences` carries the same `snooze` while it waits (null
+otherwise, and once the task is recorded). At `remind_at` every member except
+the one who put it off gets a push (`kind`: `dose_snoozed` or
+`measurement_snoozed`); that person's own phone reminds them. A task put off is
+not called missed until its grace has passed after `remind_at`. Errors: 404 (no
+such task that day), 409 `task_already_recorded`, 422 `validation_error`.
+
 ### Circles, requests, invitations and the medical file
 
 Built on 26 October 2026 for the circle creation, circle management and profile

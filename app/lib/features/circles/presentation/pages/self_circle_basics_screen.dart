@@ -117,8 +117,8 @@ class _SelfCircleBasicsScreenState extends State<SelfCircleBasicsScreen> {
                                   : null,
                             ),
                           ],
-                          const SizedBox(height: AppSpacing.sm),
-                          InsetText.note(context.tr('circles.name_hint')),
+                          // The one line under the title says who sees the
+                          // name; nothing more here.
                           if (state.accountLoad ==
                               AccountLoad.failed) ...<Widget>[
                             const SizedBox(height: AppSpacing.lg),

@@ -125,8 +125,10 @@ class AppointmentService:
 
     def _companions(self, circle_id: UUID, account_ids: list[UUID]) -> None:
         """422 unless every companion is a manager of the circle with an
-        account (their rows are locked meanwhile).
+        account (their rows are locked meanwhile). No companion is fine.
         """
+        if not account_ids:
+            return
         members = set(self.session.scalars(
             select(CareCircleManager.account_id)
             .join(Account, Account.id == CareCircleManager.account_id)
@@ -136,7 +138,7 @@ class AppointmentService:
             )
             .with_for_update()
         ))
-        if not account_ids or members != set(account_ids):
+        if members != set(account_ids):
             raise ValidationFailed(code="appointment_invalid_companion")
 
     def _replace_companions(

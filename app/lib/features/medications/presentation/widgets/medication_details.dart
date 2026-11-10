@@ -56,7 +56,12 @@ class MedicationDetails extends StatelessWidget {
             _value(
               context,
               'medications.treatment_period',
-              formatMedicationPeriod(context, version.startsOn, version.endsOn),
+              formatMedicationPeriod(
+                context,
+                version.startsOn,
+                version.endsOn,
+                today: PatientClockScope.of(context).today(),
+              ),
             ),
             if (plan.isScheduledOn(PatientClockScope.of(context).today()))
               _value(

@@ -329,7 +329,9 @@ class _RecordedStatus extends StatelessWidget {
 /// hour or an hour, with the same words as its notification. The choices
 /// open as a small Liquid Glass menu out of the button, like the circle
 /// switcher, not a sheet from the bottom. Once put off, the button says
-/// when it comes («بنذكّرك 2:36 م»), and opens the choices again.
+/// when it comes («بنذكّرك 2:36 م»), and opens the choices again. Put off
+/// by someone else in the circle, it says until when and who
+/// («مؤجّلة إلى 2:36 م · لين»).
 class _SnoozeButton extends StatefulWidget {
   const _SnoozeButton({
     required this.occurrence,
@@ -356,41 +358,66 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
   DoseReminders? get _reminders =>
       GetIt.I.isRegistered<DoseReminders>() ? GetIt.I<DoseReminders>() : null;
 
-  /// «ذكّرني لاحقًا», or «بنذكّرك 2:36 م» while the dose is put off.
-  String _label(BuildContext context, DateTime? at) {
-    if (at == null) return context.tr('reminders.snooze');
-    return context.tr(
-      'reminders.snoozed',
-      args: <String>[wallTimeText(PatientClockScope.of(context).wallTime(at))],
-    );
+  /// «ذكّرني لاحقًا»; «بنذكّرك 2:36 م» while this phone put the dose off
+  /// ([at]); «مؤجّلة إلى 2:36 م · لين» while someone else did ([shared]).
+  String _label(BuildContext context, DateTime? at, SharedSnooze? shared) {
+    String clock(DateTime moment) =>
+        wallTimeText(PatientClockScope.of(context).wallTime(moment));
+    if (at != null) {
+      return context.tr('reminders.snoozed', args: <String>[clock(at)]);
+    }
+    if (shared != null) {
+      final String? name = shared.byName;
+      return name == null
+          ? context.tr(
+              'reminders.snoozed_shared',
+              args: <String>[clock(shared.remindAt)],
+            )
+          : context.tr(
+              'reminders.snoozed_by',
+              args: <String>[clock(shared.remindAt), name],
+            );
+    }
+    return context.tr('reminders.snooze');
   }
 
-  IconData _icon(DateTime? at) =>
-      at == null ? CupertinoIcons.bell : CupertinoIcons.bell_fill;
+  IconData _icon(DateTime? at, SharedSnooze? shared) =>
+      at == null && shared == null
+      ? CupertinoIcons.bell
+      : CupertinoIcons.bell_fill;
 
-  Widget _content(BuildContext context, DateTime? at) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: <Widget>[
-      Icon(_icon(at), size: 16, color: AppSemanticColors.textPrimary),
-      const SizedBox(width: AppSpacing.sm),
-      Flexible(
-        child: Text(
-          _label(context, at),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: AppSemanticColors.textPrimary),
-        ),
-      ),
-    ],
-  );
+  Widget _content(BuildContext context, DateTime? at, SharedSnooze? shared) =>
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(
+            _icon(at, shared),
+            size: 16,
+            color: AppSemanticColors.textPrimary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            child: Text(
+              _label(context, at, shared),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge
+                  ?.copyWith(color: AppSemanticColors.textPrimary),
+            ),
+          ),
+        ],
+      );
 
-  Future<void> _snooze(BuildContext anchor, DateTime? at) async {
+  Future<void> _snooze(
+    BuildContext anchor,
+    DateTime? at,
+    SharedSnooze? shared,
+  ) async {
     setState(() => _open = true);
     final int? minutes = await showGlassMenu<int>(
       anchorContext: anchor,
       semanticLabel: context.tr('reminders.snooze_title'),
-      anchorContent: _content(context, at),
+      anchorContent: _content(context, at, shared),
       sections: <List<GlassMenuItem<int>>>[
         <GlassMenuItem<int>>[
           for (final int value in _choices)
@@ -424,34 +451,43 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
     );
   }
 
-  Widget _button(BuildContext context, DateTime? at) => Opacity(
-    opacity: _open ? 0 : 1,
-    child: Builder(
-      builder: (BuildContext anchor) => FilledButton.tonalIcon(
-        style: widget.style.copyWith(
-          backgroundColor: const WidgetStatePropertyAll<Color>(
-            AppSemanticColors.surfaceContent,
-          ),
-          foregroundColor: const WidgetStatePropertyAll<Color>(
-            AppSemanticColors.textPrimary,
+  Widget _button(BuildContext context, DateTime? at, SharedSnooze? shared) =>
+      Opacity(
+        opacity: _open ? 0 : 1,
+        child: Builder(
+          builder: (BuildContext anchor) => FilledButton.tonalIcon(
+            style: widget.style.copyWith(
+              backgroundColor: const WidgetStatePropertyAll<Color>(
+                AppSemanticColors.surfaceContent,
+              ),
+              foregroundColor: const WidgetStatePropertyAll<Color>(
+                AppSemanticColors.textPrimary,
+              ),
+            ),
+            onPressed: () => _snooze(anchor, at, shared),
+            icon: Icon(_icon(at, shared), size: 16),
+            label: Text(_label(context, at, shared)),
           ),
         ),
-        onPressed: () => _snooze(anchor, at),
-        icon: Icon(_icon(at), size: 16),
-        label: Text(_label(context, at)),
-      ),
-    ),
-  );
+      );
 
   @override
   Widget build(BuildContext context) {
+    // Put off by someone in the circle (the server's), while it waits; on
+    // the patient's wall clock, as the rest of the card.
+    final PatientClock clock = PatientClockScope.of(context);
+    final SharedSnooze? shared = widget.occurrence.snooze;
+    final SharedSnooze? waiting =
+        shared != null && clock.wallTime(shared.remindAt).isAfter(clock.now())
+        ? shared
+        : null;
     final DoseReminders? reminders = _reminders;
-    if (reminders == null) return _button(context, null);
+    if (reminders == null) return _button(context, null, waiting);
     final String key = doseSnoozeKey(widget.circleId, widget.occurrence);
     return ValueListenableBuilder<Map<String, TaskSnooze>>(
       valueListenable: reminders.snoozes,
       builder: (BuildContext context, Map<String, TaskSnooze> snoozed, _) =>
-          _button(context, snoozed[key]?.at),
+          _button(context, snoozed[key]?.at, waiting),
     );
   }
 }

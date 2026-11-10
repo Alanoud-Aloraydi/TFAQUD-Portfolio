@@ -5,6 +5,7 @@ import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminder_circle.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/services/reminders/reminder_plan.dart';
+import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
@@ -20,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 export 'package:app/core/services/reminder_circle.dart';
 export 'package:app/core/services/reminders/reminder_payloads.dart';
 export 'package:app/core/services/reminders/reminder_plan.dart';
+export 'package:app/core/services/reminders/shared_snooze.dart';
 
 /// The slots of the doses and measurements put off («ذكّرني لاحقًا» on a
 /// card, a full-screen reminder or a notification, in either mode), after
@@ -72,6 +74,12 @@ typedef _Snoozed = ({TaskSnooze snooze, int slot});
 ///
 /// Without [measurements] or [appointments] (the tests of doses), only the
 /// doses are read.
+///
+/// A task put off is told to the circle too ([share], the server): every
+/// member's card shows who put it off and until when, and at that time the
+/// server reminds the others. A task someone else put off has its reminder
+/// from the server, so this phone does not remind of it at its planned
+/// time meanwhile.
 class DoseReminders {
   DoseReminders(
     this._medications,
@@ -79,6 +87,7 @@ class DoseReminders {
     required this.texts,
     MeasurementRepository? measurements,
     AppointmentRepository? appointments,
+    this._share,
     DateTime Function()? clock,
   }) : _measurements = measurements,
        _appointments = appointments,
@@ -94,6 +103,9 @@ class DoseReminders {
   final MeasurementRepository? _measurements;
   final AppointmentRepository? _appointments;
   final PhoneNotifications _phone;
+
+  /// Tells the circle of a task put off; null in tests of one phone.
+  final Future<void> Function(SnoozeShare snooze)? _share;
 
   /// The words of the reminders.
   final DoseReminderTexts texts;
@@ -151,6 +163,7 @@ class DoseReminders {
     final ReminderCircle circle = _circleOf(circleId);
     return _snooze(
       key: doseSnoozeKey(circleId, dose),
+      after: after,
       snooze: TaskSnooze(
         circleId: circleId,
         task: SnoozedTask.dose,
@@ -171,6 +184,7 @@ class DoseReminders {
     final ReminderCircle circle = _circleOf(circleId);
     return _snooze(
       key: measurementSnoozeKey(circleId, task),
+      after: after,
       snooze: TaskSnooze(
         circleId: circleId,
         task: SnoozedTask.measurement,
@@ -195,6 +209,7 @@ class DoseReminders {
     if (circleId == null || text == null || target == null) return false;
     await _snooze(
       key: target.$1,
+      after: notificationSnooze,
       snooze: TaskSnooze(
         circleId: circleId,
         task: SnoozedTask.of(payload),
@@ -224,9 +239,11 @@ class DoseReminders {
   /// slot: put off again, it keeps one reminder, at the new time. Its
   /// reminder at its planned time, still to come when put off early, is
   /// taken off, and is not set again while the snooze waits. Recording the
-  /// task takes the snooze off ([_settleSnoozes]).
+  /// task takes the snooze off ([_settleSnoozes]). The circle is told
+  /// ([_tellCircle]).
   Future<void> _snooze({
     required String key,
+    required Duration after,
     required TaskSnooze snooze,
     required String title,
     required String body,
@@ -269,7 +286,37 @@ class DoseReminders {
       ),
     );
     await _saveSnoozes();
+    unawaited(_tellCircle(key, after));
   }
+
+  /// Tells the server the task of [key] was put off [after] from now, so
+  /// the whole circle sees it and is reminded then. Offline, only this
+  /// phone knows; it reminds of it all the same.
+  Future<void> _tellCircle(String key, Duration after) async {
+    final Future<void> Function(SnoozeShare snooze)? share = _share;
+    final SnoozeShare? snooze = snoozeShareOf(key, after);
+    if (share == null || snooze == null) return;
+    try {
+      await share(snooze);
+    } on Exception {
+      // Offline, or recorded meanwhile: nothing more to do.
+    }
+  }
+
+  /// The keys of the tasks someone else in the circle put off, still
+  /// waiting: the server reminds this phone of them at the new time.
+  Set<String> _putOffByOthers(
+    List<(ReminderCircle, DoseOccurrence)> doses,
+    List<(ReminderCircle, MeasurementOccurrence)> measurements,
+    DateTime now,
+  ) => <String>{
+    for (final (ReminderCircle circle, DoseOccurrence dose) in doses)
+      if (dose.snooze?.waitsAt(now) ?? false) doseSnoozeKey(circle.id, dose),
+    for (final (ReminderCircle circle, MeasurementOccurrence task)
+        in measurements)
+      if (task.snooze?.waitsAt(now) ?? false)
+        measurementSnoozeKey(circle.id, task),
+  };
 
   /// A slot no task put off uses; with all of them used, the one put off
   /// first gives up its slot (its reminder is replaced).
@@ -495,9 +542,13 @@ class DoseReminders {
       texts: texts,
       until: until,
       // The tasks put off have their own slots, and their reminders wait
-      // for the new time.
+      // for the new time; one put off by someone else is reminded of by
+      // the server then.
       limit: maxDoseReminders - _snoozed.length,
-      snoozed: _snoozed.keys.toSet(),
+      snoozed: <String>{
+        ..._snoozed.keys,
+        ..._putOffByOthers(doses, measurements, _now()),
+      },
     );
     // The question comes when there is something to remind of, once per run
     // of the app; iOS shows it only the first time.

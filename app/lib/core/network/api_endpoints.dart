@@ -68,6 +68,10 @@ class ApiEndpoints {
   static String resendCircleInvitation(String circleId, String invitationId) =>
       '${circleInvitation(circleId, invitationId)}/resend';
   static String leaveCircle(String circleId) => '${circle(circleId)}/leave';
+
+  /// «ذكّرني لاحقًا», shared by the circle.
+  static String taskSnoozes(String circleId) =>
+      '${circle(circleId)}/task-snoozes';
   static String medicalProfile(String circleId) =>
       '${circle(circleId)}/medical-profile';
   static String circlePatient(String circleId) => '${circle(circleId)}/patient';

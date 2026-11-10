@@ -5,7 +5,9 @@ The reminders before a dose, a measurement or an appointment (at its time,
 and for an appointment a day before and two hours before) are set on each
 phone by the app itself, so they come on time without this tick and without
 the server. The server tells only what a phone cannot know ahead: that a
-task's time passed and nothing was recorded.
+task's time passed and nothing was recorded, and that a task someone else
+put off came again (app/snoozes/due.py; this tick catches what its timer
+missed). A task put off is not called missed while it waits.
 
 Called by `/internal/tick` on an external schedule (see README). Never
 raises: a failed scan or send is logged and the tick moves on, so one bad
@@ -13,7 +15,7 @@ circle never blocks the rest.
 """
 
 import logging
-from datetime import datetime
+from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
@@ -21,7 +23,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import metrics
-from app.clock import patient_today
+from app.clock import local_moment, patient_today, patient_zone
 from app.database import transaction
 from app.medications.queries import MedicationQueries
 from app.measurements.queries import MeasurementQueries
@@ -33,12 +35,19 @@ from app.models import (
 )
 from app.push.notify import Push, notify
 from app.push.sender import PushMessage
+from app.snoozes.due import send_due_snoozes
+from app.snoozes.queries import put_off_until
 
 log = logging.getLogger(__name__)
 
 
 def run_tick(now: datetime) -> None:
-    """Scan every circle once; swallow one circle's error."""
+    """Remind of the tasks put off whose time came, then scan every circle
+    once; swallow one circle's error."""
+    try:
+        send_due_snoozes(now)
+    except Exception:  # noqa: BLE001 - the scan must still run
+        log.warning("Tasks put off were not reminded.", exc_info=True)
     with transaction() as session:
         circle_ids = list(session.scalars(select(CareCircle.id)))
     for circle_id in circle_ids:
@@ -78,6 +87,15 @@ def _circle_recipients(
     return tuple(recipients)
 
 
+def _key(task_id: str, occurrence: dict) -> tuple:
+    """An occurrence's key in `put_off_until`."""
+    return (
+        task_id,
+        occurrence["scheduled_on"],
+        occurrence["time_of_day"][:5],
+    )
+
+
 def _patient(session: Session, circle_id: UUID) -> Patient | None:
     """The circle's patient; None when the circle went since the scan
     began."""
@@ -100,11 +118,19 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
         occurrences = MedicationQueries(session, now).occurrences(
             circle_id, today, today
         )
+        moved = put_off_until(session, circle_id, "dose", today)
         recipients = _circle_recipients(session, patient)
     for occurrence in occurrences:
         if (
             occurrence["record"] is not None
             or occurrence["timing_state"] != "missed"
+        ):
+            continue
+        # A dose put off («ذكّرني لاحقًا») is missed only once its grace has
+        # passed after its new time.
+        until = moved.get(_key(occurrence["schedule_id"], occurrence))
+        if until is not None and now <= until + timedelta(
+            minutes=occurrence["missed_after_minutes"]
         ):
             continue
         # `_claim` writes the dose's key once; a scan that finds it written
@@ -144,10 +170,25 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         occurrences = MeasurementQueries(session, now).occurrences(
             circle_id, today, today
         )
+        moved = put_off_until(session, circle_id, "measurement", today)
+        zone = patient_zone(patient)
         recipients = _circle_recipients(session, patient)
     for occurrence in occurrences:
         if occurrence["status"] != "missed":
             continue
+        # The same for a reading time put off: its grace again after its new
+        # time (the grace is the time from the task to its deadline).
+        until = moved.get(_key(occurrence["version_id"], occurrence))
+        if until is not None:
+            grace = datetime.fromisoformat(
+                occurrence["deadline_at"]
+            ) - local_moment(
+                date.fromisoformat(occurrence["scheduled_on"]),
+                time.fromisoformat(occurrence["time_of_day"]),
+                zone,
+            )
+            if now <= until + grace:
+                continue
         kind_name = "سكر الدم" if occurrence["kind"] == "glucose" else (
             "ضغط الدم"
         )

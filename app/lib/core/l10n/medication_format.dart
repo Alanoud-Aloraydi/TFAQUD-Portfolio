@@ -1,4 +1,5 @@
 import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -13,17 +14,17 @@ String formatMedicationNumber(double value) =>
 String formatMedicationDate(BuildContext context, DateTime date) =>
     '${date.day} ${context.tr('circles.months.${date.month}')} ${date.year}';
 
-/// «يبدأ في 3 مارس 2026» for a plan without an end, «من 3 مارس 2026 إلى
-/// 3 أبريل 2026» for one with it.
+/// «بدأ في 3 مارس 2026» for a plan without an end that has started by
+/// [today] (the patient's day), «يبدأ في 3 مارس 2026» for one yet to start
+/// (or with no [today]), «من 3 مارس 2026 إلى 3 أبريل 2026» for one with an
+/// end.
 String formatMedicationPeriod(
   BuildContext context,
   DateTime start,
-  DateTime? end,
-) => end == null
-    ? context.tr(
-        'medications.starts_on',
-        args: [formatMedicationDate(context, start)],
-      )
+  DateTime? end, {
+  DateTime? today,
+}) => end == null
+    ? formatStartDate(context, start, today: today)
     : context.tr(
         'medications.period',
         args: [
@@ -31,6 +32,22 @@ String formatMedicationPeriod(
           formatMedicationDate(context, end),
         ],
       );
+
+/// «بدأ في 3 مارس 2026» once [start] is on or before [today] (the
+/// patient's day), «يبدأ في 3 مارس 2026» before it, or with no [today]:
+/// the same words on the cards of medicines and measurements.
+String formatStartDate(
+  BuildContext context,
+  DateTime start, {
+  DateTime? today,
+}) {
+  final bool started =
+      today != null && !scheduleDay(start).isAfter(scheduleDay(today));
+  return context.tr(
+    started ? 'medications.started_on' : 'medications.starts_on',
+    args: [formatMedicationDate(context, start)],
+  );
+}
 
 /// One dose of a schedule or an occurrence, «1 قرص».
 String formatMedicationDose(

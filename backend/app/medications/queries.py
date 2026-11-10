@@ -16,6 +16,7 @@ from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
 from app.models import Patient
+from app.snoozes.queries import attach_snoozes
 
 
 class MedicationQueries:
@@ -211,8 +212,9 @@ class MedicationQueries:
         to_date: date,
         plan_id: UUID | None = None,
     ) -> list[dict]:
-        """The doses due from `from_date` to `to_date`, with their records and
-        their timing (to come, due, missed), optionally for one medicine.
+        """The doses due from `from_date` to `to_date`, with their records,
+        their timing (to come, due, missed) and who put them off until when
+        (`snooze`), optionally for one medicine.
         """
         patient = self._patient(circle_id)
         # Every dose time of the patient's versions (not cancelled) whose
@@ -262,9 +264,13 @@ class MedicationQueries:
                 if record.recorded_by_account_id is not None
             },
         )
-        return build_occurrences(
+        occurrences = build_occurrences(
             rows, days, records, accounts, from_date, to_date, self.now,
             patient_zone(patient),
+        )
+        return attach_snoozes(
+            self.session, circle_id, "dose", occurrences, from_date,
+            to_date, self.now,
         )
 
     def _patient(self, circle_id: UUID) -> Patient:

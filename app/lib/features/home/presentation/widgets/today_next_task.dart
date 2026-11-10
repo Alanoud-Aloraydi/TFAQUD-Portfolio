@@ -132,12 +132,7 @@ class NextTaskCard extends StatelessWidget {
             if (minutes < 2880)
               Text(relative, style: Theme.of(context).textTheme.titleMedium),
             if (appointment != null)
-              Text(
-                context.tr(
-                  'appointments.companion_name',
-                  args: [appointmentCompanionNames(context, appointment)],
-                ),
-              ),
+              Text(appointmentCompanionLine(context, appointment)),
             if (measurement != null &&
                 sameDay &&
                 canRecordOccurrence(

@@ -12,11 +12,17 @@ but not for anything that must happen; that needs a real queue.
 
 With BACKGROUND_INLINE (always in tests) a job runs at once, in the caller,
 so a test sees its effect when the request returns.
+
+`run_at` waits for a moment instead (a task put off comes again at its new
+time). It is lost the same way when the process stops, so what it does is
+also done by the scheduled tick, a little later. Under BACKGROUND_INLINE it
+does nothing: a test calls the tick's work itself, at the time it chooses.
 """
 
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 
 from flask import current_app
 
@@ -47,6 +53,19 @@ def run_later(job, *args) -> None:
             return
         _pending += 1
     _executor().submit(_run, app, job, args)
+
+
+def run_at(when: datetime, now: datetime, job, *args) -> None:
+    """Run `job(*args)` at `when` (`now` is the time now), in this process.
+    A second late is better than early: the job finds its work due."""
+    app = current_app._get_current_object()
+    if app.config.get("BACKGROUND_INLINE"):
+        return
+    delay = max(0.0, (when - now).total_seconds()) + 1
+    timer = threading.Timer(delay, _run, args=(app, job, args, False))
+    # A waiting timer never keeps the process from stopping.
+    timer.daemon = True
+    timer.start()
 
 
 def _executor() -> ThreadPoolExecutor:

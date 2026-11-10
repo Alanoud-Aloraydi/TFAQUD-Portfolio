@@ -1,3 +1,4 @@
+import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 
@@ -32,6 +33,7 @@ class DoseOccurrenceModel {
         record: recordJson == null
             ? null
             : DoseRecordModel.fromJson(recordJson).toEntity(),
+        snooze: SharedSnooze.fromJson(json['snooze']),
       ),
     );
   }

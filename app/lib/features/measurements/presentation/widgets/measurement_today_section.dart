@@ -1,5 +1,6 @@
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -207,6 +208,26 @@ class MeasurementTaskRow extends StatelessWidget {
     final MeasurementReading? record = task.record?.outcome == 'read'
         ? task.record
         : null;
+    // Put off by someone in the circle («ذكّرني لاحقًا»), while it waits.
+    final PatientClock clock = PatientClockScope.of(context);
+    final SharedSnooze? snooze = task.snooze;
+    final String? putOff =
+        snooze == null ||
+            record != null ||
+            !clock.wallTime(snooze.remindAt).isAfter(now)
+        ? null
+        : snooze.byName == null
+        ? context.tr(
+            'measurements.snoozed_shared',
+            args: [wallTimeText(clock.wallTime(snooze.remindAt))],
+          )
+        : context.tr(
+            'measurements.snoozed_by',
+            args: [
+              wallTimeText(clock.wallTime(snooze.remindAt)),
+              snooze.byName!,
+            ],
+          );
     return TodayRowCard(
       isAttention: task.status == MeasurementStatus.missed,
       child: Column(
@@ -241,6 +262,25 @@ class MeasurementTaskRow extends StatelessWidget {
                         text: conditionsText(context, task.conditions),
                         background: AppSemanticColors.surfaceContent,
                         foreground: AppSemanticColors.textSupporting,
+                      ),
+                    ],
+                    if (putOff != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            CupertinoIcons.bell_fill,
+                            size: AppSizes.iconSmall,
+                          ),
+                          const SizedBox(width: AppSpacing.tight),
+                          Flexible(
+                            child: Text(
+                              putOff,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                     if (record != null) ...[

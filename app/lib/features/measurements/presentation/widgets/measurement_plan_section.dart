@@ -1,12 +1,13 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
+import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
@@ -155,6 +156,15 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                     ],
                   ),
                 ),
+                // Always editable, a change waiting for later too, with the
+                // same pencil as a medicine and an appointment.
+                if (widget.canManage)
+                  PlanEditButton(
+                    onPressed: () => context.push(
+                      Routes.editMeasurement(widget.circleId, plan.id),
+                    ),
+                    tooltip: context.tr('measurements.edit_plan'),
+                  ),
                 CompactStatusBadge(
                   text: context.tr(
                     startsLater
@@ -244,14 +254,11 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                   ),
                 ),
               ),
-            TextButton.icon(
-              onPressed: () => setState(() => _expanded = !_expanded),
-              icon: Icon(
-                _expanded
-                    ? CupertinoIcons.chevron_up
-                    : CupertinoIcons.chevron_down,
-              ),
-              label: Text(context.tr('medications.details')),
+            PlanDetailsToggle(
+              start: formatStartDate(context, _startsOn(plan), today: today),
+              label: context.tr('measurements.details'),
+              expanded: _expanded,
+              onTap: () => setState(() => _expanded = !_expanded),
             ),
             if (_expanded) ...[
               if (plan.createdByName case final name?) ...[
@@ -270,28 +277,20 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
+              // The stop in red text, as a medicine's and an appointment's;
+              // the edit is the pencil at the top.
               if (widget.canManage)
-                Row(
-                  children: [
-                    // Always editable, a change waiting for later too.
-                    OutlinedButton.icon(
-                      onPressed: () => context.push(
-                        Routes.editMeasurement(widget.circleId, plan.id),
-                      ),
-                      icon: const Icon(AppIcons.pencil),
-                      label: Text(context.tr('measurements.edit_plan')),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    TextButton(
-                      onPressed: () => _stop(context),
-                      child: Text(
-                        context.tr('measurements.stop_plan'),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    onPressed: () => _stop(context),
+                    child: Text(
+                      context.tr('measurements.stop_plan'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-                  ],
+                  ),
                 ),
             ],
           ],
@@ -323,6 +322,13 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
         .showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
   }
 }
+
+/// The first day of [plan]: its earliest version's, the one it started
+/// with (an edit starts a later version).
+DateTime _startsOn(MeasurementPlan plan) =>
+    <MeasurementVersion>[plan.version, ...plan.history]
+        .map((MeasurementVersion item) => item.effectiveFromOn)
+        .reduce((DateTime a, DateTime b) => a.isBefore(b) ? a : b);
 
 /// «9/11/2026» for [day], as the plan form's «يسري التعديل من» writes it.
 String _dayText(DateTime day) => '${day.day}/${day.month}/${day.year}';

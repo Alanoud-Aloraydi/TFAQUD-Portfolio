@@ -26,11 +26,23 @@ String appointmentKindTitle(BuildContext context, CareAppointment value) =>
     ? value.otherKind ?? context.tr('appointments.kinds.other')
     : context.tr('appointments.kinds.${value.kind.name}');
 
-/// The companions' names, joined with «،».
+/// The companions' names, joined with «،»; «بدون مرافق» for a visit
+/// nobody goes to with the patient (going is optional).
 String appointmentCompanionNames(BuildContext context, CareAppointment value) =>
-    value.companions
-        .map((companion) => companion.name)
-        .join(context.tr('appointments.companion_separator'));
+    value.companions.isEmpty
+    ? context.tr('appointments.no_companion')
+    : value.companions
+          .map((companion) => companion.name)
+          .join(context.tr('appointments.companion_separator'));
+
+/// «المرافقون: لين، حامد», or «بدون مرافق».
+String appointmentCompanionLine(BuildContext context, CareAppointment value) =>
+    value.companions.isEmpty
+    ? context.tr('appointments.no_companion')
+    : context.tr(
+        'appointments.companion_name',
+        args: [appointmentCompanionNames(context, value)],
+      );
 
 /// «الأحد 3 نوفمبر»: the weekday, day and month of [date].
 String appointmentDate(BuildContext context, DateTime date) =>

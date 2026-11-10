@@ -124,17 +124,42 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('a visit with no companion is refused and nothing is sent', (
+    testWidgets('a visit with no companion is saved: going is optional', (
       tester,
     ) async {
       final _Appointments repository = await open(tester, _riyadhAt(8));
+      // Nobody chosen; the place is above the companions.
+      await scrollTo(tester, find.text('نورة'));
 
+      await tester.enterText(find.byType(TextField).first, 'الحبيب');
       await tester.tap(find.text('appointments.save'.tr()));
       await tester.pumpAndSettle();
-      await scrollTo(tester, find.text('appointments.companion_required'.tr()));
 
-      expect(find.text('appointments.companion_required'.tr()), findsOneWidget);
-      expect(repository.created, isEmpty);
+      expect(repository.created, hasLength(1));
+      expect(repository.created.single.companionAccountIds, isEmpty);
+    });
+
+    testWidgets('the last companion can be taken off again', (tester) async {
+      final _Appointments repository = await open(tester, _riyadhAt(8));
+      await scrollTo(tester, find.text('نورة'));
+      await tester.tap(find.text('نورة'));
+      await tester.pump();
+      await tester.tap(find.text('نورة'));
+      await tester.pump();
+
+      await tester.enterText(find.byType(TextField).first, 'الحبيب');
+      await tester.tap(find.text('appointments.save'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(repository.created.single.companionAccountIds, isEmpty);
+    });
+
+    testWidgets('the note says who gets the reminder', (tester) async {
+      await open(tester, _riyadhAt(8));
+
+      await scrollTo(tester, find.text('appointments.companion_hint'.tr()));
+
+      expect(find.text('appointments.companion_hint'.tr()), findsOneWidget);
     });
 
     testWidgets(

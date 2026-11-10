@@ -1,3 +1,4 @@
+import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
@@ -383,6 +384,7 @@ class MeasurementOccurrence extends Equatable {
     required this.status,
     this.conditions = const <String>[],
     this.record,
+    this.snooze,
   });
 
   final String planId;
@@ -396,6 +398,9 @@ class MeasurementOccurrence extends Equatable {
   /// The conditions its plan gives this reading time.
   final List<String> conditions;
   final MeasurementReading? record;
+
+  /// Who in the circle put it off, and until when; null when it is not.
+  final SharedSnooze? snooze;
 
   factory MeasurementOccurrence.fromJson(Map<String, dynamic> json) =>
       MeasurementOccurrence(
@@ -412,6 +417,7 @@ class MeasurementOccurrence extends Equatable {
             : MeasurementReading.fromJson(
                 json['record'] as Map<String, dynamic>,
               ),
+        snooze: SharedSnooze.fromJson(json['snooze']),
       );
 
   @override
@@ -425,6 +431,7 @@ class MeasurementOccurrence extends Equatable {
     status,
     conditions,
     record,
+    snooze,
   ];
 }
 

@@ -31,6 +31,7 @@ from app.models.appointment import (
 from app.models.push import PushDevice
 from app.models.notification_log import NotificationLog
 from app.models.photo import Photo
+from app.models.task_snooze import TaskSnooze
 
 __all__ = [
     "Account",
@@ -62,4 +63,5 @@ __all__ = [
     "PushDevice",
     "NotificationLog",
     "Photo",
+    "TaskSnooze",
 ]

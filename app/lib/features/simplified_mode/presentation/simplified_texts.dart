@@ -2,7 +2,7 @@ import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart'
-    show TaskSnooze;
+    show SharedSnooze, TaskSnooze;
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -32,20 +32,30 @@ String simplifiedClockAt(BuildContext context, DateTime at) {
   );
 }
 
-/// «سأذكّرك 2:09 مساءً» on [task] of [circleId] while it is put off
-/// ([snoozes]); null for any other task, or once its reminder came.
+/// «سأذكّرك 2:09 مساءً» on [task] of [circleId] while this phone put it
+/// off ([snoozes]); «التذكير مؤجّل إلى 2:09 مساءً · لين» while someone else
+/// in the circle did; null for any other task, or once its reminder came.
 String? simplifiedSnoozed(
   BuildContext context,
   Map<String, TaskSnooze> snoozes,
   String circleId,
   TodayTask task,
 ) {
+  if (task.status == TodayTaskStatus.done) return null;
   final TaskSnooze? snooze = snoozes[task.snoozeKey(circleId)];
-  if (snooze == null || task.status == TodayTaskStatus.done) return null;
-  return context.tr(
-    'simplified_mode.snoozed_until',
-    args: <String>[simplifiedClockAt(context, snooze.at)],
-  );
+  if (snooze != null) {
+    return context.tr(
+      'simplified_mode.snoozed_until',
+      args: <String>[simplifiedClockAt(context, snooze.at)],
+    );
+  }
+  final SharedSnooze? shared = task.dose?.snooze ?? task.measurement?.snooze;
+  if (shared == null || !shared.waitsAt(DateTime.now())) return null;
+  final String at = simplifiedClockAt(context, shared.remindAt);
+  final String? name = shared.byName;
+  return name == null
+      ? context.tr('simplified_mode.snoozed_shared', args: <String>[at])
+      : context.tr('simplified_mode.snoozed_by', args: <String>[at, name]);
 }
 
 /// The app's one greeting, the detailed mode's too: «صباح الخير، مريم»

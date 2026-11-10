@@ -1089,4 +1089,125 @@ void main() {
       expect(phone.scheduled, hasLength(2));
     });
   });
+
+  group('a task put off, shared with the circle', () {
+    late _Medications medications;
+    late FakePhoneNotifications phone;
+    late List<SnoozeShare> shared;
+    late DoseReminders reminders;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      medications = _Medications();
+      phone = FakePhoneNotifications();
+      shared = <SnoozeShare>[];
+      reminders = DoseReminders(
+        MedicationsUseCase(medications),
+        phone,
+        texts: _texts,
+        share: (SnoozeShare snooze) async => shared.add(snooze),
+        clock: () => _now,
+      );
+    });
+
+    test('putting a dose off tells the circle which dose, and for how '
+        'long', () async {
+      final DoseOccurrence dose = _dose(3, '07:00');
+
+      await reminders.snoozeDose(_me.id, dose, const Duration(minutes: 15));
+      await pumpEventQueue();
+
+      expect(shared, <SnoozeShare>[
+        SnoozeShare(
+          circleId: _me.id,
+          task: 'dose',
+          taskId: dose.scheduleId,
+          scheduledOn: '2026-11-03',
+          minutes: 15,
+        ),
+      ]);
+    });
+
+    test('a reading time is told with its time', () async {
+      await reminders.snoozeMeasurement(
+        _me.id,
+        _measurement(3, '10:00'),
+        const Duration(minutes: 30),
+      );
+      await pumpEventQueue();
+
+      expect(shared.single.toJson(), <String, Object>{
+        'task': 'measurement',
+        'task_id': 'version-glucose',
+        'scheduled_on': '2026-11-03',
+        'time_of_day': '10:00',
+        'minutes': 30,
+      });
+    });
+
+    test('offline, this phone still reminds of it', () async {
+      reminders = DoseReminders(
+        MedicationsUseCase(medications),
+        phone,
+        texts: _texts,
+        share: (SnoozeShare _) async => throw Exception('offline'),
+        clock: () => _now,
+      );
+
+      await reminders.snoozeDose(
+        _me.id,
+        _dose(3, '07:00'),
+        const Duration(minutes: 15),
+      );
+      await pumpEventQueue();
+
+      expect(
+        phone.scheduled[cardSnoozeIdBase]?.at,
+        _now.add(const Duration(minutes: 15)),
+      );
+    });
+
+    test('a dose someone else put off is not reminded of at its own time: '
+        'the server reminds at the new one', () async {
+      final SharedSnooze byReem = SharedSnooze(
+        remindAt: DateTime.utc(2026, 11, 3, 18, 30),
+        minutes: 30,
+        byName: 'ريم',
+      );
+      medications.doses[_noura.id] = <DoseOccurrence>[
+        _dose(3, '21:00').withSnooze(byReem),
+        _dose(3, '22:00', name: 'فيتامين د'),
+      ];
+
+      await reminders.sync(<ReminderCircle>[_noura]);
+
+      // 22:00 in Riyadh is 19:00 UTC; the note comes a minute after it.
+      expect(phone.inOrder.map((ScheduledNotification n) => n.at), <DateTime>[
+        DateTime.utc(2026, 11, 3, 19),
+        DateTime.utc(2026, 11, 3, 19, 1),
+      ]);
+    });
+
+    test("the server's snooze reads with who put it off", () {
+      final SharedSnooze? snooze = SharedSnooze.fromJson(<String, dynamic>{
+        'remind_at': '2026-11-03T05:20:00+00:00',
+        'minutes': 15,
+        'snoozed_by': <String, dynamic>{
+          'account_id': 'a-reem',
+          'name': 'ريم',
+          'avatar_code': null,
+        },
+      });
+
+      expect(snooze?.remindAt, DateTime.utc(2026, 11, 3, 5, 20));
+      expect(snooze?.byName, 'ريم');
+      expect(snooze?.waitsAt(DateTime.utc(2026, 11, 3, 5, 19)), isTrue);
+      expect(snooze?.waitsAt(DateTime.utc(2026, 11, 3, 5, 20)), isFalse);
+      expect(SharedSnooze.fromJson(null), isNull);
+    });
+
+    test('a key of another shape is told nothing', () {
+      expect(snoozeShareOf('c-me|odd', const Duration(minutes: 15)), isNull);
+    });
+  });
 }

@@ -1,4 +1,3 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
@@ -8,6 +7,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -15,7 +15,6 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -77,81 +76,69 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                       child: MedicationPhotoImage(bytes: bytes, height: 140),
                     ),
             ),
-            InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: AppSizes.touch),
-                child: Row(
-                  children: [
-                    MedicationPhotoBuilder(
-                      circleId: widget.circleId,
-                      planId: plan.id,
-                      builder: (context, bytes) => bytes != null
-                          ? const SizedBox.shrink()
-                          : Container(
-                              width: AppSizes.touch,
-                              height: AppSizes.touch,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: AppSemanticColors.surfaceContent,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.field,
-                                ),
-                              ),
-                              child: const Icon(
-                                TafaqodPhosphorIcons.pill,
-                                color: AppSemanticColors.textSupporting,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: AppSizes.touch),
+              child: Row(
+                children: [
+                  MedicationPhotoBuilder(
+                    circleId: widget.circleId,
+                    planId: plan.id,
+                    builder: (context, bytes) => bytes != null
+                        ? const SizedBox.shrink()
+                        : Container(
+                            width: AppSizes.touch,
+                            height: AppSizes.touch,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppSemanticColors.surfaceContent,
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.field,
                               ),
                             ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: AppSpacing.xs,
-                            children: [
-                              Text(
-                                version.name,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                strength,
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ],
-                          ),
-                          Text(
-                            context.tr(
-                              'medications.form.${version.dosageForm.name}',
+                            child: const Icon(
+                              TafaqodPhosphorIcons.pill,
+                              color: AppSemanticColors.textSupporting,
                             ),
-                            style: Theme.of(context).textTheme.bodySmall,
                           ),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: AppSpacing.xs,
+                          children: [
+                            Text(
+                              version.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              strength,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
+                        ),
+                        Text(
+                          context.tr(
+                            'medications.form.${version.dosageForm.name}',
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ),
-                    // Always editable while it is in use or yet to start,
-                    // a change waiting for later too, as a measurement plan
-                    // and an appointment are.
-                    if (canManage && status != _PlanState.previous)
-                      IconButton(
-                        onPressed: () => _edit(context),
-                        icon: const Icon(AppIcons.pencil),
-                        tooltip: context.tr('medications.edit_title'),
-                      ),
-                    _PlanStatus(state: status),
-                    const SizedBox(width: AppSpacing.sm),
-                    Icon(
-                      _expanded
-                          ? CupertinoIcons.chevron_up
-                          : CupertinoIcons.chevron_down,
-                      size: AppSizes.iconSmall,
-                      color: AppSemanticColors.borderControlBase,
+                  ),
+                  // Always editable while it is in use or yet to start,
+                  // a change waiting for later too, as a measurement plan
+                  // and an appointment are, with the same pencil.
+                  if (canManage && status != _PlanState.previous)
+                    PlanEditButton(
+                      onPressed: () => _edit(context),
+                      tooltip: context.tr('medications.edit_title'),
                     ),
-                  ],
-                ),
+                  _PlanStatus(state: status),
+                ],
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -222,25 +209,16 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                 ),
               ),
             ],
-            Row(
-              children: [
-                const Icon(CupertinoIcons.calendar, size: AppSizes.iconSmall),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Text(
-                    formatMedicationPeriod(
-                      context,
-                      version.startsOn,
-                      version.endsOn,
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => setState(() => _expanded = !_expanded),
-                  child: Text(context.tr('medications.details')),
-                ),
-              ],
+            PlanDetailsToggle(
+              start: formatMedicationPeriod(
+                context,
+                version.startsOn,
+                version.endsOn,
+                today: today,
+              ),
+              label: context.tr('medications.details'),
+              expanded: _expanded,
+              onTap: () => setState(() => _expanded = !_expanded),
             ),
             if (_expanded) ...[
               const Divider(),
@@ -271,28 +249,19 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                   label: context.tr('medications.instructions'),
                   value: instructions,
                 ),
-              // The same pair as a measurement plan's: the edit as an
-              // outlined capsule with a pencil, the stop in red text.
-              Wrap(
-                spacing: AppSpacing.sm,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  if (canManage && status != _PlanState.previous)
-                    OutlinedButton.icon(
-                      onPressed: () => _edit(context),
-                      icon: const Icon(AppIcons.pencil),
-                      label: Text(context.tr('medications.edit_title')),
+              // The stop in red text, as a measurement plan's and an
+              // appointment's; the edit is the pencil at the top.
+              if (canManage && status != _PlanState.previous)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppSemanticColors.statusError,
                     ),
-                  if (canManage && status != _PlanState.previous)
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppSemanticColors.statusError,
-                      ),
-                      onPressed: () => _discontinue(context),
-                      child: Text(context.tr('medications.discontinue')),
-                    ),
-                ],
-              ),
+                    onPressed: () => _discontinue(context),
+                    child: Text(context.tr('medications.discontinue')),
+                  ),
+                ),
             ],
           ],
         ),

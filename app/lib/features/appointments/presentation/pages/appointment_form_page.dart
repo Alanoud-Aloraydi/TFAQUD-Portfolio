@@ -100,10 +100,6 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       setState(() => _errorKey = 'appointments.kind_required');
       return;
     }
-    if (_companionIds.isEmpty) {
-      setState(() => _errorKey = 'appointments.companion_required');
-      return;
-    }
     if (_kind != AppointmentKind.remote && _place.text.trim().isEmpty) {
       setState(() => _errorKey = 'appointments.place_required');
       return;
@@ -391,10 +387,12 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                               ),
                               showCheckmark: false,
                               selected: _companionIds.contains(item.id),
+                              // Going is optional: the last one can be
+                              // taken off too.
                               onSelected: (selected) => setState(() {
                                 if (selected) {
                                   _companionIds.add(item.id);
-                                } else if (_companionIds.length > 1) {
+                                } else {
                                   _companionIds.remove(item.id);
                                 }
                               }),

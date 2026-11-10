@@ -16,6 +16,7 @@ from app.measurements.service import (
 from app.models import MeasurementPlan, MeasurementPlanTime
 from app.models import MeasurementPlanVersion
 from app.models import MeasurementRecord, MeasurementTarget
+from app.snoozes.queries import attach_snoozes
 
 
 def version_response(
@@ -348,9 +349,14 @@ class MeasurementQueries:
                     if item is not None:
                         result.append(item)
             day += timedelta(days=1)
-        return sorted(
-            result,
-            key=lambda item: (item["scheduled_on"], item["time_of_day"]),
+        # Who put each one off, and until when.
+        return attach_snoozes(
+            self.session, circle_id, "measurement",
+            sorted(
+                result,
+                key=lambda item: (item["scheduled_on"], item["time_of_day"]),
+            ),
+            start, end, self.now,
         )
 
     def _occurrence(

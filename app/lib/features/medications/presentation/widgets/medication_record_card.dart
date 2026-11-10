@@ -114,11 +114,10 @@ class MedicationRecordCard extends StatelessWidget {
                           ],
                         ),
                         Text(
-                          context.tr(
-                            'medications.starts_on',
-                            args: [
-                              formatMedicationDate(context, version.startsOn),
-                            ],
+                          formatStartDate(
+                            context,
+                            version.startsOn,
+                            today: PatientClockScope.of(context).today(),
                           ),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),

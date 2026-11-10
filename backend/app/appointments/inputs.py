@@ -10,7 +10,7 @@ from app.validation import Dto
 
 
 class AppointmentRequest(Dto):
-    """A single appointment with a circle companion."""
+    """A single appointment, with the circle members going to it, if any."""
 
     specialty: Annotated[str, Field(min_length=1, max_length=80)]
     kind: Literal["follow_up", "test", "imaging", "remote", "other"]
@@ -19,7 +19,8 @@ class AppointmentRequest(Dto):
     time_of_day: time
     place: Annotated[str | None, Field(max_length=160)] = None
     remote_method: Literal["video", "phone"] | None = None
-    companion_account_ids: Annotated[list[UUID], Field(min_length=1)]
+    # Who goes with the patient: none, one or more managers of the circle.
+    companion_account_ids: list[UUID] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def valid_location(self):

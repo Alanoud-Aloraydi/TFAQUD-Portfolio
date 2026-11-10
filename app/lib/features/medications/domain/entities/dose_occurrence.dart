@@ -1,3 +1,4 @@
+import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
@@ -94,6 +95,7 @@ class DoseOccurrence extends Equatable {
     this.timingState,
     this.instructions,
     this.record,
+    this.snooze,
   });
 
   final String planId;
@@ -110,6 +112,10 @@ class DoseOccurrence extends Equatable {
   final String? instructions;
   final DoseRecord? record;
   final DoseTimingState? timingState;
+
+  /// Who in the circle put it off, and until when; null when it is not
+  /// put off (or once it is recorded).
+  final SharedSnooze? snooze;
 
   /// Whether the dose was taken at or after its missed boundary,
   /// [missedAfterMinutes] after its time on the patient's [clock] (the
@@ -141,6 +147,25 @@ class DoseOccurrence extends Equatable {
     timingState: null,
   );
 
+  /// This dose put off by [value], as the server keeps it.
+  DoseOccurrence withSnooze(SharedSnooze? value) => DoseOccurrence(
+    planId: planId,
+    scheduleId: scheduleId,
+    scheduledOn: scheduledOn,
+    time: time,
+    name: name,
+    strengthValue: strengthValue,
+    strengthUnit: strengthUnit,
+    dosageForm: dosageForm,
+    doseValue: doseValue,
+    doseUnit: doseUnit,
+    missedAfterMinutes: missedAfterMinutes,
+    instructions: instructions,
+    record: record,
+    timingState: timingState,
+    snooze: value,
+  );
+
   @override
   List<Object?> get props => [
     planId,
@@ -157,6 +182,7 @@ class DoseOccurrence extends Equatable {
     instructions,
     record,
     timingState,
+    snooze,
   ];
 }
 

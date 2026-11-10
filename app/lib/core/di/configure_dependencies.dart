@@ -69,6 +69,11 @@ Future<void> configureDependencies() async {
       texts: doseReminderTexts,
       measurements: getIt<MeasurementRepository>(),
       appointments: getIt<AppointmentRepository>(),
+      // «ذكّرني لاحقًا» goes to the whole circle.
+      share: (SnoozeShare snooze) => getIt<DioClient>().put(
+        ApiEndpoints.taskSnoozes(snooze.circleId),
+        data: snooze.toJson(),
+      ),
     ),
   );
   // Optional mirror of doses, measurements and appointments onto the

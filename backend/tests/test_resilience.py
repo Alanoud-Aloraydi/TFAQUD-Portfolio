@@ -1,6 +1,7 @@
 """The circuit breaker, the counters and the work after the answer."""
 
 import threading
+from datetime import datetime, timezone
 
 import pytest
 from flask import Flask, current_app
@@ -156,3 +157,35 @@ def test_a_failing_job_is_counted_and_stops_nothing():
 
     assert metrics.count("background.failed") == 1
     assert metrics.count("after") == 1
+
+
+def test_a_job_for_later_waits_for_its_moment_in_its_own_context():
+    app = Flask(__name__)
+    app.config["BACKGROUND_INLINE"] = False
+    finished = threading.Event()
+    seen = {}
+    now = datetime(2026, 11, 11, 9, tzinfo=timezone.utc)
+
+    def job(value):
+        seen["app"] = current_app._get_current_object()
+        seen["value"] = value
+        finished.set()
+
+    with app.app_context():
+        # Already due: it still runs after the caller, a second late.
+        background.run_at(now, now, job, 3)
+    assert "value" not in seen
+
+    assert finished.wait(5)
+    assert seen == {"app": app, "value": 3}
+
+
+def test_tests_leave_a_job_for_later_to_the_tick():
+    app = create_app("testing")
+    done = []
+    now = datetime(2026, 11, 11, 9, tzinfo=timezone.utc)
+
+    with app.app_context():
+        background.run_at(now, now, done.append, "reminded")
+
+    assert done == []

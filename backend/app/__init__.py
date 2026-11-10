@@ -37,6 +37,7 @@ from app.prayer_times.routes import bp as prayer_times_bp
 from app.push import PushSender, create_push_sender
 from app.push.routes import bp as push_bp
 from app.push.tick_routes import bp as tick_bp
+from app.snoozes.routes import bp as snoozes_bp
 from app.request_context import register_request_id
 from app.sms import SmsSender, create_sms_sender
 from app.users.routes import bp as users_bp
@@ -159,6 +160,7 @@ def create_app(
     app.register_blueprint(prayer_times_bp)
     app.register_blueprint(push_bp)
     app.register_blueprint(tick_bp)
+    app.register_blueprint(snoozes_bp)
     app.register_blueprint(demo_bp)
     if database_enabled and env != "production":
         # `flask --app wsgi demo-data`: demo circles, medicines and doses for

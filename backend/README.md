@@ -301,7 +301,9 @@ How the server stays up when something it depends on does not.
   `sign_in.code_sent`, `sign_in.code_not_sent`, `sign_in.code_not_checked`,
   `sign_in.invalid_code`, `sign_in.completed`, `push.sent`, `push.failed`,
   `push.gone`, `push.unregistered` (Apple's 410: the app was deleted),
-  `session.signed_out_by_apple`, `prayer_times.unavailable`,
+  `session.signed_out_by_apple`, `snooze.dose_due` and
+  `snooze.measurement_due` (a task put off came again),
+  `prayer_times.unavailable`,
   `tick.missed_dose`,
   `tick.missed_measurement`, `circuit.<service>.opened` and `.refused`,
   `database.unavailable`, `errors.internal`, `background.failed` and
