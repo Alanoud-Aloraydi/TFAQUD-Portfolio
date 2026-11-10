@@ -4,6 +4,8 @@
 !.env.example
 *-firebase-adminsdk-*.json
 service-account*.json
+# Apple push key (APNs .p8): keep it out of git
+*.p8
 
 # Python
 __pycache__/
@@ -39,3 +41,7 @@ app/ios/Flutter/Generated.xcconfig
 .vscode/
 .DS_Store
 Thumbs.db
+backend/secrets/
+
+# Flutter golden test output (made again by every failing run)
+app/test/failures/

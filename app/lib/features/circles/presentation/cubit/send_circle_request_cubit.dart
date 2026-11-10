@@ -1,0 +1,68 @@
+import 'package:app/core/errors/failure.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// Sends the request to a patient who uses the app. The circle does not exist
+/// after this: the patient has to agree and complete the details first.
+class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
+  SendCircleRequestCubit(this._circles) : super(const SendCircleRequestState());
+
+  final CirclesUseCase _circles;
+
+  /// [digits] are the digits the user typed, already written 0-9.
+  void phoneChanged(String digits) {
+    emit(state.copyWith(phone: digits, clearError: true));
+  }
+
+  void chooseMode(CircleAppMode mode) {
+    emit(state.copyWith(mode: mode, clearError: true));
+  }
+
+  /// Sends the request. The circle gets no name here: the patient names it
+  /// when they complete the request. Returns true when the server saved it.
+  /// A tap while it is on its way, or after it is saved, sends nothing.
+  Future<bool> send() async {
+    if (state.status != SendStatus.idle) return false;
+    if (!state.phoneValid) {
+      emit(state.copyWith(showErrors: true, clearError: true));
+      return false;
+    }
+    emit(
+      state.copyWith(
+        status: SendStatus.sending,
+        showErrors: false,
+        clearError: true,
+      ),
+    );
+    final result = await _circles.sendCircleRequest(
+      NewCircleRequest(
+        patientPhoneNumber: SaudiMobile.international(state.phone),
+        proposedAppMode: state.mode,
+      ),
+    );
+    if (isClosed) return false;
+    return result.when(
+      (SentCircleRequest sent) {
+        emit(state.copyWith(status: SendStatus.sent, sent: sent));
+        return true;
+      },
+      (Failure failure) {
+        emit(
+          state.copyWith(
+            status: SendStatus.idle,
+            errorKey: failure.messageKey,
+            sessionEnded: _ended(failure),
+          ),
+        );
+        return false;
+      },
+    );
+  }
+
+  bool _ended(Failure failure) =>
+      failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+}

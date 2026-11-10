@@ -1,0 +1,46 @@
+# Makes the demo on the shared test server fresh: it deletes the demo
+# accounts and builds their story again around the moment it runs (a dose
+# due an hour ago, the next one in 45 minutes, today's appointments), so
+# both the simplified and the detailed mode show every case.
+#
+# When it runs:
+#   - every morning at 07:00 in Riyadh (04:00 UTC);
+#   - from the Actions tab ("Run workflow"), right before showing the demo.
+#
+# Whatever the demo accounts did since the last run is lost: they are for
+# showing the app, not for keeping data.
+#
+# Secret it needs: TICK_SECRET (repository Settings, Secrets and variables,
+# Actions), the same value as on Render. The server must have
+# DEMO_SIGN_IN_CODE set, or it answers 404.
+
+name: Demo refresh
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call /internal/demo-data
+        run: |
+          # A free Render server sleeps when idle and takes up to a minute
+          # to wake, so the first call may time out: try three times.
+          for attempt in 1 2 3; do
+            status=$(curl -s -o response.json -w "%{http_code}" \
+              --max-time 120 -X POST \
+              -H "X-Tick-Secret: ${{ secrets.TICK_SECRET }}" \
+              "https://tfaqud-api.onrender.com/internal/demo-data" || true)
+            echo "Attempt $attempt: $status"
+            if [ "$status" = "200" ]; then
+              cat response.json
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::The demo was not refreshed (last status $status)."
+          exit 1

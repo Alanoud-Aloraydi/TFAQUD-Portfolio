@@ -1,0 +1,127 @@
+import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
+import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
+import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// Displays the medication dose history UI.
+class MedicationDoseHistory extends StatelessWidget {
+  const MedicationDoseHistory({
+    super.key,
+    required this.earliest,
+    required this.circleId,
+  });
+
+  /// The first day of the medicine. When it is after today, nothing has
+  /// been due yet and the history says when it begins.
+  final DateTime earliest;
+
+  /// Needed to show who recorded each dose.
+  final String circleId;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<MedicationOccurrencesCubit, MedicationOccurrencesState>(
+      // Only a failed «أقدم»: the answers to a dose show their own errors.
+      listenWhen: (previous, current) =>
+          current.messageKey != null &&
+          previous.status == MedicationOccurrencesStatus.loadingMore,
+      listener: _showError,
+      builder: (context, state) {
+        if (state.status == MedicationOccurrencesStatus.loading) {
+          return const DoseHistorySkeleton();
+        }
+        if (state.status == MedicationOccurrencesStatus.failure) {
+          return MedicationFailureView(
+            messageKey: state.messageKey!,
+            onRetry: context.read<MedicationOccurrencesCubit>().reload,
+          );
+        }
+        final items = state.occurrences.reversed.toList();
+        final groups = <DateTime, List<DoseOccurrence>>{};
+        for (final item in items) {
+          final day = DateUtils.dateOnly(item.scheduledOn);
+          groups.putIfAbsent(day, () => []).add(item);
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // A small header and the notes start 16 in, lined up with the
+            // text inside the cards.
+            InsetText.header(context.tr('medications.dose_history')),
+            const SizedBox(height: AppSpacing.labelGap),
+            if (items.isEmpty &&
+                earliest.isAfter(PatientClockScope.of(context).today()))
+              InsetText(
+                context.tr(
+                  'medications.dose_history_not_started',
+                  args: <String>[formatMedicationDate(context, earliest)],
+                ),
+              )
+            else if (items.isEmpty)
+              InsetText(context.tr('medications.no_dose_history'))
+            else
+              for (final group in groups.entries) ...[
+                Text(
+                  formatMedicationDate(context, group.key),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                for (final item in group.value) ...[
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppSemanticColors.surfaceContent,
+                      border: Border.all(color: AppSemanticColors.borderSubtle),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      child: DoseOccurrenceCard(
+                        occurrence: item,
+                        historyLayout: true,
+                        circleId: circleId,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                const SizedBox(height: AppSpacing.md),
+              ],
+            if (context.read<MedicationOccurrencesCubit>().canLoadEarlier(
+              earliest,
+            ))
+              Center(
+                child: TextButton(
+                  onPressed:
+                      state.status == MedicationOccurrencesStatus.loadingMore
+                      ? null
+                      : () => context
+                            .read<MedicationOccurrencesCubit>()
+                            .loadEarlier(earliest),
+                  child: Text(context.tr('medications.load_earlier')),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showError(BuildContext context, MedicationOccurrencesState state) {
+    if (state.messageKey == null) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey!))));
+  }
+}

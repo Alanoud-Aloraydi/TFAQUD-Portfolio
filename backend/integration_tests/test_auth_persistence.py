@@ -1,0 +1,484 @@
+"""Authentication through Flask with real PostgreSQL and fake SMS only."""
+
+from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
+from pathlib import Path
+from uuid import UUID
+
+import pytest
+from flask_migrate import downgrade, upgrade
+from sqlalchemy import func, inspect, select, text
+from sqlalchemy.orm import Session
+
+from app import create_app
+from app.auth.otp_store import SendRules
+from app.auth.postgres_otp import PostgresOtpStore
+from app.clock import ManualClock
+from app.models import Account, AccountSession, OtpChallenge, OtpSendAttempt
+from app.sms.base import SmsDeliveryError
+
+PHONE = "+966501234567"
+
+
+@pytest.fixture
+def auth_app(database, database_app):
+    """Each app uses durable stores but sends no network messages."""
+    app = create_app(
+        "testing",
+        clock=ManualClock(),
+        overrides={
+            "SQLALCHEMY_DATABASE_URI": database_app.config[
+                "SQLALCHEMY_DATABASE_URI"
+            ],
+            "SQLALCHEMY_ENGINE_OPTIONS": database_app.config[
+                "SQLALCHEMY_ENGINE_OPTIONS"
+            ],
+            # These tests were written for three codes per number.
+            "OTP_MAX_SENDS_PER_DAY": 3,
+        },
+    )
+    yield app
+    from app.database import db
+
+    with app.app_context():
+        db.session.remove()
+        db.engine.dispose()
+
+
+def restarted(app):
+    """Recreate application services against the same external stores."""
+    return create_app(
+        "testing",
+        clock=app.extensions["clock"],
+        sms_sender=app.extensions["sms_sender"],
+        overrides={
+            "SQLALCHEMY_DATABASE_URI": app.config["SQLALCHEMY_DATABASE_URI"],
+            "OTP_MAX_SENDS_PER_DAY": 3,
+        },
+    )
+
+
+def start(client, verification_id=None):
+    """Request or resend an OTP without exposing the fake code in output."""
+    body = {"phone_number": PHONE}
+    if verification_id:
+        body["verification_id"] = verification_id
+    response = client.post("/api/v1/auth/request-code", json=body)
+    assert response.status_code == 200
+    return response.json["verification_id"]
+
+
+def verify(app, verification_id):
+    code = app.extensions["sms_sender"].last_message_to(PHONE).code
+    return app.test_client().post(
+        "/api/v1/auth/verify-code",
+        json={"verification_id": verification_id, "code": code},
+    )
+
+
+def headers(body):
+    return {"Authorization": "Bearer " + body["access_token"]}
+
+
+def test_signup_profile_and_returning_account_are_persisted(
+    auth_app, database
+):
+    client = auth_app.test_client()
+    first = verify(auth_app, start(client))
+    assert first.status_code == 200
+    assert first.json["account"]["profile_complete"] is False
+    saved = client.put(
+        "/api/v1/accounts/me/profile",
+        headers=headers(first.json),
+        json={
+            "first_name": "Nora",
+            "last_name": "Family",
+            "display_name": "Nora",
+        },
+    )
+    assert saved.status_code == 200
+    second_app = restarted(auth_app)
+    second = verify(second_app, start(second_app.test_client()))
+    assert second.status_code == 200
+    assert second.json["account"]["id"] == first.json["account"]["id"]
+    assert second.json["account"]["profile_complete"] is True
+    with Session(database) as session:
+        assert session.scalar(select(func.count()).select_from(Account)) == 1
+        assert (
+            session.scalar(select(func.count()).select_from(AccountSession))
+            == 2
+        )
+        row = session.scalar(select(AccountSession).limit(1))
+        assert row.refresh_token_hash not in {
+            first.json["refresh_token"],
+            second.json["refresh_token"],
+        }
+
+
+def test_session_and_logout_survive_app_restart(auth_app):
+    body = verify(auth_app, start(auth_app.test_client())).json
+    client = restarted(auth_app).test_client()
+    restored = client.get("/api/v1/auth/session", headers=headers(body))
+    assert restored.status_code == 200
+    assert restored.json["account"]["profile_complete"] is False
+    assert (
+        client.post("/api/v1/auth/sign-out", headers=headers(body)).status_code
+        == 204
+    )
+    after = restarted(auth_app).test_client()
+    assert (
+        after.get("/api/v1/auth/session", headers=headers(body)).status_code
+        == 401
+    )
+    assert (
+        after.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": body["refresh_token"]},
+        ).status_code
+        == 401
+    )
+
+
+def test_logout_preserves_another_session(auth_app):
+    client = auth_app.test_client()
+    first = verify(auth_app, start(client)).json
+    second = verify(auth_app, start(client)).json
+    client.post("/api/v1/auth/sign-out", headers=headers(first))
+    after = restarted(auth_app).test_client()
+    assert (
+        after.get("/api/v1/auth/session", headers=headers(second)).status_code
+        == 200
+    )
+    assert (
+        after.get("/api/v1/auth/session", headers=headers(first)).status_code
+        == 401
+    )
+
+
+def test_pending_challenge_and_quotas_survive_restart(auth_app, database):
+    client = auth_app.test_client()
+    challenge = start(client)
+    code = auth_app.extensions["sms_sender"].last_message_to(PHONE).code
+    wrong = "000000" if code != "000000" else "111111"
+    response = client.post(
+        "/api/v1/auth/verify-code",
+        json={"verification_id": challenge, "code": wrong},
+    )
+    assert response.json["error"]["code"] == "invalid_code"
+    after = restarted(auth_app)
+    with after.app_context():
+        request = after.extensions["sign_in_service"]._otp.get_request(
+            challenge
+        )
+        assert request.wrong_tries == 1
+    start(after.test_client(), challenge)
+    start(after.test_client(), challenge)
+    assert (
+        after.test_client()
+        .post("/api/v1/auth/request-code", json={"phone_number": PHONE})
+        .status_code
+        == 429
+    )
+    assert verify(after, challenge).status_code == 200
+    with Session(database) as session:
+        row = session.get(OtpChallenge, UUID(challenge))
+        assert row.status == "verified"
+        assert row.expires_at is not None
+
+
+def test_new_challenge_supersedes_previous_request(auth_app):
+    client = auth_app.test_client()
+    previous = start(client)
+    current = start(client)
+    response = verify(auth_app, previous)
+    assert response.status_code == 404
+    assert verify(auth_app, current).status_code == 200
+
+
+def test_concurrent_quota_claims_cannot_exceed_three(auth_app, database):
+    now = auth_app.extensions["clock"].now()
+
+    def claim(_):
+        with auth_app.app_context():
+            return (
+                PostgresOtpStore()
+                .claim_send(None, PHONE, now, now - timedelta(hours=1), 3)
+                .granted
+            )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(claim, range(20)))
+    assert results.count(True) == 3
+    with Session(database) as session:
+        assert (
+            session.scalar(select(func.count()).select_from(OtpSendAttempt))
+            == 3
+        )
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(OtpChallenge)
+                .where(OtpChallenge.status == "pending")
+            )
+            == 1
+        )
+
+
+def test_resend_rechecks_attempts_before_reserving_delivery(
+    auth_app, database, monkeypatch
+):
+    """Attempts consumed just before reservation cannot trigger another SMS."""
+    challenge = start(auth_app.test_client())
+    store = auth_app.extensions["sign_in_service"]._otp
+    reserve = store.claim_send
+
+    def exhausted_before_claim(*args, **kwargs):
+        for _ in range(3):
+            assert store.claim_try(challenge, 3)
+        return reserve(*args, **kwargs)
+
+    monkeypatch.setattr(store, "claim_send", exhausted_before_claim)
+    response = auth_app.test_client().post(
+        "/api/v1/auth/request-code",
+        json={"phone_number": PHONE, "verification_id": challenge},
+    )
+    assert response.status_code == 429
+    assert response.json["error"]["code"] == "too_many_attempts"
+    with Session(database) as session:
+        assert (
+            session.scalar(select(func.count()).select_from(OtpSendAttempt))
+            == 1
+        )
+
+
+def test_concurrent_verification_attempts_cannot_exceed_three(auth_app):
+    challenge = start(auth_app.test_client())
+
+    def attempt(_):
+        with auth_app.app_context():
+            return PostgresOtpStore().claim_try(challenge, 3)
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(attempt, range(20)))
+    assert results.count(True) == 3
+    assert verify(auth_app, challenge).status_code == 429
+
+
+def test_concurrent_success_creates_one_session(
+    auth_app, database, monkeypatch
+):
+    challenge = start(auth_app.test_client())
+    monkeypatch.setattr(
+        auth_app.extensions["sms_sender"], "check_code", lambda *_: True
+    )
+
+    def finish(_):
+        return verify(auth_app, challenge).status_code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(finish, range(2)))
+    assert sorted(results) == [200, 422]
+    with Session(database) as session:
+        assert (
+            session.scalar(select(func.count()).select_from(AccountSession))
+            == 1
+        )
+
+
+def test_a_stored_session_lasts_until_it_is_signed_out(auth_app):
+    body = verify(auth_app, start(auth_app.test_client())).json
+    # Long past the 30 days a refresh token used to have.
+    auth_app.extensions["clock"].advance(days=400)
+    client = restarted(auth_app).test_client()
+    refreshed = client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
+    )
+    assert refreshed.status_code == 200
+    assert client.get(
+        "/api/v1/auth/session", headers=headers(refreshed.json)
+    ).status_code == 200
+
+    client.post("/api/v1/auth/sign-out", headers=headers(refreshed.json))
+
+    again = client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
+    )
+    assert again.status_code == 401
+
+
+def test_migration_0031_ends_only_the_sessions_that_had_ended(
+    database_app, database, account
+):
+    """Before 0031 a refresh token ended after 30 days. A session past that
+    date stays ended (signed out when it ended); a live one goes on with no
+    end date."""
+    owner = account()
+    directory = str(Path(__file__).resolve().parents[1] / "migrations")
+    downgrade(directory=directory, revision="0030")
+    try:
+        with database.begin() as connection:
+            for digit, created, ends in (
+                ("a", "now() - interval '40 days'",
+                 "now() - interval '10 days'"),
+                ("b", "now() - interval '5 days'",
+                 "now() + interval '25 days'"),
+            ):
+                connection.execute(text(f"""
+                    INSERT INTO account_session (id, account_id,
+                        refresh_token_hash, created_at, refresh_expires_at)
+                    VALUES (gen_random_uuid(), :account, :hash,
+                        {created}, {ends})
+                """), {"account": owner.id, "hash": digit * 64})
+    finally:
+        upgrade(directory=directory)
+
+    columns = {
+        c["name"] for c in inspect(database).get_columns("account_session")
+    }
+    assert "refresh_expires_at" not in columns
+    with Session(database) as session:
+        ended = {
+            row.refresh_token_hash[0]: row.revoked_at
+            for row in session.scalars(select(AccountSession))
+        }
+    assert ended["a"] is not None
+    assert ended["b"] is None
+
+
+def test_account_deletion_removes_sessions(auth_app, database):
+    body = verify(auth_app, start(auth_app.test_client())).json
+    with Session(database) as session, session.begin():
+        row = session.get(Account, UUID(body["account"]["id"]))
+        session.delete(row)
+    assert (
+        restarted(auth_app)
+        .test_client()
+        .get("/api/v1/auth/session", headers=headers(body))
+        .status_code
+        == 401
+    )
+
+
+def test_failed_session_insert_rolls_back_account_and_verification(
+    auth_app, database, monkeypatch
+):
+    challenge = start(auth_app.test_client())
+    store = auth_app.extensions["session_service"]._store
+    real_add = store.add
+
+    def fail_after_insert(record):
+        real_add(record)
+        raise RuntimeError("Simulated persistence failure")
+
+    monkeypatch.setattr(store, "add", fail_after_insert)
+    assert verify(auth_app, challenge).status_code == 500
+    with Session(database) as session:
+        assert session.scalar(select(func.count()).select_from(Account)) == 0
+        assert (
+            session.scalar(select(func.count()).select_from(AccountSession))
+            == 0
+        )
+        row = session.get(OtpChallenge, UUID(challenge))
+        assert row.status == "pending" and row.verified_at is None
+
+
+@pytest.mark.parametrize(
+    "status, expected", [(422, "failed"), (None, "reserved")]
+)
+def test_delivery_uncertainty_retains_quota(
+    auth_app, database, monkeypatch, status, expected
+):
+    def rejected(phone):
+        raise SmsDeliveryError("Simulated provider failure", status=status)
+
+    monkeypatch.setattr(
+        auth_app.extensions["sms_sender"], "send_code", rejected
+    )
+    client = auth_app.test_client()
+    for _ in range(3):
+        assert (
+            client.post(
+                "/api/v1/auth/request-code", json={"phone_number": PHONE}
+            ).status_code
+            == 503
+        )
+    result = client.post(
+        "/api/v1/auth/request-code", json={"phone_number": PHONE}
+    )
+    assert result.status_code == (503 if status == 422 else 429)
+    with Session(database) as session:
+        assert set(session.scalars(select(OtpSendAttempt.status))) == {
+            expected
+        }
+
+
+def test_postgres_applies_the_waits_and_the_caps_of_the_asker(auth_app):
+    clock = auth_app.extensions["clock"]
+    now = clock.now()
+    day = now - timedelta(hours=24)
+    rules = SendRules(
+        waits=(30,),
+        device_id="device-aaaa",
+        client_ip="203.0.113.7",
+        max_device_sends=2,
+    )
+    with auth_app.app_context():
+        store = PostgresOtpStore()
+        first = store.claim_send(None, PHONE, now, day, 20, rules=rules)
+        assert first.granted
+        assert first.next_send_at == now + timedelta(seconds=30)
+
+        soon = now + timedelta(seconds=10)
+        too_soon = store.claim_send(None, PHONE, soon, day, 20, rules=rules)
+        assert (too_soon.granted, too_soon.reason) == (False, "wait")
+        assert too_soon.retry_at == now + timedelta(seconds=30)
+
+        other = store.claim_send(None, "+966512345678", now, day, 20,
+                                 rules=rules)
+        assert other.granted
+        third = store.claim_send(None, "+966500000003", now, day, 20,
+                                 rules=rules)
+        assert (third.granted, third.reason) == (False, "device")
+
+        # A sign-in starts the count of the number again: no wait after it.
+        store.mark_sent(first.send_id, now, now + timedelta(minutes=5))
+        assert store.mark_verified(
+            first.request_id, now + timedelta(seconds=5)
+        )
+        fresh = SendRules(waits=(30,), device_id="device-bbbb")
+        later = now + timedelta(seconds=6)
+        assert store.claim_send(None, PHONE, later, day, 20,
+                                rules=fresh).granted
+
+
+def test_postgres_lets_the_owners_known_phone_past_a_stranger(auth_app):
+    clock = auth_app.extensions["clock"]
+    now = clock.now()
+    day = now - timedelta(hours=24)
+    network = {"client_ip": "203.0.113.7", "max_ip_sends": 1}
+    owner = SendRules(waits=(30,), device_id="device-owner", **network)
+    stranger = SendRules(waits=(30,), device_id="device-stranger")
+    new_phone = SendRules(waits=(30,), device_id="device-newphone")
+    with auth_app.app_context():
+        store = PostgresOtpStore()
+        # The owner signs in on their phone: it becomes known.
+        signed = store.claim_send(None, PHONE, now, day, 20, rules=owner)
+        store.mark_sent(signed.send_id, now, now + timedelta(minutes=5))
+        assert store.mark_verified(
+            signed.request_id, now + timedelta(seconds=5)
+        )
+
+        later = now + timedelta(seconds=6)
+        assert store.claim_send(None, PHONE, later, day, 20,
+                                rules=stranger).granted
+        soon = later + timedelta(seconds=1)
+        held = store.claim_send(None, PHONE, soon, day, 20, rules=stranger)
+        assert (held.granted, held.reason) == (False, "wait")
+        held = store.claim_send(None, PHONE, soon, day, 20, rules=new_phone)
+        assert (held.granted, held.reason) == (False, "wait")
+
+        # The owner's phone counts only its own codes, and its network's
+        # cap (one code an hour, already used) does not hold it back.
+        mine = store.claim_send(None, PHONE, soon, day, 20, rules=owner)
+        assert mine.granted
+        assert mine.next_send_at == soon + timedelta(seconds=30)

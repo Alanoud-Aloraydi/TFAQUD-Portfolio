@@ -1,0 +1,240 @@
+"""One error format for the whole API.
+
+Every error response has this shape:
+
+    {
+      "error": {
+        "code": "validation_error",       <- stable, for the app to act on
+        "message": "The request is not valid.",
+        "request_id": "3f2a...",
+        "details": [{"field": "...", "code": "...", "message": "..."}],
+        "retry_after_seconds": 120
+      }
+    }
+
+When `retry_after_seconds` is present, the same number is sent in the standard
+`Retry-After` header.
+
+The Flutter app decides what to do from `code` (and shows its own Arabic text).
+`message` is English and is not meant for the end user.
+"""
+
+from flask import Flask, current_app, g, jsonify
+from sqlalchemy.exc import DBAPIError, IntegrityError, OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeout
+from werkzeug.exceptions import HTTPException
+
+from app import metrics
+
+
+class ApiError(Exception):
+    """An error the API chose to return. Subclasses fix the status code."""
+
+    status = 400
+    default_code = "bad_request"
+    default_message = "The request could not be processed."
+
+    def __init__(
+        self, message=None, *, code=None, details=None, retry_after=None
+    ):
+        """Keep the message, the stable code the app reads, optional details
+        per field, and how many seconds to wait before trying again.
+        """
+        self.message = message or self.default_message
+        self.code = code or self.default_code
+        self.details = details
+        # Whole seconds the client should wait before trying again, or None.
+        self.retry_after = retry_after
+        super().__init__(self.message)
+
+
+class BadRequest(ApiError):
+    """400: the request cannot be read (not JSON, for example)."""
+    status = 400
+    default_code = "bad_request"
+    default_message = "The request is malformed."
+
+
+class Unauthorized(ApiError):
+    """401: no valid sign-in."""
+    status = 401
+    default_code = "unauthorized"
+    default_message = "Authentication is required."
+
+
+class Forbidden(ApiError):
+    """403: signed in, but not allowed to do this."""
+    status = 403
+    default_code = "forbidden"
+    default_message = "You do not have access to this resource."
+
+
+class NotFound(ApiError):
+    """404: no such thing, or one the asker may not know exists."""
+    status = 404
+    default_code = "not_found"
+    default_message = "The resource was not found."
+
+
+class ValidationFailed(ApiError):
+    """422: the request was read, but its values are not accepted."""
+    status = 422
+    default_code = "validation_error"
+    default_message = "The request is not valid."
+
+
+class Conflict(ApiError):
+    """409: the data changed since the app read it."""
+    status = 409
+    default_code = "conflict"
+    default_message = "The resource changed before this request completed."
+
+
+class TooManyRequests(ApiError):
+    """429: too many tries; `retry_after` says when to come back."""
+    status = 429
+    default_code = "too_many_requests"
+    default_message = "Too many requests. Try again later."
+
+
+class ServiceUnavailable(ApiError):
+    """503: a service we depend on cannot answer now."""
+    status = 503
+    default_code = "service_unavailable"
+    default_message = (
+        "The service is not available right now. Try again later."
+    )
+
+
+# Standard HTTP errors raised by Flask itself (unknown URL, wrong method, ...)
+# are returned in the same format, with these codes.
+_HTTP_CODES = {
+    400: "bad_request",
+    404: "not_found",
+    405: "method_not_allowed",
+    413: "payload_too_large",
+    415: "unsupported_media_type",
+}
+
+
+def error_response(
+    status: int, code: str, message: str, details=None, retry_after=None
+):
+    """The JSON answer every error shares: a stable code, a message, the
+    request id, optional details, and a Retry-After header when the client
+    should wait.
+    """
+    # The stable code the app reads, a message, and the request id to find the
+    # log line.
+    body = {
+        "error": {
+            "code": code,
+            "message": message,
+            "request_id": g.get("request_id"),
+        }
+    }
+    if details:
+        body["error"]["details"] = details
+    if retry_after is not None:
+        body["error"]["retry_after_seconds"] = retry_after
+    # Retry-After when the client should wait; a 401 says it wants a Bearer
+    # token.
+    response = jsonify(body)
+    response.status_code = status
+    if retry_after is not None:
+        response.headers["Retry-After"] = str(retry_after)
+    if status == 401:
+        response.headers["WWW-Authenticate"] = "Bearer"
+    return response
+
+
+def _handle_database_conflict(error: IntegrityError):
+    """Roll back rejected writes without exposing SQL or patient values."""
+    from app.database import db
+
+    db.session.rollback()
+    return error_response(
+        409, "data_conflict", "The change conflicts with current data."
+    )
+
+
+def _handle_database_failure(error: DBAPIError):
+    """Distinguish operational failures from database programming errors."""
+    from app.database import db
+
+    db.session.rollback()
+    # A query or a lock past its deadline (app/config.py) is one of these.
+    if isinstance(error, OperationalError) or error.connection_invalidated:
+        metrics.increment("database.unavailable")
+        current_app.logger.warning("Database unavailable; request rolled back")
+        return error_response(
+            503, "database_unavailable", "The database is unavailable."
+        )
+    metrics.increment("errors.internal")
+    current_app.logger.error(
+        "Database operation failed: %s, SQLSTATE=%s",
+        type(error).__name__,
+        getattr(error.orig, "sqlstate", None),
+    )
+    return error_response(
+        500, "internal_error", "An unexpected error occurred."
+    )
+
+
+def _handle_pool_timeout(error: PoolTimeout):
+    """Every connection of the pool stayed busy past its deadline."""
+    metrics.increment("database.unavailable")
+    current_app.logger.warning("No free database connection in time")
+    return error_response(
+        503, "database_unavailable", "The database is unavailable."
+    )
+
+
+def _handle_api_error(error: ApiError):
+    """Translate domain errors into the shared response format."""
+    return error_response(
+        error.status,
+        error.code,
+        error.message,
+        error.details,
+        error.retry_after,
+    )
+
+
+def _handle_http_exception(error: HTTPException):
+    """Preserve HTTP metadata in the shared response format."""
+    code = _HTTP_CODES.get(error.code, "http_error")
+    response = error_response(
+        error.code, code, error.description or error.name
+    )
+    # A 405 must tell the client which methods are allowed.
+    for name, value in error.get_headers():
+        if name.lower() == "allow":
+            response.headers["Allow"] = value
+    return response
+
+
+def _handle_unexpected_error(error: Exception):
+    """Log unexpected failures and return a generic response."""
+    # The traceback goes to the log. The client never sees it.
+    metrics.increment("errors.internal")
+    current_app.logger.exception(
+        "Unhandled error (request_id=%s)", g.get("request_id")
+    )
+    return error_response(
+        500, "internal_error", "An unexpected error occurred."
+    )
+
+
+def register_error_handlers(app: Flask) -> None:
+    """Register domain, HTTP, and database error responses."""
+    handlers = (
+        (IntegrityError, _handle_database_conflict),
+        (DBAPIError, _handle_database_failure),
+        (PoolTimeout, _handle_pool_timeout),
+        (ApiError, _handle_api_error),
+        (HTTPException, _handle_http_exception),
+        (Exception, _handle_unexpected_error),
+    )
+    for error_type, handler in handlers:
+        app.register_error_handler(error_type, handler)

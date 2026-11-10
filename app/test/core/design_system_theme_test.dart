@@ -1,0 +1,214 @@
+import 'package:app/core/constants/app_colors.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// WCAG 2 contrast ratio of two opaque colors.
+double contrast(Color a, Color b) {
+  final double la = a.computeLuminance();
+  final double lb = b.computeLuminance();
+  final double hi = la > lb ? la : lb;
+  final double lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+Color? resolve(
+  WidgetStateProperty<Color?>? property,
+  Set<WidgetState> states,
+) => property?.resolve(states);
+
+void main() {
+  group('palette', () {
+    test('text pairs of the design system stay readable', () {
+      // Primary text on every approved ground.
+      for (final Color ground in <Color>[
+        AppColors.surface,
+        AppColors.canvas,
+        AppColors.leafTint,
+        AppColors.leaf,
+        AppColors.honey,
+        AppColors.line,
+      ]) {
+        expect(contrast(AppColors.ink, ground), greaterThanOrEqualTo(7));
+      }
+      // White remains readable on inverse surfaces and navy containers.
+      for (final Color fill in <Color>[AppColors.ink, AppColors.slate]) {
+        expect(contrast(AppColors.surface, fill), greaterThanOrEqualTo(7));
+      }
+      // Supporting text reaches 4.5:1 on the light grounds (and turns ink
+      // with Increased Contrast).
+      for (final Color ground in <Color>[
+        AppColors.surface,
+        AppColors.canvas,
+        AppColors.leafTint,
+        AppColors.line,
+      ]) {
+        expect(contrast(AppColors.slate, ground), greaterThanOrEqualTo(4.5));
+      }
+      // Status words on the grounds they are approved on.
+      for (final Color status in <Color>[
+        AppColors.success,
+        AppColors.warning,
+        AppColors.error,
+      ]) {
+        expect(contrast(status, AppColors.surface), greaterThanOrEqualTo(4.5));
+        expect(contrast(status, AppColors.canvas), greaterThanOrEqualTo(4.5));
+        expect(contrast(status, AppColors.leafTint), greaterThanOrEqualTo(4.5));
+      }
+      // A destructive action in an alert: the red label on the grey capsule.
+      expect(
+        contrast(AppColors.error, AppColors.line),
+        greaterThanOrEqualTo(4.5),
+      );
+      // Control borders and focus reach 3:1.
+      expect(
+        contrast(AppColors.stone, AppColors.surface),
+        greaterThanOrEqualTo(3),
+      );
+      expect(
+        contrast(AppColors.stone, AppColors.canvas),
+        greaterThanOrEqualTo(3),
+      );
+      // Focus stays distinct on the page and on the green action fill.
+      expect(
+        contrast(AppColors.slate, AppColors.canvas),
+        greaterThanOrEqualTo(3),
+      );
+      expect(
+        contrast(AppSemanticColors.focusOnAction, AppColors.leaf),
+        greaterThanOrEqualTo(3),
+      );
+    });
+
+    test('honey and the greens are accents, not text colors', () {
+      expect(contrast(AppColors.honey, AppColors.surface), lessThan(3));
+      expect(contrast(AppColors.leaf, AppColors.surface), lessThan(3));
+      expect(contrast(AppColors.leafTint, AppColors.surface), lessThan(1.5));
+    });
+
+    test('settings icon squares and the ruler mark can be seen', () {
+      for (final Color tile in <Color>[
+        AppSemanticColors.settingsTileDoses,
+        AppSemanticColors.settingsTileMeasurements,
+        AppSemanticColors.settingsTileAppointments,
+      ]) {
+        expect(
+          contrast(AppSemanticColors.onSettingsTile, tile),
+          greaterThanOrEqualTo(4.5),
+        );
+      }
+      expect(
+        contrast(AppSemanticColors.pickerMark, AppColors.surface),
+        greaterThanOrEqualTo(3),
+      );
+    });
+  });
+
+  group('theme', () {
+    test('primary actions use green interaction shades with readable ink', () {
+      final ButtonStyle style = AppTheme.lightTheme.filledButtonTheme.style!;
+      expect(resolve(style.backgroundColor, <WidgetState>{}), AppColors.leaf);
+      expect(
+        resolve(style.backgroundColor, <WidgetState>{WidgetState.pressed}),
+        AppColors.leafPressed,
+      );
+      expect(
+        resolve(style.backgroundColor, <WidgetState>{WidgetState.disabled}),
+        AppColors.line,
+      );
+      expect(
+        resolve(style.foregroundColor, <WidgetState>{}),
+        AppSemanticColors.onActionPrimary,
+      );
+      expect(
+        resolve(style.backgroundColor, {WidgetState.hovered}),
+        AppColors.leafHover,
+      );
+      for (final fill in [
+        AppColors.leaf,
+        AppColors.leafHover,
+        AppColors.leafPressed,
+      ]) {
+        expect(contrast(AppColors.ink, fill), greaterThanOrEqualTo(4.5));
+        expect(
+          contrast(AppSemanticColors.focusOnAction, fill),
+          greaterThanOrEqualTo(3),
+        );
+      }
+      expect(AppSemanticColors.navigationSelected, AppColors.ink);
+      expect(
+        AppSemanticColors.navigationSelected,
+        isNot(AppSemanticColors.statusSuccess),
+      );
+    });
+
+    test('text, icons and selection marks are ink', () {
+      final ColorScheme scheme = AppTheme.lightTheme.colorScheme;
+      expect(scheme.primary, AppColors.ink);
+      expect(scheme.onSurface, AppColors.ink);
+      expect(scheme.error, AppColors.error);
+      expect(AppTheme.lightTheme.scaffoldBackgroundColor, AppColors.canvas);
+    });
+
+    test('Increased Contrast turns secondary text and status words ink', () {
+      final AppTokens light = AppTheme.lightTheme.extension<AppTokens>()!;
+      final AppTokens high = AppTheme.highContrastTheme.extension<AppTokens>()!;
+      expect(light.textSecondary, AppColors.slate);
+      expect(high.textSecondary, AppColors.ink);
+      expect(light.borderControl, AppColors.stone);
+      expect(high.borderControl, AppColors.slate);
+      expect(high.successText, AppColors.ink);
+      expect(high.warningText, AppColors.ink);
+      expect(high.errorText, AppColors.ink);
+      // Icons keep their status color.
+      expect(high.success, AppColors.success);
+      expect(high.error, AppColors.error);
+    });
+
+    test('radii are concentric: card minus padding', () {
+      expect(AppRadius.l - AppSpacing.lg, AppRadius.s);
+      expect(AppRadius.l - AppSpacing.sm, AppRadius.m);
+      expect(AppRadius.s - AppSpacing.sm, AppRadius.xs);
+    });
+
+    test('the text theme uses IBM Plex Sans Arabic, 11 or larger', () {
+      final TextTheme text = AppTheme.lightTheme.textTheme;
+      expect(text.bodyLarge!.fontFamily, 'IBMPlexSansArabic');
+      // Component styles that replace Material's own name the font too.
+      expect(
+        AppTheme.lightTheme.chipTheme.labelStyle!.fontFamily,
+        'IBMPlexSansArabic',
+      );
+      // Five sizes only, each with a line height on the 4-point grid.
+      final List<TextStyle?> styles = <TextStyle?>[
+        text.displaySmall,
+        text.headlineLarge,
+        text.headlineMedium,
+        text.headlineSmall,
+        text.titleLarge,
+        text.titleMedium,
+        text.titleSmall,
+        text.bodyLarge,
+        text.bodyMedium,
+        text.bodySmall,
+        text.labelLarge,
+        text.labelMedium,
+        text.labelSmall,
+      ];
+      final Set<double> sizes = <double>{
+        for (final TextStyle? style in styles) style!.fontSize!,
+      };
+      expect(sizes, <double>{...AppTextTheme.sizes});
+      for (final TextStyle? style in styles) {
+        final double line = style!.fontSize! * style.height!;
+        expect(line.round() % 4, 0, reason: '${style.fontSize} has line $line');
+        expect(style.fontSize, greaterThanOrEqualTo(13));
+      }
+    });
+  });
+}

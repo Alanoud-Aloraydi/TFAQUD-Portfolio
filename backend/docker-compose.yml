@@ -1,0 +1,46 @@
+# Local Flask and PostgreSQL services configured by the ignored .env file.
+
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_HOST: db
+      # Test caches are excluded from the source bind mount.
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
+    ports:
+      # Published only on the host loopback by default. To test the app on an
+      # iPhone over Wi-Fi, set API_BIND=0.0.0.0 in your own .env: the API then
+      # listens on your Wi-Fi address too. The database stays on loopback.
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-5000}:5000"
+    volumes:
+      # Source changes trigger the development server's reloader.
+      - .:/app
+    # Create or update the tables first, then start the server. A new database
+    # is empty, and the API cannot sign anyone in without its tables.
+    command: >
+      sh -c "flask --app wsgi db upgrade &&
+      flask --app wsgi run --host 0.0.0.0 --port 5000 --reload"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tfaqud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the .env file}
+      POSTGRES_DB: ${POSTGRES_DB:-tfaqud}
+    ports:
+      # Host database clients use DB_PORT; the API uses the service port 5432.
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

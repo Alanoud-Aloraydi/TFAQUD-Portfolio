@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 8.1+ (API 27, the first with a light navigation bar in a
+         theme): the bar under the app is light with dark buttons, like the
+         app's light pages, in Light and Dark Mode alike. Older versions keep
+         the system's black bar, whose white buttons stay visible. From
+         Android 15 the app draws edge to edge, the bar is transparent, and
+         only the dark buttons apply. Flutter leaves the bar alone because
+         AppNavigationThemes.systemBars sets only the status bar. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>
