@@ -1,4 +1,5 @@
-"""Provider parsing, city choice and daily cache for prayer times."""
+"""Provider parsing, city and zone choice and daily cache for prayer
+times."""
 
 import json
 from datetime import date
@@ -9,6 +10,8 @@ import pytest
 
 from app.errors import ServiceUnavailable
 from app.prayer_times import service
+
+RIYADH = "Asia/Riyadh"
 
 
 def _payload(day: str, method: int = 4,
@@ -43,15 +46,18 @@ def test_selected_city_and_date_are_sent_once(monkeypatch):
         return BytesIO(_payload(day))
 
     monkeypatch.setattr(service, "urlopen", fake_open)
-    first = service.prayer_times_for("بريدة", date(2026, 11, 2))
+    first = service.prayer_times_for("بريدة", RIYADH, date(2026, 11, 2))
     assert first["Fajr"] == "04:41"
-    assert service.prayer_times_for("بريدة", date(2026, 11, 2)) == first
-    service.prayer_times_for("الرياض", date(2026, 11, 2))
-    service.prayer_times_for("بريدة", date(2026, 11, 3))
+    assert service.prayer_times_for(
+        "بريدة", RIYADH, date(2026, 11, 2)
+    ) == first
+    service.prayer_times_for("الرياض", RIYADH, date(2026, 11, 2))
+    service.prayer_times_for("بريدة", RIYADH, date(2026, 11, 3))
     assert len(urls) == 3
+    assert "/timingsByCity/" in urls[0]
     query = parse_qs(urlparse(urls[0]).query)
     assert query == {"city": ["Buraidah"], "country": ["SA"],
-                     "method": ["4"]}
+                     "method": ["4"], "timezonestring": [RIYADH]}
     service._fetch_day.cache_clear()
 
 
@@ -67,20 +73,36 @@ def test_invalid_provider_method_is_not_cached(monkeypatch):
     monkeypatch.setattr(service, "urlopen", fake_open)
     for _ in range(2):
         with pytest.raises(ServiceUnavailable) as error:
-            service.prayer_times_for("الرياض", date(2026, 11, 2))
+            service.prayer_times_for("الرياض", RIYADH, date(2026, 11, 2))
         assert error.value.code == "prayer_times_unavailable"
     assert len(calls) == 2
     service._fetch_day.cache_clear()
 
 
-def test_unsupported_city_never_contacts_provider(monkeypatch):
-    """Do not mislabel a city outside the supported list as Saudi."""
+def test_a_city_outside_saudi_arabia_is_asked_for_in_its_zone(
+    monkeypatch,
+):
+    """A typed city is found by its name, never labelled Saudi, and its
+    times come in the patient's zone with the provider's method."""
+    service._fetch_day.cache_clear()
+    urls = []
+
     def fake_open(url, timeout):
-        pytest.fail("Unsupported city reached the provider")
+        urls.append(url)
+        return BytesIO(
+            _payload("02-11-2026", method=3, timezone="Europe/London")
+        )
 
     monkeypatch.setattr(service, "urlopen", fake_open)
-    with pytest.raises(ServiceUnavailable):
-        service.prayer_times_for("London", date(2026, 11, 2))
+    times = service.prayer_times_for(
+        "لندن", "Europe/London", date(2026, 11, 2)
+    )
+    assert times["Isha"] == "18:43"
+    assert "/timingsByAddress/02-11-2026?" in urls[0]
+    assert parse_qs(urlparse(urls[0]).query) == {
+        "address": ["لندن"], "timezonestring": ["Europe/London"],
+    }
+    service._fetch_day.cache_clear()
 
 
 def test_wrong_timezone_is_not_cached(monkeypatch):
@@ -92,5 +114,5 @@ def test_wrong_timezone_is_not_cached(monkeypatch):
 
     monkeypatch.setattr(service, "urlopen", fake_open)
     with pytest.raises(ServiceUnavailable):
-        service.prayer_times_for("الرياض", date(2026, 11, 2))
+        service.prayer_times_for("الرياض", RIYADH, date(2026, 11, 2))
     service._fetch_day.cache_clear()

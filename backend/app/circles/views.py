@@ -40,6 +40,8 @@ def patient_view(session: Session, patient: Patient, viewer: UUID) -> dict:
         "last_name": source.last_name,
         "birth_date": patient.birth_date.isoformat(),
         "city": patient.city,
+        # Every time of the circle is wall clock in this IANA zone.
+        "time_zone": patient.time_zone,
         "latitude": patient.latitude,
         "longitude": patient.longitude,
         "has_account": linked is not None,

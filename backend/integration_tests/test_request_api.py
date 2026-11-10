@@ -91,6 +91,7 @@ def test_request_from_sending_to_the_new_circle(
                 "is_patient": is_patient,
                 "patient_name": "Noura",
                 "patient_avatar_code": None,
+                "time_zone": "Asia/Riyadh",
             }
         ]
     with Session(database) as session:

@@ -280,3 +280,23 @@ def test_a_wrong_birth_date_or_city_is_refused(client, sms, change, code):
     response = save(client, session["access_token"], {**NAMES, **change})
 
     error_of(response, 422, code)
+
+
+def test_a_day_that_is_already_today_somewhere_is_accepted(
+    client, sms, clock
+):
+    # The account has no patient and so no zone yet. At 15 Oct 12:00 UTC
+    # it is still the 15th in Riyadh but already the 16th at UTC+14, where
+    # someone may live and pick it on their phone; the 17th is still ahead
+    # everywhere.
+    token = sign_in(client, sms)["access_token"]
+
+    accepted = save(
+        client, token, {**NAMES, "birth_date": "2026-10-16", "city": "Riyadh"}
+    )
+    refused = save(
+        client, token, {**NAMES, "birth_date": "2026-10-17", "city": "Riyadh"}
+    )
+
+    assert accepted.status_code == 200
+    error_of(refused, 422, "invalid_birth_date")

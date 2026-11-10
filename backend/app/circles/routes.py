@@ -50,6 +50,7 @@ def create_self_circle():
             body.city,
             body.latitude,
             body.longitude,
+            body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
         view = views.circle_view(work.session, circle.id, work.actor, MANAGER)
@@ -70,6 +71,7 @@ def create_offline_circle():
             body.city,
             body.latitude,
             body.longitude,
+            body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
         view = views.circle_view(work.session, circle.id, work.actor, MANAGER)
@@ -110,8 +112,8 @@ def rename_circle(circle_id):
 @bp.put("/<circle_id>/patient")
 @require_circle_role(*MEMBER)
 def update_patient(circle_id):
-    """Birth date, city, location; the names too when the patient has no
-    account."""
+    """Birth date, city, zone, location; the names too when the patient
+    has no account."""
     body = parse_json_body(PatientUpdateInput)
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
@@ -124,6 +126,7 @@ def update_patient(circle_id):
             last_name=body.last_name,
             latitude=body.latitude,
             longitude=body.longitude,
+            time_zone=body.time_zone,
         )
         view = views.circle_view(
             work.session, cid, work.actor, current_circle_role()

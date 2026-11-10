@@ -485,6 +485,7 @@ the team has not approved them yet.
 | Ids | Text with hyphens, like the circle ids of `GET /api/v1/home`. The sign-in endpoints still return the account id without hyphens (section 10, point 9). |
 | Dates | `birth_date` is written `YYYY-MM-DD` and cannot be in the future or before 1900. |
 | Location | `latitude` and `longitude` are numbers, sent together or not at all. The city is always required; the location is what "use my location" adds. |
+| Time zone | `time_zone` is the IANA zone where the patient lives (`Asia/Riyadh`, `Europe/London`). Every time of a circle (doses, readings, visits, "today", the birth-date check, prayer times) is wall clock in it, whoever records and wherever their phone is. The app sends it with the city: `Asia/Riyadh` for a city of its Saudi list, the phone's zone for a city typed by hand. Left out, an edit keeps the saved zone and a creation gets `Asia/Riyadh` (an app older than zones offers only Saudi cities). A name that is not an IANA zone gives 422 `invalid_time_zone`. Built 10 November 2026, migration 0030. |
 | One transaction | A request is saved completely or not at all. A circle is never half created: if the medical part of a creation request is wrong, no circle, no patient and no mode change is saved. |
 | Answers | Circle data carries `Cache-Control: no-store`. |
 | Hidden ids | A circle that you are not in and a circle that does not exist both give 403 `forbidden`. A request, an invitation or an emergency contact that is not yours and one that does not exist both give 404 `not_found`. |
@@ -538,6 +539,7 @@ POST /api/v1/circles/self
   "name": "My care",
   "birth_date": "1954-06-05",
   "city": "Riyadh",
+  "time_zone": "Asia/Riyadh",
   "latitude": 24.7136,
   "longitude": 46.6753,
   "medical_profile": { "blood_type": "O+" }
@@ -548,7 +550,7 @@ A patient without an account (PROFILE-01B). The caller manages the circle. Same
 body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each),
 and without `name`: the circle is named automatically (see "Circle names" below).
 An older app still sends `name`; it is accepted and not used. In both bodies
-`latitude`, `longitude` and `medical_profile` are optional. For self-care `name`
+`time_zone`, `latitude`, `longitude` and `medical_profile` are optional. For self-care `name`
 is 1 to 60 characters: the patient's own name for the circle, for example
 `رعايتي`, `صحتي` or `دائرتي`.
 
@@ -582,6 +584,7 @@ patient's own choice is never shown to the others.
       "last_name": "Algraawi",
       "birth_date": "1954-06-05",
       "city": "Riyadh",
+      "time_zone": "Asia/Riyadh",
       "latitude": 24.7136,
       "longitude": 46.6753,
       "has_account": true,
@@ -632,7 +635,7 @@ Only the patient with an account may call it, as a manager or as a simplified
 patient: it changes their own name for the circle. Anyone else, and anyone in a
 circle of a patient without an account, gets 403 `patient_names_circle`. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
 `birth_date` and `city` are required; `latitude`/`longitude` are replaced (sending
-none clears them). A patient without an account also needs `first_name` and
+none clears them); `time_zone` is optional and, left out, the saved zone stays. A patient without an account also needs `first_name` and
 `last_name`; for a patient with an account those two fields are an error
 (422 `linked_patient_name`), because the names come from the account.
 
@@ -684,7 +687,7 @@ The flow has three steps. The circle exists only after step 3.
    is consent only. It does not create the circle.
 3. The patient calls `POST .../{request_id}/complete` with the basic data
    (PROFILE-01C): `name` (their own name for the circle, 1 to 60 characters),
-   `birth_date`, `city`, optional `latitude`, `longitude` and `medical_profile`.
+   `birth_date`, `city`, optional `time_zone`, `latitude`, `longitude` and `medical_profile`.
    This creates the circle (201 `circle`). Calling it again returns the same
    circle. An older app sends no `name`; the circle is then `دائرتي`.
 
@@ -844,7 +847,7 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 | `account_session` | One row per sign-in: the hash of the refresh token, the times, `revoked_at`. | Deleted with the account. The hash is unique. No device and no IP address are stored. |
 | `otp_challenge`, `otp_send_attempt` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
 | `care_circle` | A circle: `name`. | A circle always has exactly one patient and at least one manager (checked when the transaction commits). |
-| `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `latitude`, `longitude`, `blood_type`. | One per circle. An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
+| `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `time_zone` (IANA), `latitude`, `longitude`, `blood_type`. | One per circle. `time_zone` is not blank (the server checks it is a real zone). An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
 | `care_circle_manager` | Who manages a circle. | Once per account and circle. A manager has a complete account in `detailed` mode. A detailed patient manages their own circle. |
 | `care_circle_creation_request` | A request to create a circle for a patient: status `pending`, `accepted`, `completed`, `declined`, `canceled` or `superseded`. | One open request per sender and number. A patient can have one accepted request at a time. A completed request points to its circle. |
 | `care_circle_manager_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `canceled`. | One pending invitation per circle and number. |

@@ -10,7 +10,14 @@ from app.database import db
 
 
 class Account(db.Model):
-    """An authenticated identity; management is a separate membership."""
+    """The ``account`` table: one row per phone-verified person.
+
+    Created at the first sign-in with the phone number only; onboarding then
+    fills the names, birth date and city through PUT
+    /api/v1/accounts/me/profile. The names are all null or all set, with the
+    lengths the API checks (``profile_names``). Caring for a circle is a
+    separate membership row, not a column here.
+    """
 
     __tablename__ = "account"
     __table_args__ = (

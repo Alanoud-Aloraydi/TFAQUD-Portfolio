@@ -13,6 +13,8 @@ from datetime import date, datetime
 
 @dataclass(frozen=True)
 class User:
+    """An account as the API sees it, detached from the database row."""
+
     id: str
     phone: str  # international format, +9665XXXXXXXX
     created_at: datetime
@@ -25,6 +27,12 @@ class User:
 
     @property
     def profile_complete(self) -> bool:
+        """True once the three names are saved; the app then skips onboarding.
+
+        Birth date and city are left out on purpose: accounts made before
+        onboarding asked for them give them when they create their own
+        circle.
+        """
         return bool(self.first_name and self.last_name and self.display_name)
 
     def to_dict(self) -> dict:
@@ -45,6 +53,12 @@ class User:
 
 
 class UserStore(ABC):
+    """Storage of accounts, read and written by the auth and users routes.
+
+    PostgresUserStore backs the app; InMemoryUserStore backs unit tests.
+    The profile endpoint writes through update_profile.
+    """
+
     @abstractmethod
     def get_or_create_by_phone(
         self, phone: str, now: datetime

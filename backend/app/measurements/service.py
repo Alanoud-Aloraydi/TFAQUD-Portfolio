@@ -2,18 +2,16 @@
 
 from datetime import date, datetime, time, timedelta
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.clock import local_moment, patient_today, patient_zone
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.measurements.inputs import PlanRequest, ReadingRequest
 from app.models import MeasurementPlan, MeasurementPlanTime
 from app.models import MeasurementPlanVersion
 from app.models import MeasurementRecord, MeasurementTarget, Patient
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def patient_for_circle(session: Session, circle_id: UUID) -> Patient:
@@ -81,14 +79,14 @@ class MeasurementService:
         self, circle_id: UUID, actor_id: UUID, body: PlanRequest
     ) -> MeasurementPlan:
         """Create a plan from its first effective day."""
-        if body.starts_on < self.now.astimezone(RIYADH).date():
-            raise ValidationFailed(code="measurement_start_in_past")
         patient = self.session.scalar(
             select(Patient).where(Patient.care_circle_id == circle_id)
             .with_for_update()
         )
         if patient is None:
             raise NotFound()
+        if body.starts_on < patient_today(patient, self.now):
+            raise ValidationFailed(code="measurement_start_in_past")
         existing = self.session.scalar(
             select(MeasurementPlan.id).where(
                 MeasurementPlan.patient_id == patient.id,
@@ -126,7 +124,7 @@ class MeasurementService:
             )
         )
         latest = versions[-1]
-        today = self.now.astimezone(RIYADH).date()
+        today = self._today(plan.patient_id)
         if latest.number != body.expected_version_number:
             raise Conflict(code="measurement_plan_changed")
         if latest.effective_from_on > today:
@@ -171,7 +169,7 @@ class MeasurementService:
                 .where(
                     MeasurementPlanVersion.plan_id == plan.id,
                     MeasurementPlanVersion.effective_from_on
-                    <= self.now.astimezone(RIYADH).date(),
+                    <= self._today(plan.patient_id),
                 )
                 .order_by(MeasurementPlanVersion.number.desc())
             )
@@ -299,7 +297,7 @@ class MeasurementService:
             )
             .order_by(MeasurementPlanVersion.number.desc())
         ))
-        today = self.now.astimezone(RIYADH).date()
+        today = self._today(patient_id)
         return next(
             (version for version in versions
              if version.effective_from_on <= today),
@@ -356,6 +354,10 @@ class MeasurementService:
             self.session.flush()
         return record
 
+    def _today(self, patient_id: UUID) -> date:
+        """The patient's calendar day now, in their own zone."""
+        return patient_today(self.session.get(Patient, patient_id), self.now)
+
     def _plan(self, circle_id: UUID, plan_id: UUID) -> MeasurementPlan:
         patient = patient_for_circle(self.session, circle_id)
         plan = self.session.scalar(
@@ -379,7 +381,7 @@ class MeasurementService:
         scheduled_time: time | None,
     ) -> time:
         """The reading time this task is, after checking the task exists."""
-        if scheduled_on > self.now.astimezone(RIYADH).date():
+        if scheduled_on > self._today(patient_id):
             raise ValidationFailed(code="future_measurement_task")
         row = self.session.execute(
             select(MeasurementPlan, MeasurementPlanVersion)
@@ -416,8 +418,11 @@ class MeasurementService:
             & (1 << (scheduled_on.isoweekday() - 1))
             or (
                 plan.stopped_at is not None
-                and datetime.combine(scheduled_on, scheduled_time, RIYADH)
-                >= plan.stopped_at
+                and local_moment(
+                    scheduled_on,
+                    scheduled_time,
+                    patient_zone(self.session.get(Patient, patient_id)),
+                ) >= plan.stopped_at
             )
         ):
             raise NotFound()

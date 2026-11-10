@@ -36,6 +36,7 @@ from app.appointments.inputs import AppointmentRequest
 from app.appointments.service import AppointmentService
 from app.care import CareService
 from app.circles.inputs import MedicalProfileInput
+from app.clock import DEFAULT_ZONE
 from app.database import transaction
 from app.demo_accounts import DEMO_ACCOUNTS, DEMO_PHONES
 from app.extensions import get_clock
@@ -53,7 +54,6 @@ from app.measurements.inputs import ReadingRequest
 from app.measurements.service import MeasurementService
 from app.models import Account, CareCircle, CareCircleManager, MedicationPlan
 
-RIYADH = ZoneInfo("Asia/Riyadh")
 EVERY_DAY = [1, 2, 3, 4, 5, 6, 7]
 
 # A number with no account: the main demo account asks it for a circle.
@@ -64,6 +64,9 @@ INVITED_PHONE = "+966559876543"
 
 RIYADH_POINT = (24.7136, 46.6753)
 JEDDAH_POINT = (21.4858, 39.1925)
+# Every demo patient lives in a listed Saudi city (Riyadh or Jeddah), so
+# `CareService` gives each of them this zone and the story is told in it.
+DEMO_ZONE = ZoneInfo(DEFAULT_ZONE)
 
 # How far back the dose records go.
 HISTORY_DAYS = 30
@@ -116,11 +119,11 @@ def _plan(name, strength, unit, form, schedules, starts, ends=None, **more):
 
 
 class DemoBuilder:
-    """Make the demo story in one session, at `now` (Asia/Riyadh)."""
+    """Make the demo story in one session, at `now` (in `DEMO_ZONE`)."""
 
     def __init__(self, session: Session, now: datetime):
         self.session = session
-        self.now = now.astimezone(RIYADH)
+        self.now = now.astimezone(DEMO_ZONE)
         self.today = self.now.date()
         self.summary = Summary()
 
@@ -131,7 +134,7 @@ class DemoBuilder:
 
     def at(self, offset: int, hour: int = 9, minute: int = 0) -> datetime:
         return datetime.combine(
-            self.day(offset), time(hour, minute), tzinfo=RIYADH
+            self.day(offset), time(hour, minute), tzinfo=DEMO_ZONE
         )
 
     # ---- people and circles ---------------------------------------------
@@ -209,7 +212,7 @@ class DemoBuilder:
         due = datetime.combine(
             scheduled_on,
             time.fromisoformat(item["time_of_day"]),
-            tzinfo=RIYADH,
+            tzinfo=DEMO_ZONE,
         )
         if due > self.now:
             return
@@ -252,8 +255,8 @@ class DemoBuilder:
         kept within today, so a task falls where the story wants it: done,
         late, next or later."""
         moment = self.now + timedelta(minutes=minutes)
-        start = datetime.combine(self.today, time(0, 5), tzinfo=RIYADH)
-        end = datetime.combine(self.today, time(23, 55), tzinfo=RIYADH)
+        start = datetime.combine(self.today, time(0, 5), tzinfo=DEMO_ZONE)
+        end = datetime.combine(self.today, time(23, 55), tzinfo=DEMO_ZONE)
         moment = min(max(moment, start), end)
         return f"{moment.hour:02d}:{moment.minute - moment.minute % 5:02d}"
 
@@ -837,7 +840,7 @@ def rebuild_demo(now: datetime, *, reset: bool) -> tuple[bool, Summary]:
     Returns whether an old one was deleted, and what was made. Raises
     LookupError when it is already there and `reset` is not set.
     """
-    now = now.astimezone(RIYADH)
+    now = now.astimezone(DEMO_ZONE)
     with transaction() as session:
         exists = session.scalar(
             select(Account.id).where(Account.phone_number.in_(DEMO_PHONES))

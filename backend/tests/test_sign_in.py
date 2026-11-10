@@ -840,7 +840,9 @@ def test_after_signing_in_a_new_request_works(client, sms):
 # ---- verify-code: input checks ---------------------------------------------
 
 
-def test_an_unknown_verification_id_is_refused(client, provider_calls):
+def test_verify_code_with_an_unknown_verification_id_is_refused(
+    client, provider_calls
+):
     response = verify_code(client, "does-not-exist", "123456")
 
     error_of(response, 404, "verification_not_found")

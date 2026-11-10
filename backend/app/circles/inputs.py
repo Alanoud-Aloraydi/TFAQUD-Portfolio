@@ -55,6 +55,8 @@ Name50 = _text(50)
 Label30 = _text(30)
 CircleName = _text(60)
 City = _text(60)
+# An IANA zone name such as "Europe/London"; CareService checks it is real.
+TimeZone = _text(64)
 OtherText = _text(100)
 IsoDate = Annotated[
     date, BeforeValidator(_iso_date_only), Field(ge=_OLDEST_BIRTH)
@@ -153,9 +155,11 @@ class _Point(Dto):
 
 
 class _Place(_Point):
-    """City plus the optional point."""
+    """City plus the optional point, and the city's IANA zone (left out by
+    an app older than zones; see `CareService._zone_for`)."""
 
     city: City
+    time_zone: TimeZone | None = None
 
 
 class _PatientBasics(_Place):
@@ -169,6 +173,7 @@ class _OwnBasics(_Point):
 
     birth_date: IsoDate | None = None
     city: City | None = None
+    time_zone: TimeZone | None = None
     medical_profile: MedicalProfileInput | None = None
 
 

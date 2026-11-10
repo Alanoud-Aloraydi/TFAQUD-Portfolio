@@ -1,19 +1,17 @@
 """Transactional appointment creation, revision, and outcomes."""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.appointments.inputs import AppointmentRequest
 from app.appointments.inputs import ReviseAppointmentRequest
+from app.clock import local_moment, patient_zone
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.models import Account, CareCircleManager, Patient
 from app.models.appointment import Appointment, AppointmentCompanion
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 class AppointmentService:
@@ -28,7 +26,7 @@ class AppointmentService:
     ) -> Appointment:
         """Create a visit for the circle patient."""
         patient = self._patient(circle_id)
-        self._future(body)
+        self._future(patient.id, body)
         self._companions(circle_id, body.companion_account_ids)
         appointment = Appointment(
             patient_id=patient.id,
@@ -53,7 +51,7 @@ class AppointmentService:
             raise Conflict(code="appointment_already_closed")
         if appointment.updated_at != body.expected_updated_at:
             raise Conflict(code="appointment_changed")
-        self._future(body)
+        self._future(appointment.patient_id, body)
         self._companions(circle_id, body.companion_account_ids)
         self._fill(appointment, body)
         self._replace_companions(appointment.id, body.companion_account_ids)
@@ -74,11 +72,11 @@ class AppointmentService:
             raise Conflict(code="appointment_already_closed")
         if appointment.updated_at != expected_updated_at:
             raise Conflict(code="appointment_changed")
-        if status == "completed" and datetime.combine(
+        if status == "completed" and self._moment(
+            appointment.patient_id,
             appointment.scheduled_on,
             appointment.time_of_day,
-            tzinfo=RIYADH,
-        ) > self.now.astimezone(RIYADH):
+        ) > self.now:
             raise ValidationFailed(code="appointment_not_started")
         appointment.status = status
         appointment.updated_by_account_id = actor_id
@@ -153,10 +151,17 @@ class AppointmentService:
         appointment.place = body.place.strip() if body.place else None
         appointment.remote_method = body.remote_method
 
-    def _future(self, body: AppointmentRequest) -> None:
+    def _moment(
+        self, patient_id: UUID, day: date, time_of_day: time
+    ) -> datetime:
+        """The instant of a visit: its time is wall clock in the patient's
+        own zone, wherever the recorder is."""
+        patient = self.session.get(Patient, patient_id)
+        return local_moment(day, time_of_day, patient_zone(patient))
+
+    def _future(self, patient_id: UUID, body: AppointmentRequest) -> None:
         """Reject newly scheduled visits that have already passed."""
-        scheduled = datetime.combine(
-            body.scheduled_on, body.time_of_day, tzinfo=RIYADH
-        )
-        if scheduled < self.now.astimezone(RIYADH):
+        if self._moment(
+            patient_id, body.scheduled_on, body.time_of_day
+        ) < self.now:
             raise ValidationFailed(code="appointment_time_in_past")

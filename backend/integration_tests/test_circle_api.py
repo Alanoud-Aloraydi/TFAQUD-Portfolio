@@ -61,6 +61,7 @@ def test_self_care_circle_is_created_and_listed(
         "last_name": "Family",
         "birth_date": "1954-06-05",
         "city": "Riyadh",
+        "time_zone": "Asia/Riyadh",
         "latitude": 24.7136,
         "longitude": 46.6753,
         "has_account": True,
@@ -89,6 +90,7 @@ def test_self_care_circle_is_created_and_listed(
             "is_patient": True,
             "patient_name": "Nora",
             "patient_avatar_code": None,
+            "time_zone": "Asia/Riyadh",
         }
     ]
     with Session(database) as session:

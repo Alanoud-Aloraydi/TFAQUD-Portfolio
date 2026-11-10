@@ -15,12 +15,12 @@ circle never blocks the rest.
 import logging
 from datetime import datetime
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.clock import patient_today
 from app.database import transaction
 from app.medications.queries import MedicationQueries
 from app.measurements.queries import MeasurementQueries
@@ -34,7 +34,6 @@ from app.push.notify import Push, notify
 from app.push.sender import PushMessage
 
 log = logging.getLogger(__name__)
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def run_tick(now: datetime) -> None:
@@ -61,30 +60,43 @@ def _claim(dedupe_key: str) -> bool:
     return True
 
 
-def _circle_recipients(session: Session, circle_id: UUID) -> tuple[UUID, ...]:
-    """Every manager of the circle, plus its patient if they have one."""
+def _circle_recipients(
+    session: Session, patient: Patient
+) -> tuple[UUID, ...]:
+    """Every manager of the patient's circle, plus the patient if they have
+    an account."""
     recipients = set(
         session.scalars(
             select(CareCircleManager.account_id).where(
-                CareCircleManager.care_circle_id == circle_id
+                CareCircleManager.care_circle_id == patient.care_circle_id
             )
         )
     )
-    patient = session.scalar(
-        select(Patient).where(Patient.care_circle_id == circle_id)
-    )
-    if patient is not None and patient.account_id is not None:
+    if patient.account_id is not None:
         recipients.add(patient.account_id)
     return tuple(recipients)
 
 
+def _patient(session: Session, circle_id: UUID) -> Patient | None:
+    """The circle's patient; None when the circle went since the scan
+    began."""
+    return session.scalar(
+        select(Patient).where(Patient.care_circle_id == circle_id)
+    )
+
+
 def _scan_doses(circle_id: UUID, now: datetime) -> None:
-    today = now.astimezone(RIYADH).date()
+    """Tell the circle once about each dose of the patient's today that
+    was missed."""
     with transaction() as session:
+        patient = _patient(session, circle_id)
+        if patient is None:
+            return
+        today = patient_today(patient, now)
         occurrences = MedicationQueries(session, now).occurrences(
             circle_id, today, today
         )
-        recipients = _circle_recipients(session, circle_id)
+        recipients = _circle_recipients(session, patient)
     for occurrence in occurrences:
         if (
             occurrence["record"] is not None
@@ -113,12 +125,17 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
 
 
 def _scan_measurements(circle_id: UUID, now: datetime) -> None:
-    today = now.astimezone(RIYADH).date()
+    """Tell the circle once about each reading time of the patient's today
+    that was missed."""
     with transaction() as session:
+        patient = _patient(session, circle_id)
+        if patient is None:
+            return
+        today = patient_today(patient, now)
         occurrences = MeasurementQueries(session, now).occurrences(
             circle_id, today, today
         )
-        recipients = _circle_recipients(session, circle_id)
+        recipients = _circle_recipients(session, patient)
     for occurrence in occurrences:
         if occurrence["status"] != "missed":
             continue

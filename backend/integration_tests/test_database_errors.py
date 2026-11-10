@@ -86,6 +86,7 @@ def test_patient_activation_waits_for_account_profile_update(
                             account_id=patient.id,
                             birth_date=BIRTH,
                             city="Riyadh",
+                            time_zone="Asia/Riyadh",
                         )
                     )
                     session.flush()

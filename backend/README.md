@@ -248,7 +248,7 @@ nothing, because the token belongs to the sign-in that sent it.
 The reminders before a task are set on each phone by the app itself, so
 they come on time with no server and no tick: each dose and measurement at
 its time, and each appointment a day before and two hours before
-(`app/lib/features/medications/domain/dose_reminders.dart`). The server
+(`app/lib/core/services/reminders/dose_reminders.dart`). The server
 only tells what a phone cannot know ahead.
 
 `POST /internal/tick` scans every circle for a dose or measurement whose

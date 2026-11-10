@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
+from app.clock import DEFAULT_ZONE, is_zone, patient_today
 from app.errors import Forbidden, NotFound, ValidationFailed
 from app.circles.naming import OWN_NAME_DEFAULT, SHARED_PREFIX, shared_name
 from app.models import Account, CareCircle, CareCircleCreationRequest
@@ -149,17 +150,37 @@ class CareService:
             raise NotFound("The invitation does not exist.")
         return invitation
 
-    def _check_patient_basics(self, birth_date: date, city: str) -> None:
-        """Birth date and city are required for every patient."""
-        if not city.strip():
+    def _check_patient_basics(self, patient: Patient) -> None:
+        """Birth date, city and zone are required for every patient.
+
+        Runs on the patient as it will be saved: the birth date is checked
+        against the day in the patient's own zone, as the app's date sheet
+        counts it there."""
+        if not patient.city.strip():
             raise ValidationFailed(
                 "The city cannot be blank.", code="invalid_city"
             )
-        if birth_date > self.now.date():
+        if not is_zone(patient.time_zone):
+            raise ValidationFailed(
+                "The time zone is not a known IANA zone.",
+                code="invalid_time_zone",
+            )
+        if patient.birth_date > patient_today(patient, self.now):
             raise ValidationFailed(
                 "The birth date cannot be in the future.",
                 code="invalid_birth_date",
             )
+
+    @staticmethod
+    def _zone_for(time_zone: str | None, current: str | None = None) -> str:
+        """The patient's zone: the one sent, else the one saved, else
+        `DEFAULT_ZONE`.
+
+        The app sends the zone with every city: Saudi Arabia's for a city
+        of its Saudi list, the phone's for a city typed by hand, and the
+        person can change it later. An app older than zones sends none and
+        offers only the Saudi list, so its patients live by DEFAULT_ZONE."""
+        return time_zone or current or DEFAULT_ZONE
 
     @staticmethod
     def _own_basics(
@@ -194,28 +215,29 @@ class CareService:
         last_name: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
+        time_zone: str | None = None,
     ) -> CareCircle:
         """Build a complete circle before deferred constraints run."""
         if not name.strip():
             raise ValidationFailed(
                 "The circle name cannot be blank.", code="invalid_circle_name"
             )
-        self._check_patient_basics(birth_date, city)
+        patient = Patient(
+            account_id=patient_account.id if patient_account else None,
+            first_name=first_name,
+            last_name=last_name,
+            birth_date=birth_date,
+            city=city.strip(),
+            time_zone=self._zone_for(time_zone),
+            latitude=latitude,
+            longitude=longitude,
+        )
+        self._check_patient_basics(patient)
         circle = CareCircle(name=name.strip())
         self.session.add(circle)
         self.session.flush()
-        self.session.add(
-            Patient(
-                care_circle_id=circle.id,
-                account_id=patient_account.id if patient_account else None,
-                first_name=first_name,
-                last_name=last_name,
-                birth_date=birth_date,
-                city=city.strip(),
-                latitude=latitude,
-                longitude=longitude,
-            )
-        )
+        patient.care_circle_id = circle.id
+        self.session.add(patient)
         for manager_id in sorted(managers):
             self.session.add(
                 CareCircleManager(
@@ -245,6 +267,7 @@ class CareService:
         city: str | None,
         latitude: float | None = None,
         longitude: float | None = None,
+        time_zone: str | None = None,
     ) -> CareCircle:
         """Create self-care with both patient identity and management."""
         account = self._lock_accounts(actor_id)[actor_id]
@@ -259,6 +282,7 @@ class CareService:
             patient_account=account,
             latitude=latitude,
             longitude=longitude,
+            time_zone=time_zone,
         )
 
     def create_without_account(
@@ -270,6 +294,7 @@ class CareService:
         city: str,
         latitude: float | None = None,
         longitude: float | None = None,
+        time_zone: str | None = None,
     ) -> CareCircle:
         """Create a care circle for a patient without an account.
 
@@ -292,6 +317,7 @@ class CareService:
             last_name=last_name.strip(),
             latitude=latitude,
             longitude=longitude,
+            time_zone=time_zone,
         )
 
     def request_creation(
@@ -397,6 +423,7 @@ class CareService:
         longitude: float | None = None,
         *,
         name: str | None = None,
+        time_zone: str | None = None,
     ) -> CareCircle:
         """Activate only the accepted request owned by this patient.
 
@@ -441,6 +468,7 @@ class CareService:
             patient_account=account,
             latitude=latitude,
             longitude=longitude,
+            time_zone=time_zone,
         )
         request.status = "completed"
         request.care_circle_id = circle.id
@@ -652,8 +680,11 @@ class CareService:
         last_name: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
+        time_zone: str | None = None,
     ) -> Patient:
-        """Let managers and the linked patient edit basic medical identity."""
+        """Let managers and the linked patient edit basic medical identity.
+
+        `time_zone` left out keeps the saved zone (see `_zone_for`)."""
         patient = self._get_patient(circle_id)
         account_ids = {actor_id}
         if patient.account_id is not None:
@@ -664,7 +695,6 @@ class CareService:
         self.session.refresh(patient)
         if patient.account_id != actor_id:
             self._require_manager(actor_id, circle_id)
-        self._check_patient_basics(birth_date, city)
         if patient.account_id is not None:
             if first_name is not None or last_name is not None:
                 raise ValidationFailed(
@@ -684,10 +714,12 @@ class CareService:
                 )
             patient.first_name = first_name.strip()
             patient.last_name = last_name.strip()
+        patient.time_zone = self._zone_for(time_zone, patient.time_zone)
         patient.birth_date = birth_date
         patient.city = city.strip()
         patient.latitude = latitude
         patient.longitude = longitude
+        self._check_patient_basics(patient)
         self.session.flush()
         return patient
 

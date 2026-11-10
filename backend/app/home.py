@@ -62,6 +62,7 @@ def _circles(account_id: UUID) -> list[dict]:
                 Patient.avatar_code,
                 Patient.account_id,
                 Patient.first_name,
+                Patient.time_zone,
                 Account.display_name,
                 Account.first_name.label("account_first_name"),
                 Account.avatar_code.label("account_avatar_code"),
@@ -102,6 +103,9 @@ def _circles(account_id: UUID) -> list[dict]:
                     if row.account_id is not None
                     else row.avatar_code
                 ),
+                # The patient's IANA zone: the app shows and schedules
+                # every time of this circle in it, wherever the phone is.
+                "time_zone": row.time_zone,
             }
             for row in session.execute(statement)
         ]

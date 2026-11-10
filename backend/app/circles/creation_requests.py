@@ -100,6 +100,7 @@ def complete(request_id):
             body.latitude,
             body.longitude,
             name=body.name,
+            time_zone=body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
         mode = work.session.get(Account, work.actor).app_mode

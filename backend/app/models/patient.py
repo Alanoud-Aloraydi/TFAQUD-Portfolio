@@ -23,6 +23,9 @@ class Patient(db.Model):
             name="name_source",
         ),
         CheckConstraint("length(btrim(city)) > 0", name="city_nonblank"),
+        CheckConstraint(
+            "length(btrim(time_zone)) > 0", name="time_zone_nonblank"
+        ),
         CheckConstraint("latitude BETWEEN -90 AND 90", name="latitude"),
         CheckConstraint("longitude BETWEEN -180 AND 180", name="longitude"),
         CheckConstraint(
@@ -54,6 +57,9 @@ class Patient(db.Model):
     avatar_code: Mapped[str | None] = mapped_column(Text)
     birth_date: Mapped[date]
     city: Mapped[str] = mapped_column(Text)
+    # The IANA zone where the patient lives (e.g. "Asia/Riyadh"): every
+    # schedule and "today" of the circle follows it (`app.clock`).
+    time_zone: Mapped[str] = mapped_column(Text)
     latitude: Mapped[float | None]
     longitude: Mapped[float | None]
     blood_type: Mapped[str | None] = mapped_column(Text)

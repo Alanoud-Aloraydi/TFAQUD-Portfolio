@@ -1,20 +1,18 @@
 """Idempotent recording of scheduled medication outcomes."""
 
-from datetime import date, datetime
+from datetime import date
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.clock import local_moment, patient_today, patient_zone
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.medications.inputs import DoseRecordRequest
 from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
 from app.models import Patient
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 class MedicationDoseService:
@@ -32,7 +30,14 @@ class MedicationDoseService:
         actor_id: UUID,
         body: DoseRecordRequest,
     ) -> MedicationDoseRecord:
-        if scheduled_on > self.now.astimezone(RIYADH).date():
+        patient = self.session.scalar(
+            select(Patient).where(Patient.care_circle_id == circle_id)
+        )
+        if patient is None:
+            raise NotFound("The scheduled dose does not exist.")
+        # The patient's today: a dose of tomorrow there is in the future,
+        # whatever day it is where the recorder's phone is.
+        if scheduled_on > patient_today(patient, self.now):
             raise ValidationFailed(
                 "A future dose cannot be recorded.",
                 code="future_dose_record",
@@ -48,7 +53,7 @@ class MedicationDoseService:
                     "The taken time cannot be in the future.",
                     code="future_taken_time",
                 )
-        self._require_occurrence(circle_id, schedule_id, scheduled_on)
+        self._require_occurrence(patient, schedule_id, scheduled_on)
         existing = self.session.scalar(
             select(MedicationDoseRecord)
             .where(
@@ -77,7 +82,7 @@ class MedicationDoseService:
 
     def _require_occurrence(
         self,
-        circle_id: UUID,
+        patient: Patient,
         schedule_id: UUID,
         scheduled_on: date,
     ) -> None:
@@ -97,9 +102,8 @@ class MedicationDoseService:
                 MedicationSchedule.plan_version_id
                 == MedicationPlanVersion.id,
             )
-            .join(Patient, Patient.id == MedicationPlan.patient_id)
             .where(
-                Patient.care_circle_id == circle_id,
+                MedicationPlan.patient_id == patient.id,
                 MedicationSchedule.id == schedule_id,
                 MedicationPlanVersion.treatment_starts_on <= scheduled_on,
                 MedicationPlanVersion.cancelled_at.is_(None),
@@ -131,10 +135,8 @@ class MedicationDoseService:
             raise NotFound("The scheduled dose does not exist.")
         if (
             plan.discontinued_at is not None
-            and datetime.combine(
-                scheduled_on,
-                schedule.time_of_day,
-                tzinfo=RIYADH,
+            and local_moment(
+                scheduled_on, schedule.time_of_day, patient_zone(patient)
             ) >= plan.discontinued_at
         ):
             raise NotFound("The scheduled dose does not exist.")

@@ -3,11 +3,11 @@
 import unicodedata
 from datetime import timedelta
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.clock import patient_today
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.medications.availability import require_available_name
 from app.medications.inputs import PlanRequest, RevisePlanRequest
@@ -15,8 +15,6 @@ from app.medications.plan_versions import add_plan_version
 from app.medications.plan_versions import same_definition
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule, Patient
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def normalize_medication_name(value: str) -> str:
@@ -38,13 +36,13 @@ class MedicationPlanService:
         actor_id: UUID,
         body: PlanRequest,
     ) -> MedicationPlan:
-        if body.treatment_starts_on < self.now.astimezone(RIYADH).date():
-            raise ValidationFailed(code="medication_start_in_past")
         patient = self._patient(circle_id, lock=True)
+        if body.treatment_starts_on < patient_today(patient, self.now):
+            raise ValidationFailed(code="medication_start_in_past")
         normalized_name = normalize_medication_name(body.name)
         require_available_name(
             self.session,
-            patient.id,
+            patient,
             normalized_name,
             body,
             effective_from_on=body.treatment_starts_on,
@@ -82,7 +80,7 @@ class MedicationPlanService:
         current = self._current_version(plan.id)
         if current.version_number != body.expected_version_number:
             raise Conflict(code="medication_version_conflict")
-        today = self.now.astimezone(RIYADH).date()
+        today = patient_today(self._patient_of(plan), self.now)
         normalized_name = normalize_medication_name(body.name)
         if same_definition(
             self.session, current, body, normalized_name
@@ -136,7 +134,7 @@ class MedicationPlanService:
             )
         require_available_name(
             self.session,
-            plan.patient_id,
+            self._patient_of(plan),
             normalized_name,
             body,
             exclude_plan_id=plan.id,
@@ -192,7 +190,7 @@ class MedicationPlanService:
             raise ValidationFailed(code="medication_start_in_past")
         require_available_name(
             self.session,
-            plan.patient_id,
+            self._patient_of(plan),
             normalized_name,
             body,
             exclude_plan_id=plan.id,
@@ -225,7 +223,7 @@ class MedicationPlanService:
         if plan.discontinued_at is not None:
             raise Conflict(code="medication_discontinued")
         pending = self._current_version(plan.id)
-        today = self.now.astimezone(RIYADH).date()
+        today = patient_today(self._patient_of(plan), self.now)
         if (pending.version_number != expected_version_number
                 or pending.effective_from_on <= today):
             raise Conflict(code="medication_version_conflict")
@@ -269,6 +267,10 @@ class MedicationPlanService:
         if patient is None:
             raise NotFound("The patient does not exist.")
         return patient
+
+    def _patient_of(self, plan: MedicationPlan) -> Patient:
+        """The plan's patient, already loaded and locked by `_plan`."""
+        return self.session.get(Patient, plan.patient_id)
 
     def _plan(self, circle_id: UUID, plan_id: UUID) -> MedicationPlan:
         patient = self._patient(circle_id, lock=True)

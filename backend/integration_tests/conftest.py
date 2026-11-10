@@ -52,6 +52,10 @@ def database_app():
 def database(database_app):
     """Clear application tables only in the dedicated test database."""
     with db.engine.begin() as connection:
+        # The 15 s statement limit catches a hung query in a test; this
+        # wipe of every table is slow by nature on a busy Docker disk and
+        # is still bounded by the lock limit.
+        connection.execute(text("SET LOCAL statement_timeout = '120s'"))
         connection.execute(
             text(
                 "TRUNCATE otp_challenge, account, care_circle, patient, "

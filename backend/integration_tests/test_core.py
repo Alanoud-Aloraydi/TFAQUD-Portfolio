@@ -121,6 +121,7 @@ def test_deferred_checks_reject_incomplete_circles(database, account, missing):
                         last_name="Family",
                         birth_date=BIRTH,
                         city="Riyadh",
+                        time_zone="Asia/Riyadh",
                     )
                 )
     assert count(database, CareCircle) == 0

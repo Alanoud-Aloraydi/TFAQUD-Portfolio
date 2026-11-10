@@ -4,9 +4,8 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from app.clock import local_moment
 from app.medications.representations import occurrence_response
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def build_occurrences(
@@ -17,11 +16,13 @@ def build_occurrences(
     from_date: date,
     to_date: date,
     now: datetime,
+    zone: ZoneInfo,
 ):
     """Build only applicable occurrences, selecting the latest version.
 
     `rows` are (plan, version, schedule); `days` maps each schedule's id to
-    its `ScheduleDays`.
+    its `ScheduleDays`. A schedule's time is wall clock in the patient's
+    `zone`, so a dose at 08:00 stays at 08:00 there across a DST change.
     """
     by_plan = defaultdict(list)
     for row in rows:
@@ -43,8 +44,8 @@ def build_occurrences(
                     schedule.id
                 ].applies_on(current, version.treatment_starts_on):
                     continue
-                scheduled_at = datetime.combine(
-                    current, schedule.time_of_day, tzinfo=RIYADH
+                scheduled_at = local_moment(
+                    current, schedule.time_of_day, zone
                 )
                 if (
                     plan.discontinued_at is not None
@@ -94,16 +95,16 @@ def _version_applies(plan, version, day: date) -> bool:
 
 
 def _timing_state(scheduled_at, now, record, missed_after_minutes):
-    """Return timing without persisting calculated occurrences."""
+    """Return timing without persisting calculated occurrences.
+
+    `scheduled_at` and `now` are instants (`local_moment` gives UTC), so the
+    minutes are real minutes even across a DST change."""
     if record is not None:
         return None
-    local_now = now.astimezone(RIYADH)
-    if local_now < scheduled_at:
+    if now < scheduled_at:
         return "upcoming"
-    if local_now < scheduled_at + timedelta(minutes=15):
+    if now < scheduled_at + timedelta(minutes=15):
         return "due"
-    if local_now < scheduled_at + timedelta(
-        minutes=missed_after_minutes
-    ):
+    if now < scheduled_at + timedelta(minutes=missed_after_minutes):
         return "late"
     return "missed"

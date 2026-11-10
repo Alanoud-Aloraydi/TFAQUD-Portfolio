@@ -2,12 +2,12 @@
 
 from datetime import date, datetime, timedelta
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.accounts import accounts_by_id, recorder_response
+from app.clock import local_moment, patient_today, patient_zone
 from app.measurements.service import (
     outside_target,
     patient_for_circle,
@@ -16,8 +16,6 @@ from app.measurements.service import (
 from app.models import MeasurementPlan, MeasurementPlanTime
 from app.models import MeasurementPlanVersion
 from app.models import MeasurementRecord, MeasurementTarget
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 def version_response(
@@ -139,7 +137,7 @@ class MeasurementQueries:
         ))
         active = {}
         future = {}
-        today = self.now.astimezone(RIYADH).date()
+        today = patient_today(patient, self.now)
         for plan, version in plans:
             future[plan.kind] = (plan, version)
             if version.effective_from_on <= today:
@@ -204,7 +202,7 @@ class MeasurementQueries:
         for version in versions:
             by_plan.setdefault(version.plan_id, []).append(version)
         times = plan_times(self.session, [version.id for version in versions])
-        today = self.now.astimezone(RIYADH).date()
+        today = patient_today(patient, self.now)
         result = []
         for plan in plans:
             history = by_plan[plan.id]
@@ -260,8 +258,11 @@ class MeasurementQueries:
     def occurrences(
         self, circle_id: UUID, start: date, end: date
     ) -> list[dict]:
-        """Calculate expected tasks instead of persisting pending rows."""
+        """Calculate expected tasks instead of persisting pending rows.
+
+        Reading times are wall clock in the patient's own zone."""
         patient = patient_for_circle(self.session, circle_id)
+        zone = patient_zone(patient)
         rows = list(
             self.session.execute(
                 select(MeasurementPlan, MeasurementPlanVersion)
@@ -321,7 +322,8 @@ class MeasurementQueries:
                     continue
                 for reading_time in times[version.id]:
                     item = self._occurrence(
-                        plan, version, reading_time, day, saved, accounts
+                        plan, version, reading_time, day, saved, accounts,
+                        zone,
                     )
                     if item is not None:
                         result.append(item)
@@ -332,11 +334,12 @@ class MeasurementQueries:
         )
 
     def _occurrence(
-        self, plan, version, reading_time, day, saved, accounts
+        self, plan, version, reading_time, day, saved, accounts, zone
     ) -> dict | None:
         """One reading time of a version on a day, as a task, or None when
-        the plan stopped before it."""
-        scheduled = datetime.combine(day, reading_time.time_of_day, RIYADH)
+        the plan stopped before it. `deadline_at` keeps the offset of the
+        patient's `zone` on that day."""
+        scheduled = local_moment(day, reading_time.time_of_day, zone)
         if plan.stopped_at is not None and scheduled >= plan.stopped_at:
             return None
         record = saved.get((version.id, day, reading_time.time_of_day))
@@ -359,7 +362,7 @@ class MeasurementQueries:
             "kind": plan.kind,
             "scheduled_on": day.isoformat(),
             "time_of_day": reading_time.time_of_day.strftime("%H:%M"),
-            "deadline_at": deadline.isoformat(),
+            "deadline_at": deadline.astimezone(zone).isoformat(),
             "status": status,
             "glucose_context": reading_time.glucose_context,
             "conditions": list(reading_time.conditions),
@@ -373,11 +376,13 @@ class MeasurementQueries:
         }
 
     def readings(self, circle_id: UUID, start: date, end: date) -> list[dict]:
-        """Return recorded readings and skips in the requested date range."""
+        """Return recorded readings and skips in the requested date range,
+        whose days are the patient's own."""
         patient = patient_for_circle(self.session, circle_id)
-        lower = datetime.combine(start, datetime.min.time(), RIYADH)
-        upper = datetime.combine(
-            end + timedelta(days=1), datetime.min.time(), RIYADH
+        zone = patient_zone(patient)
+        lower = local_moment(start, datetime.min.time(), zone)
+        upper = local_moment(
+            end + timedelta(days=1), datetime.min.time(), zone
         )
         rows = list(
             self.session.execute(

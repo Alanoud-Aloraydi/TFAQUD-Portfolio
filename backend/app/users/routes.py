@@ -1,4 +1,8 @@
-"""Save the authenticated account's names, birth date and city."""
+"""HTTP endpoints of the signed-in account: /api/v1/accounts/me.
+
+Flow: the app's ProfileRemoteDataSource -> PUT /me/profile (save_profile)
+-> UserStore.update_profile -> the ``account`` table.
+"""
 
 import unicodedata
 from typing import Annotated
@@ -12,6 +16,7 @@ from sqlalchemy import select
 from app.auth.decorators import current_auth, require_auth
 from app.circles.inputs import City, DeleteAccountInput, IsoDate
 from app.circles.support import care_work
+from app.clock import latest_today
 from app.database import transaction
 from app.errors import NotFound, ValidationFailed
 from app.extensions import get_clock, get_user_store
@@ -22,7 +27,7 @@ bp = Blueprint("users", __name__, url_prefix="/api/v1/accounts")
 
 
 def _one_line(value: str) -> str:
-    # Control characters are invalid in displayed names.
+    """Refuse a name with a line break or another control character."""
     if any(unicodedata.category(ch) == "Cc" for ch in value):
         raise PydanticCustomError(
             "invalid_name",
@@ -32,7 +37,13 @@ def _one_line(value: str) -> str:
 
 
 def _name(max_length: int):
-    # DTO normalization removes surrounding whitespace before validation.
+    """A required one-line name of 1 to ``max_length`` characters.
+
+    Length is counted in code points after trimming (Dto strips the
+    surrounding whitespace first), as the ``account`` table's
+    ``profile_names`` check counts it. The app limits its fields the same
+    way (NameLimits, CodePointLengthFormatter).
+    """
     return Annotated[
         str,
         Field(min_length=1, max_length=max_length),
@@ -41,6 +52,8 @@ def _name(max_length: int):
 
 
 class ProfileRequest(Dto):
+    """Body of PUT /api/v1/accounts/me/profile."""
+
     first_name: _name(50)
     last_name: _name(50)
     display_name: _name(30)
@@ -53,8 +66,17 @@ class ProfileRequest(Dto):
 @bp.put("/me/profile")
 @require_auth
 def save_profile():
+    """Save the signed-in account's names, and birth date and city if sent.
+
+    Called by onboarding (all five fields) and the account page (names
+    only). A birth date in the future is refused with
+    ``invalid_birth_date``. Returns the saved account.
+    """
     body = parse_json_body(ProfileRequest)
-    if body.birth_date and body.birth_date > get_clock().now().date():
+    # No patient, so no zone yet: only a day that is still ahead
+    # everywhere is in the future. A circle checks it again in the
+    # patient's own zone (`CareService`).
+    if body.birth_date and body.birth_date > latest_today(get_clock().now()):
         raise ValidationFailed(
             "The birth date cannot be in the future.",
             code="invalid_birth_date",

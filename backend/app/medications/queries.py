@@ -5,9 +5,9 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from zoneinfo import ZoneInfo
 
 from app.accounts import accounts_by_id, recorder_response
+from app.clock import patient_today, patient_zone
 from app.errors import NotFound
 from app.medications.occurrence_builder import build_occurrences
 from app.medications.representations import plan_response
@@ -16,8 +16,6 @@ from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
 from app.models import Patient
-
-RIYADH = ZoneInfo("Asia/Riyadh")
 
 
 class MedicationQueries:
@@ -45,7 +43,7 @@ class MedicationQueries:
         for plan, version in rows:
             grouped.setdefault(plan.id, (plan, []))[1].append(version)
         result = [
-            self._plan_response(plan, versions)
+            self._plan_response(patient, plan, versions)
             for plan, versions in grouped.values()
         ]
         last_records = self._latest_records(patient.id)
@@ -142,11 +140,14 @@ class MedicationQueries:
         ).all()
         if not rows:
             raise NotFound("The medication plan does not exist.")
-        return self._plan_response(rows[0][0], [row[1] for row in rows])
+        return self._plan_response(
+            patient, rows[0][0], [row[1] for row in rows]
+        )
 
-    def _plan_response(self, plan, versions) -> dict:
-        """Show the active, pending, and completed versions separately."""
-        today = self.now.astimezone(RIYADH).date()
+    def _plan_response(self, patient, plan, versions) -> dict:
+        """Show the active, pending, and completed versions separately,
+        as of the patient's today."""
+        today = patient_today(patient, self.now)
         active = [v for v in versions if v.effective_from_on <= today]
         version = (
             max(active, key=lambda item: item.version_number)
@@ -239,7 +240,8 @@ class MedicationQueries:
             },
         )
         return build_occurrences(
-            rows, days, records, accounts, from_date, to_date, self.now
+            rows, days, records, accounts, from_date, to_date, self.now,
+            patient_zone(patient),
         )
 
     def _patient(self, circle_id: UUID) -> Patient:
