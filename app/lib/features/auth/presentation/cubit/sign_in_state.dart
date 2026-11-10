@@ -1,3 +1,4 @@
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
@@ -48,6 +49,18 @@ class SignInState extends Equatable {
 
   /// The mode the app opens in once the code is correct.
   final CircleAppMode appMode;
+
+  /// The typed number is a whole Saudi mobile number ([SaudiMobile]).
+  bool get phoneValid => SaudiMobile.isValid(phone);
+
+  /// The typed number with the country code, as the API takes it.
+  String get fullPhone => SaudiMobile.international(phone);
+
+  /// A request is in flight, or the code was accepted: no other tap is taken.
+  bool get busy =>
+      status == SignInStatus.sendingCode ||
+      status == SignInStatus.verifying ||
+      status == SignInStatus.verified;
 
   SignInState copyWith({
     String? phone,

@@ -1,16 +1,16 @@
 import 'dart:typed_data';
 
-import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
@@ -37,7 +37,11 @@ class MedicationForm extends StatefulWidget {
 }
 
 class _MedicationFormState extends State<MedicationForm> {
-  late final MedicationFormData _data;
+  /// Made on the first build, where the patient's today can be read.
+  late final MedicationFormData _data = MedicationFormData(
+    widget.plan,
+    today: PatientClockScope.of(context).today(),
+  );
   String? _errorKey;
   MedicationFormIssue? _issue;
   bool _dirty = false;
@@ -46,12 +50,6 @@ class _MedicationFormState extends State<MedicationForm> {
   Uint8List? _photo;
   bool _photoRemoved = false;
   String? _savedPlanId;
-
-  @override
-  void initState() {
-    super.initState();
-    _data = MedicationFormData(widget.plan);
-  }
 
   @override
   void dispose() {
@@ -220,7 +218,8 @@ class _MedicationFormState extends State<MedicationForm> {
       await _savePhoto(_savedPlanId!);
       return;
     }
-    if (widget.plan == null && _data.startsOn.isBefore(riyadhToday())) {
+    if (widget.plan == null &&
+        _data.startsOn.isBefore(PatientClockScope.of(context).today())) {
       setState(() => _errorKey = 'medications.start_in_past');
       return;
     }

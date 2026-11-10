@@ -2,45 +2,47 @@ import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// Shared category selector for home composition tabs.
+/// The three kinds of care that «الخطة» and «السجل» split their pages by.
+/// The order is the order of the segments and of the pages.
+enum HomeCategory { medications, measurements, appointments }
+
+/// Remembers which [HomeCategory] a tab page shows, for the page's
+/// [HomeCategoryControl] and its pages (`category.index` is the page).
+mixin HomeCategorySelection<T extends StatefulWidget> on State<T> {
+  HomeCategory category = HomeCategory.medications;
+
+  /// Shows [value]; the same one again does nothing.
+  void selectCategory(HomeCategory value) {
+    if (value != category) setState(() => category = value);
+  }
+}
+
+/// Shared category selector for home composition tabs. The counts are shown
+/// beside the labels unless [showCounts] is false.
 class HomeCategoryControl extends StatelessWidget {
   const HomeCategoryControl({
     super.key,
-    required this.medicationCount,
-    this.measurementCount = 0,
-    this.appointmentCount = 0,
+    required this.selected,
+    required this.onChanged,
+    required this.counts,
     this.showCounts = true,
-    this.selected = 'medications',
-    this.onChanged,
   });
 
-  final int medicationCount;
-  final int measurementCount;
-  final int appointmentCount;
+  final HomeCategory selected;
+  final ValueChanged<HomeCategory> onChanged;
+
+  /// How many of each kind there are.
+  final Map<HomeCategory, int> counts;
   final bool showCounts;
-  final String selected;
-  final ValueChanged<String>? onChanged;
 
   @override
-  Widget build(BuildContext context) => GlassSegmentedControl<String>(
-    segments: <String, String>{
-      'medications': context.tr('home_category.medications'),
-      'measurements': context.tr('home_category.measurements'),
-      'appointments': context.tr('home_category.appointments'),
+  Widget build(BuildContext context) => GlassSegmentedControl<HomeCategory>(
+    segments: <HomeCategory, String>{
+      for (final HomeCategory value in HomeCategory.values)
+        value: context.tr('home_category.${value.name}'),
     },
     selected: selected,
-    enabledValues: const <String>{
-      'medications',
-      'measurements',
-      'appointments',
-    },
     onChanged: onChanged,
-    counts: showCounts
-        ? <String, int>{
-            'medications': medicationCount,
-            'measurements': measurementCount,
-            'appointments': appointmentCount,
-          }
-        : null,
+    counts: showCounts ? counts : null,
   );
 }

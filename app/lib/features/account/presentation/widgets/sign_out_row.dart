@@ -1,6 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:easy_localization/easy_localization.dart';

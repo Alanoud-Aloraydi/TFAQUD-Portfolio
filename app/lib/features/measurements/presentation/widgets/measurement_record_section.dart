@@ -1,15 +1,16 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
@@ -23,20 +24,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-/// Displays the measurement record section UI.
+/// The «السجل» tab's measurements: a month's charts, calendar and readings
+/// of [circleId], with «تسجيل قراءة» for a free reading.
+///
+/// Holds its own [MeasurementReadingsCubit] for the month shown; it reads
+/// again by itself when a reading of the circle is saved anywhere.
 class MeasurementRecordSection extends StatefulWidget {
   const MeasurementRecordSection({
     super.key,
     required this.circleId,
     required this.header,
     required this.plans,
-    required this.refreshRevision,
   });
 
   final String circleId;
   final Widget header;
   final List<MeasurementPlan> plans;
-  final int refreshRevision;
 
   @override
   State<MeasurementRecordSection> createState() =>
@@ -48,24 +51,35 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
     GetIt.I<MeasurementRepository>(),
     GetIt.I<PrivatePhotoRepository>().changes,
   );
-  DateTime _month = DateTime(riyadhToday().year, riyadhToday().month);
+
+  /// The month shown; the patient's current one at first.
+  late DateTime _month = _thisMonth;
+
+  DateTime get _thisMonth {
+    final DateTime today = PatientClockScope.of(context).today();
+    return DateTime(today.year, today.month);
+  }
+
   String _filter = 'all';
   bool _calendarGlucose = false;
   bool _calendarBp = false;
 
+  bool _started = false;
+
+  /// The first month is read here, not in initState: it is the patient's
+  /// current month, read from [PatientClockScope].
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     _loadMonth();
   }
 
   @override
   void didUpdateWidget(MeasurementRecordSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.circleId != oldWidget.circleId ||
-        widget.refreshRevision != oldWidget.refreshRevision) {
-      _loadMonth();
-    }
+    if (widget.circleId != oldWidget.circleId) _loadMonth();
   }
 
   @override
@@ -82,7 +96,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
 
   void _changeMonth(int offset) {
     final candidate = DateTime(_month.year, _month.month + offset);
-    if (candidate.isAfter(DateTime(riyadhToday().year, riyadhToday().month))) {
+    if (candidate.isAfter(_thisMonth)) {
       return;
     }
     setState(() => _month = candidate);
@@ -120,9 +134,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                   ),
                 ),
                 IconButton(
-                  onPressed:
-                      _month.year == riyadhToday().year &&
-                          _month.month == riyadhToday().month
+                  onPressed: _month == _thisMonth
                       ? null
                       : () => _changeMonth(1),
                   icon: const Icon(CupertinoIcons.chevron_left),
@@ -306,7 +318,9 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
 
   Widget _readingRow(BuildContext context, MeasurementReading reading) {
     final skipped = reading.outcome == 'skipped';
-    final at = skipped ? reading.scheduledOn! : riyadhNow(reading.measuredAt!);
+    final at = skipped
+        ? reading.scheduledOn!
+        : PatientClockScope.of(context).wallTime(reading.measuredAt!);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppSemanticColors.surfaceContent,
@@ -337,8 +351,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                     skipped
                         ? '${at.day}/${at.month}/${at.year}'
                         : '${at.day}/${at.month}/${at.year} · '
-                              '${at.hour.toString().padLeft(2, '0')}:'
-                              '${at.minute.toString().padLeft(2, '0')}',
+                              '${wallTimeText(at)}',
                   ),
                   if (!skipped && reading.planVersionId == null)
                     Text(

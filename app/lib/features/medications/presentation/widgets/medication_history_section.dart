@@ -1,8 +1,8 @@
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_record_card.dart';
@@ -51,7 +51,7 @@ class MedicationHistorySection extends StatelessWidget {
         onRetry: () => context.read<MedicationsCubit>().load(circleId),
       );
     }
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final current = state.plans
         .where((plan) => !plan.isPreviousOn(today))
         .toList();

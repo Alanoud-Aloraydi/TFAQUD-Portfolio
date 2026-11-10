@@ -1,15 +1,19 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -44,7 +48,9 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   ];
   AppointmentKind _kind = AppointmentKind.followUp;
   String _specialty = 'diabetes';
-  DateTime _date = riyadhToday();
+
+  /// A new visit starts on the patient's today.
+  late DateTime _date = PatientClockScope.of(context).today();
   TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
   String _remoteMethod = 'video';
   final Set<String> _companionIds = <String>{};
@@ -82,16 +88,10 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       ..addAll(value.companions.map((item) => item.id));
   }
 
-  String _dateText(DateTime date) =>
-      '${context.tr('common.weekdays.${date.weekday}')} '
-      '${date.day} ${context.tr('circles.months.${date.month}')}';
-
-  String _timeText(TimeOfDay time) =>
-      '${time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod}:'
-      '${time.minute.toString().padLeft(2, '0')} '
-      '${context.tr(time.period == DayPeriod.am ? 'common.am' : 'common.pm')}';
-
+  /// Checks the form, then adds the appointment (or changes [value]) and
+  /// leaves with `true`; the cubit's message key shows when the server says no.
   Future<void> _save(CareAppointment? value) async {
+    if (_saving) return;
     if (_specialty == 'other' && _otherSpecialty.text.trim().isEmpty) {
       setState(() => _errorKey = 'appointments.specialty_required');
       return;
@@ -122,21 +122,28 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       remoteMethod: _kind == AppointmentKind.remote ? _remoteMethod : null,
       companionAccountIds: _companionIds.toList(),
     );
+    if (wallClockAt(
+      draft.scheduledOn,
+      draft.time,
+    ).isBefore(PatientClockScope.of(context).now())) {
+      setState(() => _errorKey = 'appointments.time_in_past');
+      return;
+    }
     setState(() {
       _saving = true;
       _errorKey = null;
     });
     final cubit = context.read<AppointmentsCubit>();
-    final saved = value == null
-        ? await cubit.create(draft)
-        : await cubit.revise(value, draft);
+    final errorKey = value == null
+        ? await cubit.create(widget.circleId, draft)
+        : await cubit.revise(widget.circleId, value, draft);
     if (!mounted) return;
-    if (saved) {
+    if (errorKey == null) {
       context.pop(true);
     } else {
       setState(() {
         _saving = false;
-        _errorKey = cubit.state.errorKey ?? 'error.unknown';
+        _errorKey = errorKey;
       });
     }
   }
@@ -154,11 +161,19 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       if (appointment == null) {
         return Scaffold(
           body: Center(
-            child: state.status == AppointmentsLoadStatus.loading
-                ? const CircularProgressIndicator()
-                : Text(
-                    context.tr(state.errorKey ?? 'error.resource_not_found'),
-                  ),
+            child: switch (state.status) {
+              AppointmentsLoadStatus.initial ||
+              AppointmentsLoadStatus.loading =>
+                const CircularProgressIndicator(),
+              AppointmentsLoadStatus.failure => TextButton(
+                onPressed: () =>
+                    context.read<AppointmentsCubit>().load(widget.circleId),
+                child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+              ),
+              AppointmentsLoadStatus.ready => Text(
+                context.tr('error.resource_not_found'),
+              ),
+            },
           ),
         );
       }
@@ -225,6 +240,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                       TextField(
                         controller: _otherSpecialty,
                         maxLength: 80,
+                        inputFormatters: const [CodePointLengthFormatter(80)],
                         textAlign: TextAlign.start,
                         onChanged: (_) => setState(() => _errorKey = null),
                         decoration: InputDecoration(
@@ -254,6 +270,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                       TextField(
                         controller: _otherKind,
                         maxLength: 80,
+                        inputFormatters: const [CodePointLengthFormatter(80)],
                         textAlign: TextAlign.start,
                         onChanged: (_) => setState(() => _errorKey = null),
                         decoration: InputDecoration(
@@ -271,10 +288,10 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
             children: [
               InsetRow(
                 label: context.tr('appointments.date'),
-                value: _dateText(_date),
+                value: appointmentDate(context, _date),
                 showChevron: true,
                 onTap: () async {
-                  final today = riyadhToday();
+                  final today = PatientClockScope.of(context).today();
                   final selected = await showTafaqodDateSheet(
                     context,
                     title: context.tr('appointments.date'),
@@ -282,12 +299,14 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                     firstDate: today,
                     lastDate: DateTime(today.year + 5, 12, 31),
                   );
-                  if (selected != null) setState(() => _date = selected);
+                  if (selected != null && mounted) {
+                    setState(() => _date = selected);
+                  }
                 },
               ),
               InsetRow(
                 label: context.tr('appointments.time'),
-                value: _timeText(_time),
+                value: timeOfDayText(_time),
                 showChevron: true,
                 onTap: () async {
                   final selected = await showTafaqodTimeSheet(
@@ -295,7 +314,9 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                     title: context.tr('appointments.time'),
                     initialTime: _time,
                   );
-                  if (selected != null) setState(() => _time = selected);
+                  if (selected != null && mounted) {
+                    setState(() => _time = selected);
+                  }
                 },
               ),
               if (_kind == AppointmentKind.remote)
@@ -317,6 +338,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                     controller: _place,
                     textAlign: TextAlign.start,
                     maxLength: 160,
+                    inputFormatters: const [CodePointLengthFormatter(160)],
                     decoration: InputDecoration(
                       labelText: context.tr('appointments.place'),
                       hintText: context.tr('appointments.place_hint'),

@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/utils/text_limits.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
@@ -25,11 +26,7 @@ enum _Field { glucose, upper, lower }
 /// «تسجيل قياس»: blood pressure or glucose, a big number typed on a big
 /// keypad, the optional circumstances, and one save button.
 class SimplifiedMeasureScreen extends StatefulWidget {
-  const SimplifiedMeasureScreen({super.key, this.lockedKind});
-
-  /// The kind of the task this reading answers; null lets the patient
-  /// choose among the kinds that can be recorded.
-  final MeasurementKind? lockedKind;
+  const SimplifiedMeasureScreen({super.key});
 
   @override
   State<SimplifiedMeasureScreen> createState() =>
@@ -55,7 +52,7 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
   @override
   void initState() {
     super.initState();
-    _kind = widget.lockedKind;
+    _kind = context.read<SimplifiedMeasurementCubit>().state.task?.kind;
   }
 
   @override
@@ -100,12 +97,10 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
     );
   }
 
-  /// Shows [kind], starting its conditions from today's task of it.
+  /// Shows [kind], starting its conditions from the task when there is one.
   void _show(SimplifiedMeasurementState state, MeasurementKind? kind) {
     _kind = kind;
-    _conditions = kind == null
-        ? const <String>[]
-        : state.taskFor(kind, DateTime.now())?.conditions ?? const <String>[];
+    _conditions = state.task?.conditions ?? const <String>[];
     _errorKey = null;
   }
 
@@ -160,7 +155,26 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
         return SimplifiedPage(
           title: context.tr('simplified_mode.measure_title'),
           backKey: 'simplified_mode.close',
-          listen: ready ? _listen(context, kind) : const <SpokenPart>[],
+          // A failure or a missing target is read too, not only the form.
+          listen: switch (state.status) {
+            SimplifiedMeasurementStatus.ready when kind != null => _listen(
+              context,
+              kind,
+            ),
+            SimplifiedMeasurementStatus.failure => <SpokenPart>[
+              (
+                id: null,
+                text: sentences(<String>[
+                  context.tr(state.messageKey ?? 'error.unknown'),
+                  context.tr('simplified_mode.try_again'),
+                ]),
+              ),
+            ],
+            SimplifiedMeasurementStatus.ready => <SpokenPart>[
+              (id: null, text: context.tr('simplified_mode.no_target')),
+            ],
+            SimplifiedMeasurementStatus.loading => const <SpokenPart>[],
+          },
           footer: ready
               ? ListenTarget(
                   id: _Part.save,
@@ -265,7 +279,7 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
     final bool glucose = kind == MeasurementKind.glucose;
     final List<String> codes = _conditionCodes(kind);
     return <Widget>[
-      if (widget.lockedKind == null && state.kinds.length > 1)
+      if (state.kinds.length > 1)
         ListenTarget(
           id: _Part.kind,
           radius: 36,
@@ -385,6 +399,7 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
               TextField(
                 controller: _note,
                 maxLength: 250,
+                inputFormatters: const [CodePointLengthFormatter(250)],
                 style: SimplifiedStyle.text(
                   SimplifiedStyle.body,
                   color: SimplifiedStyle.ink,

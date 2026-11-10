@@ -1,3 +1,5 @@
+import 'package:app/core/utils/api_date.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:equatable/equatable.dart';
 
@@ -27,7 +29,7 @@ class MeasurementTarget extends Equatable {
 
   factory MeasurementTarget.fromJson(Map<String, dynamic> json) =>
       MeasurementTarget(
-        kind: MeasurementKind.values.byName(json['kind'] as String),
+        kind: _kind(json['kind']),
         glucoseLow: json['glucose_low'] as int?,
         glucoseHigh: json['glucose_high'] as int?,
         systolicLimit: json['systolic_limit'] as int?,
@@ -54,7 +56,7 @@ class MeasurementTime extends Equatable {
     this.conditions = const <String>[],
   });
 
-  /// «HH:mm» in Riyadh.
+  /// «HH:mm», the patient's wall clock.
   final String time;
 
   /// «ظروف القياس» ([MeasurementConditions]), none or more.
@@ -204,7 +206,7 @@ class MeasurementPlan extends Equatable {
     final lastEditedBy = json['last_edited_by'] as Map<String, dynamic>?;
     return MeasurementPlan(
       id: json['id'] as String,
-      kind: MeasurementKind.values.byName(json['kind'] as String),
+      kind: _kind(json['kind']),
       version: MeasurementVersion.fromJson(
         json['version'] as Map<String, dynamic>,
       ),
@@ -308,7 +310,7 @@ class MeasurementReading extends Equatable {
   factory MeasurementReading.fromJson(Map<String, dynamic> json) =>
       MeasurementReading(
         id: json['id'] as String,
-        kind: MeasurementKind.values.byName(json['kind'] as String),
+        kind: _kind(json['kind']),
         outcome: json['outcome'] as String,
         recordedAt: DateTime.parse(json['recorded_at'] as String),
         measuredAt: json['measured_at'] == null
@@ -399,16 +401,11 @@ class MeasurementOccurrence extends Equatable {
       MeasurementOccurrence(
         planId: json['plan_id'] as String,
         versionId: json['version_id'] as String,
-        kind: MeasurementKind.values.byName(json['kind'] as String),
+        kind: _kind(json['kind']),
         scheduledOn: DateTime.parse(json['scheduled_on'] as String),
         time: json['time_of_day'] as String,
         deadlineAt: DateTime.parse(json['deadline_at'] as String),
-        status: MeasurementStatus.values.byName(
-          (json['status'] as String).replaceAllMapped(
-            RegExp(r'_([a-z])'),
-            (match) => match[1]!.toUpperCase(),
-          ),
-        ),
+        status: _status(json['status']),
         conditions: MeasurementConditions.fromJson(json),
         record: json['record'] == null
             ? null
@@ -459,7 +456,9 @@ class MeasurementPlanDraft {
 
   /// One reading time is sent as before (`time_of_day`), so it saves on a
   /// server without several times too; more are sent as `times`, and so is
-  /// one with conditions only a list holds.
+  /// one with conditions only a list holds. With [expectedVersion] (a
+  /// revision: the number of the plan's latest version) [startsOn] is the
+  /// day the change takes effect.
   Map<String, dynamic> toJson({int? expectedVersion}) => {
     'kind': kind.name,
     if (times.length == 1 && times.single.fitsLegacy(kind))
@@ -467,8 +466,8 @@ class MeasurementPlanDraft {
     else
       'times': [for (final MeasurementTime item in times) item.toJson(kind)],
     'weekdays': weekdays,
-    'starts_on': _date(startsOn),
-    'effective_from_on': ?(expectedVersion == null ? null : _date(startsOn)),
+    'starts_on': apiDate(startsOn),
+    'effective_from_on': ?(expectedVersion == null ? null : apiDate(startsOn)),
     'grace_minutes': graceMinutes,
     'glucose_low': glucoseLow,
     'glucose_high': glucoseHigh,
@@ -539,9 +538,57 @@ class MeasurementReadingDraft {
   };
 }
 
-String measurementDate(DateTime value) => _date(value);
+/// A kind or status this app does not know (sent by a newer server).
+class UnknownMeasurementValue implements Exception {
+  const UnknownMeasurementValue(this.value);
 
-String _date(DateTime value) =>
-    '${value.year.toString().padLeft(4, '0')}-'
-    '${value.month.toString().padLeft(2, '0')}-'
-    '${value.day.toString().padLeft(2, '0')}';
+  /// The value as the server sent it.
+  final Object? value;
+
+  @override
+  String toString() => 'UnknownMeasurementValue($value)';
+}
+
+/// [values] parsed by [parse], leaving out an item of a kind or status this
+/// app does not know, so one newer item never hides the whole list.
+List<T> knownMeasurementItems<T>(
+  List<dynamic> values,
+  T Function(Map<String, dynamic> json) parse,
+) => <T>[
+  for (final dynamic item in values)
+    ?_known(() => parse(item as Map<String, dynamic>)),
+];
+
+T? _known<T>(T Function() parse) {
+  try {
+    return parse();
+  } on UnknownMeasurementValue {
+    return null;
+  }
+}
+
+MeasurementKind _kind(Object? value) =>
+    MeasurementKind.values.asNameMap()[value] ??
+    (throw UnknownMeasurementValue(value));
+
+/// `read_late` → [MeasurementStatus.readLate].
+MeasurementStatus _status(Object? value) =>
+    MeasurementStatus.values.asNameMap()[value is String
+        ? value.replaceAllMapped(
+            RegExp('_([a-z])'),
+            (match) => match[1]!.toUpperCase(),
+          )
+        : null] ??
+    (throw UnknownMeasurementValue(value));
+
+/// The latest moment, not after now on [clock], whose patient wall time is
+/// [time] («HH:mm»): today's, or yesterday's while today's is still to
+/// come. A reading can only be in the past, so «11:50 م» picked at 12:10
+/// after midnight is last night's; the server accepts it for that task.
+DateTime latestReadingMoment(PatientClock clock, String time) {
+  final DateTime today = clock.today();
+  final DateTime moment = clock.momentOf(today, time);
+  return clock.wallTime(moment).isAfter(clock.now())
+      ? clock.momentOf(addDays(today, -1), time)
+      : moment;
+}

@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 
 /// Maps prayer day data between the API and app.
@@ -25,6 +26,7 @@ class PrayerDayModel {
         date: DateTime.parse(json['date'] as String),
         city: json['city'] as String,
         times: times,
+        timeZone: json['timezone'] as String? ?? defaultPatientZone,
       ),
     );
   }

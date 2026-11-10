@@ -1,25 +1,21 @@
-import 'package:app/features/circles/data/models/new_self_circle_model.dart';
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/core/utils/api_date.dart';
 import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 
 /// The body of POST /api/v1/circles/patient-without-account
-/// (docs/api-contracts.md): the body of the self circle, plus the two names of
-/// the patient.
+/// (docs/api-contracts.md): the two names of the patient, the birth date,
+/// the city and the patient's IANA zone ([timeZone]). No name: the server
+/// names the circle.
 class NewPatientCircleModel {
-  const NewPatientCircleModel(this._circle);
+  const NewPatientCircleModel(this._circle, [this._timeZone]);
 
   final NewPatientCircle _circle;
+  final String? _timeZone;
 
-  Map<String, dynamic> toJson() {
-    final MedicalProfileDraft? medical = _circle.medicalProfile;
-    return <String, dynamic>{
-      'name': _circle.name,
-      'patient_first_name': _circle.patientFirstName,
-      'patient_last_name': _circle.patientLastName,
-      'birth_date': NewSelfCircleModel.isoDate(_circle.birthDate),
-      'city': _circle.city,
-      if (medical != null && !medical.isEmpty)
-        'medical_profile': NewSelfCircleModel.medicalJson(medical),
-    };
-  }
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'patient_first_name': _circle.patientFirstName,
+    'patient_last_name': _circle.patientLastName,
+    'birth_date': apiDate(_circle.birthDate),
+    'city': _circle.city,
+    'time_zone': ?_timeZone,
+  };
 }

@@ -6,13 +6,14 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
-import 'package:app/core/services/simplified_voice.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart'
+    show TaskSnooze;
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
-import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
@@ -50,7 +51,7 @@ class _SimplifiedModeFeatureScreenState
   StreamSubscription<String>? _taps;
 
   /// A reminder tapped before the day was read; opened once it is.
-  TodayTaskKind? _pendingReminder;
+  ReminderRequest? _pendingReminder;
 
   /// Whether this phone's push token was asked for in this run.
   bool _pushStarted = false;
@@ -68,7 +69,7 @@ class _SimplifiedModeFeatureScreenState
           context.read<SimplifiedModeCubit>().snoozeFromNotification(launchTap),
         );
       } else {
-        _pendingReminder = reminderTaskKind(launchTap);
+        _pendingReminder = reminderRequest(launchTap);
       }
     }
     _taps = _phone.taps.listen(_onTap);
@@ -97,11 +98,11 @@ class _SimplifiedModeFeatureScreenState
       await cubit.snoozeFromNotification(payload);
       return;
     }
-    final TodayTaskKind? kind = reminderTaskKind(payload);
-    if (kind == null) return;
+    final ReminderRequest? request = reminderRequest(payload);
+    if (request == null) return;
     await cubit.load();
     if (!mounted || cubit.state.day == null) return;
-    unawaited(context.push(Routes.simplifiedReminder, extra: kind));
+    unawaited(context.push(Routes.simplifiedReminder, extra: request));
   }
 
   /// Gives the server this phone's push token once the patient's day is
@@ -114,10 +115,10 @@ class _SimplifiedModeFeatureScreenState
   }
 
   void _openPending(BuildContext context) {
-    final TodayTaskKind? kind = _pendingReminder;
-    if (kind == null) return;
+    final ReminderRequest? request = _pendingReminder;
+    if (request == null) return;
     _pendingReminder = null;
-    unawaited(context.push(Routes.simplifiedReminder, extra: kind));
+    unawaited(context.push(Routes.simplifiedReminder, extra: request));
   }
 
   @override
@@ -150,7 +151,7 @@ class _SimplifiedModeFeatureScreenState
                     day: day,
                     schedule: schedule,
                     now: state.now,
-                    snooze: state.snooze,
+                    snoozes: state.snoozes,
                   ),
                 ),
               (SimplifiedModeStatus.failure, _, _) => _LoadFailed(
@@ -204,15 +205,15 @@ class _HomeBody extends StatelessWidget {
     required this.day,
     required this.schedule,
     required this.now,
-    required this.snooze,
+    required this.snoozes,
   });
 
   final SimplifiedDay day;
   final TodaySchedule schedule;
   final DateTime now;
 
-  /// The task put off with «ذكّرني لاحقًا», if any.
-  final SimplifiedSnooze? snooze;
+  /// The tasks put off with «ذكّرني لاحقًا», by [TodayTask.snoozeKey].
+  final Map<String, TaskSnooze> snoozes;
 
   /// The whole home, card by card, in the order it shows.
   List<SpokenPart> _listen(BuildContext context) => <SpokenPart>[
@@ -256,14 +257,14 @@ class _HomeBody extends StatelessWidget {
         context,
         task!,
         day,
-        simplifiedSnoozed(context, snooze, task, now),
+        simplifiedSnoozed(context, snoozes, day.circleId, task),
       ),
       HomeFocus.task => _NextCard.lines(
         context,
         task!,
         day,
         now,
-        simplifiedSnoozed(context, snooze, task, now),
+        simplifiedSnoozed(context, snoozes, day.circleId, task),
       ),
       HomeFocus.allDone => _DoneCard.lines(context, schedule),
       HomeFocus.empty => <String>[context.tr('simplified_mode.nothing_today')],
@@ -347,9 +348,9 @@ class _HomeBody extends StatelessWidget {
               day: day,
               snoozed: simplifiedSnoozed(
                 context,
-                snooze,
+                snoozes,
+                day.circleId,
                 schedule.focusTask!,
-                now,
               ),
             ),
             HomeFocus.task => _NextCard(
@@ -359,9 +360,9 @@ class _HomeBody extends StatelessWidget {
               now: now,
               snoozed: simplifiedSnoozed(
                 context,
-                snooze,
+                snoozes,
+                day.circleId,
                 schedule.focusTask!,
-                now,
               ),
             ),
             HomeFocus.allDone => _DoneCard(schedule: schedule),
@@ -389,19 +390,22 @@ class _HomeBody extends StatelessWidget {
   }
 }
 
-/// Opens the full-screen reminder of [task] when it can be recorded now;
-/// a measurement goes straight to its reading.
+/// Opens the full-screen reminder of that exact [task] when it can be
+/// recorded now; a measurement goes straight to its reading, which records
+/// that task.
 void _openTask(BuildContext context, TodayTask task, String circleId) {
   if (task.kind == TodayTaskKind.measurement) {
     unawaited(
-      context.push(
-        Routes.simplifiedMeasure(circleId),
-        extra: task.measurement!.kind,
-      ),
+      context.push(Routes.simplifiedMeasure(circleId), extra: task.measurement),
     );
     return;
   }
-  unawaited(context.push(Routes.simplifiedReminder, extra: task.kind));
+  unawaited(
+    context.push(
+      Routes.simplifiedReminder,
+      extra: ReminderRequest.of(task, circleId),
+    ),
+  );
 }
 
 /// The next task: the medicine's photo first (how the patient knows it),
@@ -759,10 +763,7 @@ class _LateDoseCard extends StatelessWidget {
           SimplifiedButton(
             label: context.tr('simplified_mode.remind_later'),
             tone: SimplifiedButtonTone.secondary,
-            onPressed: () => context.push(
-              Routes.simplifiedSnooze,
-              extra: TodayTaskKind.medication,
-            ),
+            onPressed: () => context.push(Routes.simplifiedSnooze, extra: task),
           ),
         ],
       ),

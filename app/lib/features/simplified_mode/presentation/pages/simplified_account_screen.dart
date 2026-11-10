@@ -5,14 +5,15 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
+import 'package:app/core/widgets/forms/calendar_sync_choices.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_speech_rate.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
@@ -24,7 +25,6 @@ import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.d
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 /// «حسابي»: the patient's name and number, the text size and reading,
@@ -578,53 +578,10 @@ class _CalendarSyncCard extends StatefulWidget {
   State<_CalendarSyncCard> createState() => _CalendarSyncCardState();
 }
 
-class _CalendarSyncCardState extends State<_CalendarSyncCard> {
-  final CalendarSync _calendar = GetIt.I<CalendarSync>();
-
-  /// Null while the values load.
-  Map<CalendarSyncCategory, bool>? _enabled;
-
+class _CalendarSyncCardState extends State<_CalendarSyncCard>
+    with CalendarSyncChoices<_CalendarSyncCard> {
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final String circleId = widget.circleId;
-    final Map<CalendarSyncCategory, bool> values = <CalendarSyncCategory, bool>{
-      for (final CalendarSyncCategory category in CalendarSyncCategory.values)
-        category: await _calendar.isEnabled(circleId, category),
-    };
-    if (mounted && circleId == widget.circleId) {
-      setState(() => _enabled = values);
-    }
-  }
-
-  Future<void> _set(CalendarSyncCategory category, bool value) async {
-    final Map<CalendarSyncCategory, bool>? enabled = _enabled;
-    if (enabled == null) return;
-    setState(() {
-      _enabled = <CalendarSyncCategory, bool>{...enabled, category: value};
-    });
-    await _calendar.setEnabled(widget.circleId, category, value);
-  }
-
-  static (IconData, Color) _look(CalendarSyncCategory category) =>
-      switch (category) {
-        CalendarSyncCategory.doses => (
-          CareVisuals.medicationIcon,
-          CareVisuals.medicationTile,
-        ),
-        CalendarSyncCategory.measurements => (
-          CareVisuals.measurementIcon,
-          CareVisuals.measurementTile,
-        ),
-        CalendarSyncCategory.appointments => (
-          CareVisuals.appointmentIcon,
-          CareVisuals.appointmentTile,
-        ),
-      };
+  String get calendarCircleId => widget.circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -640,14 +597,14 @@ class _CalendarSyncCardState extends State<_CalendarSyncCard> {
                 if (category != CalendarSyncCategory.values.first)
                   const Divider(height: 1, color: SimplifiedStyle.chip),
                 _CalendarRow(
-                  look: _look(category),
+                  look: (category.icon, category.tile),
                   label: context.tr(
                     'simplified_mode.calendar.${category.name}',
                   ),
-                  value: _enabled?[category] ?? false,
-                  onChanged: _enabled == null
+                  value: enabled?[category] ?? false,
+                  onChanged: enabled == null
                       ? null
-                      : (value) => _set(category, value),
+                      : (value) => setChoice(category, value),
                 ),
               ],
             ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
@@ -76,7 +77,7 @@ class CirclesUseCase {
     required bool accept,
   }) => _repository.respondToInvitation(id, accept: accept);
 
-  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) => _repository.completeRequest(id, request);

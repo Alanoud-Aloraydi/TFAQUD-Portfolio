@@ -1,3 +1,4 @@
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:equatable/equatable.dart';
@@ -37,6 +38,10 @@ class SendCircleRequestState extends Equatable {
 
   /// The request the server saved. Set once [status] is [SendStatus.sent].
   final SentCircleRequest? sent;
+
+  /// [phone] is a whole Saudi mobile number ([SaudiMobile]): requests go to
+  /// accounts, which sign in with one.
+  bool get phoneValid => SaudiMobile.isValid(phone);
 
   SendCircleRequestState copyWith({
     String? phone,

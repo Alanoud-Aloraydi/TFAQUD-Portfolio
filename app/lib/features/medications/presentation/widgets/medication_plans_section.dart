@@ -1,10 +1,8 @@
-import 'dart:async';
-
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
@@ -54,7 +52,7 @@ class MedicationPlansSection extends StatelessWidget {
         onRetry: () => context.read<MedicationsCubit>().load(circleId),
       );
     }
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final current = state.plans
         .where((plan) => !plan.isPreviousOn(today))
         .toList();
@@ -84,10 +82,8 @@ class MedicationPlansSection extends StatelessWidget {
     );
   }
 
+  /// The cubit reads the list again by itself when the form saves.
   Future<void> _addMedication(BuildContext context) async {
-    final saved = await context.push<bool>(Routes.newMedication(circleId));
-    if (saved == true && context.mounted) {
-      unawaited(context.read<MedicationsCubit>().load(circleId));
-    }
+    await context.push<bool>(Routes.newMedication(circleId));
   }
 }

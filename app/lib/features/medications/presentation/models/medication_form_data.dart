@@ -1,5 +1,4 @@
 import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
@@ -19,11 +18,12 @@ class MedicationFormIssue {
 /// Holds medication form values for this workflow.
 class MedicationFormData {
   /// Filled from [plan]'s latest version: a change waiting for later, when
-  /// there is one, so editing again starts from it.
-  MedicationFormData(MedicationPlan? plan)
-    : this._(plan?.pendingVersion ?? plan?.version);
+  /// there is one, so editing again starts from it. [today] is the
+  /// patient's, where a new medicine and an edit start.
+  MedicationFormData(MedicationPlan? plan, {required DateTime today})
+    : this._(plan?.pendingVersion ?? plan?.version, today);
 
-  MedicationFormData._(MedicationVersion? version)
+  MedicationFormData._(MedicationVersion? version, DateTime today)
     : name = TextEditingController(text: version?.name),
       strength = TextEditingController(
         text: version == null ? null : _number(version.strengthValue),
@@ -33,9 +33,9 @@ class MedicationFormData {
       instructions = TextEditingController(text: version?.instructions),
       form = version?.dosageForm ?? DosageForm.tablet,
       missedAfterMinutes = version?.missedAfterMinutes ?? 60,
-      startsOn = version?.startsOn ?? riyadhToday(),
+      startsOn = version?.startsOn ?? today,
       endsOn = version?.endsOn,
-      effectiveFromOn = version == null ? null : riyadhToday(),
+      effectiveFromOn = version == null ? null : today,
       schedules = version == null
           ? [_newSchedule()]
           : version.schedules.map(_fromSchedule).toList();

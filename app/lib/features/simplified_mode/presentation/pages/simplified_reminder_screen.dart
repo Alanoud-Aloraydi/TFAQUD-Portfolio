@@ -1,15 +1,17 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
@@ -52,12 +54,14 @@ class _ReminderContent {
   final VoidCallback? onLater;
 }
 
-/// The full-screen reminder a tapped notification opens, like a call: a
-/// calm dark ground, one picture, and one or two big round answers.
+/// The full-screen reminder a tapped notification or a home card opens,
+/// like a call: a calm dark ground, one picture, and one or two big round
+/// answers.
 class SimplifiedReminderScreen extends StatelessWidget {
-  const SimplifiedReminderScreen({super.key, required this.kind});
+  const SimplifiedReminderScreen({super.key, required this.request});
 
-  final TodayTaskKind kind;
+  /// The task it asks about; while it waits, it is shown live from the day.
+  final ReminderRequest request;
 
   @override
   Widget build(BuildContext context) {
@@ -67,16 +71,16 @@ class SimplifiedReminderScreen extends StatelessWidget {
         final TodaySchedule? schedule = state.schedule;
         final _ReminderContent? content = day == null || schedule == null
             ? null
-            : switch (kind) {
+            : switch (request.kind) {
                 TodayTaskKind.medication => _dose(
                   context,
-                  schedule.taskToRecord(kind),
+                  schedule.reminderTask(request, day.circleId),
                   day,
                   state.saving,
                 ),
                 TodayTaskKind.measurement => _measurement(
                   context,
-                  schedule.taskToRecord(kind),
+                  schedule.reminderTask(request, day.circleId),
                   day,
                 ),
                 TodayTaskKind.appointment => _appointment(
@@ -150,10 +154,8 @@ class SimplifiedReminderScreen extends StatelessWidget {
       ),
       yesLabel: context.tr('simplified_mode.took'),
       onYes: saving ? null : () => unawaited(take()),
-      onLater: () => context.pushReplacement(
-        Routes.simplifiedSnooze,
-        extra: TodayTaskKind.medication,
-      ),
+      onLater: () =>
+          context.pushReplacement(Routes.simplifiedSnooze, extra: task),
     );
   }
 
@@ -185,12 +187,10 @@ class SimplifiedReminderScreen extends StatelessWidget {
       yesLabel: context.tr('simplified_mode.measure_now'),
       onYes: () => context.pushReplacement(
         Routes.simplifiedMeasure(day.circleId),
-        extra: item.kind,
+        extra: item,
       ),
-      onLater: () => context.pushReplacement(
-        Routes.simplifiedSnooze,
-        extra: TodayTaskKind.measurement,
-      ),
+      onLater: () =>
+          context.pushReplacement(Routes.simplifiedSnooze, extra: task),
     );
   }
 
@@ -202,13 +202,17 @@ class SimplifiedReminderScreen extends StatelessWidget {
     DateTime now,
   ) {
     if (appointment == null) return null;
-    final DateTime today = riyadhToday(now);
-    final int daysAway = appointment.scheduledOn.difference(today).inDays;
-    final String lead = switch (daysAway) {
-      0 => context.tr('simplified_mode.appointment_today'),
-      1 => context.tr('simplified_mode.appointment_tomorrow'),
-      _ => context.tr('simplified_mode.appointment_coming'),
-    };
+    // Calendar days, never 24-hour steps: on a phone whose own clocks
+    // change, «غدًا» stays tomorrow.
+    final DateTime today = PatientClockScope.of(context).today(now);
+    final DateTime on = scheduleDay(appointment.scheduledOn);
+    final String lead = context.tr(
+      on == today
+          ? 'simplified_mode.appointment_today'
+          : on == addDays(today, 1)
+          ? 'simplified_mode.appointment_tomorrow'
+          : 'simplified_mode.appointment_coming',
+    );
     return _ReminderContent(
       brand: context.tr('simplified_mode.appointment_brand'),
       lead: lead,
@@ -444,80 +448,112 @@ class _RoundAnswer extends StatelessWidget {
   final Color ink;
   final VoidCallback? onTap;
 
+  /// The round button and the word under it are one answer: an elderly
+  /// user often taps the word, so the whole column takes the tap, and a
+  /// screen reader hears it as one button named by the word.
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 130,
-      child: Column(
-        children: <Widget>[
-          SizedBox(
-            width: SimplifiedStyle.answer,
-            height: SimplifiedStyle.answer,
-            child: FilledButton(
-              onPressed: onTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: fill,
-                foregroundColor: ink,
-                shape: const CircleBorder(),
-                padding: EdgeInsets.zero,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Semantics(
+        button: true,
+        enabled: onTap != null,
+        label: label,
+        excludeSemantics: true,
+        child: SizedBox(
+          width: 130,
+          child: Column(
+            children: <Widget>[
+              SizedBox(
+                width: SimplifiedStyle.answer,
+                height: SimplifiedStyle.answer,
+                child: FilledButton(
+                  onPressed: onTap,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: fill,
+                    foregroundColor: ink,
+                    shape: const CircleBorder(),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: Icon(icon, size: 46),
+                ),
               ),
-              child: Semantics(
-                label: label,
-                excludeSemantics: true,
-                child: Icon(icon, size: 46),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: SimplifiedStyle.head(21, color: SimplifiedStyle.surface),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 12),
-          ExcludeSemantics(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: SimplifiedStyle.head(21, color: SimplifiedStyle.surface),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
 /// The reminder's task is no longer waiting (someone in the family may
-/// have recorded it), so there is nothing to answer.
+/// have recorded it, or it is of another circle), so there is nothing to
+/// answer. It is read aloud as it opens, like the reminder it replaces.
 class _NothingWaiting extends StatelessWidget {
   const _NothingWaiting();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            context.tr('simplified_mode.nothing_waiting'),
-            textAlign: TextAlign.center,
-            style: SimplifiedStyle.head(
-              SimplifiedStyle.display,
-              color: SimplifiedStyle.surface,
-            ),
+    final String title = context.tr('simplified_mode.nothing_waiting');
+    final String text = context.tr('simplified_mode.nothing_waiting_text');
+    final String back = context.tr('simplified_mode.back_home');
+    return ListenScope(
+      parts: <SpokenPart>[
+        (id: _Part.task, text: sentences(<String>[title, text])),
+        (id: _Part.yes, text: back),
+      ],
+      child: ReadOnOpen(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: <Widget>[
+              const SizedBox(height: 24),
+              ListenTarget(
+                id: _Part.task,
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: SimplifiedStyle.head(
+                        SimplifiedStyle.display,
+                        color: SimplifiedStyle.surface,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      text,
+                      textAlign: TextAlign.center,
+                      style: SimplifiedStyle.text(
+                        SimplifiedStyle.body,
+                        color: SimplifiedStyle.onDarkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const ListenButton(onDark: true),
+              const SizedBox(height: 32),
+              ListenTarget(
+                id: _Part.yes,
+                radius: SimplifiedStyle.action / 2,
+                child: SimplifiedButton(
+                  label: back,
+                  tone: SimplifiedButtonTone.secondary,
+                  onPressed: () => context.go(Routes.simplifiedMode),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            context.tr('simplified_mode.nothing_waiting_text'),
-            textAlign: TextAlign.center,
-            style: SimplifiedStyle.text(
-              SimplifiedStyle.body,
-              color: SimplifiedStyle.onDarkMuted,
-            ),
-          ),
-          const SizedBox(height: 32),
-          SimplifiedButton(
-            label: context.tr('simplified_mode.back_home'),
-            tone: SimplifiedButtonTone.secondary,
-            onPressed: () => context.go(Routes.simplifiedMode),
-          ),
-        ],
+        ),
       ),
     );
   }

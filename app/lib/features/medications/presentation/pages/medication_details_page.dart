@@ -1,17 +1,18 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
@@ -23,7 +24,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-/// Displays the medication details page UI.
+/// One medicine's page: its details, versions, pending change and dose
+/// history. Opened from the plan, record and «اليوم» rows with `extra`
+/// [canManage]; the route builds its [MedicationsCubit] (`loadPlan`).
 class MedicationDetailsPage extends StatelessWidget {
   const MedicationDetailsPage({
     super.key,
@@ -84,15 +87,16 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = riyadhToday();
-    final from = today.subtract(const Duration(days: 31));
+    final today = PatientClockScope.of(context).today();
+    // Calendar days, so a phone's own DST change never moves the range.
+    final from = DateTime(today.year, today.month, today.day - 31);
     final start = plan.version.startsOn.isAfter(from)
         ? plan.version.startsOn
         : from;
     return BlocProvider(
       create: (_) => MedicationOccurrencesCubit(
         GetIt.I<MedicationsUseCase>(),
-        GetIt.I<PrivatePhotoRepository>().changes,
+        photoChanges: GetIt.I<PrivatePhotoRepository>().changes,
       )..load(circleId, start, today, planId: plan.id),
       child: Scaffold(
         appBar: AppBar(
@@ -183,11 +187,7 @@ class _Content extends StatelessWidget {
       context.pop(true);
       return;
     }
-    final message = context.read<MedicationsCubit>().state.messageKey;
-    if (message != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(message))));
-    }
+    _showFailure(context);
   }
 
   Future<void> _cancelPending(BuildContext context) async {
@@ -209,7 +209,21 @@ class _Content extends StatelessWidget {
     );
     if (confirmed != true || !context.mounted) return;
     final changed = await context.read<MedicationsCubit>().cancelPending(plan);
-    if (changed && context.mounted) context.pop(true);
+    if (!context.mounted) return;
+    if (changed) {
+      context.pop(true);
+      return;
+    }
+    _showFailure(context);
+  }
+
+  /// The cubit's message after a refused change, as a snack bar.
+  void _showFailure(BuildContext context) {
+    final message = context.read<MedicationsCubit>().state.messageKey;
+    if (message != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr(message))));
+    }
   }
 }
 
@@ -275,7 +289,7 @@ class _PendingRevision extends StatelessWidget {
                 context.tr(
                   'medications.pending_schedule',
                   args: [
-                    formatMedicationTime(context, schedule.time),
+                    clockText(schedule.time),
                     formatMedicationNumber(schedule.doseValue),
                     context.tr('medications.unit.${schedule.doseUnit.name}'),
                   ],

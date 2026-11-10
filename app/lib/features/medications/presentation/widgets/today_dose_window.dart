@@ -1,15 +1,18 @@
+import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// Shows the planned time and the medicine's own missed-dose boundary.
+/// Shows the planned time and the medicine's own missed-dose boundary of
+/// an unrecorded dose; [now] is the patient's wall time
+/// ([PatientClock.now]).
 class TodayDoseWindow extends StatelessWidget {
   const TodayDoseWindow({
     super.key,
@@ -22,14 +25,7 @@ class TodayDoseWindow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parts = occurrence.time.split(':');
-    final scheduled = DateTime.utc(
-      occurrence.scheduledOn.year,
-      occurrence.scheduledOn.month,
-      occurrence.scheduledOn.day,
-      int.parse(parts[0]),
-      int.parse(parts[1]),
-    );
+    final scheduled = wallClockAt(occurrence.scheduledOn, occurrence.time);
     final missed = scheduled.add(
       Duration(minutes: occurrence.missedAfterMinutes),
     );
@@ -41,9 +37,6 @@ class TodayDoseWindow extends StatelessWidget {
     final label = minutesUntilDue > 0
         ? afterDuration(context, minutesUntilDue)
         : context.tr('today_dashboard.status.${status!.name}');
-    final missedTime =
-        '${missed.hour.toString().padLeft(2, '0')}:'
-        '${missed.minute.toString().padLeft(2, '0')}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -56,7 +49,7 @@ class TodayDoseWindow extends StatelessWidget {
             Text(
               context.tr(
                 'today_dashboard.missed_at',
-                args: [formatMedicationTime(context, missedTime)],
+                args: [wallTimeText(missed)],
               ),
               style: Theme.of(context).textTheme.bodySmall,
             ),

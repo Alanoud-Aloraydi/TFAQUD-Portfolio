@@ -78,8 +78,8 @@ class MedicationSchedule extends Equatable {
   final String? instructions;
   final ScheduleRepeat repeat;
 
-  /// Days of the month (1 .. 31) of a monthly schedule; empty for a weekly
-  /// one.
+  /// Days of the month (1 .. 28, the days every month has, as the server
+  /// allows) of a monthly schedule; empty for a weekly one.
   final List<int> monthDays;
 
   /// Every how many days an interval schedule repeats, counted from the

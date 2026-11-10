@@ -1,8 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
@@ -37,12 +36,9 @@ class _DoseTaken extends SimplifiedDoneMessage {
 
   @override
   String text(BuildContext context) {
-    final DateTime wall = riyadhNow(at);
-    final String time =
-        '${wall.hour}:${wall.minute.toString().padLeft(2, '0')}';
     return context.tr(
       'simplified_mode.done_dose',
-      args: <String>[name, simplifiedTime(context, time)],
+      args: <String>[name, simplifiedClockAt(context, at)],
     );
   }
 }

@@ -1,4 +1,5 @@
-import 'package:app/features/circles/data/models/new_self_circle_model.dart';
+import 'package:app/core/utils/api_date.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -152,6 +153,7 @@ class MedicalFileModel {
           hasAccount: patient['has_account'] as bool? ?? false,
           latitude: (patient['latitude'] as num?)?.toDouble(),
           longitude: (patient['longitude'] as num?)?.toDouble(),
+          timeZone: patient['time_zone'] as String? ?? defaultPatientZone,
         ),
         profile: MedicalProfileJson.fromJson(
           json['medical_profile'] as Map<String, dynamic>,
@@ -223,12 +225,13 @@ class PatientUpdateModel {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
-      'birth_date': NewSelfCircleModel.isoDate(_update.birthDate),
+      'birth_date': apiDate(_update.birthDate),
       'city': _update.city,
       'first_name': ?_update.firstName,
       'last_name': ?_update.lastName,
       'latitude': _update.latitude,
       'longitude': _update.longitude,
+      'time_zone': ?_update.timeZone,
     };
   }
 }

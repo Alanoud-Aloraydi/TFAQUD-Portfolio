@@ -1,12 +1,12 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
-import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -24,15 +24,6 @@ class RequestSentView extends StatelessWidget {
 
   final SentCircleRequest request;
 
-  /// "+966501234567" is shown as "+966 50 123 4567", in English digits.
-  static String displayPhone(String full) {
-    const String code = '+966';
-    final String digits = full.startsWith(code)
-        ? full.substring(code.length)
-        : full;
-    return '$code ${PhoneNumberFormatter.display(digits)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
@@ -47,10 +38,8 @@ class RequestSentView extends StatelessWidget {
                 Container(
                   width: 72,
                   height: 72,
-                  decoration: BoxDecoration(
-                    color: accepted
-                        ? AppSemanticColors.surfaceContent
-                        : AppSemanticColors.surfaceContent,
+                  decoration: const BoxDecoration(
+                    color: AppSemanticColors.surfaceContent,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -113,7 +102,7 @@ class RequestSentView extends StatelessWidget {
   }
 }
 
-/// Renders the details card element of request sent view.
+/// The number asked, the proposed mode and the status of the request.
 class _DetailsCard extends StatelessWidget {
   const _DetailsCard({required this.request, required this.accepted});
 
@@ -132,7 +121,7 @@ class _DetailsCard extends StatelessWidget {
           _DetailRow(
             label: context.tr('circles.patient_phone_label'),
             child: Text(
-              RequestSentView.displayPhone(request.patientPhoneNumber),
+              SaudiMobile.display(request.patientPhoneNumber),
               textDirection: TextDirection.ltr,
               style: text.bodyMedium,
             ),
@@ -160,9 +149,7 @@ class _DetailsCard extends StatelessWidget {
                     ? 'circles.request_status_accepted'
                     : 'circles.request_status_pending',
               ),
-              background: accepted
-                  ? AppSemanticColors.background
-                  : AppSemanticColors.background,
+              background: AppSemanticColors.background,
               foreground: accepted
                   ? AppSemanticColors.statusSuccess
                   : context.tokens.textSecondary,
@@ -174,7 +161,7 @@ class _DetailsCard extends StatelessWidget {
   }
 }
 
-/// Renders the detail row element of request sent view.
+/// One row of [_DetailsCard]: its label and its value.
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.child});
 

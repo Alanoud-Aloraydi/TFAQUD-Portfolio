@@ -1,23 +1,25 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/constants/name_limits.dart';
+import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/forms/picker_field.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
+import 'package:app/core/widgets/pickers/city_sheet.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
-import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
-import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
+import 'package:app/features/circles/presentation/widgets/time_zone_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -206,6 +208,17 @@ class _EditFormState extends State<_EditForm> {
     if (picked != null) cubit.cityChanged(picked);
   }
 
+  Future<void> _pickTimeZone(
+    BuildContext context,
+    MedicalFileEditCubit cubit,
+  ) async {
+    final String? picked = await showTimeZoneSheet(
+      context,
+      selected: widget.state.timeZone,
+    );
+    if (picked != null) cubit.timeZoneChanged(picked);
+  }
+
   Future<void> _save(BuildContext context, MedicalFileEditCubit cubit) async {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     final GoRouter router = GoRouter.of(context);
@@ -236,7 +249,7 @@ class _EditFormState extends State<_EditForm> {
     final MedicalFileEditState state = widget.state;
     final MedicalForm form = state.form;
     final TextTheme text = Theme.of(context).textTheme;
-    final String requiredText = context.tr('circles.field_required');
+    final String requiredText = context.tr('common.field_required');
     final bool showErrors = state.showErrors;
     return Column(
       children: <Widget>[
@@ -250,7 +263,7 @@ class _EditFormState extends State<_EditForm> {
                   LabeledTextField(
                     label: context.tr('circles.patient_first_name'),
                     controller: _firstName,
-                    maxLength: MedicalFileEditCubit.maxNameLength,
+                    maxLength: NameLimits.name,
                     onChanged: cubit.firstNameChanged,
                     errorText: showErrors && state.firstName.trim().isEmpty
                         ? requiredText
@@ -260,7 +273,7 @@ class _EditFormState extends State<_EditForm> {
                   LabeledTextField(
                     label: context.tr('circles.patient_last_name'),
                     controller: _lastName,
-                    maxLength: MedicalFileEditCubit.maxNameLength,
+                    maxLength: NameLimits.name,
                     onChanged: cubit.lastNameChanged,
                     textInputAction: TextInputAction.done,
                     errorText: showErrors && state.lastName.trim().isEmpty
@@ -300,6 +313,18 @@ class _EditFormState extends State<_EditForm> {
                       ? requiredText
                       : null,
                 ),
+                // Every Saudi city has one zone; any other city's can be
+                // set here, and all the circle's times follow it.
+                if (state.zoneEditable) ...<Widget>[
+                  const SizedBox(height: AppSpacing.lg),
+                  PickerField(
+                    label: context.tr('circles.time_zone'),
+                    hint: context.tr('circles.time_zone_sheet_title'),
+                    icon: AppIcons.clock,
+                    value: timeZoneName(state.timeZone!),
+                    onTap: () => _pickTimeZone(context, cubit),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.blood_type')),
                 const SizedBox(height: AppSpacing.sm),

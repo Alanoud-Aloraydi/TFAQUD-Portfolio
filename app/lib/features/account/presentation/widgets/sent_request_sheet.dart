@@ -1,13 +1,13 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -70,7 +70,7 @@ class _SentRequestSheet extends StatelessWidget {
             _Line(
               label: context.tr('circles.patient_phone_label'),
               child: Text(
-                RequestSentView.displayPhone(request.patientPhoneNumber),
+                SaudiMobile.display(request.patientPhoneNumber),
                 textDirection: TextDirection.ltr,
                 style: text.bodyMedium,
               ),

@@ -1,22 +1,17 @@
-import 'dart:convert';
-
-import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_speech_rate.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Keeps the simplified mode's text size, whether «استماع» shows, how fast
-/// it reads, whether a reminder reads itself, and the task put off with
-/// «ذكّرني لاحقًا», on this phone: they belong to the device, not the
-/// account (its reminder is set on the phone too).
+/// it reads, and whether a reminder reads itself, on this phone: they
+/// belong to the device, not the account.
 @lazySingleton
 class SimplifiedPreferences {
   static const String _textSizeKey = 'simplified_text_size';
   static const String _voiceKey = 'simplified_voice_enabled';
   static const String _speechRateKey = 'simplified_speech_rate';
   static const String _autoReadKey = 'simplified_auto_read';
-  static const String _snoozeKey = 'simplified_snooze';
 
   /// Where the earlier simplified mode kept its text size
   /// («small», «normal», «large»), read once so a choice is not lost.
@@ -78,28 +73,5 @@ class SimplifiedPreferences {
   Future<void> saveAutoRead(bool enabled) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoReadKey, enabled);
-  }
-
-  /// The task put off, or null; one at a time, like its reminder.
-  Future<SimplifiedSnooze?> snooze() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? saved = prefs.getString(_snoozeKey);
-    if (saved == null) return null;
-    try {
-      return SimplifiedSnooze.fromJson(jsonDecode(saved));
-    } on FormatException {
-      // Unreadable: as if nothing were put off.
-      return null;
-    }
-  }
-
-  Future<void> saveSnooze(SimplifiedSnooze snooze) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_snoozeKey, jsonEncode(snooze.toJson()));
-  }
-
-  Future<void> clearSnooze() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_snoozeKey);
   }
 }

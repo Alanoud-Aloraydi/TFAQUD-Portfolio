@@ -1,12 +1,13 @@
+import 'package:app/core/constants/name_limits.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -104,9 +105,18 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
               if (state.status == AccountStatus.loading)
                 const Center(child: CircularProgressIndicator())
               else if (state.status == AccountStatus.failure)
-                TextButton(
-                  onPressed: context.read<AccountCubit>().load,
-                  child: Text(context.tr(state.messageKey ?? 'error.unknown')),
+                Column(
+                  children: [
+                    Text(
+                      context.tr(state.messageKey ?? 'error.unknown'),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    FilledButton(
+                      onPressed: context.read<AccountCubit>().load,
+                      child: Text(context.tr('auth.retry')),
+                    ),
+                  ],
                 )
               else
                 Expanded(
@@ -141,7 +151,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                         LabeledTextField(
                           label: context.tr('account.display_name'),
                           controller: _display,
-                          maxLength: AccountCubit.maxDisplayNameLength,
+                          maxLength: NameLimits.displayName,
                           onChanged: (_) => setState(() => _errorKey = null),
                         ),
                         const SizedBox(height: AppSpacing.labelGap),
@@ -152,7 +162,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                           children: [
                             InfoRow(
                               label: context.tr('account.phone'),
-                              value: RequestSentView.displayPhone(
+                              value: SaudiMobile.display(
                                 state.account!.phoneNumber,
                               ),
                               ltr: true,
@@ -203,7 +213,7 @@ class _NameField extends StatelessWidget {
       const SizedBox(height: AppSpacing.labelGap),
       TextField(
         controller: controller,
-        maxLength: AccountCubit.maxNameLength,
+        maxLength: NameLimits.name,
         textAlign: TextAlign.start,
         textDirection: TextDirection.rtl,
         onChanged: onChanged,

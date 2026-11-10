@@ -1,5 +1,4 @@
 import 'package:app/features/circles/domain/entities/account_summary.dart';
-import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:equatable/equatable.dart';
 
 /// The circle name chips of the person's own circle: the one for their own
@@ -7,8 +6,8 @@ import 'package:equatable/equatable.dart';
 /// them type a name.
 enum NamePreset { care, health, circle, other }
 
-/// Which circle the pages create. The health and allergies pages are the same
-/// for both; the first page and the call that creates the circle differ.
+/// Which circle the page creates. Each flow has its own page and its own
+/// call; the health answers are filled later in the medical file.
 enum CircleFlow {
   /// A circle for the person's own care (PROFILE-01): they are the patient.
   self,
@@ -22,15 +21,24 @@ enum CircleFlow {
   approved,
 }
 
-/// Loading of the account names shown in the read-only "Name" field.
-enum AccountLoad { loading, loaded, failed }
+/// Loading of the signed-in account, which gives the name shown on the
+/// approved page, whether the account already has a circle of its own care
+/// and the birth date and city onboarding saved.
+enum AccountLoad {
+  loading,
+  loaded,
+  failed,
 
-/// Defines the supported create status values.
+  /// The [CircleFlow.patient] flow reads no account: the patient is someone
+  /// else.
+  notNeeded,
+}
+
+/// The progress of the create call.
 enum CreateStatus { idle, saving, created }
 
-/// State of the three pages that create a circle: basic details, health
-/// condition, allergies. One cubit keeps the answers of all three, so going back
-/// never loses them.
+/// State of the page that creates a circle: the circle's name, or the
+/// patient's names, and the patient's birth date and city.
 class CreateCircleState extends Equatable {
   const CreateCircleState({
     this.account,
@@ -39,17 +47,8 @@ class CreateCircleState extends Equatable {
     this.customName = '',
     this.patientFirstName = '',
     this.patientLastName = '',
-    this.circleName = '',
     this.birthDate,
     this.city,
-    this.bloodType,
-    this.conditions = const <String>{},
-    this.conditionOther = '',
-    this.noAllergies = false,
-    this.medication = const <String>{},
-    this.medicationOther = '',
-    this.food = const <String>{},
-    this.foodOther = '',
     this.showErrors = false,
     this.status = CreateStatus.idle,
     this.errorKey,
@@ -60,34 +59,20 @@ class CreateCircleState extends Equatable {
   final AccountSummary? account;
   final AccountLoad accountLoad;
 
-  // Step 1: basic details.
+  /// The chosen name chip and, for [NamePreset.other], the typed name.
   final NamePreset namePreset;
   final String customName;
 
-  // Step 1 of a circle for a patient without the app: the patient's names.
+  /// The patient's names, typed for a patient without the app.
   final String patientFirstName;
   final String patientLastName;
 
-  /// The name the circle gets. Set when the first step is complete.
-  final String circleName;
+  /// The birth date and city typed on the page; unused when the account
+  /// holds its own ([ownBasicsSaved]).
   final DateTime? birthDate;
   final String? city;
 
-  // Step 2: health condition.
-  final String? bloodType;
-
-  /// Codes of the chosen conditions, including "none" and "other".
-  final Set<String> conditions;
-  final String conditionOther;
-
-  // Step 3: allergies.
-  final bool noAllergies;
-  final Set<String> medication;
-  final String medicationOther;
-  final Set<String> food;
-  final String foodOther;
-
-  /// True after a tap on a button with a missing answer.
+  /// True after a tap on the create button with a missing answer.
   final bool showErrors;
 
   final CreateStatus status;
@@ -105,9 +90,16 @@ class CreateCircleState extends Equatable {
 
   String? get fullName => account?.fullName;
 
-  /// The account already has a circle for its own care. Nothing can be created,
-  /// so the first page says so before anything is filled in.
+  /// The account already has a circle for its own care. Nothing can be
+  /// created, so the page says so before anything is filled in.
   bool get alreadyHasCircle => account?.hasOwnCircle ?? false;
+
+  /// The page waits for the account before it can create, so it knows the
+  /// birth date and city and whether a circle exists already.
+  bool get waitingForAccount => accountLoad == AccountLoad.loading;
+
+  /// The create button shows a spinner and takes no tap.
+  bool get busy => waitingForAccount || status == CreateStatus.saving;
 
   /// Both names of the patient are typed (a circle for a patient without the
   /// app).
@@ -119,24 +111,17 @@ class CreateCircleState extends Equatable {
   bool get ownBasicsSaved => account?.hasBasics ?? false;
 
   /// The page asks for the birth date and city: always for a patient without
-  /// the app (no account is loaded), and for the person's own care only when
-  /// the account has not saved them.
+  /// the app, and for the person's own care only when the account has not
+  /// saved them (or could not be read).
   bool get asksBasics => !ownBasicsSaved;
 
-  /// The first step is complete and the circle name is set.
-  bool get basicsComplete =>
-      circleName.isNotEmpty &&
-      (ownBasicsSaved || (birthDate != null && city != null));
+  /// The patient's birth date: the account's when it holds one, else the one
+  /// typed on the page.
+  DateTime? get patientBirthDate =>
+      ownBasicsSaved ? account!.birthDate : birthDate;
 
-  /// "Other" needs its text, here and in the two lists of step 3.
-  bool get conditionsValid =>
-      !conditions.contains(MedicalOptions.other) ||
-      conditionOther.trim().isNotEmpty;
-
-  bool get allergiesValid =>
-      (!medication.contains(MedicalOptions.other) ||
-          medicationOther.trim().isNotEmpty) &&
-      (!food.contains(MedicalOptions.other) || foodOther.trim().isNotEmpty);
+  /// The patient's city, the same way. It also gives the patient's zone.
+  String? get patientCity => ownBasicsSaved ? account!.city : city;
 
   CreateCircleState copyWith({
     AccountSummary? account,
@@ -145,18 +130,8 @@ class CreateCircleState extends Equatable {
     String? customName,
     String? patientFirstName,
     String? patientLastName,
-    String? circleName,
     DateTime? birthDate,
     String? city,
-    String? bloodType,
-    bool clearBloodType = false,
-    Set<String>? conditions,
-    String? conditionOther,
-    bool? noAllergies,
-    Set<String>? medication,
-    String? medicationOther,
-    Set<String>? food,
-    String? foodOther,
     bool? showErrors,
     CreateStatus? status,
     String? errorKey,
@@ -171,17 +146,8 @@ class CreateCircleState extends Equatable {
       customName: customName ?? this.customName,
       patientFirstName: patientFirstName ?? this.patientFirstName,
       patientLastName: patientLastName ?? this.patientLastName,
-      circleName: circleName ?? this.circleName,
       birthDate: birthDate ?? this.birthDate,
       city: city ?? this.city,
-      bloodType: clearBloodType ? null : (bloodType ?? this.bloodType),
-      conditions: conditions ?? this.conditions,
-      conditionOther: conditionOther ?? this.conditionOther,
-      noAllergies: noAllergies ?? this.noAllergies,
-      medication: medication ?? this.medication,
-      medicationOther: medicationOther ?? this.medicationOther,
-      food: food ?? this.food,
-      foodOther: foodOther ?? this.foodOther,
       showErrors: showErrors ?? this.showErrors,
       status: status ?? this.status,
       errorKey: clearError ? null : (errorKey ?? this.errorKey),
@@ -198,17 +164,8 @@ class CreateCircleState extends Equatable {
     customName,
     patientFirstName,
     patientLastName,
-    circleName,
     birthDate,
     city,
-    bloodType,
-    conditions,
-    conditionOther,
-    noAllergies,
-    medication,
-    medicationOther,
-    food,
-    foodOther,
     showErrors,
     status,
     errorKey,

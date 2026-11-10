@@ -1,12 +1,14 @@
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
@@ -35,31 +37,35 @@ class MeasurementAttentionSection extends StatelessWidget {
   final List<MeasurementReading> readings;
   final bool boxed;
 
-  /// How many cards it shows.
+  /// How many cards it shows; [clock] is the patient's, whose today an
+  /// outside reading counts on.
   static int count(
     List<MeasurementOccurrence> tasks,
     List<MeasurementReading> readings,
-  ) => _missed(tasks).length + _outside(readings).length;
+    PatientClock clock,
+  ) => _missed(tasks).length + _outside(readings, clock).length;
 
   static List<MeasurementOccurrence> _missed(
     List<MeasurementOccurrence> tasks,
   ) => tasks.where((item) => item.status == MeasurementStatus.missed).toList();
 
-  static List<MeasurementReading> _outside(List<MeasurementReading> readings) =>
-      readings
-          .where(
-            (item) =>
-                item.outsideTarget == true &&
-                item.followedUpAt == null &&
-                item.measuredAt != null &&
-                DateUtils.isSameDay(riyadhNow(item.measuredAt), riyadhNow()),
-          )
-          .toList();
+  static List<MeasurementReading> _outside(
+    List<MeasurementReading> readings,
+    PatientClock clock,
+  ) => readings
+      .where(
+        (item) =>
+            item.outsideTarget == true &&
+            item.followedUpAt == null &&
+            item.measuredAt != null &&
+            clock.today(item.measuredAt!) == clock.today(),
+      )
+      .toList();
 
   @override
   Widget build(BuildContext context) {
     final missed = _missed(tasks);
-    final outside = _outside(readings);
+    final outside = _outside(readings, PatientClockScope.of(context));
     if (missed.isEmpty && outside.isEmpty) return const SizedBox.shrink();
     if (!boxed) {
       return Column(
@@ -87,15 +93,16 @@ class MeasurementAttentionSection extends StatelessWidget {
         context,
         title:
             '${_title(context, task.kind)} · '
-            '${_time(context, task.time)}',
+            '${clockText(task.time)}',
         subtitle: context.tr('measurements.not_recorded'),
         actions: [
           FilledButton(
-            onPressed: () => _record(context, task),
+            onPressed: () =>
+                showMeasurementReadingSheet(context, occurrence: task),
             child: Text(context.tr('measurements.record_reading')),
           ),
           TextButton(
-            onPressed: () => context.read<MeasurementTasksCubit>().skip(task),
+            onPressed: () => _skip(context, task),
             child: Text(context.tr('measurements.skip')),
           ),
         ],
@@ -111,8 +118,12 @@ class MeasurementAttentionSection extends StatelessWidget {
         subtitle: context.tr('measurements.outside_target'),
         actions: [
           TextButton(
-            onPressed: () =>
-                context.read<MeasurementReadingsCubit>().followUp(reading),
+            onPressed: () async {
+              final String? messageKey = await context
+                  .read<MeasurementReadingsCubit>()
+                  .followUp(reading);
+              if (context.mounted) _show(context, messageKey);
+            },
             child: Text(context.tr('measurements.follow_up')),
           ),
         ],
@@ -137,16 +148,11 @@ class MeasurementAttentionSection extends StatelessWidget {
       ],
     ),
   );
-
-  Future<void> _record(BuildContext context, MeasurementOccurrence task) async {
-    final saved = await showMeasurementReadingSheet(context, occurrence: task);
-    if (saved && context.mounted) {
-      context.read<MeasurementTasksCubit>().reload();
-    }
-  }
 }
 
-/// Displays the measurement task row UI.
+/// One measurement task of «اليوم»: its time, kind, conditions and status,
+/// the reading that answered it, and «تسجيل قراءة»/«تخطي» while it can be
+/// answered ([now] is the patient's wall time).
 class MeasurementTaskRow extends StatelessWidget {
   const MeasurementTaskRow({
     super.key,
@@ -167,7 +173,7 @@ class MeasurementTaskRow extends StatelessWidget {
         task.status != MeasurementStatus.missed;
     final canRecord = canRecordOccurrence(
       resolved: resolved,
-      scheduledAt: riyadhScheduledAt(task.scheduledOn, task.time),
+      scheduledAt: wallClockAt(task.scheduledOn, task.time),
       now: now,
     );
     final status = switch (task.status) {
@@ -212,7 +218,7 @@ class MeasurementTaskRow extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_time(context, task.time)),
+              Text(clockText(task.time)),
               const SizedBox(width: AppSpacing.sm),
               Icon(
                 task.kind == MeasurementKind.glucose
@@ -247,7 +253,10 @@ class MeasurementTaskRow extends StatelessWidget {
                         context.tr(
                           'measurements.recorded_at',
                           args: [
-                            _time(context, _hhmm(riyadhNow(record.recordedAt))),
+                            wallTimeText(
+                              PatientClockScope.of(context)
+                                  .wallTime(record.recordedAt),
+                            ),
                           ],
                         ),
                         style: Theme.of(context).textTheme.bodySmall,
@@ -299,15 +308,10 @@ class MeasurementTaskRow extends StatelessWidget {
                         ),
                         minimumSize: const Size(0, 34),
                       ),
-                      onPressed: () async {
-                        final saved = await showMeasurementReadingSheet(
-                          context,
-                          occurrence: task,
-                        );
-                        if (saved && context.mounted) {
-                          context.read<MeasurementTasksCubit>().reload();
-                        }
-                      },
+                      onPressed: () => showMeasurementReadingSheet(
+                        context,
+                        occurrence: task,
+                      ),
                       icon: const Icon(CupertinoIcons.checkmark, size: 16),
                       label: Text(context.tr('measurements.record_reading')),
                     ),
@@ -319,8 +323,7 @@ class MeasurementTaskRow extends StatelessWidget {
                         horizontal: AppSpacing.xs,
                       ),
                     ),
-                    onPressed: () =>
-                        context.read<MeasurementTasksCubit>().skip(task),
+                    onPressed: () => _skip(context, task),
                     icon: const Icon(CupertinoIcons.minus_circle, size: 16),
                     label: Text(context.tr('measurements.skip')),
                   ),
@@ -337,14 +340,19 @@ String _title(BuildContext context, MeasurementKind kind) => context.tr(
   kind == MeasurementKind.glucose ? 'measurements.glucose' : 'measurements.bp',
 );
 
-String _time(BuildContext context, String value) {
-  final parts = value.split(':');
-  final hour24 = int.parse(parts[0]);
-  final hour = hour24 % 12 == 0 ? 12 : hour24 % 12;
-  return '$hour:${parts[1]} '
-      '${context.tr(hour24 < 12 ? 'common.am' : 'common.pm')}';
+/// «تخطي» on [task]; a refused answer shows its message. The tasks read
+/// again by themselves once it is saved.
+Future<void> _skip(BuildContext context, MeasurementOccurrence task) async {
+  final String? messageKey = await context.read<MeasurementTasksCubit>().skip(
+    task,
+  );
+  if (context.mounted) _show(context, messageKey);
 }
 
-String _hhmm(DateTime at) =>
-    '${at.hour.toString().padLeft(2, '0')}:'
-    '${at.minute.toString().padLeft(2, '0')}';
+/// A refused answer's message ([messageKey]), wherever the task is shown.
+/// [context] must still be mounted.
+void _show(BuildContext context, String? messageKey) {
+  if (messageKey == null) return;
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(context.tr(messageKey))));
+}

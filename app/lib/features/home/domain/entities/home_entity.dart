@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:equatable/equatable.dart';
 
 /// Summarizes the selected care circle for Home.
@@ -9,6 +10,7 @@ class CareCircleSummary extends Equatable {
     this.patientAvatarCode,
     this.isPatient = true,
     this.patientName,
+    this.timeZone = defaultPatientZone,
   });
 
   final String id;
@@ -24,6 +26,14 @@ class CareCircleSummary extends Equatable {
   /// («أدوية محمود الحالية»).
   final String? patientName;
 
+  /// The IANA zone where the patient lives: every day and time of this
+  /// circle is wall clock there ([clock]). [defaultPatientZone] when an
+  /// older server does not say.
+  final String timeZone;
+
+  /// The patient's clock.
+  PatientClock get clock => PatientClock(timeZone);
+
   @override
   List<Object?> get props => [
     id,
@@ -32,6 +42,7 @@ class CareCircleSummary extends Equatable {
     patientAvatarCode,
     isPatient,
     patientName,
+    timeZone,
   ];
 }
 

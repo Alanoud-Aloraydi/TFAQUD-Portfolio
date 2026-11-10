@@ -1,19 +1,19 @@
 import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
-import 'package:app/features/medications/domain/dose_reminders.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
-import 'package:app/features/medications/presentation/dose_reminder_texts.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,7 +24,9 @@ import 'package:get_it/get_it.dart';
 /// Defines the supported dose controls layout values.
 enum DoseControlsLayout { regular, today, attention }
 
-/// Displays the dose record controls UI.
+/// The answers to one unrecorded dose («انأخذت», another time, skip,
+/// «ذكّرني لاحقًا»), or its recorded status. Calls the nearest
+/// [MedicationOccurrencesCubit] and shows a refused answer's message.
 class DoseRecordControls extends StatelessWidget {
   const DoseRecordControls({
     super.key,
@@ -49,7 +51,7 @@ class DoseRecordControls extends StatelessWidget {
       (cubit) => cubit.state.recordingOccurrence == occurrence,
     );
     if (isRecording) return const _RecordingStatus();
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final scheduledOn = scheduleDay(occurrence.scheduledOn);
     if (scheduledOn.isAfter(today)) return const SizedBox.shrink();
     final isToday = scheduledOn == today;
@@ -161,8 +163,12 @@ class DoseRecordControls extends StatelessWidget {
     );
   }
 
-  Future<void> _takeNow(BuildContext context) =>
-      _recordTaken(context, DateTime.now());
+  Future<void> _takeNow(BuildContext context) async {
+    final String? messageKey = await context
+        .read<MedicationOccurrencesCubit>()
+        .take(occurrence);
+    if (context.mounted) _show(context, messageKey);
+  }
 
   Future<void> _takeAtDifferentTime(BuildContext context) async {
     final takenAt = await selectTakenTime(
@@ -171,26 +177,27 @@ class DoseRecordControls extends StatelessWidget {
       circleId: circleId,
     );
     if (takenAt == null || !context.mounted) return;
-    if (takenAt.isAfter(DateTime.now())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('medications.future_taken_time'))),
-      );
-      return;
-    }
-    await _recordTaken(context, takenAt);
-  }
-
-  Future<void> _recordTaken(BuildContext context, DateTime takenAt) async {
-    await context.read<MedicationOccurrencesCubit>().record(
-      occurrence,
-      DoseRecordDraft(outcome: DoseOutcome.taken, takenAt: takenAt),
-    );
+    final String? messageKey = await context
+        .read<MedicationOccurrencesCubit>()
+        .take(occurrence, takenAt);
+    if (context.mounted) _show(context, messageKey);
   }
 
   Future<void> _skip(BuildContext context) async {
     final draft = await selectSkippedDose(context);
     if (draft == null || !context.mounted) return;
-    await context.read<MedicationOccurrencesCubit>().record(occurrence, draft);
+    final String? messageKey = await context
+        .read<MedicationOccurrencesCubit>()
+        .record(occurrence, draft);
+    if (context.mounted) _show(context, messageKey);
+  }
+
+  /// A refused answer's message ([messageKey]), wherever the controls are.
+  /// [context] must still be mounted.
+  void _show(BuildContext context, String? messageKey) {
+    if (messageKey == null) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.tr(messageKey))));
   }
 }
 
@@ -266,7 +273,7 @@ class _RecordedStatus extends StatelessWidget {
                     context,
                     circleId,
                     taken
-                        ? occurrence.takenLate
+                        ? occurrence.isTakenLate(PatientClockScope.of(context))
                               ? 'medications.taken_late_status'
                               : 'medications.taken_status'
                         : 'medications.skipped_status',
@@ -314,11 +321,7 @@ class _RecordedStatus extends StatelessWidget {
   }
 
   String _takenTime(BuildContext context, DateTime takenAt) {
-    final local = riyadhNow(takenAt);
-    final time =
-        '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}';
-    return formatMedicationTime(context, time);
+    return wallTimeText(PatientClockScope.of(context).wallTime(takenAt));
   }
 }
 
@@ -356,12 +359,9 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
   /// «ذكّرني لاحقًا», or «بنذكّرك 2:36 م» while the dose is put off.
   String _label(BuildContext context, DateTime? at) {
     if (at == null) return context.tr('reminders.snooze');
-    final DateTime wall = riyadhNow(at);
-    final String time =
-        '${wall.hour}:${wall.minute.toString().padLeft(2, '0')}';
     return context.tr(
       'reminders.snoozed',
-      args: <String>[formatMedicationTime(context, time)],
+      args: <String>[wallTimeText(PatientClockScope.of(context).wallTime(at))],
     );
   }
 
@@ -406,19 +406,10 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
     setState(() => _open = false);
     final DoseReminders? reminders = _reminders;
     if (minutes == null || reminders == null) return;
-    // Only the reminder's words are needed, never who an appointment is for.
-    final ReminderCircle circle = ReminderCircle(
-      id: widget.circleId,
-      name: '',
-      viewerId: null,
-      viewerIsPatient: false,
-    );
     await reminders.snoozeDose(
-      circleId: widget.circleId,
-      dose: widget.occurrence,
-      title: doseReminderTexts.title(circle, widget.occurrence),
-      body: doseReminderTexts.body(circle, widget.occurrence),
-      after: Duration(minutes: minutes),
+      widget.circleId,
+      widget.occurrence,
+      Duration(minutes: minutes),
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -457,10 +448,10 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
     final DoseReminders? reminders = _reminders;
     if (reminders == null) return _button(context, null);
     final String key = doseSnoozeKey(widget.circleId, widget.occurrence);
-    return ValueListenableBuilder<Map<String, DateTime>>(
-      valueListenable: reminders.snoozedDoses,
-      builder: (BuildContext context, Map<String, DateTime> snoozed, _) =>
-          _button(context, snoozed[key]),
+    return ValueListenableBuilder<Map<String, TaskSnooze>>(
+      valueListenable: reminders.snoozes,
+      builder: (BuildContext context, Map<String, TaskSnooze> snoozed, _) =>
+          _button(context, snoozed[key]?.at),
     );
   }
 }

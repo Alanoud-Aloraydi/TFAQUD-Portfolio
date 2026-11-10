@@ -1,11 +1,10 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 import 'package:app/features/circles/domain/entities/new_self_circle.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -13,17 +12,24 @@ import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-/// Coordinates create circle actions and UI state.
+/// Keeps the answers of the page that creates a circle and creates the circle
+/// of its [flow].
 class CreateCircleCubit extends Cubit<CreateCircleState> {
   /// [request] is the request the patient agreed to, and is needed for the
-  /// [CircleFlow.approved] flow only. The patient names that circle on the
-  /// page, as they would their own.
+  /// [CircleFlow.approved] flow only; it travels with the route. The patient
+  /// names that circle on the page, as they would their own.
   CreateCircleCubit(
     this._circles,
     this._home, {
     required this.flow,
     this.request,
-  }) : super(const CreateCircleState());
+  }) : super(
+         CreateCircleState(
+           accountLoad: flow == CircleFlow.patient
+               ? AccountLoad.notNeeded
+               : AccountLoad.loading,
+         ),
+       );
 
   final CirclesUseCase _circles;
   final HomeUseCase _home;
@@ -35,20 +41,17 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
   /// The request of the [CircleFlow.approved] flow.
   final ReceivedCircleRequest? request;
 
-  /// The longest first name or last name of a patient the API accepts.
-  static const int maxNameLength = 50;
-
   /// The longest typed circle name. The API accepts 60; a short name is what
   /// fits in the row of circles at the top of the screen.
   static const int maxCustomNameLength = 30;
 
-  // ---- account name ----------------------------------------------------
-
-  /// Loads the account for the read-only "Name" field and to learn at once
-  /// whether the account already has a circle of its own care. The pages work
-  /// without it, so a failure only shows a message and a retry link; the
-  /// server still refuses a second circle at the last step.
+  /// Loads the account: its name, whether it already has a circle of its own
+  /// care, and the birth date and city onboarding saved. The page works
+  /// without it (it then asks for the birth date and city), so a failure
+  /// shows a message and a retry; the server still refuses a second circle.
+  /// Does nothing for [CircleFlow.patient], whose patient is someone else.
   Future<void> loadAccount() async {
+    if (flow == CircleFlow.patient) return;
     emit(state.copyWith(accountLoad: AccountLoad.loading));
     final result = await _circles.getAccount();
     if (isClosed) return;
@@ -67,8 +70,6 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     );
   }
 
-  // ---- step 1: basic details -------------------------------------------
-
   void choosePreset(NamePreset preset) {
     emit(state.copyWith(namePreset: preset, clearError: true));
   }
@@ -85,25 +86,6 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     emit(state.copyWith(city: value, clearError: true));
   }
 
-  /// Checks the first step. [presetName] is the text of the chosen chip, which
-  /// the page translates. Returns true when the page may go to the next step.
-  bool continueFromBasics({required String presetName}) {
-    if (state.alreadyHasCircle) return false;
-    final String name = state.namePreset == NamePreset.other
-        ? state.customName.trim()
-        : presetName;
-    final bool basicsMissing =
-        state.asksBasics && (state.birthDate == null || state.city == null);
-    if (name.isEmpty || basicsMissing) {
-      emit(state.copyWith(showErrors: true));
-      return false;
-    }
-    emit(state.copyWith(circleName: name, showErrors: false));
-    return true;
-  }
-
-  // ---- step 1 for a patient without the app ------------------------------
-
   void patientFirstNameChanged(String value) {
     emit(state.copyWith(patientFirstName: value, clearError: true));
   }
@@ -112,177 +94,33 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     emit(state.copyWith(patientLastName: value, clearError: true));
   }
 
-  /// Checks the first step of a circle for a patient without the app.
-  /// Nobody names that circle: everyone sees «دائرة» and the patient's first
-  /// name. [sharedName] is that name, which the page translates; the server
-  /// makes the same one. Returns true when the page may go to the next step.
-  bool continueFromPatientBasics({required String sharedName}) {
-    if (!state.patientNamesComplete ||
-        state.birthDate == null ||
-        state.city == null) {
-      emit(state.copyWith(showErrors: true));
-      return false;
-    }
-    emit(state.copyWith(circleName: sharedName.trim(), showErrors: false));
-    return true;
-  }
-
-  // ---- step 1 for a patient who agreed to a request -----------------------
-
-  /// Checks the page of a circle the patient agreed to: the patient's own
-  /// name for it (the same chips as their own circle), and the birth date and
-  /// the city only when onboarding did not save them. [presetName] is the
-  /// text of the chosen chip, which the page translates. Returns true when
-  /// the circle may be created.
-  bool continueFromApprovedBasics({required String presetName}) =>
-      continueFromBasics(presetName: presetName);
-
-  // ---- step 2: health condition ----------------------------------------
-
-  /// Picks a blood type; a second tap on the same one clears it.
-  void chooseBloodType(String code) {
-    if (state.bloodType == code) {
-      emit(state.copyWith(clearBloodType: true));
-    } else {
-      emit(state.copyWith(bloodType: code));
-    }
-  }
-
-  /// "None" stands alone: it clears the other choices, and any other choice
-  /// clears it.
-  void toggleCondition(String code) {
-    final Set<String> next = _toggled(state.conditions, code);
-    emit(
-      state.copyWith(
-        conditions: next,
-        conditionOther: next.contains(MedicalOptions.other)
-            ? state.conditionOther
-            : '',
-        clearError: true,
-      ),
-    );
-  }
-
-  void conditionOtherChanged(String value) {
-    emit(state.copyWith(conditionOther: value, clearError: true));
-  }
-
-  /// Checks the second step. Returns true when the page may go on.
-  bool continueFromHealth() {
-    if (!state.conditionsValid) {
-      emit(state.copyWith(showErrors: true));
-      return false;
-    }
-    emit(state.copyWith(showErrors: false));
-    return true;
-  }
-
-  /// Drops the answers of the second step.
-  void skipHealth() {
-    emit(
-      state.copyWith(
-        clearBloodType: true,
-        conditions: const <String>{},
-        conditionOther: '',
-        showErrors: false,
-      ),
-    );
-  }
-
-  // ---- step 3: allergies -----------------------------------------------
-
-  /// "No allergies" stands alone: it clears the lists, and any item clears it.
-  void toggleNoAllergies() {
-    if (state.noAllergies) {
-      emit(state.copyWith(noAllergies: false));
-    } else {
-      emit(
-        state.copyWith(
-          noAllergies: true,
-          medication: const <String>{},
-          medicationOther: '',
-          food: const <String>{},
-          foodOther: '',
-          clearError: true,
-        ),
-      );
-    }
-  }
-
-  void toggleMedication(String code) {
-    final Set<String> next = {...state.medication};
-    if (!next.add(code)) next.remove(code);
-    emit(
-      state.copyWith(
-        medication: next,
-        medicationOther: next.contains(MedicalOptions.other)
-            ? state.medicationOther
-            : '',
-        noAllergies: false,
-        clearError: true,
-      ),
-    );
-  }
-
-  void toggleFood(String code) {
-    final Set<String> next = {...state.food};
-    if (!next.add(code)) next.remove(code);
-    emit(
-      state.copyWith(
-        food: next,
-        foodOther: next.contains(MedicalOptions.other) ? state.foodOther : '',
-        noAllergies: false,
-        clearError: true,
-      ),
-    );
-  }
-
-  void medicationOtherChanged(String value) {
-    emit(state.copyWith(medicationOther: value, clearError: true));
-  }
-
-  void foodOtherChanged(String value) {
-    emit(state.copyWith(foodOther: value, clearError: true));
-  }
-
-  // ---- create ----------------------------------------------------------
-
-  /// Creates the circle of the [flow]. [skipAllergies] drops the answers of the
-  /// third step first. Returns true when the circle was created, so the page can
-  /// leave.
-  Future<bool> create({bool skipAllergies = false}) async {
-    if (state.status == CreateStatus.saving) return false;
+  /// Creates the circle of the [flow]. [presetName] is the text of the chosen
+  /// chip, which the page translates; the [CircleFlow.patient] flow names
+  /// nothing (the server names it «دائرة» and the patient's first name). A
+  /// missing answer marks the fields and sends nothing. A tap while the
+  /// account loads, while saving or after the circle was created sends
+  /// nothing either. Returns true when the circle was created, so the page
+  /// can leave.
+  Future<bool> create({String presetName = ''}) async {
+    if (state.busy || state.status == CreateStatus.created) return false;
     if (state.alreadyHasCircle) {
       emit(state.copyWith(errorKey: 'circles.already_has_circle'));
       return false;
     }
-    if (skipAllergies) {
-      emit(
-        state.copyWith(
-          noAllergies: false,
-          medication: const <String>{},
-          medicationOther: '',
-          food: const <String>{},
-          foodOther: '',
-        ),
-      );
-    }
-    if (!state.allergiesValid) {
+    final String name = state.namePreset == NamePreset.other
+        ? state.customName.trim()
+        : presetName.trim();
+    final DateTime? birthDate = state.patientBirthDate;
+    final String? city = state.patientCity;
+    final bool nameMissing = flow == CircleFlow.patient
+        ? !state.patientNamesComplete
+        : name.isEmpty;
+    if (nameMissing || birthDate == null || city == null) {
       emit(state.copyWith(showErrors: true));
       return false;
     }
-    // Null when the account holds them: the server reads them from there.
-    final DateTime? birthDate = state.ownBasicsSaved ? null : state.birthDate;
-    final String? city = state.ownBasicsSaved ? null : state.city;
-    final bool namesMissing =
-        flow == CircleFlow.patient && !state.patientNamesComplete;
-    final bool requestMissing = flow == CircleFlow.approved && request == null;
-    final bool patientBasicsMissing =
-        flow == CircleFlow.patient && (birthDate == null || city == null);
-    if (!state.basicsComplete ||
-        namesMissing ||
-        requestMissing ||
-        patientBasicsMissing) {
+    final ReceivedCircleRequest? asked = request;
+    if (flow == CircleFlow.approved && asked == null) {
       emit(state.copyWith(errorKey: 'error.invalid_data'));
       return false;
     }
@@ -293,57 +131,38 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
         showErrors: false,
       ),
     );
-    final Result<(CareCircleSummary, String?), Failure> result;
-    switch (flow) {
-      case CircleFlow.self:
-        final selfResult = await _circles.createSelfCircle(
-          NewSelfCircle(
-            name: state.circleName,
-            birthDate: birthDate,
-            city: city,
-            medicalProfile: _medicalProfile(),
+    final Result<(CareCircleSummary, CircleAppMode), Failure> result =
+        switch (flow) {
+          CircleFlow.self => _detailed(
+            await _circles.createSelfCircle(
+              NewSelfCircle(name: name, birthDate: birthDate, city: city),
+            ),
           ),
-        );
-        result = selfResult.when(
-          (circle) => Success((circle, null)),
-          (failure) => Error(failure),
-        );
-      case CircleFlow.patient:
-        final patientResult = await _circles.createPatientCircle(
-          NewPatientCircle(
-            name: state.circleName,
-            patientFirstName: state.patientFirstName.trim(),
-            patientLastName: state.patientLastName.trim(),
-            birthDate: birthDate!,
-            city: city!,
-            medicalProfile: _medicalProfile(),
+          CircleFlow.patient => _detailed(
+            await _circles.createPatientCircle(
+              NewPatientCircle(
+                patientFirstName: state.patientFirstName.trim(),
+                patientLastName: state.patientLastName.trim(),
+                birthDate: birthDate,
+                city: city,
+              ),
+            ),
           ),
-        );
-        result = patientResult.when(
-          (circle) => Success((circle, null)),
-          (failure) => Error(failure),
-        );
-      case CircleFlow.approved:
-        result = await _circles.completeRequest(
-          request!.id,
-          CompleteCircleRequest(
-            name: state.circleName,
-            birthDate: birthDate,
-            city: city,
-            medicalProfile: _medicalProfile(),
+          CircleFlow.approved => await _circles.completeRequest(
+            asked!.id,
+            CompleteCircleRequest(name: name, birthDate: birthDate, city: city),
           ),
-        );
-    }
+        };
     if (isClosed) return false;
     return result.when(
       (data) {
-        final (circle, accountAppMode) = data;
+        final (CareCircleSummary circle, CircleAppMode mode) = data;
         // Every open home screen loads the circles again and selects this one.
         _home.notifyCirclesChanged(select: circle.id);
         emit(
           state.copyWith(
             status: CreateStatus.created,
-            switchToSimplified: accountAppMode == 'simplified',
+            switchToSimplified: mode == CircleAppMode.simplified,
           ),
         );
         return true;
@@ -364,84 +183,15 @@ class CreateCircleCubit extends Cubit<CreateCircleState> {
     );
   }
 
-  // ---- helpers ---------------------------------------------------------
+  /// A circle the person creates for themself or for a patient without the
+  /// app leaves the account in the detailed mode (the server commits it).
+  Result<(CareCircleSummary, CircleAppMode), Failure> _detailed(
+    Result<CareCircleSummary, Failure> result,
+  ) => result.when(
+    (circle) => Success((circle, CircleAppMode.detailed)),
+    (failure) => Error(failure),
+  );
 
   bool _ended(Failure failure) =>
       failure is UnauthorizedFailure || failure is SessionExpiredFailure;
-
-  Set<String> _toggled(Set<String> chosen, String code) {
-    final Set<String> next = {...chosen};
-    if (code == MedicalOptions.none) {
-      if (next.contains(code)) {
-        next.remove(code);
-      } else {
-        next
-          ..clear()
-          ..add(code);
-      }
-      return next;
-    }
-    next.remove(MedicalOptions.none);
-    if (!next.add(code)) next.remove(code);
-    return next;
-  }
-
-  /// The parts the user answered, or null when the user answered none.
-  MedicalProfileDraft? _medicalProfile() {
-    final MedicalProfileDraft draft = MedicalProfileDraft(
-      bloodType: state.bloodType,
-      conditions: _conditions(),
-      allergies: _allergies(),
-    );
-    return draft.isEmpty ? null : draft;
-  }
-
-  ConditionsDraft? _conditions() {
-    final Set<String> chosen = state.conditions;
-    if (chosen.isEmpty) return null;
-    if (chosen.contains(MedicalOptions.none)) {
-      return const ConditionsDraft.none();
-    }
-    final List<String> codes = _inOrder(chosen, <String>[
-      ...MedicalOptions.conditions,
-      MedicalOptions.other,
-    ]);
-    return ConditionsDraft.listed(
-      codes: codes,
-      other: codes.contains(MedicalOptions.other)
-          ? state.conditionOther.trim()
-          : null,
-    );
-  }
-
-  AllergiesDraft? _allergies() {
-    if (state.noAllergies) return const AllergiesDraft.none();
-    if (state.medication.isEmpty && state.food.isEmpty) return null;
-    final List<String> medication = _inOrder(state.medication, <String>[
-      ...MedicalOptions.medications,
-      MedicalOptions.other,
-    ]);
-    final List<String> food = _inOrder(state.food, <String>[
-      ...MedicalOptions.foods,
-      MedicalOptions.other,
-    ]);
-    return AllergiesDraft.listed(
-      medication: medication,
-      otherMedication: medication.contains(MedicalOptions.other)
-          ? state.medicationOther.trim()
-          : null,
-      food: food,
-      otherFood: food.contains(MedicalOptions.other)
-          ? state.foodOther.trim()
-          : null,
-    );
-  }
-
-  /// The chosen codes in the order of the design.
-  List<String> _inOrder(Set<String> chosen, List<String> order) {
-    return <String>[
-      for (final String code in order)
-        if (chosen.contains(code)) code,
-    ];
-  }
 }

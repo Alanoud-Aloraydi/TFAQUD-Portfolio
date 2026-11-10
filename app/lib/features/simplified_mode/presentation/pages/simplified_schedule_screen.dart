@@ -1,5 +1,5 @@
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
@@ -73,9 +73,9 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                         task,
                         simplifiedSnoozed(
                           context,
-                          state.snooze,
+                          state.snoozes,
+                          day.circleId,
                           task,
-                          state.now,
                         ),
                       ),
                     ),
@@ -135,9 +135,9 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                             circleId: day.circleId,
                             snoozed: simplifiedSnoozed(
                               context,
-                              state.snooze,
+                              state.snoozes,
+                              day.circleId,
                               task,
-                              state.now,
                             ),
                           ),
                         ),
@@ -185,8 +185,13 @@ class _Filters extends StatelessWidget {
               onTap: () => onChanged(entry.key),
               borderRadius: BorderRadius.circular(24),
               child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                constraints: const BoxConstraints(
+                  minHeight: SimplifiedStyle.touch,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: entry.key == selected

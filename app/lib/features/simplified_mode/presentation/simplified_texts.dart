@@ -1,11 +1,12 @@
+import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
-import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart'
+    show TaskSnooze;
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
-import 'package:app/features/simplified_mode/domain/entities/simplified_snooze.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,35 +23,34 @@ String simplifiedTime(BuildContext context, String time) {
   return '${hour % 12 == 0 ? 12 : hour % 12}:$minute $period';
 }
 
-/// The Riyadh clock time of the instant [at]: «2:09 مساءً».
+/// The patient's clock time at the instant [at]: «2:09 مساءً».
 String simplifiedClockAt(BuildContext context, DateTime at) {
-  final DateTime wall = riyadhNow(at);
+  final DateTime wall = PatientClockScope.of(context).wallTime(at);
   return simplifiedTime(
     context,
     '${wall.hour}:${wall.minute.toString().padLeft(2, '0')}',
   );
 }
 
-/// «سأذكّرك 2:09 مساءً» on [task] while [snooze] puts it off at [now];
-/// null for any other task, or once its reminder came.
+/// «سأذكّرك 2:09 مساءً» on [task] of [circleId] while it is put off
+/// ([snoozes]); null for any other task, or once its reminder came.
 String? simplifiedSnoozed(
   BuildContext context,
-  SimplifiedSnooze? snooze,
+  Map<String, TaskSnooze> snoozes,
+  String circleId,
   TodayTask task,
-  DateTime now,
 ) {
-  if (snooze == null || snooze.isOver(now) || !snooze.covers(task)) {
-    return null;
-  }
+  final TaskSnooze? snooze = snoozes[task.snoozeKey(circleId)];
+  if (snooze == null || task.status == TodayTaskStatus.done) return null;
   return context.tr(
     'simplified_mode.snoozed_until',
-    args: <String>[simplifiedClockAt(context, snooze.until)],
+    args: <String>[simplifiedClockAt(context, snooze.at)],
   );
 }
 
 /// The app's one greeting, the detailed mode's too: «صباح الخير، مريم»
 /// from Fajr until Asr, «مساء الخير، مريم» after ([prayers] is today's;
-/// without it, about where those prayers fall in Riyadh).
+/// without it, the fallback times of [isMorning]).
 String simplifiedGreeting(
   BuildContext context,
   String? name,
@@ -58,7 +58,7 @@ String simplifiedGreeting(
   PrayerDay? prayers,
 ) => greeting(
   context,
-  riyadhNow(now),
+  PatientClockScope.of(context).wallTime(now),
   name,
   fajr: prayers?.times[Prayer.fajr],
   asr: prayers?.times[Prayer.asr],
@@ -66,7 +66,7 @@ String simplifiedGreeting(
 
 /// «اليوم · الجمعة 6 نوفمبر».
 String simplifiedToday(BuildContext context, DateTime now) {
-  final DateTime day = riyadhToday(now);
+  final DateTime day = PatientClockScope.of(context).today(now);
   return context.tr(
     'simplified_mode.today_date',
     args: <String>[
@@ -77,10 +77,12 @@ String simplifiedToday(BuildContext context, DateTime now) {
   );
 }
 
-/// How long until [at] (Riyadh wall time) from [now], in the detailed
-/// mode's words: «بعد ساعتين», «بعد 3 دقائق», or «الآن» once it came.
+/// How long until [at] (the patient's wall time) from the instant [now],
+/// in the detailed mode's words: «بعد ساعتين», «بعد 3 دقائق», or «الآن»
+/// once it came.
 String simplifiedUntil(BuildContext context, DateTime at, DateTime now) {
-  final int minutes = at.difference(riyadhNow(now)).inMinutes;
+  final DateTime wall = PatientClockScope.of(context).wallTime(now);
+  final int minutes = at.difference(wall).inMinutes;
   if (minutes <= 0) return context.tr('simplified_mode.now');
   return afterDuration(context, minutes);
 }
@@ -90,13 +92,7 @@ String simplifiedDoseAmount(BuildContext context, DoseOccurrence dose) {
   if (dose.doseValue == 1) {
     return context.tr('simplified_mode.dose_one.${dose.doseUnit.name}');
   }
-  return context.tr(
-    'medications.dose',
-    args: <String>[
-      formatMedicationNumber(dose.doseValue),
-      context.tr('medications.unit.${dose.doseUnit.name}'),
-    ],
-  );
+  return formatMedicationDose(context, dose.doseValue, dose.doseUnit);
 }
 
 /// The medicine's strength: «500 ملغ».

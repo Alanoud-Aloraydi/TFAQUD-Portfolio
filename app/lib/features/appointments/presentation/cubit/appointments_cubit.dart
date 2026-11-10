@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -23,24 +26,46 @@ class AppointmentsState extends Equatable {
   List<Object?> get props => [status, appointments, errorKey];
 }
 
-/// Coordinates appointments actions and UI state.
+/// The appointments of one circle, and their changes.
+///
+/// The home tabs hold one; each appointment page holds its own. Each reads
+/// again whenever the repository says the circle's appointments changed,
+/// wherever the change was saved, so they never disagree.
 class AppointmentsCubit extends Cubit<AppointmentsState> {
-  AppointmentsCubit(this._repository) : super(const AppointmentsState());
+  AppointmentsCubit(this._repository) : super(const AppointmentsState()) {
+    _changes = _repository.changes.listen((circleId) {
+      if (circleId == _circleId) unawaited(load(circleId, silent: true));
+    });
+  }
 
   final AppointmentRepository _repository;
+  late final StreamSubscription<String> _changes;
   String? _circleId;
+
+  /// Goes up at each [load], so an older reading that ends later is dropped.
   int _revision = 0;
 
-  Future<void> load(String circleId) async {
+  /// True while a change is being sent: a second tap sends nothing.
+  bool _writing = false;
+
+  /// Reads [circleId]'s appointments; another circle's list is dropped first.
+  /// With [silent] a list already shown stays while it is read again (no
+  /// loading state), and a failure keeps it.
+  Future<void> load(String circleId, {bool silent = false}) async {
+    if (isClosed) return;
     final changed = _circleId != circleId;
     _circleId = circleId;
     final revision = ++_revision;
-    emit(
-      AppointmentsState(
-        status: AppointmentsLoadStatus.loading,
-        appointments: changed ? const [] : state.appointments,
-      ),
-    );
+    final bool keep =
+        silent && !changed && state.status == AppointmentsLoadStatus.ready;
+    if (!keep) {
+      emit(
+        AppointmentsState(
+          status: AppointmentsLoadStatus.loading,
+          appointments: changed ? const [] : state.appointments,
+        ),
+      );
+    }
     try {
       final appointments = await _repository.appointments(circleId);
       if (isClosed || revision != _revision) return;
@@ -54,47 +79,68 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
       if (isClosed || revision != _revision) return;
       emit(
         AppointmentsState(
-          status: AppointmentsLoadStatus.failure,
+          status: keep
+              ? AppointmentsLoadStatus.ready
+              : AppointmentsLoadStatus.failure,
           appointments: state.appointments,
-          errorKey: FailureExceptions.getException(error).messageKey,
+          errorKey: keep
+              ? null
+              : FailureExceptions.getException(error).messageKey,
         ),
       );
     }
   }
 
-  Future<bool> create(AppointmentDraft draft) =>
-      _write((circleId) => _repository.create(circleId, draft));
+  /// Adds an appointment to [circleId]; null when saved, else the message key.
+  Future<String?> create(String circleId, AppointmentDraft draft) =>
+      _write(circleId, () => _repository.create(circleId, draft));
 
-  Future<bool> revise(CareAppointment appointment, AppointmentDraft draft) =>
-      _write((circleId) => _repository.revise(circleId, appointment, draft));
+  /// Changes [appointment]; null when saved, else the message key.
+  Future<String?> revise(
+    String circleId,
+    CareAppointment appointment,
+    AppointmentDraft draft,
+  ) => _write(circleId, () => _repository.revise(circleId, appointment, draft));
 
-  Future<bool> setStatus(
+  /// Marks [appointment] attended or cancelled; null when saved, else the
+  /// message key.
+  Future<String?> setStatus(
+    String circleId,
     CareAppointment appointment,
     AppointmentStatus status,
   ) => _write(
-    (circleId) => _repository.setStatus(circleId, appointment, status),
+    circleId,
+    () => _repository.setStatus(circleId, appointment, status),
   );
 
-  Future<bool> _write(
-    Future<CareAppointment> Function(String circleId) operation,
+  /// A saved change reloads through the repository's changes. An appointment
+  /// changed, closed or gone elsewhere reads the list again so the page shows
+  /// the truth.
+  Future<String?> _write(
+    String circleId,
+    Future<CareAppointment> Function() operation,
   ) async {
-    final circleId = _circleId;
-    if (circleId == null) return false;
+    if (_writing) return 'error.unknown';
+    _writing = true;
     try {
-      await operation(circleId);
-      if (!isClosed) await load(circleId);
-      return true;
+      await operation();
+      return null;
     } catch (error) {
-      if (!isClosed) {
-        emit(
-          AppointmentsState(
-            status: AppointmentsLoadStatus.ready,
-            appointments: state.appointments,
-            errorKey: FailureExceptions.getException(error).messageKey,
-          ),
-        );
+      final Failure failure = FailureExceptions.getException(error);
+      if (!isClosed &&
+          _circleId == circleId &&
+          (failure is ConflictFailure || failure is NotFoundFailure)) {
+        unawaited(load(circleId));
       }
-      return false;
+      return failure.messageKey;
+    } finally {
+      _writing = false;
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _changes.cancel();
+    return super.close();
   }
 }

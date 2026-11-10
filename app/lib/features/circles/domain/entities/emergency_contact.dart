@@ -1,3 +1,4 @@
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:equatable/equatable.dart';
 
 /// One person to call in an emergency, as the medical file and the emergency
@@ -28,9 +29,7 @@ class EmergencyContact extends Equatable {
 
   /// The number without the country code, `5XXXXXXXX`, as the phone field
   /// holds it.
-  String get nationalNumber => phoneNumber.startsWith('+966')
-      ? phoneNumber.substring('+966'.length)
-      : phoneNumber;
+  String get nationalNumber => SaudiMobile.national(phoneNumber);
 
   @override
   List<Object?> get props => [id, name, relation, phoneNumber];

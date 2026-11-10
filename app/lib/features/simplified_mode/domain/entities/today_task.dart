@@ -1,4 +1,5 @@
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -54,15 +55,27 @@ class TodayTask extends Equatable {
   final TodayTaskKind kind;
   final DateTime day;
 
-  /// Riyadh wall time, «HH:mm».
+  /// The patient's wall time, «HH:mm».
   final String time;
   final TodayTaskStatus status;
   final DoseOccurrence? dose;
   final MeasurementOccurrence? measurement;
   final CareAppointment? appointment;
 
-  /// The task's moment on the Riyadh wall-time scale of [riyadhNow].
-  DateTime get scheduledAt => riyadhScheduledAt(day, time);
+  /// The task's wall time, on the scale of [PatientClock.now].
+  DateTime get scheduledAt => wallClockAt(day, time);
+
+  /// The key its «ذكّرني لاحقًا» is kept by in [circleId], the same as
+  /// the detailed mode's ([DoseReminders.snoozes]); null for an
+  /// appointment, which is not put off.
+  String? snoozeKey(String circleId) => switch ((dose, measurement)) {
+    (final DoseOccurrence value, _) => doseSnoozeKey(circleId, value),
+    (_, final MeasurementOccurrence value) => measurementSnoozeKey(
+      circleId,
+      value,
+    ),
+    _ => null,
+  };
 
   TodayTask withStatus(TodayTaskStatus value) => TodayTask._(
     kind: kind,

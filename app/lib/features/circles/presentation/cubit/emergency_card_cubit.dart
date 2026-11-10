@@ -13,29 +13,27 @@ class EmergencyCardCubit extends Cubit<EmergencyCardState> {
 
   final CirclesUseCase _circles;
   final String circleId;
+  int _revision = 0;
 
+  /// Reads the card and, at the same time, the medical file for the age
+  /// line (only the file has the birth date). The card shows without the
+  /// age when the file cannot be read. A read that a newer one (a retry)
+  /// overtook is dropped.
   Future<void> load() async {
+    final int revision = ++_revision;
     emit(const EmergencyCardState());
-    final result = await _circles.getEmergencyCard(circleId);
-    if (isClosed) return;
-    final EmergencyCard? card = result.tryGetSuccess();
-    if (card != null) {
-      // The age line needs the birth date, which only the medical file has.
-      // The card shows without it when the file cannot be read.
-      final file = await _circles.getMedicalFile(circleId);
-      if (isClosed) return;
-      emit(
+    final (cardResult, fileResult) = await (
+      _circles.getEmergencyCard(circleId),
+      _circles.getMedicalFile(circleId),
+    ).wait;
+    if (isClosed || revision != _revision) return;
+    cardResult.when(
+      (EmergencyCard card) => emit(
         EmergencyCardState(
           status: EmergencyCardStatus.ready,
           card: card,
-          birthDate: file.tryGetSuccess()?.patient.birthDate,
+          birthDate: fileResult.tryGetSuccess()?.patient.birthDate,
         ),
-      );
-      return;
-    }
-    result.when(
-      (EmergencyCard card) => emit(
-        EmergencyCardState(status: EmergencyCardStatus.ready, card: card),
       ),
       (Failure failure) => emit(
         EmergencyCardState(

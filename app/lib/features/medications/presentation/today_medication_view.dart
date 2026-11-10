@@ -1,6 +1,6 @@
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 
 /// Selects medication occurrences for the Today view.
 class TodayMedicationView {

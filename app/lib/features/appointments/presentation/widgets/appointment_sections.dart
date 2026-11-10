@@ -1,19 +1,20 @@
-import 'dart:async';
-
-import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,44 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-String appointmentTitle(BuildContext context, CareAppointment value) {
-  const presets = {
-    'internal',
-    'diabetes',
-    'cardiology',
-    'eyes',
-    'dental',
-    'neurology',
-  };
-  if (!presets.contains(value.specialty)) return value.specialty;
-  return '${context.tr('appointments.clinic')} '
-      '${context.tr('appointments.specialties.${value.specialty}')}';
-}
-
-String appointmentKindTitle(BuildContext context, CareAppointment value) =>
-    value.kind == AppointmentKind.other
-    ? value.otherKind ?? context.tr('appointments.kinds.other')
-    : context.tr('appointments.kinds.${value.kind.name}');
-
-String appointmentCompanionNames(BuildContext context, CareAppointment value) =>
-    value.companions
-        .map((companion) => companion.name)
-        .join(context.tr('appointments.companion_separator'));
-
-String appointmentDate(BuildContext context, DateTime date) =>
-    '${context.tr('common.weekdays.${date.weekday}')} '
-    '${date.day} ${context.tr('circles.months.${date.month}')}';
-
-String appointmentTime(BuildContext context, String value) {
-  final parts = value.split(':');
-  final hour = int.parse(parts[0]);
-  final minute = int.parse(parts[1]);
-  return '${hour % 12 == 0 ? 12 : hour % 12}:'
-      '${minute.toString().padLeft(2, '0')} '
-      '${context.tr(hour < 12 ? 'common.am' : 'common.pm')}';
-}
-
-/// Displays the appointment plan section UI.
+/// The plan tab's appointments: upcoming first, then the earlier ones.
 class AppointmentPlanSection extends StatelessWidget {
   const AppointmentPlanSection({
     super.key,
@@ -75,7 +39,7 @@ class AppointmentPlanSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppointmentsCubit>().state;
-    final now = riyadhNow();
+    final now = PatientClockScope.of(context).now();
     final values =
         state.appointments
             .where(
@@ -90,9 +54,6 @@ class AppointmentPlanSection extends StatelessWidget {
       children: [
         header,
         const SizedBox(height: AppSpacing.lg),
-        if (state.errorKey != null &&
-            state.status != AppointmentsLoadStatus.failure)
-          Text(context.tr(state.errorKey!)),
         if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
           const Center(child: CircularProgressIndicator())
         else if (state.status == AppointmentsLoadStatus.failure)
@@ -120,11 +81,9 @@ class AppointmentPlanSection extends StatelessWidget {
     );
   }
 
+  /// The cubit reloads by itself when the form saves.
   Future<void> _addAppointment(BuildContext context) async {
-    final saved = await context.push<bool>(Routes.newAppointment(circleId));
-    if (saved == true && context.mounted) {
-      unawaited(context.read<AppointmentsCubit>().load(circleId));
-    }
+    await context.push<bool>(Routes.newAppointment(circleId));
   }
 }
 
@@ -181,13 +140,17 @@ class AppointmentCard extends StatelessWidget {
                 CompactStatusBadge(
                   text: context.tr(
                     showRelativeDate
-                        ? _relativeDateKey(value.scheduledOn)
+                        ? _relativeDateKey(context, value.scheduledOn)
                         : value.status == AppointmentStatus.scheduled &&
-                              value.scheduledAt.isBefore(riyadhNow())
+                              value.scheduledAt.isBefore(
+                                PatientClockScope.of(context).now(),
+                              )
                         ? 'appointments.status.unconfirmed'
                         : 'appointments.status.${value.status.name}',
                     args: showRelativeDate
-                        ? ['${scheduleDay(value.scheduledOn).difference(riyadhToday()).inDays}']
+                        ? [
+                            '${scheduleDay(value.scheduledOn).difference(PatientClockScope.of(context).today()).inDays}',
+                          ]
                         : null,
                   ),
                   background: AppSemanticColors.surfaceContent,
@@ -209,7 +172,7 @@ class AppointmentCard extends StatelessWidget {
                   children: [
                     Text(
                       '${appointmentDate(context, value.scheduledOn)} · '
-                      '${appointmentTime(context, value.time)}',
+                      '${clockText(value.time)}',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     Text(
@@ -260,7 +223,9 @@ class AppointmentCard extends StatelessWidget {
               ),
             ),
             if (value.status == AppointmentStatus.scheduled &&
-                !value.scheduledAt.isBefore(riyadhNow())) ...[
+                !value.scheduledAt.isBefore(
+                  PatientClockScope.of(context).now(),
+                )) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
                 context.tr('appointments.appears_today'),
@@ -269,15 +234,10 @@ class AppointmentCard extends StatelessWidget {
             ],
             if (value.status == AppointmentStatus.completed)
               TextButton.icon(
-                onPressed: () async {
-                  await context.push<void>(
-                    Routes.appointmentVisit(circleId, value.id),
-                    extra: canManage,
-                  );
-                  if (context.mounted) {
-                    context.read<AppointmentsCubit>().load(circleId);
-                  }
-                },
+                onPressed: () => context.push<void>(
+                  Routes.appointmentVisit(circleId, value.id),
+                  extra: canManage,
+                ),
                 icon: const Icon(CupertinoIcons.doc_text),
                 label: Text(context.tr('appointments.visit_title')),
               ),
@@ -290,18 +250,15 @@ class AppointmentCard extends StatelessWidget {
                   children: [
                     // The outlined capsule with a pencil, as every edit.
                     OutlinedButton.icon(
-                      onPressed: () async {
-                        final changed = await context.push<bool>(
-                          Routes.editAppointment(circleId, value.id),
-                        );
-                        if (changed == true && context.mounted) {
-                          context.read<AppointmentsCubit>().load(circleId);
-                        }
-                      },
+                      onPressed: () => context.push<bool>(
+                        Routes.editAppointment(circleId, value.id),
+                      ),
                       icon: const Icon(AppIcons.pencil),
                       label: Text(context.tr('appointments.edit')),
                     ),
-                    if (!value.scheduledAt.isAfter(riyadhNow()))
+                    if (!value.scheduledAt.isAfter(
+                      PatientClockScope.of(context).now(),
+                    ))
                       TextButton(
                         onPressed: () =>
                             _status(context, AppointmentStatus.completed),
@@ -344,13 +301,23 @@ class AppointmentCard extends StatelessWidget {
         ),
       ],
     );
-    if (confirmed == true && context.mounted) {
-      context.read<AppointmentsCubit>().setStatus(value, status);
+    if (confirmed != true || !context.mounted) return;
+    final errorKey = await context.read<AppointmentsCubit>().setStatus(
+      circleId,
+      value,
+      status,
+    );
+    if (errorKey != null && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
     }
   }
 
-  String _relativeDateKey(DateTime date) {
-    final days = scheduleDay(date).difference(riyadhToday()).inDays;
+  /// «اليوم», «بكرة», … for [date], counted from the patient's today.
+  String _relativeDateKey(BuildContext context, DateTime date) {
+    final days = scheduleDay(date)
+        .difference(PatientClockScope.of(context).today())
+        .inDays;
     if (days == 0) return 'appointments.today';
     if (days == 1) return 'appointments.tomorrow';
     if (days == 2) return 'appointments.in_two_days';
@@ -383,7 +350,7 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppointmentsCubit>().state;
-    final now = riyadhNow();
+    final now = PatientClockScope.of(context).now();
     final values = state.appointments.where((item) {
       final upcoming =
           item.status == AppointmentStatus.scheduled &&
@@ -395,9 +362,6 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
       children: [
         widget.header,
         const SizedBox(height: AppSpacing.md),
-        if (state.errorKey != null &&
-            state.status != AppointmentsLoadStatus.failure)
-          Text(context.tr(state.errorKey!)),
         WhiteFilterMenu<String>(
           glass: true,
           options: {
@@ -437,13 +401,9 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
     );
   }
 
+  /// The cubit reloads by itself when the form saves.
   Future<void> _addAppointment(BuildContext context) async {
-    final saved = await context.push<bool>(
-      Routes.newAppointment(widget.circleId),
-    );
-    if (saved == true && context.mounted) {
-      unawaited(context.read<AppointmentsCubit>().load(widget.circleId));
-    }
+    await context.push<bool>(Routes.newAppointment(widget.circleId));
   }
 }
 
@@ -472,7 +432,7 @@ class AppointmentTodayRow extends StatelessWidget {
             ],
           ),
         ),
-        Text(appointmentTime(context, value.time)),
+        Text(clockText(value.time)),
       ],
     ),
   );

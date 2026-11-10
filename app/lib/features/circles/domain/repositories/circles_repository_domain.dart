@@ -1,4 +1,5 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
@@ -86,7 +87,7 @@ abstract class CirclesRepositoryDomain {
   /// POST /api/v1/circle-requests/{id}/complete. This creates the circle.
   /// The second value is the account's own app mode right after this
   /// commits it, so the caller can switch shells immediately.
-  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   );

@@ -1,29 +1,30 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_skeleton.dart';
+import 'package:app/features/account/presentation/widgets/calendar_sync_section.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_sheet.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/sign_out_row.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/request_age.dart';
-import 'package:app/features/circles/presentation/widgets/calendar_sync_section.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -190,7 +191,7 @@ class AccountScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(account.fullName, style: text.titleLarge),
               Text(
-                RequestSentView.displayPhone(account.phoneNumber),
+                SaudiMobile.display(account.phoneNumber),
                 textDirection: TextDirection.ltr,
                 style: text.bodySmall?.copyWith(
                   color: context.tokens.textSecondary,
@@ -212,7 +213,7 @@ class AccountScreen extends StatelessWidget {
               ),
               InfoRow(
                 label: context.tr('account.phone'),
-                value: RequestSentView.displayPhone(account.phoneNumber),
+                value: SaudiMobile.display(account.phoneNumber),
                 ltr: true,
               ),
             ],
@@ -315,7 +316,10 @@ class _SentRequestRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final bool accepted = request.status == CircleRequestStatus.accepted;
-    final int? days = RequestAge.days(request.createdAt, DateTime.now());
+    final int? days = RequestAge.days(
+      request.createdAt,
+      PatientClockScope.of(context),
+    );
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -345,7 +349,7 @@ class _SentRequestRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    RequestSentView.displayPhone(request.patientPhoneNumber),
+                    SaudiMobile.display(request.patientPhoneNumber),
                     textDirection: TextDirection.ltr,
                     style: text.titleMedium,
                   ),
@@ -367,9 +371,7 @@ class _SentRequestRow extends StatelessWidget {
                     ? 'account.status_accepted_short'
                     : 'circles.request_status_pending',
               ),
-              background: accepted
-                  ? AppSemanticColors.background
-                  : AppSemanticColors.background,
+              background: AppSemanticColors.background,
               foreground: accepted
                   ? AppSemanticColors.statusSuccess
                   : context.tokens.textSecondary,

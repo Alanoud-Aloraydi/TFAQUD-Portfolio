@@ -1,4 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
@@ -6,8 +8,11 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/circles/domain/emergency_number.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
@@ -16,11 +21,9 @@ import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dar
 import 'package:app/features/circles/presentation/cubit/emergency_card_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_export.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -229,12 +232,11 @@ class _CardText {
 
   /// «72 سنة · مواليد 1954» or «72 years · born 1954».
   String age(DateTime birthDate) {
-    final DateTime now = DateTime.now();
-    int years = now.year - birthDate.year;
-    final bool before =
-        now.month < birthDate.month ||
-        (now.month == birthDate.month && now.day < birthDate.day);
-    if (before) years -= 1;
+    // On the patient's today, where they live.
+    final int years = BirthDateRules.ageOn(
+      birthDate,
+      PatientClockScope.of(context).today(),
+    );
     final bool few = years >= 3 && years <= 10;
     return t(
       few ? 'age_few' : 'age_many',
@@ -633,7 +635,7 @@ class _Medicines extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return BlocBuilder<MedicationsCubit, MedicationsState>(
       builder: (BuildContext context, MedicationsState state) {
-        final DateTime today = DateUtils.dateOnly(DateTime.now());
+        final DateTime today = PatientClockScope.of(context).today();
         final List<MedicationPlan> current = state.plans
             .where(
               (MedicationPlan plan) =>
@@ -823,21 +825,28 @@ class _Contacts extends StatelessWidget {
   }
 }
 
-/// The red «اتصال بالإسعاف 997» under the card.
+/// The red «اتصال بالإسعاف» button under the card; it calls
+/// [EmergencyNumber.ambulance].
 class _AmbulanceButton extends StatelessWidget {
   const _AmbulanceButton();
 
   @override
   Widget build(BuildContext context) {
     return FilledButton.icon(
-      onPressed: () => launchUrl(Uri(scheme: 'tel', path: '997')),
+      onPressed: () =>
+          launchUrl(Uri(scheme: 'tel', path: EmergencyNumber.ambulance)),
       style: FilledButton.styleFrom(
         backgroundColor: AppSemanticColors.statusError,
         foregroundColor: AppSemanticColors.surfaceContent,
         minimumSize: const Size.fromHeight(AppSizes.button),
       ),
       icon: const Icon(AppIcons.siren, size: AppSizes.icon),
-      label: Text(context.tr('emergency_card.ambulance')),
+      label: Text(
+        context.tr(
+          'emergency_card.ambulance',
+          args: <String>[EmergencyNumber.ambulance],
+        ),
+      ),
     );
   }
 }

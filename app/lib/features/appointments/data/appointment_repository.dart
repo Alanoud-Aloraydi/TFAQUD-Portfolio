@@ -17,13 +17,18 @@ class AppointmentRepository {
   /// change (so calendar sync can pick it up right away).
   Stream<String> get changes => _changes.stream;
 
+  /// The circle's appointments; a row with an unknown status is left out.
   Future<List<CareAppointment>> appointments(String circleId) async {
     final values = await _remote.appointments(circleId);
     return values
-        .map((item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) => AppointmentModel.tryFromJson(item as Map<String, dynamic>),
+        )
+        .nonNulls
         .toList();
   }
 
+  /// The circle's members who can go with the patient.
   Future<List<AppointmentCompanion>> companions(String circleId) async {
     final values = await _remote.companions(circleId);
     return values
@@ -34,6 +39,7 @@ class AppointmentRepository {
         .toList();
   }
 
+  /// Adds an appointment; announces the change on [changes].
   Future<CareAppointment> create(
     String circleId,
     AppointmentDraft draft,
@@ -43,6 +49,7 @@ class AppointmentRepository {
     return result;
   }
 
+  /// Changes a scheduled appointment; announces the change on [changes].
   Future<CareAppointment> revise(
     String circleId,
     CareAppointment appointment,
@@ -55,6 +62,8 @@ class AppointmentRepository {
     return result;
   }
 
+  /// Marks an appointment attended or cancelled; announces the change on
+  /// [changes].
   Future<CareAppointment> setStatus(
     String circleId,
     CareAppointment appointment,
@@ -67,6 +76,10 @@ class AppointmentRepository {
     return result;
   }
 
-  static CareAppointment _appointment(Map<String, dynamic> data) =>
-      AppointmentModel.fromJson(data['appointment'] as Map<String, dynamic>);
+  /// The appointment the server answered with after a change.
+  static CareAppointment _appointment(Map<String, dynamic> data) {
+    final json = data['appointment'] as Map<String, dynamic>;
+    return AppointmentModel.tryFromJson(json) ??
+        (throw const FormatException('Unknown appointment status'));
+  }
 }

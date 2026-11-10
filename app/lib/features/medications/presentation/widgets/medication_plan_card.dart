@@ -1,18 +1,18 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -47,7 +47,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     final strength =
         '${formatMedicationNumber(version.strengthValue)} '
         '${context.tr('medications.strength_display.${version.strengthUnit.name}')}';
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final status = plan.isPreviousOn(today)
         ? _PlanState.previous
         : plan.isScheduledOn(today)
@@ -228,7 +228,11 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
-                    _period(context, version.startsOn, version.endsOn),
+                    formatMedicationPeriod(
+                      context,
+                      version.startsOn,
+                      version.endsOn,
+                    ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
@@ -296,15 +300,11 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     );
   }
 
+  /// The cubits read again by themselves when the form saves.
   Future<void> _edit(BuildContext context) async {
-    final changed = await context.push<bool>(
+    await context.push<bool>(
       Routes.editMedication(widget.circleId, widget.plan.id),
     );
-    if (changed != true || !context.mounted) return;
-    await Future.wait([
-      context.read<MedicationsCubit>().load(widget.circleId),
-      context.read<MedicationOccurrencesCubit>().reload(),
-    ]);
   }
 
   Future<void> _discontinue(BuildContext context) async {
@@ -325,14 +325,7 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     final changed = await context.read<MedicationsCubit>().discontinue(
       widget.plan,
     );
-    if (!context.mounted) return;
-    if (changed) {
-      await Future.wait([
-        context.read<MedicationsCubit>().load(widget.circleId),
-        context.read<MedicationOccurrencesCubit>().reload(),
-      ]);
-      return;
-    }
+    if (!context.mounted || changed) return;
     final message = context.read<MedicationsCubit>().state.messageKey;
     if (message != null) {
       ScaffoldMessenger.of(context)
@@ -340,35 +333,17 @@ class _MedicationPlanCardState extends State<MedicationPlanCard> {
     }
   }
 
-  String _period(BuildContext context, DateTime start, DateTime? end) {
-    if (end == null) {
-      return context.tr(
-        'medications.starts_on',
-        args: [formatMedicationDate(context, start)],
-      );
-    }
-    return context.tr(
-      'medications.period',
-      args: [
-        formatMedicationDate(context, start),
-        formatMedicationDate(context, end),
-      ],
-    );
-  }
-
   String _scheduleSummary(
     BuildContext context,
     List<MedicationSchedule> schedules,
   ) => schedules
       .map((schedule) {
-        final dose = context.tr(
-          'medications.dose',
-          args: [
-            formatMedicationNumber(schedule.doseValue),
-            context.tr('medications.unit.${schedule.doseUnit.name}'),
-          ],
+        final dose = formatMedicationDose(
+          context,
+          schedule.doseValue,
+          schedule.doseUnit,
         );
-        return '${formatMedicationTime(context, schedule.time)} · $dose';
+        return '${clockText(schedule.time)} · $dose';
       })
       .join('، ');
 }
@@ -401,13 +376,11 @@ class _ScheduleLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final time = formatMedicationTime(context, schedule.time);
-    final dose = context.tr(
-      'medications.dose',
-      args: [
-        formatMedicationNumber(schedule.doseValue),
-        context.tr('medications.unit.${schedule.doseUnit.name}'),
-      ],
+    final time = clockText(schedule.time);
+    final dose = formatMedicationDose(
+      context,
+      schedule.doseValue,
+      schedule.doseUnit,
     );
     final Widget days = switch (schedule.repeat) {
       ScheduleRepeat.monthly => Text(

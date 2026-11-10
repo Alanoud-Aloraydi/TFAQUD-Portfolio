@@ -2,16 +2,16 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/birth_date_city_fields.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/account_name_field.dart';
 import 'package:app/features/circles/presentation/widgets/already_has_circle_view.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_city_fields.dart';
-import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,13 +50,12 @@ class _ApprovedCircleBasicsScreenState
     super.dispose();
   }
 
-  Future<void> _create(BuildContext context, CreateCircleCubit cubit) async {
-    final NamePreset preset = cubit.state.namePreset;
-    final bool ok = cubit.continueFromApprovedBasics(
-      presetName: context.tr('circles.preset.${preset.name}'),
-    );
-    if (ok) await createCircleAndOpen(context, cubit);
-  }
+  Future<void> _create(BuildContext context, CreateCircleCubit cubit) =>
+      createCircleAndOpen(
+        context,
+        cubit,
+        presetName: context.tr('circles.preset.${cubit.state.namePreset.name}'),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +72,7 @@ class _ApprovedCircleBasicsScreenState
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
               if (state.alreadyHasCircle) return const AlreadyHasCircleView();
-              final String requiredText = context.tr('circles.field_required');
+              final String requiredText = context.tr('common.field_required');
               return Column(
                 children: <Widget>[
                   Expanded(
@@ -83,7 +82,7 @@ class _ApprovedCircleBasicsScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          CircleStepHeader(
+                          StepHeader(
                             title: context.tr('circles.approved_title'),
                             onBack: context.canPop()
                                 ? () => context.pop()
@@ -129,8 +128,7 @@ class _ApprovedCircleBasicsScreenState
                           const SizedBox(height: AppSpacing.sm),
                           InsetText.note(context.tr('circles.name_hint')),
                           if (state.asksBasics &&
-                              state.accountLoad !=
-                                  AccountLoad.loading) ...<Widget>[
+                              !state.waitingForAccount) ...<Widget>[
                             const SizedBox(height: AppSpacing.lg),
                             BirthDateCityFields(
                               birthDate: state.birthDate,
@@ -151,7 +149,7 @@ class _ApprovedCircleBasicsScreenState
                   const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.create'),
-                    isLoading: state.status == CreateStatus.saving,
+                    isLoading: state.busy,
                     onPressed: () => _create(context, cubit),
                   ),
                 ],

@@ -4,8 +4,8 @@ import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
-import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
 
 /// Displays the medication plan list UI.
 class MedicationPlanList extends StatelessWidget {

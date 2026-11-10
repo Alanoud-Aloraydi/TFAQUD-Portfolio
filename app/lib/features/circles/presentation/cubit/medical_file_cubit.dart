@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
@@ -22,12 +23,6 @@ class MedicalFileCubit extends Cubit<MedicalFileState> {
 
   /// The files saved on the edit page while this page is open under it.
   late final StreamSubscription<MedicalFile> _saves;
-
-  /// A Saudi mobile number without the country code or a leading zero: nine
-  /// digits that start with 5. The same rule as the sign-in page.
-  static final RegExp _phonePattern = RegExp(r'^5[0-9]{8}$');
-
-  static const String countryCode = '+966';
 
   int _revision = 0;
 
@@ -116,11 +111,6 @@ class MedicalFileCubit extends Cubit<MedicalFileState> {
     (ContactForm form) => form.copyWith(phone: digits, clearError: true),
   );
 
-  /// True for nine digits that start with 5. [digits] are written 0-9.
-  static bool isValidPhone(String digits) => _phonePattern.hasMatch(digits);
-
-  bool get isPhoneValid => isValidPhone(state.form?.phone ?? '');
-
   void _edit(ContactForm Function(ContactForm form) change) {
     final ContactForm? form = state.form;
     if (form == null || form.saving) return;
@@ -135,7 +125,7 @@ class MedicalFileCubit extends Cubit<MedicalFileState> {
     if (form == null || file == null || form.saving) return false;
     final String name = form.name.trim();
     final String? relation = form.relation;
-    if (relation == null || name.isEmpty || !isPhoneValid) {
+    if (relation == null || name.isEmpty || !form.phoneValid) {
       emit(state.copyWith(form: form.copyWith(showErrors: true)));
       return false;
     }
@@ -147,7 +137,7 @@ class MedicalFileCubit extends Cubit<MedicalFileState> {
     final ContactDraft draft = ContactDraft(
       name: name,
       relation: relation,
-      phoneNumber: '$countryCode${form.phone}',
+      phoneNumber: SaudiMobile.international(form.phone),
     );
     final result = form.isNew
         ? await _circles.addContact(circleId, draft)

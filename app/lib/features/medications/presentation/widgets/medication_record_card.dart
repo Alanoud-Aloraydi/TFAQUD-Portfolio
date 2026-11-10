@@ -1,17 +1,18 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -33,16 +34,17 @@ class MedicationRecordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final version = plan.version;
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final previous = plan.isPreviousOn(today);
     final scheduled = plan.isScheduledOn(today);
     final last = plan.lastRecord;
-    final takenLocal = last?.takenAt == null ? null : riyadhNow(last!.takenAt);
+    final takenLocal = last?.takenAt == null
+        ? null
+        : PatientClockScope.of(context).wallTime(last!.takenAt!);
     final lastDate = takenLocal ?? last?.scheduledOn;
-    final lastTime = takenLocal == null
-        ? last?.time
-        : '${takenLocal.hour.toString().padLeft(2, '0')}:'
-              '${takenLocal.minute.toString().padLeft(2, '0')}';
+    final String? lastTime = takenLocal == null
+        ? (last == null ? null : clockText(last.time))
+        : wallTimeText(takenLocal);
     final statusText = context.tr(
       previous
           ? 'medications.previous_label'
@@ -177,7 +179,7 @@ class MedicationRecordCard extends StatelessWidget {
                                   : 'medications.last_skipped_record',
                               args: [
                                 formatMedicationDate(context, lastDate!),
-                                formatMedicationTime(context, lastTime!),
+                                lastTime!,
                               ],
                             ),
                       style: Theme.of(context).textTheme.bodySmall,

@@ -18,6 +18,11 @@ class HomeState extends Equatable {
   final String? selectedCircleId;
   final String? messageKey;
 
+  /// The selected circle, with its patient's zone; null while loading.
+  CareCircleSummary? get selectedCircle => data?.circles
+      .where((circle) => circle.id == selectedCircleId)
+      .firstOrNull;
+
   @override
   List<Object?> get props => [status, data, selectedCircleId, messageKey];
 }

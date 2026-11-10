@@ -1,12 +1,12 @@
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
 import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
@@ -32,6 +32,10 @@ class MedicationDoseHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<MedicationOccurrencesCubit, MedicationOccurrencesState>(
+      // Only a failed «أقدم»: the answers to a dose show their own errors.
+      listenWhen: (previous, current) =>
+          current.messageKey != null &&
+          previous.status == MedicationOccurrencesStatus.loadingMore,
       listener: _showError,
       builder: (context, state) {
         if (state.status == MedicationOccurrencesStatus.loading) {
@@ -56,7 +60,8 @@ class MedicationDoseHistory extends StatelessWidget {
             // text inside the cards.
             InsetText.header(context.tr('medications.dose_history')),
             const SizedBox(height: AppSpacing.labelGap),
-            if (items.isEmpty && earliest.isAfter(_today()))
+            if (items.isEmpty &&
+                earliest.isAfter(PatientClockScope.of(context).today()))
               InsetText(
                 context.tr(
                   'medications.dose_history_not_started',
@@ -113,8 +118,6 @@ class MedicationDoseHistory extends StatelessWidget {
       },
     );
   }
-
-  static DateTime _today() => riyadhToday();
 
   void _showError(BuildContext context, MedicationOccurrencesState state) {
     if (state.messageKey == null) return;

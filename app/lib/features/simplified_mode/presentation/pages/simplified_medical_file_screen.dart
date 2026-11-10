@@ -1,13 +1,13 @@
+import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_controls.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';

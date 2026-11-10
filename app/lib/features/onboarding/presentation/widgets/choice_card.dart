@@ -4,8 +4,9 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// One option of a single-choice question: icon, title, hint, and a radio mark.
-/// The whole card is the tap target.
+/// One option of a single-choice question on the start step: an icon, a
+/// title, a hint and a radio mark. The whole card is the tap target, and
+/// screen readers hear it as a checked or unchecked option of one group.
 class ChoiceCard extends StatelessWidget {
   const ChoiceCard({
     super.key,
@@ -82,7 +83,8 @@ class ChoiceCard extends StatelessWidget {
   }
 }
 
-/// Renders the radio mark element of choice card.
+/// The radio mark at the end of a [ChoiceCard]: a ring, filled when
+/// selected.
 class _RadioMark extends StatelessWidget {
   const _RadioMark({required this.selected});
 

@@ -7,11 +7,11 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
+import 'package:app/core/widgets/forms/calendar_sync_choices.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
 // Its own TextDirection (from intl) would hide Flutter's.
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
 
 /// The calendar-sync switches (doses, measurements, appointments) for one
 /// circle, as one iOS Settings group: each row an icon square, its name and
@@ -56,31 +56,12 @@ class CalendarSyncCircleList extends StatelessWidget {
   }
 }
 
-/// The three kinds of care a circle can put on the calendar, in order.
-const List<CalendarSyncCategory> _categories = <CalendarSyncCategory>[
-  CalendarSyncCategory.doses,
-  CalendarSyncCategory.measurements,
-  CalendarSyncCategory.appointments,
-];
-
 String _labelKey(CalendarSyncCategory category) => switch (category) {
   CalendarSyncCategory.doses => 'circle_overview.calendar_sync_doses',
   CalendarSyncCategory.measurements =>
     'circle_overview.calendar_sync_measurements',
   CalendarSyncCategory.appointments =>
     'circle_overview.calendar_sync_appointments',
-};
-
-IconData _icon(CalendarSyncCategory category) => switch (category) {
-  CalendarSyncCategory.doses => CareVisuals.medicationIcon,
-  CalendarSyncCategory.measurements => CareVisuals.measurementIcon,
-  CalendarSyncCategory.appointments => CareVisuals.appointmentIcon,
-};
-
-Color _tile(CalendarSyncCategory category) => switch (category) {
-  CalendarSyncCategory.doses => CareVisuals.medicationTile,
-  CalendarSyncCategory.measurements => CareVisuals.measurementTile,
-  CalendarSyncCategory.appointments => CareVisuals.appointmentTile,
 };
 
 /// One circle's switches, their values loaded once and kept here, so the
@@ -102,64 +83,38 @@ class _CircleCalendar extends StatefulWidget {
   State<_CircleCalendar> createState() => _CircleCalendarState();
 }
 
-class _CircleCalendarState extends State<_CircleCalendar> {
-  final CalendarSync _calendar = GetIt.I<CalendarSync>();
-
-  /// Null while the values load.
-  Map<CalendarSyncCategory, bool>? _enabled;
+class _CircleCalendarState extends State<_CircleCalendar>
+    with CalendarSyncChoices<_CircleCalendar> {
   bool _open = false;
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final String circleId = widget.circleId;
-    final Map<CalendarSyncCategory, bool> values = <CalendarSyncCategory, bool>{
-      for (final CalendarSyncCategory category in _categories)
-        category: await _calendar.isEnabled(circleId, category),
-    };
-    if (mounted && circleId == widget.circleId) {
-      setState(() => _enabled = values);
-    }
-  }
-
-  Future<void> _set(CalendarSyncCategory category, bool value) async {
-    final Map<CalendarSyncCategory, bool>? enabled = _enabled;
-    if (enabled == null) return;
-    setState(() {
-      _enabled = <CalendarSyncCategory, bool>{...enabled, category: value};
-    });
-    await _calendar.setEnabled(widget.circleId, category, value);
-  }
+  String get calendarCircleId => widget.circleId;
 
   List<Widget> _switches(BuildContext context) => <Widget>[
-    for (final CalendarSyncCategory category in _categories)
+    for (final CalendarSyncCategory category in CalendarSyncCategory.values)
       ToggleRow(
         label: context.tr(_labelKey(category)),
         leading: SettingsIconTile(
-          icon: _icon(category),
-          background: _tile(category),
+          icon: category.icon,
+          background: category.tile,
         ),
-        value: _enabled?[category] ?? false,
-        onChanged: (bool value) => unawaited(_set(category, value)),
+        value: enabled?[category] ?? false,
+        onChanged: (bool value) => unawaited(setChoice(category, value)),
       ),
   ];
 
   /// «الكل», «2 من 3» or «متوقفة»; nothing while the values load.
   String _summary(BuildContext context) {
-    final Map<CalendarSyncCategory, bool>? enabled = _enabled;
-    if (enabled == null) return '';
-    final int on = enabled.values.where((bool value) => value).length;
+    final Map<CalendarSyncCategory, bool>? choices = enabled;
+    if (choices == null) return '';
+    final int on = choices.values.where((bool value) => value).length;
     if (on == 0) return context.tr('circle_overview.calendar_sync_off');
-    if (on == _categories.length) {
+    if (on == CalendarSyncCategory.values.length) {
       return context.tr('circle_overview.calendar_sync_all');
     }
     return context.tr(
       'circle_overview.calendar_sync_some',
-      args: <String>['$on', '${_categories.length}'],
+      args: <String>['$on', '${CalendarSyncCategory.values.length}'],
     );
   }
 

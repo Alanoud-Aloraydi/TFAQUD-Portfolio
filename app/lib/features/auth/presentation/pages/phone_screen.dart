@@ -1,6 +1,7 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
@@ -28,9 +29,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     super.initState();
     // Shows the number again when the user comes back from the code page.
     _controller = TextEditingController(
-      text: PhoneNumberFormatter.display(
-        context.read<SignInCubit>().state.phone,
-      ),
+      text: SaudiMobile.group(context.read<SignInCubit>().state.phone),
     );
   }
 

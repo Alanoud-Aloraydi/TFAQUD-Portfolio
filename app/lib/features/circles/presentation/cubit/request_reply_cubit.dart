@@ -14,12 +14,16 @@ class RequestReplyCubit extends Cubit<RequestReplyState> {
   final CirclesUseCase _circles;
   final ReceivedCircleRequest request;
 
+  /// Agrees; the page then goes on to the basic data.
   Future<void> accept() => _answer(accept: true);
 
+  /// Declines; the page then goes back.
   Future<void> decline() => _answer(accept: false);
 
+  /// Sends one answer. A tap while it is on its way, or after the server
+  /// saved it (the page is leaving), sends nothing.
   Future<void> _answer({required bool accept}) async {
-    if (state.sending) return;
+    if (state.sending || state.outcome != ReplyOutcome.none) return;
     emit(state.copyWith(sending: true, clearError: true));
     final result = await _circles.respondToRequest(request.id, accept: accept);
     if (isClosed) return;

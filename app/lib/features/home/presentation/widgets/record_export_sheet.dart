@@ -1,21 +1,22 @@
+import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/data/visit_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
-import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/home/data/record_pdf_exporter.dart';
 import 'package:app/features/home/presentation/cubit/record_export_cubit.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -93,7 +94,9 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     ];
     final String exportedOn = context.tr(
       'record_export.exported_on',
-      args: <String>[formatBirthDate(context, DateTime.now())],
+      args: <String>[
+        formatBirthDate(context, PatientClockScope.of(context).today()),
+      ],
     );
     // Read now: the footer is written after the page has awaited.
     final String pageTemplate = context.tr('record_export.page');
@@ -155,7 +158,7 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
   /// One block per medicine: its name and whether it is current, the
   /// strength (left to right) and the form, and one line per dose time.
   RecordPdfSection _medicationSection(List<MedicationPlan> plans) {
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     return RecordPdfSection(
       title: context.tr('record_export.medications'),
       empty: plans.isEmpty ? context.tr('medications.no_records') : null,
@@ -275,7 +278,7 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
           badgeMuted: item.status != AppointmentStatus.completed,
           detail: [
             RecordPdfRow(value: appointmentDate(context, item.scheduledOn)),
-            RecordPdfRow(value: appointmentTime(context, item.time)),
+            RecordPdfRow(value: clockText(item.time)),
             RecordPdfRow(value: appointmentKindTitle(context, item)),
           ],
           fields: [

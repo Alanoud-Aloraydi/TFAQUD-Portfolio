@@ -1,13 +1,14 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
@@ -21,7 +22,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Displays the measurement plan form page UI.
+/// «جدولة قياس» (new, [planId] null) or «تعديل جدولة القياس» of [planId].
+///
+/// An edit starts from the plan's latest version (a change waiting for
+/// later, when there is one) and is saved against that version's number,
+/// so a change made elsewhere meanwhile is refused, not overwritten.
 class MeasurementPlanFormPage extends StatefulWidget {
   const MeasurementPlanFormPage({
     super.key,
@@ -49,27 +54,31 @@ class _Reading {
 /// times, days, start and grace while the form switches between them, and
 /// only the kind shown is saved.
 class _Schedule {
-  _Schedule(this.readings);
+  _Schedule(this.readings, this.start);
 
   /// The reading times of a day, like a medicine's dose times: one or more,
   /// up to [_MeasurementPlanFormPageState._maxReadings], each with its own
   /// conditions.
   final List<_Reading> readings;
   final Set<int> days = {1, 2, 3, 4, 5, 6, 7};
-  DateTime start = riyadhToday();
+
+  /// The first day, on the patient's calendar.
+  DateTime start;
   int grace = 60;
 }
 
 class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   MeasurementKind _kind = MeasurementKind.glucose;
 
-  final Map<MeasurementKind, _Schedule> _schedules = {
+  /// Made on first use, where the patient's today can be read: a new plan
+  /// starts on it.
+  late final Map<MeasurementKind, _Schedule> _schedules = {
     MeasurementKind.glucose: _Schedule(<_Reading>[
       _Reading(const TimeOfDay(hour: 7, minute: 30), <String>['fasting']),
-    ]),
+    ], PatientClockScope.of(context).today()),
     MeasurementKind.bp: _Schedule(<_Reading>[
       _Reading(const TimeOfDay(hour: 8, minute: 0), <String>[]),
-    ]),
+    ], PatientClockScope.of(context).today()),
   };
 
   _Schedule get _schedule => _schedules[_kind]!;
@@ -115,7 +124,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         for (final MeasurementTime item in version.readingTimes)
           _Reading(_parseTime(item.time), item.conditions),
       ]);
-    final earliest = riyadhToday();
+    final earliest = PatientClockScope.of(context).today();
     _start = version.effectiveFromOn.isAfter(earliest)
         ? version.effectiveFromOn
         : earliest;
@@ -191,16 +200,16 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       _errorKey = null;
     });
     final cubit = context.read<MeasurementPlansCubit>();
-    final saved = plan == null
+    final String? errorKey = plan == null
         ? await cubit.create(draft)
         : await cubit.revise(plan, draft);
     if (!mounted) return;
-    if (saved) {
+    if (errorKey == null) {
       context.pop(true);
     } else {
       setState(() {
         _saving = false;
-        _errorKey = cubit.state.errorKey ?? 'error.unknown';
+        _errorKey = errorKey;
       });
     }
   }
@@ -211,16 +220,27 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     MeasurementPlan? plan;
     if (widget.planId != null) {
       for (final item in state.plans) {
-        if (item.id == widget.planId) plan = item;
+        // A stopped plan is not edited: it is gone from the plan tab.
+        if (item.id == widget.planId && item.stoppedAt == null) plan = item;
       }
       if (plan != null) _fill(plan);
     }
     if (widget.planId != null && plan == null) {
       return Scaffold(
+        appBar: AppBar(),
         body: Center(
-          child: state.status == MeasurementLoadStatus.loading
-              ? const CircularProgressIndicator()
-              : Text(context.tr(state.errorKey ?? 'error.resource_not_found')),
+          child: switch (state.status) {
+            MeasurementLoadStatus.initial ||
+            MeasurementLoadStatus.loading => const CircularProgressIndicator(),
+            MeasurementLoadStatus.failure => TextButton(
+              onPressed: () =>
+                  context.read<MeasurementPlansCubit>().load(widget.circleId),
+              child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+            ),
+            MeasurementLoadStatus.ready => Text(
+              context.tr('error.resource_not_found'),
+            ),
+          },
         ),
       );
     }
@@ -377,7 +397,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 ),
                 value: '${_start.day}/${_start.month}/${_start.year}',
                 onTap: () async {
-                  final earliest = riyadhToday();
+                  final earliest = PatientClockScope.of(context).today();
                   final selected = await showTafaqodDateSheet(
                     context,
                     title: context.tr(
@@ -389,7 +409,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                     firstDate: earliest,
                     lastDate: earliest.add(const Duration(days: 3650)),
                   );
-                  if (selected != null) setState(() => _start = selected);
+                  if (selected != null && mounted) {
+                    setState(() => _start = selected);
+                  }
                 },
               ),
               InsetRow(
@@ -487,7 +509,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     return <Widget>[
       InsetRow(
         label: label,
-        value: _formatTime(reading.time),
+        value: timeOfDayText(reading.time),
         trailing: _readings.length == 1
             ? null
             : IconButton(
@@ -507,7 +529,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
             title: label,
             initialTime: reading.time,
           );
-          if (selected != null) {
+          if (selected != null && mounted) {
             setState(() {
               reading.time = selected;
               _errorKey = null;
@@ -558,10 +580,4 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   static String _clock(TimeOfDay value) =>
       '${value.hour.toString().padLeft(2, '0')}:'
       '${value.minute.toString().padLeft(2, '0')}';
-
-  String _formatTime(TimeOfDay value) {
-    final hour = value.hourOfPeriod == 0 ? 12 : value.hourOfPeriod;
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute ${context.tr(value.hour < 12 ? 'common.am' : 'common.pm')}';
-  }
 }

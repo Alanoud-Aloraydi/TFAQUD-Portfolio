@@ -1,16 +1,17 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/constants/name_limits.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/core/widgets/forms/picker_field.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
+import 'package:app/core/widgets/pickers/city_sheet.dart';
 import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
-import 'package:app/features/circles/presentation/widgets/birth_date_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/circle_step_header.dart';
-import 'package:app/features/circles/presentation/widgets/city_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/picker_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -74,16 +75,6 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
     if (picked != null) cubit.cityChanged(picked);
   }
 
-  Future<void> _create(BuildContext context, CreateCircleCubit cubit) async {
-    final bool ok = cubit.continueFromPatientBasics(
-      sharedName: context.tr(
-        'circles.shared_name',
-        args: <String>[cubit.state.patientFirstName.trim()],
-      ),
-    );
-    if (ok) await createCircleAndOpen(context, cubit);
-  }
-
   @override
   Widget build(BuildContext context) {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
@@ -98,7 +89,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
           ),
           child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
             builder: (BuildContext context, CreateCircleState state) {
-              final String requiredText = context.tr('circles.field_required');
+              final String requiredText = context.tr('common.field_required');
               return Column(
                 children: <Widget>[
                   Expanded(
@@ -108,7 +99,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          CircleStepHeader(
+                          StepHeader(
                             title: context.tr('circles.patient_title'),
                             subtitle: context.tr('circles.patient_subtitle'),
                             onBack: context.canPop()
@@ -119,7 +110,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                           LabeledTextField(
                             label: context.tr('circles.patient_first_name'),
                             controller: _firstName,
-                            maxLength: CreateCircleCubit.maxNameLength,
+                            maxLength: NameLimits.name,
                             onChanged: cubit.patientFirstNameChanged,
                             errorText:
                                 state.showErrors &&
@@ -131,7 +122,7 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                           LabeledTextField(
                             label: context.tr('circles.patient_last_name'),
                             controller: _lastName,
-                            maxLength: CreateCircleCubit.maxNameLength,
+                            maxLength: NameLimits.name,
                             textInputAction: TextInputAction.done,
                             onChanged: cubit.patientLastNameChanged,
                             errorText:
@@ -195,8 +186,8 @@ class _PatientCircleBasicsScreenState extends State<PatientCircleBasicsScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   PillButton(
                     label: context.tr('circles.create'),
-                    isLoading: state.status == CreateStatus.saving,
-                    onPressed: () => _create(context, cubit),
+                    isLoading: state.busy,
+                    onPressed: () => createCircleAndOpen(context, cubit),
                   ),
                 ],
               );

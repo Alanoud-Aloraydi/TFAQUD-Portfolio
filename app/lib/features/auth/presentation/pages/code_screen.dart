@@ -1,9 +1,9 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
-import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
@@ -28,24 +28,23 @@ class CodeScreen extends StatelessWidget {
   }
 
   void _back(BuildContext context) {
-    context.read<SignInCubit>().backToPhone();
     if (context.canPop()) {
       context.pop();
     } else {
+      // Opened directly (a reload on the web): there is no page to return to.
+      context.read<SignInCubit>().backToPhone();
       context.go(Routes.authPhone);
     }
   }
 
-  Future<void> _confirm(BuildContext context) async {
-    final SignInCubit cubit = context.read<SignInCubit>();
-    final bool correct = await cubit.verify();
-    if (!context.mounted || !correct) return;
-    // A user who has not saved the name page goes to it; the others go
-    // home, to whichever home their account's app mode uses.
+  /// Where a verified sign-in goes: a user who has not saved the name page
+  /// goes to it; the others go home, to whichever home their account's app
+  /// mode uses.
+  void _signedIn(BuildContext context, SignInState state) {
     context.go(
-      cubit.state.needsProfile
+      state.needsProfile
           ? Routes.onboarding
-          : cubit.state.appMode == CircleAppMode.simplified
+          : state.appMode == CircleAppMode.simplified
           ? Routes.simplifiedMode
           : Routes.today,
     );
@@ -54,96 +53,110 @@ class CodeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.sm,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: BlocBuilder<SignInCubit, SignInState>(
-            builder: (BuildContext context, SignInState state) {
-              final String phone =
-                  '+966 ${PhoneNumberFormatter.display(state.phone)}';
-              return Column(
-                children: <Widget>[
-                  Expanded(
-                    child: SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          StepHeader(
-                            title: context.tr('auth.code_title'),
-                            subtitle: context.tr(
-                              'auth.code_sent_to',
-                              args: <String>[_isolate(phone)],
+    // The system back gesture also leaves the number: the request goes.
+    return PopScope(
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) context.read<SignInCubit>().backToPhone();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            child: BlocConsumer<SignInCubit, SignInState>(
+              listenWhen: (SignInState before, SignInState after) =>
+                  before.status != SignInStatus.verified &&
+                  after.status == SignInStatus.verified,
+              listener: _signedIn,
+              builder: (BuildContext context, SignInState state) {
+                final String phone = SaudiMobile.display(state.fullPhone);
+                return Column(
+                  children: <Widget>[
+                    Expanded(
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            StepHeader(
+                              title: context.tr('auth.code_title'),
+                              subtitle: context.tr(
+                                'auth.code_sent_to',
+                                args: <String>[_isolate(phone)],
+                              ),
+                              onBack: () => _back(context),
                             ),
-                            onBack: () => _back(context),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextButton(
-                            onPressed: () => _back(context),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppSemanticColors.textPrimary,
-                              padding: EdgeInsets.zero,
-                              alignment: AlignmentDirectional.centerStart,
-                            ),
-                            child: Text(
-                              context.tr('auth.edit_phone'),
-                              style: text.labelLarge?.copyWith(
-                                color: AppSemanticColors.textPrimary,
+                            const SizedBox(height: AppSpacing.sm),
+                            TextButton(
+                              onPressed: () => _back(context),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppSemanticColors.textPrimary,
+                                padding: EdgeInsets.zero,
+                                alignment: AlignmentDirectional.centerStart,
+                              ),
+                              child: Text(
+                                context.tr('auth.edit_phone'),
+                                style: text.labelLarge?.copyWith(
+                                  color: AppSemanticColors.textPrimary,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          OtpField(
-                            length: SignInCubit.codeLength,
-                            value: state.code,
-                            hasError: state.errorKey != null,
-                            onChanged: context.read<SignInCubit>().codeChanged,
-                            // The last digit sends the code at once.
-                            onCompleted: (_) => _confirm(context),
-                          ),
-                          if (state.errorKey != null) ...<Widget>[
                             const SizedBox(height: AppSpacing.lg),
-                            InlineError(messageKey: state.errorKey!),
-                          ],
-                          const SizedBox(height: AppSpacing.lg),
-                          Center(
-                            child: state.resendSeconds > 0
-                                ? Text(
-                                    context.tr(
-                                      'auth.resend_in',
-                                      args: <String>[
-                                        _isolate(_clock(state.resendSeconds)),
-                                      ],
+                            OtpField(
+                              length: SignInCubit.codeLength,
+                              value: state.code,
+                              hasError: state.errorKey != null,
+                              onChanged: context
+                                  .read<SignInCubit>()
+                                  .codeChanged,
+                              // The last digit sends the code at once.
+                              onCompleted: (_) =>
+                                  context.read<SignInCubit>().verify(),
+                            ),
+                            if (state.errorKey != null) ...<Widget>[
+                              const SizedBox(height: AppSpacing.lg),
+                              InlineError(messageKey: state.errorKey!),
+                            ],
+                            const SizedBox(height: AppSpacing.lg),
+                            Center(
+                              child: state.resendSeconds > 0
+                                  ? Text(
+                                      context.tr(
+                                        'auth.resend_in',
+                                        args: <String>[
+                                          _isolate(_clock(state.resendSeconds)),
+                                        ],
+                                      ),
+                                      style: text.bodyMedium,
+                                    )
+                                  : TextButton(
+                                      onPressed: context
+                                          .read<SignInCubit>()
+                                          .resendCode,
+                                      child: Text(context.tr('auth.resend')),
                                     ),
-                                    style: text.bodyMedium,
-                                  )
-                                : TextButton(
-                                    onPressed: context
-                                        .read<SignInCubit>()
-                                        .resendCode,
-                                    child: Text(context.tr('auth.resend')),
-                                  ),
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  PillButton(
-                    label: context.tr('auth.confirm'),
-                    isLoading: state.status == SignInStatus.verifying,
-                    onPressed: () => _confirm(context),
-                  ),
-                ],
-              );
-            },
+                    const SizedBox(height: AppSpacing.lg),
+                    PillButton(
+                      label: context.tr('auth.confirm'),
+                      isLoading:
+                          state.status == SignInStatus.verifying ||
+                          state.status == SignInStatus.verified,
+                      onPressed: context.read<SignInCubit>().verify,
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),

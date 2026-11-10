@@ -13,57 +13,43 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// A quick reading and three real creation flows in the shared add sheet.
+/// The shared add sheet: a quick reading and the three creation flows. What
+/// they save reaches the lists by itself, because the cubits follow their
+/// repositories' change streams; nothing is reloaded here.
 Future<void> showHomeAddSheet(
   BuildContext context, {
   required String circleId,
-  required VoidCallback onMedicationSaved,
-  required VoidCallback onMeasurementSaved,
-  required VoidCallback onAppointmentSaved,
-  required VoidCallback onReadingSaved,
 }) {
   return showGlassSheet<void>(
     context,
     title: context.tr('add.title'),
     builder: (BuildContext sheetContext) => _HomeAddSheet(
       circleId: circleId,
-      onMedication: () {
-        Navigator.of(sheetContext).pop();
-        unawaited(
-          context.push<bool>(Routes.newMedication(circleId)).then((saved) {
-            if (saved == true) onMedicationSaved();
-          }),
-        );
-      },
-      onMeasurement: () {
-        Navigator.of(sheetContext).pop();
-        unawaited(
-          context.push<bool>(Routes.newMeasurement(circleId)).then((saved) {
-            if (saved == true) onMeasurementSaved();
-          }),
-        );
-      },
-      onAppointment: () {
-        Navigator.of(sheetContext).pop();
-        unawaited(
-          context.push<bool>(Routes.newAppointment(circleId)).then((saved) {
-            if (saved == true) onAppointmentSaved();
-          }),
-        );
-      },
+      onMedication: () =>
+          _openFrom(sheetContext, context, Routes.newMedication(circleId)),
+      onMeasurement: () =>
+          _openFrom(sheetContext, context, Routes.newMeasurement(circleId)),
+      onAppointment: () =>
+          _openFrom(sheetContext, context, Routes.newAppointment(circleId)),
       onReading: () {
         Navigator.of(sheetContext).pop();
-        unawaited(
-          showMeasurementReadingSheet(context).then((saved) {
-            if (saved) onReadingSaved();
-          }),
-        );
+        unawaited(showMeasurementReadingSheet(context));
       },
     ),
   );
 }
 
-/// Renders the home add sheet element of home add sheet.
+/// Closes the sheet and opens the form at [location].
+void _openFrom(
+  BuildContext sheetContext,
+  BuildContext context,
+  String location,
+) {
+  Navigator.of(sheetContext).pop();
+  unawaited(context.push<bool>(location));
+}
+
+/// The content of the add sheet: the quick reading, then the three plans.
 class _HomeAddSheet extends StatelessWidget {
   const _HomeAddSheet({
     required this.circleId,

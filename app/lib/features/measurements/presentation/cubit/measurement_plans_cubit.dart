@@ -1,28 +1,52 @@
+import 'dart:async';
+
+import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Coordinates measurement plans actions and UI state.
+/// The measurement plans of one circle, and their changes.
+///
+/// The «الخطة» tab holds one; the plan form page holds its own. Each reads
+/// again whenever the repository says the circle's plans changed, wherever
+/// the change was saved, so the two never disagree.
 class MeasurementPlansCubit extends Cubit<MeasurementPlansState> {
   MeasurementPlansCubit(this._repository)
-    : super(const MeasurementPlansState());
+    : super(const MeasurementPlansState()) {
+    _changes = _repository.changes.listen((circleId) {
+      if (circleId == _circleId) unawaited(load(circleId, silent: true));
+    });
+  }
 
   final MeasurementRepository _repository;
+  late final StreamSubscription<String> _changes;
   String? _circleId;
+
+  /// Goes up at each [load], so an older reading that ends later is dropped.
   int _revision = 0;
 
-  Future<void> load(String circleId) async {
+  /// True while a plan is being saved: a second tap saves nothing.
+  bool _writing = false;
+
+  /// Reads [circleId]'s plans; the list of another circle is cleared first.
+  /// With [silent] a list already shown stays while it is read again (no
+  /// loading state), and a failure keeps it.
+  Future<void> load(String circleId, {bool silent = false}) async {
     final changedCircle = _circleId != circleId;
     _circleId = circleId;
     final revision = ++_revision;
-    emit(
-      MeasurementPlansState(
-        status: MeasurementLoadStatus.loading,
-        plans: changedCircle ? const [] : state.plans,
-      ),
-    );
+    final bool keep =
+        silent && !changedCircle && state.status == MeasurementLoadStatus.ready;
+    if (!keep) {
+      emit(
+        MeasurementPlansState(
+          status: MeasurementLoadStatus.loading,
+          plans: changedCircle ? const [] : state.plans,
+        ),
+      );
+    }
     try {
       final plans = await _repository.plans(circleId);
       if (isClosed || revision != _revision) return;
@@ -36,43 +60,58 @@ class MeasurementPlansCubit extends Cubit<MeasurementPlansState> {
       if (isClosed || revision != _revision) return;
       emit(
         MeasurementPlansState(
-          status: MeasurementLoadStatus.failure,
+          status: keep
+              ? MeasurementLoadStatus.ready
+              : MeasurementLoadStatus.failure,
           plans: state.plans,
-          errorKey: FailureExceptions.getException(error).messageKey,
+          errorKey: keep
+              ? null
+              : FailureExceptions.getException(error).messageKey,
         ),
       );
     }
   }
 
-  Future<bool> create(MeasurementPlanDraft draft) =>
+  /// Adds a plan; null when saved, else the message key to show.
+  Future<String?> create(MeasurementPlanDraft draft) =>
       _write((circleId) => _repository.createPlan(circleId, draft));
 
-  Future<bool> revise(MeasurementPlan plan, MeasurementPlanDraft draft) =>
+  /// Changes [plan] (its latest version); null when saved, else the
+  /// message key to show.
+  Future<String?> revise(MeasurementPlan plan, MeasurementPlanDraft draft) =>
       _write((circleId) => _repository.revisePlan(circleId, plan, draft));
 
-  Future<bool> stop(MeasurementPlan plan) =>
+  /// Stops [plan]; null when stopped, else the message key to show.
+  Future<String?> stop(MeasurementPlan plan) =>
       _write((circleId) => _repository.stopPlan(circleId, plan.id));
 
-  Future<bool> _write(
+  /// A saved change reloads through the repository's changes. A plan
+  /// changed or gone elsewhere (conflict, not found) reads the plans again
+  /// so the page shows the truth.
+  Future<String?> _write(
     Future<MeasurementPlan> Function(String circleId) operation,
   ) async {
     final circleId = _circleId;
-    if (circleId == null) return false;
+    if (circleId == null || _writing) return null;
+    _writing = true;
     try {
       await operation(circleId);
-      if (!isClosed) await load(circleId);
-      return true;
+      return null;
     } catch (error) {
-      if (!isClosed) {
-        emit(
-          MeasurementPlansState(
-            status: MeasurementLoadStatus.ready,
-            plans: state.plans,
-            errorKey: FailureExceptions.getException(error).messageKey,
-          ),
-        );
+      final Failure failure = FailureExceptions.getException(error);
+      if (!isClosed &&
+          (failure is ConflictFailure || failure is NotFoundFailure)) {
+        unawaited(load(circleId));
       }
-      return false;
+      return failure.messageKey;
+    } finally {
+      _writing = false;
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _changes.cancel();
+    return super.close();
   }
 }

@@ -20,13 +20,15 @@ class MeasurementTargetsState extends Equatable {
   List<Object?> get props => [loading, targets, errorKey];
 }
 
-/// Coordinates measurement targets actions and UI state.
+/// The targets of one circle's patient, for a free reading's sheet.
 class MeasurementTargetsCubit extends Cubit<MeasurementTargetsState> {
   MeasurementTargetsCubit(this._repository) : super(MeasurementTargetsState());
 
   final MeasurementRepository _repository;
 
+  /// Reads [circleId]'s targets; called again to retry after a failure.
   Future<void> load(String circleId) async {
+    emit(MeasurementTargetsState());
     try {
       final targets = await _repository.targets(circleId);
       if (!isClosed) {

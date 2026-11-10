@@ -1,11 +1,11 @@
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
-import 'package:app/core/services/device_id.dart';
+import 'package:app/features/auth/data/datasources/device_id.dart';
+import 'package:app/features/auth/data/models/account_status_response.dart';
+import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:app/features/auth/data/models/account_status_response.dart';
-import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:injectable/injectable.dart';
 
 /// Sends base auth requests to the API.

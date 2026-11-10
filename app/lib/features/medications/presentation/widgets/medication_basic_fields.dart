@@ -1,6 +1,6 @@
-import 'package:app/core/widgets/forms/option_chips.dart';
-import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
@@ -41,7 +41,7 @@ class MedicationBasicFields extends StatelessWidget {
           controller: data.name,
           focusNode: data.nameFocus,
           errorText: issue?.field == MedicationFormField.name
-              ? context.tr('medications.field_required')
+              ? context.tr('common.field_required')
               : null,
           maxLength: 50,
           onChanged: (_) => onChanged(),

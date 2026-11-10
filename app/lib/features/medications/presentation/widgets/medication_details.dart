@@ -1,15 +1,16 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/features/account/presentation/widgets/settings_card.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -55,9 +56,9 @@ class MedicationDetails extends StatelessWidget {
             _value(
               context,
               'medications.treatment_period',
-              _period(context, version.startsOn, version.endsOn),
+              formatMedicationPeriod(context, version.startsOn, version.endsOn),
             ),
-            if (plan.isScheduledOn(riyadhToday()))
+            if (plan.isScheduledOn(PatientClockScope.of(context).today()))
               _value(
                 context,
                 'medications.effective_from',
@@ -79,22 +80,6 @@ class MedicationDetails extends StatelessWidget {
 
   Widget _value(BuildContext context, String label, String value) =>
       InfoRow(label: context.tr(label), value: value);
-
-  String _period(BuildContext context, DateTime start, DateTime? end) {
-    if (end == null) {
-      return context.tr(
-        'medications.starts_on',
-        args: [formatMedicationDate(context, start)],
-      );
-    }
-    return context.tr(
-      'medications.period',
-      args: [
-        formatMedicationDate(context, start),
-        formatMedicationDate(context, end),
-      ],
-    );
-  }
 }
 
 /// Displays the medication revision history UI.
@@ -193,14 +178,12 @@ class _RevisionEntry extends StatelessWidget {
   String _scheduleText(BuildContext context, MedicationVersion item) => item
       .schedules
       .map((schedule) {
-        final dose = context.tr(
-          'medications.dose',
-          args: [
-            formatMedicationNumber(schedule.doseValue),
-            context.tr('medications.unit.${schedule.doseUnit.name}'),
-          ],
+        final dose = formatMedicationDose(
+          context,
+          schedule.doseValue,
+          schedule.doseUnit,
         );
-        return '${formatMedicationTime(context, schedule.time)} · $dose';
+        return '${clockText(schedule.time)} · $dose';
       })
       .join('، ');
 }
@@ -215,7 +198,7 @@ class _ScheduleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final time = formatMedicationTime(context, schedule.time);
+    final time = clockText(schedule.time);
     final days = switch (schedule.repeat) {
       ScheduleRepeat.monthly => formatMonthDays(context, schedule.monthDays),
       ScheduleRepeat.interval => formatInterval(
@@ -227,12 +210,10 @@ class _ScheduleRow extends StatelessWidget {
             .map((day) => context.tr('medications.weekday.$day'))
             .join(context.tr('medications.list_separator')),
     };
-    final dose = context.tr(
-      'medications.dose',
-      args: [
-        formatMedicationNumber(schedule.doseValue),
-        context.tr('medications.unit.${schedule.doseUnit.name}'),
-      ],
+    final dose = formatMedicationDose(
+      context,
+      schedule.doseValue,
+      schedule.doseUnit,
     );
     final details = [
       days,

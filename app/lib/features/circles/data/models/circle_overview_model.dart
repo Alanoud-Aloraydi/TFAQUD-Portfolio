@@ -1,3 +1,4 @@
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 
 /// Maps the protected circle detail response to its display data.
@@ -22,7 +23,10 @@ class CircleOverviewModel {
         patientIsYou: patient['is_you'] as bool,
         patientUsesApp: patient['has_account'] as bool,
         patientAvatarCode: patient['avatar_code'] as String?,
-        appMode: patient['app_mode'] as String?,
+        appMode: switch (patient['app_mode']) {
+          final String mode => CircleAppMode.parse(mode),
+          _ => null,
+        },
         patientBirthDate: DateTime.parse(patient['birth_date'] as String),
         city: patient['city'] as String,
         canManage: circle['role'] == 'manager',

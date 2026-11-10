@@ -1,3 +1,4 @@
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
 /// People and pending invitations visible to a circle member.
@@ -22,7 +23,9 @@ class CircleOverview extends Equatable {
   final bool patientIsYou;
   final bool patientUsesApp;
   final String? patientAvatarCode;
-  final String? appMode;
+
+  /// The mode of the patient's app; null for a patient without an account.
+  final CircleAppMode? appMode;
   final DateTime patientBirthDate;
   final String city;
   final bool canManage;
@@ -33,6 +36,14 @@ class CircleOverview extends Equatable {
   /// A patient with an account in the circle chooses their own picture.
   bool get canEditPatientPhoto =>
       patientIsYou || (canManage && !patientUsesApp);
+
+  /// Leaving deletes the circle when the person leaving is its patient or
+  /// its only manager (the server's rule, `CareService.leave_circle`). The
+  /// tab asks to delete instead of to leave; when the members changed
+  /// meanwhile the server refuses and the tab reads the circle again.
+  bool get leaveDeletesCircle =>
+      patientIsYou ||
+      members.where((CircleMember member) => member.isManager).length <= 1;
 
   @override
   List<Object?> get props => [

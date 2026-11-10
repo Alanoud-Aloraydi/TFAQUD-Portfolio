@@ -14,14 +14,16 @@ import 'package:go_router/go_router.dart';
 /// The invitations and requests that need a reply, shared by the
 /// notifications page and the start-of-onboarding page: a brand-new person
 /// may already have one waiting (someone invited them before they ever
-/// opened the app), and answering it here picks their circle directly,
-/// skipping the self/other choice below.
+/// opened the app). On the start page an accepted invitation calls
+/// [onAccepted], which leaves for the circle, so the self/other choice
+/// below is skipped.
 class PendingInvitesSection extends StatelessWidget {
   const PendingInvitesSection({
     super.key,
     required this.cubit,
     required this.state,
     this.maxItems,
+    this.onAccepted,
   });
 
   final InboxCubit cubit;
@@ -31,6 +33,18 @@ class PendingInvitesSection extends StatelessWidget {
   /// page that only wants a short teaser (the start-of-onboarding page).
   /// `null` (the notifications page) shows every one of them.
   final int? maxItems;
+
+  /// Called once an invitation is accepted. `null` (the notifications page)
+  /// stays on the page.
+  final VoidCallback? onAccepted;
+
+  Future<void> _accept(String invitationId) async {
+    final bool accepted = await cubit.respondToInvitation(
+      invitationId,
+      accept: true,
+    );
+    if (accepted) onAccepted?.call();
+  }
 
   Future<void> _open(
     BuildContext context,
@@ -72,8 +86,7 @@ class PendingInvitesSection extends StatelessWidget {
         InvitationCard(
           invitation: invitation,
           busy: state.busyIds.contains(invitation.id),
-          onAccept: () =>
-              cubit.respondToInvitation(invitation.id, accept: true),
+          onAccept: () => _accept(invitation.id),
           onDecline: () =>
               cubit.respondToInvitation(invitation.id, accept: false),
         ),

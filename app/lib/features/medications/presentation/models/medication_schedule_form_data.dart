@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:flutter/material.dart';
 
 /// Holds schedule form values for this workflow.
 ///

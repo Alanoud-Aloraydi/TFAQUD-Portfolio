@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +75,7 @@ class _MeasurementChartState extends State<MeasurementChart> {
       final dayReadings = widget.readings.where((reading) {
         final at = reading.measuredAt;
         if (at == null) return false;
-        final local = riyadhNow(at);
+        final local = PatientClockScope.of(context).wallTime(at);
         return local.year == widget.month.year &&
             local.month == widget.month.month &&
             local.day == day;
@@ -123,6 +125,7 @@ class _MeasurementChartState extends State<MeasurementChart> {
                 widget.month,
                 widget.targetLow,
                 widget.targetHigh,
+                PatientClockScope.of(context),
               ),
             ),
           ),
@@ -182,10 +185,8 @@ class _MeasurementChartState extends State<MeasurementChart> {
   );
 
   String _readingDateTime(DateTime instant) {
-    final at = riyadhNow(instant);
-    return '${at.day}/${at.month} '
-        '${at.hour.toString().padLeft(2, '0')}:'
-        '${at.minute.toString().padLeft(2, '0')}';
+    final at = PatientClockScope.of(context).wallTime(instant);
+    return '${at.day}/${at.month} ${wallTimeText(at)}';
   }
 }
 
@@ -220,6 +221,7 @@ class _MeasurementPainter extends CustomPainter {
     this.month,
     this.targetLow,
     this.targetHigh,
+    this.clock,
   );
 
   final MeasurementKind kind;
@@ -227,6 +229,9 @@ class _MeasurementPainter extends CustomPainter {
   final DateTime month;
   final int? targetLow;
   final int? targetHigh;
+
+  /// The patient's clock: a reading falls on its day where they live.
+  final PatientClock clock;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -298,7 +303,7 @@ class _MeasurementPainter extends CustomPainter {
     for (final reading in readings) {
       final at = reading.measuredAt == null
           ? null
-          : riyadhNow(reading.measuredAt);
+          : clock.wallTime(reading.measuredAt!);
       if (at == null || at.year != month.year || at.month != month.month) {
         continue;
       }
@@ -359,7 +364,8 @@ class _MeasurementPainter extends CustomPainter {
       oldDelegate.readings != readings ||
       oldDelegate.month != month ||
       oldDelegate.targetLow != targetLow ||
-      oldDelegate.targetHigh != targetHigh;
+      oldDelegate.targetHigh != targetHigh ||
+      oldDelegate.clock != clock;
 }
 
 /// Compact Saturday-first calendar with readings shown below the selected day.
@@ -396,7 +402,7 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
       widget.month.month,
     );
     final lead = (widget.month.weekday + 1) % 7;
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final rows = ((lead + days) / 7).ceil();
     final selected = _selectedDay;
     final selectedReadings = selected == null
@@ -450,8 +456,7 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
           else
             for (final reading in selectedReadings)
               Text(
-                '${reading.valueText} · '
-                '${_readingTime(riyadhNow(reading.measuredAt!))}',
+                '${reading.valueText} · ${wallTimeText(PatientClockScope.of(context).wallTime(reading.measuredAt!))}',
               ),
         ],
       ],
@@ -462,16 +467,12 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
       widget.readings.where((reading) {
         final at = reading.measuredAt == null
             ? null
-            : riyadhNow(reading.measuredAt);
+            : PatientClockScope.of(context).wallTime(reading.measuredAt!);
         return at != null &&
             at.year == widget.month.year &&
             at.month == widget.month.month &&
             at.day == day;
       }).toList();
-
-  String _readingTime(DateTime at) =>
-      '${at.hour.toString().padLeft(2, '0')}:'
-      '${at.minute.toString().padLeft(2, '0')}';
 
   Widget _dayCell(BuildContext context, int day, DateTime today, int days) =>
       day < 1 || day > days

@@ -1,17 +1,20 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_targets_cubit.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +23,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
+/// Opens «تسجيل قراءة» over [context], whose [MeasurementReadingsCubit]
+/// saves it: the answer to [occurrence], the task the person chose, or a
+/// free reading when it is null. True when a reading was saved.
 Future<bool> showMeasurementReadingSheet(
   BuildContext context, {
   MeasurementOccurrence? occurrence,
@@ -50,7 +56,9 @@ Future<bool> showMeasurementReadingSheet(
     ) ??
     false;
 
-/// Displays the measurement reading sheet UI.
+/// «تسجيل قراءة»: the values, conditions and time of one reading. A free
+/// reading also picks its kind and shows the patient's target (editable
+/// when no plan sets it).
 class MeasurementReadingSheet extends StatefulWidget {
   const MeasurementReadingSheet({super.key, this.occurrence});
 
@@ -68,7 +76,11 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   /// reader can change; a free reading starts with none.
   late List<String> _conditions =
       widget.occurrence?.conditions ?? const <String>[];
-  TimeOfDay _time = TimeOfDay.now();
+
+  /// The time picked; until then, now on the patient's clock.
+  TimeOfDay? _picked;
+  TimeOfDay get _time =>
+      _picked ?? TimeOfDay.fromDateTime(PatientClockScope.of(context).now());
   final _systolic = TextEditingController();
   final _diastolic = TextEditingController();
   final _glucose = TextEditingController();
@@ -157,18 +169,13 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       setState(() => _errorKey = 'measurements.invalid_reading');
       return;
     }
-    final now = DateTime.now();
-    final measuredAt = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      _time.hour,
-      _time.minute,
+    // The time read is the patient's wall clock where they live, wherever
+    // this phone is: the latest such time, so last night's after midnight.
+    final PatientClock clock = PatientClockScope.of(context);
+    final measuredAt = latestReadingMoment(
+      clock,
+      '${_time.hour}:${_time.minute}',
     );
-    if (measuredAt.isAfter(now)) {
-      setState(() => _errorKey = 'measurements.future_reading');
-      return;
-    }
     final draft = MeasurementReadingDraft(
       kind: _kind,
       outcome: 'read',
@@ -199,15 +206,16 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       _saving = true;
       _errorKey = null;
     });
-    final cubit = context.read<MeasurementReadingsCubit>();
-    final saved = await cubit.record(draft, occurrence: widget.occurrence);
+    final String? errorKey = await context
+        .read<MeasurementReadingsCubit>()
+        .record(draft, clock: clock, occurrence: widget.occurrence);
     if (!mounted) return;
-    if (saved) {
+    if (errorKey == null) {
       Navigator.of(context).pop(true);
     } else {
       setState(() {
         _saving = false;
-        _errorKey = cubit.state.errorKey ?? 'error.unknown';
+        _errorKey = errorKey;
       });
     }
   }
@@ -277,7 +285,17 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                                 .state
                                 .errorKey
                             case final error?)
-                          Text(context.tr(error))
+                          TextButton(
+                            onPressed: () =>
+                                context.read<MeasurementTargetsCubit>().load(
+                                  context
+                                      .read<MeasurementReadingsCubit>()
+                                      .circleId!,
+                                ),
+                            // Tapping the message reads the targets again,
+                            // as the other measurement lists retry.
+                            child: Text(context.tr(error)),
+                          )
                         else ...[
                           InsetGroup(
                             header: context.tr('measurements.target'),
@@ -413,15 +431,15 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                         children: [
                           InsetRow(
                             label: context.tr('measurements.actual_time'),
-                            value: _formatTime(_time),
+                            value: timeOfDayText(_time),
                             onTap: () async {
                               final selected = await showTafaqodTimeSheet(
                                 context,
                                 title: context.tr('measurements.actual_time'),
                                 initialTime: _time,
                               );
-                              if (selected != null) {
-                                setState(() => _time = selected);
+                              if (selected != null && mounted) {
+                                setState(() => _picked = selected);
                               }
                             },
                           ),
@@ -509,10 +527,4 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       ),
     ],
   );
-
-  String _formatTime(TimeOfDay value) {
-    final hour = value.hourOfPeriod == 0 ? 12 : value.hourOfPeriod;
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute ${context.tr(value.hour < 12 ? 'common.am' : 'common.pm')}';
-  }
 }

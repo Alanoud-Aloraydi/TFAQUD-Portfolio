@@ -1,3 +1,4 @@
+import 'package:app/core/constants/saudi_cities.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
@@ -8,7 +9,8 @@ import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The edit page of the medical file (CIRCLE-05, "تعديل"): the birth date, the
-/// city, the names of a patient without an account, the blood type, the chronic
+/// city and its time zone, the names of a patient without an account, the
+/// blood type, the chronic
 /// conditions and the allergies. Each part is saved with the call of its own,
 /// and only the parts that changed are sent.
 class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
@@ -17,9 +19,6 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
 
   final CirclesUseCase _circles;
   final String circleId;
-
-  /// The longest first name or last name of a patient the API accepts.
-  static const int maxNameLength = 50;
 
   /// Fills the page with [file], the file the medical file page already
   /// shows, so the page opens at once without reading it again.
@@ -31,6 +30,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
       lastName: file.patient.lastName,
       birthDate: file.patient.birthDate,
       city: file.patient.city,
+      timeZone: file.patient.timeZone,
       form: MedicalForm.fromProfile(file.profile),
     ),
   );
@@ -64,8 +64,20 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
   void birthDateChanged(DateTime value) =>
       emit(state.copyWith(birthDate: value, clearError: true));
 
-  void cityChanged(String value) =>
-      emit(state.copyWith(city: value, clearError: true));
+  /// A city of the Saudi list brings its zone; a city typed by hand keeps
+  /// the zone shown, which the person changes when it differs
+  /// ([timeZoneChanged]).
+  void cityChanged(String value) => emit(
+    state.copyWith(
+      city: value,
+      timeZone: SaudiCities.zoneOf(value),
+      clearError: true,
+    ),
+  );
+
+  /// The IANA zone where the patient lives, picked by hand.
+  void timeZoneChanged(String value) =>
+      emit(state.copyWith(timeZone: value, clearError: true));
 
   // ---- the health answers ----------------------------------------------
 
@@ -117,9 +129,11 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
     final String firstName = editNames ? state.firstName.trim() : '';
     final String lastName = editNames ? state.lastName.trim() : '';
     final bool cityChanged = city != patient.city;
+    final String timeZone = state.timeZone ?? patient.timeZone;
     final bool basicsChanged =
         birthDate != patient.birthDate ||
         cityChanged ||
+        timeZone != patient.timeZone ||
         (editNames &&
             (firstName != patient.firstName || lastName != patient.lastName));
     final MedicalProfileDraft profile = state.form.toProfile();
@@ -139,6 +153,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
         // The coordinates of an old city would be wrong for the new one.
         latitude: cityChanged ? null : patient.latitude,
         longitude: cityChanged ? null : patient.longitude,
+        timeZone: timeZone,
       );
       final result = await _circles.updatePatient(
         circleId,
@@ -149,6 +164,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
           lastName: editNames ? lastName : null,
           latitude: updated.latitude,
           longitude: updated.longitude,
+          timeZone: timeZone,
         ),
       );
       if (isClosed) return false;

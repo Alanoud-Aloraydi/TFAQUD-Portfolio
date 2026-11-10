@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/services/simplified_voice.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_speech.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -16,7 +16,7 @@ import 'package:get_it/get_it.dart';
 /// The look of a [SimplifiedButton].
 enum SimplifiedButtonTone { primary, secondary, danger, dark, quiet }
 
-/// The mode's 72-high capsule button, full width.
+/// The mode's capsule button, full width and at least 72 high.
 class SimplifiedButton extends StatelessWidget {
   const SimplifiedButton({
     super.key,
@@ -62,17 +62,22 @@ class SimplifiedButton extends StatelessWidget {
         BorderSide.none,
       ),
     };
+    // At least [SimplifiedStyle.action] high, and taller when a large text
+    // size wraps the label, so it is never cut off.
     return SizedBox(
       width: double.infinity,
-      height: SimplifiedStyle.action,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(SimplifiedStyle.action),
           backgroundColor: fill,
           foregroundColor: text,
           disabledBackgroundColor: SimplifiedStyle.disabled,
           shape: StadiumBorder(side: side),
-          padding: const EdgeInsets.symmetric(horizontal: SimplifiedStyle.pad),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SimplifiedStyle.pad,
+            vertical: 12,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -160,38 +165,38 @@ class ListenButton extends StatelessWidget {
         : SimplifiedStyle.ink;
     return ValueListenableBuilder<bool>(
       valueListenable: voice.speaking,
-      builder: (context, speaking, _) => SizedBox(
-        height: SimplifiedStyle.touch,
-        child: OutlinedButton.icon(
-          onPressed: () => speaking ? voice.stop() : readAloud(context, parts),
-          icon: Icon(
-            speaking ? CupertinoIcons.stop_fill : CupertinoIcons.speaker_2_fill,
-            size: 24,
+      builder: (context, speaking, _) => OutlinedButton.icon(
+        onPressed: () => speaking ? voice.stop() : readAloud(context, parts),
+        icon: Icon(
+          speaking ? CupertinoIcons.stop_fill : CupertinoIcons.speaker_2_fill,
+          size: 24,
+        ),
+        label: Text(
+          context.tr(
+            speaking ? 'simplified_mode.stop' : 'simplified_mode.listen',
           ),
-          label: Text(
-            context.tr(
-              speaking ? 'simplified_mode.stop' : 'simplified_mode.listen',
-            ),
-            style: SimplifiedStyle.head(
-              SimplifiedStyle.caption,
-              color: foreground,
-            ),
+          style: SimplifiedStyle.head(
+            SimplifiedStyle.caption,
+            color: foreground,
           ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: foreground,
-            backgroundColor: speaking
-                ? SimplifiedStyle.accentTint.withValues(alpha: onDark ? .4 : 1)
-                : SimplifiedStyle.clear,
-            side: BorderSide(
-              color: onDark
-                  ? SimplifiedStyle.onDarkMuted
-                  : SimplifiedStyle.control,
-              width: 1.5,
-            ),
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: SimplifiedStyle.pad,
-            ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: foreground,
+          backgroundColor: speaking
+              ? SimplifiedStyle.accentTint.withValues(alpha: onDark ? .4 : 1)
+              : SimplifiedStyle.clear,
+          side: BorderSide(
+            color: onDark
+                ? SimplifiedStyle.onDarkMuted
+                : SimplifiedStyle.control,
+            width: 1.5,
+          ),
+          shape: const StadiumBorder(),
+          // At least [SimplifiedStyle.touch] high; taller at a large text.
+          minimumSize: const Size(0, SimplifiedStyle.touch),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SimplifiedStyle.pad,
+            vertical: 8,
           ),
         ),
       ),
@@ -374,8 +379,8 @@ class _ListenTargetState extends State<ListenTarget> {
 class _PartSpeaker extends StatelessWidget {
   const _PartSpeaker({required this.part, required this.reading});
 
-  /// The size Apple and Google ask of anything tapped.
-  static const double size = 48;
+  /// The simplified mode's least tap size ([SimplifiedStyle.touch]).
+  static const double size = SimplifiedStyle.touch;
 
   final SpokenPart part;
   final bool reading;
@@ -608,9 +613,14 @@ class SimplifiedChip extends StatelessWidget {
         : choice
         ? SimplifiedStyle.clear
         : SimplifiedStyle.chip;
+    // A choice is at least [SimplifiedStyle.touch] high, and grows with a
+    // large text.
     final Widget body = Container(
-      height: choice ? 52 : null,
-      padding: EdgeInsets.symmetric(horizontal: 18, vertical: choice ? 0 : 8),
+      constraints: choice
+          ? const BoxConstraints(minHeight: SimplifiedStyle.touch)
+          : null,
+      alignment: choice ? Alignment.center : null,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(26),
@@ -680,7 +690,13 @@ class SimplifiedSegmented<T> extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onChanged(entry.key),
                   child: Container(
-                    height: SimplifiedStyle.touch,
+                    constraints: const BoxConstraints(
+                      minHeight: SimplifiedStyle.touch,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: entry.key == selected

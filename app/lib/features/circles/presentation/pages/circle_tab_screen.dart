@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
@@ -13,11 +14,15 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/birth_date_rules.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
@@ -25,9 +30,7 @@ import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
-import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/circles/presentation/widgets/member_profile_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
@@ -90,22 +93,29 @@ class _CircleContent extends StatelessWidget {
           if (state.status == CircleOverviewStatus.loading)
             const Center(child: CupertinoActivityIndicator())
           else if (state.status == CircleOverviewStatus.failure)
-            TextButton(
-              onPressed: context.read<CircleOverviewCubit>().load,
-              child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+            Column(
+              children: <Widget>[
+                Text(
+                  context.tr(state.errorKey ?? 'error.unknown'),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton(
+                  onPressed: context.read<CircleOverviewCubit>().load,
+                  child: Text(context.tr('auth.retry')),
+                ),
+              ],
             )
           else
-            ..._ready(context, state.overview!, state.medicalFile),
+            ..._ready(context, state),
         ],
       ),
     );
   }
 
-  List<Widget> _ready(
-    BuildContext context,
-    CircleOverview overview,
-    MedicalFile? medicalFile,
-  ) {
+  List<Widget> _ready(BuildContext context, CircleOverviewState state) {
+    final CircleOverview overview = state.overview!;
+    final MedicalFile? medicalFile = state.medicalFile;
     return <Widget>[
       CircleCard(circle: circle, overview: overview, medicalFile: medicalFile),
       const SizedBox(height: AppSpacing.md),
@@ -144,13 +154,13 @@ class _CircleContent extends StatelessWidget {
       if (overview.canManage) ...<Widget>[
         const SizedBox(height: AppSpacing.md),
         FilledButton.icon(
-          onPressed: () => _invite(context),
+          onPressed: state.acting ? null : () => _invite(context),
           icon: const Icon(AppIcons.userPlus, size: AppSizes.iconSmall),
           label: Text(context.tr('circle_overview.add_member')),
         ),
         const SizedBox(height: AppSpacing.sm),
         TextButton.icon(
-          onPressed: () => _leave(context, overview),
+          onPressed: state.acting ? null : () => _leave(context, overview),
           style: TextButton.styleFrom(
             foregroundColor: AppSemanticColors.statusError,
             minimumSize: const Size.fromHeight(AppSizes.button),
@@ -173,9 +183,7 @@ class _CircleContent extends StatelessWidget {
   }
 
   Future<void> _leave(BuildContext context, CircleOverview overview) async {
-    final bool deletesCircle =
-        overview.patientIsYou ||
-        overview.members.where((member) => member.isManager).length == 1;
+    final bool deletesCircle = overview.leaveDeletesCircle;
     final bool? confirmed = await showAppAlert<bool>(
       context,
       title: context.tr(
@@ -354,12 +362,10 @@ class CircleCard extends StatelessWidget {
 
   /// «نورة العتيبي · 72 سنة · بريدة».
   String _who(BuildContext context) {
-    final DateTime today = DateTime.now();
-    final DateTime birth = overview.patientBirthDate;
-    final bool beforeBirthday =
-        today.month < birth.month ||
-        (today.month == birth.month && today.day < birth.day);
-    final int age = today.year - birth.year - (beforeBirthday ? 1 : 0);
+    final int age = BirthDateRules.ageOn(
+      overview.patientBirthDate,
+      PatientClockScope.of(context).today(),
+    );
     return <String>[
       overview.patientName,
       context.tr('circle_overview.age', args: <String>['$age']),
@@ -457,13 +463,13 @@ class _Fact extends StatelessWidget {
 class _AppMode extends StatelessWidget {
   const _AppMode({required this.mode});
 
-  final String? mode;
+  final CircleAppMode? mode;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final String value = context.tr(
-      mode == 'simplified'
+      mode == CircleAppMode.simplified
           ? 'circle_overview.simplified'
           : 'circle_overview.detailed',
     );
@@ -858,7 +864,12 @@ class _InvitationRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final CircleOverviewCubit cubit = context.read<CircleOverviewCubit>();
-    final int days = RequestAge.days(invitation.sentAt, DateTime.now()) ?? 0;
+    // One change of the members at a time (CircleOverviewState.acting).
+    final bool acting = context.select(
+      (CircleOverviewCubit tab) => tab.state.acting,
+    );
+    final int days =
+        RequestAge.days(invitation.sentAt, PatientClockScope.of(context)) ?? 0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Row(
@@ -871,7 +882,7 @@ class _InvitationRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  RequestSentView.displayPhone(invitation.phoneNumber),
+                  SaudiMobile.display(invitation.phoneNumber),
                   textDirection: TextDirection.ltr,
                   style: text.titleSmall,
                 ),
@@ -887,6 +898,7 @@ class _InvitationRow extends StatelessWidget {
                       _SmallAction(
                         label: context.tr('circle_overview.resend'),
                         color: AppSemanticColors.textPrimary,
+                        enabled: !acting,
                         onPressed: () => _act(
                           context,
                           cubit.resendInvitation(invitation.id),
@@ -895,6 +907,7 @@ class _InvitationRow extends StatelessWidget {
                       _SmallAction(
                         label: context.tr('circle_overview.cancel'),
                         color: AppSemanticColors.statusError,
+                        enabled: !acting,
                         onPressed: () => _act(
                           context,
                           cubit.cancelInvitation(invitation.id),
@@ -938,18 +951,22 @@ class _SmallAction extends StatelessWidget {
     required this.label,
     required this.color,
     required this.onPressed,
+    required this.enabled,
   });
 
   final String label;
   final Color color;
   final VoidCallback onPressed;
 
+  /// False while another change of the members is on its way.
+  final bool enabled;
+
   static const double _height = 32;
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: onPressed,
+      onPressed: enabled ? onPressed : null,
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
         minimumSize: const Size(0, _height),

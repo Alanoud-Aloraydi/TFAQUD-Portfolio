@@ -1,7 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/data/visit_repository.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';

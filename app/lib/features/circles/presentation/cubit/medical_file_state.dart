@@ -1,3 +1,4 @@
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:equatable/equatable.dart';
 
@@ -35,6 +36,10 @@ class ContactForm extends Equatable {
   final String? errorKey;
 
   bool get isNew => contactId == null;
+
+  /// [phone] is a whole Saudi mobile number ([SaudiMobile]); emergency
+  /// contacts are Saudi numbers (see `saudi_mobile.dart`).
+  bool get phoneValid => SaudiMobile.isValid(phone);
 
   ContactForm copyWith({
     String? relation,
@@ -94,6 +99,7 @@ class MedicalFileState extends Equatable {
   MedicalFileState copyWith({
     MedicalFileStatus? status,
     MedicalFile? file,
+    String? messageKey,
     ContactForm? form,
     bool clearForm = false,
     bool? sessionEnded,
@@ -101,7 +107,7 @@ class MedicalFileState extends Equatable {
     return MedicalFileState(
       status: status ?? this.status,
       file: file ?? this.file,
-      messageKey: messageKey,
+      messageKey: messageKey ?? this.messageKey,
       form: clearForm ? null : (form ?? this.form),
       sessionEnded: sessionEnded ?? this.sessionEnded,
     );

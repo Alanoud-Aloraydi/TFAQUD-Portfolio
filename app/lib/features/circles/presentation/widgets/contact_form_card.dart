@@ -1,17 +1,17 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -59,9 +59,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
   void initState() {
     super.initState();
     _name = TextEditingController(text: widget.form.name);
-    _phone = TextEditingController(
-      text: PhoneNumberFormatter.display(widget.form.phone),
-    );
+    _phone = TextEditingController(text: SaudiMobile.group(widget.form.phone));
   }
 
   @override
@@ -75,9 +73,8 @@ class _ContactFormCardState extends State<ContactFormCard> {
   Widget build(BuildContext context) {
     final ContactForm form = widget.form;
     final TextTheme text = Theme.of(context).textTheme;
-    final String requiredText = context.tr('circles.field_required');
-    final bool phoneInvalid =
-        form.showErrors && !MedicalFileCubit.isValidPhone(form.phone);
+    final String requiredText = context.tr('common.field_required');
+    final bool phoneInvalid = form.showErrors && !form.phoneValid;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),

@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 
 /// Maps the home API payload without retaining clinical or session data.
@@ -25,6 +26,7 @@ class HomeModel {
             patientAvatarCode: circle['patient_avatar_code'] as String?,
             isPatient: circle['is_patient'] as bool? ?? true,
             patientName: circle['patient_name'] as String?,
+            timeZone: circle['time_zone'] as String? ?? defaultPatientZone,
           );
         }).toList(),
       ),

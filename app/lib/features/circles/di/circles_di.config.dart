@@ -13,6 +13,8 @@
 import 'package:app/core/network/dio_client.dart' as _i602;
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart'
     as _i962;
+import 'package:app/features/circles/data/datasources/device_zone.dart'
+    as _i1068;
 import 'package:app/features/circles/data/repositories/circles_repository_data.dart'
     as _i721;
 import 'package:app/features/circles/domain/repositories/circles_repository_domain.dart'
@@ -29,12 +31,15 @@ extension GetItInjectableX on _i174.GetIt {
     _i526.EnvironmentFilter? environmentFilter,
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    gh.lazySingleton<_i1068.DeviceZone>(() => _i1068.PluginDeviceZone());
     gh.lazySingleton<_i962.BaseCirclesRemoteDataSource>(
       () => _i962.CirclesRemoteDataSource(gh<_i602.DioClient>()),
     );
     gh.lazySingleton<_i533.CirclesRepositoryDomain>(
-      () =>
-          _i721.CirclesRepositoryData(gh<_i962.BaseCirclesRemoteDataSource>()),
+      () => _i721.CirclesRepositoryData(
+        gh<_i962.BaseCirclesRemoteDataSource>(),
+        gh<_i1068.DeviceZone>(),
+      ),
     );
     gh.lazySingleton<_i249.CirclesUseCase>(
       () => _i249.CirclesUseCase(gh<_i533.CirclesRepositoryDomain>()),

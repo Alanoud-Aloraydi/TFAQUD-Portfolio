@@ -1,6 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
@@ -16,25 +16,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Last page of the account setup: "لديك دعوة؟ أم تبدأ دائرتك؟". The "+" next to the
-/// circles opens it again, to add another circle ([addingCircle]). That page
-/// has no "تخطي الآن", because the account is already set up.
+/// Step 2 of 2 of the first account set-up («كيف تحب تستخدم تفقّد؟»), and
+/// the page the "+" next to the circles opens to add another circle
+/// ([addingCircle]: no steps, no «تخطي الآن», no invitations).
 ///
-/// Above the choice, a brand-new person's own pending invitations show up
-/// right away ([PendingInvitesSection]): someone may have invited them
-/// before they ever opened the app, so answering it here picks their circle
-/// directly, with no need to choose "أرعى شخصًا آخر" at all.
+/// In the first set-up, the person's own pending invitations show above the
+/// choice ([PendingInvitesSection]): someone may have invited them before
+/// they opened the app. Accepting one leaves for «اليوم» with that circle,
+/// with no need to choose below. [InboxCubit] and [PendingInvitesSection]
+/// stay in the circles feature on purpose: invitations are circle logic,
+/// shared with the notifications page and the home bell.
 ///
-/// "أدير رعايتي بنفسي" continues to the three steps that create your own circle.
-/// "أرعى شخصًا آخر" asks whether the patient uses the app. If the patient does,
-/// the next page asks for the patient's phone number and sends a request. If the
-/// patient does not, the next pages create the circle directly. The choice is
-/// kept in [OnboardingCubit].
+/// The choice is kept in [OnboardingCubit] and decides the next page:
+/// «أتابع رعايتي بنفسي» opens the page that creates the person's own circle;
+/// «أتابع رعاية شخص آخر» then asks whether that person uses the app — if so,
+/// the next page sends them a request by phone number, otherwise it creates
+/// the circle directly.
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key, this.addingCircle = false});
 
+  /// True when opened from the "+" to add another circle.
   final bool addingCircle;
 
+  /// Opens the page that matches the complete choice in [state].
   void _continue(BuildContext context, OnboardingState state) {
     if (state.careTarget == CareTarget.self) {
       context.push(Routes.createSelfCircle);
@@ -107,6 +111,10 @@ class StartScreen extends StatelessWidget {
                                         cubit: context.read<InboxCubit>(),
                                         state: inboxState,
                                         maxItems: 2,
+                                        // The circle is chosen: no reason
+                                        // to stay and pick "self/other".
+                                        onAccepted: () =>
+                                            context.go(Routes.today),
                                       ),
                                     );
                                   },
@@ -167,8 +175,9 @@ class StartScreen extends StatelessWidget {
   }
 }
 
-/// The follow-up question, shown under "another person": a small header and
-/// two choices, the same width as the cards above.
+/// The follow-up question under «أتابع رعاية شخص آخر»: whether the
+/// cared-for person uses the app, as two [ChoiceCard]s the width of the
+/// cards above.
 class _PatientQuestion extends StatelessWidget {
   const _PatientQuestion({required this.state});
 

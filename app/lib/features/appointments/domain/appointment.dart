@@ -1,5 +1,5 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:equatable/equatable.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 
 /// Defines the supported appointment kind values.
 enum AppointmentKind { followUp, test, imaging, remote, other }
@@ -45,9 +45,9 @@ class CareAppointment extends Equatable {
   final String? createdByName;
   final String? updatedByName;
 
-  DateTime get scheduledAt {
-    return riyadhScheduledAt(scheduledOn, time);
-  }
+  /// The visit's wall time where the patient lives, on the scale of
+  /// [PatientClock.now].
+  DateTime get scheduledAt => wallClockAt(scheduledOn, time);
 
   @override
   List<Object?> get props => [

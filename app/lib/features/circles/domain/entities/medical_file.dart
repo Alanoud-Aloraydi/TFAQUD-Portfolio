@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:equatable/equatable.dart';
@@ -13,6 +14,7 @@ class PatientBasics extends Equatable {
     required this.hasAccount,
     this.latitude,
     this.longitude,
+    this.timeZone = defaultPatientZone,
   });
 
   /// While the patient has an account the names are the account's names, and
@@ -29,6 +31,10 @@ class PatientBasics extends Equatable {
   final double? latitude;
   final double? longitude;
 
+  /// The IANA zone where the patient lives; every time of the circle is
+  /// wall clock there.
+  final String timeZone;
+
   String get fullName => '$firstName $lastName'.trim();
 
   @override
@@ -40,6 +46,7 @@ class PatientBasics extends Equatable {
     hasAccount,
     latitude,
     longitude,
+    timeZone,
   ];
 }
 

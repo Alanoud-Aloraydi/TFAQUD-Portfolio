@@ -3,14 +3,15 @@ import 'dart:math' as math;
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/intro_memory.dart';
 import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/components/navigation_themes.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/features/auth/data/datasources/intro_memory.dart';
 import 'package:app/features/auth/presentation/widgets/intro_previews.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -138,7 +139,7 @@ class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // Every page is light, so the status bar icons are dark.
-      value: SystemUiOverlayStyle.dark,
+      value: AppNavigationThemes.systemBars,
       child: Scaffold(
         backgroundColor: AppSemanticColors.introCanvas,
         body: Stack(

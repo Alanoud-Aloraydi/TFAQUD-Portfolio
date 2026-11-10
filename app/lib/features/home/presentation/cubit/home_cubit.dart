@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
@@ -8,8 +9,11 @@ import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Coordinates home actions and UI state.
+///
+/// [shownClock], when given, follows the selected circle, so every page
+/// reads that patient's clock (see [ShownCircleClock]).
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit(this._home, [Listenable? photoChanges])
+  HomeCubit(this._home, [Listenable? photoChanges, this._shownClock])
     : _photoChanges = photoChanges,
       super(const HomeState()) {
     _changes = _home.changes.listen((select) => refresh(select: select));
@@ -20,11 +24,20 @@ class HomeCubit extends Cubit<HomeState> {
 
   final HomeUseCase _home;
   final Listenable? _photoChanges;
+  final ShownCircleClock? _shownClock;
   late final StreamSubscription<String?> _changes;
   int _revision = 0;
   bool _selecting = false;
 
   void _onPhotoChanged() => unawaited(refresh());
+
+  /// Every state with a selected circle shows that patient's clock.
+  @override
+  void emit(HomeState state) {
+    super.emit(state);
+    final String? zone = state.selectedCircle?.timeZone;
+    if (zone != null) _shownClock?.show(zone);
+  }
 
   @override
   Future<void> close() async {

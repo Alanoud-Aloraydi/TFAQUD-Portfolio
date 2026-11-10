@@ -7,9 +7,9 @@ import 'package:equatable/equatable.dart';
 /// show them. [toProfile] turns it into the answers the API takes, and
 /// [MedicalForm.fromProfile] does the opposite for the saved answers.
 ///
-/// The rules are the ones of the three creation pages: "none" stands alone, a
-/// second tap on a choice clears it, and the typed text of "other" is kept
-/// only while "other" is chosen.
+/// The rules: "none" stands alone, a second tap on a choice clears it, and
+/// the typed text of "other" is kept only while "other" is chosen. A circle
+/// is created without these answers; they are filled here afterwards.
 class MedicalForm extends Equatable {
   const MedicalForm({
     this.bloodType,

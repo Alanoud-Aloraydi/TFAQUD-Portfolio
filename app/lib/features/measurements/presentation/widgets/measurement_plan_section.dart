@@ -1,19 +1,17 @@
-import 'dart:async';
-
-import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -21,7 +19,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Displays the measurement plan section UI.
+/// The «الخطة» tab's measurements: the active plans of [circleId], each
+/// editable and stoppable when [canManage]. The plans and tasks read again
+/// by themselves after a change saved anywhere.
 class MeasurementPlanSection extends StatelessWidget {
   const MeasurementPlanSection({
     super.key,
@@ -55,7 +55,9 @@ class MeasurementPlanSection extends StatelessWidget {
           EmptyStateNote(
             context.tr('measurements.no_plans'),
             actionLabel: canManage ? context.tr('add.measurement') : null,
-            onAction: canManage ? () => _addMeasurement(context) : null,
+            onAction: canManage
+                ? () => context.push(Routes.newMeasurement(circleId))
+                : null,
           )
         else
           for (final plan in state.plans.where(
@@ -71,16 +73,10 @@ class MeasurementPlanSection extends StatelessWidget {
       ],
     );
   }
-
-  Future<void> _addMeasurement(BuildContext context) async {
-    final saved = await context.push<bool>(Routes.newMeasurement(circleId));
-    if (saved == true && context.mounted) {
-      unawaited(context.read<MeasurementPlansCubit>().load(circleId));
-    }
-  }
 }
 
-/// Displays the measurement plan card UI.
+/// One active measurement plan: its kind, target, reading times and days,
+/// a change waiting for later, and who added or last changed it.
 class MeasurementPlanCard extends StatefulWidget {
   const MeasurementPlanCard({
     super.key,
@@ -104,7 +100,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
   Widget build(BuildContext context) {
     final plan = widget.plan;
     final version = plan.version;
-    final today = riyadhToday();
+    final today = PatientClockScope.of(context).today();
     final startsLater = version.effectiveFromOn.isAfter(today);
     final kind = plan.kind == MeasurementKind.glucose
         ? 'measurements.glucose'
@@ -184,7 +180,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                     for (final MeasurementTime reading in version.readingTimes)
                       Row(
                         children: [
-                          Text(_formatTime(reading.time)),
+                          Text(clockText(reading.time)),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
@@ -244,9 +240,7 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                 child: Text(
                   context.tr(
                     'measurements.pending_change',
-                    args: [
-                      measurementDate(plan.pendingVersion!.effectiveFromOn),
-                    ],
+                    args: [_dayText(plan.pendingVersion!.effectiveFromOn)],
                   ),
                 ),
               ),
@@ -281,17 +275,9 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                   children: [
                     // Always editable, a change waiting for later too.
                     OutlinedButton.icon(
-                      onPressed: () async {
-                        final saved = await context.push<bool>(
-                          Routes.editMeasurement(widget.circleId, plan.id),
-                        );
-                        if (saved == true && context.mounted) {
-                          context.read<MeasurementPlansCubit>().load(
-                            widget.circleId,
-                          );
-                          context.read<MeasurementTasksCubit>().reload();
-                        }
-                      },
+                      onPressed: () => context.push(
+                        Routes.editMeasurement(widget.circleId, plan.id),
+                      ),
                       icon: const Icon(AppIcons.pencil),
                       label: Text(context.tr('measurements.edit_plan')),
                     ),
@@ -329,19 +315,14 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
       ],
     );
     if (confirmed != true || !context.mounted) return;
-    final stopped = await context.read<MeasurementPlansCubit>().stop(
+    final String? errorKey = await context.read<MeasurementPlansCubit>().stop(
       widget.plan,
     );
-    if (stopped && context.mounted) {
-      context.read<MeasurementTasksCubit>().reload();
-    }
-  }
-
-  String _formatTime(String value) {
-    final parts = value.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = parts[1];
-    return '${hour % 12 == 0 ? 12 : hour % 12}:$minute '
-        '${context.tr(hour < 12 ? 'common.am' : 'common.pm')}';
+    if (errorKey == null || !context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
   }
 }
+
+/// «9/11/2026» for [day], as the plan form's «يسري التعديل من» writes it.
+String _dayText(DateTime day) => '${day.day}/${day.month}/${day.year}';

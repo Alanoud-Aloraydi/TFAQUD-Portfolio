@@ -1,7 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -94,7 +94,7 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   controller: _phone,
                   label: context.tr('circles.patient_phone_label'),
                   autofocus: false,
-                  showError: state.showErrors && !cubit.isPhoneValid,
+                  showError: state.showErrors && !state.phoneValid,
                   onChanged: (String typed) =>
                       cubit.phoneChanged(ArabicDigits.digitsOnly(typed)),
                 ),

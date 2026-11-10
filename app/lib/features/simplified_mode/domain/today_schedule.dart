@@ -1,9 +1,10 @@
-import 'package:app/core/utils/riyadh_time.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
 
 /// What the simplified home's one card shows.
 enum HomeFocus {
@@ -32,17 +33,19 @@ class TodaySchedule {
     required this._wallNow,
   }) : tasks = List<TodayTask>.unmodifiable(tasks);
 
-  /// [now] is an instant; [doses] may include tomorrow's (for
-  /// [firstDoseTomorrow]); [appointments] may be of any day.
+  /// [now] is an instant, read on the patient's [clock]; [doses] may
+  /// include tomorrow's (for [firstDoseTomorrow]); [appointments] may be of
+  /// any day.
   factory TodaySchedule.build({
+    required PatientClock clock,
     required DateTime now,
     required List<DoseOccurrence> doses,
     required List<MeasurementOccurrence> measurements,
     required List<CareAppointment> appointments,
   }) {
-    final DateTime wall = riyadhNow(now);
+    final DateTime wall = clock.wallTime(now);
     final DateTime today = scheduleDay(wall);
-    final DateTime tomorrow = today.add(const Duration(days: 1));
+    final DateTime tomorrow = addDays(today, 1);
     final List<TodayTask> raw = <TodayTask>[
       for (final DoseOccurrence dose in doses)
         if (_sameDay(dose.scheduledOn, today))
@@ -124,9 +127,9 @@ class TodaySchedule {
       next ??
       tasks.where((task) => task.status == TodayTaskStatus.late).lastOrNull;
 
-  /// The dose or measurement ([kind]) a full-screen reminder asks about:
-  /// the most recent one whose time came and is not recorded (the one the
-  /// reminder fired for), else the next task when it is of [kind] and can
+  /// The dose or measurement ([kind]) waiting now, for a reminder that
+  /// names no task ([reminderTask]): the most recent one whose time came
+  /// and is not recorded, else the next task when it is of [kind] and can
   /// already be recorded. Null when nothing of [kind] waits.
   TodayTask? taskToRecord(TodayTaskKind kind) {
     final TodayTask? due = tasks
@@ -143,6 +146,24 @@ class TodaySchedule {
       return coming;
     }
     return null;
+  }
+
+  /// The dose or measurement a reminder for [request] in [circleId] asks
+  /// about, while it is still not recorded: that exact task by its key, or,
+  /// without a key, the one of its kind waiting now ([taskToRecord]). Null
+  /// when it was recorded (someone in the family may have), when it is of
+  /// another circle or day, and for an appointment.
+  TodayTask? reminderTask(ReminderRequest request, String circleId) {
+    if (request.kind == TodayTaskKind.appointment) return null;
+    final String? key = request.taskKey;
+    if (key == null) return taskToRecord(request.kind);
+    return tasks
+        .where(
+          (task) =>
+              task.status != TodayTaskStatus.done &&
+              task.snoozeKey(circleId) == key,
+        )
+        .firstOrNull;
   }
 
   /// Whether [task] can be recorded now: not resolved, and not more than an

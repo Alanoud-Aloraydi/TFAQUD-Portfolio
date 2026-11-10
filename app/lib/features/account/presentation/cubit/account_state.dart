@@ -97,7 +97,7 @@ class AccountState extends Equatable {
       account: account ?? this.account,
       circles: circles ?? this.circles,
       sent: sent ?? this.sent,
-      messageKey: messageKey ?? this.messageKey,
+      messageKey: clearMessages ? null : (messageKey ?? this.messageKey),
       errorKey: clearMessages ? null : (errorKey ?? this.errorKey),
       noticeKey: clearMessages ? null : (noticeKey ?? this.noticeKey),
       busyIds: busyIds ?? this.busyIds,

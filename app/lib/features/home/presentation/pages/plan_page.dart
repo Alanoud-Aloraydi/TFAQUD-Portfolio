@@ -1,7 +1,7 @@
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/fading_branches.dart';
-import 'package:app/core/utils/riyadh_time.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
@@ -16,7 +16,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Displays the plan page UI.
+/// «الخطة»: the medicines, measurement plans and appointments of the shown
+/// circle, one kind at a time.
 class PlanPage extends StatefulWidget {
   const PlanPage({super.key});
 
@@ -24,23 +25,16 @@ class PlanPage extends StatefulWidget {
   State<PlanPage> createState() => _PlanPageState();
 }
 
-class _PlanPageState extends State<PlanPage> {
-  static const _categories = ['medications', 'measurements', 'appointments'];
-  String _selected = 'medications';
-
-  void _select(String value) {
-    if (_categories.contains(value) && value != _selected) {
-      setState(() => _selected = value);
-    }
-  }
-
+class _PlanPageState extends State<PlanPage>
+    with HomeCategorySelection<PlanPage> {
   @override
   Widget build(BuildContext context) {
     return SelectedCircleBuilder(
       builder: (context, circle) =>
           BlocBuilder<MedicationsCubit, MedicationsState>(
             builder: (context, state) {
-              final today = riyadhToday();
+              final clock = PatientClockScope.of(context);
+              final today = clock.today();
               final count = state.plans
                   .where((plan) => !plan.isPreviousOn(today))
                   .length;
@@ -57,7 +51,7 @@ class _PlanPageState extends State<PlanPage> {
                   .where(
                     (item) =>
                         item.status == AppointmentStatus.scheduled &&
-                        !item.scheduledAt.isBefore(riyadhNow()),
+                        !item.scheduledAt.isBefore(clock.now()),
                   )
                   .length;
               final header = Column(
@@ -72,16 +66,18 @@ class _PlanPageState extends State<PlanPage> {
                     ),
                   ),
                   HomeCategoryControl(
-                    medicationCount: count,
-                    measurementCount: measurements,
-                    appointmentCount: appointments,
-                    selected: _selected,
-                    onChanged: _select,
+                    counts: {
+                      HomeCategory.medications: count,
+                      HomeCategory.measurements: measurements,
+                      HomeCategory.appointments: appointments,
+                    },
+                    selected: category,
+                    onChanged: selectCategory,
                   ),
                 ],
               );
               return FadingBranches(
-                currentIndex: _categories.indexOf(_selected),
+                currentIndex: category.index,
                 children: [
                   MedicationPlansSection(
                     circleId: circle.id,

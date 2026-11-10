@@ -1,3 +1,4 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
@@ -15,6 +16,7 @@ class SimplifiedDay extends Equatable {
     required this.accountId,
     required this.isPatient,
     required this.displayName,
+    required this.timeZone,
     required List<DoseOccurrence> doses,
     required List<MeasurementOccurrence> measurements,
     required List<CareAppointment> appointments,
@@ -39,6 +41,13 @@ class SimplifiedDay extends Equatable {
   final bool isPatient;
   final String? displayName;
   final String? avatarCode;
+
+  /// The IANA zone where the patient lives: every day and time shown is
+  /// wall clock there ([clock]).
+  final String timeZone;
+
+  /// The patient's clock.
+  PatientClock get clock => PatientClock(timeZone);
 
   /// Today's and tomorrow's doses.
   final List<DoseOccurrence> doses;
@@ -66,6 +75,7 @@ class SimplifiedDay extends Equatable {
     isPatient,
     displayName,
     avatarCode,
+    timeZone,
     doses,
     measurements,
     appointments,

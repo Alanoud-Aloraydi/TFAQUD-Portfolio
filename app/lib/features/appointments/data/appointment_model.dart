@@ -1,3 +1,4 @@
+import 'package:app/core/utils/api_date.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 
 /// Maps appointment data between the API and app.
@@ -11,11 +12,27 @@ class AppointmentModel {
         avatarCode: json['avatar_code'] as String?,
       );
 
-  static CareAppointment fromJson(Map<String, dynamic> json) => CareAppointment(
+  /// The appointment in [json], or null when its status is one this app does
+  /// not know: one such row must not hide the whole list. An unknown kind
+  /// reads as [AppointmentKind.other].
+  static CareAppointment? tryFromJson(Map<String, dynamic> json) {
+    final status = AppointmentStatus.values
+        .where((value) => value.name == json['status'])
+        .firstOrNull;
+    return status == null ? null : _fromJson(json, status);
+  }
+
+  static CareAppointment _fromJson(
+    Map<String, dynamic> json,
+    AppointmentStatus status,
+  ) => CareAppointment(
     id: json['id'] as String,
     specialty: json['specialty'] as String,
-    kind: AppointmentKind.values.byName(
-      json['kind'] == 'follow_up' ? 'followUp' : json['kind'] as String,
+    kind: AppointmentKind.values.firstWhere(
+      (value) =>
+          value.name ==
+          (json['kind'] == 'follow_up' ? 'followUp' : json['kind']),
+      orElse: () => AppointmentKind.other,
     ),
     otherKind: json['other_kind'] as String?,
     scheduledOn: DateTime.parse(json['scheduled_on'] as String),
@@ -25,7 +42,7 @@ class AppointmentModel {
     companions: (json['companions'] as List<dynamic>)
         .map((item) => companionFromJson(item as Map<String, dynamic>))
         .toList(),
-    status: AppointmentStatus.values.byName(json['status'] as String),
+    status: status,
     updatedAt: DateTime.parse(json['updated_at'] as String),
     createdByName:
         (json['created_by'] as Map<String, dynamic>?)?['name'] as String?,
@@ -42,10 +59,7 @@ class AppointmentModel {
         ? 'follow_up'
         : draft.kind.name,
     'other_kind': draft.otherKind,
-    'scheduled_on':
-        '${draft.scheduledOn.year.toString().padLeft(4, '0')}-'
-        '${draft.scheduledOn.month.toString().padLeft(2, '0')}-'
-        '${draft.scheduledOn.day.toString().padLeft(2, '0')}',
+    'scheduled_on': apiDate(draft.scheduledOn),
     'time_of_day': draft.time,
     'place': draft.place,
     'remote_method': draft.remoteMethod,

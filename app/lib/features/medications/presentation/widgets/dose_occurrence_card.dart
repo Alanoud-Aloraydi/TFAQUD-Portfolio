@@ -1,10 +1,11 @@
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/medication_format.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +44,7 @@ class DoseOccurrenceCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    formatMedicationTime(context, occurrence.time),
+                    clockText(occurrence.time),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: AppTextTheme.bold,
                       color: AppSemanticColors.textPrimary,
@@ -93,7 +94,7 @@ class _TimeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = formatMedicationTime(context, occurrence.time);
+    final value = clockText(occurrence.time);
     return DecoratedBox(
       decoration: BoxDecoration(
         border: BorderDirectional(
@@ -170,12 +171,10 @@ class _DoseDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dose = context.tr(
-      'medications.dose',
-      args: [
-        formatMedicationNumber(occurrence.doseValue),
-        context.tr('medications.unit.${occurrence.doseUnit.name}'),
-      ],
+    final dose = formatMedicationDose(
+      context,
+      occurrence.doseValue,
+      occurrence.doseUnit,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

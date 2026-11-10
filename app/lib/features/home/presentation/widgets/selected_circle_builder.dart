@@ -1,10 +1,12 @@
+import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
-import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Displays the selected circle builder UI.
+/// Builds a tab page for the circle the home cubit selected, and rebuilds it
+/// from scratch (a new key) when another circle is chosen. Nothing while no
+/// circle is selected.
 class SelectedCircleBuilder extends StatelessWidget {
   const SelectedCircleBuilder({super.key, required this.builder});
 

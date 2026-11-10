@@ -1,7 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';

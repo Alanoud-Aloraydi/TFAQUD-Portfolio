@@ -1,4 +1,5 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
@@ -12,14 +13,6 @@ class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
 
   final CirclesUseCase _circles;
 
-  /// A Saudi mobile number without the country code or a leading zero: nine
-  /// digits that start with 5. The same rule as the sign-in page.
-  static final RegExp _phonePattern = RegExp(r'^5[0-9]{8}$');
-
-  static const String countryCode = '+966';
-
-  bool get isPhoneValid => _phonePattern.hasMatch(state.phone);
-
   /// [digits] are the digits the user typed, already written 0-9.
   void phoneChanged(String digits) {
     emit(state.copyWith(phone: digits, clearError: true));
@@ -31,9 +24,10 @@ class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
 
   /// Sends the request. The circle gets no name here: the patient names it
   /// when they complete the request. Returns true when the server saved it.
+  /// A tap while it is on its way, or after it is saved, sends nothing.
   Future<bool> send() async {
-    if (state.status == SendStatus.sending) return false;
-    if (!isPhoneValid) {
+    if (state.status != SendStatus.idle) return false;
+    if (!state.phoneValid) {
       emit(state.copyWith(showErrors: true, clearError: true));
       return false;
     }
@@ -46,7 +40,7 @@ class SendCircleRequestCubit extends Cubit<SendCircleRequestState> {
     );
     final result = await _circles.sendCircleRequest(
       NewCircleRequest(
-        patientPhoneNumber: '$countryCode${state.phone}',
+        patientPhoneNumber: SaudiMobile.international(state.phone),
         proposedAppMode: state.mode,
       ),
     );

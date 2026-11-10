@@ -1,8 +1,11 @@
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
@@ -10,7 +13,6 @@ import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -67,6 +69,13 @@ class VisitPage extends StatelessWidget {
       ),
       body: state.status == AppointmentsLoadStatus.loading || visit.loading
           ? const Center(child: CircularProgressIndicator())
+          : visit.loadFailed
+          ? Center(
+              child: TextButton(
+                onPressed: context.read<VisitCubit>().load,
+                child: Text(context.tr(visit.errorKey ?? 'error.unknown')),
+              ),
+            )
           : appointment == null
           ? Center(
               child: TextButton(
@@ -95,7 +104,7 @@ class VisitPage extends StatelessWidget {
         ),
         Text(
           '${appointmentDate(context, appointment.scheduledOn)} · '
-          '${appointmentTime(context, appointment.time)}',
+          '${clockText(appointment.time)}',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         Text(
@@ -418,6 +427,7 @@ class _VisitEditSheetState extends State<_VisitEditSheet> {
     child: TextField(
       controller: controller,
       maxLength: limit,
+      inputFormatters: [CodePointLengthFormatter(limit)],
       minLines: 2,
       maxLines: 4,
       textAlign: TextAlign.start,
