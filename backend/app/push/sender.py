@@ -8,9 +8,12 @@ starts sending.
 """
 
 import logging
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Protocol
+
+from app.resilience import CircuitBreaker
 
 log = logging.getLogger(__name__)
 
@@ -81,6 +84,10 @@ class ApnsPushSender:
 
     Apple's provider API: one POST per phone to /3/device/<token>, with a
     short JWT (ES256) made from the key id, the team id and the key.
+
+    After 3 sends in a row with no answer or a 5xx, Apple is not called for
+    a minute (app/resilience.py): each send answers FAILED at once, so a
+    scan with many phones does not wait 10 seconds per phone.
     """
 
     enabled = True
@@ -94,6 +101,7 @@ class ApnsPushSender:
         private_key: str,
         environment: str = "sandbox",
         client=None,
+        breaker: CircuitBreaker | None = None,
     ):
         if environment not in _HOSTS:
             raise ValueError("environment must be sandbox or production")
@@ -105,27 +113,35 @@ class ApnsPushSender:
         self._client = client
         self._token: str | None = None
         self._token_made = 0.0
+        self._breaker = breaker or CircuitBreaker("apns")
+        # Pushes go out from two background threads (app/background.py).
+        self._lock = threading.Lock()
 
     def _http(self):
-        if self._client is None:
-            import httpx
+        with self._lock:
+            if self._client is None:
+                import httpx
 
-            self._client = httpx.Client(http2=True, timeout=10)
-        return self._client
+                self._client = httpx.Client(http2=True, timeout=10)
+            return self._client
 
     def _provider_token(self) -> str:
-        now = time.time()
-        if self._token is None or now - self._token_made > _TOKEN_SECONDS:
-            import jwt
+        with self._lock:
+            now = time.time()
+            if (
+                self._token is None
+                or now - self._token_made > _TOKEN_SECONDS
+            ):
+                import jwt
 
-            self._token = jwt.encode(
-                {"iss": self._team_id, "iat": int(now)},
-                self._private_key,
-                algorithm="ES256",
-                headers={"kid": self._key_id},
-            )
-            self._token_made = now
-        return self._token
+                self._token = jwt.encode(
+                    {"iss": self._team_id, "iat": int(now)},
+                    self._private_key,
+                    algorithm="ES256",
+                    headers={"kid": self._key_id},
+                )
+                self._token_made = now
+            return self._token
 
     def payload(self, message: PushMessage) -> dict:
         return {
@@ -142,6 +158,8 @@ class ApnsPushSender:
         }
 
     def send(self, token: str, message: PushMessage) -> str:
+        if not self._breaker.allow():
+            return FAILED
         try:
             response = self._http().post(
                 f"{self._host}/3/device/{token}",
@@ -155,7 +173,13 @@ class ApnsPushSender:
             )
         except Exception:  # noqa: BLE001 - a push must never break a request
             log.warning("Apple push could not be reached.", exc_info=True)
+            self._breaker.record_failure()
             return FAILED
+        # A 4xx is about this phone or this message; Apple itself is up.
+        if response.status_code >= 500:
+            self._breaker.record_failure()
+        else:
+            self._breaker.record_success()
         if response.status_code == 200:
             return SENT
         reason = ""

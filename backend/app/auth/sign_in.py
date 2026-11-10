@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from app.auth.otp_store import AttemptsExhausted, OtpStore, SendRules
+from app import metrics
 from app.auth.service import IssuedSession, SessionService
 from app.errors import (
     NotFound,
@@ -157,12 +158,14 @@ class SignInService:
         try:
             self._sms.send_code(phone)
         except SmsDeliveryError as error:
+            metrics.increment("sign_in.code_not_sent")
             if error.delivery_rejected:
                 self._otp.release_send(send_id)
             raise ServiceUnavailable(
                 "The code could not be sent. Try again.",
                 code="sms_unavailable",
             ) from None
+        metrics.increment("sign_in.code_sent")
         sent_at = self._clock.now()
         self._otp.mark_sent(send_id, sent_at, sent_at + self._valid_for)
 
@@ -202,6 +205,7 @@ class SignInService:
         try:
             accepted = self._sms.check_code(request.phone, code)
         except SmsDeliveryError:
+            metrics.increment("sign_in.code_not_checked")
             self._otp.release_try(verification_id)
             raise ServiceUnavailable(
                 "The code could not be checked. Try again.",
@@ -219,11 +223,14 @@ class SignInService:
                     "The code has expired. Ask for a new one.",
                     code="code_expired",
                 )
+            metrics.increment("sign_in.invalid_code")
             raise ValidationFailed(
                 "The code is not correct.", code="invalid_code"
             )
 
-        return self._complete_sign_in(request)
+        result = self._complete_sign_in(request)
+        metrics.increment("sign_in.completed")
+        return result
 
     def _complete_sign_in(self, request) -> SignInResult:
         """Consume the challenge and persist account/session atomically."""

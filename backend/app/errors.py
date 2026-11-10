@@ -21,7 +21,10 @@ The Flutter app decides what to do from `code` (and shows its own Arabic text).
 
 from flask import Flask, current_app, g, jsonify
 from sqlalchemy.exc import DBAPIError, IntegrityError, OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeout
 from werkzeug.exceptions import HTTPException
+
+from app import metrics
 
 
 class ApiError(Exception):
@@ -141,11 +144,14 @@ def _handle_database_failure(error: DBAPIError):
     from app.database import db
 
     db.session.rollback()
+    # A query or a lock past its deadline (app/config.py) is one of these.
     if isinstance(error, OperationalError) or error.connection_invalidated:
+        metrics.increment("database.unavailable")
         current_app.logger.warning("Database unavailable; request rolled back")
         return error_response(
             503, "database_unavailable", "The database is unavailable."
         )
+    metrics.increment("errors.internal")
     current_app.logger.error(
         "Database operation failed: %s, SQLSTATE=%s",
         type(error).__name__,
@@ -153,6 +159,15 @@ def _handle_database_failure(error: DBAPIError):
     )
     return error_response(
         500, "internal_error", "An unexpected error occurred."
+    )
+
+
+def _handle_pool_timeout(error: PoolTimeout):
+    """Every connection of the pool stayed busy past its deadline."""
+    metrics.increment("database.unavailable")
+    current_app.logger.warning("No free database connection in time")
+    return error_response(
+        503, "database_unavailable", "The database is unavailable."
     )
 
 
@@ -183,6 +198,7 @@ def _handle_http_exception(error: HTTPException):
 def _handle_unexpected_error(error: Exception):
     """Log unexpected failures and return a generic response."""
     # The traceback goes to the log. The client never sees it.
+    metrics.increment("errors.internal")
     current_app.logger.exception(
         "Unhandled error (request_id=%s)", g.get("request_id")
     )
@@ -196,6 +212,7 @@ def register_error_handlers(app: Flask) -> None:
     handlers = (
         (IntegrityError, _handle_database_conflict),
         (DBAPIError, _handle_database_failure),
+        (PoolTimeout, _handle_pool_timeout),
         (ApiError, _handle_api_error),
         (HTTPException, _handle_http_exception),
         (Exception, _handle_unexpected_error),

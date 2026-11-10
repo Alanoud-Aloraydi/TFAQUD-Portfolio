@@ -336,3 +336,42 @@ def test_a_redirect_is_never_followed_because_the_key_would_follow_it():
         None, None, 302, "Found", {}, "https://evil.test/"
     )
     assert redirected is None
+
+
+# --- a sick Authentica -------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "failure", [(500, None), (503, None), (429, None), TimeoutError("slow")]
+)
+def test_after_three_failures_authentica_is_not_called_for_a_while(failure):
+    sender, transport = make_sender(failure, failure, failure)
+    for _ in range(3):
+        with pytest.raises(SmsDeliveryError):
+            sender.send_code(PHONE)
+
+    with pytest.raises(SmsDeliveryError) as problem:
+        sender.check_code(PHONE, CODE)
+
+    # Answered at once, without a call: nothing can have been sent.
+    assert len(transport.calls) == 3
+    assert problem.value.not_sent
+    assert problem.value.delivery_rejected
+
+
+def test_a_wrong_key_or_a_wrong_code_is_an_answer_and_opens_nothing():
+    sender, transport = make_sender(
+        WRONG_KEY, VERIFY_REFUSED, WRONG_KEY, VERIFY_REFUSED, SEND_OK
+    )
+    for answer in range(4):
+        try:
+            if answer % 2:
+                sender.check_code(PHONE, CODE)
+            else:
+                sender.send_code(PHONE)
+        except SmsDeliveryError:
+            pass
+
+    sender.send_code(PHONE)
+
+    assert len(transport.calls) == 5

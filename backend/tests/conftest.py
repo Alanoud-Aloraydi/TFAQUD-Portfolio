@@ -10,7 +10,7 @@ import socket
 
 import pytest
 
-from app import create_app
+from app import create_app, metrics, resilience
 from app.auth.otp_store import InMemoryOtpStore
 from app.authz import InMemoryCircleAccess
 from app.clock import ManualClock
@@ -29,6 +29,13 @@ def isolate_sms_environment(monkeypatch):
     """Unit tests never inherit the real SMS settings of a developer's .env."""
     monkeypatch.delenv("SMS_BACKEND", raising=False)
     monkeypatch.delenv("AUTHENTICA_API_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def closed_breakers_and_no_counts():
+    """Each test starts with every circuit breaker closed and no counts."""
+    resilience.reset_all()
+    metrics.reset()
 
 
 @pytest.fixture(autouse=True)

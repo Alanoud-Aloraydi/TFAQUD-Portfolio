@@ -18,6 +18,9 @@ this file uses it:
   - Anything else (401 for a wrong key, 429 for too many calls, 5xx, no
     answer, an answer we do not know) is not a decision about the code. It
     raises `SmsDeliveryError`, so that it is never counted as a wrong try.
+  - After 3 calls in a row with no answer, a 5xx or a 429, Authentica is
+    not called for a minute (app/resilience.py): sign-in answers "try
+    again" at once instead of after 10 seconds each.
 
 The HTTP call is a small function (`transport`) that can be replaced. Tests
 give a fake one, so no test opens a network connection. The default one uses
@@ -34,6 +37,7 @@ import urllib.error
 import urllib.request
 
 from app.config import ConfigError
+from app.resilience import CircuitBreaker
 from app.sms.base import SmsDeliveryError, SmsSender
 
 logger = logging.getLogger(__name__)
@@ -97,6 +101,7 @@ class AuthenticaSmsSender(SmsSender):
         template_id: int = DEFAULT_TEMPLATE_ID,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
         transport=None,
+        breaker: CircuitBreaker | None = None,
     ):
         if not api_key:
             raise ConfigError(
@@ -111,6 +116,7 @@ class AuthenticaSmsSender(SmsSender):
         self._template_id = template_id
         self._timeout = timeout
         self._transport = transport or urllib_post
+        self._breaker = breaker or CircuitBreaker("authentica")
 
     def send_code(self, phone: str) -> None:
         status, body = self._post(
@@ -135,6 +141,11 @@ class AuthenticaSmsSender(SmsSender):
         raise self._error("verify-otp", status)
 
     def _post(self, call: str, body: dict):
+        if not self._breaker.allow():
+            raise SmsDeliveryError(
+                f"Authentica failed several times; {call} was not called.",
+                not_sent=True,
+            )
         try:
             status, parsed = self._transport(
                 f"{self._base_url}/{call}",
@@ -147,10 +158,17 @@ class AuthenticaSmsSender(SmsSender):
             logger.warning(
                 "Authentica %s: no answer (%s)", call, type(error).__name__
             )
+            self._breaker.record_failure()
             raise SmsDeliveryError(
                 f"Authentica did not answer {call} ({type(error).__name__})."
             ) from None
         logger.info("Authentica %s: HTTP %s", call, status)
+        # Sick: a server error, or too many calls. A 401 (wrong key) or a
+        # 422 (wrong code) is an answer, so Authentica is up.
+        if status >= 500 or status == 429:
+            self._breaker.record_failure()
+        else:
+            self._breaker.record_success()
         return status, parsed
 
     @staticmethod

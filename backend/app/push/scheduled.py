@@ -21,6 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app import metrics
 from app.database import transaction
 from app.medications.queries import MedicationQueries
 from app.measurements.queries import MeasurementQueries
@@ -97,6 +98,7 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
         )
         if not _claim(key):
             continue
+        metrics.increment("tick.missed_dose")
         # «ما تسجّلت» says only what the app knows: the dose may have been
         # taken and not recorded.
         notify(
@@ -132,6 +134,7 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         )
         if not _claim(key):
             continue
+        metrics.increment("tick.missed_measurement")
         notify(
             Push(
                 recipients,

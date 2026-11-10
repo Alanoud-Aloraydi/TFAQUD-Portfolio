@@ -41,6 +41,17 @@ DEFAULT_OTP_RESEND_WAITS = (30, 60, 120, 300, 600)
 DEFAULT_OTP_MAX_SENDS_PER_DEVICE_HOUR = 10
 DEFAULT_OTP_MAX_SENDS_PER_IP_HOUR = 30
 
+# Every database call has a deadline, like every call to another service:
+# a hung query or a held lock must not hold a request (and a gunicorn
+# worker) until gunicorn kills it after 120 seconds.
+DEFAULT_DATABASE_STATEMENT_TIMEOUT_MS = 5_000
+DEFAULT_DATABASE_LOCK_TIMEOUT_MS = 3_000
+# A transaction left open and idle (a bug) is ended after this.
+DEFAULT_DATABASE_IDLE_IN_TRANSACTION_MS = 30_000
+DEFAULT_DATABASE_CONNECT_TIMEOUT_SECONDS = 5
+# Waiting for a free connection of the pool.
+DEFAULT_DATABASE_POOL_TIMEOUT_SECONDS = 5
+
 MIN_SECRET_KEY_LENGTH = 32
 
 _DEV_SECRET_KEY = "development-only-secret-key-not-for-real-use"
@@ -92,6 +103,42 @@ def _int_from_env(name: str, default: int) -> int:
     if value <= 0:
         raise ConfigError(f"{name} must be greater than zero, got {value}.")
     return value
+
+
+def _engine_options() -> dict:
+    """The pool and the deadlines of every database connection."""
+    statement = _int_from_env(
+        "DATABASE_STATEMENT_TIMEOUT_MS", DEFAULT_DATABASE_STATEMENT_TIMEOUT_MS
+    )
+    lock = _int_from_env(
+        "DATABASE_LOCK_TIMEOUT_MS", DEFAULT_DATABASE_LOCK_TIMEOUT_MS
+    )
+    idle = _int_from_env(
+        "DATABASE_IDLE_IN_TRANSACTION_MS",
+        DEFAULT_DATABASE_IDLE_IN_TRANSACTION_MS,
+    )
+    return {
+        "pool_pre_ping": True,
+        "isolation_level": "READ COMMITTED",
+        "hide_parameters": True,
+        "pool_timeout": _int_from_env(
+            "DATABASE_POOL_TIMEOUT_SECONDS",
+            DEFAULT_DATABASE_POOL_TIMEOUT_SECONDS,
+        ),
+        "connect_args": {
+            "connect_timeout": _int_from_env(
+                "DATABASE_CONNECT_TIMEOUT_SECONDS",
+                DEFAULT_DATABASE_CONNECT_TIMEOUT_SECONDS,
+            ),
+            # Set when the connection opens, so they hold for every query;
+            # migrations lift the statement one (migrations/env.py).
+            "options": (
+                f"-c statement_timeout={statement} "
+                f"-c lock_timeout={lock} "
+                f"-c idle_in_transaction_session_timeout={idle}"
+            ),
+        },
+    }
 
 
 def load_config(
@@ -179,12 +226,11 @@ def load_config(
         # Shared secret for the external scheduler's call to /internal/tick.
         # None (unset) keeps the endpoint refusing every request.
         "TICK_SECRET": os.environ.get("TICK_SECRET"),
+        # Push notifications and other work no one waits for run after the
+        # answer (app/background.py); tests run them at once.
+        "BACKGROUND_INLINE": env_name == "testing",
         "SQLALCHEMY_DATABASE_URI": None,
-        "SQLALCHEMY_ENGINE_OPTIONS": {
-            "pool_pre_ping": True,
-            "isolation_level": "READ COMMITTED",
-            "hide_parameters": True,
-        },
+        "SQLALCHEMY_ENGINE_OPTIONS": _engine_options(),
     }
 
     # Unit tests keep explicit fakes; database tests supply their own URL.

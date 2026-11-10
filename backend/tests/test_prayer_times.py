@@ -94,3 +94,48 @@ def test_wrong_timezone_is_not_cached(monkeypatch):
     with pytest.raises(ServiceUnavailable):
         service.prayer_times_for("الرياض", date(2026, 11, 2))
     service._fetch_day.cache_clear()
+
+
+def test_a_sick_provider_is_not_called_for_a_while(monkeypatch):
+    """After 3 failures in a row the home page gets its answer at once."""
+    service._fetch_day.cache_clear()
+    calls = []
+
+    def down(url, timeout):
+        calls.append(url)
+        raise OSError("no answer")
+
+    monkeypatch.setattr(service, "urlopen", down)
+    for _ in range(3):
+        with pytest.raises(ServiceUnavailable):
+            service.prayer_times_for("الرياض", date(2026, 10, 26))
+
+    with pytest.raises(ServiceUnavailable) as problem:
+        service.prayer_times_for("جدة", date(2026, 10, 26))
+
+    assert len(calls) == 3
+    assert problem.value.code == "prayer_times_unavailable"
+    service._fetch_day.cache_clear()
+
+
+def test_a_day_already_kept_is_answered_while_the_provider_is_sick(
+    monkeypatch,
+):
+    service._fetch_day.cache_clear()
+
+    def answer(url, timeout):
+        return BytesIO(_payload("26-10-2026"))
+
+    monkeypatch.setattr(service, "urlopen", answer)
+    kept = service.prayer_times_for("الرياض", date(2026, 10, 26))
+
+    def down(url, timeout):
+        raise OSError("no answer")
+
+    monkeypatch.setattr(service, "urlopen", down)
+    for day in (27, 28, 29):
+        with pytest.raises(ServiceUnavailable):
+            service.prayer_times_for("الرياض", date(2026, 10, day))
+
+    assert service.prayer_times_for("الرياض", date(2026, 10, 26)) == kept
+    service._fetch_day.cache_clear()
