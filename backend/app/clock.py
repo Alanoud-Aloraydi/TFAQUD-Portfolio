@@ -3,9 +3,8 @@
 Code never calls `datetime.now()` directly. It calls `clock.now()`.
 
   SystemClock  - the real time. Used by the running server.
-  ManualClock  - time that only moves when told to. Used by tests and by
-                 scripts/walkthrough.py, which is how token expiry is checked
-                 without waiting 15 minutes or 30 days.
+  ManualClock  - time that only moves when told to. Used by tests, which is
+                 how token expiry is checked without waiting 15 minutes.
 
 Every calendar rule of a circle (schedules, "today", birth dates) follows
 the patient's own IANA zone, `Patient.time_zone`, whoever records and

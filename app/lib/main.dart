@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,9 +9,12 @@ import 'package:sizer/sizer.dart';
 import 'core/di/configure_dependencies.dart';
 import 'core/media/private_photo_repository.dart';
 import 'core/navigation/app_router.dart';
+import 'core/network/api_options.dart';
 import 'core/services/app_accessibility.dart';
+import 'core/services/fresh_install.dart';
 import 'core/services/phone_notifications.dart';
 import 'core/services/shown_circle_clock.dart';
+import 'core/services/token_storage.dart';
 import 'core/setup.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/components/navigation_themes.dart';
@@ -24,6 +28,11 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   await setup();
   await configureDependencies();
+  // Installed again: the sign-in the Keychain kept from before is ended, so
+  // the app opens signed out.
+  if (FreshInstall.firstStart) {
+    await LeftoverSignIn(GetIt.I<TokenStorage>(), Dio(buildApiOptions())).end();
+  }
   // Early, so the tap on a reminder that opened the app is not lost.
   await GetIt.I<PhoneNotifications>().initialize();
 

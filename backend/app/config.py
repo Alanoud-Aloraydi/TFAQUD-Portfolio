@@ -20,9 +20,9 @@ from sqlalchemy.exc import ArgumentError
 
 ENVIRONMENTS = ("development", "testing", "staging", "production")
 
-# Default token lifetimes, overridable through environment variables.
+# Default access-token lifetime, overridable through an environment variable.
+# A refresh token has none: it works until its session is signed out.
 DEFAULT_ACCESS_TOKEN_MINUTES = 15
-DEFAULT_REFRESH_TOKEN_DAYS = 30
 
 # OTP validity matches the provider's configured lifetime.
 DEFAULT_OTP_VALID_SECONDS = 300
@@ -161,9 +161,6 @@ def load_config(
         "SECRET_KEY": os.environ.get("SECRET_KEY"),
         "ACCESS_TOKEN_MINUTES": _int_from_env(
             "ACCESS_TOKEN_MINUTES", DEFAULT_ACCESS_TOKEN_MINUTES
-        ),
-        "REFRESH_TOKEN_DAYS": _int_from_env(
-            "REFRESH_TOKEN_DAYS", DEFAULT_REFRESH_TOKEN_DAYS
         ),
         "SMS_BACKEND": os.environ.get("SMS_BACKEND", "fake"),
         "OTP_VALID_SECONDS": _int_from_env(

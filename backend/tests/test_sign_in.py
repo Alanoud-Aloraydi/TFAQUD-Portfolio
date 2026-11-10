@@ -581,7 +581,6 @@ def test_the_right_code_signs_the_user_in(client, sms):
         "access_token",
         "access_token_expires_at",
         "refresh_token",
-        "refresh_token_expires_at",
         "account",
     }
     assert body["account"]["phone_number"] == PHONE

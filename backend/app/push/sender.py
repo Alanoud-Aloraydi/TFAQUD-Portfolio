@@ -19,7 +19,12 @@ log = logging.getLogger(__name__)
 
 # What a send can end in.
 SENT = "sent"
-GONE = "gone"  # Apple says the token is no longer valid: forget it.
+# Apple says the token is wrong for this app (a sandbox token sent to the
+# production server, say): forget the token, keep the sign-in.
+GONE = "gone"
+# Apple says the token is no longer active (410), which is what deleting the
+# app from the phone leads to: forget the token and sign its session out.
+UNREGISTERED = "unregistered"
 FAILED = "failed"  # Anything else; the token is kept for the next time.
 
 _HOSTS = {
@@ -50,7 +55,7 @@ class PushSender(Protocol):
     enabled: bool
 
     def send(self, token: str, message: PushMessage) -> str:
-        """Send to one phone; answer SENT, GONE or FAILED."""
+        """Send to one phone; answer SENT, GONE, UNREGISTERED or FAILED."""
 
 
 class NoPushSender:
@@ -65,16 +70,23 @@ class NoPushSender:
 
 @dataclass
 class RecordingPushSender:
-    """For tests: keeps what would be sent. Tokens in `gone` answer GONE."""
+    """For tests: keeps what would be sent. Tokens in `gone` answer GONE,
+    and tokens in `deleted_apps` answer UNREGISTERED (the app was deleted).
+    """
 
     enabled: bool = True
     sent: list = field(default_factory=list)
     gone: set = field(default_factory=set)
+    deleted_apps: set = field(default_factory=set)
 
     def send(self, token: str, message: PushMessage) -> str:
-        """Keep the message, or answer GONE for a token in `gone`."""
+        """Keep the message, or answer GONE or UNREGISTERED for a token in
+        `gone` or `deleted_apps`.
+        """
         if token in self.gone:
             return GONE
+        if token in self.deleted_apps:
+            return UNREGISTERED
         self.sent.append((token, message))
         return SENT
 
@@ -173,8 +185,9 @@ class ApnsPushSender:
         }
 
     def send(self, token: str, message: PushMessage) -> str:
-        """Send `message` to one phone: SENT, GONE when Apple no longer knows
-        the token, or FAILED (the token is kept).
+        """Send `message` to one phone: SENT; UNREGISTERED when the token is
+        no longer active (the app was deleted); GONE when the token is wrong
+        for this app; or FAILED (the token is kept).
         """
         if not self._breaker.allow():
             return FAILED
@@ -201,18 +214,19 @@ class ApnsPushSender:
             self._breaker.record_success()
         if response.status_code == 200:
             return SENT
-        # Apple says why: a token it no longer knows is GONE; anything else is
-        # FAILED and the token is kept.
+        # Apple says why. 410 (Unregistered, ExpiredToken) is final: the token
+        # is no longer active, as after the app is deleted. A token that is
+        # wrong for this app is GONE, but says nothing about the app: a
+        # BadDeviceToken is often a sandbox token sent to the production
+        # server. Anything else is FAILED and the token is kept.
         reason = ""
         try:
             reason = response.json().get("reason", "")
         except ValueError:
             pass
-        if response.status_code == 410 or reason in (
-            "BadDeviceToken",
-            "Unregistered",
-            "DeviceTokenNotForTopic",
-        ):
+        if response.status_code == 410 or reason == "Unregistered":
+            return UNREGISTERED
+        if reason in ("BadDeviceToken", "DeviceTokenNotForTopic"):
             return GONE
         log.warning(
             "Apple push refused: %s %s", response.status_code, reason

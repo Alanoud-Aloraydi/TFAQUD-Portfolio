@@ -3,13 +3,17 @@
 Life of a session:
 
   create_session(user_id)   after the user proves their phone number (F01)
-        -> access token (15 min) + refresh token (30 days)
+        -> access token (15 min) + refresh token (until sign-out)
   authenticate(access)      on every protected request
         -> checks signature, expiry, and that the session is not revoked
   refresh(refresh_token)    when the access token has expired
         -> a new access token for the same session
   sign_out(session_id)      when the user signs out
         -> the session is revoked; its tokens stop working immediately
+
+A session has no end date. Only a revocation ends it: the user signing out,
+the account deleted, or the server signing out a phone whose app Apple says
+was deleted (`app.push.notify`).
 """
 
 import uuid
@@ -37,18 +41,17 @@ class IssuedAccessToken:
 
 @dataclass(frozen=True)
 class IssuedSession(IssuedAccessToken):
-    """What a sign-in gives the app: the access token, the refresh token, both
-    end times, and the session id.
+    """What a sign-in gives the app: the access token and when it ends, the
+    refresh token (which ends only at sign-out), and the session id.
     """
 
     refresh_token: str
-    refresh_token_expires_at: datetime
     session_id: str
 
 
 class SessionService:
     """Starts, refreshes and ends sign-in sessions: a short access token for
-    each request, and a long refresh token to get a new one.
+    each request, and a refresh token, kept until sign-out, to get a new one.
     """
 
     def __init__(
@@ -56,14 +59,14 @@ class SessionService:
         store: SessionStore,
         secret_key: str,
         access_ttl: timedelta,
-        refresh_ttl: timedelta,
         clock,
     ):
-        """Keep the store, the signing key, the two lifetimes and the clock."""
+        """Keep the store, the signing key, the access lifetime and the
+        clock.
+        """
         self._store = store
         self._secret = secret_key
         self._access_ttl = access_ttl
-        self._refresh_ttl = refresh_ttl
         self._clock = clock
 
     def create_session(self, user_id: str) -> IssuedSession:
@@ -75,7 +78,6 @@ class SessionService:
         now = self._clock.now()
         session_id = uuid.uuid4().hex
         refresh_token = new_refresh_token()
-        refresh_expires_at = now + self._refresh_ttl
 
         self._store.add(
             SessionRecord(
@@ -83,7 +85,6 @@ class SessionService:
                 user_id=user_id,
                 refresh_token_hash=hash_refresh_token(refresh_token),
                 created_at=now,
-                refresh_expires_at=refresh_expires_at,
             )
         )
         # And a first access token.
@@ -92,7 +93,6 @@ class SessionService:
             access_token=access.access_token,
             access_token_expires_at=access.access_token_expires_at,
             refresh_token=refresh_token,
-            refresh_token_expires_at=refresh_expires_at,
             session_id=session_id,
         )
 
@@ -108,7 +108,6 @@ class SessionService:
             record is None
             or record.is_revoked
             or record.user_id != claims.user_id
-            or self._clock.now() >= record.refresh_expires_at
         ):
             raise Unauthorized(
                 "The session has ended. Sign in again.", code="session_revoked"
@@ -117,19 +116,15 @@ class SessionService:
 
     def refresh(self, refresh_token: str) -> IssuedAccessToken:
         """A new access token for a live session's refresh token; the same
-        refusal for an unknown, signed-out or expired one.
+        refusal for an unknown or signed-out one.
         """
         now = self._clock.now()
         record = self._store.get_by_refresh_hash(
             hash_refresh_token(refresh_token)
         )
-        # One answer for every failure (unknown, revoked, expired): the app can
-        # only do one thing in all three cases, which is to sign in again.
-        if (
-            record is None
-            or record.is_revoked
-            or now >= record.refresh_expires_at
-        ):
+        # One answer for both failures (unknown, signed out): the app can only
+        # do one thing in both cases, which is to sign in again.
+        if record is None or record.is_revoked:
             raise Unauthorized(
                 "The refresh token is not valid. Sign in again.",
                 code="invalid_refresh_token",

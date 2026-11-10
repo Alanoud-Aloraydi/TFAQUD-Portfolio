@@ -3,10 +3,11 @@
 Access token  - a signed JWT. Short life (15 minutes, proposal). The app
                 sends it with every request. It carries the user id and the
                 session id.
-Refresh token - a random string. Long life (30 days, proposal). The app
-                sends it only to get a new access token. It is not a JWT: it
-                means nothing by itself and is valid only while the server
-                has a matching, non-revoked session record.
+Refresh token - a random string with no end date: it works until its
+                session is signed out. The app sends it only to get a new
+                access token. It is not a JWT: it means nothing by itself
+                and is valid only while the server has a matching,
+                non-revoked session record.
 """
 
 import hashlib

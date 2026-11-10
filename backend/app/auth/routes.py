@@ -98,7 +98,6 @@ def verify_code():
         access_token=session.access_token,
         access_token_expires_at=session.access_token_expires_at.isoformat(),
         refresh_token=session.refresh_token,
-        refresh_token_expires_at=session.refresh_token_expires_at.isoformat(),
         account=result.user.to_dict(),
     )
 

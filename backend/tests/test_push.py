@@ -17,7 +17,7 @@ from app.push import (
     PushMessage,
     create_push_sender,
 )
-from app.push.sender import FAILED, GONE, SENT
+from app.push.sender import FAILED, GONE, SENT, UNREGISTERED
 from tests.conftest import bearer
 
 TOKEN = "ab" * 32
@@ -163,7 +163,10 @@ def test_the_provider_token_is_reused(key):
 @pytest.mark.parametrize(
     ("status", "reason", "result"),
     [
-        (410, "Unregistered", GONE),
+        (410, "Unregistered", UNREGISTERED),
+        (410, "ExpiredToken", UNREGISTERED),
+        # Often a sandbox token sent to the production server: the app may
+        # well still be on the phone.
         (400, "BadDeviceToken", GONE),
         (400, "DeviceTokenNotForTopic", GONE),
         (403, "InvalidProviderToken", FAILED),
@@ -249,6 +252,6 @@ def test_an_answer_about_one_phone_opens_nothing(key):
 
     sender = apns(key, handler)
     for _ in range(4):
-        assert sender.send(TOKEN, MESSAGE) == GONE
+        assert sender.send(TOKEN, MESSAGE) == UNREGISTERED
 
     assert len(calls) == 4

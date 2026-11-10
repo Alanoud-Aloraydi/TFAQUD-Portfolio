@@ -8,19 +8,20 @@ from app.config import ConfigError, load_config
 from app.sms import FakeSmsSender
 
 
-def test_default_token_lifetimes_are_the_proposal_of_tfqd_11(app):
+def test_the_default_access_token_lifetime_is_the_proposal_of_tfqd_11(app):
     assert app.config["ACCESS_TOKEN_MINUTES"] == 15
-    assert app.config["REFRESH_TOKEN_DAYS"] == 30
+    # A refresh token has no lifetime to set: it ends only at sign-out.
+    assert "REFRESH_TOKEN_DAYS" not in app.config
 
 
-def test_token_lifetimes_can_be_changed_by_environment_variable(monkeypatch):
+def test_the_access_token_lifetime_can_be_changed_by_environment_variable(
+    monkeypatch,
+):
     monkeypatch.setenv("ACCESS_TOKEN_MINUTES", "5")
-    monkeypatch.setenv("REFRESH_TOKEN_DAYS", "7")
 
     config = load_config("testing")
 
-    lifetimes = (config["ACCESS_TOKEN_MINUTES"], config["REFRESH_TOKEN_DAYS"])
-    assert lifetimes == (5, 7)
+    assert config["ACCESS_TOKEN_MINUTES"] == 5
 
 
 @pytest.mark.parametrize("value", ["abc", "0", "-3", "1.5"])

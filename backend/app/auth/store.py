@@ -1,9 +1,11 @@
 """Where sessions are kept.
 
-A session is one sign-in. It starts when the user signs in and ends when the
-user signs out (or after the refresh token's lifetime). The server keeps one
-record per session; this is what makes sign-out real: the record is marked
-revoked, and every later request that depends on it is refused.
+A session is one sign-in. It starts when the user signs in and ends only
+when it is signed out: by the user, by deleting the account, or by the
+server when the app was deleted from the phone. It has no end date. The
+server keeps one record per session; this is what makes sign-out real: the
+record is marked revoked, and every later request that depends on it is
+refused.
 
 `SessionStore` is the interface. PostgresSessionStore persists sessions across
 workers and restarts. InMemorySessionStore is reserved for isolated tests.
@@ -21,14 +23,13 @@ from datetime import datetime
 @dataclass(frozen=True)
 class SessionRecord:
     """One sign-in as the server keeps it: who, the hash of its refresh token,
-    until when, and when it was signed out.
+    when it started, and when it was signed out.
     """
 
     id: str
     user_id: str
     refresh_token_hash: str
     created_at: datetime
-    refresh_expires_at: datetime
     revoked_at: datetime | None = None
 
     @property

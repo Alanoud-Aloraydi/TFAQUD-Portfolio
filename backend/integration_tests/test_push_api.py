@@ -235,6 +235,80 @@ def test_a_token_apple_forgot_is_deleted(
     assert devices(database) == {}
 
 
+def invite(database_app, database, inviter, invited):
+    """`inviter` invites `invited`'s number to a new circle: a push to every
+    signed-in phone of `invited`."""
+    circle = offline_circle(database, inviter)
+    return Phone(database_app, inviter, "c").call(
+        "post",
+        f"/api/v1/circles/{circle.id}/invitations",
+        {"invitee_phone_number": invited.phone_number},
+    )
+
+
+def refresh(database_app, phone):
+    return database_app.test_client().post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": phone.issued.refresh_token},
+    )
+
+
+def test_a_deleted_app_is_signed_out(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    deleted = Phone(database_app, khaled, "b")
+    deleted.register()
+    kept = Phone(database_app, khaled, "d")
+    kept.register()
+    # Apple: this token is no longer active (410), as after deleting the app.
+    pushes.deleted_apps.add(deleted.token)
+
+    assert invite(database_app, database, reem, khaled).status_code == 201
+
+    # That phone's sign-in has ended, as a sign-out would end it...
+    assert refresh(database_app, deleted).status_code == 401
+    me = deleted.call("get", "/api/v1/auth/session")
+    assert me.json["error"]["code"] == "session_revoked"
+    assert deleted.token not in devices(database)
+    # ...and Khaled's other phone is still signed in and told.
+    assert refresh(database_app, kept).status_code == 200
+    assert len(pushes.to(kept.token)) == 1
+
+
+def test_a_token_wrong_for_the_app_keeps_the_sign_in(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b")
+    phone.register()
+    # A BadDeviceToken: often a sandbox token on the production server.
+    pushes.gone.add(phone.token)
+
+    invite(database_app, database, reem, khaled)
+
+    assert devices(database) == {}
+    assert refresh(database_app, phone).status_code == 200
+
+
+def test_a_sign_in_keeps_only_the_last_token_its_app_sent(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b")
+    phone.register()
+    old_token = phone.token
+    # iOS gave the phone a new token; the app sends it when it opens.
+    phone.register("e" * 64)
+
+    assert list(devices(database)) == ["e" * 64]
+    # Apple's later "no longer active" for the old token reaches no one.
+    pushes.deleted_apps.add(old_token)
+    invite(database_app, database, reem, khaled)
+    assert refresh(database_app, phone).status_code == 200
+    assert len(pushes.to("e" * 64)) == 1
+
+
 def test_without_a_push_service_the_request_still_works(
     database_app, database, account, monkeypatch
 ):

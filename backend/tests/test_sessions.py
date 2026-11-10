@@ -1,9 +1,10 @@
 """Sessions: access token, refresh token, sign-out.
 
-The three rules of TFQD-6 / TFQD-11 are tested here:
+The rules of TFQD-6 / TFQD-11 are tested here:
   1. an expired access token is rejected, and a refresh gives a new one;
   2. after sign-out the refresh token is rejected (acceptance criterion);
-  3. after sign-out the old access token is rejected too.
+  3. after sign-out the old access token is rejected too;
+  4. a refresh token has no end date: only a sign-out ends it.
 """
 
 import jwt
@@ -170,15 +171,30 @@ def test_unknown_refresh_token_is_rejected(client):
     assert error_code(response) == "invalid_refresh_token"
 
 
-def test_refresh_token_lives_30_days(client, signed_in, clock):
-    clock.advance(days=29, hours=23)
-    still_valid = refresh_with(client, signed_in.refresh_token)
-    clock.advance(hours=1)
-    expired = refresh_with(client, signed_in.refresh_token)
+def test_a_refresh_token_never_ends_by_itself(client, signed_in, clock):
+    # Well past the 30 days it used to have, and years later.
+    for days in (31, 365 * 3):
+        clock.advance(days=days)
+        refreshed = refresh_with(client, signed_in.refresh_token)
+        assert refreshed.status_code == 200
+        # And the access token it gives works.
+        access = refreshed.get_json()["access_token"]
+        assert session_of(client, access).status_code == 200
 
-    assert still_valid.status_code == 200
-    assert expired.status_code == 401
-    assert error_code(expired) == "invalid_refresh_token"
+
+def test_after_years_a_sign_out_still_ends_the_session(
+    client, signed_in, clock
+):
+    clock.advance(days=365 * 2)
+    access = refresh_with(
+        client, signed_in.refresh_token
+    ).get_json()["access_token"]
+
+    sign_out_with(client, access)
+
+    after = refresh_with(client, signed_in.refresh_token)
+    assert after.status_code == 401
+    assert error_code(after) == "invalid_refresh_token"
 
 
 # -------------------------------------------------------------------- sign-out
@@ -279,6 +295,5 @@ def test_no_device_or_ip_is_stored_with_a_session(app, signed_in):
         "user_id",
         "refresh_token_hash",
         "created_at",
-        "refresh_expires_at",
         "revoked_at",
     }

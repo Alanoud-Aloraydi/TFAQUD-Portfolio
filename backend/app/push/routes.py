@@ -1,7 +1,11 @@
 """The app sends its phone's Apple push token after the person signs in.
 
 The token is kept with the sign-in (session) that sent it: after a sign-out
-that phone gets nothing more, and the row goes with the session.
+that phone gets nothing more, and the row goes with the session. A sign-in
+keeps one token, the last one its app sent: an app sends its token every
+time it opens, and iOS can give the phone a new one. The old token is then
+deleted, so Apple's later "no longer active" for it cannot end a sign-in
+whose app is still there (notify.py).
 """
 
 from typing import Annotated
@@ -9,6 +13,7 @@ from uuid import UUID
 
 from flask import Blueprint, current_app
 from pydantic import StringConstraints
+from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert
 
 from app.auth.decorators import current_auth, require_auth
@@ -36,8 +41,9 @@ class PushDeviceInput(Dto):
 @bp.put("/push-device")
 @require_auth
 def register_push_device():
-    """Keep this phone's token for the caller's sign-in. A token that was
-    another sign-in's (the phone changed hands) moves to this one."""
+    """Keep this phone's token for the caller's sign-in, in place of the one
+    it sent before. A token that was another sign-in's (the phone changed
+    hands) moves to this one."""
     body = parse_json_body(PushDeviceInput)
     if "sqlalchemy" not in current_app.extensions:
         raise ServiceUnavailable()
@@ -50,9 +56,17 @@ def register_push_device():
         "session_id": UUID(auth.session_id),
         "updated_at": now,
     }
+    token = body.token.lower()
     with transaction() as session:
+        # The token this sign-in sent before, if iOS has given a new one.
+        session.execute(
+            delete(PushDevice).where(
+                PushDevice.session_id == values["session_id"],
+                PushDevice.token != token,
+            )
+        )
         statement = insert(PushDevice).values(
-            token=body.token.lower(), created_at=now, **values
+            token=token, created_at=now, **values
         )
         session.execute(
             statement.on_conflict_do_update(

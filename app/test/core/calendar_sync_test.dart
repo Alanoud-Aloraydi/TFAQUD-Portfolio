@@ -30,12 +30,49 @@ typedef _Event = ({
   String? place,
   List<Duration>? reminders,
   String? zone,
+  String? calendar,
+  DateTime? until,
 });
+
+/// An event of an older version, in the phone's default calendar.
+_Event _older(String title, DateTime start) => (
+  title: title,
+  start: start,
+  repeats: false,
+  note: null,
+  place: null,
+  reminders: null,
+  zone: null,
+  calendar: null,
+  until: null,
+);
+
+extension on _Event {
+  /// The same event, in the calendar [id].
+  _Event withCalendar(String id) => (
+    title: title,
+    start: start,
+    repeats: repeats,
+    note: note,
+    place: place,
+    reminders: reminders,
+    zone: zone,
+    calendar: id,
+    until: until,
+  );
+}
 
 /// The phone's calendar, in memory.
 class _Calendar extends Fake implements DeviceCalendar {
   final Map<String, _Event> events = <String, _Event>{};
+
+  /// The calendars made on the phone: id → name. The phone's default one
+  /// is not here (an event in it has no calendar).
+  final Map<String, String> calendars = <String, String>{};
   int _next = 0;
+
+  /// The phone takes no new calendar (no account that allows one).
+  bool noNewCalendars = false;
 
   CalendarPermissionStatus status = CalendarPermissionStatus.granted;
 
@@ -78,6 +115,12 @@ class _Calendar extends Fake implements DeviceCalendar {
     List<Duration>? reminders,
     EventOptionsAndroid? android,
   }) async {
+    if (calendarId != null && !calendars.containsKey(calendarId)) {
+      throw const DeviceCalendarException(
+        errorCode: DeviceCalendarError.notFound,
+        message: 'no such calendar',
+      );
+    }
     final String id = 'event-${_next++}';
     events[id] = (
       title: title,
@@ -87,17 +130,72 @@ class _Calendar extends Fake implements DeviceCalendar {
       place: location,
       reminders: reminders,
       zone: timeZone,
+      calendar: calendarId,
+      until: switch (recurrenceRule?.end) {
+        final UntilEnd end => end.until,
+        _ => null,
+      },
     );
     return id;
   }
 
-  void _remove(String id, {required bool repeats}) {
+  void _needFull() {
     if (status != CalendarPermissionStatus.granted) {
       throw const DeviceCalendarException(
         errorCode: DeviceCalendarError.permissionDenied,
         message: 'full access needed',
       );
     }
+  }
+
+  @override
+  Future<List<Calendar>> listCalendars() async {
+    _needFull();
+    return <Calendar>[
+      for (final MapEntry<String, String> entry in calendars.entries)
+        Calendar(id: entry.key, name: entry.value, readOnly: false),
+    ];
+  }
+
+  @override
+  Future<String> createCalendar({
+    required String name,
+    String? colorHex,
+    CalendarOptionsAndroid? android,
+    CalendarOptionsIos? ios,
+  }) async {
+    _needFull();
+    if (noNewCalendars) {
+      throw const DeviceCalendarException(
+        errorCode: DeviceCalendarError.calendarUnavailable,
+        message: 'no source',
+      );
+    }
+    final String id = 'calendar-${_next++}';
+    calendars[id] = name;
+    return id;
+  }
+
+  @override
+  Future<void> deleteCalendar(String calendarId) async {
+    _needFull();
+    if (calendars.remove(calendarId) == null) {
+      throw const DeviceCalendarException(
+        errorCode: DeviceCalendarError.notFound,
+        message: 'no such calendar',
+      );
+    }
+    // Its events go with it.
+    events.removeWhere((String _, _Event e) => e.calendar == calendarId);
+  }
+
+  /// The events in the calendar named [name].
+  Iterable<_Event> inCalendar(String name) => events.values.where(
+    (_Event e) => e.calendar != null && calendars[e.calendar] == name,
+  );
+
+  void _remove(String id, {required bool repeats}) {
+    _needFull();
     final _Event? event = events[id];
     if (event == null) {
       throw const DeviceCalendarException(
@@ -131,7 +229,7 @@ class _Calendar extends Fake implements DeviceCalendar {
         Event(
           eventId: entry.key,
           instanceId: entry.key,
-          calendarId: 'calendar',
+          calendarId: entry.value.calendar ?? 'default',
           title: entry.value.title,
           startDate: entry.value.start,
           endDate: entry.value.start.add(const Duration(hours: 1)),
@@ -151,13 +249,29 @@ class _Medications extends Fake implements MedicationsRepositoryDomain {
 }
 
 class _Measurements extends Fake implements MeasurementRepository {
+  List<MeasurementPlan> list = const <MeasurementPlan>[];
+
   @override
   Stream<String> get changes => const Stream<String>.empty();
 
   @override
-  Future<List<MeasurementPlan>> plans(String circleId) async =>
-      const <MeasurementPlan>[];
+  Future<List<MeasurementPlan>> plans(String circleId) async => list;
 }
+
+/// A glucose reading every day at 08:00, from the first of November.
+final MeasurementPlan _reading = MeasurementPlan(
+  id: 'plan-1',
+  kind: MeasurementKind.glucose,
+  version: MeasurementVersion(
+    id: 'version-1',
+    number: 1,
+    effectiveFromOn: DateTime(2026, 11, 1),
+    time: '08:00',
+    weekdays: const <int>[1, 2, 3, 4, 5, 6, 7],
+    graceMinutes: 60,
+  ),
+  history: const <MeasurementVersion>[],
+);
 
 class _Appointments extends Fake implements AppointmentRepository {
   final Map<String, List<CareAppointment>> visits =
@@ -397,14 +511,9 @@ void main() {
               'old-1',
         }),
       });
-      calendar.events['old-1'] = (
-        title: 'دائرة نورة · السكري',
-        start: DateTime.now().add(const Duration(days: 3)),
-        repeats: false,
-        note: null,
-        place: null,
-        reminders: null,
-        zone: null,
+      calendar.events['old-1'] = _older(
+        'دائرة نورة · السكري',
+        DateTime.now().add(const Duration(days: 3)),
       );
 
       await sync.sync(<ReminderCircle>[_circle]);
@@ -439,6 +548,172 @@ void main() {
         await sync.isEnabled(_circle.id, CalendarSyncCategory.appointments),
         isFalse,
       );
+    });
+
+    test("the events go in the app's own «تفقّد» calendar", () async {
+      await turnOn();
+
+      expect(calendar.calendars.values, <String>['تفقّد']);
+      expect(calendar.inCalendar('تفقّد'), hasLength(1));
+    });
+
+    test('signing out deletes the whole «تفقّد» calendar', () async {
+      await turnOn();
+      // One more, made before this version, in the default calendar.
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final Map<String, dynamic> saved = jsonDecode(
+        prefs.getString('calendar_sync_events')!,
+      ) as Map<String, dynamic>;
+      final DateTime start = DateTime.now().add(const Duration(days: 5));
+      calendar.events['old-1'] = _older('visit diabetes', start);
+      saved['appointment:a-0:old'] = 'old-1';
+      await prefs.setString('calendar_sync_events', jsonEncode(saved));
+
+      await sync.clear();
+
+      expect(calendar.calendars, isEmpty);
+      expect(calendar.events, isEmpty);
+      expect(prefs.getString('calendar_sync_events'), isNull);
+    });
+
+    test('turning every switch off deletes the empty calendar', () async {
+      await turnOn();
+
+      await turnOff();
+
+      expect(calendar.calendars, isEmpty);
+    });
+
+    test('a «تفقّد» calendar left by an earlier install goes first, with '
+        'its events', () async {
+      // Deleting the app left its calendar; this install never made it.
+      calendar.calendars['left'] = 'تفقّد';
+      calendar.events['left-1'] = _older(
+        'visit diabetes',
+        DateTime.now().add(const Duration(days: 3)),
+      ).withCalendar('left');
+
+      await turnOn();
+
+      expect(calendar.calendars.keys, isNot(contains('left')));
+      expect(calendar.calendars.values, <String>['تفقّد']);
+      expect(calendar.events.keys, isNot(contains('left-1')));
+      expect(calendar.inCalendar('تفقّد'), hasLength(1));
+    });
+
+    test('a calendar deleted in the Calendar app is made again, with its '
+        'events', () async {
+      await turnOn();
+      final String deleted = calendar.calendars.keys.single;
+      await calendar.deleteCalendar(deleted);
+
+      await sync.refresh();
+
+      expect(calendar.calendars.keys.single, isNot(deleted));
+      expect(calendar.inCalendar('تفقّد'), hasLength(1));
+    });
+
+    test('without full access the events go in the default calendar', () async {
+      calendar
+        ..status = CalendarPermissionStatus.writeOnly
+        ..answer = CalendarPermissionStatus.writeOnly;
+
+      await turnOn();
+
+      expect(calendar.calendars, isEmpty);
+      expect(calendar.events.values.single.calendar, isNull);
+    });
+
+    test('a phone that takes no new calendar uses its default one', () async {
+      calendar.noNewCalendars = true;
+
+      await turnOn();
+
+      expect(calendar.events.values.single.calendar, isNull);
+    });
+
+    group('a repeating event', () {
+      late DateTime now;
+      late _Measurements measurements;
+      late CalendarSync repeating;
+
+      setUp(() {
+        now = DateTime.utc(2026, 11, 10, 9);
+        measurements = _Measurements()..list = <MeasurementPlan>[_reading];
+        repeating = CalendarSync(
+          MedicationsUseCase(_Medications()),
+          measurements,
+          _Appointments(),
+          calendar: calendar,
+          texts: _texts,
+          clock: () => now,
+        );
+      });
+
+      Future<void> turnOnReadings() async {
+        await repeating.sync(<ReminderCircle>[_circle]);
+        await repeating.setEnabled(
+          _circle.id,
+          CalendarSyncCategory.measurements,
+          true,
+        );
+      }
+
+      test('repeats two weeks ahead, no further', () async {
+        await turnOnReadings();
+
+        final _Event event = calendar.events.values.single;
+        expect(event.repeats, isTrue);
+        expect(event.until, now.add(const Duration(days: 14)));
+      });
+
+      test('is made again, two weeks ahead, once one week is left', () async {
+        await turnOnReadings();
+        final String first = calendar.events.keys.single;
+
+        // Six days on: more than a week left, nothing changes.
+        now = now.add(const Duration(days: 6));
+        await repeating.refresh();
+        expect(calendar.events.keys.single, first);
+
+        // Eight days on: less than a week left.
+        now = now.add(const Duration(days: 2));
+        await repeating.refresh();
+        final _Event again = calendar.events.values.single;
+        expect(calendar.events.keys.single, isNot(first));
+        expect(again.until, now.add(const Duration(days: 14)));
+        expect(calendar.inCalendar('تفقّد'), hasLength(1));
+      });
+
+      test('of an older version, with no end, is replaced by one that has '
+          "an end, in the app's calendar", () async {
+        SharedPreferences.setMockInitialValues(<String, Object>{
+          'calendar_sync_selections': <String>['c-1:measurements'],
+          'calendar_sync_events': jsonEncode(<String, Object>{
+            'v2:c-1:measurements:version-1:0:08:00': <String, String>{
+              'id': 'old-1',
+              'title': 'read glucose',
+            },
+          }),
+        });
+        calendar.events['old-1'] = (
+          title: 'read glucose',
+          start: now,
+          repeats: true,
+          note: null,
+          place: null,
+          reminders: null,
+          zone: null,
+          calendar: null,
+          until: null,
+        );
+
+        await repeating.sync(<ReminderCircle>[_circle]);
+
+        expect(calendar.events.keys, isNot(contains('old-1')));
+        final _Event event = calendar.inCalendar('تفقّد').single;
+        expect(event.until, isNotNull);
+      });
     });
 
     testWidgets('the words follow the reminders', (WidgetTester tester) async {

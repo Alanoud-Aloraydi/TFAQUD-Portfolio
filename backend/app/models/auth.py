@@ -10,13 +10,14 @@ from app.database import db
 
 
 class AccountSession(db.Model):
-    """One independently revocable sign-in; only refresh hashes are stored."""
+    """One independently revocable sign-in; only refresh hashes are stored.
+
+    It has no end date: it lasts until `revoked_at` is set (sign-out, the
+    account deleted, or the app deleted from the phone).
+    """
 
     __tablename__ = "account_session"
     __table_args__ = (
-        CheckConstraint(
-            "refresh_expires_at > created_at", name="expiry_order"
-        ),
         CheckConstraint("revoked_at >= created_at", name="revocation_order"),
         CheckConstraint(
             "refresh_token_hash ~ '^[0-9a-f]{64}$'", name="refresh_hash"
@@ -29,9 +30,6 @@ class AccountSession(db.Model):
     )
     refresh_token_hash: Mapped[str] = mapped_column(Text, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    refresh_expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True)
-    )
     revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )

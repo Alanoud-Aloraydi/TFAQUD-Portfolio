@@ -154,7 +154,7 @@ Authorization: Bearer <access token>
 | | Access token | Refresh token |
 |---|---|---|
 | What it is | A signed token (JWT, HS256) holding the user id, the session id and the expiry time | A random string with nothing inside |
-| Lifetime | 15 minutes (**Decided**) | 30 days (**Decided**) |
+| Lifetime | 15 minutes (**Decided**) | None: it works until the session is signed out (**Decided** on 10 November 2026) |
 | Sent to | Every protected endpoint | `POST /api/v1/auth/refresh` only |
 | The server keeps | Nothing. It checks the signature and the session record. | Only the SHA-256 hash of it, in the session record |
 
@@ -168,6 +168,19 @@ and from that moment:
 Signing out one session does not end the user's other sessions (**Decided**).
 There is no endpoint that ends all the sessions at once, because no story asks
 for it. Deleting an account (F05) ends every session of that user.
+
+**A session ends only by a sign-out (Rule, 10 November 2026).** A refresh token
+has no end date. A session ends in one of three ways, and each is a sign-out:
+
+- the person signs out (`POST /api/v1/auth/sign-out`);
+- the account is deleted (F05);
+- the app was deleted from the phone: Apple then answers 410 for the phone's
+  push token, and the server signs out the session that token belongs to
+  (section 6, push-device). Apple's answer can come days later.
+
+The app also signs out by itself when it is installed again: iOS keeps the
+tokens in the Keychain after the app is deleted, so the app checks on its
+first start and signs the old session out instead of using it.
 
 **Order of the checks on a protected request (Built).** First the signature,
 then the expiry, then the session record. This is why an expired token gives
@@ -330,7 +343,6 @@ Body:
   "access_token": "<access token>",
   "access_token_expires_at": "2026-10-15T12:15:00+00:00",
   "refresh_token": "<refresh token>",
-  "refresh_token_expires_at": "2026-11-14T12:00:00+00:00",
   "account": {
     "id": "1840809a6c1b4814b9d1ecc779b8241b",
     "phone_number": "+966501234567",
@@ -460,7 +472,11 @@ access token. Body:
 The token (64 to 200 hexadecimal characters, any case) is kept with the sign-in
 (session) that sent it: after a sign-out that phone gets no push, and deleting the
 account or the session deletes it. A token that belonged to another sign-in moves to
-this one. 204, empty body. Errors: 400 `invalid_json`, 401, 422 `validation_error`,
+this one. A sign-in keeps only the last token it sent: the app sends its token every
+time it opens, and a new one replaces the old. When Apple answers 410 for a token
+(the app was deleted), the token is deleted and its sign-in is signed out; a token
+that is only wrong for the app (`BadDeviceToken`, often a sandbox token on the
+production server) is deleted and the sign-in stays. 204, empty body. Errors: 400 `invalid_json`, 401, 422 `validation_error`,
 503 without a database.
 
 The server sends a push (title and one line, in Arabic) for: a new or resent
@@ -844,7 +860,7 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 | Table | What it holds | Rules the database enforces |
 |---|---|---|
 | `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `birth_date`, `city`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. `birth_date` (not before 1900) and `city` (1 to 60 characters) are optional; onboarding fills them (migration 0009). |
-| `account_session` | One row per sign-in: the hash of the refresh token, the times, `revoked_at`. | Deleted with the account. The hash is unique. No device and no IP address are stored. |
+| `account_session` | One row per sign-in: the hash of the refresh token, `created_at`, `revoked_at` (no end date since migration 0031). | Deleted with the account. The hash is unique. No device and no IP address are stored. |
 | `otp_challenge`, `otp_send_attempt` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
 | `care_circle` | A circle: `name`. | A circle always has exactly one patient and at least one manager (checked when the transaction commits). |
 | `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `time_zone` (IANA), `latitude`, `longitude`, `blood_type`. | One per circle. `time_zone` is not blank (the server checks it is a real zone). An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
@@ -1236,8 +1252,8 @@ change in the pull request review.
 
 | # | Point | Decision |
 |---|---|---|
-| 1 | Token lifetimes | 15 minutes (access) and 30 days (refresh). Confirmed. |
-| 2 | Refresh token replacement | Not replaced. The same token works until day 30 or sign-out (section 4). |
+| 1 | Token lifetimes | 15 minutes (access). The refresh token has no end date: only a sign-out ends it (changed on 10 November 2026; it was 30 days). |
+| 2 | Refresh token replacement | Not replaced. The same token works until sign-out (section 4). |
 | 3 | Patients and Simplified Mode | Decided per story in section 7. |
 | 4 | The bell endpoint | `GET /api/v1/notifications` and `POST /api/v1/notifications/{notification_id}/read` (section 6). |
 | 5 | Who makes and checks the OTP code | Authentica, with template 5: a 6-digit code, Arabic text, valid 300 seconds (dashboard setting). Our server counts the 3 wrong tries (section 8). Decided on 19 October 2026. |

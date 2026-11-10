@@ -18,7 +18,6 @@ def _record(row):
         user_id=row.account_id.hex,
         refresh_token_hash=row.refresh_token_hash,
         created_at=row.created_at,
-        refresh_expires_at=row.refresh_expires_at,
         revoked_at=row.revoked_at,
     )
 
@@ -35,7 +34,6 @@ class PostgresSessionStore(SessionStore):
                     account_id=UUID(record.user_id),
                     refresh_token_hash=record.refresh_token_hash,
                     created_at=record.created_at,
-                    refresh_expires_at=record.refresh_expires_at,
                     revoked_at=record.revoked_at,
                 )
             )

@@ -115,6 +115,7 @@ class _DesiredEvent {
     this.note,
     this.place,
     this.recurrence,
+    this.until,
   });
 
   final String title;
@@ -129,18 +130,30 @@ class _DesiredEvent {
   final String? note;
   final String? place;
   final RecurrenceRule? recurrence;
+
+  /// The moment a repeating event repeats up to ([recurrence] ends there).
+  final DateTime? until;
 }
 
 /// What this phone remembers of an event it made: the calendar's id for
 /// it, and its title and first start, to find it again when the calendar
-/// gave it another id (a calendar of another account can, once it syncs).
-/// An event saved before this version has its id only.
+/// gave it another id (a calendar of another account can, once it syncs);
+/// the calendar it is in (null: the phone's default one); and, for a
+/// repeating one, the day it repeats to. An older event has less.
 class _SavedEvent {
-  const _SavedEvent(this.id, {this.title, this.start});
+  const _SavedEvent(
+    this.id, {
+    this.title,
+    this.start,
+    this.until,
+    this.calendar,
+  });
 
   final String id;
   final String? title;
   final DateTime? start;
+  final DateTime? until;
+  final String? calendar;
 
   static _SavedEvent? fromJson(Object? value) {
     if (value is String) return _SavedEvent(value);
@@ -148,11 +161,15 @@ class _SavedEvent {
     final Object? id = value['id'];
     final Object? title = value['title'];
     final Object? start = value['start'];
+    final Object? until = value['until'];
+    final Object? calendar = value['calendar'];
     if (id is! String) return null;
     return _SavedEvent(
       id,
       title: title is String ? title : null,
       start: start is String ? DateTime.tryParse(start) : null,
+      until: until is String ? DateTime.tryParse(until) : null,
+      calendar: calendar is String ? calendar : null,
     );
   }
 
@@ -160,6 +177,8 @@ class _SavedEvent {
     'id': id,
     'title': ?title,
     'start': ?start?.toIso8601String(),
+    'until': ?until?.toIso8601String(),
+    'calendar': ?calendar,
   };
 }
 
@@ -173,6 +192,17 @@ class _SavedEvent {
 /// the phone's shared calendar is visible to anything else with calendar
 /// access, unlike the rest of this app's circle-scoped data. Turning a
 /// switch off takes its events off the phone's calendar again.
+///
+/// The events go in the app's own calendar, «تفقّد» ([calendarName]), so
+/// they can all go in one step: signing out deletes the whole calendar,
+/// and the person can delete it in the Calendar app too. Deleting the app
+/// leaves a calendar behind (iOS tells an app nothing when it is deleted),
+/// so a repeating event repeats only two weeks ahead ([_ahead]) and is made
+/// again, further ahead, by a refresh when one week is left: while the app
+/// is used its events go on, and after it is deleted their alerts stop
+/// within two weeks. A «تفقّد» calendar left by an earlier install is
+/// deleted before a new one is made. Without full calendar access the
+/// events go in the phone's default calendar, as before.
 ///
 /// Nothing here is stored on the server. Each phone keeps its own small map
 /// of "key it created" → "calendar event" in [SharedPreferences], and on
@@ -226,9 +256,29 @@ class CalendarSync {
   static const String _selectionsKey = 'calendar_sync_selections';
   static const String _eventsKey = 'calendar_sync_events';
 
+  /// The id of the app's own calendar, once made.
+  static const String _calendarKey = 'calendar_sync_calendar';
+
+  /// The name of the app's own calendar on the phone.
+  static const String calendarName = 'تفقّد';
+
+  /// The app's green («leaf»), for the calendar's dot.
+  static const String _calendarColor = '#A8D5BA';
+
+  /// How far ahead a repeating event repeats.
+  static const Duration _ahead = Duration(days: 14);
+
+  /// With less than this left, a refresh makes the event again, [_ahead]
+  /// from then: at most once a week.
+  static const Duration _extendWithin = Duration(days: 7);
+
   /// What the keys of this version start with. A key of an older version
-  /// (an older wording) is not wanted any more, so its event is replaced.
-  static const String _keyVersion = 'v2';
+  /// is not wanted any more, so its event is replaced: v2 events were in
+  /// the default calendar and repeated with no end.
+  static const String _keyVersion = 'v3';
+
+  /// A key of any version: «v2:…», «v3:…».
+  static final RegExp _versioned = RegExp(r'^v\d+$');
 
   List<ReminderCircle> _circles = const <ReminderCircle>[];
 
@@ -290,11 +340,11 @@ class CalendarSync {
   /// One reading runs at a time; a call during it makes one more right after.
   Future<void> refresh() => _runner.run();
 
-  /// Removes every event this feature made: the person signed out. Also
-  /// clears every selection — they are stored on the device, not the
-  /// account, so the next person to sign in on this device must opt in
-  /// themselves. An event the calendar would not delete now is deleted at
-  /// the next refresh.
+  /// Removes every event this feature made, with the app's own calendar:
+  /// the person signed out. Also clears every selection — they are stored
+  /// on the device, not the account, so the next person to sign in on this
+  /// device must opt in themselves. An event the calendar would not delete
+  /// now is deleted at the next refresh.
   Future<void> clear() async {
     _session++;
     _circles = const <ReminderCircle>[];
@@ -398,6 +448,7 @@ class CalendarSync {
     final plans = result.tryGetSuccess();
     if (plans == null) return false;
     final PatientClock clock = circle.clock;
+    final DateTime ahead = _now().toUtc().add(_ahead);
     for (final plan in plans) {
       if (plan.isPreviousOn(clock.today())) continue;
       final version = plan.version;
@@ -420,7 +471,10 @@ class CalendarSync {
             final List<int> days = schedule.monthDays.toList()..sort();
             if (days.isEmpty) continue;
             start = _nextMonthDay(clock, from, schedule.time, days);
-            recurrence = MonthlyRecurrence(daysOfMonth: days);
+            recurrence = MonthlyRecurrence(
+              daysOfMonth: days,
+              end: UntilEnd(_until(start, ahead)),
+            );
           // A dose every few days as one event repeating every that many
           // days («FREQ=DAILY;INTERVAL=3»), from its first day on or after
           // [from] on the count from the start of the treatment.
@@ -434,7 +488,10 @@ class CalendarSync {
               version.startsOn,
               every,
             );
-            recurrence = DailyRecurrence(interval: every);
+            recurrence = DailyRecurrence(
+              interval: every,
+              end: UntilEnd(_until(start, ahead)),
+            );
           case ScheduleRepeat.weekly:
             start = _nextOccurrence(
               clock,
@@ -444,6 +501,7 @@ class CalendarSync {
             );
             recurrence = WeeklyRecurrence(
               daysOfWeek: schedule.weekdays.map(_dayOfWeek).toList(),
+              end: UntilEnd(_until(start, ahead)),
             );
         }
         desired[key] = _DesiredEvent(
@@ -454,6 +512,7 @@ class CalendarSync {
           end: start.add(const Duration(minutes: 15)),
           reminders: const <Duration>[Duration.zero],
           recurrence: recurrence,
+          until: _until(start, ahead),
         );
       }
     }
@@ -471,6 +530,7 @@ class CalendarSync {
       return false;
     }
     final PatientClock clock = circle.clock;
+    final DateTime ahead = _now().toUtc().add(_ahead);
     for (final plan in plans) {
       if (plan.stoppedAt != null) continue;
       final version = plan.version;
@@ -496,7 +556,9 @@ class CalendarSync {
           reminders: const <Duration>[Duration.zero],
           recurrence: WeeklyRecurrence(
             daysOfWeek: version.weekdays.map(_dayOfWeek).toList(),
+            end: UntilEnd(_until(start, ahead)),
           ),
+          until: _until(start, ahead),
         );
       }
     }
@@ -556,12 +618,19 @@ class CalendarSync {
     int session,
   ) async {
     final Map<String, _SavedEvent> saved = _readSaved(prefs);
-    // Not wanted any more, or wanted with other words: taken off.
+    await _forgetDeletedCalendar(prefs, saved);
+    final String? own = prefs.getString(_calendarKey);
+    // Not wanted any more; or wanted with other words, near the end of its
+    // two weeks, or outside the app's calendar now that it has one: taken
+    // off (and the wanted ones made again).
     final List<String> stale = <String>[];
     for (final MapEntry<String, _SavedEvent> entry in saved.entries) {
       final _DesiredEvent? wanted = desired[entry.key];
+      final _SavedEvent event = entry.value;
       if (wanted != null
-          ? wanted.title != entry.value.title
+          ? wanted.title != event.title ||
+                _endsSoon(event) ||
+                (own != null && event.calendar != own)
           : !unread.contains(_groupOf(entry.key))) {
         stale.add(entry.key);
       }
@@ -575,26 +644,47 @@ class CalendarSync {
         if (await _delete(key, saved[key]!, known)) saved.remove(key);
       }
     }
-    for (final MapEntry<String, _DesiredEvent> entry in desired.entries) {
+    // The wanted events not on the calendar. One whose old event could not
+    // be taken off yet stays as it is, until it can.
+    final List<MapEntry<String, _DesiredEvent>> missing = desired.entries
+        .where((MapEntry<String, _DesiredEvent> e) => !saved.containsKey(e.key))
+        .toList();
+    final String? calendarId = missing.isEmpty
+        ? null
+        : await _ownCalendar(prefs);
+    if (session != _session) return;
+    for (final MapEntry<String, _DesiredEvent> entry in missing) {
       if (session != _session) return;
-      // Still there: its old event could not be taken off yet.
-      if (saved.containsKey(entry.key)) continue;
-      final String? id = await _createEvent(entry.value);
+      final String? id = await _createEvent(entry.value, calendarId);
       if (id != null) {
         saved[entry.key] = _SavedEvent(
           id,
           title: entry.value.title,
           start: entry.value.start,
+          until: entry.value.until,
+          calendar: calendarId,
         );
       }
     }
     if (session != _session) return;
     await _writeSaved(prefs, saved);
+    // Nothing on the app's calendar any more: it goes too, until needed.
+    if (saved.isEmpty &&
+        prefs.getString(_calendarKey) != null &&
+        await _fullAccess()) {
+      await _deleteOwnCalendar(prefs);
+    }
   }
 
+  /// Takes off every event this phone made: the app's whole calendar at
+  /// once, then, one by one, any put in the phone's default calendar.
   Future<void> _removeAll(SharedPreferences prefs) async {
     final Map<String, _SavedEvent> saved = _readSaved(prefs);
-    if (saved.isNotEmpty && await _fullAccess()) {
+    final String? own = prefs.getString(_calendarKey);
+    if ((saved.isNotEmpty || own != null) && await _fullAccess()) {
+      if (own != null && await _deleteOwnCalendar(prefs)) {
+        saved.removeWhere((String _, _SavedEvent e) => e.calendar == own);
+      }
       final Set<String> known = <String>{
         for (final _SavedEvent event in saved.values) event.id,
       };
@@ -603,6 +693,75 @@ class CalendarSync {
       }
     }
     await _writeSaved(prefs, saved);
+  }
+
+  /// Whether a repeating event is near the end of its two weeks.
+  bool _endsSoon(_SavedEvent event) {
+    final DateTime? until = event.until;
+    return until != null && until.difference(_now()) < _extendWithin;
+  }
+
+  /// The id of the app's own calendar, made the first time it is needed;
+  /// null when the phone will not make one (no full access, or no calendar
+  /// account that takes a new calendar): the events then go in the phone's
+  /// default calendar.
+  ///
+  /// A «تفقّد» calendar this install did not make was left by an earlier
+  /// one (deleting the app leaves its calendar): it is deleted, with its
+  /// events, before a new one is made.
+  Future<String?> _ownCalendar(SharedPreferences prefs) async {
+    final String? known = prefs.getString(_calendarKey);
+    if (known != null) return known;
+    if (!await _fullAccess()) return null;
+    try {
+      for (final Calendar left in await _calendar.listCalendars()) {
+        if (left.name == calendarName && !left.readOnly) {
+          await _calendar.deleteCalendar(left.id);
+        }
+      }
+      final String id = await _calendar.createCalendar(
+        name: calendarName,
+        colorHex: _calendarColor,
+      );
+      await prefs.setString(_calendarKey, id);
+      return id;
+    } on Exception {
+      return null;
+    }
+  }
+
+  /// The app's calendar was deleted (in the Calendar app, say), and its
+  /// events with it: they are forgotten here, so they are made again.
+  Future<void> _forgetDeletedCalendar(
+    SharedPreferences prefs,
+    Map<String, _SavedEvent> saved,
+  ) async {
+    final String? own = prefs.getString(_calendarKey);
+    if (own == null || !await _fullAccess()) return;
+    try {
+      final List<Calendar> calendars = await _calendar.listCalendars();
+      if (calendars.any((Calendar calendar) => calendar.id == own)) return;
+    } on Exception {
+      return;
+    }
+    saved.removeWhere((String _, _SavedEvent e) => e.calendar == own);
+    await prefs.remove(_calendarKey);
+  }
+
+  /// Deletes the app's calendar with every event on it; true when it is
+  /// gone (or was already).
+  Future<bool> _deleteOwnCalendar(SharedPreferences prefs) async {
+    final String? own = prefs.getString(_calendarKey);
+    if (own == null) return true;
+    try {
+      await _calendar.deleteCalendar(own);
+    } on DeviceCalendarException catch (error) {
+      if (error.errorCode != DeviceCalendarError.notFound) return false;
+    } on Exception {
+      return false;
+    }
+    await prefs.remove(_calendarKey);
+    return true;
   }
 
   /// The circle and category of a key of this version, «c-1:doses»;
@@ -618,7 +777,7 @@ class CalendarSync {
   /// a task put off.
   static bool _repeats(String key) {
     final List<String> parts = key.split(':');
-    return parts.first == _keyVersion
+    return _versioned.hasMatch(parts.first)
         ? parts.length > 3 &&
               parts[2] != CalendarSyncCategory.appointments.name &&
               parts[3] != _snoozePart
@@ -677,9 +836,12 @@ class CalendarSync {
     }
   }
 
-  Future<String?> _createEvent(_DesiredEvent event) async {
+  /// Makes [event] in the calendar [calendarId] (null: the phone's default
+  /// one); its id, or null when it could not be made.
+  Future<String?> _createEvent(_DesiredEvent event, String? calendarId) async {
     try {
       return await _calendar.createEvent(
+        calendarId: calendarId,
         title: event.title,
         startDate: event.start,
         endDate: event.end,
@@ -733,6 +895,14 @@ class CalendarSync {
   Future<void> _deleteById(String id, {required bool repeats}) => repeats
       ? _calendar.deleteRecurring(id, EventSpan.allEvents)
       : _calendar.deleteEvent(instanceId: id);
+}
+
+/// The last moment a repeating event that starts at [start] repeats to:
+/// [ahead] (two weeks from now), or its first time when that is later, so
+/// it has at least that one. UTC, as the calendar's rule takes it.
+DateTime _until(DateTime start, DateTime ahead) {
+  final DateTime first = start.toUtc();
+  return first.isAfter(ahead) ? first : ahead;
 }
 
 DayOfWeek _dayOfWeek(int weekday) => switch (weekday) {

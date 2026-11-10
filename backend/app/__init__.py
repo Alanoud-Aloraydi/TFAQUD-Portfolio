@@ -121,7 +121,6 @@ def create_app(
         store=session_store,
         secret_key=app.config["SECRET_KEY"],
         access_ttl=timedelta(minutes=app.config["ACCESS_TOKEN_MINUTES"]),
-        refresh_ttl=timedelta(days=app.config["REFRESH_TOKEN_DAYS"]),
         clock=clock,
     )
     app.extensions["session_service"] = session_service
