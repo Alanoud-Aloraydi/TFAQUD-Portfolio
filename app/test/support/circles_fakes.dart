@@ -148,10 +148,9 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Result<String?, Failure> invitationReplied = const Success<String?, Failure>(
     'circle-from-invitation',
   );
-  Result<(CareCircleSummary, String?), Failure> completed = const Success((
-    newCircle,
-    null,
-  ));
+  Result<(CareCircleSummary, CircleAppMode), Failure> completed = const Success(
+    (newCircle, CircleAppMode.detailed),
+  );
   Result<void, Failure> canceled = const Success(null);
   Result<void, Failure> deleted = const Success(null);
 
@@ -162,6 +161,18 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Result<EmergencyCard, Failure> emergencyCard = Success(nouraCard);
   Result<void, Failure> patientUpdated = const Success(null);
   Result<void, Failure> contactDeleted = const Success(null);
+
+  // The changes of the members on the Circle tab.
+  Result<void, Failure> invited = const Success(null);
+  Result<void, Failure> invitationChanged = const Success(null);
+  Result<void, Failure> left = const Success(null);
+
+  /// When set, an invitation, a resend, a cancel or a leave waits for it.
+  Future<Result<void, Failure>>? pendingMemberChange;
+
+  /// The calls of the member changes, in order: `invite:+9665…`,
+  /// `resend:<id>`, `cancel:<id>`, `leave:<confirmDelete>`.
+  final List<String> memberCalls = <String>[];
 
   /// When set, saving the health answers answers with it. Otherwise the
   /// answers are given back as sent, like the server does.
@@ -177,7 +188,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
 
   /// The same, for [completeRequest] specifically: its result shape differs
   /// (it also carries the account's app mode), so it needs its own field.
-  Future<Result<(CareCircleSummary, String?), Failure>>? pendingCompleted;
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>>? pendingCompleted;
 
   /// When set, adding or changing a contact waits for it.
   Future<Result<EmergencyContact, Failure>>? pendingContact;
@@ -226,7 +237,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     invitationReplied = const Success<String?, Failure>(
       'circle-from-invitation',
     );
-    completed = const Success((newCircle, null));
+    completed = const Success((newCircle, CircleAppMode.detailed));
     canceled = const Success(null);
     deleted = const Success(null);
     circleOverview = Success(nouraOverview);
@@ -313,7 +324,7 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   }
 
   @override
-  Future<Result<(CareCircleSummary, String?), Failure>> completeRequest(
+  Future<Result<(CareCircleSummary, CircleAppMode), Failure>> completeRequest(
     String id,
     CompleteCircleRequest request,
   ) async {
@@ -340,6 +351,42 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   ) async {
     circleOverviewReads++;
     return circleOverview;
+  }
+
+  @override
+  Future<Result<void, Failure>> inviteManager(
+    String circleId,
+    String phoneNumber,
+  ) async {
+    memberCalls.add('invite:$phoneNumber');
+    return await pendingMemberChange ?? invited;
+  }
+
+  @override
+  Future<Result<void, Failure>> resendManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    memberCalls.add('resend:$invitationId');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> cancelManagerInvitation(
+    String circleId,
+    String invitationId,
+  ) async {
+    memberCalls.add('cancel:$invitationId');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> leaveCircle(
+    String circleId, {
+    required bool confirmDelete,
+  }) async {
+    memberCalls.add('leave:$confirmDelete');
+    return await pendingMemberChange ?? left;
   }
 
   @override

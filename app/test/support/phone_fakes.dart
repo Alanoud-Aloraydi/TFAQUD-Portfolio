@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// The phone's notifications, kept in memory: what is scheduled, how often
 /// the app asked for permission, and taps the test sends.
@@ -61,4 +64,78 @@ class FakePhoneNotifications implements PhoneNotifications {
     launchTap = null;
     return tap;
   }
+}
+
+/// The dose reminders, kept in memory: what was synced, refreshed, cleared
+/// and snoozed from a notification tap.
+class FakeDoseReminders extends Fake implements DoseReminders {
+  /// What [snoozeTap] answers.
+  bool result = true;
+  final List<String> snoozed = <String>[];
+  final List<List<ReminderCircle>> synced = <List<ReminderCircle>>[];
+  int refreshes = 0;
+  int clears = 0;
+
+  @override
+  Future<void> sync(List<ReminderCircle> circles) async {
+    synced.add(circles);
+  }
+
+  @override
+  Future<void> refresh() async {
+    refreshes++;
+  }
+
+  @override
+  Future<void> clear() async => clears++;
+
+  @override
+  Future<bool> snoozeTap(String tap) async {
+    snoozed.add(tap);
+    return result;
+  }
+}
+
+/// The calendar sync, kept in memory. [on] holds the switched-on
+/// `circleId:category` pairs; everything else is counted.
+class FakeCalendarSync extends Fake implements CalendarSync {
+  FakeCalendarSync([Set<String>? on]) : on = on ?? <String>{};
+
+  final Set<String> on;
+  final List<List<ReminderCircle>> synced = <List<ReminderCircle>>[];
+  int refreshes = 0;
+  int clears = 0;
+
+  @override
+  Future<bool> isEnabled(
+    String circleId,
+    CalendarSyncCategory category,
+  ) async => on.contains('$circleId:${category.name}');
+
+  @override
+  Future<void> setEnabled(
+    String circleId,
+    CalendarSyncCategory category,
+    bool value,
+  ) async {
+    final String key = '$circleId:${category.name}';
+    if (value) {
+      on.add(key);
+    } else {
+      on.remove(key);
+    }
+  }
+
+  @override
+  Future<void> sync(List<ReminderCircle> circles) async {
+    synced.add(circles);
+  }
+
+  @override
+  Future<void> refresh() async {
+    refreshes++;
+  }
+
+  @override
+  Future<void> clear() async => clears++;
 }
