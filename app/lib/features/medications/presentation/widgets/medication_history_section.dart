@@ -1,5 +1,8 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
+import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -7,7 +10,6 @@ import 'package:app/features/medications/presentation/cubit/medications_cubit.da
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_record_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
-import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,7 +46,7 @@ class MedicationHistorySection extends StatelessWidget {
       return const PlansSkeleton(filter: true);
     }
     if (state.status == MedicationsStatus.failure) {
-      return MedicationFailureView(
+      return RetryView(
         messageKey: state.messageKey!,
         onRetry: () => context.read<MedicationsCubit>().load(circleId),
       );
@@ -77,11 +79,11 @@ class MedicationHistorySection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         if (visible.isEmpty)
-          Center(child: Text(context.tr('medications.no_records')))
+          EmptyStateNote(context.tr('medications.no_records'))
         else
           for (final plan in visible) ...[
             MedicationRecordCard(circleId: circleId, plan: plan),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppItemCard.listGap),
           ],
       ],
     );

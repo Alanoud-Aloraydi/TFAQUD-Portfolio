@@ -6,6 +6,8 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
@@ -324,6 +326,7 @@ class DeclinedRequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
+    final DateTime? answered = request.respondedAt;
     return _InboxCard(
       avatarText: '!',
       avatarBackground: AppSemanticColors.borderSubtle,
@@ -331,10 +334,33 @@ class DeclinedRequestCard extends StatelessWidget {
       title: context.tr('circles.declined_title'),
       // The number below says which request it was.
       body: context.tr('circles.declined_body'),
-      extra: Text(
-        SaudiMobile.display(request.patientPhoneNumber),
-        textDirection: TextDirection.ltr,
-        style: text.bodyMedium?.copyWith(color: context.tokens.textSecondary),
+      extra: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            SaudiMobile.display(request.patientPhoneNumber),
+            textDirection: TextDirection.ltr,
+            style: text.bodyMedium?.copyWith(
+              color: context.tokens.textSecondary,
+            ),
+          ),
+          // The day on the patient's calendar, never the phone's zone.
+          if (answered != null)
+            Text(
+              context.tr(
+                'circles.declined_on',
+                args: <String>[
+                  formatBirthDate(
+                    context,
+                    PatientClockScope.of(context).today(answered),
+                  ),
+                ],
+              ),
+              style: text.bodySmall?.copyWith(
+                color: context.tokens.textSecondary,
+              ),
+            ),
+        ],
       ),
     );
   }

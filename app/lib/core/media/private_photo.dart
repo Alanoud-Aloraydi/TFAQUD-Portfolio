@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/png_encoder.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -161,9 +162,7 @@ Future<Uint8List?> pickAndCropPhoto(
     );
   } on PlatformException {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('photos.access_failed'))),
-      );
+      AppToast.show(context, 'photos.access_failed', kind: ToastKind.error);
     }
     return null;
   }

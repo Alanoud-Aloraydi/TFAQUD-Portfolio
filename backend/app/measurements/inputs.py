@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from app.plan_limits import DEFAULT_MISSED_AFTER_MINUTES, MissedAfter
 from app.validation import Dto
 
 Kind = Literal["glucose", "blood_pressure"]
@@ -59,7 +60,7 @@ class PlanRequest(Dto):
     ]
     weekdays: Annotated[list[int], Field(min_length=1, max_length=7)]
     starts_on: date
-    missed_after_minutes: Literal[30, 60, 120] = 60
+    missed_after_minutes: MissedAfter = DEFAULT_MISSED_AFTER_MINUTES
     glucose_low: Value | None = None
     glucose_high: Value | None = None
     systolic_limit: Value | None = None

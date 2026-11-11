@@ -84,7 +84,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                 children: [
                   TextButton(
                     onPressed: () => context.pop(),
-                    child: Text(context.tr('account.cancel')),
+                    child: Text(context.tr('common.cancel')),
                   ),
                   Expanded(
                     child: Text(

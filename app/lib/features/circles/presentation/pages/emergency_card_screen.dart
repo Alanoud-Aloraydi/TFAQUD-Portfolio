@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -76,7 +77,9 @@ class _EmergencyCardScreenState extends State<EmergencyCardScreen> {
     }
     if (!mounted) return;
     setState(() => _exporting = false);
-    if (!shared) messenger.showSnackBar(SnackBar(content: Text(failed)));
+    if (!shared) {
+      AppToast.showText(messenger, failed, kind: ToastKind.error);
+    }
   }
 
   @override

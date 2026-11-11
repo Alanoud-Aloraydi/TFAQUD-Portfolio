@@ -268,7 +268,7 @@ final MeasurementPlan _reading = MeasurementPlan(
     effectiveFromOn: DateTime(2026, 11, 1),
     time: '08:00',
     weekdays: const <int>[1, 2, 3, 4, 5, 6, 7],
-    graceMinutes: 60,
+    missedAfterMinutes: 60,
   ),
   history: const <MeasurementVersion>[],
 );

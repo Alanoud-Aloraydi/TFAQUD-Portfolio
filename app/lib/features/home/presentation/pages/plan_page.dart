@@ -4,7 +4,7 @@ import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_plan_section.dart';
 import 'package:app/features/home/presentation/widgets/home_category_control.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';

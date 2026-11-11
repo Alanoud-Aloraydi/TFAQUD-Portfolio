@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
+from app.plan_limits import MISSED_AFTER_CHECK
 
 KINDS = ("glucose", "blood_pressure")
 _KINDS_SQL = "kind IN ('glucose', 'blood_pressure')"
@@ -123,7 +124,7 @@ class MeasurementPlanVersion(db.Model):
         ),
         CheckConstraint("version_number > 0", name="version_number"),
         CheckConstraint(
-            "missed_after_minutes IN (30, 60, 120)",
+            MISSED_AFTER_CHECK,
             name="missed_after_minutes",
         ),
         CheckConstraint(

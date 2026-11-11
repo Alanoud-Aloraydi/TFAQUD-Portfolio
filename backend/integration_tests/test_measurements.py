@@ -332,3 +332,31 @@ def test_concurrent_task_records_keep_one_outcome(
         assert session.scalar(
             select(func.count()).select_from(MeasurementReading)
         ) == 1
+
+
+def test_missed_after_accepts_free_minutes_inside_the_range(
+    database_app, database, account
+):
+    """45 minutes is stored and echoed; 361 and 4 are refused."""
+    owner = account()
+    circle = offline_circle(database, owner)
+    client = database_app.test_client()
+    headers = signed_in(database_app, owner)
+    path = f"/api/v1/circles/{circle.id}/measurement-plans"
+    body = {
+        "kind": "glucose",
+        "times": [{"time_of_day": "08:00", "measurement_state": "fasting"}],
+        "weekdays": [1],
+        "starts_on": datetime.now(timezone.utc).date().isoformat(),
+        "glucose_low": 80,
+        "glucose_high": 140,
+    }
+    for minutes, status in ((4, 422), (361, 422), (360, 201)):
+        response = client.post(
+            path,
+            headers=headers,
+            json={**body, "missed_after_minutes": minutes},
+        )
+        assert response.status_code == status
+    saved = client.get(path, headers=headers).json["measurement_plans"]
+    assert saved[0]["version"]["missed_after_minutes"] == 360

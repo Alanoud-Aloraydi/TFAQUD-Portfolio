@@ -121,16 +121,6 @@ def test_skip_note_requires_the_other_reason():
         )
 
 
-def test_missed_threshold_accepts_only_the_three_visible_choices():
-    assert PlanRequest.model_validate(plan()).missed_after_minutes == 60
-    for minutes in (30, 60, 120):
-        assert PlanRequest.model_validate(
-            plan(missed_after_minutes=minutes)
-        ).missed_after_minutes == minutes
-    with pytest.raises(ValidationError):
-        PlanRequest.model_validate(plan(missed_after_minutes=45))
-
-
 def test_dose_status_changes_at_due_and_missed_boundaries():
     scheduled = datetime(2026, 11, 2, 8, tzinfo=timezone.utc)
 

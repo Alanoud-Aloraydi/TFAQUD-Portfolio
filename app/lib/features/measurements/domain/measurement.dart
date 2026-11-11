@@ -87,7 +87,7 @@ class MeasurementVersion extends Equatable {
     required this.effectiveFromOn,
     required this.time,
     required this.weekdays,
-    required this.graceMinutes,
+    required this.missedAfterMinutes,
     this.glucoseLow,
     this.glucoseHigh,
     this.systolicLimit,
@@ -102,7 +102,7 @@ class MeasurementVersion extends Equatable {
   /// The first reading time ([readingTimes] has them all).
   final String time;
   final List<int> weekdays;
-  final int graceMinutes;
+  final int missedAfterMinutes;
   final int? glucoseLow;
   final int? glucoseHigh;
   final int? systolicLimit;
@@ -127,7 +127,7 @@ class MeasurementVersion extends Equatable {
       effectiveFromOn: DateTime.parse(json['effective_from_on'] as String),
       time: times.first.time,
       weekdays: (json['weekdays'] as List<dynamic>).cast<int>(),
-      graceMinutes: json['missed_after_minutes'] as int,
+      missedAfterMinutes: json['missed_after_minutes'] as int,
       glucoseLow: json['glucose_low'] as int?,
       glucoseHigh: json['glucose_high'] as int?,
       systolicLimit: json['systolic_limit'] as int?,
@@ -143,7 +143,7 @@ class MeasurementVersion extends Equatable {
     effectiveFromOn,
     time,
     weekdays,
-    graceMinutes,
+    missedAfterMinutes,
     times,
     glucoseLow,
     glucoseHigh,
@@ -293,6 +293,11 @@ class MeasurementReading extends Equatable {
   String get valueText =>
       kind == MeasurementKind.bp ? '$valueOne/$valueTwo' : '$valueOne';
 
+  /// The target this reading was judged against, written like [valueText].
+  String get targetText => kind == MeasurementKind.bp
+      ? '$systolicLimit/$diastolicLimit'
+      : '$glucoseLow–$glucoseHigh';
+
   factory MeasurementReading.fromJson(Map<String, dynamic> json) =>
       MeasurementReading(
         id: json['id'] as String,
@@ -430,7 +435,7 @@ class MeasurementPlanDraft {
     required this.times,
     required this.weekdays,
     required this.startsOn,
-    required this.graceMinutes,
+    required this.missedAfterMinutes,
     this.glucoseLow,
     this.glucoseHigh,
     this.systolicLimit,
@@ -443,7 +448,7 @@ class MeasurementPlanDraft {
   final List<MeasurementTime> times;
   final List<int> weekdays;
   final DateTime startsOn;
-  final int graceMinutes;
+  final int missedAfterMinutes;
   final int? glucoseLow;
   final int? glucoseHigh;
   final int? systolicLimit;
@@ -460,7 +465,7 @@ class MeasurementPlanDraft {
     'weekdays': weekdays,
     'starts_on': apiDate(startsOn),
     'effective_from_on': ?(expectedVersion == null ? null : apiDate(startsOn)),
-    'missed_after_minutes': graceMinutes,
+    'missed_after_minutes': missedAfterMinutes,
     'glucose_low': glucoseLow,
     'glucose_high': glucoseHigh,
     'systolic_limit': systolicLimit,

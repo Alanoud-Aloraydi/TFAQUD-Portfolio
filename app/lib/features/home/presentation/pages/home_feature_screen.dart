@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -137,16 +138,11 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   /// Says when a reminder put off from its notification comes again.
   void _showSnoozed() {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr(
-            'reminders.snoozed',
-            args: <String>[
-              afterDuration(context, notificationSnooze.inMinutes),
-            ],
-          ),
-        ),
+    AppToast.showText(
+      ScaffoldMessenger.of(context),
+      context.tr(
+        'reminders.snoozed',
+        args: <String>[afterDuration(context, notificationSnooze.inMinutes)],
       ),
     );
   }
@@ -178,8 +174,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     } else if (state.status == HomeStatus.onboarding) {
       context.go(Routes.onboarding);
     } else if (state.status == HomeStatus.ready && state.messageKey != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey!))));
+      AppToast.show(context, state.messageKey!, kind: ToastKind.error);
     }
     final CareCircleSummary? selected = state.selectedCircle;
     if (state.status == HomeStatus.ready &&

@@ -25,6 +25,12 @@ abstract class AppMotion {
   static const Duration introEnter = Duration(milliseconds: 760);
   static const int branchEnterMilliseconds = 260;
   static const int branchExitMilliseconds = 140;
+  static const Duration branchEnterDuration = Duration(
+    milliseconds: branchEnterMilliseconds,
+  );
+  static const Duration branchExitDuration = Duration(
+    milliseconds: branchExitMilliseconds,
+  );
   static const Curve easeOut = Curves.easeOut;
   static const Curve easeIn = Curves.easeIn;
   static const Curve easeOutCubic = Curves.easeOutCubic;

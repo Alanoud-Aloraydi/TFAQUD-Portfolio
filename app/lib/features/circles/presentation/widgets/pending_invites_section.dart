@@ -1,3 +1,4 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -38,12 +39,24 @@ class PendingInvitesSection extends StatelessWidget {
   /// stays on the page.
   final VoidCallback? onAccepted;
 
-  Future<void> _accept(String invitationId) async {
+  Future<void> _accept(BuildContext context, String invitationId) async {
     final bool accepted = await cubit.respondToInvitation(
       invitationId,
       accept: true,
     );
-    if (accepted) onAccepted?.call();
+    if (!accepted) return;
+    if (context.mounted) AppToast.show(context, 'toast.invite_accepted');
+    onAccepted?.call();
+  }
+
+  Future<void> _decline(BuildContext context, String invitationId) async {
+    final bool declined = await cubit.respondToInvitation(
+      invitationId,
+      accept: false,
+    );
+    if (declined && context.mounted) {
+      AppToast.show(context, 'toast.invite_declined');
+    }
   }
 
   Future<void> _open(
@@ -75,7 +88,11 @@ class PendingInvitesSection extends StatelessWidget {
         ),
       ],
     );
-    if (yes == true) await cubit.cancelRequest(request.id);
+    if (yes != true) return;
+    final bool canceled = await cubit.cancelRequest(request.id);
+    if (canceled && context.mounted) {
+      AppToast.show(context, 'toast.request_canceled');
+    }
   }
 
   @override
@@ -86,9 +103,8 @@ class PendingInvitesSection extends StatelessWidget {
         InvitationCard(
           invitation: invitation,
           busy: state.busyIds.contains(invitation.id),
-          onAccept: () => _accept(invitation.id),
-          onDecline: () =>
-              cubit.respondToInvitation(invitation.id, accept: false),
+          onAccept: () => _accept(context, invitation.id),
+          onDecline: () => _decline(context, invitation.id),
         ),
       for (final ReceivedCircleRequest request in state.inbox.received)
         if (request.isAccepted)

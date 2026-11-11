@@ -1,6 +1,6 @@
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_record_section.dart';
 import 'package:app/features/home/presentation/widgets/home_category_control.dart';
 import 'package:app/features/home/presentation/widgets/record_export_sheet.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';

@@ -66,10 +66,18 @@ class PlanDetailsToggle extends StatelessWidget {
                 const Icon(CupertinoIcons.calendar, size: AppSizes.iconSmall),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(child: Text(start, style: text.bodySmall)),
+                const SizedBox(width: AppSpacing.sm),
+                Flexible(child: Text(label, style: text.labelLarge)),
               ] else
-                const Spacer(),
-              const SizedBox(width: AppSpacing.sm),
-              Text(label, style: text.labelLarge),
+                // Takes the free width so a long label wraps beside the
+                // arrow at large text.
+                Expanded(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.end,
+                    style: text.labelLarge,
+                  ),
+                ),
               const SizedBox(width: AppSpacing.xs),
               Icon(
                 expanded

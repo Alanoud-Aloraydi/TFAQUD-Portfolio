@@ -34,8 +34,8 @@ class CircleOverviewState extends Equatable {
   /// Why the load failed: a key in assets/translations.
   final String? errorKey;
 
-  /// True while an invitation, a resend, a cancel or the leave is on its
-  /// way; another one is refused until it ends.
+  /// True while an invitation, a resend, a cancel, a change of a member or
+  /// the leave is on its way; another one is refused until it ends.
   final bool acting;
 
   CircleOverviewState copyWith({
@@ -176,6 +176,7 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
   Future<String?> cancelInvitation(String invitationId) =>
       _act(() => _circles.cancelManagerInvitation(circleId, invitationId));
 
+  /// Pauses or restores a member's editing. Returns an error key, or null.
   Future<String?> setMemberEditAccess(
     String accountId, {
     required bool canEdit,
@@ -183,6 +184,7 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
     () => _circles.setMemberEditAccess(circleId, accountId, canEdit: canEdit),
   );
 
+  /// Removes a member from the circle. Returns an error key, or null.
   Future<String?> removeMember(String accountId) =>
       _act(() => _circles.removeMember(circleId, accountId));
 
@@ -212,13 +214,19 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
     if (isClosed) return null;
     emit(state.copyWith(acting: false));
     final Failure? failure = result.tryGetError();
-    if ((failure == null && reload) ||
-        failure is InvitationUnavailableFailure ||
-        failure is LeaveDeletesCircleFailure) {
+    if ((failure == null && reload) || _tabIsStale(failure)) {
       await load();
     }
     return failure?.messageKey;
   }
+
+  /// A failure that means the tab shows old members: the invitation or the
+  /// member is gone already, or the person's access changed meanwhile.
+  bool _tabIsStale(Failure? failure) =>
+      failure is InvitationUnavailableFailure ||
+      failure is LeaveDeletesCircleFailure ||
+      failure is NotFoundFailure ||
+      failure is ForbiddenFailure;
 
   @override
   Future<void> close() async {

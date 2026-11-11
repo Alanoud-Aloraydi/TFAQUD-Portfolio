@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -173,7 +174,11 @@ class _MedicationFormState extends State<MedicationForm> {
                 ),
               ],
               const SizedBox(height: AppSpacing.xl),
-              MedicationInstructionsGroup(data: _data, onChanged: _changed),
+              MedicationInstructionsGroup(
+                data: _data,
+                issue: _issue,
+                onChanged: _changed,
+              ),
               const SizedBox(height: AppSpacing.xl),
               MedicationPeriodFields(
                 data: _data,
@@ -271,6 +276,7 @@ class _MedicationFormState extends State<MedicationForm> {
     }
     if (!mounted) return;
     _dirty = false;
+    AppToast.show(context, 'toast.medication_saved');
     context.pop(true);
   }
 
@@ -279,6 +285,7 @@ class _MedicationFormState extends State<MedicationForm> {
       MedicationFormField.name => _data.nameFocus,
       MedicationFormField.strength => _data.strengthFocus,
       MedicationFormField.period => _data.periodFocus,
+      MedicationFormField.missedAfter => _data.missedAfterFocus,
       MedicationFormField.dose =>
         _data.schedules[issue.scheduleIndex!].doseFocus,
       MedicationFormField.weekdays =>

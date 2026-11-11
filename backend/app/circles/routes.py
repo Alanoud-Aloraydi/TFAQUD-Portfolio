@@ -171,10 +171,10 @@ def update_patient(circle_id):
 
 
 @bp.post("/<circle_id>/leave")
-@require_circle_role(MANAGER)
+@require_circle_role(MANAGER, CircleRole.MEMBER)
 def leave_circle(circle_id):
-    """Leave as a manager; the last manager must confirm deleting the
-    circle."""
+    """Leave the circle, also as a member whose editing is paused; the
+    patient or the last manager must confirm deleting the circle."""
     body = parse_optional_json_body(LeaveCircleInput)
     with care_work() as work:
         work.care.leave_circle(

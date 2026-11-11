@@ -163,7 +163,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
                       color: AppSemanticColors.borderControlBase,
                     ),
                   ),
-                  child: Text(context.tr('circles.contact_cancel')),
+                  child: Text(context.tr('common.cancel')),
                 ),
               ),
             ],

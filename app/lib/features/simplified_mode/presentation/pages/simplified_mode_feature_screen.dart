@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/phone_notifications.dart';
@@ -138,8 +139,7 @@ class _SimplifiedModeFeatureScreenState
         }
         final String? key = state.messageKey;
         if (key != null && state.status == SimplifiedModeStatus.ready) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(context.tr(key))));
+          AppToast.show(context, key, kind: ToastKind.error);
           context.read<SimplifiedModeCubit>().messageShown();
         }
       },

@@ -38,6 +38,7 @@ class SentCircleRequestModel {
         proposedAppMode: parseMode(request['proposed_app_mode'] as String?),
         status: parseStatus(request['status'] as String?),
         createdAt: parseTime(request['created_at']),
+        respondedAt: parseTime(request['responded_at']),
       ),
     );
   }

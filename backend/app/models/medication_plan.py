@@ -9,6 +9,7 @@ from sqlalchemy import UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
+from app.plan_limits import MISSED_AFTER_CHECK
 
 
 class MedicationPlan(db.Model):
@@ -85,7 +86,7 @@ class MedicationPlanVersion(db.Model):
         ),
         CheckConstraint("strength_value > 0", name="positive_strength"),
         CheckConstraint(
-            "missed_after_minutes IN (30, 60, 120)",
+            MISSED_AFTER_CHECK,
             name="missed_after_minutes",
         ),
         CheckConstraint(

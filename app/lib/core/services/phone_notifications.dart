@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app/core/services/service_texts.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -55,16 +56,12 @@ class ScheduledNotification extends Equatable {
 const String reminderCategory = 'tafaqod.reminder';
 const String snoozeAction = 'snooze';
 
-/// The words of [snoozeAction], fixed: the translations are not loaded
-/// when the plugin starts.
-const String _snoozeLabel = 'ذكّرني بعد 15 دقيقة';
-
 /// The Android channel of the reminders. Android 8+ shows nothing without
 /// a channel; the person can tune its sound and importance in Settings.
 const AndroidNotificationChannel reminderChannel = AndroidNotificationChannel(
   'tafaqod.reminders',
-  'التذكيرات',
-  description: 'تذكير الجرعات والقياسات والمواعيد',
+  ServiceTexts.channelName,
+  description: ServiceTexts.channelDescription,
   importance: Importance.high,
 );
 
@@ -166,7 +163,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
               actions: <DarwinNotificationAction>[
                 DarwinNotificationAction.plain(
                   snoozeAction,
-                  _snoozeLabel,
+                  ServiceTexts.snoozeAction,
                   options: <DarwinNotificationActionOption>{
                     DarwinNotificationActionOption.foreground,
                   },
@@ -311,7 +308,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
               ? const <AndroidNotificationAction>[
                   AndroidNotificationAction(
                     snoozeAction,
-                    _snoozeLabel,
+                    ServiceTexts.snoozeAction,
                     showsUserInterface: true,
                   ),
                 ]

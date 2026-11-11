@@ -478,6 +478,16 @@ void main() {
         expect(find.text('circles.patient_title'.tr()), findsOneWidget);
         expect(find.text('circles.patient_first_name'.tr()), findsOneWidget);
         expect(find.text('circles.patient_last_name'.tr()), findsOneWidget);
+        // What the circle means, what is required and why, and who sees it.
+        for (final String key in <String>[
+          'circles.patient_subtitle',
+          'circles.patient_required_note',
+          'circles.birth_date_why',
+          'circles.patient_city_why',
+          'circles.patient_privacy_note',
+        ]) {
+          expect(find.text(key.tr(), skipOffstage: false), findsOneWidget);
+        }
         // The name of the signed-in account is not shown: the patient's names
         // are typed.
         expect(find.text('Reem Alahmadi'), findsNothing);

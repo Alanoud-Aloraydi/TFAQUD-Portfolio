@@ -1,4 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/l10n/medication_format.dart';
@@ -6,6 +8,7 @@ import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -17,7 +20,6 @@ import 'package:app/features/medications/presentation/widgets/medication_details
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
-import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,7 +56,7 @@ class MedicationDetailsPage extends StatelessWidget {
         if (state.status == MedicationsStatus.failure || state.plans.isEmpty) {
           return Scaffold(
             appBar: AppBar(),
-            body: MedicationFailureView(
+            body: RetryView(
               messageKey: state.messageKey ?? 'error.resource_not_found',
               onRetry: () =>
                   context.read<MedicationsCubit>().loadPlan(circleId, planId),
@@ -184,6 +186,7 @@ class _Content extends StatelessWidget {
     final changed = await context.read<MedicationsCubit>().discontinue(plan);
     if (!context.mounted) return;
     if (changed) {
+      AppToast.show(context, 'toast.medication_stopped');
       context.pop(true);
       return;
     }
@@ -211,6 +214,7 @@ class _Content extends StatelessWidget {
     final changed = await context.read<MedicationsCubit>().cancelPending(plan);
     if (!context.mounted) return;
     if (changed) {
+      AppToast.show(context, 'toast.change_canceled');
       context.pop(true);
       return;
     }
@@ -221,8 +225,7 @@ class _Content extends StatelessWidget {
   void _showFailure(BuildContext context) {
     final message = context.read<MedicationsCubit>().state.messageKey;
     if (message != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(message))));
+      AppToast.show(context, message, kind: ToastKind.error);
     }
   }
 }
@@ -280,8 +283,10 @@ class _PendingRevision extends StatelessWidget {
             if (pending.instructions case final instructions?)
               Text(instructions),
             Text(
-              context.tr(
-                'medications.missed_option.${pending.missedAfterMinutes}',
+              arabicCount(
+                context,
+                ArabicCount.minutes,
+                pending.missedAfterMinutes,
               ),
             ),
             for (final schedule in pending.schedules)

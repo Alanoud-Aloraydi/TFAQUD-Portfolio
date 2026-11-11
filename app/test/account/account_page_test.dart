@@ -374,7 +374,7 @@ void main() {
         expect(inDialog('account.delete_title'.tr()), findsOneWidget);
         expect(inDialog('account.delete_body'.tr()), findsOneWidget);
 
-        await tester.tap(inDialog('account.cancel'.tr()));
+        await tester.tap(inDialog('common.cancel'.tr()));
         await tester.pumpAndSettle();
 
         expect(circles.deletions, isEmpty);
@@ -437,7 +437,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(inDialog('account.delete_confirm'.tr()));
         await tester.pumpAndSettle();
-        await tester.tap(inDialog('account.cancel'.tr()));
+        await tester.tap(inDialog('common.cancel'.tr()));
         await tester.pumpAndSettle();
 
         // Only the first try reached the server, and it was refused.

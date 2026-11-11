@@ -1,3 +1,4 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/widgets/layout/settings_card.dart';
@@ -18,14 +19,14 @@ class SignOutRow extends StatelessWidget {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (BuildContext context, AuthState state) {
         if (state is AuthErrorState) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.tr(state.messageKey))));
+          AppToast.show(context, state.messageKey, kind: ToastKind.error);
         }
         if (state is AuthSignedOutState) {
           if (!state.serverConfirmed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.tr('auth.sign_out_local_only'))),
+            AppToast.show(
+              context,
+              'auth.sign_out_local_only',
+              kind: ToastKind.error,
             );
           }
           context.go(Routes.auth);

@@ -1,3 +1,4 @@
+import 'package:app/core/utils/overdue_window.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -28,6 +29,7 @@ class TodayMedicationView {
           final scheduledOn = scheduleDay(item.scheduledOn);
           return item != next &&
               !scheduledOn.isAfter(today) &&
+              !scheduledOn.isBefore(overdueStart(today)) &&
               item.record == null &&
               status == DoseTimingState.missed;
         }).toList()..sort((a, b) {

@@ -1,3 +1,4 @@
+import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
@@ -12,7 +13,7 @@ class MedicationVersion extends Equatable {
     required this.dosageForm,
     required this.startsOn,
     required List<MedicationSchedule> schedules,
-    this.missedAfterMinutes = 60,
+    this.missedAfterMinutes = PlanLimits.defaultMissedAfterMinutes,
     this.reason,
     this.instructions,
     this.endsOn,
@@ -154,7 +155,7 @@ class MedicationPlanDraft extends Equatable {
     required this.dosageForm,
     required this.startsOn,
     required List<MedicationScheduleDraft> schedules,
-    this.missedAfterMinutes = 60,
+    this.missedAfterMinutes = PlanLimits.defaultMissedAfterMinutes,
     this.reason,
     this.instructions,
     this.endsOn,
