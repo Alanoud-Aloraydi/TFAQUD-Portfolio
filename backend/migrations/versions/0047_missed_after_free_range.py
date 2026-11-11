@@ -17,7 +17,9 @@ _TABLES = ("medication_plan_version", "measurement_plan_version")
 
 
 def _constraint(table: str) -> str:
-    return f"ck_{table}_missed_after_minutes"
+    # `op.f` keeps the name as it is: the naming convention would otherwise
+    # prefix a name that already starts with `ck_` a second time.
+    return op.f(f"ck_{table}_missed_after_minutes")
 
 
 def _replace(condition: str) -> None:
