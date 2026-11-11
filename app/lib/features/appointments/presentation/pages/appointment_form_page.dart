@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
@@ -135,6 +136,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
         : await cubit.revise(widget.circleId, value, draft);
     if (!mounted) return;
     if (errorKey == null) {
+      AppToast.show(context, 'toast.appointment_saved');
       context.pop(true);
     } else {
       setState(() {

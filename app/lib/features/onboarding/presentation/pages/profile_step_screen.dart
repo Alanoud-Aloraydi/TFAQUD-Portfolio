@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/name_limits.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -72,7 +73,9 @@ class _ProfileStepScreenState extends State<ProfileStepScreen> {
 
   Future<void> _continue() async {
     final bool saved = await context.read<OnboardingCubit>().saveProfile();
-    if (saved && mounted) context.push(Routes.onboardingStart);
+    if (!saved || !mounted) return;
+    AppToast.show(context, 'toast.profile_saved');
+    unawaited(context.push(Routes.onboardingStart));
   }
 
   /// «رجوع»: the sign-in is already made with the code, so going back to
@@ -101,8 +104,7 @@ class _ProfileStepScreenState extends State<ProfileStepScreen> {
   /// why it failed.
   void _signedOut(BuildContext context, AuthState state) {
     if (state is AuthErrorState) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey))));
+      AppToast.show(context, state.messageKey, kind: ToastKind.error);
       return;
     }
     if (state is AuthSignedOutState) {

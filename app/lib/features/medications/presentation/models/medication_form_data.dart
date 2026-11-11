@@ -1,3 +1,4 @@
+import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -5,7 +6,7 @@ import 'package:app/features/medications/presentation/models/medication_schedule
 import 'package:flutter/material.dart';
 
 /// Defines the supported medication form field values.
-enum MedicationFormField { name, strength, period, dose, weekdays }
+enum MedicationFormField { name, strength, period, dose, weekdays, missedAfter }
 
 /// Describes one medication form validation issue.
 class MedicationFormIssue {
@@ -32,7 +33,8 @@ class MedicationFormData {
       reason = TextEditingController(text: version?.reason),
       instructions = TextEditingController(text: version?.instructions),
       form = version?.dosageForm ?? DosageForm.tablet,
-      missedAfterMinutes = version?.missedAfterMinutes ?? 60,
+      missedAfterMinutes =
+          version?.missedAfterMinutes ?? PlanLimits.defaultMissedAfterMinutes,
       startsOn = version?.startsOn ?? today,
       endsOn = version?.endsOn,
       effectiveFromOn = version == null ? null : today,
@@ -48,8 +50,9 @@ class MedicationFormData {
   final FocusNode nameFocus = FocusNode();
   final FocusNode strengthFocus = FocusNode();
   final FocusNode periodFocus = FocusNode();
+  final FocusNode missedAfterFocus = FocusNode();
   DosageForm form;
-  int missedAfterMinutes;
+  int? missedAfterMinutes;
   DateTime startsOn;
   DateTime? endsOn;
   DateTime? effectiveFromOn;
@@ -101,6 +104,9 @@ class MedicationFormData {
         );
       }
     }
+    if (!PlanLimits.isValidMissedAfter(missedAfterMinutes)) {
+      return const MedicationFormIssue(MedicationFormField.missedAfter);
+    }
     return null;
   }
 
@@ -137,7 +143,7 @@ class MedicationFormData {
       dosageForm: form,
       reason: _optional(reason.text),
       instructions: _optional(instructions.text),
-      missedAfterMinutes: missedAfterMinutes,
+      missedAfterMinutes: missedAfterMinutes!,
       startsOn: startsOn,
       endsOn: endsOn,
       effectiveFromOn: effectiveFromOn,
@@ -153,6 +159,7 @@ class MedicationFormData {
     nameFocus.dispose();
     strengthFocus.dispose();
     periodFocus.dispose();
+    missedAfterFocus.dispose();
     for (final schedule in schedules) {
       schedule.dispose();
     }

@@ -29,12 +29,16 @@ class SentCircleRequest extends Equatable {
     required this.proposedAppMode,
     required this.status,
     this.createdAt,
+    this.respondedAt,
   });
 
   final String id;
   final String patientPhoneNumber;
   final CircleAppMode proposedAppMode;
   final CircleRequestStatus status;
+
+  /// When the patient answered (UTC); null while the request is open.
+  final DateTime? respondedAt;
 
   /// When the server saved the request. The account page says how long ago.
   final DateTime? createdAt;
@@ -46,5 +50,6 @@ class SentCircleRequest extends Equatable {
     proposedAppMode,
     status,
     createdAt,
+    respondedAt,
   ];
 }

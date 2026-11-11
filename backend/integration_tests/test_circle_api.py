@@ -357,6 +357,56 @@ def test_non_owner_cannot_manage_circle_members(
     assert error_code(response, 403) == "forbidden"
 
 
+def test_a_paused_member_cannot_manage_members_but_can_leave(
+    database_app, database, account
+):
+    owner, paused, other = (
+        account(name="Noura"),
+        account(name="Khaled"),
+        account(name="Reem"),
+    )
+    circle_id = Api(database_app, owner).post(
+        "/api/v1/circles/self", SELF
+    ).json["circle"]["id"]
+    with Session(database) as session:
+        circle = session.get(CareCircle, circle_id)
+    add_manager(database, owner, circle, paused)
+    add_manager(database, owner, circle, other)
+    path = circle_url(circle_id, f"/members/{other.id}")
+    Api(database_app, owner).patch(
+        circle_url(circle_id, f"/members/{paused.id}"), {"can_edit": False}
+    )
+    paused_api = Api(database_app, paused)
+
+    assert error_code(paused_api.delete(path), 403) == "forbidden"
+    assert error_code(
+        paused_api.patch(path, {"can_edit": False}), 403
+    ) == "forbidden"
+    assert paused_api.post(circle_url(circle_id, "/leave")).status_code == 204
+    assert error_code(
+        paused_api.get(circle_url(circle_id)), 403
+    ) == "forbidden"
+    assert Api(database_app, owner).get(
+        circle_url(circle_id)
+    ).status_code == 200
+
+
+def test_the_owner_cannot_pause_or_remove_themself(
+    database_app, database, account
+):
+    owner = account(name="Noura")
+    circle_id = Api(database_app, owner).post(
+        "/api/v1/circles/self", SELF
+    ).json["circle"]["id"]
+    api = Api(database_app, owner)
+    path = circle_url(circle_id, f"/members/{owner.id}")
+
+    assert error_code(api.patch(path, {"can_edit": False}), 422) == (
+        "circle_owner"
+    )
+    assert error_code(api.delete(path), 422) == "circle_owner"
+
+
 def test_a_simplified_patient_sees_the_circle_without_invitations(
     database_app, database, account
 ):

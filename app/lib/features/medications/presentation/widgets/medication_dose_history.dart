@@ -1,7 +1,9 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -9,7 +11,6 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
-import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,7 +43,7 @@ class MedicationDoseHistory extends StatelessWidget {
           return const DoseHistorySkeleton();
         }
         if (state.status == MedicationOccurrencesStatus.failure) {
-          return MedicationFailureView(
+          return RetryView(
             messageKey: state.messageKey!,
             onRetry: context.read<MedicationOccurrencesCubit>().reload,
           );
@@ -90,8 +91,6 @@ class MedicationDoseHistory extends StatelessWidget {
                       ),
                       child: DoseOccurrenceCard(
                         occurrence: item,
-                        historyLayout: true,
-                        showControls: false,
                         circleId: circleId,
                       ),
                     ),
@@ -122,7 +121,6 @@ class MedicationDoseHistory extends StatelessWidget {
 
   void _showError(BuildContext context, MedicationOccurrencesState state) {
     if (state.messageKey == null) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.tr(state.messageKey!))));
+    AppToast.show(context, state.messageKey!, kind: ToastKind.error);
   }
 }

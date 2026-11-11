@@ -195,7 +195,7 @@ void main() {
         expect(find.text('circle_overview.patient_line'.tr()), findsOneWidget);
         expect(find.text('+966 55 987 6543'), findsOneWidget);
         expect(find.text('circle_overview.resend'.tr()), findsOneWidget);
-        expect(find.text('circle_overview.cancel'.tr()), findsOneWidget);
+        expect(find.text('common.cancel'.tr()), findsOneWidget);
       });
 
       testWidgets(
@@ -347,7 +347,7 @@ void main() {
         await openFile(tester);
         await fillNewContact(tester);
 
-        await tester.tap(find.text('circles.contact_cancel'.tr()));
+        await tester.tap(find.text('common.cancel'.tr()));
         await tester.pumpAndSettle();
 
         expect(find.text('circles.contact_new_title'.tr()), findsNothing);

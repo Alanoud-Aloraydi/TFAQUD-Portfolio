@@ -1,11 +1,14 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/constants/plan_limits.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/forms/weekday_selector.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
@@ -50,7 +53,7 @@ class _Reading {
 }
 
 /// The schedule of one kind: glucose and blood pressure each keep their own
-/// times, days, start and grace while the form switches between them, and
+/// times, days, start and missed-after wait while the form switches between them, and
 /// only the kind shown is saved.
 class _Schedule {
   _Schedule(this.readings, this.start);
@@ -63,7 +66,7 @@ class _Schedule {
 
   /// The first day, on the patient's calendar.
   DateTime start;
-  int grace = 60;
+  int? missedAfter = PlanLimits.defaultMissedAfterMinutes;
 }
 
 class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
@@ -85,8 +88,8 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   Set<int> get _days => _schedule.days;
   DateTime get _start => _schedule.start;
   set _start(DateTime value) => _schedule.start = value;
-  int get _grace => _schedule.grace;
-  set _grace(int value) => _schedule.grace = value;
+  int? get _missedAfter => _schedule.missedAfter;
+  set _missedAfter(int? value) => _schedule.missedAfter = value;
 
   final _low = TextEditingController();
   final _high = TextEditingController();
@@ -95,8 +98,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   bool _initialized = false;
   bool _saving = false;
   String? _errorKey;
-
-  static const _weekOrder = [6, 7, 1, 2, 3, 4, 5];
+  bool _missedAfterChecked = false;
 
   /// Several planned readings can share the same day.
   static const int _maxReadings = 6;
@@ -134,7 +136,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     _high.text = '${version.glucoseHigh ?? ''}';
     _systolic.text = '${version.systolicLimit ?? ''}';
     _diastolic.text = '${version.diastolicLimit ?? ''}';
-    _grace = version.graceMinutes;
+    _missedAfter = version.missedAfterMinutes;
   }
 
   Future<void> _save(MeasurementPlan? plan) async {
@@ -151,6 +153,10 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     final diastolic = int.tryParse(_diastolic.text);
     if (_days.isEmpty) {
       setState(() => _errorKey = 'measurements.days_required');
+      return;
+    }
+    if (!PlanLimits.isValidMissedAfter(_missedAfter)) {
+      setState(() => _missedAfterChecked = true);
       return;
     }
     final times = <String>{for (final item in _readings) _clock(item.time)};
@@ -191,7 +197,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       ],
       weekdays: _days.toList()..sort(),
       startsOn: _start,
-      graceMinutes: _grace,
+      missedAfterMinutes: _missedAfter!,
       glucoseLow: _kind == MeasurementKind.glucose ? low : null,
       glucoseHigh: _kind == MeasurementKind.glucose ? high : null,
       systolicLimit: _kind == MeasurementKind.bp ? systolic : null,
@@ -207,6 +213,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         : await cubit.revise(plan, draft);
     if (!mounted) return;
     if (errorKey == null) {
+      AppToast.show(context, 'toast.measurement_plan_saved');
       context.pop(true);
     } else {
       setState(() {
@@ -354,39 +361,13 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                   children: [
                     Text(context.tr('measurements.days')),
                     const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        for (final day in _weekOrder)
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                end: AppSpacing.xs,
-                              ),
-                              child: InkWell(
-                                onTap: () => setState(() {
-                                  if (!_days.remove(day)) _days.add(day);
-                                }),
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  constraints: const BoxConstraints(
-                                    minHeight: 44,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _days.contains(day)
-                                        ? AppSemanticColors.selectedSurface
-                                        : AppSemanticColors.surfaceContent,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    context.tr(
-                                      'medications.weekday_short.$day',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
+                    WeekdaySelector(
+                      selected: _days,
+                      onChanged: (Set<int> days) => setState(() {
+                        _days
+                          ..clear()
+                          ..addAll(days);
+                      }),
                     ),
                   ],
                 ),
@@ -416,16 +397,13 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                   }
                 },
               ),
-              InsetRow(
-                label: context.tr('measurements.grace'),
-                value: context.tr('measurements.minutes', args: ['$_grace']),
-                onTap: () => setState(() {
-                  _grace = _grace == 30
-                      ? 60
-                      : _grace == 60
-                      ? 120
-                      : 30;
-                }),
+              MissedAfterField(
+                key: ValueKey<String>('missed-after-${_kind.name}'),
+                label: context.tr('measurements.missed_after'),
+                minutes: _missedAfter,
+                showError: _missedAfterChecked,
+                onChanged: (int? minutes) =>
+                    setState(() => _missedAfter = minutes),
               ),
             ],
           ),

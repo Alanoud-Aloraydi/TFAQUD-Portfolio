@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/calendar_sync.dart';
@@ -68,8 +69,11 @@ class SimplifiedAccountScreen extends StatelessWidget {
           return;
         }
         if (state.errorKey case final String key) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(context.tr(key))));
+          AppToast.show(
+            context,
+            key,
+            kind: state.errorKey != null ? ToastKind.error : ToastKind.success,
+          );
           cubit.messagesShown();
         }
         if (state.deletePrompt != DeletePrompt.none) {
@@ -730,14 +734,14 @@ class _SignOutButton extends StatelessWidget {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthErrorState) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.tr(state.messageKey))));
+          AppToast.show(context, state.messageKey, kind: ToastKind.error);
         }
         if (state is AuthSignedOutState) {
           if (!state.serverConfirmed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.tr('auth.sign_out_local_only'))),
+            AppToast.show(
+              context,
+              'auth.sign_out_local_only',
+              kind: ToastKind.error,
             );
           }
           context.go(Routes.auth);

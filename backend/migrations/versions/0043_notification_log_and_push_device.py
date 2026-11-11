@@ -30,6 +30,17 @@ def upgrade() -> None:
         ("scheduled_on", sa.Date()), ("time_of_day", sa.Time()),
     ):
         op.add_column(log, sa.Column(column, type_))
+    # The first server (6 to 8 November 2026) also wrote «dose_due:…»,
+    # «measurement_due:…», «appointment_reminder:<id>» and a reading's
+    # «measurement_missed» without its time. Those days are past, so their
+    # rows hold nothing back any more: keep only the two shapes the tick
+    # writes now, or one old row stops the upgrade.
+    op.execute(
+        f"DELETE FROM {log} WHERE dedupe_key !~ "
+        "'^(dose_missed:[0-9a-f-]{36}:[0-9]{4}-[0-9]{2}-[0-9]{2}"
+        "|measurement_missed:[0-9a-f-]{36}:[0-9]{4}-[0-9]{2}-[0-9]{2}"
+        ":[0-9]{2}:[0-9]{2}(:[0-9]{2})?)$'"
+    )
     op.execute(
         f"UPDATE {log} SET kind = split_part(dedupe_key, ':', 1), "
         "target_id = split_part(dedupe_key, ':', 2)::uuid, "

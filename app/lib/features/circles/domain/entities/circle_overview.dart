@@ -14,9 +14,11 @@ class CircleOverview extends Equatable {
     required this.city,
     required this.canManage,
     this.canManageMembers = false,
+    bool? canLeave,
     required List<CircleMember> members,
     required List<CirclePendingInvitation> pendingInvitations,
-  }) : members = List.unmodifiable(members),
+  }) : canLeave = canLeave ?? canManage,
+       members = List.unmodifiable(members),
        pendingInvitations = List.unmodifiable(pendingInvitations);
 
   final String name;
@@ -31,6 +33,9 @@ class CircleOverview extends Equatable {
   final String city;
   final bool canManage;
   final bool canManageMembers;
+
+  /// A manager, and a member whose editing is paused, may leave.
+  final bool canLeave;
   final List<CircleMember> members;
   final List<CirclePendingInvitation> pendingInvitations;
 
@@ -40,12 +45,14 @@ class CircleOverview extends Equatable {
       patientIsYou || (canManage && !patientUsesApp);
 
   /// Leaving deletes the circle when the person leaving is its patient or
-  /// its only manager (the server's rule, `CareService.leave_circle`). The
-  /// tab asks to delete instead of to leave; when the members changed
-  /// meanwhile the server refuses and the tab reads the circle again.
+  /// its only member (the server's rule, `CareService.leave_circle`). A
+  /// member with paused editing still counts as someone who stays. When the
+  /// members changed meanwhile the server refuses and the tab reads the
+  /// circle again.
   bool get leaveDeletesCircle =>
       patientIsYou ||
-      members.where((CircleMember member) => member.isManager).length <= 1;
+      members.where((CircleMember member) => member.holdsMembership).length <=
+          1;
 
   @override
   List<Object?> get props => [
@@ -59,6 +66,7 @@ class CircleOverview extends Equatable {
     city,
     canManage,
     canManageMembers,
+    canLeave,
     members,
     pendingInvitations,
   ];
@@ -89,6 +97,13 @@ class CircleMember extends Equatable {
 
   /// So another member can call them; null for a patient with no account.
   final String? phoneNumber;
+
+  /// A member the owner paused: still in the circle, reading only.
+  bool get isViewOnly => !isManager && !isPatient;
+
+  /// Whether the server holds a membership row for this person. The patient
+  /// of a circle who manages nothing is listed but holds none.
+  bool get holdsMembership => isManager || !isPatient;
 
   @override
   List<Object?> get props => [

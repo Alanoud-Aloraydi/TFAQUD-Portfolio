@@ -1,27 +1,19 @@
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/section_header.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_visuals.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_chart_card.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_readings_list.dart';
+import 'package:app/features/measurements/presentation/widgets/month_switcher.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -60,17 +52,13 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
 
   /// The month shown; the patient's current one at first.
   late DateTime _month = _thisMonth;
+  String _filter = 'all';
+  bool _started = false;
 
   DateTime get _thisMonth {
     final DateTime today = PatientClockScope.of(context).today();
     return DateTime(today.year, today.month);
   }
-
-  String _filter = 'all';
-  bool _calendarGlucose = false;
-  bool _calendarBp = false;
-
-  bool _started = false;
 
   /// The first month is read here, not in initState: it is the patient's
   /// current month, read from [PatientClockScope].
@@ -96,363 +84,122 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   }
 
   void _loadMonth() {
-    final end = DateTime(_month.year, _month.month + 1, 0);
+    final DateTime end = DateTime(_month.year, _month.month + 1, 0);
     _readings.load(widget.circleId, _month, end);
     _tasks.loadRange(widget.circleId, _month, end);
   }
 
   void _changeMonth(int offset) {
-    final candidate = DateTime(_month.year, _month.month + offset);
-    if (candidate.isAfter(_thisMonth)) {
-      return;
-    }
+    final DateTime candidate = DateTime(_month.year, _month.month + offset);
+    if (candidate.isAfter(_thisMonth)) return;
     setState(() => _month = candidate);
     _loadMonth();
   }
 
+  bool _matches(MeasurementKind kind) =>
+      _filter == 'all' || kind.name == _filter;
+
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
-    providers: [
-      BlocProvider.value(value: _readings),
-      BlocProvider.value(value: _tasks),
+    providers: <BlocProvider<dynamic>>[
+      BlocProvider<MeasurementReadingsCubit>.value(value: _readings),
+      BlocProvider<MeasurementTasksCubit>.value(value: _tasks),
     ],
     child: BlocBuilder<MeasurementReadingsCubit, MeasurementReadingsState>(
-      builder: (context, state) {
-        final taskState = context.watch<MeasurementTasksCubit>().state;
-        final values = state.readings
-            .where((item) => item.outcome == 'read')
-            .toList();
-        final filtered = state.readings
-            .where((item) => _filter == 'all' || item.kind.name == _filter)
-            .toList();
-        final missed =
-            taskState.tasks
-                .where(
-                  (item) =>
-                      item.status == MeasurementStatus.missed &&
-                      (_filter == 'all' || item.kind.name == _filter),
-                )
-                .toList()
-              ..sort((a, b) {
-                final byDay = b.scheduledOn.compareTo(a.scheduledOn);
-                return byDay != 0 ? byDay : b.time.compareTo(a.time);
-              });
-        return ListView(
-          padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
-          children: [
-            widget.header,
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => _changeMonth(-1),
-                  icon: const Icon(CupertinoIcons.chevron_right),
-                ),
-                Expanded(
-                  child: Text(
-                    '${context.tr('circles.months.${_month.month}')} '
-                    '${_month.year}',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  onPressed: _month == _thisMonth
-                      ? null
-                      : () => _changeMonth(1),
-                  icon: const Icon(CupertinoIcons.chevron_left),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (state.status == MeasurementLoadStatus.loading &&
-                state.readings.isEmpty)
-              const Center(child: CircularProgressIndicator())
-            else if (state.status == MeasurementLoadStatus.failure)
-              TextButton(
-                onPressed: _loadMonth,
-                child: Text(context.tr(state.errorKey ?? 'error.unknown')),
-              )
-            else if (taskState.status == MeasurementLoadStatus.failure)
-              TextButton(
-                onPressed: _loadMonth,
-                child: Text(context.tr(taskState.errorKey ?? 'error.unknown')),
-              )
-            else ...[
-              _chartCard(context, MeasurementKind.glucose, values),
-              const SizedBox(height: AppSpacing.md),
-              _chartCard(context, MeasurementKind.bp, values),
-              const SizedBox(height: AppSpacing.xl),
-              SectionHeader(context.tr('measurements.readings')),
-              WhiteFilterMenu<String>(
-                options: {
-                  'all': context.tr('measurements.all'),
-                  'glucose': context.tr('measurements.glucose'),
-                  'bp': context.tr('measurements.bp'),
-                },
-                selected: _filter,
-                onChanged: (value) => setState(() => _filter = value),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              if (missed.isNotEmpty) ...[
-                SectionHeader(
-                  context.tr('measurements.unrecorded_measurements'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                for (final task in missed) ...[
-                  Text(
-                    '${task.scheduledOn.day}/${task.scheduledOn.month}/'
-                    '${task.scheduledOn.year}',
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  MeasurementTaskRow(
-                    task: task,
-                    now: PatientClockScope.of(context).now(),
-                    circleId: widget.circleId,
-                    readOnly: true,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-                const SizedBox(height: AppSpacing.md),
-              ],
-              if (filtered.isEmpty && missed.isEmpty)
-                Center(child: Text(context.tr('measurements.no_readings')))
-              else
-                for (final reading in filtered) ...[
-                  _readingRow(context, reading),
-                  const SizedBox(height: AppSpacing.xs),
-                ],
-            ],
-          ],
-        );
-      },
+      builder: (context, state) => ListView(
+        padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+        children: <Widget>[
+          widget.header,
+          const SizedBox(height: AppSpacing.md),
+          WhiteFilterMenu<String>(
+            glass: true,
+            options: <String, String>{
+              'all': context.tr('measurements.all'),
+              'glucose': context.tr('measurements.glucose'),
+              'bp': context.tr('measurements.bp'),
+            },
+            selected: _filter,
+            onChanged: (value) => setState(() => _filter = value),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          MonthSwitcher(
+            month: _month,
+            canGoForward: _month != _thisMonth,
+            onChange: _changeMonth,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ..._content(context, state),
+        ],
+      ),
     ),
   );
 
-  Widget _chartCard(
-    BuildContext context,
-    MeasurementKind kind,
-    List<MeasurementReading> all,
-  ) {
-    final readings = all.where((item) => item.kind == kind).toList();
-    final plan = widget.plans
-        .where((item) => item.kind == kind && item.stoppedAt == null)
-        .firstOrNull;
-    final version = plan?.version;
-    final monthEnd = DateTime(_month.year, _month.month + 1, 0);
-    final firstReading = readings.firstOrNull;
-    final sharedReadingTarget =
-        firstReading != null &&
-        readings.every(
-          (reading) =>
-              reading.glucoseLow == firstReading.glucoseLow &&
-              reading.glucoseHigh == firstReading.glucoseHigh &&
-              reading.systolicLimit == firstReading.systolicLimit &&
-              reading.diastolicLimit == firstReading.diastolicLimit,
-        );
-    final readingTarget = sharedReadingTarget ? firstReading : null;
-    final planTarget =
-        readings.isEmpty &&
-            version != null &&
-            !version.effectiveFromOn.isAfter(monthEnd)
-        ? version
-        : null;
-    final low = kind == MeasurementKind.glucose
-        ? readingTarget?.glucoseLow ?? planTarget?.glucoseLow
-        : readingTarget?.diastolicLimit ?? planTarget?.diastolicLimit;
-    final high = kind == MeasurementKind.glucose
-        ? readingTarget?.glucoseHigh ?? planTarget?.glucoseHigh
-        : readingTarget?.systolicLimit ?? planTarget?.systolicLimit;
-    final calendar = kind == MeasurementKind.glucose
-        ? _calendarGlucose
-        : _calendarBp;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceContent,
-        border: Border.all(color: AppSemanticColors.borderSubtle),
-        borderRadius: BorderRadius.circular(AppRadius.m),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  kind == MeasurementKind.glucose
-                      ? CupertinoIcons.drop
-                      : CupertinoIcons.heart,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    context.tr(
-                      kind == MeasurementKind.glucose
-                          ? 'measurements.glucose'
-                          : 'measurements.bp',
-                    ),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                if (readings.isNotEmpty)
-                  Text(
-                    readings.first.valueText,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              readings.isEmpty
-                  ? context.tr('measurements.no_readings')
-                  : context.tr(
-                      'measurements.reading_count',
-                      args: [
-                        '${readings.length}',
-                        '${readings.where((r) => r.outsideTarget == true).length}',
-                      ],
-                    ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            GlassSegmentedControl<bool>(
-              segments: {
-                false: context.tr('measurements.chart'),
-                true: context.tr('measurements.calendar'),
-              },
-              selected: calendar,
-              onChanged: (value) => setState(() {
-                if (kind == MeasurementKind.glucose) {
-                  _calendarGlucose = value;
-                } else {
-                  _calendarBp = value;
-                }
-              }),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            AnimatedSwitcher(
-              duration: const Duration(
-                milliseconds: AppMotion.branchEnterMilliseconds,
-              ),
-              reverseDuration: const Duration(
-                milliseconds: AppMotion.branchExitMilliseconds,
-              ),
-              switchInCurve: AppMotion.branchEnter,
-              switchOutCurve: AppMotion.easeIn,
-              child: KeyedSubtree(
-                key: ValueKey(calendar),
-                child: calendar
-                    ? MeasurementCalendar(readings: readings, month: _month)
-                    : MeasurementChart(
-                        kind: kind,
-                        readings: readings,
-                        month: _month,
-                        targetLow: low,
-                        targetHigh: high,
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  List<Widget> _content(BuildContext context, MeasurementReadingsState state) {
+    final MeasurementTasksState tasks = context
+        .watch<MeasurementTasksCubit>()
+        .state;
+    final String? errorKey = state.status == MeasurementLoadStatus.failure
+        ? state.errorKey
+        : (tasks.status == MeasurementLoadStatus.failure
+              ? tasks.errorKey
+              : null);
+    if (state.status == MeasurementLoadStatus.loading &&
+        state.readings.isEmpty) {
+      return const <Widget>[Center(child: CircularProgressIndicator())];
+    }
+    if (state.status == MeasurementLoadStatus.failure ||
+        tasks.status == MeasurementLoadStatus.failure) {
+      return <Widget>[
+        RetryView(messageKey: errorKey ?? 'error.unknown', onRetry: _loadMonth),
+      ];
+    }
+    return _loaded(context, state, tasks);
   }
 
-  Widget _readingRow(BuildContext context, MeasurementReading reading) {
-    final skipped = reading.outcome == 'skipped';
-    final at = skipped
-        ? reading.scheduledOn!
-        : PatientClockScope.of(context).wallTime(reading.measuredAt!);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceContent,
-        borderRadius: BorderRadius.circular(AppRadius.field),
+  List<Widget> _loaded(
+    BuildContext context,
+    MeasurementReadingsState state,
+    MeasurementTasksState tasks,
+  ) {
+    final List<MeasurementReading> values = <MeasurementReading>[
+      for (final MeasurementReading r in state.readings)
+        if (r.outcome == 'read') r,
+    ];
+    final List<MeasurementOccurrence> missed = <MeasurementOccurrence>[
+      for (final MeasurementOccurrence t in tasks.tasks)
+        if (t.status == MeasurementStatus.missed && _matches(t.kind)) t,
+    ]..sort(_newestFirst);
+    return <Widget>[
+      for (final MeasurementKind kind in MeasurementKind.values)
+        if (_matches(kind)) ...<Widget>[
+          MeasurementChartCard(
+            kind: kind,
+            readings: <MeasurementReading>[
+              for (final MeasurementReading r in values)
+                if (r.kind == kind) r,
+            ],
+            plans: widget.plans,
+            month: _month,
+            circleId: widget.circleId,
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+      const SizedBox(height: AppSpacing.md),
+      SectionHeader(context.tr('measurements.readings')),
+      const SizedBox(height: AppSpacing.sm),
+      MeasurementReadingsList(
+        circleId: widget.circleId,
+        readings: <MeasurementReading>[
+          for (final MeasurementReading r in state.readings)
+            if (_matches(r.kind)) r,
+        ],
+        missed: missed,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Icon(
-              reading.kind == MeasurementKind.glucose
-                  ? CupertinoIcons.drop
-                  : CupertinoIcons.heart,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr(
-                      reading.kind == MeasurementKind.glucose
-                          ? 'measurements.glucose'
-                          : 'measurements.bp',
-                    ),
-                  ),
-                  Text(
-                    skipped
-                        ? '${at.day}/${at.month}/${at.year}'
-                        : '${at.day}/${at.month}/${at.year} · '
-                              '${wallTimeText(at)}',
-                  ),
-                  if (!skipped && reading.planVersionId == null)
-                    Text(
-                      reading.outsideTarget == null
-                          ? context.tr('measurements.without_target')
-                          : reading.kind == MeasurementKind.glucose
-                          ? '${context.tr('measurements.target')}: '
-                                '${reading.glucoseLow}–${reading.glucoseHigh}'
-                          : '${context.tr('measurements.target')}: '
-                                '${reading.systolicLimit}/${reading.diastolicLimit}',
-                    ),
-                  // «بعد جهد، بعد القهوة».
-                  if (!skipped && reading.conditions.isNotEmpty)
-                    Text(readingConditionsText(context, reading)),
-                  if (skipped && reading.skipReasonCode != null)
-                    Text(
-                      context.tr(
-                        'measurements.skip_reason_line',
-                        args: [measurementSkipReasonText(context, reading)],
-                      ),
-                    ),
-                  if (reading.note != null) Text(reading.note!),
-                  if (reading.recordedByName case final name?) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        PersonPhoto(
-                          name: name,
-                          photoPath: personPhotoPath(
-                            widget.circleId,
-                            reading.recordedByAccountId,
-                          ),
-                          avatarCode: reading.recordedByAvatarCode,
-                          size: AppSizes.iconSmall,
-                        ),
-                        const SizedBox(width: AppSpacing.tight),
-                        Text(
-                          name,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Text(
-              skipped ? context.tr('measurements.skipped') : reading.valueText,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: reading.outsideTarget == true
-                    ? AppSemanticColors.statusWarning
-                    : AppSemanticColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    ];
+  }
+
+  static int _newestFirst(MeasurementOccurrence a, MeasurementOccurrence b) {
+    final int byDay = b.scheduledOn.compareTo(a.scheduledOn);
+    return byDay != 0 ? byDay : b.time.compareTo(a.time);
   }
 }

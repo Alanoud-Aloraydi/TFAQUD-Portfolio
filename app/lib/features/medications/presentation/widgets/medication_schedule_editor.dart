@@ -4,7 +4,7 @@ import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/forms/weekday_selector.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
@@ -40,10 +40,6 @@ class MedicationScheduleEditor extends StatelessWidget {
 
   /// The day the treatment starts, where «كل كم يوم» counts from.
   final DateTime? startsOn;
-
-  /// Match the supplied schedule strip: Saturday through Friday. Numbers are
-  /// those of [DateTime.weekday] (Monday 1 … Sunday 7).
-  static const List<int> _weekOrder = <int>[6, 7, 1, 2, 3, 4, 5];
 
   /// The largest dose the stepper reaches.
   static const double _maxDose = 999;
@@ -235,7 +231,7 @@ class MedicationScheduleEditor extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.md),
-          if (interval) _interval(context) else _weekdays(context),
+          if (interval) _interval(context) else _weekdays(),
         ],
       ),
     );
@@ -304,15 +300,12 @@ class MedicationScheduleEditor extends StatelessWidget {
     );
   }
 
-  Widget _weekdays(BuildContext context) => OptionChips(
-    options: <ChipOption>[
-      for (final int day in _weekOrder)
-        ChipOption('$day', context.tr('medications.weekday_short.$day')),
-    ],
-    isSelected: (String code) => data.weekdays.contains(int.parse(code)),
-    onTap: (String code) {
-      final int day = int.parse(code);
-      if (!data.weekdays.remove(day)) data.weekdays.add(day);
+  Widget _weekdays() => WeekdaySelector(
+    selected: data.weekdays,
+    onChanged: (Set<int> days) {
+      data.weekdays
+        ..clear()
+        ..addAll(days);
       onChanged();
     },
   );

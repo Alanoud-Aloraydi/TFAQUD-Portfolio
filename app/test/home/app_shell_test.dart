@@ -157,7 +157,7 @@ void main() {
         find.widgetWithText(FilledButton, 'home.create_circle'.tr()),
         findsOneWidget,
       );
-      // With no circle yet, the switcher is «إضافة فرد لمتابعته» itself.
+      // With no circle yet, the switcher is the add button itself.
       final GlassCapsuleButton addCircle = tester.widget<GlassCapsuleButton>(
         find.descendant(
           of: find.byType(HomeWidget),

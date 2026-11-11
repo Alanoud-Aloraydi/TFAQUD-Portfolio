@@ -31,6 +31,7 @@ class CircleOverviewModel {
         city: patient['city'] as String,
         canManage: circle['role'] == 'manager',
         canManageMembers: circle['can_manage_members'] as bool? ?? false,
+        canLeave: circle['role'] == 'manager' || circle['role'] == 'member',
         members: <CircleMember>[
           for (final raw in members)
             CircleMember(

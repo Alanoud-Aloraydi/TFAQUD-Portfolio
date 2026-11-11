@@ -1,3 +1,4 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -47,11 +48,15 @@ class RequestReplyScreen extends StatelessWidget {
               if (state.sessionEnded) {
                 context.go(Routes.auth);
               } else if (state.outcome == ReplyOutcome.accepted) {
+                AppToast.show(context, 'toast.request_accepted');
                 context.pushReplacement(Routes.completeRequest, extra: request);
-              } else if (context.canPop()) {
-                context.pop();
               } else {
-                context.go(Routes.notifications);
+                AppToast.show(context, 'toast.request_declined');
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(Routes.notifications);
+                }
               }
             },
             builder: (BuildContext context, RequestReplyState state) {

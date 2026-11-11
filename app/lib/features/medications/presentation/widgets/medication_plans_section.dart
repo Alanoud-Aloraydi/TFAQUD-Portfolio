@@ -1,13 +1,13 @@
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
-import 'package:app/features/medications/presentation/widgets/medication_state_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,7 +47,7 @@ class MedicationPlansSection extends StatelessWidget {
       return const PlansSkeleton();
     }
     if (state.status == MedicationsStatus.failure) {
-      return MedicationFailureView(
+      return RetryView(
         messageKey: state.messageKey!,
         onRetry: () => context.read<MedicationsCubit>().load(circleId),
       );

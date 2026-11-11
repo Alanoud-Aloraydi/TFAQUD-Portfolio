@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from app.plan_limits import DEFAULT_MISSED_AFTER_MINUTES, MissedAfter
 from app.validation import Dto
 
 Text50 = Annotated[str, Field(min_length=1, max_length=50)]
@@ -128,7 +129,7 @@ class PlanRequest(Dto):
     dosage_form: DosageForm
     reason_for_use: Annotated[str | None, Field(max_length=100)] = None
     instructions: OptionalText250 = None
-    missed_after_minutes: Literal[30, 60, 120] = 60
+    missed_after_minutes: MissedAfter = DEFAULT_MISSED_AFTER_MINUTES
     treatment_starts_on: date
     treatment_ends_on: date | None = None
     schedules: Annotated[

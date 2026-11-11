@@ -1,5 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -126,10 +127,12 @@ class MedicationInstructionsGroup extends StatelessWidget {
     super.key,
     required this.data,
     required this.onChanged,
+    this.issue,
   });
 
   final MedicationFormData data;
   final VoidCallback onChanged;
+  final MedicationFormIssue? issue;
 
   @override
   Widget build(BuildContext context) {
@@ -180,30 +183,15 @@ class MedicationInstructionsGroup extends StatelessWidget {
           maxLines: 2,
           onChanged: (_) => onChanged(),
         ),
-        InsetBlock(
-          semanticLabel: context.tr('medications.missed_after'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(context.tr('medications.missed_after')),
-              const SizedBox(height: AppSpacing.sm),
-              OptionChips(
-                options: <ChipOption>[
-                  for (final minutes in const <int>[30, 60, 120])
-                    ChipOption(
-                      '$minutes',
-                      context.tr('medications.missed_option.$minutes'),
-                    ),
-                ],
-                isSelected: (String code) =>
-                    int.parse(code) == data.missedAfterMinutes,
-                onTap: (String code) {
-                  data.missedAfterMinutes = int.parse(code);
-                  onChanged();
-                },
-              ),
-            ],
-          ),
+        MissedAfterField(
+          label: context.tr('medications.missed_after'),
+          minutes: data.missedAfterMinutes,
+          focusNode: data.missedAfterFocus,
+          showError: issue?.field == MedicationFormField.missedAfter,
+          onChanged: (int? minutes) {
+            data.missedAfterMinutes = minutes;
+            onChanged();
+          },
         ),
       ],
     );

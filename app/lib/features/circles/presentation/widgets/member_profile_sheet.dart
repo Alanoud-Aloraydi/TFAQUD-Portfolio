@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -163,8 +164,6 @@ class _MemberProfile extends StatelessWidget {
   void _copy(BuildContext context, String phone) {
     unawaited(Clipboard.setData(ClipboardData(text: phone)));
     HapticFeedback.selectionClick();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.tr('circle_overview.member_copied'))),
-    );
+    AppToast.show(context, 'circle_overview.member_copied');
   }
 }

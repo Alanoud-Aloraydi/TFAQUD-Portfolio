@@ -38,11 +38,15 @@ class StatusPill extends StatelessWidget {
             Icon(icon, size: AppSizes.iconSmall, color: foreground),
             const SizedBox(width: AppSpacing.xs),
           ],
-          Text(
-            text,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: foreground,
-              fontWeight: AppTextTheme.semibold,
+          // Flexible, so a long label wraps at large text instead of
+          // overflowing.
+          Flexible(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: foreground,
+                fontWeight: AppTextTheme.semibold,
+              ),
             ),
           ),
         ],

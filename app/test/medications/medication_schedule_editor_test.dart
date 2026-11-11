@@ -90,21 +90,23 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    // The week is seven day chips, all on for every day; there is no
-    // separate "every day" chip.
-    testWidgets('a day chip takes its day out of the week and back', (
+    // All seven days collapse into «كل الأيام»; a day then narrows the week.
+    testWidgets('a day narrows the week and «كل الأيام» brings it back', (
       tester,
     ) async {
       final data = await openEditor(tester, 1);
-      // The chip, not its letter: the chip takes the tap.
-      final sunday = find.widgetWithText(
-        FilterChip,
-        'medications.weekday_short.7'.tr(),
-      );
+      final sunday = find.text('medications.weekday_short.7'.tr());
+      final monday = find.text('medications.weekday_short.1'.tr());
       await tester.tap(sunday);
       await tester.pump();
-      expect(data.weekdays, {1, 2, 3, 4, 5, 6});
+      expect(data.weekdays, {7});
+      await tester.tap(monday);
+      await tester.pump();
+      expect(data.weekdays, {1, 7});
       await tester.tap(sunday);
+      await tester.pump();
+      expect(data.weekdays, {1});
+      await tester.tap(find.text('weekday_picker.all_days'.tr()));
       await tester.pump();
       expect(data.weekdays, {1, 2, 3, 4, 5, 6, 7});
       expect(tester.takeException(), isNull);

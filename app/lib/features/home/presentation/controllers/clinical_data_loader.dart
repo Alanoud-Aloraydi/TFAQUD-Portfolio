@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/utils/overdue_window.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -10,11 +11,11 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 
-/// The days «اليوم» reads doses for: from yesterday (a dose of last night
-/// still waits) to a month ahead (the next-task card), counted in calendar
-/// days of the patient's [today].
+/// The days «اليوم» reads doses for: from the first overdue day (a missed
+/// dose can still be answered) to a month ahead (the next-task card),
+/// counted in calendar days of the patient's [today].
 ({DateTime from, DateTime to}) occurrenceWindow(DateTime today) =>
-    (from: addDays(today, -1), to: addDays(today, 30));
+    (from: overdueStart(today), to: addDays(today, 30));
 
 /// Reads the shown circle's data into the cubits of the home tabs, and
 /// again when the patient's day changes.

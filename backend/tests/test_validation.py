@@ -65,9 +65,13 @@ def test_body_that_is_not_an_object_is_rejected(client, body):
 
 def test_error_does_not_echo_the_value_that_was_sent(client):
     secret_value = "very-secret-value-0000"
+    # The response carries a random hex request id. A short number could
+    # appear in it by chance, so the sent number is long enough that it
+    # cannot.
+    sent_number = 8675309418273645
     response = post_refresh(
-        client, json={"refresh_token": 1234, "other": secret_value}
+        client, json={"refresh_token": sent_number, "other": secret_value}
     )
 
     assert secret_value not in response.get_data(as_text=True)
-    assert "1234" not in response.get_data(as_text=True)
+    assert str(sent_number) not in response.get_data(as_text=True)

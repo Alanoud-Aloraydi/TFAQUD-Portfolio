@@ -1,6 +1,8 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/l10n/weekdays_text.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -49,8 +51,10 @@ class MedicationDetails extends StatelessWidget {
             _value(
               context,
               'medications.missed_after',
-              context.tr(
-                'medications.missed_option.${version.missedAfterMinutes}',
+              arabicCount(
+                context,
+                ArabicCount.minutes,
+                version.missedAfterMinutes,
               ),
             ),
             _value(
@@ -210,10 +214,7 @@ class _ScheduleRow extends StatelessWidget {
         context,
         schedule.intervalDays ?? 1,
       ),
-      ScheduleRepeat.weekly =>
-        schedule.weekdays
-            .map((day) => context.tr('medications.weekday.$day'))
-            .join(context.tr('medications.list_separator')),
+      ScheduleRepeat.weekly => formatWeekdays(context, schedule.weekdays),
     };
     final dose = formatMedicationDose(
       context,

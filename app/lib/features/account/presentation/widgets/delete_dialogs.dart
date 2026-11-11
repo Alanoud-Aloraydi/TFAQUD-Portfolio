@@ -70,7 +70,7 @@ Future<PatientChoice?> showPatientChoiceDialog(BuildContext context) {
         value: PatientChoice.delete,
         destructive: true,
       ),
-      AppAlertAction<PatientChoice>(label: context.tr('account.cancel')),
+      AppAlertAction<PatientChoice>(label: context.tr('common.cancel')),
     ],
   );
 }
@@ -103,7 +103,7 @@ Future<bool?> _confirm(
   required String title,
   required String body,
   required String yes,
-  String no = 'account.cancel',
+  String no = 'common.cancel',
 }) {
   return showAppAlert<bool>(
     context,

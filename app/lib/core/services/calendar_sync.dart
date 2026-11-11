@@ -8,6 +8,7 @@ import 'package:app/core/services/reminders/dose_reminders.dart'
     show TaskSnooze;
 import 'package:app/core/services/reminders/reminder_payloads.dart'
     show SnoozedTask;
+import 'package:app/core/services/service_texts.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
@@ -193,7 +194,7 @@ class _SavedEvent {
 /// access, unlike the rest of this app's circle-scoped data. Turning a
 /// switch off takes its events off the phone's calendar again.
 ///
-/// The events go in the app's own calendar, «تفقّد» ([calendarName]), so
+/// The events go in the app's own calendar ([ServiceTexts.calendarName]), so
 /// they can all go in one step: signing out deletes the whole calendar,
 /// and the person can delete it in the Calendar app too. Deleting the app
 /// leaves a calendar behind (iOS tells an app nothing when it is deleted),
@@ -258,9 +259,6 @@ class CalendarSync {
 
   /// The id of the app's own calendar, once made.
   static const String _calendarKey = 'calendar_sync_calendar';
-
-  /// The name of the app's own calendar on the phone.
-  static const String calendarName = 'تفقّد';
 
   /// The app's green («leaf»), for the calendar's dot.
   static const String _calendarColor = '#A8D5BA';
@@ -715,12 +713,12 @@ class CalendarSync {
     if (!await _fullAccess()) return null;
     try {
       for (final Calendar left in await _calendar.listCalendars()) {
-        if (left.name == calendarName && !left.readOnly) {
+        if (left.name == ServiceTexts.calendarName && !left.readOnly) {
           await _calendar.deleteCalendar(left.id);
         }
       }
       final String id = await _calendar.createCalendar(
-        name: calendarName,
+        name: ServiceTexts.calendarName,
         colorHex: _calendarColor,
       );
       await prefs.setString(_calendarKey, id);

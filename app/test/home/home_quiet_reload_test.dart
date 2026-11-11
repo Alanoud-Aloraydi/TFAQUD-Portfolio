@@ -5,7 +5,7 @@ import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/home/presentation/widgets/today_prayer_period.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/photo_probe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';

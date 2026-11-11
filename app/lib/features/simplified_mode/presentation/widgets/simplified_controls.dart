@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
@@ -140,7 +141,9 @@ Future<void> readAloud(
       (id: part.id, text: toSpeech(part.text, words)),
   ], rate: rate);
   if (!spoken && !quietWithoutVoice) {
-    messenger?.showSnackBar(SnackBar(content: Text(missing)));
+    if (messenger != null) {
+      AppToast.showText(messenger, missing, kind: ToastKind.error);
+    }
   }
 }
 
