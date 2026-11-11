@@ -142,7 +142,7 @@ def cancel_pending_plan(circle_id, plan_id):
 @bp.get("/medication-occurrences")
 @require_circle_role(*_READ_ROLES)
 def list_occurrences(circle_id):
-    """The doses due between two dates (at most 32 days), each with its record
+    """The doses due between two dates (at most 35 days), each with its record
     when there is one.
     """
     query = occurrence_query()

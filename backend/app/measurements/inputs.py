@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from app.plan_limits import DEFAULT_MISSED_AFTER_MINUTES, MissedAfter
-from app.validation import Dto
+from app.validation import MAX_RANGE_DAYS, Dto
 
 Kind = Literal["glucose", "blood_pressure"]
 # «ظروف القياس»: what was going on at a reading, one or more of them.
@@ -230,6 +230,8 @@ class ReadingQuery(Dto):
         """Prevent oversized or reversed requests."""
         if self.to_date < self.from_date:
             raise ValueError("The end date cannot precede the start.")
-        if (self.to_date - self.from_date).days > 31:
-            raise ValueError("A request can cover at most 32 days.")
+        if (self.to_date - self.from_date).days >= MAX_RANGE_DAYS:
+            raise ValueError(
+                f"A request can cover at most {MAX_RANGE_DAYS} days."
+            )
         return self
