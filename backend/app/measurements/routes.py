@@ -171,7 +171,7 @@ def stop_plan(circle_id, plan_id):
 @bp.get("/measurement-occurrences")
 @require_circle_role(*MEMBERS)
 def list_occurrences(circle_id):
-    """Calculate tasks for at most 32 calendar days."""
+    """Calculate tasks for at most 35 calendar days."""
     dates = _range()
     with transaction() as session:
         values = MeasurementQueries(session, get_clock().now()).occurrences(

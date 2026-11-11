@@ -27,6 +27,30 @@ def signed_in(app, account):
     return {"Authorization": "Bearer " + issued.access_token}
 
 
+@pytest.mark.parametrize(
+    "page", ["medication-occurrences", "measurement-occurrences"]
+)
+def test_the_app_today_window_is_answered(
+    database_app, database, account, page
+):
+    """«اليوم» asks for 2 overdue days, today and 30 days ahead in one
+    request (33 days). Refusing it left the tab with «صار خطأ غير متوقع»."""
+    owner = account()
+    circle = offline_circle(database, owner)
+    today = datetime.now(ZoneInfo("Asia/Riyadh")).date()
+
+    answer = database_app.test_client().get(
+        f"/api/v1/circles/{circle.id}/{page}",
+        headers=signed_in(database_app, owner),
+        query_string={
+            "from": (today - timedelta(days=2)).isoformat(),
+            "to": (today + timedelta(days=30)).isoformat(),
+        },
+    )
+
+    assert answer.status_code == 200, answer.json
+
+
 def test_plan_occurrence_reading_and_export(database_app, database, account):
     """Pending tasks stay computed; one explicit reading is saved."""
     owner = account()

@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from app.plan_limits import DEFAULT_MISSED_AFTER_MINUTES, MissedAfter
-from app.validation import Dto
+from app.validation import MAX_RANGE_DAYS, Dto
 
 Text50 = Annotated[str, Field(min_length=1, max_length=50)]
 OptionalText250 = Annotated[str | None, Field(max_length=250)]
@@ -250,9 +250,11 @@ class OccurrenceQuery(Dto):
 
     @model_validator(mode="after")
     def valid_range(self):
-        """The range runs forward and covers at most 32 days."""
+        """The range runs forward and covers at most MAX_RANGE_DAYS days."""
         if self.to_date < self.from_date:
             raise ValueError("The end date cannot precede the start date.")
-        if (self.to_date - self.from_date).days > 31:
-            raise ValueError("A request can cover at most 32 days.")
+        if (self.to_date - self.from_date).days >= MAX_RANGE_DAYS:
+            raise ValueError(
+                f"A request can cover at most {MAX_RANGE_DAYS} days."
+            )
         return self

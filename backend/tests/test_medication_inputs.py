@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from app.measurements.inputs import ReadingQuery
 from app.medications.inputs import DoseRecordRequest, OccurrenceQuery
 from app.medications.inputs import PlanRequest
 from app.medications.occurrence_builder import _timing_state
@@ -82,15 +83,25 @@ def test_injection_accepts_volume_or_units():
     )
 
 
-def test_occurrence_query_accepts_at_most_thirty_two_days():
-    query = OccurrenceQuery.model_validate(
-        {"from": "2026-10-01", "to": "2026-11-01"}
+@pytest.mark.parametrize("query_type", [OccurrenceQuery, ReadingQuery])
+def test_a_list_covers_at_most_thirty_five_days(query_type):
+    # 1 October to 4 November: 35 days, both ends counted.
+    query = query_type.model_validate(
+        {"from": "2026-10-01", "to": "2026-11-04"}
     )
-    assert query.to_date == date(2026, 11, 1)
-    with pytest.raises(ValidationError, match="at most 32 days"):
-        OccurrenceQuery.model_validate(
-            {"from": "2026-10-01", "to": "2026-11-02"}
-        )
+    assert query.to_date == date(2026, 11, 4)
+    with pytest.raises(ValidationError, match="at most 35 days"):
+        query_type.model_validate({"from": "2026-10-01", "to": "2026-11-05"})
+
+
+@pytest.mark.parametrize("query_type", [OccurrenceQuery, ReadingQuery])
+def test_a_list_takes_the_app_today_window(query_type):
+    """«اليوم» reads 2 overdue days, today and 30 days ahead (33 days); on
+    11 November that is 9 November to 11 December."""
+    query = query_type.model_validate(
+        {"from": "2026-11-09", "to": "2026-12-11"}
+    )
+    assert (query.to_date - query.from_date).days + 1 == 33
 
 
 def test_taken_dose_requires_time_and_rejects_skip_details():
