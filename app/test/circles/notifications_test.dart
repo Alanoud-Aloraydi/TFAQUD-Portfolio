@@ -135,12 +135,14 @@ void main() {
     ) async {
       circles.inbox = Success(
         inboxOf(
-          sent: const <SentCircleRequest>[
+          sent: <SentCircleRequest>[
             SentCircleRequest(
               id: 'request-1',
               patientPhoneNumber: '+966501234567',
               proposedAppMode: CircleAppMode.simplified,
               status: CircleRequestStatus.declined,
+              // 22:30 UTC is already the next day in Riyadh (9 Nov).
+              respondedAt: DateTime.utc(2026, 11, 8, 22, 30),
             ),
           ],
         ),
@@ -148,10 +150,19 @@ void main() {
       // A declined request needs no answer, so there is no dot.
       await openNotifications(tester, 0);
 
-      expect(find.text('circles.events_title'.tr()), findsOneWidget);
+      expect(find.text('circles.previous_title'.tr()), findsOneWidget);
+      expect(find.text('circles.none_current'.tr()), findsOneWidget);
       expect(find.text('circles.declined_title'.tr()), findsOneWidget);
       expect(find.text('circles.declined_body'.tr()), findsOneWidget);
       expect(find.text('+966 50 123 4567'), findsOneWidget);
+      expect(
+        find.text(
+          'circles.declined_on'.tr(
+            args: <String>['9 ${'circles.months.11'.tr()} 2026'],
+          ),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('circles.inbox_empty'.tr()), findsNothing);
     });
 
@@ -165,7 +176,7 @@ void main() {
       );
       await openNotifications(tester, 0);
 
-      expect(find.text('circles.events_title'.tr()), findsNothing);
+      expect(find.text('circles.previous_title'.tr()), findsNothing);
       expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
     });
 

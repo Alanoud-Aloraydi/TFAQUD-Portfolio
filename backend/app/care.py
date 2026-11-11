@@ -92,6 +92,17 @@ class CareService:
         if manager_id is None:
             raise Forbidden("A current manager membership is required.")
 
+    def _require_membership(self, actor_id: UUID, circle_id: UUID) -> None:
+        """Require any membership, including one whose editing is paused."""
+        member_id = self.session.scalar(
+            select(CareCircleManager.id).where(
+                CareCircleManager.account_id == actor_id,
+                CareCircleManager.care_circle_id == circle_id,
+            )
+        )
+        if member_id is None:
+            raise Forbidden("A circle membership is required.")
+
     def _get_circle(self, circle_id: UUID) -> CareCircle:
         """Return the circle (which is its patient) or raise NotFound."""
         circle = self.session.get(CareCircle, circle_id)
@@ -700,10 +711,13 @@ class CareService:
     def leave_circle(
         self, actor_id: UUID, circle_id: UUID, confirm_delete: bool = False
     ) -> None:
-        """Require explicit deletion when the last manager leaves."""
+        """Leave the circle; the patient or the last member must confirm
+        its deletion."""
         self._lock_accounts(actor_id)
         circle = self._lock_circle(circle_id)
-        self._require_manager(actor_id, circle_id)
+        # A member whose editing is paused may leave; the owner's removal
+        # of them is not the only way out.
+        self._require_membership(actor_id, circle_id)
         is_patient = circle.account_id == actor_id
         if is_patient or not self._has_other_manager(actor_id, circle_id):
             if not confirm_delete:

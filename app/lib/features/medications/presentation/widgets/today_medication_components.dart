@@ -2,22 +2,18 @@ import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/attention_box.dart';
-import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
+import 'package:app/features/medications/presentation/widgets/dose_strength_text.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/today_dose_window.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -134,7 +130,7 @@ class _AttentionMedicationCard extends StatelessWidget {
                         extra: canManage,
                       ),
                       child: Text(
-                        '${occurrence.name} ${_strength(context, occurrence)}',
+                        '${occurrence.name} ${doseStrengthText(context, occurrence)}',
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                     ),
@@ -255,7 +251,7 @@ class _NextDoseInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final strength = _strength(context, occurrence);
+    final strength = doseStrengthText(context, occurrence);
     final dose = formatMedicationDose(
       context,
       occurrence.doseValue,
@@ -317,182 +313,3 @@ class _NextDoseInfo extends StatelessWidget {
     );
   }
 }
-
-/// Displays the today medication prayer dose row UI.
-class TodayMedicationPrayerDoseRow extends StatelessWidget {
-  const TodayMedicationPrayerDoseRow({
-    super.key,
-    required this.occurrence,
-    required this.circleId,
-    required this.canManage,
-    required this.now,
-    this.showThumbnail = false,
-  });
-
-  final DoseOccurrence occurrence;
-  final String circleId;
-
-  /// Passed on to the medicine's page.
-  final bool canManage;
-  final DateTime now;
-  final bool showThumbnail;
-
-  @override
-  Widget build(BuildContext context) {
-    final status = medicationTimingState(occurrence, now);
-    final isUnrecorded = status == DoseTimingState.missed;
-    final record = occurrence.record;
-    final label = record != null
-        ? context.tr(
-            record.outcome == DoseOutcome.skipped
-                ? 'today_dashboard.status.skipped'
-                : occurrence.isTakenLate(PatientClockScope.of(context))
-                ? 'today_dashboard.status.taken_late'
-                : 'today_dashboard.status.taken',
-          )
-        : context.tr('today_dashboard.status.${status!.name}');
-    final isTaken = record?.outcome == DoseOutcome.taken;
-    final isWaiting =
-        status == DoseTimingState.due || status == DoseTimingState.late;
-    final TodayStatusTone statusTone = isTaken
-        ? TodayStatusTone.success
-        : record != null
-        ? TodayStatusTone.neutral
-        : isWaiting || isUnrecorded
-        ? TodayStatusTone.attention
-        : TodayStatusTone.neutral;
-    final dose = formatMedicationDose(
-      context,
-      occurrence.doseValue,
-      occurrence.doseUnit,
-    );
-    final canRecord = canRecordOccurrence(
-      resolved: record != null,
-      scheduledAt: wallClockAt(occurrence.scheduledOn, occurrence.time),
-      now: now,
-    );
-    return TodayRowCard(
-      tone: isUnrecorded ? TodayRowTone.attention : TodayRowTone.normal,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 48,
-                child: Text(
-                  clockText(occurrence.time),
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              if (showThumbnail) ...[
-                MedicationPhotoBuilder(
-                  circleId: circleId,
-                  planId: occurrence.planId,
-                  builder: (context, bytes) => bytes == null
-                      ? Container(
-                          width: 40,
-                          height: 40,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: CareVisuals.medicationTile,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            CareVisuals.medicationIcon,
-                            size: AppSizes.iconSmall,
-                          ),
-                        )
-                      : MedicationPhotoImage(
-                          bytes: bytes,
-                          width: 40,
-                          height: 40,
-                        ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-              ] else ...[
-                const TodayTaskKindIcon(
-                  icon: CareVisuals.medicationIcon,
-                  background: CareVisuals.medicationTile,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
-                      onTap: () => context.push(
-                        Routes.medicationDetails(circleId, occurrence.planId),
-                        extra: canManage,
-                      ),
-                      child: Text(
-                        '${occurrence.name} ${_strength(context, occurrence)}',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ),
-                    Text(
-                      occurrence.instructions == null
-                          ? dose
-                          : '$dose · ${occurrence.instructions}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    if (record?.recordedByName case final name?) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          PersonPhoto(
-                            name: name,
-                            photoPath: personPhotoPath(
-                              circleId,
-                              record!.recordedByAccountId,
-                            ),
-                            avatarCode: record.recordedByAvatarCode,
-                            size: AppSizes.iconSmall,
-                          ),
-                          const SizedBox(width: AppSpacing.tight),
-                          Text(
-                            name,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (record?.outcome == DoseOutcome.skipped &&
-                        record?.skipReasonCode != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        context.tr(
-                          'medications.skip_reason_line',
-                          args: [doseSkipReasonText(context, record!)],
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              TodayTaskStatusBadge(text: label, tone: statusTone),
-            ],
-          ),
-          if (canRecord) ...[
-            const SizedBox(height: AppSpacing.sm),
-            DoseRecordControls(
-              occurrence: occurrence,
-              layout: DoseControlsLayout.attention,
-              circleId: circleId,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-String _strength(BuildContext context, DoseOccurrence occurrence) =>
-    '${formatMedicationNumber(occurrence.strengthValue)} '
-    '${context.tr('medications.strength_display.${occurrence.strengthUnit.name}')}';

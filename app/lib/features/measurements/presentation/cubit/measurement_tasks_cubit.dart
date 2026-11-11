@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/utils/overdue_window.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
@@ -54,15 +55,15 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
     return super.close();
   }
 
-  /// Reads [circleId]'s tasks from the day before the patient's [day] to 30
-  /// calendar days later. Yesterday is retained only so «يحتاج انتباهك» can
-  /// keep an unrecorded task for its second and final day.
+  /// Reads [circleId]'s tasks from the first overdue day before the
+  /// patient's [day] to 30 calendar days later, so «يحتاج انتباهك» keeps an
+  /// unrecorded task until its last overdue day.
   /// With [silent] a list already shown stays while it is read again (no
   /// loading state), and a failure keeps it.
   Future<void> load(String circleId, DateTime day, {bool silent = false}) =>
       loadRange(
         circleId,
-        DateTime(day.year, day.month, day.day - 1),
+        overdueStart(day),
         DateTime(day.year, day.month, day.day + 30),
         silent: silent,
       );

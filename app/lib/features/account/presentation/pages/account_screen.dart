@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -70,8 +71,13 @@ class AccountScreen extends StatelessWidget {
               }
               final String? key = state.errorKey ?? state.noticeKey;
               if (key != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(context.tr(key))));
+                AppToast.show(
+                  context,
+                  key,
+                  kind: state.errorKey != null
+                      ? ToastKind.error
+                      : ToastKind.success,
+                );
                 cubit.messagesShown();
               }
               if (state.deletePrompt != DeletePrompt.none) {

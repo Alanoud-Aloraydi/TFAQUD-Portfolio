@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/constants/name_limits.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -225,7 +226,7 @@ class _EditFormState extends State<_EditForm> {
     final String saved = context.tr('circles.file_saved');
     final bool ok = await cubit.save();
     if (!ok || !mounted) return;
-    messenger.showSnackBar(SnackBar(content: Text(saved)));
+    AppToast.showText(messenger, saved);
     final String? savedTo = widget.savedTo;
     if (savedTo != null) {
       router.go(savedTo);

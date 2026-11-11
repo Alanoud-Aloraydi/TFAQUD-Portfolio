@@ -1,3 +1,4 @@
+import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -91,7 +92,7 @@ class DoseOccurrence extends Equatable {
     required this.dosageForm,
     required this.doseValue,
     required this.doseUnit,
-    this.missedAfterMinutes = 60,
+    this.missedAfterMinutes = PlanLimits.defaultMissedAfterMinutes,
     this.timingState,
     this.instructions,
     this.record,

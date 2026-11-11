@@ -1,3 +1,4 @@
+import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -67,7 +68,9 @@ class MedicationPlanModel {
       ),
       reason: versionJson['reason_for_use'] as String?,
       instructions: versionJson['instructions'] as String?,
-      missedAfterMinutes: versionJson['missed_after_minutes'] as int? ?? 60,
+      missedAfterMinutes:
+          versionJson['missed_after_minutes'] as int? ??
+          PlanLimits.defaultMissedAfterMinutes,
       startsOn: DateTime.parse(versionJson['treatment_starts_on'] as String),
       endsOn: _optionalDate(versionJson['treatment_ends_on']),
       effectiveFromOn: DateTime.parse(

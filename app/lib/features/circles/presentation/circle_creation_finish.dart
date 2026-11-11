@@ -1,3 +1,4 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -30,5 +31,5 @@ Future<void> createCircleAndOpen(
     return;
   }
   context.go(Routes.circle);
-  messenger.showSnackBar(SnackBar(content: Text(notice)));
+  AppToast.showText(messenger, notice);
 }

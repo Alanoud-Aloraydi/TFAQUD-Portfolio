@@ -1,11 +1,11 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_row.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
@@ -183,6 +183,25 @@ void main() {
       );
 
       expect(find.text('today_dashboard.status.upcoming'.tr()), findsOneWidget);
+    });
+
+    testWidgets('the row is plain without a circle to open it in', (
+      tester,
+    ) async {
+      await pumpArabic(
+        tester,
+        home: Scaffold(body: AppointmentTodayRow(value: appointment('14:00'))),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(AppointmentTodayRow),
+          matching: find.byType(InkWell),
+        ),
+        findsOneWidget,
+      );
+      final InkWell area = tester.widget(find.byType(InkWell));
+      expect(area.onTap, isNull);
     });
 
     testWidgets('a passed appointment asks for attendance confirmation', (

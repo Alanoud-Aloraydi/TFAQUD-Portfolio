@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -199,9 +200,7 @@ class _PersonPhotoEditorState extends State<_PersonPhotoEditor> {
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('photos.save_failed'))),
-        );
+        AppToast.show(context, 'photos.save_failed', kind: ToastKind.error);
       }
     } finally {
       if (mounted) setState(() => _saving = false);

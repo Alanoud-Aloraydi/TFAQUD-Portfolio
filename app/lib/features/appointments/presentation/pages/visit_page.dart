@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -406,6 +407,7 @@ class _VisitEditSheetState extends State<_VisitEditSheet> {
                           ),
                         );
                         if (saved && context.mounted) {
+                          AppToast.show(context, 'toast.visit_saved');
                           Navigator.of(context).pop();
                         }
                       },

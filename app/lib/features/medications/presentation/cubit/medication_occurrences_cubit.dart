@@ -10,8 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The doses of one range of the patient's days, and their recording.
 ///
-/// The «اليوم» tab holds one for the selected circle (yesterday to a month
-/// ahead); a medicine's details page holds one for that plan's history.
+/// The «اليوم» tab holds one for the selected circle (the overdue days to a
+/// month ahead); a medicine's details page holds one for that plan's history.
 /// Widgets call [load], [loadEarlier] and [record]/[take]; the cubit asks
 /// [MedicationsUseCase] (→ repository → `GET medication-occurrences` and
 /// `PUT medication-dose-records`). Each cubit reads its range again, with no

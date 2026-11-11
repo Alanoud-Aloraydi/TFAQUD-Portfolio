@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/private_photo.dart';
@@ -16,10 +17,8 @@ import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
-import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
@@ -29,8 +28,9 @@ import 'package:app/features/circles/domain/entities/medical_profile_draft.dart'
 import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/widgets/circle_member_row.dart';
+import 'package:app/features/circles/presentation/widgets/leave_circle_button.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
-import 'package:app/features/circles/presentation/widgets/member_profile_sheet.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
@@ -158,16 +158,10 @@ class _CircleContent extends StatelessWidget {
           icon: const Icon(AppIcons.userPlus, size: AppSizes.iconSmall),
           label: Text(context.tr('circle_overview.add_member')),
         ),
+      ],
+      if (overview.canLeave) ...<Widget>[
         const SizedBox(height: AppSpacing.sm),
-        TextButton.icon(
-          onPressed: state.acting ? null : () => _leave(context, overview),
-          style: TextButton.styleFrom(
-            foregroundColor: AppSemanticColors.statusError,
-            minimumSize: const Size.fromHeight(AppSizes.button),
-          ),
-          icon: const Icon(AppIcons.signOut, size: AppSizes.iconSmall),
-          label: Text(context.tr('circle_overview.leave')),
-        ),
+        LeaveCircleButton(overview: overview),
       ],
     ];
   }
@@ -180,50 +174,6 @@ class _CircleContent extends StatelessWidget {
       message: context.tr('circle_overview.invite_hint'),
       builder: (_) => _InviteMemberSheet(cubit: cubit),
     );
-  }
-
-  Future<void> _leave(BuildContext context, CircleOverview overview) async {
-    final bool deletesCircle = overview.leaveDeletesCircle;
-    final bool? confirmed = await showAppAlert<bool>(
-      context,
-      title: context.tr(
-        deletesCircle
-            ? 'circle_overview.delete_title'
-            : 'circle_overview.leave_title',
-      ),
-      message: context.tr(
-        deletesCircle
-            ? 'circle_overview.delete_message'
-            : 'circle_overview.leave_message',
-      ),
-      actions: <AppAlertAction<bool>>[
-        AppAlertAction<bool>(
-          label: context.tr('circle_overview.cancel'),
-          value: false,
-        ),
-        AppAlertAction<bool>(
-          label: context.tr(
-            deletesCircle
-                ? 'circle_overview.delete_confirm'
-                : 'circle_overview.leave',
-          ),
-          value: true,
-          destructive: true,
-        ),
-      ],
-    );
-    if (confirmed != true || !context.mounted) return;
-    final String? error = await context.read<CircleOverviewCubit>().leave(
-      confirmDelete: deletesCircle,
-    );
-    if (!context.mounted) return;
-    if (error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(error))));
-      return;
-    }
-    await context.read<HomeCubit>().refresh();
-    if (context.mounted) context.go(Routes.today);
   }
 }
 
@@ -667,7 +617,7 @@ class _MembersList extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Widget> rows = <Widget>[
       for (final CircleMember member in overview.members)
-        _MemberRow(
+        CircleMemberRow(
           member: member,
           circleId: circleId,
           patientUsesApp: overview.patientUsesApp,
@@ -727,221 +677,6 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-/// A member: the name with «أنت» for the viewer, «المريض · يستخدم التطبيق»
-/// under the patient, and the badges «مدير» and «صاحب الملف» at the end.
-class _MemberRow extends StatelessWidget {
-  const _MemberRow({
-    required this.member,
-    required this.circleId,
-    required this.patientUsesApp,
-    required this.patientIsYou,
-    required this.canManageMembers,
-  });
-
-  final CircleMember member;
-  final String circleId;
-  final bool patientUsesApp;
-  final bool patientIsYou;
-  final bool canManageMembers;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    // A patient with their own account is one person with one photo: read
-    // it through the account endpoint, so the circle tab and the profile
-    // stay in sync. The photo is only ever edited from the patient card or
-    // the account page, never from this row.
-    final String photoPath = member.isPatient
-        ? (patientIsYou
-              ? ApiEndpoints.accountPhoto
-              : ApiEndpoints.patientPhoto(circleId))
-        : personPhotoPath(circleId, member.accountId);
-    return InkWell(
-      // The viewer's own row opens their account; anyone else's opens that
-      // member's card: photo, name and number, to call them.
-      onTap: member.isYou
-          ? () => context.push(Routes.account)
-          : () => showMemberProfileSheet(
-              context,
-              member: member,
-              photoPath: photoPath,
-              patientUsesApp: patientUsesApp,
-            ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Row(
-          children: <Widget>[
-            PersonPhoto(
-              name: member.name,
-              photoPath: photoPath,
-              avatarCode: member.avatarCode,
-              size: AppSizes.avatarPortrait,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: <Widget>[
-                      Text(member.name, style: text.titleSmall),
-                      if (member.isYou) const _YouPill(),
-                    ],
-                  ),
-                  if (member.isPatient && patientUsesApp)
-                    Text(
-                      context.tr('circle_overview.patient_line'),
-                      style: text.bodySmall,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            if (canManageMembers && !member.isYou && !member.isPatient)
-              _MemberAccessControls(member: member)
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  if (member.isManager)
-                    StatusPill(
-                      text: context.tr('circle_overview.manager'),
-                      background: AppSemanticColors.borderPlan,
-                      foreground: AppSemanticColors.textSupporting,
-                      icon: AppIcons.crown,
-                    ),
-                  if (member.isPatient) ...<Widget>[
-                    const SizedBox(height: AppSpacing.xs),
-                    StatusPill(
-                      text: context.tr('circle_overview.owner'),
-                      background: AppSemanticColors.selectedSurface,
-                      foreground: AppSemanticColors.statusSuccess,
-                      icon: AppIcons.user,
-                    ),
-                  ],
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MemberAccessControls extends StatelessWidget {
-  const _MemberAccessControls({required this.member});
-
-  final CircleMember member;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool acting = context.select(
-      (CircleOverviewCubit cubit) => cubit.state.acting,
-    );
-    final String? accountId = member.accountId;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              context.tr('circle_overview.allow_editing'),
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            Switch.adaptive(
-              value: member.canEdit,
-              onChanged: acting || accountId == null
-                  ? null
-                  : (bool value) =>
-                        _changeAccess(context, accountId, canEdit: value),
-            ),
-          ],
-        ),
-        IconButton(
-          tooltip: context.tr('circle_overview.remove_member'),
-          onPressed: acting || accountId == null
-              ? null
-              : () => _confirmRemove(context, accountId),
-          icon: const Icon(CupertinoIcons.trash),
-          color: AppSemanticColors.statusError,
-        ),
-      ],
-    );
-  }
-
-  Future<void> _changeAccess(
-    BuildContext context,
-    String accountId, {
-    required bool canEdit,
-  }) async {
-    final error = await context.read<CircleOverviewCubit>().setMemberEditAccess(
-      accountId,
-      canEdit: canEdit,
-    );
-    if (context.mounted && error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(error))));
-    }
-  }
-
-  Future<void> _confirmRemove(BuildContext context, String accountId) async {
-    final confirmed = await showAppAlert<bool>(
-      context,
-      title: context.tr('circle_overview.remove_member_title'),
-      message: context.tr(
-        'circle_overview.remove_member_message',
-        args: <String>[member.name],
-      ),
-      actions: <AppAlertAction<bool>>[
-        AppAlertAction<bool>(
-          label: context.tr('circle_overview.cancel'),
-          value: false,
-        ),
-        AppAlertAction<bool>(
-          label: context.tr('circle_overview.remove_member'),
-          value: true,
-          destructive: true,
-        ),
-      ],
-    );
-    if (confirmed != true || !context.mounted) return;
-    final error = await context.read<CircleOverviewCubit>().removeMember(
-      accountId,
-    );
-    if (context.mounted && error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(error))));
-    }
-  }
-}
-
-/// «أنت»: a small ink capsule after the viewer's name.
-class _YouPill extends StatelessWidget {
-  const _YouPill();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: const ShapeDecoration(
-        color: AppSemanticColors.textPrimary,
-        shape: StadiumBorder(),
-      ),
-      child: Text(
-        context.tr('circle_overview.you'),
-        style: Theme.of(context).textTheme.labelMedium
-            ?.copyWith(color: AppSemanticColors.surfaceContent),
-      ),
-    );
-  }
-}
-
 /// A pending invitation: the number left to right, how long ago it was
 /// sent, and under them «إعادة الإرسال» and «إلغاء».
 class _InvitationRow extends StatelessWidget {
@@ -992,15 +727,17 @@ class _InvitationRow extends StatelessWidget {
                         onPressed: () => _act(
                           context,
                           cubit.resendInvitation(invitation.id),
+                          'toast.invite_resent',
                         ),
                       ),
                       _SmallAction(
-                        label: context.tr('circle_overview.cancel'),
+                        label: context.tr('common.cancel'),
                         color: AppSemanticColors.statusError,
                         enabled: !acting,
                         onPressed: () => _act(
                           context,
                           cubit.cancelInvitation(invitation.id),
+                          'toast.invite_canceled',
                         ),
                       ),
                     ],
@@ -1026,11 +763,18 @@ class _InvitationRow extends StatelessWidget {
     );
   }
 
-  static Future<void> _act(BuildContext context, Future<String?> action) async {
+  static Future<void> _act(
+    BuildContext context,
+    Future<String?> action,
+    String doneKey,
+  ) async {
     final String? errorKey = await action;
-    if (!context.mounted || errorKey == null) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
+    if (!context.mounted) return;
+    if (errorKey == null) {
+      AppToast.show(context, doneKey);
+      return;
+    }
+    AppToast.show(context, errorKey, kind: ToastKind.error);
   }
 }
 
@@ -1099,6 +843,7 @@ class _InviteMemberSheetState extends State<_InviteMemberSheet> {
     );
     if (!mounted) return;
     if (error == null) {
+      AppToast.show(context, 'toast.invite_sent');
       Navigator.of(context).pop();
     } else {
       setState(() {

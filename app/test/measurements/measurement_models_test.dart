@@ -27,7 +27,7 @@ void main() {
         ],
         weekdays: const [1, 3],
         startsOn: DateTime(2026, 11, 3),
-        graceMinutes: 60,
+        missedAfterMinutes: 60,
         glucoseLow: 80,
         glucoseHigh: 140,
       );
@@ -82,7 +82,7 @@ void main() {
         ],
         weekdays: const [1],
         startsOn: DateTime(2026, 11, 3),
-        graceMinutes: 60,
+        missedAfterMinutes: 60,
         glucoseLow: 80,
         glucoseHigh: 140,
       );
@@ -110,7 +110,7 @@ void main() {
         times: const [MeasurementTime(time: '08:00')],
         weekdays: const [1],
         startsOn: DateTime(2026, 11, 3),
-        graceMinutes: 60,
+        missedAfterMinutes: 60,
         systolicLimit: 130,
         diastolicLimit: 80,
       );

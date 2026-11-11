@@ -43,17 +43,17 @@ void main() {
   });
 
   group('occurrenceWindow', () {
-    test('runs from yesterday to a month ahead, in calendar days', () {
+    test('runs from two days back to a month ahead, in calendar days', () {
       final window = occurrenceWindow(DateTime(2026, 11, 10));
 
-      expect(window.from, DateTime(2026, 11, 9));
+      expect(window.from, DateTime(2026, 11, 8));
       expect(window.to, DateTime(2026, 12, 10));
     });
 
     test('crosses month and year ends and a clock change', () {
       expect(
         occurrenceWindow(DateTime(2026, 1, 1)).from,
-        DateTime(2025, 12, 31),
+        DateTime(2025, 12, 30),
       );
       expect(
         occurrenceWindow(DateTime(2026, 12, 15)).to,
@@ -62,7 +62,7 @@ void main() {
       // The day after a spring-forward day of many zones.
       expect(
         occurrenceWindow(DateTime(2026, 3, 29)).from,
-        DateTime(2026, 3, 28),
+        DateTime(2026, 3, 27),
       );
       expect(occurrenceWindow(DateTime(2026, 3, 29)).to, DateTime(2026, 4, 28));
     });

@@ -1,3 +1,4 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
@@ -196,8 +197,7 @@ class DoseRecordControls extends StatelessWidget {
   /// [context] must still be mounted.
   void _show(BuildContext context, String? messageKey) {
     if (messageKey == null) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.tr(messageKey))));
+    AppToast.show(context, messageKey, kind: ToastKind.error);
   }
 }
 
@@ -447,14 +447,11 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
       Duration(minutes: minutes),
     );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr(
-            'reminders.snoozed',
-            args: <String>[afterDuration(context, minutes)],
-          ),
-        ),
+    AppToast.showText(
+      ScaffoldMessenger.of(context),
+      context.tr(
+        'reminders.snoozed',
+        args: <String>[afterDuration(context, minutes)],
       ),
     );
   }

@@ -125,7 +125,7 @@ final MeasurementPlan _plan = MeasurementPlan(
     effectiveFromOn: DateTime(2026, 11, 1),
     time: '08:00',
     weekdays: const <int>[1, 2, 3, 4, 5, 6, 7],
-    graceMinutes: 60,
+    missedAfterMinutes: 60,
   ),
   history: const <MeasurementVersion>[],
 );
@@ -135,7 +135,7 @@ MeasurementPlanDraft get _draft => MeasurementPlanDraft(
   times: const <MeasurementTime>[MeasurementTime(time: '08:00')],
   weekdays: const <int>[1, 2, 3, 4, 5, 6, 7],
   startsOn: DateTime(2026, 11, 3),
-  graceMinutes: 60,
+  missedAfterMinutes: 60,
 );
 
 void main() {
@@ -281,14 +281,14 @@ void main() {
     );
 
     group('MeasurementTasksCubit', () {
-      test('reads yesterday through 30 calendar days ahead', () async {
+      test('reads two days back through 30 calendar days ahead', () async {
         final repository = _Repository();
         final cubit = MeasurementTasksCubit(repository);
 
         await cubit.load('circle-1', DateTime(2026, 3, 20));
 
         expect(repository.occurrenceRanges.single, (
-          DateTime(2026, 3, 19),
+          DateTime(2026, 3, 18),
           DateTime(2026, 4, 19),
         ));
         await cubit.close();

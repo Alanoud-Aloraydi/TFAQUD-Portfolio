@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
@@ -38,7 +39,7 @@ class _Measurements extends Fake implements MeasurementRepository {
         effectiveFromOn: draft.startsOn,
         time: '07:30',
         weekdays: draft.weekdays,
-        graceMinutes: draft.graceMinutes,
+        missedAfterMinutes: draft.missedAfterMinutes,
       ),
       history: const <MeasurementVersion>[],
     );
@@ -57,7 +58,10 @@ void main() {
     await cubit.load('c-1');
     final GoRouter router = GoRouter(
       routes: <RouteBase>[
-        GoRoute(path: '/', builder: (context, state) => const Text('home')),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: Text('home')),
+        ),
         GoRoute(
           path: '/form',
           builder: (context, state) =>
@@ -95,8 +99,8 @@ void main() {
   ) async {
     final _Measurements repository = await open(tester);
 
-    await tester.enterText(find.byType(TextField).at(0), '70');
-    await tester.enterText(find.byType(TextField).at(1), '130');
+    await tester.enterText(find.byType(TextField).at(1), '70');
+    await tester.enterText(find.byType(TextField).at(2), '130');
     await tester.tap(find.text('measurements.save'.tr()));
     await tester.pumpAndSettle();
 
@@ -106,5 +110,55 @@ void main() {
     // Noon in Riyadh on 9 November, whatever zone the test machine is in.
     expect(draft.startsOn, DateTime(2026, 11, 9));
     expect(find.text('home'), findsOneWidget);
+  });
+
+  Finder missedAfterBox() => find.descendant(
+    of: find.byType(MissedAfterField),
+    matching: find.byType(TextField),
+  );
+
+  testWidgets('the missed-after minutes are typed freely and sent as typed', (
+    tester,
+  ) async {
+    final _Measurements repository = await open(tester);
+
+    await tester.enterText(find.byType(TextField).at(1), '70');
+    await tester.enterText(find.byType(TextField).at(2), '130');
+    await tester.enterText(missedAfterBox(), '45');
+    await tester.tap(find.text('measurements.save'.tr()));
+    await tester.pumpAndSettle();
+
+    expect(repository.created.single.missedAfterMinutes, 45);
+  });
+
+  testWidgets('minutes above the limit are refused and nothing is sent', (
+    tester,
+  ) async {
+    final _Measurements repository = await open(tester);
+
+    await tester.enterText(find.byType(TextField).at(1), '70');
+    await tester.enterText(find.byType(TextField).at(2), '130');
+    await tester.enterText(missedAfterBox(), '400');
+    await tester.tap(find.text('measurements.save'.tr()));
+    await tester.pumpAndSettle();
+
+    expect(repository.created, isEmpty);
+    expect(
+      find.text(
+        'plan_limits.missed_after_range'.tr(args: <String>['5', '360']),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('saving a plan says so', (tester) async {
+    await open(tester);
+
+    await tester.enterText(find.byType(TextField).at(1), '70');
+    await tester.enterText(find.byType(TextField).at(2), '130');
+    await tester.tap(find.text('measurements.save'.tr()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('toast.measurement_plan_saved'.tr()), findsOneWidget);
   });
 }
