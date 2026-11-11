@@ -446,7 +446,7 @@ def test_future_revision_and_immediate_stop_keep_only_earlier_dose(
     revised = client.put(plan_path, headers=headers, json=revision)
     assert revised.status_code == 200
     assert client.post(
-        f"{plan_path}/discontinue", headers=headers
+        f"{plan_path}/stop", headers=headers
     ).status_code == 200
 
     listed = client.get(

@@ -14,6 +14,7 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
+import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,12 +25,10 @@ class MedicationRecordCard extends StatelessWidget {
     super.key,
     required this.circleId,
     required this.plan,
-    required this.canManage,
   });
 
   final String circleId;
   final MedicationPlan plan;
-  final bool canManage;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +61,7 @@ class MedicationRecordCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: () => context.push(
           Routes.medicationDetails(circleId, plan.id),
-          extra: canManage,
+          extra: false,
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -203,6 +202,23 @@ class MedicationRecordCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
+                      ),
+                    ],
+                    if (last?.outcome == DoseOutcome.skipped &&
+                        last?.skipReasonCode != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        context.tr(
+                          'medications.skip_reason_line',
+                          args: [
+                            doseSkipReasonLabel(
+                              context,
+                              last!.skipReasonCode,
+                              last.skipReasonNote,
+                            ),
+                          ],
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ],

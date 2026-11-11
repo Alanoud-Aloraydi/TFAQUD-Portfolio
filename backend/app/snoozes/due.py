@@ -16,7 +16,7 @@ from app.database import transaction
 from app.extensions import get_clock
 from app.measurements.queries import MeasurementQueries
 from app.medications.queries import MedicationQueries
-from app.models import Account, CareCircleManager, Patient, TaskSnooze
+from app.models import Account, CareCircle, CareCircleManager, TaskSnooze
 from app.push.notify import Push, notify
 from app.push.sender import PushMessage
 
@@ -72,7 +72,7 @@ def _remind(row, now: datetime) -> None:
     them itself), unless the task was recorded meanwhile."""
     with transaction() as session:
         patient = session.scalar(
-            select(Patient).where(Patient.care_circle_id == row.care_circle_id)
+            select(CareCircle).where(CareCircle.id == row.care_circle_id)
         )
         if patient is None:
             return
@@ -117,7 +117,7 @@ def _unanswered_subject(session, row, now: datetime) -> str | None:
         row.care_circle_id, day, day
     ):
         if (
-            item["version_id"] == str(row.task_id)
+            item["plan_version_id"] == str(row.task_id)
             and item["time_of_day"] == wall_time
         ):
             if item["status"] in _ANSWERED:

@@ -326,8 +326,9 @@ The first time:
 
 1. Make a Render account. The owner of the GitHub repository connects GitHub
    to Render and gives it this repository.
-2. In Render: **New**, then **Blueprint**, pick the repository and the branch
-   to deploy.
+2. In Render: **New**, then **Blueprint**, pick the repository and a branch:
+   Render reads `render.yaml` from it. The API deploys from `main` whatever
+   the branch (`branch: main` in `render.yaml`).
 3. Render asks for the values that are not in git: `PUSH_BACKEND` (`none` for
    now), `APNS_KEY_ID` and `APNS_TEAM_ID`.
 4. **Apply**. The first build takes a few minutes. The API's address is at the
@@ -360,10 +361,12 @@ process instead of two: the fake sender keeps its codes in the memory of the
 process that sent them, so with two a correct code was refused about every
 second try.
 
-After that, every push to the chosen branch deploys again by itself once the
-GitHub checks of `.github/workflows/ci.yml` pass on it, with the new
-migrations, and the old version answers until the new one is ready. A failed
-check deploys nothing.
+After that, every push to `main` (a merged pull request) deploys again by
+itself once the GitHub checks of `.github/workflows/ci.yml` pass on it, with
+the new migrations, and the old version answers until the new one is ready. A
+failed check deploys nothing. A change to `render.yaml` itself is applied when
+it reaches the Blueprint's branch (Auto Sync), or with **Manual Sync** on the
+Blueprint's page.
 `[skip render]` in a commit message skips one deploy. Settings change in
 **Environment**, without a new commit.
 

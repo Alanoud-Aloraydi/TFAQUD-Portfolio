@@ -109,5 +109,37 @@ void main() {
       expect(find.text('2 من 3'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('the first enabled choice asks for confirmation', (
+      tester,
+    ) async {
+      await open(tester);
+
+      await tester.tap(find.text('دائرة محمد'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CupertinoSwitch).first);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('circle_overview.calendar_sync_confirm_title'.tr()),
+        findsOneWidget,
+      );
+      expect(calendar.on, isNot(contains('c-2:doses')));
+
+      await tester.tap(
+        find.text('circle_overview.calendar_sync_confirm_cancel'.tr()),
+      );
+      await tester.pumpAndSettle();
+      expect(calendar.on, isNot(contains('c-2:doses')));
+
+      await tester.tap(find.byType(CupertinoSwitch).first);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text('circle_overview.calendar_sync_confirm_accept'.tr()),
+      );
+      await tester.pumpAndSettle();
+      expect(calendar.on, contains('c-2:doses'));
+      expect(tester.takeException(), isNull);
+    });
   });
 }

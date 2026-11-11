@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.errors import Conflict, NotFound, ValidationFailed
-from app.models import Appointment, AppointmentVisit, Patient
+from app.models import Appointment, AppointmentVisit
 
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
 
@@ -99,11 +99,9 @@ class VisitService:
         """The circle's appointment with this id, locked when `lock`; 404 for
         another circle's.
         """
-        query = select(Appointment).join(
-            Patient, Patient.id == Appointment.patient_id
-        ).where(
+        query = select(Appointment).where(
             Appointment.id == appointment_id,
-            Patient.care_circle_id == circle_id,
+            Appointment.care_circle_id == circle_id,
         )
         if lock:
             query = query.with_for_update(of=Appointment)

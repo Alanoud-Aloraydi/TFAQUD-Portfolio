@@ -74,7 +74,10 @@ void main() {
     ) async {
       home.response = Success(homeData(circles: <CareCircleSummary>[]));
       await pumpApp(tester);
-      await tester.tap(find.text('home.create_circle'.tr()));
+      // The top bar's «+» has the same words, so tap the button itself.
+      await tester.tap(
+        find.widgetWithText(FilledButton, 'home.create_circle'.tr()),
+      );
       await tester.pumpAndSettle();
       expect(find.text('onboarding.start_title'.tr()), findsOneWidget);
     });
@@ -395,7 +398,6 @@ void main() {
           final request = circles.sentRequests.single;
           expect(request.patientPhoneNumber, '+966501234567');
           // The patient names the circle; the request carries no name.
-          expect(request.circleLabel, isNull);
           expect(request.proposedAppMode.name, 'detailed');
         },
       );
@@ -431,7 +433,6 @@ void main() {
           SentCircleRequest(
             id: 'request-1',
             patientPhoneNumber: '+966501234567',
-            circleLabel: 'أمي',
             proposedAppMode: CircleAppMode.simplified,
             status: CircleRequestStatus.accepted,
           ),

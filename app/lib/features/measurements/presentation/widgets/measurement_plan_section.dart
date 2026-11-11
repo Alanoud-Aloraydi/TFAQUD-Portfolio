@@ -13,7 +13,6 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -143,14 +142,14 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                         context.tr(kind),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      // With one reading a day, its conditions under the
-                      // name; with several, each one's beside its time below.
+                      // With one glucose reading, its state under the name;
+                      // with several, each state is beside its time below.
                       if (version.readingTimes.length == 1 &&
-                          version.readingTimes.single.conditions.isNotEmpty)
+                          version.readingTimes.single.measurementState != null)
                         Text(
-                          conditionsText(
-                            context,
-                            version.readingTimes.single.conditions,
+                          context.tr(
+                            'measurements.condition.'
+                            '${version.readingTimes.single.measurementState}',
                           ),
                         ),
                     ],
@@ -195,8 +194,11 @@ class _MeasurementPlanCardState extends State<MeasurementPlanCard> {
                           Expanded(
                             child: Text(
                               version.readingTimes.length > 1 &&
-                                      reading.conditions.isNotEmpty
-                                  ? conditionsText(context, reading.conditions)
+                                      reading.measurementState != null
+                                  ? context.tr(
+                                      'measurements.condition.'
+                                      '${reading.measurementState}',
+                                    )
                                   : context.tr('measurements.one_reading'),
                               textAlign: TextAlign.end,
                             ),

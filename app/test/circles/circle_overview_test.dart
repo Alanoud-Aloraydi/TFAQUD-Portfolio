@@ -17,6 +17,7 @@ Map<String, dynamic> _circle(List<Map<String, dynamic>> members) =>
       'circle': <String, dynamic>{
         'name': 'رعاية أمي',
         'role': 'manager',
+        'can_manage_members': true,
         'patient': <String, dynamic>{
           'first_name': 'نورة',
           'last_name': 'العتيبي',
@@ -64,6 +65,8 @@ void main() {
             'display_name': 'لينا',
             'is_you': true,
             'is_patient': false,
+            'role': 'member',
+            'can_edit': false,
           },
           <String, dynamic>{
             'display_name': 'نورة',
@@ -75,6 +78,8 @@ void main() {
 
       expect(overview.members.map((m) => m.isPatient), <bool>[false, true]);
       expect(overview.members.first.isYou, isTrue);
+      expect(overview.canManageMembers, isTrue);
+      expect(overview.members.first.canEdit, isFalse);
       expect(overview.pendingInvitations.single.phoneNumber, '+966559876543');
       // Sent again: the row counts from the last time it was sent.
       expect(

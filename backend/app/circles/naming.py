@@ -10,8 +10,7 @@
 
 The name of the others is worked out when it is read, so a new display name
 or a corrected first name shows at once. `care_circle.name` keeps the
-patient's own choice; for a patient without an account it holds the same
-automatic name, which nobody reads back.
+patient's own choice, and is empty for a patient without an account.
 """
 
 from uuid import UUID
@@ -19,7 +18,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Account, CareCircle, Patient
+from app.models import Account, CareCircle
 
 SHARED_PREFIX = "دائرة"
 
@@ -44,7 +43,7 @@ def account_name(account: Account | None) -> str | None:
 def name_for(
     viewer: UUID,
     *,
-    own_name: str,
+    own_name: str | None,
     patient_account_id: UUID | None,
     patient_account_name: str | None,
     patient_first_name: str | None,
@@ -63,13 +62,12 @@ def circle_name(session: Session, circle_id: UUID, viewer: UUID) -> str:
     row = session.execute(
         select(
             CareCircle.name,
-            Patient.account_id,
-            Patient.first_name,
+            CareCircle.account_id,
+            CareCircle.first_name,
             Account.display_name,
             Account.first_name.label("account_first_name"),
         )
-        .join(Patient, Patient.care_circle_id == CareCircle.id)
-        .outerjoin(Account, Account.id == Patient.account_id)
+        .outerjoin(Account, Account.id == CareCircle.account_id)
         .where(CareCircle.id == circle_id)
     ).one_or_none()
     if row is None:

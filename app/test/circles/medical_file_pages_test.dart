@@ -151,7 +151,7 @@ void main() {
         expect(find.byType(CircleCard), findsNothing);
       });
 
-      testWidgets('shows the managers, the patient and a pending invitation', (
+      testWidgets('shows the members, the patient and a pending invitation', (
         WidgetTester tester,
       ) async {
         circles.circleOverview = Success(
@@ -180,9 +180,11 @@ void main() {
 
         await openCircleTab(tester);
 
+        // The header counts every member (Reem and Noura), not only the
+        // managers.
         expect(
           find.text(
-            '${'circle_overview.managers_two'.tr()} · '
+            '${'circle_overview.members_count_two'.tr()} · '
             '${'circle_overview.invitations_one'.tr()}',
           ),
           findsOneWidget,

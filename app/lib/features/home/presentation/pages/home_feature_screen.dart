@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
@@ -104,6 +105,9 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    // A circle member may have changed their photo on another phone while
+    // this app was away. The home refresh below then reads every photo fresh.
+    GetIt.I<PrivatePhotoRepository>().invalidateCache();
     // The page stays as it is while the data loads again in the background.
     unawaited(context.read<HomeCubit>().refresh());
     unawaited(context.read<InboxCubit>().load());

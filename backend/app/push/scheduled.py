@@ -11,14 +11,16 @@ missed). A task put off is not called missed while it waits.
 
 Called by `/internal/tick` on an external schedule (see README). Never
 raises: a failed scan or send is logged and the tick moves on, so one bad
-circle never blocks the rest.
+circle never blocks the rest. Each tick also deletes the rows kept only for
+a while: sign-in code requests after 30 days (they hold a phone number,
+a device id and an IP address), and its own log after 14 days.
 """
 
 import logging
 from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -31,7 +33,7 @@ from app.models import (
     CareCircle,
     CareCircleManager,
     NotificationLog,
-    Patient,
+    OtpRequest,
 )
 from app.push.notify import Push, notify
 from app.push.sender import PushMessage
@@ -40,14 +42,22 @@ from app.snoozes.queries import put_off_until
 
 log = logging.getLogger(__name__)
 
+# How long a row that is only needed for a while is kept.
+OTP_KEPT = timedelta(days=30)
+LOG_KEPT = timedelta(days=14)
+
 
 def run_tick(now: datetime) -> None:
-    """Remind of the tasks put off whose time came, then scan every circle
-    once; swallow one circle's error."""
+    """Remind of the tasks put off whose time came, delete the rows past
+    their time, then scan every circle once; swallow one circle's error."""
     try:
         send_due_snoozes(now)
     except Exception:  # noqa: BLE001 - the scan must still run
         log.warning("Tasks put off were not reminded.", exc_info=True)
+    try:
+        purge_old_rows(now)
+    except Exception:  # noqa: BLE001 - the scan must still run
+        log.warning("Purging old rows failed.", exc_info=True)
     with transaction() as session:
         circle_ids = list(session.scalars(select(CareCircle.id)))
     for circle_id in circle_ids:
@@ -60,25 +70,49 @@ def run_tick(now: datetime) -> None:
             )
 
 
-def _claim(dedupe_key: str) -> bool:
-    """True the first time `dedupe_key` is claimed; False on a repeat."""
+def purge_old_rows(now: datetime) -> None:
+    """Delete sign-in code requests older than `OTP_KEPT` (their sends go
+    with them) and log rows older than `LOG_KEPT`."""
+    with transaction() as session:
+        session.execute(
+            delete(OtpRequest).where(OtpRequest.created_at < now - OTP_KEPT)
+        )
+        session.execute(
+            delete(NotificationLog).where(
+                NotificationLog.sent_at < now - LOG_KEPT
+            )
+        )
+
+
+def _claim(
+    kind: str, target_id: str, scheduled_on: str, time_of_day: str | None
+) -> bool:
+    """True the first time this notification is claimed; False on a
+    repeat."""
     try:
         with transaction() as session:
-            session.add(NotificationLog(dedupe_key=dedupe_key))
+            session.add(NotificationLog(
+                kind=kind,
+                target_id=UUID(target_id),
+                scheduled_on=date.fromisoformat(scheduled_on),
+                time_of_day=(
+                    time.fromisoformat(time_of_day) if time_of_day else None
+                ),
+            ))
     except IntegrityError:
         return False
     return True
 
 
 def _circle_recipients(
-    session: Session, patient: Patient
+    session: Session, patient: CareCircle
 ) -> tuple[UUID, ...]:
     """Every manager of the patient's circle, plus the patient if they have
     an account."""
     recipients = set(
         session.scalars(
             select(CareCircleManager.account_id).where(
-                CareCircleManager.care_circle_id == patient.care_circle_id
+                CareCircleManager.care_circle_id == patient.id
             )
         )
     )
@@ -96,11 +130,11 @@ def _key(task_id: str, occurrence: dict) -> tuple:
     )
 
 
-def _patient(session: Session, circle_id: UUID) -> Patient | None:
+def _patient(session: Session, circle_id: UUID) -> CareCircle | None:
     """The circle's patient; None when the circle went since the scan
     began."""
     return session.scalar(
-        select(Patient).where(Patient.care_circle_id == circle_id)
+        select(CareCircle).where(CareCircle.id == circle_id)
     )
 
 
@@ -133,13 +167,14 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
             minutes=occurrence["missed_after_minutes"]
         ):
             continue
-        # `_claim` writes the dose's key once; a scan that finds it written
-        # sent it already.
-        key = (
-            f"dose_missed:{occurrence['schedule_id']}:"
-            f"{occurrence['scheduled_on']}"
-        )
-        if not _claim(key):
+        # `_claim` logs the dose once; a scan that finds it logged sent it
+        # already.
+        if not _claim(
+            "dose_missed",
+            occurrence["schedule_id"],
+            occurrence["scheduled_on"],
+            None,
+        ):
             continue
         metrics.increment("tick.missed_dose")
         # «ما تسجّلت» says only what the app knows: the dose may have been
@@ -193,11 +228,12 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
             "ضغط الدم"
         )
         # One alert per reading time of the day.
-        key = (
-            f"measurement_missed:{occurrence['version_id']}:"
-            f"{occurrence['scheduled_on']}:{occurrence['time_of_day']}"
-        )
-        if not _claim(key):
+        if not _claim(
+            "measurement_missed",
+            occurrence["plan_version_id"],
+            occurrence["scheduled_on"],
+            occurrence["time_of_day"],
+        ):
             continue
         metrics.increment("tick.missed_measurement")
         notify(

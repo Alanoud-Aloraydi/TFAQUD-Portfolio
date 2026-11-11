@@ -14,7 +14,7 @@ from app import create_app
 from app.auth.otp_store import SendRules
 from app.auth.postgres_otp import PostgresOtpStore
 from app.clock import ManualClock
-from app.models import Account, AccountSession, OtpChallenge, OtpSendAttempt
+from app.models import Account, AccountSession, OtpRequest, OtpSend
 from app.sms.base import SmsDeliveryError
 
 PHONE = "+966501234567"
@@ -181,7 +181,7 @@ def test_pending_challenge_and_quotas_survive_restart(auth_app, database):
     )
     assert verify(after, challenge).status_code == 200
     with Session(database) as session:
-        row = session.get(OtpChallenge, UUID(challenge))
+        row = session.get(OtpRequest, UUID(challenge))
         assert row.status == "verified"
         assert row.expires_at is not None
 
@@ -211,14 +211,14 @@ def test_concurrent_quota_claims_cannot_exceed_three(auth_app, database):
     assert results.count(True) == 3
     with Session(database) as session:
         assert (
-            session.scalar(select(func.count()).select_from(OtpSendAttempt))
+            session.scalar(select(func.count()).select_from(OtpSend))
             == 3
         )
         assert (
             session.scalar(
                 select(func.count())
-                .select_from(OtpChallenge)
-                .where(OtpChallenge.status == "pending")
+                .select_from(OtpRequest)
+                .where(OtpRequest.status == "pending")
             )
             == 1
         )
@@ -246,7 +246,7 @@ def test_resend_rechecks_attempts_before_reserving_delivery(
     assert response.json["error"]["code"] == "too_many_attempts"
     with Session(database) as session:
         assert (
-            session.scalar(select(func.count()).select_from(OtpSendAttempt))
+            session.scalar(select(func.count()).select_from(OtpSend))
             == 1
         )
 
@@ -378,7 +378,7 @@ def test_failed_session_insert_rolls_back_account_and_verification(
             session.scalar(select(func.count()).select_from(AccountSession))
             == 0
         )
-        row = session.get(OtpChallenge, UUID(challenge))
+        row = session.get(OtpRequest, UUID(challenge))
         assert row.status == "pending" and row.verified_at is None
 
 
@@ -407,7 +407,7 @@ def test_delivery_uncertainty_retains_quota(
     )
     assert result.status_code == (503 if status == 422 else 429)
     with Session(database) as session:
-        assert set(session.scalars(select(OtpSendAttempt.status))) == {
+        assert set(session.scalars(select(OtpSend.status))) == {
             expected
         }
 

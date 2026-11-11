@@ -1,12 +1,9 @@
 """Persistence models registered with SQLAlchemy metadata."""
-
 from app.models.account import Account
-from app.models.auth import AccountSession, OtpChallenge, OtpSendAttempt
+from app.models.auth import AccountSession, OtpRequest, OtpSend
 from app.models.circle import CareCircle
-from app.models.patient import Patient
 from app.models.manager import CareCircleManager
-from app.models.creation_request import CareCircleCreationRequest
-from app.models.invitation import CareCircleManagerInvitation
+from app.models.circle_request import CareCircleInvitation, CareCircleRequest
 from app.models.medical import EmergencyContact, PatientAllergy
 from app.models.medical import PatientCondition
 from app.models.medication_dose_record import MedicationDoseRecord
@@ -20,7 +17,8 @@ from app.models.measurement import (
     MeasurementPlan,
     MeasurementPlanTime,
     MeasurementPlanVersion,
-    MeasurementRecord,
+    MeasurementPlanWeekday,
+    MeasurementReading,
     MeasurementTarget,
 )
 from app.models.appointment import (
@@ -30,23 +28,26 @@ from app.models.appointment import (
 )
 from app.models.push import PushDevice
 from app.models.notification_log import NotificationLog
-from app.models.photo import Photo
+from app.models.photo import AccountPhoto, CareCirclePhoto
+from app.models.photo import MedicationPlanPhoto
 from app.models.task_snooze import TaskSnooze
 
 __all__ = [
     "Account",
+    "AccountPhoto",
     "AccountSession",
-    "OtpChallenge",
-    "OtpSendAttempt",
+    "OtpRequest",
+    "OtpSend",
     "CareCircle",
-    "Patient",
+    "CareCircleInvitation",
     "CareCircleManager",
-    "CareCircleCreationRequest",
-    "CareCircleManagerInvitation",
+    "CareCircleRequest",
+    "CareCirclePhoto",
     "EmergencyContact",
     "PatientAllergy",
     "PatientCondition",
     "MedicationPlan",
+    "MedicationPlanPhoto",
     "MedicationPlanVersion",
     "MedicationSchedule",
     "MedicationScheduleDay",
@@ -55,13 +56,14 @@ __all__ = [
     "MeasurementPlan",
     "MeasurementPlanTime",
     "MeasurementPlanVersion",
-    "MeasurementRecord",
+    "MeasurementPlanWeekday",
+    "MeasurementReading",
+    "TaskSnooze",
     "MeasurementTarget",
     "Appointment",
     "AppointmentCompanion",
     "AppointmentVisit",
     "PushDevice",
     "NotificationLog",
-    "Photo",
     "TaskSnooze",
 ]

@@ -55,7 +55,7 @@ void main() {
       final plan = MedicationPlanModel.fromJson({
         'id': 'plan-1',
         'created_at': '2026-10-01T10:00:00Z',
-        'discontinued_at': null,
+        'stopped_at': null,
         'history': [
           {
             'version_number': 1,
@@ -189,7 +189,7 @@ void main() {
           MedicationPlanModel.fromJson({
             'id': 'plan-1',
             'created_at': '2026-10-01T10:00:00Z',
-            'discontinued_at': null,
+            'stopped_at': null,
             'history': [],
             'version': {
               'version_number': 1,

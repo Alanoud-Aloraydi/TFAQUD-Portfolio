@@ -14,7 +14,7 @@ from app.medications.inputs import PlanRequest, RevisePlanRequest
 from app.medications.plan_versions import add_plan_version
 from app.medications.plan_versions import same_definition
 from app.models import MedicationDoseRecord, MedicationPlan
-from app.models import MedicationPlanVersion, MedicationSchedule, Patient
+from app.models import MedicationPlanVersion, MedicationSchedule, CareCircle
 
 
 def normalize_medication_name(value: str) -> str:
@@ -55,7 +55,7 @@ class MedicationPlanService:
         )
         # The medicine, and its first version from its start.
         plan = MedicationPlan(
-            patient_id=patient.id,
+            care_circle_id=patient.id,
             created_by_account_id=actor_id,
         )
         self.session.add(plan)
@@ -84,10 +84,10 @@ class MedicationPlanService:
         replaces it, or starts tomorrow when doses were already recorded.
         """
         plan = self._plan(circle_id, plan_id)
-        if plan.discontinued_at is not None:
+        if plan.stopped_at is not None:
             raise ValidationFailed(
-                "A discontinued medication cannot be revised.",
-                code="medication_discontinued",
+                "A stopped medication cannot be revised.",
+                code="medication_stopped",
             )
         current = self._current_version(plan.id)
         if current.version_number != body.expected_version_number:
@@ -237,8 +237,8 @@ class MedicationPlanService:
         # Only a medicine in use, whose version read by the app is the one
         # waiting to start.
         plan = self._plan(circle_id, plan_id)
-        if plan.discontinued_at is not None:
-            raise Conflict(code="medication_discontinued")
+        if plan.stopped_at is not None:
+            raise Conflict(code="medication_stopped")
         pending = self._current_version(plan.id)
         today = patient_today(self._patient_of(plan), self.now)
         if (pending.version_number != expected_version_number
@@ -262,7 +262,7 @@ class MedicationPlanService:
         self.session.flush()
         return plan
 
-    def discontinue(
+    def stop(
         self,
         circle_id: UUID,
         plan_id: UUID,
@@ -272,19 +272,19 @@ class MedicationPlanService:
         stopped stays as it is.
         """
         plan = self._plan(circle_id, plan_id)
-        if plan.discontinued_at is not None:
+        if plan.stopped_at is not None:
             return plan
-        plan.discontinued_at = self.now
-        plan.discontinued_by_account_id = actor_id
+        plan.stopped_at = self.now
+        plan.stopped_by_account_id = actor_id
         self.session.flush()
         return plan
 
-    def _patient(self, circle_id: UUID, *, lock: bool) -> Patient:
+    def _patient(self, circle_id: UUID, *, lock: bool) -> CareCircle:
         """The circle's patient, locked when `lock` (so two changes to their
         medicines run one after the other); 404 when there is none.
         """
-        statement = select(Patient).where(
-            Patient.care_circle_id == circle_id
+        statement = select(CareCircle).where(
+            CareCircle.id == circle_id
         )
         if lock:
             statement = statement.with_for_update()
@@ -293,9 +293,9 @@ class MedicationPlanService:
             raise NotFound("The patient does not exist.")
         return patient
 
-    def _patient_of(self, plan: MedicationPlan) -> Patient:
+    def _patient_of(self, plan: MedicationPlan) -> CareCircle:
         """The plan's patient, already loaded and locked by `_plan`."""
-        return self.session.get(Patient, plan.patient_id)
+        return self.session.get(CareCircle, plan.care_circle_id)
 
     def _plan(self, circle_id: UUID, plan_id: UUID) -> MedicationPlan:
         """The patient's medicine with this id, its patient row locked; 404 for
@@ -306,7 +306,7 @@ class MedicationPlanService:
             select(MedicationPlan)
             .where(
                 MedicationPlan.id == plan_id,
-                MedicationPlan.patient_id == patient.id,
+                MedicationPlan.care_circle_id == patient.id,
             )
             .with_for_update()
         )

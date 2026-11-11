@@ -85,7 +85,7 @@ def _send(sender, accounts: Iterable[UUID], message: PushMessage) -> None:
                     AccountSession.id == PushDevice.session_id,
                 )
                 .where(
-                    PushDevice.account_id.in_(list(accounts)),
+                    AccountSession.account_id.in_(list(accounts)),
                     AccountSession.revoked_at.is_(None),
                 )
                 .order_by(PushDevice.token)

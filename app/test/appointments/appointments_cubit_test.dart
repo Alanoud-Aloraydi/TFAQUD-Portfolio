@@ -15,7 +15,7 @@ Map<String, dynamic> _json({
   'id': id,
   'specialty': 'diabetes',
   'kind': kind,
-  'other_kind': null,
+  'other_text': null,
   'scheduled_on': '2030-01-05',
   'time_of_day': '10:00',
   'place': 'Clinic',

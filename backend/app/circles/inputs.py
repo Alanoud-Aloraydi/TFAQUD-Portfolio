@@ -55,7 +55,6 @@ def _iso_date_only(value):
 
 
 Name50 = _text(50)
-Label30 = _text(30)
 CircleName = _text(60)
 City = _text(60)
 # An IANA zone name such as "Europe/London"; CareService checks it is real.
@@ -72,6 +71,12 @@ Longitude = Annotated[
 ]
 Flag = Annotated[bool, Field(strict=True)]
 AppMode = Literal["detailed", "simplified"]
+
+
+class MemberAccessInput(Dto):
+    """The circle owner's persistent edit permission for one member."""
+
+    can_edit: Flag
 
 
 # ---- medical profile --------------------------------------------------
@@ -249,13 +254,10 @@ class LeaveCircleInput(Dto):
 # ---- requests and invitations --------------------------------------------
 
 
-class CreationRequestInput(Dto):
+class CircleRequestInput(Dto):
     """The body of asking a patient to make their circle."""
 
     patient_phone_number: Phone
-    # Not used for the name any more (the patient names the circle). An
-    # older app still sends it.
-    circle_label: Label30 | None = None
     proposed_app_mode: AppMode
 
 

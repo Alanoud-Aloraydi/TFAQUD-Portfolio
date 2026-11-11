@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, String
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey
 from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -39,7 +39,14 @@ class MedicationDoseRecord(db.Model):
             "skip_reason_note IS NULL OR skip_reason_code = 'other'",
             name="skip_note",
         ),
-        UniqueConstraint("schedule_id", "scheduled_on"),
+        CheckConstraint(
+            "skip_reason_note IS NULL OR char_length(skip_reason_note) <= 250",
+            name="skip_reason_note_length",
+        ),
+        UniqueConstraint(
+            "schedule_id", "scheduled_on",
+            name="uq_medication_dose_record_schedule_id_scheduled_on",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -54,8 +61,8 @@ class MedicationDoseRecord(db.Model):
     taken_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
-    skip_reason_code: Mapped[str | None] = mapped_column(String(40))
-    skip_reason_note: Mapped[str | None] = mapped_column(String(250))
+    skip_reason_code: Mapped[str | None] = mapped_column(Text)
+    skip_reason_note: Mapped[str | None] = mapped_column(Text)
     recorded_by_account_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("account.id", ondelete="SET NULL"),
         index=True,

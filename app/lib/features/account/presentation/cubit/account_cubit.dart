@@ -123,6 +123,7 @@ class AccountCubit extends Cubit<AccountState> {
               patientCircleId: current.patientCircleId,
               birthDate: current.birthDate,
               city: current.city,
+              avatarCode: current.avatarCode,
             ),
             noticeKey: 'account.saved',
           ),

@@ -1,9 +1,9 @@
-"""Medical data about the patient, kept in rows beside the patient.
+"""The medical file of a circle's patient: conditions, allergies, contacts.
 
-The code lists below are the only values the API accepts. The database checks
-the same lists (migration 0005), so a bad value is refused in both places.
+The code lists below are the only values the API accepts, and the database
+checks the same lists. Whether the patient has none of them is not a row:
+it is `care_circle.conditions_status` / `allergies_status` (migration 0038).
 """
-
 from datetime import datetime
 from uuid import UUID
 
@@ -12,8 +12,19 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
+from app.models.circle import BLOOD_TYPES
 
-BLOOD_TYPES = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+__all__ = [
+    "BLOOD_TYPES",
+    "CONDITION_CODES",
+    "CONTACT_RELATIONS",
+    "EmergencyContact",
+    "FOOD_ALLERGY_CODES",
+    "MEDICATION_ALLERGY_CODES",
+    "PatientAllergy",
+    "PatientCondition",
+]
+
 CONDITION_CODES = (
     "diabetes",
     "hypertension",
@@ -46,7 +57,7 @@ FOOD_ALLERGY_CODES = (
 )
 CONTACT_RELATIONS = ("son", "daughter", "husband", "wife", "other")
 
-_CONDITIONS_SQL = ", ".join(f"'{c}'" for c in ("none",) + CONDITION_CODES)
+_CONDITIONS_SQL = ", ".join(f"'{c}'" for c in CONDITION_CODES)
 _MEDICATION_SQL = ", ".join(f"'{c}'" for c in MEDICATION_ALLERGY_CODES)
 _FOOD_SQL = ", ".join(f"'{c}'" for c in FOOD_ALLERGY_CODES)
 _RELATIONS_SQL = ", ".join(f"'{c}'" for c in CONTACT_RELATIONS)
@@ -60,11 +71,14 @@ _OTHER_TEXT = (
 
 
 class PatientCondition(db.Model):
-    """One chronic condition of a patient. The code 'none' stands alone."""
+    """One chronic condition of a circle's patient."""
 
     __tablename__ = "patient_condition"
     __table_args__ = (
-        UniqueConstraint("patient_id", "code"),
+        UniqueConstraint(
+            "care_circle_id", "code",
+            name="uq_patient_condition_care_circle_id_code",
+        ),
         CheckConstraint(f"code IN ({_CONDITIONS_SQL})", name="code"),
         CheckConstraint(_OTHER_TEXT, name="other_text"),
     )
@@ -73,21 +87,24 @@ class PatientCondition(db.Model):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
-    patient_id: Mapped[UUID] = mapped_column(
-        ForeignKey("patient.id", ondelete="CASCADE"),
+    care_circle_id: Mapped[UUID] = mapped_column(
+        ForeignKey("care_circle.id", ondelete="CASCADE"),
     )
     code: Mapped[str] = mapped_column(Text)
+    # The words of «أخرى»; null for every other code.
     other_text: Mapped[str | None] = mapped_column(Text)
 
 
 class PatientAllergy(db.Model):
-    """One allergy of a patient. kind 'none' means no known allergies."""
+    """One allergy of a circle's patient: a medication or a food."""
 
     __tablename__ = "patient_allergy"
     __table_args__ = (
-        UniqueConstraint("patient_id", "kind", "code"),
+        UniqueConstraint(
+            "care_circle_id", "kind", "code",
+            name="uq_patient_allergy_care_circle_id_kind_code",
+        ),
         CheckConstraint(
-            "(kind = 'none' AND code = 'none') OR "
             f"(kind = 'medication' AND code IN ({_MEDICATION_SQL})) OR "
             f"(kind = 'food' AND code IN ({_FOOD_SQL}))",
             name="kind_code",
@@ -99,11 +116,12 @@ class PatientAllergy(db.Model):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
-    patient_id: Mapped[UUID] = mapped_column(
-        ForeignKey("patient.id", ondelete="CASCADE"),
+    care_circle_id: Mapped[UUID] = mapped_column(
+        ForeignKey("care_circle.id", ondelete="CASCADE"),
     )
     kind: Mapped[str] = mapped_column(Text)
     code: Mapped[str] = mapped_column(Text)
+    # The words of «أخرى»; null for every other code.
     other_text: Mapped[str | None] = mapped_column(Text)
 
 
@@ -112,7 +130,10 @@ class EmergencyContact(db.Model):
 
     __tablename__ = "emergency_contact"
     __table_args__ = (
-        UniqueConstraint("patient_id", "phone_number"),
+        UniqueConstraint(
+            "care_circle_id", "phone_number",
+            name="uq_emergency_contact_care_circle_id_phone_number",
+        ),
         CheckConstraint("length(btrim(name)) BETWEEN 1 AND 50", name="name"),
         CheckConstraint(f"relation IN ({_RELATIONS_SQL})", name="relation"),
         CheckConstraint(
@@ -124,8 +145,8 @@ class EmergencyContact(db.Model):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
-    patient_id: Mapped[UUID] = mapped_column(
-        ForeignKey("patient.id", ondelete="CASCADE"),
+    care_circle_id: Mapped[UUID] = mapped_column(
+        ForeignKey("care_circle.id", ondelete="CASCADE"),
     )
     name: Mapped[str] = mapped_column(Text)
     relation: Mapped[str] = mapped_column(Text)

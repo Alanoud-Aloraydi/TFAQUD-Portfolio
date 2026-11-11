@@ -26,7 +26,6 @@ CircleInbox _inbox({
       const SentCircleRequest(
         id: 'sent-1',
         patientPhoneNumber: '+966501234567',
-        circleLabel: 'أمي',
         proposedAppMode: CircleAppMode.simplified,
         status: CircleRequestStatus.declined,
       ),

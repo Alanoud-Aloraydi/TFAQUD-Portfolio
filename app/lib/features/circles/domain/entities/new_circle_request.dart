@@ -7,20 +7,15 @@ class NewCircleRequest extends Equatable {
   const NewCircleRequest({
     required this.patientPhoneNumber,
     required this.proposedAppMode,
-    this.circleLabel,
   });
 
   /// The patient's number with the country code, `+9665XXXXXXXX`.
   final String patientPhoneNumber;
 
-  /// Not sent by this app any more: the patient names the circle when they
-  /// complete the request, and the sender sees «دائرة» and the patient's
-  /// name. The API still accepts it.
-  final String? circleLabel;
   final CircleAppMode proposedAppMode;
 
   @override
-  List<Object?> get props => [patientPhoneNumber, circleLabel, proposedAppMode];
+  List<Object?> get props => [patientPhoneNumber, proposedAppMode];
 }
 
 /// The state of a request on the sender's side.
@@ -31,7 +26,6 @@ class SentCircleRequest extends Equatable {
   const SentCircleRequest({
     required this.id,
     required this.patientPhoneNumber,
-    required this.circleLabel,
     required this.proposedAppMode,
     required this.status,
     this.createdAt,
@@ -39,7 +33,6 @@ class SentCircleRequest extends Equatable {
 
   final String id;
   final String patientPhoneNumber;
-  final String circleLabel;
   final CircleAppMode proposedAppMode;
   final CircleRequestStatus status;
 
@@ -50,7 +43,6 @@ class SentCircleRequest extends Equatable {
   List<Object?> get props => [
     id,
     patientPhoneNumber,
-    circleLabel,
     proposedAppMode,
     status,
     createdAt,

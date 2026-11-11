@@ -525,25 +525,27 @@ def test_the_card_cannot_be_changed(setup):
 @pytest.mark.parametrize(
     "statement",
     [
-        "UPDATE patient SET blood_type = 'X+'",
-        "INSERT INTO patient_condition (patient_id, code) "
-        "SELECT id, 'flu' FROM patient",
-        "INSERT INTO patient_condition (patient_id, code) "
-        "SELECT id, 'other' FROM patient",
-        "INSERT INTO patient_condition (patient_id, code, other_text) "
-        "SELECT id, 'asthma', 'text' FROM patient",
-        "INSERT INTO patient_allergy (patient_id, kind, code) "
-        "SELECT id, 'none', 'milk' FROM patient",
-        "INSERT INTO patient_allergy (patient_id, kind, code) "
-        "SELECT id, 'food', 'penicillin' FROM patient",
-        "INSERT INTO patient_allergy (patient_id, kind, code) "
-        "SELECT id, 'drink', 'milk' FROM patient",
-        "INSERT INTO emergency_contact (patient_id, name, relation, "
-        "phone_number) SELECT id, 'A', 'cousin', '+966511111111' FROM patient",
-        "INSERT INTO emergency_contact (patient_id, name, relation, "
-        "phone_number) SELECT id, 'A', 'son', 'not-a-phone' FROM patient",
-        "INSERT INTO emergency_contact (patient_id, name, relation, "
-        "phone_number) SELECT id, '  ', 'son', '+966511111111' FROM patient",
+        "UPDATE care_circle SET blood_type = 'X+'",
+        "INSERT INTO patient_condition (care_circle_id, code) "
+        "SELECT id, 'flu' FROM care_circle",
+        "INSERT INTO patient_condition (care_circle_id, code) "
+        "SELECT id, 'other' FROM care_circle",
+        "INSERT INTO patient_condition (care_circle_id, code, other_text) "
+        "SELECT id, 'asthma', 'text' FROM care_circle",
+        "INSERT INTO patient_allergy (care_circle_id, kind, code) "
+        "SELECT id, 'none', 'milk' FROM care_circle",
+        "INSERT INTO patient_allergy (care_circle_id, kind, code) "
+        "SELECT id, 'food', 'penicillin' FROM care_circle",
+        "INSERT INTO patient_allergy (care_circle_id, kind, code) "
+        "SELECT id, 'drink', 'milk' FROM care_circle",
+        "INSERT INTO emergency_contact (care_circle_id, name, relation, "
+        "phone_number) SELECT id, 'A', 'cousin', '+966511111111' "
+        "FROM care_circle",
+        "INSERT INTO emergency_contact (care_circle_id, name, relation, "
+        "phone_number) SELECT id, 'A', 'son', 'not-a-phone' FROM care_circle",
+        "INSERT INTO emergency_contact (care_circle_id, name, relation, "
+        "phone_number) SELECT id, '  ', 'son', '+966511111111' "
+        "FROM care_circle",
     ],
 )
 def test_database_rules_hold_without_the_api(database, account, statement):
@@ -557,8 +559,8 @@ def test_database_rules_hold_without_the_api(database, account, statement):
 def test_the_database_keeps_each_choice_once(database, account):
     offline_circle(database, account())
     insert = (
-        "INSERT INTO patient_condition (patient_id, code) "
-        "SELECT id, 'asthma' FROM patient"
+        "INSERT INTO patient_condition (care_circle_id, code) "
+        "SELECT id, 'asthma' FROM care_circle"
     )
     with database.begin() as connection:
         connection.execute(text(insert))

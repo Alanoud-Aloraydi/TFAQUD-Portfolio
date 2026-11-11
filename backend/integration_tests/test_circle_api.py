@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Account, CareCircle, CareCircleManager, Patient
+from app.models import Account, CareCircle, CareCircleManager
 from integration_tests.helpers import Api, BIRTH, add_manager, count
 from integration_tests.helpers import error_code, offline_circle, run
 
@@ -28,7 +28,6 @@ def simplified_circle(database, requester, patient):
         "request_creation",
         requester.id,
         patient.phone_number,
-        "Mother",
         "simplified",
     )
     run(database, "respond_creation", patient.id, request.id, True)
@@ -76,11 +75,13 @@ def test_self_care_circle_is_created_and_listed(
             "is_you": True,
             "is_patient": True,
             "role": "manager",
+            "can_edit": True,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }
     ]
     assert circle["pending_invitations"] == []
+    assert circle["can_manage_members"] is True
     home = api.get("/api/v1/home")
     assert home.json["care_circles"] == [
         {
@@ -206,7 +207,7 @@ def test_a_bad_medical_part_creates_nothing(database_app, database, account):
 
     assert error_code(response, 422) == "other_text_required"
     assert count(database, CareCircle) == 0
-    assert count(database, Patient) == 0
+    assert count(database, CareCircle) == 0
     with Session(database) as session:
         assert session.get(Account, owner.id).app_mode is None
 
@@ -234,12 +235,14 @@ def test_circle_for_a_patient_without_an_account(
             "is_you": True,
             "is_patient": False,
             "role": "manager",
+            "can_edit": True,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }
     ]
+    assert circle["can_manage_members"] is False
     with Session(database) as session:
-        patient = session.scalar(select(Patient))
+        patient = session.scalar(select(CareCircle))
         assert patient.account_id is None
         assert session.get(Account, owner.id).app_mode == "detailed"
 
@@ -294,6 +297,66 @@ def test_the_circle_page_lists_members_you_first(
     ]
 
 
+def test_detailed_owner_can_pause_restore_and_remove_member(
+    database_app, database, account
+):
+    owner, member = account(name="Noura"), account(name="Khaled")
+    created = Api(database_app, owner).post("/api/v1/circles/self", SELF)
+    circle_id = created.json["circle"]["id"]
+    with Session(database) as session:
+        circle = session.get(CareCircle, circle_id)
+    add_manager(database, owner, circle, member)
+    owner_api = Api(database_app, owner)
+    member_api = Api(database_app, member)
+    path = circle_url(circle_id, f"/members/{member.id}")
+
+    paused = owner_api.patch(path, {"can_edit": False})
+
+    assert paused.status_code == 200
+    saved = next(
+        item for item in paused.json["circle"]["members"]
+        if item["account_id"] == str(member.id)
+    )
+    assert (saved["role"], saved["can_edit"]) == ("member", False)
+    assert member_api.get(circle_url(circle_id)).status_code == 200
+    assert member_api.post(
+        circle_url(circle_id, "/medication-plans"), {}
+    ).status_code == 403
+    assert member_api.get("/api/v1/home").json["care_circles"][0][
+        "can_manage_medications"
+    ] is False
+
+    restored = owner_api.patch(path, {"can_edit": True})
+    assert restored.status_code == 200
+    assert owner_api.delete(path).status_code == 204
+    removed_view = member_api.get(circle_url(circle_id))
+    assert error_code(removed_view, 403) == "forbidden"
+
+
+def test_non_owner_cannot_manage_circle_members(
+    database_app, database, account
+):
+    owner, first, second = (
+        account(name="Noura"),
+        account(name="Khaled"),
+        account(name="Reem"),
+    )
+    circle_id = Api(database_app, owner).post(
+        "/api/v1/circles/self", SELF
+    ).json["circle"]["id"]
+    with Session(database) as session:
+        circle = session.get(CareCircle, circle_id)
+    add_manager(database, owner, circle, first)
+    add_manager(database, owner, circle, second)
+
+    response = Api(database_app, first).patch(
+        circle_url(circle_id, f"/members/{second.id}"),
+        {"can_edit": False},
+    )
+
+    assert error_code(response, 403) == "forbidden"
+
+
 def test_a_simplified_patient_sees_the_circle_without_invitations(
     database_app, database, account
 ):
@@ -328,7 +391,7 @@ def test_a_manager_cannot_rename_an_automatic_name(
 
     assert error_code(response, 403) == "patient_names_circle"
     with Session(database) as session:
-        assert session.get(CareCircle, circle.id).name == "دائرة Nora"
+        assert session.get(CareCircle, circle.id).name is None
 
 
 def test_a_blank_circle_name_is_refused(database_app, database, account):
@@ -467,7 +530,7 @@ def test_the_last_manager_must_confirm_deleting_the_circle(
     done = api.post(circle_url(circle.id, "/leave"), {"confirm_delete": True})
     assert done.status_code == 204
     assert count(database, CareCircle) == 0
-    assert count(database, Patient) == 0
+    assert count(database, CareCircle) == 0
 
 
 def test_deleting_a_circle_needs_the_confirmation_in_the_url(
@@ -560,7 +623,7 @@ def test_invitation_from_sending_to_accepting(database_app, database, account):
     received = invited.get("/api/v1/invitations").json["invitations"]
     assert len(received) == 1
     assert received[0]["id"] == invitation["id"]
-    assert received[0]["circle_name"] == circle.name
+    assert received[0]["circle_name"] == "دائرة Nora"
     assert received[0]["invited_by"] == {"display_name": "Reem"}
     # The invited person is not told the circle id before accepting.
     assert "care_circle_id" not in received[0]
@@ -697,9 +760,9 @@ def test_an_invitation_cannot_be_reached_through_another_circle(
     assert error_code(api.post(url + "/resend"), 404) == "not_found"
     assert error_code(api.delete(url), 404) == "not_found"
     with Session(database) as session:
-        from app.models import CareCircleManagerInvitation
+        from app.models import CareCircleInvitation
 
         assert (
-            session.get(CareCircleManagerInvitation, invitation.id).status
+            session.get(CareCircleInvitation, invitation.id).status
             == "pending"
         )

@@ -70,7 +70,7 @@ def attach_snoozes(
     not yet recorded. A dose is found by its schedule, a reading time by its
     version; both by day and wall time."""
     waiting = waiting_snoozes(session, circle_id, task, start, end, now)
-    id_key = "schedule_id" if task == "dose" else "version_id"
+    id_key = "schedule_id" if task == "dose" else "plan_version_id"
     for item in occurrences:
         key = (item[id_key], item["scheduled_on"], item["time_of_day"][:5])
         item["snooze"] = (

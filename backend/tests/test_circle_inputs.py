@@ -204,17 +204,10 @@ def test_leaving_checks_a_body_when_one_is_sent(
     [
         {
             "patient_phone_number": "0512345678",
-            "circle_label": "Mother",
             "proposed_app_mode": "simplified",
         },
         {
             "patient_phone_number": PHONE,
-            "circle_label": "",
-            "proposed_app_mode": "simplified",
-        },
-        {
-            "patient_phone_number": PHONE,
-            "circle_label": "Mother",
             "proposed_app_mode": "full",
         },
     ],

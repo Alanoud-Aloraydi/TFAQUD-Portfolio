@@ -17,6 +17,11 @@ import 'package:app/features/home/presentation/cubit/record_export_cubit.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +31,7 @@ Future<void> showRecordExportSheet(
   BuildContext context, {
   required String circleId,
   required List<MedicationPlan> plans,
+  required List<MeasurementPlan> measurementPlans,
 }) => showModalBottomSheet<void>(
   context: context,
   useSafeArea: true,
@@ -37,19 +43,31 @@ Future<void> showRecordExportSheet(
       GetIt.I<CirclesUseCase>(),
       RecordPdfExporter(),
       GetIt.I<MeasurementRepository>(),
+      GetIt.I<MedicationsUseCase>(),
       GetIt.I<AppointmentRepository>(),
       GetIt.I<VisitRepository>(),
       circleId,
     )..load(),
-    child: _RecordExportSheet(plans: List.unmodifiable(plans)),
+    child: _RecordExportSheet(
+      plans: List.unmodifiable(plans),
+      measurementPlans: List.unmodifiable(measurementPlans),
+    ),
   ),
 );
 
+enum _ExportMode { summary, detailed }
+
+enum _ExportRange { last7, last30, last90, custom, all }
+
 /// Renders the record export sheet element of record export sheet.
 class _RecordExportSheet extends StatefulWidget {
-  const _RecordExportSheet({required this.plans});
+  const _RecordExportSheet({
+    required this.plans,
+    required this.measurementPlans,
+  });
 
   final List<MedicationPlan> plans;
+  final List<MeasurementPlan> measurementPlans;
 
   @override
   State<_RecordExportSheet> createState() => _RecordExportSheetState();
@@ -60,7 +78,49 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
   bool _medications = true;
   bool _measurements = true;
   bool _appointments = true;
+  bool _includeContacts = false;
+  _ExportMode _mode = _ExportMode.summary;
+  _ExportRange _range = _ExportRange.last30;
+  DateTimeRange? _customRange;
   String? _errorKey;
+
+  DateTime get _today => PatientClockScope.of(context).today();
+
+  DateTime get _earliest {
+    final dates = <DateTime>[
+      for (final plan in widget.plans) plan.version.startsOn,
+      for (final plan in widget.measurementPlans)
+        plan.history.first.effectiveFromOn,
+    ];
+    if (dates.isEmpty) return _today;
+    dates.sort();
+    return dates.first;
+  }
+
+  DateTimeRange get _selectedRange {
+    if (_range == _ExportRange.custom && _customRange != null) {
+      return _customRange!;
+    }
+    final days = switch (_range) {
+      _ExportRange.last7 => 6,
+      _ExportRange.last30 => 29,
+      _ExportRange.last90 => 89,
+      _ExportRange.all => null,
+      _ExportRange.custom => 29,
+    };
+    return DateTimeRange(
+      start: days == null
+          ? _earliest
+          : DateTime(_today.year, _today.month, _today.day - days),
+      end: _today,
+    );
+  }
+
+  bool _within(DateTime value, DateTimeRange range) {
+    final day = DateUtils.dateOnly(value);
+    return !day.isBefore(DateUtils.dateOnly(range.start)) &&
+        !day.isAfter(DateUtils.dateOnly(range.end));
+  }
 
   Future<void> _share(RecordExportState state) async {
     final exporter = context.read<RecordExportCubit>();
@@ -73,23 +133,53 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
       return;
     }
     List<MeasurementReading> readings = const [];
+    List<MeasurementOccurrence> measurementTasks = const [];
+    List<DoseOccurrence> doses = const [];
     List<CareAppointment> appointments = const [];
     Map<String, VisitPaper> visits = const {};
+    final range = _selectedRange;
     try {
-      if (_measurements) readings = await exporter.allMeasurements();
+      if (_medications) {
+        doses = await exporter.medicationOccurrences(range.start, range.end);
+      }
+      if (_measurements) {
+        readings = (await exporter.allMeasurements()).where((item) {
+          final date = item.measuredAt ?? item.scheduledOn;
+          return date != null && _within(date, range);
+        }).toList();
+        measurementTasks = await exporter.measurementOccurrences(
+          range.start,
+          range.end,
+        );
+      }
       if (_appointments) {
-        appointments = await exporter.allAppointments();
-        visits = await exporter.allVisits(appointments);
+        appointments = (await exporter.allAppointments())
+            .where((item) => _within(item.scheduledOn, range))
+            .toList();
+        if (_mode == _ExportMode.detailed) {
+          visits = await exporter.allVisits(appointments);
+        }
       }
     } on Exception {
       if (mounted) setState(() => _errorKey = 'record_export.failed');
       return;
     }
     if (!mounted) return;
+    final confirmed = await _confirmSummary(
+      doses,
+      readings,
+      measurementTasks,
+      appointments,
+    );
+    if (confirmed != true || !mounted) return;
     final sections = <RecordPdfSection>[
+      _summarySection(doses, readings, measurementTasks, appointments),
       if (_medical && file != null) _medicalSection(file),
       if (_medications) _medicationSection(widget.plans),
+      if (_medications && _mode == _ExportMode.detailed) _doseSection(doses),
       if (_measurements) _measurementSection(readings),
+      if (_measurements && _mode == _ExportMode.detailed)
+        _missedMeasurementSection(measurementTasks),
       if (_appointments) _appointmentSection(appointments, visits),
     ];
     final String exportedOn = context.tr(
@@ -103,12 +193,13 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     final error = await exporter.share(
       title: context.tr('record_export.pdf_title'),
       subtitle: file == null
-          ? exportedOn
-          : '${file.patient.fullName} · $exportedOn',
+          ? '${_rangeText(range)} · $exportedOn'
+          : '${file.patient.fullName} · ${_rangeText(range)} · $exportedOn',
       appName: context.tr('auth.app_name'),
       pageLabel: (int page, int pages) =>
           pageTemplate.replaceFirst('{}', '$page').replaceFirst('{}', '$pages'),
       sections: sections,
+      filename: _filename(file?.patient.fullName, range),
     );
     if (!mounted) return;
     if (error == null) {
@@ -116,6 +207,211 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     } else {
       setState(() => _errorKey = error);
     }
+  }
+
+  String _rangeText(DateTimeRange range) =>
+      '${formatBirthDate(context, range.start)} – '
+      '${formatBirthDate(context, range.end)}';
+
+  String _filename(String? patientName, DateTimeRange range) {
+    final safe = (patientName ?? 'record').trim().replaceAll(
+      RegExp(r'[^A-Za-z0-9\u0600-\u06FF]+'),
+      '-',
+    );
+    final from = range.start.toIso8601String().split('T').first;
+    final to = range.end.toIso8601String().split('T').first;
+    return 'tafaqod-$safe-$from-$to.pdf';
+  }
+
+  RecordPdfSection _summarySection(
+    List<DoseOccurrence> doses,
+    List<MeasurementReading> readings,
+    List<MeasurementOccurrence> tasks,
+    List<CareAppointment> appointments,
+  ) {
+    final resolvedDoses = doses.where((item) => item.record != null).length;
+    final missedDoses = doses
+        .where(
+          (item) =>
+              item.record == null && item.timingState == DoseTimingState.missed,
+        )
+        .length;
+    final missedMeasurements = tasks
+        .where((item) => item.status == MeasurementStatus.missed)
+        .length;
+    return RecordPdfSection(
+      title: context.tr('record_export.summary'),
+      rows: [
+        RecordPdfRow(
+          label: context.tr('record_export.current_medications'),
+          value:
+              '${widget.plans.where((item) => !item.isPreviousOn(_today)).length}',
+          ltr: true,
+        ),
+        RecordPdfRow(
+          label: context.tr('record_export.recorded_doses'),
+          value: '$resolvedDoses',
+          ltr: true,
+        ),
+        RecordPdfRow(
+          label: context.tr('record_export.missed_tasks'),
+          value: '${missedDoses + missedMeasurements}',
+          ltr: true,
+        ),
+        RecordPdfRow(
+          label: context.tr('record_export.measurement_count'),
+          value: '${readings.where((item) => item.outcome == 'read').length}',
+          ltr: true,
+        ),
+        RecordPdfRow(
+          label: context.tr('record_export.outside_count'),
+          value:
+              '${readings.where((item) => item.outsideTarget == true).length}',
+          ltr: true,
+        ),
+        RecordPdfRow(
+          label: context.tr('record_export.appointment_count'),
+          value: '${appointments.length}',
+          ltr: true,
+        ),
+      ],
+    );
+  }
+
+  Future<bool?> _confirmSummary(
+    List<DoseOccurrence> doses,
+    List<MeasurementReading> readings,
+    List<MeasurementOccurrence> tasks,
+    List<CareAppointment> appointments,
+  ) {
+    final missed =
+        doses
+            .where(
+              (item) =>
+                  item.record == null &&
+                  item.timingState == DoseTimingState.missed,
+            )
+            .length +
+        tasks.where((item) => item.status == MeasurementStatus.missed).length;
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.tr('record_export.preview_title')),
+        content: Text(
+          context.tr(
+            'record_export.preview_text',
+            args: [
+              '${widget.plans.where((item) => !item.isPreviousOn(_today)).length}',
+              '${doses.where((item) => item.record != null).length}',
+              '$missed',
+              '${readings.where((item) => item.outcome == 'read').length}',
+              '${appointments.length}',
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.tr('common.cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.tr('record_export.create_file')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  RecordPdfSection _doseSection(List<DoseOccurrence> doses) {
+    final visible = doses.where(
+      (item) =>
+          item.record != null || item.timingState == DoseTimingState.missed,
+    );
+    final yesterday = DateTime(_today.year, _today.month, _today.day - 1);
+    return RecordPdfSection(
+      title: context.tr('record_export.dose_log'),
+      empty: visible.isEmpty ? context.tr('medications.no_dose_history') : null,
+      items: [
+        for (final dose in visible)
+          RecordPdfItem(
+            title: dose.name,
+            badge: dose.record?.outcome == DoseOutcome.taken
+                ? context.tr('today_dashboard.status.taken')
+                : dose.record?.outcome == DoseOutcome.skipped
+                ? context.tr('today_dashboard.status.skipped')
+                : context.tr(
+                    DateUtils.dateOnly(dose.scheduledOn).isBefore(yesterday)
+                        ? 'medications.timing.missed'
+                        : 'medications.timing.unrecorded',
+                  ),
+            badgeMuted: dose.record?.outcome != DoseOutcome.taken,
+            detail: [
+              RecordPdfRow(
+                value:
+                    '${formatBirthDate(context, dose.scheduledOn)} · '
+                    '${clockText(dose.time)}',
+              ),
+            ],
+            fields: [
+              if (dose.record case final record?
+                  when record.outcome == DoseOutcome.skipped &&
+                      record.skipReasonCode != null)
+                RecordPdfRow(
+                  label: context.tr('record_export.skip_reason'),
+                  value: doseSkipReasonText(context, record),
+                ),
+              if (dose.record?.recordedByName case final name?)
+                RecordPdfRow(
+                  label: context.tr('record_export.recorded_by'),
+                  value: name,
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  RecordPdfSection _missedMeasurementSection(
+    List<MeasurementOccurrence> tasks,
+  ) {
+    final missed = tasks.where(
+      (item) => item.status == MeasurementStatus.missed,
+    );
+    final yesterday = DateTime(_today.year, _today.month, _today.day - 1);
+    return RecordPdfSection(
+      title: context.tr('record_export.unrecorded_measurements'),
+      empty: missed.isEmpty ? context.tr('measurements.no_readings') : null,
+      items: [
+        for (final task in missed)
+          RecordPdfItem(
+            title: context.tr(
+              task.kind == MeasurementKind.glucose
+                  ? 'measurements.glucose'
+                  : 'measurements.bp',
+            ),
+            badge: context.tr(
+              DateUtils.dateOnly(task.scheduledOn).isBefore(yesterday)
+                  ? 'measurements.missed'
+                  : 'measurements.unrecorded',
+            ),
+            badgeMuted: true,
+            detail: [
+              RecordPdfRow(
+                value:
+                    '${formatBirthDate(context, task.scheduledOn)} · '
+                    '${clockText(task.time)}',
+              ),
+              if (task.measurementState != null)
+                RecordPdfRow(
+                  value: context.tr(
+                    'measurements.condition.${task.measurementState}',
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
   }
 
   /// The patient's data as label-value lines. The blood type and the phone
@@ -146,12 +442,13 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
         label: context.tr('circles.conditions'),
         value: MedicalTexts.conditions(context, file.profile.conditions),
       ),
-      for (final contact in file.contacts)
-        RecordPdfRow(
-          label: MedicalTexts.relation(context, contact),
-          value: contact.name,
-          extra: MedicalTexts.phone(contact),
-        ),
+      if (_includeContacts)
+        for (final contact in file.contacts)
+          RecordPdfRow(
+            label: MedicalTexts.relation(context, contact),
+            value: contact.name,
+            extra: MedicalTexts.phone(contact),
+          ),
     ],
   );
 
@@ -199,61 +496,71 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     );
   }
 
-  RecordPdfSection _measurementSection(List<MeasurementReading> readings) =>
-      RecordPdfSection(
-        title: context.tr('record_export.measurements'),
-        empty: readings.isEmpty ? context.tr('measurements.no_readings') : null,
-        items: [
-          for (final reading in readings)
-            RecordPdfItem(
-              title: context.tr(
-                reading.kind == MeasurementKind.bp
-                    ? 'measurements.bp'
-                    : 'measurements.glucose',
+  RecordPdfSection _measurementSection(
+    List<MeasurementReading> readings,
+  ) => RecordPdfSection(
+    title: context.tr('record_export.measurements'),
+    empty: readings.isEmpty ? context.tr('measurements.no_readings') : null,
+    items: [
+      for (final reading in readings)
+        RecordPdfItem(
+          title: context.tr(
+            reading.kind == MeasurementKind.bp
+                ? 'measurements.bp'
+                : 'measurements.glucose',
+          ),
+          badge: context.tr(
+            reading.outcome == 'skipped'
+                ? 'measurements.skipped'
+                : reading.outsideTarget == true
+                ? 'measurements.outside_target'
+                : reading.outsideTarget == null
+                ? 'measurements.without_target'
+                : 'measurements.read',
+          ),
+          badgeMuted: reading.outcome == 'skipped',
+          detail: [RecordPdfRow(value: _readingDate(reading))],
+          fields: [
+            if (reading.outcome != 'skipped')
+              RecordPdfRow(
+                label: context.tr('measurements.value'),
+                value: reading.valueText,
+                unit: context.tr(
+                  reading.kind == MeasurementKind.bp
+                      ? 'measurements.bp_unit'
+                      : 'measurements.glucose_unit',
+                ),
+                ltr: true,
               ),
-              badge: context.tr(
-                reading.outcome == 'skipped'
-                    ? 'measurements.skipped'
-                    : reading.outsideTarget == true
-                    ? 'measurements.outside_target'
-                    : reading.outsideTarget == null
-                    ? 'measurements.without_target'
-                    : 'measurements.read',
+            if (reading.planVersionId == null && reading.outcome != 'skipped')
+              RecordPdfRow(
+                label: context.tr('measurements.target'),
+                value: reading.outsideTarget == null
+                    ? context.tr('measurements.without_target')
+                    : reading.kind == MeasurementKind.glucose
+                    ? '${reading.glucoseLow}–${reading.glucoseHigh}'
+                    : '${reading.systolicLimit}/${reading.diastolicLimit}',
+                ltr: reading.outsideTarget != null,
               ),
-              badgeMuted: reading.outcome == 'skipped',
-              detail: [RecordPdfRow(value: _readingDate(reading))],
-              fields: [
-                if (reading.outcome != 'skipped')
-                  RecordPdfRow(
-                    label: context.tr('measurements.value'),
-                    value: reading.valueText,
-                    unit: context.tr(
-                      reading.kind == MeasurementKind.bp
-                          ? 'measurements.bp_unit'
-                          : 'measurements.glucose_unit',
-                    ),
-                    ltr: true,
-                  ),
-                if (reading.planVersionId == null &&
-                    reading.outcome != 'skipped')
-                  RecordPdfRow(
-                    label: context.tr('measurements.target'),
-                    value: reading.outsideTarget == null
-                        ? context.tr('measurements.without_target')
-                        : reading.kind == MeasurementKind.glucose
-                        ? '${reading.glucoseLow}–${reading.glucoseHigh}'
-                        : '${reading.systolicLimit}/${reading.diastolicLimit}',
-                    ltr: reading.outsideTarget != null,
-                  ),
-                if (reading.note?.isNotEmpty == true)
-                  RecordPdfRow(
-                    label: context.tr('measurements.note'),
-                    value: reading.note!,
-                  ),
-              ],
-            ),
-        ],
-      );
+            if (reading.outcome == 'read' && reading.conditions.isNotEmpty)
+              RecordPdfRow(
+                label: context.tr('measurements.condition_optional'),
+                value: readingConditionsText(context, reading),
+              ),
+            if (reading.outcome == 'skipped' && reading.skipReasonCode != null)
+              RecordPdfRow(
+                label: context.tr('record_export.skip_reason'),
+                value: measurementSkipReasonText(context, reading),
+              ),
+            if (reading.note?.isNotEmpty == true)
+              RecordPdfRow(
+                label: context.tr('measurements.note'),
+                value: reading.note!,
+              ),
+          ],
+        ),
+    ],
+  );
 
   String _readingDate(MeasurementReading reading) {
     final date = reading.measuredAt?.toLocal() ?? reading.scheduledOn;
@@ -316,6 +623,21 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     ],
   );
 
+  Future<void> _pickCustomRange() async {
+    final selected = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: _today,
+      initialDateRange: _customRange ?? _selectedRange,
+    );
+    if (selected != null && mounted) {
+      setState(() {
+        _customRange = selected;
+        _range = _ExportRange.custom;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) => SafeArea(
     child: Padding(
@@ -326,67 +648,118 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
         AppSpacing.lg,
       ),
       child: BlocBuilder<RecordExportCubit, RecordExportState>(
-        builder: (context, state) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.tr('record_export.title'),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            Text(
-              context.tr('record_export.subtitle'),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            CheckboxListTile(
-              title: Text(context.tr('record_export.medical_file')),
-              value: _medical && state.medicalFile != null,
-              onChanged: state.medicalFile == null
-                  ? null
-                  : (value) => setState(() => _medical = value ?? false),
-            ),
-            CheckboxListTile(
-              title: Text(context.tr('record_export.medications')),
-              value: _medications,
-              onChanged: (value) =>
-                  setState(() => _medications = value ?? false),
-            ),
-            CheckboxListTile(
-              title: Text(context.tr('record_export.measurements')),
-              value: _measurements,
-              onChanged: (value) =>
-                  setState(() => _measurements = value ?? false),
-            ),
-            CheckboxListTile(
-              title: Text(context.tr('record_export.appointments')),
-              value: _appointments,
-              onChanged: (value) =>
-                  setState(() => _appointments = value ?? false),
-            ),
-            if (_errorKey != null || state.errorKey != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              // Lined up with the text of the rows above.
-              InsetText(
-                context.tr(_errorKey ?? state.errorKey!),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+        builder: (context, state) => SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                context.tr('record_export.title'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Text(
+                context.tr('record_export.subtitle'),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SegmentedButton<_ExportMode>(
+                segments: [
+                  ButtonSegment(
+                    value: _ExportMode.summary,
+                    label: Text(context.tr('record_export.mode.summary')),
+                  ),
+                  ButtonSegment(
+                    value: _ExportMode.detailed,
+                    label: Text(context.tr('record_export.mode.detailed')),
+                  ),
+                ],
+                selected: {_mode},
+                onSelectionChanged: (value) =>
+                    setState(() => _mode = value.first),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              DropdownButtonFormField<_ExportRange>(
+                initialValue: _range,
+                decoration: InputDecoration(
+                  labelText: context.tr('record_export.period'),
+                ),
+                items: [
+                  for (final value in _ExportRange.values)
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(
+                        value == _ExportRange.custom && _customRange != null
+                            ? _rangeText(_customRange!)
+                            : context.tr('record_export.range.${value.name}'),
+                      ),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  if (value == _ExportRange.custom) {
+                    _pickCustomRange();
+                  } else {
+                    setState(() => _range = value);
+                  }
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CheckboxListTile(
+                title: Text(context.tr('record_export.medical_file')),
+                value: _medical && state.medicalFile != null,
+                onChanged: state.medicalFile == null
+                    ? null
+                    : (value) => setState(() => _medical = value ?? false),
+              ),
+              CheckboxListTile(
+                title: Text(context.tr('record_export.medications')),
+                value: _medications,
+                onChanged: (value) =>
+                    setState(() => _medications = value ?? false),
+              ),
+              if (_medical && state.medicalFile != null)
+                SwitchListTile(
+                  title: Text(context.tr('record_export.include_contacts')),
+                  value: _includeContacts,
+                  onChanged: (value) =>
+                      setState(() => _includeContacts = value),
+                ),
+              CheckboxListTile(
+                title: Text(context.tr('record_export.measurements')),
+                value: _measurements,
+                onChanged: (value) =>
+                    setState(() => _measurements = value ?? false),
+              ),
+              CheckboxListTile(
+                title: Text(context.tr('record_export.appointments')),
+                value: _appointments,
+                onChanged: (value) =>
+                    setState(() => _appointments = value ?? false),
+              ),
+              if (_errorKey != null || state.errorKey != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                // Lined up with the text of the rows above.
+                InsetText(
+                  context.tr(_errorKey ?? state.errorKey!),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton(
+                onPressed:
+                    state.status == RecordExportStatus.ready &&
+                        !state.sharing &&
+                        ((_medical && state.medicalFile != null) ||
+                            _medications ||
+                            _measurements ||
+                            _appointments)
+                    ? () => _share(state)
+                    : null,
+                child: Text(context.tr('record_export.share')),
               ),
             ],
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton(
-              onPressed:
-                  state.status == RecordExportStatus.ready &&
-                      !state.sharing &&
-                      ((_medical && state.medicalFile != null) ||
-                          _medications ||
-                          _measurements ||
-                          _appointments)
-                  ? () => _share(state)
-                  : null,
-              child: Text(context.tr('record_export.share')),
-            ),
-          ],
+          ),
         ),
       ),
     ),

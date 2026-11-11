@@ -201,11 +201,12 @@ def test_a_reading_time_is_put_off_by_its_time(
         f"/api/v1/circles/{circle.id}/measurement-plans",
         {
             "kind": "glucose",
-            "time_of_day": "08:00",
+            "times": [
+                {"time_of_day": "08:00", "measurement_state": "fasting"}
+            ],
             "weekdays": [3],
             "starts_on": DAY,
-            "grace_minutes": 60,
-            "glucose_context": "fasting",
+            "missed_after_minutes": 60,
             "glucose_low": 80,
             "glucose_high": 140,
         },

@@ -37,7 +37,6 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   static const SentCircleRequest waitingRequest = SentCircleRequest(
     id: 'request-1',
     patientPhoneNumber: '+966501234567',
-    circleLabel: 'أمي',
     proposedAppMode: CircleAppMode.simplified,
     status: CircleRequestStatus.pending,
   );
@@ -46,7 +45,6 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   static const ReceivedCircleRequest askedOfNoura = ReceivedCircleRequest(
     id: 'request-in-1',
     status: CircleRequestStatus.pending,
-    circleLabel: 'أمي',
     circleName: 'أمي نورة',
     proposedAppMode: CircleAppMode.simplified,
     requesterName: 'سارة الحربي',
@@ -56,7 +54,6 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   static const ReceivedCircleRequest agreedByNoura = ReceivedCircleRequest(
     id: 'request-in-1',
     status: CircleRequestStatus.accepted,
-    circleLabel: 'أمي',
     circleName: 'أمي نورة',
     proposedAppMode: CircleAppMode.simplified,
     requesterName: 'سارة الحربي',
@@ -377,6 +374,25 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
     String invitationId,
   ) async {
     memberCalls.add('cancel:$invitationId');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> setMemberEditAccess(
+    String circleId,
+    String accountId, {
+    required bool canEdit,
+  }) async {
+    memberCalls.add('access:$accountId:$canEdit');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> removeMember(
+    String circleId,
+    String accountId,
+  ) async {
+    memberCalls.add('remove:$accountId');
     return await pendingMemberChange ?? invitationChanged;
   }
 

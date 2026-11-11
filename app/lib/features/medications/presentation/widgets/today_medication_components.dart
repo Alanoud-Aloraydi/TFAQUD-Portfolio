@@ -6,16 +6,17 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/attention_box.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/today_dose_window.dart';
@@ -339,7 +340,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = medicationTimingState(occurrence, now);
-    final isMissed = status == DoseTimingState.missed;
+    final isUnrecorded = status == DoseTimingState.missed;
     final record = occurrence.record;
     final label = record != null
         ? context.tr(
@@ -353,20 +354,13 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
     final isTaken = record?.outcome == DoseOutcome.taken;
     final isWaiting =
         status == DoseTimingState.due || status == DoseTimingState.late;
-    final statusColor = isMissed
-        ? context.tokens.errorText
-        : isTaken
-        ? context.tokens.successText
-        : isWaiting
-        ? context.tokens.warningText
-        : context.tokens.textSecondary;
-    final statusBackground = isMissed
-        ? Theme.of(context).colorScheme.errorContainer
-        : isTaken
-        ? AppSemanticColors.selectedSurface
-        : isWaiting
-        ? AppSemanticColors.surfaceAttention
-        : AppSemanticColors.surfaceContent;
+    final TodayStatusTone statusTone = isTaken
+        ? TodayStatusTone.success
+        : record != null
+        ? TodayStatusTone.neutral
+        : isWaiting || isUnrecorded
+        ? TodayStatusTone.attention
+        : TodayStatusTone.neutral;
     final dose = formatMedicationDose(
       context,
       occurrence.doseValue,
@@ -378,7 +372,7 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
       now: now,
     );
     return TodayRowCard(
-      isAttention: isMissed,
+      tone: isUnrecorded ? TodayRowTone.attention : TodayRowTone.normal,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -399,22 +393,29 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                   planId: occurrence.planId,
                   builder: (context, bytes) => bytes == null
                       ? Container(
-                          width: 56,
-                          height: 56,
+                          width: 40,
+                          height: 40,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: AppSemanticColors.surfaceContent,
-                            borderRadius: BorderRadius.circular(
-                              AppRadius.field,
-                            ),
+                            color: CareVisuals.medicationTile,
+                            shape: BoxShape.circle,
                           ),
-                          child: const Icon(TafaqodPhosphorIcons.pill),
+                          child: const Icon(
+                            CareVisuals.medicationIcon,
+                            size: AppSizes.iconSmall,
+                          ),
                         )
                       : MedicationPhotoImage(
                           bytes: bytes,
-                          width: 56,
-                          height: 56,
+                          width: 40,
+                          height: 40,
                         ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+              ] else ...[
+                const TodayTaskKindIcon(
+                  icon: CareVisuals.medicationIcon,
+                  background: CareVisuals.medicationTile,
                 ),
                 const SizedBox(width: AppSpacing.sm),
               ],
@@ -427,25 +428,9 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                         Routes.medicationDetails(circleId, occurrence.planId),
                         extra: canManage,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (!showThumbnail) ...[
-                            const Icon(
-                              TafaqodPhosphorIcons.pill,
-                              size: 15,
-                              color: AppSemanticColors.textSupporting,
-                            ),
-                            const SizedBox(width: AppSpacing.tight),
-                          ],
-                          Flexible(
-                            child: Text(
-                              '${occurrence.name} '
-                              '${_strength(context, occurrence)}',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '${occurrence.name} ${_strength(context, occurrence)}',
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
                     ),
                     Text(
@@ -476,15 +461,22 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
                         ],
                       ),
                     ],
+                    if (record?.outcome == DoseOutcome.skipped &&
+                        record?.skipReasonCode != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        context.tr(
+                          'medications.skip_reason_line',
+                          args: [doseSkipReasonText(context, record!)],
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              CompactStatusBadge(
-                text: label,
-                background: statusBackground,
-                foreground: statusColor,
-              ),
+              TodayTaskStatusBadge(text: label, tone: statusTone),
             ],
           ),
           if (canRecord) ...[
@@ -504,70 +496,3 @@ class TodayMedicationPrayerDoseRow extends StatelessWidget {
 String _strength(BuildContext context, DoseOccurrence occurrence) =>
     '${formatMedicationNumber(occurrence.strengthValue)} '
     '${context.tr('medications.strength_display.${occurrence.strengthUnit.name}')}';
-
-/// Displays the medication period marks UI.
-class MedicationPeriodMarks extends StatelessWidget {
-  const MedicationPeriodMarks({
-    super.key,
-    required this.occurrences,
-    required this.now,
-  });
-
-  final List<DoseOccurrence> occurrences;
-  final DateTime now;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (final occurrence in occurrences)
-        _PeriodMark(occurrence: occurrence, now: now),
-    ],
-  );
-}
-
-/// Renders the period mark element of today medication components.
-class _PeriodMark extends StatelessWidget {
-  const _PeriodMark({required this.occurrence, required this.now});
-
-  final DoseOccurrence occurrence;
-  final DateTime now;
-
-  @override
-  Widget build(BuildContext context) {
-    final outcome = occurrence.record?.outcome;
-    final missed =
-        medicationTimingState(occurrence, now) == DoseTimingState.missed;
-    final late = occurrence.isTakenLate(PatientClockScope.of(context));
-    final color = outcome == DoseOutcome.taken
-        ? late
-              ? context.tokens.warningText
-              : context.tokens.successText
-        : missed
-        ? context.tokens.errorText
-        : context.tokens.textSecondary;
-    final background = outcome == DoseOutcome.taken
-        ? AppSemanticColors.selectedSurface
-        : missed
-        ? context.tokens.error.withValues(alpha: .08)
-        : AppSemanticColors.surfaceContent;
-    final icon = outcome == DoseOutcome.taken
-        ? TafaqodPhosphorIcons.check
-        : missed
-        ? TafaqodPhosphorIcons.warning
-        : TafaqodPhosphorIcons.minus;
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(start: AppSpacing.xs),
-      child: Container(
-        width: 18,
-        height: 18,
-        decoration: BoxDecoration(
-          color: background,
-          shape: BoxShape.circle,
-          border: late ? Border.all(color: AppSemanticColors.accentWarm) : null,
-        ),
-        child: Icon(icon, size: 11, color: color),
-      ),
-    );
-  }
-}

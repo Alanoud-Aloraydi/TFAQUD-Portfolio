@@ -48,6 +48,17 @@ class CirclesUseCase {
     String invitationId,
   ) => _repository.cancelManagerInvitation(circleId, invitationId);
 
+  Future<Result<void, Failure>> setMemberEditAccess(
+    String circleId,
+    String accountId, {
+    required bool canEdit,
+  }) => _repository.setMemberEditAccess(circleId, accountId, canEdit: canEdit);
+
+  Future<Result<void, Failure>> removeMember(
+    String circleId,
+    String accountId,
+  ) => _repository.removeMember(circleId, accountId);
+
   Future<Result<void, Failure>> leaveCircle(
     String circleId, {
     required bool confirmDelete,

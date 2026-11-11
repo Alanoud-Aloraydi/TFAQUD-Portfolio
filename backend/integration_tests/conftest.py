@@ -65,9 +65,9 @@ def database(database_app):
         connection.execute(text("SET LOCAL statement_timeout = '120s'"))
         connection.execute(
             text(
-                "TRUNCATE otp_challenge, account, care_circle, patient, "
+                "TRUNCATE otp_request, account, care_circle, "
                 "care_circle_manager, "
-                "care_circle_creation_request, care_circle_manager_invitation "
+                "care_circle_request, care_circle_invitation "
                 "CASCADE"
             )
         )

@@ -25,14 +25,16 @@ bp = Blueprint(
     url_prefix="/api/v1/circles/<circle_id>",
 )
 
-_MEMBER_ROLES = (
+_READ_ROLES = (
     CircleRole.MANAGER,
     CircleRole.SIMPLIFIED_PATIENT,
+    CircleRole.MEMBER,
 )
+_RECORD_ROLES = (CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
 
 
 @bp.get("/medication-plans")
-@require_circle_role(*_MEMBER_ROLES)
+@require_circle_role(*_READ_ROLES)
 def list_plans(circle_id):
     """Every medicine of the circle's patient, with its current version, any
     edit waiting to start, and its latest dose.
@@ -66,7 +68,7 @@ def create_plan(circle_id):
 
 
 @bp.get("/medication-plans/<plan_id>")
-@require_circle_role(*_MEMBER_ROLES)
+@require_circle_role(*_READ_ROLES)
 def get_plan(circle_id, plan_id):
     """One medicine of the circle's patient."""
     with transaction() as session:
@@ -100,14 +102,14 @@ def revise_plan(circle_id, plan_id):
     return jsonify(medication_plan=result)
 
 
-@bp.post("/medication-plans/<plan_id>/discontinue")
+@bp.post("/medication-plans/<plan_id>/stop")
 @require_circle_role(CircleRole.MANAGER)
-def discontinue_plan(circle_id, plan_id):
+def stop_plan(circle_id, plan_id):
     """Stop a medicine (a manager only); its history stays."""
     with transaction() as session:
         plan = MedicationPlanService(
             session, get_clock().now()
-        ).discontinue(
+        ).stop(
             uuid_value(circle_id),
             uuid_value(plan_id),
             uuid_value(current_auth().user_id),
@@ -138,7 +140,7 @@ def cancel_pending_plan(circle_id, plan_id):
 
 
 @bp.get("/medication-occurrences")
-@require_circle_role(*_MEMBER_ROLES)
+@require_circle_role(*_READ_ROLES)
 def list_occurrences(circle_id):
     """The doses due between two dates (at most 32 days), each with its record
     when there is one.
@@ -160,7 +162,7 @@ def list_occurrences(circle_id):
 
 
 @bp.put("/medication-dose-records/<schedule_id>/<scheduled_on>")
-@require_circle_role(*_MEMBER_ROLES)
+@require_circle_role(*_RECORD_ROLES)
 def record_dose(circle_id, schedule_id, scheduled_on):
     """Record one dose as taken or skipped. Sending the same record again
     changes nothing; a different one for a dose already recorded is a conflict.

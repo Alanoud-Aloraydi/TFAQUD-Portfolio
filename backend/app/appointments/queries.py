@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.accounts import accounts_by_id, recorder_response
-from app.models import Account, CareCircleManager, Patient
+from app.models import Account, CareCircleManager, CareCircle
 from app.models.appointment import Appointment, AppointmentCompanion
 
 
@@ -16,8 +16,7 @@ def appointments_for_circle(session: Session, circle_id: UUID) -> list[dict]:
     # made and last changed each, read once for all.
     appointments = list(session.scalars(
         select(Appointment)
-        .join(Patient, Patient.id == Appointment.patient_id)
-        .where(Patient.care_circle_id == circle_id)
+        .where(Appointment.care_circle_id == circle_id)
         .order_by(Appointment.scheduled_on, Appointment.time_of_day)
     ))
     companions = companions_for_appointments(
@@ -51,7 +50,7 @@ def appointment_view(
         "id": str(appointment.id),
         "specialty": appointment.specialty,
         "kind": appointment.kind,
-        "other_kind": appointment.other_kind,
+        "other_text": appointment.other_text,
         "scheduled_on": appointment.scheduled_on.isoformat(),
         "time_of_day": appointment.time_of_day.isoformat(timespec="minutes"),
         "place": appointment.place,
@@ -107,7 +106,7 @@ def companions_for_circle(session: Session, circle_id: UUID) -> list[dict]:
     # The circle's managers, by name, but not the patient (a patient in the
     # full app manages their own circle, and does not go with themself).
     patient_account_id = session.scalar(
-        select(Patient.account_id).where(Patient.care_circle_id == circle_id)
+        select(CareCircle.account_id).where(CareCircle.id == circle_id)
     )
     query = (
         select(CareCircleManager.account_id, Account.display_name,

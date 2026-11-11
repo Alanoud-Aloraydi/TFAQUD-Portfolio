@@ -6,7 +6,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.clock import ManualClock
-from app.models import Account, CareCircle, Patient
+from app.models import Account, CareCircle
 from integration_tests.helpers import Api, BIRTH, add_manager, count
 from integration_tests.helpers import error_code, offline_circle, run
 
@@ -139,7 +139,7 @@ def test_continued_care_keeps_the_circle_and_the_patient_name(
         "Khaled"
     ]
     with Session(database) as session:
-        assert session.scalar(select(Patient)).account_id is None
+        assert session.scalar(select(CareCircle)).account_id is None
 
 
 def test_a_patient_can_delete_the_circle_with_the_account(
@@ -196,6 +196,7 @@ def test_a_member_leaves_other_circles_untouched(
             "is_you": True,
             "is_patient": False,
             "role": "manager",
+            "can_edit": True,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }
@@ -218,7 +219,7 @@ def test_a_companion_who_deletes_their_account_leaves_the_visit_in_place(
     saved = Api(database_app, owner).post(base, {
         "specialty": "السكري",
         "kind": "follow_up",
-        "other_kind": None,
+        "other_text": None,
         "scheduled_on": "2026-11-11",
         "time_of_day": "10:00",
         "place": "الحبيب",
@@ -248,6 +249,6 @@ def test_a_dose_is_checked_again_only_when_its_day_or_schedule_changes(
     with Session(database) as session:
         definition = session.scalar(text(
             "SELECT pg_get_triggerdef(oid) FROM pg_trigger "
-            "WHERE tgname = 'check_medication_dose_valid'"
+            "WHERE tgname = 'trg_medication_dose_record_check_valid'"
         ))
     assert "UPDATE OF schedule_id, scheduled_on" in definition

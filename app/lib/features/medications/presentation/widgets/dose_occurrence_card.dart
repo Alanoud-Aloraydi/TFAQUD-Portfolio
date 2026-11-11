@@ -5,6 +5,7 @@ import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -51,7 +52,10 @@ class DoseOccurrenceCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  _TimingState(state: timingState ?? occurrence.timingState),
+                  _TimingState(
+                    state: timingState ?? occurrence.timingState,
+                    scheduledOn: occurrence.scheduledOn,
+                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -121,7 +125,10 @@ class _TimeBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            _TimingState(state: timingState),
+            _TimingState(
+              state: timingState,
+              scheduledOn: occurrence.scheduledOn,
+            ),
           ],
         ),
       ),
@@ -130,14 +137,25 @@ class _TimeBadge extends StatelessWidget {
 }
 
 class _TimingState extends StatelessWidget {
-  const _TimingState({required this.state});
+  const _TimingState({required this.state, required this.scheduledOn});
 
   final DoseTimingState? state;
+  final DateTime scheduledOn;
 
   @override
   Widget build(BuildContext context) {
     if (state == null) return const SizedBox.shrink();
-    final label = context.tr('medications.timing.${state!.name}');
+    final today = PatientClockScope.of(context).today();
+    final yesterday = DateUtils.dateOnly(today)
+        .subtract(const Duration(days: 1));
+    final recentMissed =
+        state == DoseTimingState.missed &&
+        !DateUtils.dateOnly(scheduledOn).isBefore(yesterday);
+    final label = context.tr(
+      recentMissed
+          ? 'medications.timing.unrecorded'
+          : 'medications.timing.${state!.name}',
+    );
     final tokens = context.tokens;
     final (Color background, Color foreground) colors = switch (state!) {
       DoseTimingState.upcoming => (
