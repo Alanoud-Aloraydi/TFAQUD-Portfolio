@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -85,6 +86,9 @@ class _SimplifiedModeFeatureScreenState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      // A family member's picture may have changed on their phone while this
+      // app was away; the day refresh below rebuilds it from a fresh read.
+      GetIt.I<PrivatePhotoRepository>().invalidateCache();
       unawaited(context.read<SimplifiedModeCubit>().resumed());
     }
   }
@@ -612,8 +616,8 @@ List<String> _taskChips(
       ?day.reasons[task.dose!.planId],
     ],
     TodayTaskKind.measurement => <String>[
-      for (final String code in task.measurement!.conditions)
-        context.tr('measurements.condition.$code'),
+      if (task.measurement!.measurementState case final state?)
+        context.tr('measurements.condition.$state'),
     ],
     TodayTaskKind.appointment => <String>[
       if (task.appointment!.companions.isNotEmpty)

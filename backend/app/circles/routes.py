@@ -19,6 +19,7 @@ from app.circles.inputs import (
     InviteInput,
     LeaveCircleInput,
     MedicalProfileInput,
+    MemberAccessInput,
     PatientUpdateInput,
     RenameCircleInput,
 )
@@ -32,6 +33,7 @@ bp = Blueprint("circles", __name__, url_prefix="/api/v1/circles")
 MANAGER = CircleRole.MANAGER
 # A patient with a linked account can read and edit their own data.
 MEMBER = (CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
+READ_MEMBER = (*MEMBER, CircleRole.MEMBER)
 
 
 # ---- create ---------------------------------------------------------
@@ -82,7 +84,7 @@ def create_offline_circle():
 
 
 @bp.get("/<circle_id>")
-@require_circle_role(*MEMBER)
+@require_circle_role(*READ_MEMBER)
 def get_circle(circle_id):
     """One circle as its member sees it: the patient, the managers, the
     invitations, and what the asker may do.
@@ -95,6 +97,36 @@ def get_circle(circle_id):
             current_circle_role(),
         )
     return answer({"circle": view})
+
+
+@bp.patch("/<circle_id>/members/<account_id>")
+@require_circle_role(MANAGER)
+def update_member_access(circle_id, account_id):
+    """Pause or restore another member's editing; owner-only in service."""
+    body = parse_json_body(MemberAccessInput)
+    with care_work() as work:
+        cid = parse_id(circle_id, "care circle")
+        work.care.update_member_access(
+            work.actor,
+            cid,
+            parse_id(account_id, "account"),
+            body.can_edit,
+        )
+        view = views.circle_view(work.session, cid, work.actor, MANAGER)
+    return answer({"circle": view})
+
+
+@bp.delete("/<circle_id>/members/<account_id>")
+@require_circle_role(MANAGER)
+def remove_member(circle_id, account_id):
+    """Remove another member; owner-only in service."""
+    with care_work() as work:
+        work.care.remove_member(
+            work.actor,
+            parse_id(circle_id, "care circle"),
+            parse_id(account_id, "account"),
+        )
+    return "", 204
 
 
 @bp.patch("/<circle_id>")
@@ -219,7 +251,7 @@ def cancel_invitation(circle_id, invitation_id):
 
 
 @bp.get("/<circle_id>/medical-profile")
-@require_circle_role(*MEMBER)
+@require_circle_role(*READ_MEMBER)
 def get_medical_profile(circle_id):
     """The whole medical file page: patient, health data, contacts."""
     with care_work() as work:
@@ -235,7 +267,7 @@ def get_medical_profile(circle_id):
 
 
 @bp.get("/<circle_id>/emergency-card")
-@require_circle_role(*MEMBER)
+@require_circle_role(*READ_MEMBER)
 def get_emergency_card(circle_id):
     """The read-only emergency card (F18). It is built from the medical file,
     so an edit of the file shows on the card at once."""

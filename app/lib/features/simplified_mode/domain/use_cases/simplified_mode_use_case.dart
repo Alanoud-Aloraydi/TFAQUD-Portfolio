@@ -57,9 +57,12 @@ class SimplifiedModeUseCase {
     final Result<HomeEntity, Failure> home = await _home.getHome();
     final HomeEntity? account = home.tryGetSuccess();
     if (account == null) return Error(home.tryGetError()!);
-    final CareCircleSummary? circle =
-        account.circles.where((item) => item.isPatient).firstOrNull ??
-        account.circles.firstOrNull;
+    // A simplified account is always the patient. Never fall back to a circle
+    // they merely manage: every task, family member and medical fact on this
+    // mode must belong to the person's own circle.
+    final CareCircleSummary? circle = account.circles
+        .where((item) => item.isPatient)
+        .firstOrNull;
     if (circle == null) return const Error(EmptyDataFailure());
 
     final DateTime today = circle.clock.today(now);

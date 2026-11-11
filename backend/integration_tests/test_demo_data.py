@@ -11,8 +11,8 @@ from app.models import (
     Account,
     Appointment,
     CareCircle,
-    CareCircleCreationRequest,
-    CareCircleManagerInvitation,
+    CareCircleRequest,
+    CareCircleInvitation,
     MedicationDoseRecord,
     MedicationPlan,
     MedicationPlanVersion,
@@ -57,9 +57,9 @@ def test_demo_data_makes_the_whole_story(database_app, database):
     assert _count(database, MedicationDoseRecord) > 100
     # Sara invites Lina; Lina invites her sister's number, and Sara into
     # Khaled's circle.
-    assert _count(database, CareCircleManagerInvitation) == 3
+    assert _count(database, CareCircleInvitation) == 3
     # Lina's request to her father waits; the one to Khaled is done.
-    assert _count(database, CareCircleCreationRequest) == 2
+    assert _count(database, CareCircleRequest) == 2
     assert _count(database, MeasurementPlan) == 3
     assert _count(database, Appointment) == 4
 
@@ -82,7 +82,7 @@ def test_the_demo_account_reads_it_like_the_app(database_app, database):
         f"/api/v1/circles/{mother}/medication-plans", headers=headers
     ).get_json()["medication_plans"]
     by_name = {plan["version"]["name"]: plan for plan in plans}
-    assert by_name["أسبرين"]["discontinued_at"] is not None
+    assert by_name["أسبرين"]["stopped_at"] is not None
     assert by_name["أملوديبين"]["version"]["version_number"] == 2
     assert "pending_version" in by_name["ميتفورمين"]
     assert by_name["ميتفورمين"]["version"]["strength_value"] == "500"
@@ -194,7 +194,7 @@ def test_a_reset_works_after_lina_joined_saras_circle(database_app, database):
     assert reset.exit_code == 0, reset.output
     assert _count(database, Account) == 3
     assert _count(database, CareCircle) == 4
-    assert _count(database, CareCircleManagerInvitation) == 3
+    assert _count(database, CareCircleInvitation) == 3
 
 
 def test_a_reset_leaves_other_accounts_alone(database_app, database):

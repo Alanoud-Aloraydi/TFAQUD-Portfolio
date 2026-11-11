@@ -19,7 +19,7 @@ abstract class ApiErrorCodes {
   static const String dataConflict = 'data_conflict';
   static const String medicationPeriodConflict = 'medication_period_conflict';
   static const String medicationVersionConflict = 'medication_version_conflict';
-  static const String medicationDiscontinued = 'medication_discontinued';
+  static const String medicationDiscontinued = 'medication_stopped';
   static const String medicationRevisionDate = 'medication_revision_date';
   static const String medicationStartInPast = 'medication_start_in_past';
   static const String doseRecordConflict = 'dose_record_conflict';

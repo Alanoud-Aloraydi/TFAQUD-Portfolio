@@ -45,7 +45,7 @@ class _Appointments extends Fake implements AppointmentRepository {
       'id': 'v-1',
       'specialty': draft.specialty,
       'kind': 'follow_up',
-      'other_kind': null,
+      'other_text': null,
       'scheduled_on': '2026-11-09',
       'time_of_day': draft.time,
       'place': draft.place,

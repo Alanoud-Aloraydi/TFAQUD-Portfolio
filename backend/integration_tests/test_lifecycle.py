@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.database import db
 from app.errors import Forbidden, NotFound, ValidationFailed
-from app.models import Account, CareCircle, CareCircleCreationRequest
-from app.models import CareCircleManager, CareCircleManagerInvitation
+from app.models import Account, CareCircle, CareCircleRequest
+from app.models import CareCircleManager, CareCircleInvitation
 from app.users.postgres import PostgresUserStore
 from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run
@@ -28,7 +28,6 @@ def test_simplified_patient_can_edit_own_profile(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "simplified",
     )
     run(database, "respond_creation", patient.id, request.id, True)
@@ -70,7 +69,6 @@ def test_patient_can_delete_circle_without_deleting_account(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "simplified",
     )
     run(database, "respond_creation", patient.id, request.id, True)
@@ -120,7 +118,6 @@ def test_canceling_consent_leaves_the_mode_unset(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "simplified",
     )
     run(database, "respond_creation", patient.id, request.id, True)
@@ -128,8 +125,8 @@ def test_canceling_consent_leaves_the_mode_unset(database, account):
     with Session(database) as session:
         assert session.get(Account, patient.id).app_mode is None
         assert (
-            session.get(CareCircleCreationRequest, request.id).status
-            == "canceled"
+            session.get(CareCircleRequest, request.id).status
+            == "cancelled"
         )
 
 
@@ -141,14 +138,13 @@ def test_deleting_patient_account_cancels_accepted_request(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "simplified",
     )
     run(database, "respond_creation", patient.id, request.id, True)
     run(database, "delete_account", patient.id)
     with Session(database) as session:
-        saved = session.get(CareCircleCreationRequest, request.id)
-        assert saved.status == "canceled"
+        saved = session.get(CareCircleRequest, request.id)
+        assert saved.status == "cancelled"
         assert saved.responded_by_account_id is None
 
 
@@ -161,7 +157,6 @@ def test_only_one_accepted_incomplete_request(database, account):
             "request_creation",
             owner.id,
             patient.phone_number,
-            "Mother",
             "detailed",
         )
         for owner in (first, second)
@@ -182,8 +177,8 @@ def test_other_manager_can_cancel_pending_invitation(database, account):
     run(database, "cancel_invitation", other.id, invitation.id)
     with Session(database) as session:
         assert (
-            session.get(CareCircleManagerInvitation, invitation.id).status
-            == "canceled"
+            session.get(CareCircleInvitation, invitation.id).status
+            == "cancelled"
         )
 
 
@@ -269,7 +264,7 @@ def test_migrations_round_trip(database, database_app):
     downgrade(directory=directory, revision="base")
     assert set(inspect(database).get_table_names()) == {"alembic_version"}
     upgrade(directory=directory)
-    assert "patient" in inspect(database).get_table_names()
+    assert "care_circle" in inspect(database).get_table_names()
 
 
 def test_sign_in_survives_deletion_before_account_read(database):
@@ -304,7 +299,6 @@ def test_completion_handles_deletion_before_request_lock(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "detailed",
     )
     run(database, "respond_creation", patient.id, request.id, True)
@@ -315,7 +309,7 @@ def test_completion_handles_deletion_before_request_lock(database, account):
 
     def delete_circle(connection, cursor, statement, *args):
         nonlocal deleted
-        if deleted or "FROM care_circle_creation_request" not in statement:
+        if deleted or "FROM care_circle_request" not in statement:
             return
         deleted = True
         with database.begin() as writer:

@@ -11,7 +11,7 @@ from integration_tests.helpers import offline_circle
 
 DEVICE = "/api/v1/accounts/me/push-device"
 REQUESTS = "/api/v1/circle-requests"
-REQUEST = {"circle_label": "Mother", "proposed_app_mode": "simplified"}
+REQUEST = {"proposed_app_mode": "simplified"}
 BASICS = {"birth_date": "1950-01-02", "city": "Buraydah"}
 
 

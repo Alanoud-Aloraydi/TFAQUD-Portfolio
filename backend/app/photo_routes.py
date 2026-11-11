@@ -12,12 +12,17 @@ from app.authz.roles import CircleRole
 from app.database import transaction
 from app.errors import NotFound, ValidationFailed
 from app.models import Account, CareCircleManager, MedicationPlan
-from app.models import Patient
+from app.models import CareCircle
 from app.photos import AVATAR_CODES, MAX_PHOTO_BYTES, PhotoService
 from app.validation import Dto, parse_json_body
 
 bp = Blueprint("photos", __name__, url_prefix="/api/v1")
-MEMBERS = (CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
+MEMBERS = (
+    CircleRole.MANAGER,
+    CircleRole.SIMPLIFIED_PATIENT,
+    CircleRole.MEMBER,
+)
+PATIENT_WRITERS = (CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
 
 
 class AvatarRequest(Dto):
@@ -66,17 +71,15 @@ def _account(session, account_id: UUID) -> Account:
     return account
 
 
-def _patient(session, circle_id: UUID) -> Patient:
-    """The circle's patient; 404 when there is none."""
-    patient = session.scalar(select(Patient).where(
-        Patient.care_circle_id == circle_id
-    ))
+def _patient(session, circle_id: UUID) -> CareCircle:
+    """The circle (its patient); 404 when there is none."""
+    patient = session.get(CareCircle, circle_id)
     if patient is None:
         raise NotFound()
     return patient
 
 
-def _patient_write(session, circle_id: UUID) -> Patient:
+def _patient_write(session, circle_id: UUID) -> CareCircle:
     """Allow the patient themself, or a manager of a patient without an
     account. A patient with an account in the circle (any app mode) chooses
     their own picture: nobody else can change it."""
@@ -90,7 +93,7 @@ def _patient_write(session, circle_id: UUID) -> Patient:
     raise NotFound()
 
 
-def _patient_photo_owner(patient: Patient) -> tuple[str, UUID]:
+def _patient_photo_owner(patient: CareCircle) -> tuple[str, UUID]:
     """A patient with an account shares the account's own photo and avatar
     (one person, one picture); a patient without one keeps their own."""
     if patient.account_id is not None:
@@ -184,7 +187,7 @@ def patient_photo(circle_id):
 
 
 @bp.put("/circles/<circle_id>/patient/photo")
-@require_circle_role(*MEMBERS)
+@require_circle_role(*PATIENT_WRITERS)
 def save_patient_photo(circle_id):
     """Let the patient, or the manager of a patient without an account,
     save a photo."""
@@ -201,7 +204,7 @@ def save_patient_photo(circle_id):
 
 
 @bp.put("/circles/<circle_id>/patient/avatar")
-@require_circle_role(*MEMBERS)
+@require_circle_role(*PATIENT_WRITERS)
 def save_patient_avatar(circle_id):
     """Choose a character for the patient."""
     body = parse_json_body(AvatarRequest)
@@ -217,7 +220,7 @@ def save_patient_avatar(circle_id):
 
 
 @bp.delete("/circles/<circle_id>/patient/avatar")
-@require_circle_role(*MEMBERS)
+@require_circle_role(*PATIENT_WRITERS)
 def clear_patient_avatar(circle_id):
     """Restore the patient's initial-letter appearance."""
     with transaction() as session:
@@ -233,11 +236,9 @@ def clear_patient_avatar(circle_id):
 
 def _plan(session, circle_id: UUID, plan_id: UUID) -> MedicationPlan:
     """The circle's medicine with this id; 404 for another circle's."""
-    plan = session.scalar(select(MedicationPlan).join(
-        Patient, Patient.id == MedicationPlan.patient_id
-    ).where(
+    plan = session.scalar(select(MedicationPlan).where(
         MedicationPlan.id == plan_id,
-        Patient.care_circle_id == circle_id,
+        MedicationPlan.care_circle_id == circle_id,
     ))
     if plan is None:
         raise NotFound()

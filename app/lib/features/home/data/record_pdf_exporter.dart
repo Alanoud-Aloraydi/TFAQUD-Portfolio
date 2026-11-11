@@ -99,6 +99,7 @@ class RecordPdfExporter {
     required String appName,
     required String Function(int page, int pages) pageLabel,
     required List<RecordPdfSection> sections,
+    required String filename,
   }) async {
     final pw.Font regular = pw.Font.ttf(
       await rootBundle.load('assets/fonts/IBMPlexSansArabic-Regular.ttf'),
@@ -157,10 +158,7 @@ class RecordPdfExporter {
         ],
       ),
     );
-    await Printing.sharePdf(
-      bytes: await document.save(),
-      filename: 'tafaqod-care-record.pdf',
-    );
+    await Printing.sharePdf(bytes: await document.save(), filename: filename);
   }
 
   pw.Widget _title(

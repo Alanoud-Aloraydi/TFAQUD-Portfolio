@@ -74,7 +74,6 @@ SentCircleRequest _sent(String id, CircleRequestStatus status) =>
     SentCircleRequest(
       id: id,
       patientPhoneNumber: '+966501234567',
-      circleLabel: 'أمي',
       proposedAppMode: CircleAppMode.simplified,
       status: status,
     );
@@ -192,6 +191,10 @@ void main() {
       expect(cubit.state.account?.displayName, 'Ree');
       // The phone number and the circle of the account are kept.
       expect(cubit.state.account?.phoneNumber, '+966501234567');
+      expect(
+        cubit.state.account?.avatarCode,
+        CirclesFakeRepository.reem.avatarCode,
+      );
       expect(cubit.state.noticeKey, 'account.saved');
       // The home screen loads again, for the letter on its top bar.
       expect(await signal, isNull);

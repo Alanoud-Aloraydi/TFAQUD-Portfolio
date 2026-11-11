@@ -15,8 +15,8 @@ from app.circles.naming import circle_name
 from app.models import (
     Account,
     CareCircle,
-    CareCircleCreationRequest,
-    CareCircleManagerInvitation,
+    CareCircleInvitation,
+    CareCircleRequest,
 )
 from app.push.notify import Push
 from app.push.sender import PushMessage
@@ -42,7 +42,7 @@ def _display_name(session: Session, account_id: UUID | None) -> str | None:
 
 
 def invitation_push(
-    session: Session, invitation: CareCircleManagerInvitation
+    session: Session, invitation: CareCircleInvitation
 ) -> Push | None:
     """To the invited number, when it has an account: a new invitation, or
     the same one sent again."""
@@ -64,7 +64,7 @@ def invitation_push(
 
 
 def circle_request_push(
-    session: Session, request: CareCircleCreationRequest
+    session: Session, request: CareCircleRequest
 ) -> Push | None:
     """To the patient's number, when it has an account: someone asks to
     care for them."""
@@ -83,7 +83,7 @@ def circle_request_push(
 
 
 def request_answer_push(
-    session: Session, request: CareCircleCreationRequest
+    session: Session, request: CareCircleRequest
 ) -> Push | None:
     """To the person who asked: the patient accepted or declined. The
     patient answered, so their name can be told."""
@@ -114,7 +114,7 @@ def circle_ready_push(
     session: Session, request_id: UUID, circle: CareCircle
 ) -> Push | None:
     """To the person who asked: the patient finished, the circle exists."""
-    request = session.get(CareCircleCreationRequest, request_id)
+    request = session.get(CareCircleRequest, request_id)
     if request is None:
         return None
     # As the sender sees it: «دائرة» and the patient's name, not the

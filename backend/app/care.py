@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.clock import DEFAULT_ZONE, is_zone, patient_today
 from app.errors import Forbidden, NotFound, ValidationFailed
-from app.circles.naming import OWN_NAME_DEFAULT, SHARED_PREFIX, shared_name
-from app.models import Account, CareCircle, CareCircleCreationRequest
-from app.models import CareCircleManager, CareCircleManagerInvitation, Patient
+from app.circles.naming import OWN_NAME_DEFAULT
+from app.models import Account, CareCircle, CareCircleInvitation
+from app.models import CareCircleManager, CareCircleRequest, OtpRequest
 
 
 class CareService:
@@ -62,10 +62,10 @@ class CareService:
 
     def _require_no_patient(self, account_id: UUID) -> None:
         """Recheck patient uniqueness after acquiring the account lock."""
-        patient_id = self.session.scalar(
-            select(Patient.id).where(Patient.account_id == account_id)
+        circle_id = self.session.scalar(
+            select(CareCircle.id).where(CareCircle.account_id == account_id)
         )
-        if patient_id is not None:
+        if circle_id is not None:
             raise ValidationFailed(
                 "This account already has a care circle.",
                 code="already_has_circle",
@@ -86,19 +86,18 @@ class CareService:
             select(CareCircleManager.id).where(
                 CareCircleManager.account_id == actor_id,
                 CareCircleManager.care_circle_id == circle_id,
+                CareCircleManager.can_edit.is_(True),
             )
         )
         if manager_id is None:
             raise Forbidden("A current manager membership is required.")
 
-    def _get_patient(self, circle_id: UUID) -> Patient:
-        """Return the circle's patient or raise NotFound."""
-        patient = self.session.scalar(
-            select(Patient).where(Patient.care_circle_id == circle_id)
-        )
-        if patient is None:
-            raise NotFound("The patient does not exist.")
-        return patient
+    def _get_circle(self, circle_id: UUID) -> CareCircle:
+        """Return the circle (which is its patient) or raise NotFound."""
+        circle = self.session.get(CareCircle, circle_id)
+        if circle is None:
+            raise NotFound("The care circle does not exist.")
+        return circle
 
     def _has_other_manager(self, actor_id: UUID, circle_id: UUID) -> bool:
         """Check for another manager while the circle is locked."""
@@ -122,26 +121,71 @@ class CareService:
             )
         )
 
+    def update_member_access(
+        self, actor_id: UUID, circle_id: UUID, member_id: UUID, can_edit: bool
+    ) -> None:
+        """Let only the detailed patient pause or restore another member."""
+        self._lock_accounts(actor_id, member_id)
+        circle = self._lock_circle(circle_id)
+        actor = self.session.get(Account, actor_id)
+        if circle.account_id != actor_id or actor.app_mode != "detailed":
+            raise Forbidden("Only the detailed circle owner manages access.")
+        if member_id == actor_id:
+            raise ValidationFailed(
+                "The owner access cannot be changed.", code="circle_owner"
+            )
+        membership = self.session.scalar(
+            select(CareCircleManager).where(
+                CareCircleManager.care_circle_id == circle_id,
+                CareCircleManager.account_id == member_id,
+            ).with_for_update()
+        )
+        if membership is None:
+            raise NotFound("The circle member does not exist.")
+        membership.can_edit = can_edit
+
+    def remove_member(
+        self, actor_id: UUID, circle_id: UUID, member_id: UUID
+    ) -> None:
+        """Let only the detailed patient remove another circle member."""
+        self._lock_accounts(actor_id, member_id)
+        circle = self._lock_circle(circle_id)
+        actor = self.session.get(Account, actor_id)
+        if circle.account_id != actor_id or actor.app_mode != "detailed":
+            raise Forbidden("Only the detailed circle owner removes members.")
+        if member_id == actor_id or member_id == circle.account_id:
+            raise ValidationFailed(
+                "The circle owner cannot be removed.", code="circle_owner"
+            )
+        removed = self.session.execute(
+            delete(CareCircleManager).where(
+                CareCircleManager.care_circle_id == circle_id,
+                CareCircleManager.account_id == member_id,
+            )
+        )
+        if removed.rowcount == 0:
+            raise NotFound("The circle member does not exist.")
+
     def _get_creation_request(
         self, request_id: UUID, *, lock: bool = False
-    ) -> CareCircleCreationRequest:
-        """Refresh a creation request and reject a concurrently deleted row."""
+    ) -> CareCircleRequest:
+        """Refresh a circle request and reject a concurrently deleted row."""
         request = self.session.get(
-            CareCircleCreationRequest,
+            CareCircleRequest,
             request_id,
             with_for_update=lock,
             populate_existing=True,
         )
         if request is None:
-            raise NotFound("The creation request does not exist.")
+            raise NotFound("The circle request does not exist.")
         return request
 
     def _get_invitation(
         self, invitation_id: UUID, *, lock: bool = False
-    ) -> CareCircleManagerInvitation:
+    ) -> CareCircleInvitation:
         """Refresh an invitation and reject a missing row."""
         invitation = self.session.get(
-            CareCircleManagerInvitation,
+            CareCircleInvitation,
             invitation_id,
             with_for_update=lock,
             populate_existing=True,
@@ -150,22 +194,24 @@ class CareService:
             raise NotFound("The invitation does not exist.")
         return invitation
 
-    def _check_patient_basics(self, patient: Patient) -> None:
+    def _check_patient_basics(
+        self, circle: CareCircle, birth_date: date, city: str
+    ) -> None:
         """Birth date, city and zone are required for every patient.
 
-        Runs on the patient as it will be saved: the birth date is checked
-        against the day in the patient's own zone, as the app's date sheet
-        counts it there."""
-        if not patient.city.strip():
+        Runs on the values as they will be saved (on the circle, or on the
+        patient's account): the birth date is checked against the day in
+        the patient's own zone, as the app's date sheet counts it there."""
+        if not city.strip():
             raise ValidationFailed(
                 "The city cannot be blank.", code="invalid_city"
             )
-        if not is_zone(patient.time_zone):
+        if not is_zone(circle.time_zone):
             raise ValidationFailed(
                 "The time zone is not a known IANA zone.",
                 code="invalid_time_zone",
             )
-        if patient.birth_date > patient_today(patient, self.now):
+        if birth_date > patient_today(circle, self.now):
             raise ValidationFailed(
                 "The birth date cannot be in the future.",
                 code="invalid_birth_date",
@@ -206,7 +252,7 @@ class CareService:
 
     def _create_circle(
         self,
-        name: str,
+        name: str | None,
         birth_date: date,
         city: str,
         managers: set[UUID],
@@ -217,30 +263,34 @@ class CareService:
         longitude: float | None = None,
         time_zone: str | None = None,
     ) -> CareCircle:
-        """Build a complete circle before deferred constraints run."""
-        # A circle needs a name and valid patient basics.
-        if not name.strip():
+        """Build a complete circle before deferred constraints run.
+
+        A patient with an account keeps the birth date and city on the
+        account, and `name` is their own name for the circle; a patient
+        without one keeps them on the circle, which has no name of its own.
+        """
+        if patient_account is not None and not (name or "").strip():
             raise ValidationFailed(
                 "The circle name cannot be blank.", code="invalid_circle_name"
             )
-        # The patient (with or without an account), checked before the
-        # circle and its managers are added with it.
-        patient = Patient(
+        circle = CareCircle(
+            name=name.strip() if patient_account is not None else None,
             account_id=patient_account.id if patient_account else None,
-            first_name=first_name,
-            last_name=last_name,
-            birth_date=birth_date,
-            city=city.strip(),
             time_zone=self._zone_for(time_zone),
             latitude=latitude,
             longitude=longitude,
         )
-        self._check_patient_basics(patient)
-        circle = CareCircle(name=name.strip())
+        self._check_patient_basics(circle, birth_date, city)
+        if patient_account is not None:
+            patient_account.birth_date = birth_date
+            patient_account.city = city.strip()
+        else:
+            circle.first_name = first_name
+            circle.last_name = last_name
+            circle.birth_date = birth_date
+            circle.city = city.strip()
         self.session.add(circle)
         self.session.flush()
-        patient.care_circle_id = circle.id
-        self.session.add(patient)
         for manager_id in sorted(managers):
             self.session.add(
                 CareCircleManager(
@@ -251,11 +301,11 @@ class CareService:
         # The patient has a circle now: their other open requests close.
         if patient_account:
             self.session.execute(
-                update(CareCircleCreationRequest)
+                update(CareCircleRequest)
                 .where(
-                    CareCircleCreationRequest.patient_phone_number
+                    CareCircleRequest.patient_phone_number
                     == patient_account.phone_number,
-                    CareCircleCreationRequest.status.in_(
+                    CareCircleRequest.status.in_(
                         ["pending", "accepted"]
                     ),
                 )
@@ -303,10 +353,10 @@ class CareService:
         """Create a care circle for a patient without an account.
 
         Nobody chooses its name: everyone sees «دائرة» and the patient's
-        first name (`app.circles.naming`).
+        first name (`app.circles.naming`), so the circle stores none.
         """
         # The asker manages in the detailed mode, and the patient needs both
-        # names; the circle is «دائرة» and the patient's first name.
+        # names.
         account = self._lock_accounts(actor_id)[actor_id]
         self._assign_app_mode(account, "detailed")
         if not first_name.strip() or not last_name.strip():
@@ -315,7 +365,7 @@ class CareService:
                 code="patient_name_required",
             )
         return self._create_circle(
-            shared_name(first_name),
+            None,
             birth_date,
             city,
             {actor_id},
@@ -327,13 +377,10 @@ class CareService:
         )
 
     def request_creation(
-        self, actor_id: UUID, phone: str, label: str | None, mode: str
-    ) -> CareCircleCreationRequest:
-        """Persist a pending request without allocating a circle.
-
-        `label` no longer names the circle: the patient names it when they
-        complete the request. An older app still sends one; it is kept.
-        """
+        self, actor_id: UUID, phone: str, mode: str
+    ) -> CareCircleRequest:
+        """Persist a pending request without allocating a circle; the
+        patient names the circle when they complete the request."""
         target = self.session.scalar(
             select(Account).where(Account.phone_number == phone)
         )
@@ -359,18 +406,17 @@ class CareService:
         if target:
             self._require_no_patient(target.id)
         existing = self.session.scalar(
-            select(CareCircleCreationRequest).where(
-                CareCircleCreationRequest.requested_by_account_id == actor_id,
-                CareCircleCreationRequest.patient_phone_number == phone,
-                CareCircleCreationRequest.status.in_(["pending", "accepted"]),
+            select(CareCircleRequest).where(
+                CareCircleRequest.requested_by_account_id == actor_id,
+                CareCircleRequest.patient_phone_number == phone,
+                CareCircleRequest.status.in_(["pending", "accepted"]),
             )
         )
         if existing:
             return existing
-        request = CareCircleCreationRequest(
+        request = CareCircleRequest(
             requested_by_account_id=actor_id,
             patient_phone_number=phone,
-            proposed_circle_label=(label or "").strip() or SHARED_PREFIX,
             proposed_app_mode=mode,
         )
         self.session.add(request)
@@ -379,7 +425,7 @@ class CareService:
 
     def respond_creation(
         self, actor_id: UUID, request_id: UUID, accept: bool
-    ) -> CareCircleCreationRequest:
+    ) -> CareCircleRequest:
         """Record verified patient consent, without creating a circle."""
         account = self._lock_accounts(actor_id)[actor_id]
         self._require_complete_profile(account)
@@ -397,10 +443,9 @@ class CareService:
         if accept:
             self._require_no_patient(actor_id)
             other = self.session.scalar(
-                select(CareCircleCreationRequest.id).where(
-                    CareCircleCreationRequest.responded_by_account_id
-                    == actor_id,
-                    CareCircleCreationRequest.status == "accepted",
+                select(CareCircleRequest.id).where(
+                    CareCircleRequest.responded_by_account_id == actor_id,
+                    CareCircleRequest.status == "accepted",
                 )
             )
             if other:
@@ -503,18 +548,18 @@ class CareService:
             and request.patient_phone_number != account.phone_number
         ):
             raise Forbidden("This request belongs to another account.")
-        if request.status == "canceled":
+        if request.status == "cancelled":
             return
         if request.status not in {"pending", "accepted"}:
             raise ValidationFailed(
                 "Only incomplete requests can be canceled.",
                 code="request_not_cancelable",
             )
-        request.status = "canceled"
+        request.status = "cancelled"
 
     def invite_manager(
         self, actor_id: UUID, circle_id: UUID, phone: str
-    ) -> CareCircleManagerInvitation:
+    ) -> CareCircleInvitation:
         """Create or resend a pending invitation under the circle lock."""
         # Only a manager of the circle invites, and not their own number.
         account = self._lock_accounts(actor_id)[actor_id]
@@ -543,16 +588,16 @@ class CareService:
         # A pending invitation to the same number is sent again, not made
         # twice.
         invitation = self.session.scalar(
-            select(CareCircleManagerInvitation).where(
-                CareCircleManagerInvitation.care_circle_id == circle_id,
-                CareCircleManagerInvitation.invitee_phone_number == phone,
-                CareCircleManagerInvitation.status == "pending",
+            select(CareCircleInvitation).where(
+                CareCircleInvitation.care_circle_id == circle_id,
+                CareCircleInvitation.invitee_phone_number == phone,
+                CareCircleInvitation.status == "pending",
             )
         )
         if invitation:
             invitation.last_sent_at = self.now
         else:
-            invitation = CareCircleManagerInvitation(
+            invitation = CareCircleInvitation(
                 care_circle_id=circle_id,
                 invited_by_account_id=actor_id,
                 invitee_phone_number=phone,
@@ -564,7 +609,7 @@ class CareService:
 
     def respond_invitation(
         self, actor_id: UUID, invitation_id: UUID, accept: bool
-    ) -> CareCircleManagerInvitation:
+    ) -> CareCircleInvitation:
         """Accept or decline only an invitation to the actor's phone."""
         # Lock the account, the circle and the invitation; only the invited
         # number answers.
@@ -617,18 +662,18 @@ class CareService:
         self._lock_circle(invitation.care_circle_id)
         self._require_manager(actor_id, invitation.care_circle_id)
         invitation = self._get_invitation(invitation_id, lock=True)
-        if invitation.status == "canceled":
+        if invitation.status == "cancelled":
             return
         if invitation.status != "pending":
             raise ValidationFailed(
                 "Only pending invitations can be canceled.",
                 code="invitation_not_cancelable",
             )
-        invitation.status = "canceled"
+        invitation.status = "cancelled"
 
     def resend_invitation(
         self, actor_id: UUID, circle_id: UUID, invitation_id: UUID
-    ) -> CareCircleManagerInvitation:
+    ) -> CareCircleInvitation:
         """Mark a pending invitation as sent again, from its own circle."""
         self._lock_accounts(actor_id)
         self._lock_circle(circle_id)
@@ -646,7 +691,7 @@ class CareService:
 
     @staticmethod
     def _check_invitation_circle(
-        invitation: CareCircleManagerInvitation, circle_id: UUID | None
+        invitation: CareCircleInvitation, circle_id: UUID | None
     ) -> None:
         """An invitation is only reachable through its own circle."""
         if circle_id is not None and invitation.care_circle_id != circle_id:
@@ -659,8 +704,7 @@ class CareService:
         self._lock_accounts(actor_id)
         circle = self._lock_circle(circle_id)
         self._require_manager(actor_id, circle_id)
-        patient = self._get_patient(circle_id)
-        is_patient = patient.account_id == actor_id
+        is_patient = circle.account_id == actor_id
         if is_patient or not self._has_other_manager(actor_id, circle_id):
             if not confirm_delete:
                 raise ValidationFailed(
@@ -683,12 +727,7 @@ class CareService:
         # patient's name), and not with a blank name.
         self._lock_accounts(actor_id)
         circle = self._lock_circle(circle_id)
-        patient_account = self.session.scalar(
-            select(Patient.account_id).where(
-                Patient.care_circle_id == circle_id
-            )
-        )
-        if patient_account is None or patient_account != actor_id:
+        if circle.account_id is None or circle.account_id != actor_id:
             raise Forbidden(
                 "Only the patient names this circle.",
                 code="patient_names_circle",
@@ -710,25 +749,24 @@ class CareService:
         latitude: float | None = None,
         longitude: float | None = None,
         time_zone: str | None = None,
-    ) -> Patient:
+    ) -> CareCircle:
         """Let managers and the linked patient edit basic medical identity.
 
         `time_zone` left out keeps the saved zone (see `_zone_for`)."""
         # Lock the asker and the patient's account, then the circle; the
         # patient edits their own details, anyone else must be a manager.
-        patient = self._get_patient(circle_id)
+        circle = self._get_circle(circle_id)
         account_ids = {actor_id}
-        if patient.account_id is not None:
-            account_ids.add(patient.account_id)
-        account = self._lock_accounts(*account_ids)[actor_id]
-        self._require_complete_profile(account)
-        self._lock_circle(circle_id)
-        self.session.refresh(patient)
-        if patient.account_id != actor_id:
+        if circle.account_id is not None:
+            account_ids.add(circle.account_id)
+        accounts = self._lock_accounts(*account_ids)
+        self._require_complete_profile(accounts[actor_id])
+        circle = self._lock_circle(circle_id)
+        if circle.account_id != actor_id:
             self._require_manager(actor_id, circle_id)
         # A patient with an account keeps the account's names; one without an
         # account needs both names here.
-        if patient.account_id is not None:
+        if circle.account_id is not None:
             if first_name is not None or last_name is not None:
                 raise ValidationFailed(
                     "Linked patient names use the account.",
@@ -745,18 +783,22 @@ class CareService:
                     "Both patient names are required.",
                     code="patient_name_required",
                 )
-            patient.first_name = first_name.strip()
-            patient.last_name = last_name.strip()
-        # Then the zone, the birth date, the city and the optional point,
-        # checked together once set.
-        patient.time_zone = self._zone_for(time_zone, patient.time_zone)
-        patient.birth_date = birth_date
-        patient.city = city.strip()
-        patient.latitude = latitude
-        patient.longitude = longitude
-        self._check_patient_basics(patient)
+            circle.first_name = first_name.strip()
+            circle.last_name = last_name.strip()
+        # Then the zone and the optional point on the circle, and the birth
+        # date and city where the patient keeps them, checked together.
+        circle.time_zone = self._zone_for(time_zone, circle.time_zone)
+        circle.latitude = latitude
+        circle.longitude = longitude
+        self._check_patient_basics(circle, birth_date, city)
+        holder = (
+            accounts[circle.account_id]
+            if circle.account_id is not None else circle
+        )
+        holder.birth_date = birth_date
+        holder.city = city.strip()
         self.session.flush()
-        return patient
+        return circle
 
     def delete_circle(
         self, actor_id: UUID, circle_id: UUID, confirm: bool = False
@@ -764,8 +806,7 @@ class CareService:
         """Honor patient control, or explicit last-manager departure."""
         self._lock_accounts(actor_id)
         circle = self._lock_circle(circle_id)
-        patient = self._get_patient(circle_id)
-        if patient.account_id != actor_id:
+        if circle.account_id != actor_id:
             self._require_manager(actor_id, circle_id)
             if self._has_other_manager(actor_id, circle_id):
                 raise Forbidden("Only the patient controls this deletion.")
@@ -786,8 +827,8 @@ class CareService:
         account = self._lock_accounts(actor_id)[actor_id]
         # Every circle the account is in: the one where it is the patient
         # (which needs its choice), and every one it manages.
-        patient = self.session.scalar(
-            select(Patient).where(Patient.account_id == actor_id)
+        own = self.session.scalar(
+            select(CareCircle).where(CareCircle.account_id == actor_id)
         )
         circle_ids = set(
             self.session.scalars(
@@ -796,8 +837,8 @@ class CareService:
                 )
             )
         )
-        if patient:
-            circle_ids.add(patient.care_circle_id)
+        if own:
+            circle_ids.add(own.id)
             if patient_choice not in {"delete", "continue"}:
                 raise ValidationFailed(
                     "Choose deletion or continued care.",
@@ -808,28 +849,41 @@ class CareService:
         for circle_id in sorted(circle_ids):
             self._resolve_account_circle(
                 account,
-                patient,
+                own,
                 circle_id,
                 patient_choice,
                 delete_last_managed_circles,
             )
-        # Requests the account accepted but never finished are cancelled; then
-        # the account goes.
-        self.session.execute(
-            update(CareCircleCreationRequest)
-            .where(
-                CareCircleCreationRequest.responded_by_account_id == actor_id,
-                CareCircleCreationRequest.status == "accepted",
-            )
-            .values(status="canceled")
-        )
+        # Nothing addressed to its phone number stays: the requests and
+        # invitations still open for it, and its sign-in code requests
+        # (with their sends). Then the account goes.
+        self._forget_phone(account.phone_number)
         self.session.delete(account)
         self.session.flush()
+
+    def _forget_phone(self, phone: str) -> None:
+        """Delete what holds `phone` for someone who is leaving: the open
+        requests and invitations to it, and its sign-in code requests."""
+        self.session.execute(
+            delete(CareCircleRequest).where(
+                CareCircleRequest.patient_phone_number == phone,
+                CareCircleRequest.status.in_(["pending", "accepted"]),
+            )
+        )
+        self.session.execute(
+            delete(CareCircleInvitation).where(
+                CareCircleInvitation.invitee_phone_number == phone,
+                CareCircleInvitation.status == "pending",
+            )
+        )
+        self.session.execute(
+            delete(OtpRequest).where(OtpRequest.phone_number == phone)
+        )
 
     def _resolve_account_circle(
         self,
         account: Account,
-        patient: Patient | None,
+        own: CareCircle | None,
         circle_id: UUID,
         patient_choice: str | None,
         delete_last_managed_circles: bool,
@@ -837,9 +891,7 @@ class CareService:
         """Resolve one locked circle before deleting its account."""
         # The patient's own circle goes when they chose to delete it.
         circle = self._lock_circle(circle_id)
-        own_circle = (
-            patient is not None and patient.care_circle_id == circle_id
-        )
+        own_circle = own is not None and own.id == circle_id
         if own_circle and patient_choice == "delete":
             self.session.delete(circle)
             self.session.flush()
@@ -854,11 +906,16 @@ class CareService:
             self.session.delete(circle)
             self.session.flush()
             return
-        # The care goes on: the patient keeps their names without an account,
-        # and the account stops managing.
+        # The care goes on: the circle keeps the patient's names, birth date,
+        # city and avatar without the account (and no name of its own), and
+        # the account stops managing.
         if own_circle:
-            patient.first_name = account.first_name
-            patient.last_name = account.last_name
-            patient.account_id = None
+            circle.first_name = account.first_name
+            circle.last_name = account.last_name
+            circle.birth_date = account.birth_date
+            circle.city = account.city
+            circle.avatar_code = account.avatar_code
+            circle.name = None
+            circle.account_id = None
             self.session.flush()
         self._remove_manager(account.id, circle_id)

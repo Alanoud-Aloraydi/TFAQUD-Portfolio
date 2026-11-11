@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/forms/calendar_sync_choices.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
@@ -40,6 +42,17 @@ class SimplifiedAccountScreen extends StatelessWidget {
     );
     final bool voiceEnabled = context.select<SimplifiedSettingsCubit, bool>(
       (cubit) => cubit.state.voiceEnabled,
+    );
+    final SimplifiedTextSize textSize = context
+        .select<SimplifiedSettingsCubit, SimplifiedTextSize>(
+          (cubit) => cubit.state.textSize,
+        );
+    final SimplifiedSpeechRate speechRate = context
+        .select<SimplifiedSettingsCubit, SimplifiedSpeechRate>(
+          (cubit) => cubit.state.speechRate,
+        );
+    final bool autoRead = context.select<SimplifiedSettingsCubit, bool>(
+      (cubit) => cubit.state.autoRead,
     );
     return BlocListener<AccountCubit, AccountState>(
       listenWhen: (before, after) =>
@@ -79,7 +92,7 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   id: _Part.profile,
                   text: sentences(<String>[
                     account.displayName,
-                    account.phoneNumber,
+                    context.tr('simplified_mode.photo_hint'),
                   ]),
                 ),
               (
@@ -87,9 +100,12 @@ class SimplifiedAccountScreen extends StatelessWidget {
                 text: sentences(<String>[
                   context.tr('simplified_mode.display_sound'),
                   context.tr('simplified_mode.text_size'),
-                  for (final SimplifiedTextSize size
-                      in SimplifiedTextSize.values)
-                    context.tr('simplified_mode.size.${size.name}'),
+                  context.tr(
+                    'simplified_mode.selected_option',
+                    args: <String>[
+                      context.tr('simplified_mode.size.${textSize.name}'),
+                    ],
+                  ),
                 ]),
               ),
               (
@@ -104,9 +120,12 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   id: _Part.speechRate,
                   text: sentences(<String>[
                     context.tr('simplified_mode.speech_rate'),
-                    for (final SimplifiedSpeechRate rate
-                        in SimplifiedSpeechRate.values)
-                      context.tr('simplified_mode.rate.${rate.name}'),
+                    context.tr(
+                      'simplified_mode.selected_option',
+                      args: <String>[
+                        context.tr('simplified_mode.rate.${speechRate.name}'),
+                      ],
+                    ),
                   ]),
                 ),
                 (
@@ -114,6 +133,11 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   text: sentences(<String>[
                     context.tr('simplified_mode.auto_read_title'),
                     context.tr('simplified_mode.auto_read_text'),
+                    context.tr(
+                      autoRead
+                          ? 'simplified_mode.setting_on'
+                          : 'simplified_mode.setting_off',
+                    ),
                   ]),
                 ),
               ],
@@ -123,9 +147,6 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   text: sentences(<String>[
                     context.tr('simplified_mode.calendar_title'),
                     context.tr('simplified_mode.calendar_text'),
-                    for (final CalendarSyncCategory category
-                        in CalendarSyncCategory.values)
-                      context.tr('simplified_mode.calendar.${category.name}'),
                   ]),
                 ),
                 (
@@ -150,11 +171,39 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   speaker: ListenSpeaker.beside,
                   child: Row(
                     children: <Widget>[
-                      PersonPhoto(
-                        name: account.displayName,
-                        photoPath: ApiEndpoints.accountPhoto,
-                        avatarCode: account.avatarCode,
-                        size: 72,
+                      Semantics(
+                        button: true,
+                        label: context.tr('simplified_mode.change_photo'),
+                        excludeSemantics: true,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => unawaited(
+                            showPersonPhotoSheet(
+                              context,
+                              title: context.tr('photos.your_photo'),
+                              name: account.displayName,
+                              photoPath: ApiEndpoints.accountPhoto,
+                              avatarPath: ApiEndpoints.accountAvatar,
+                              avatarCode: account.avatarCode,
+                              frontCamera: true,
+                              onSaved: () => unawaited(
+                                context.read<AccountCubit>().load(),
+                              ),
+                            ),
+                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: <Widget>[
+                              PersonPhoto(
+                                name: account.displayName,
+                                photoPath: ApiEndpoints.accountPhoto,
+                                avatarCode: account.avatarCode,
+                                size: 72,
+                              ),
+                              const PhotoEditBadge(),
+                            ],
+                          ),
+                        ),
                       ),
                       const SizedBox(width: SimplifiedStyle.gap),
                       Expanded(
@@ -170,10 +219,16 @@ class SimplifiedAccountScreen extends StatelessWidget {
                             Directionality(
                               textDirection: TextDirection.ltr,
                               child: Text(
-                                account.phoneNumber,
+                                SaudiMobile.display(account.phoneNumber),
                                 style: SimplifiedStyle.text(
                                   SimplifiedStyle.caption,
                                 ),
+                              ),
+                            ),
+                            Text(
+                              context.tr('simplified_mode.photo_hint'),
+                              style: SimplifiedStyle.text(
+                                SimplifiedStyle.caption,
                               ),
                             ),
                           ],
@@ -604,7 +659,7 @@ class _CalendarSyncCardState extends State<_CalendarSyncCard>
                   value: enabled?[category] ?? false,
                   onChanged: enabled == null
                       ? null
-                      : (value) => setChoice(category, value),
+                      : (value) => unawaited(setChoice(category, value)),
                 ),
               ],
             ],

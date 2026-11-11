@@ -13,6 +13,7 @@ class CircleOverview extends Equatable {
     required this.patientBirthDate,
     required this.city,
     required this.canManage,
+    this.canManageMembers = false,
     required List<CircleMember> members,
     required List<CirclePendingInvitation> pendingInvitations,
   }) : members = List.unmodifiable(members),
@@ -29,6 +30,7 @@ class CircleOverview extends Equatable {
   final DateTime patientBirthDate;
   final String city;
   final bool canManage;
+  final bool canManageMembers;
   final List<CircleMember> members;
   final List<CirclePendingInvitation> pendingInvitations;
 
@@ -56,6 +58,7 @@ class CircleOverview extends Equatable {
     patientBirthDate,
     city,
     canManage,
+    canManageMembers,
     members,
     pendingInvitations,
   ];
@@ -70,8 +73,9 @@ class CircleMember extends Equatable {
     this.accountId,
     this.avatarCode,
     this.isManager = true,
+    bool? canEdit,
     this.phoneNumber,
-  });
+  }) : canEdit = canEdit ?? isManager;
 
   final String name;
   final bool isYou;
@@ -81,6 +85,7 @@ class CircleMember extends Equatable {
   final String? accountId;
   final String? avatarCode;
   final bool isManager;
+  final bool canEdit;
 
   /// So another member can call them; null for a patient with no account.
   final String? phoneNumber;
@@ -93,6 +98,7 @@ class CircleMember extends Equatable {
     accountId,
     avatarCode,
     isManager,
+    canEdit,
     phoneNumber,
   ];
 }

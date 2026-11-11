@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 import pytest
 
 from app.database import db
-from app.models import MeasurementRecord
+from app.models import MeasurementReading
 from integration_tests.helpers import offline_circle
 
 
@@ -39,11 +39,12 @@ def test_plan_occurrence_reading_and_export(database_app, database, account):
     base = f"/api/v1/circles/{circle.id}"
     body = {
         "kind": "glucose",
-        "time_of_day": "00:00",
+        "times": [
+            {"time_of_day": "00:00", "measurement_state": "fasting"}
+        ],
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
-        "grace_minutes": 60,
-        "glucose_context": "fasting",
+        "missed_after_minutes": 60,
         "glucose_low": 80,
         "glucose_high": 140,
     }
@@ -59,17 +60,19 @@ def test_plan_occurrence_reading_and_export(database_app, database, account):
     assert len(tasks.json["measurement_occurrences"]) == 1
     with Session(database) as session:
         assert (
-            session.scalar(select(func.count()).select_from(MeasurementRecord))
+            session.scalar(
+                select(func.count()).select_from(MeasurementReading)
+            )
             == 0
         )
 
-    record_path = f"{base}/measurement-records/{version_id}/{day.isoformat()}"
+    record_path = f"{base}/measurement-readings/{version_id}/{day.isoformat()}"
     reading = {
         "kind": "glucose",
         "outcome": "read",
         "measured_at": (now - timedelta(minutes=1)).isoformat(),
-        "value_one": 151,
-        "glucose_context": "fasting",
+        "glucose_value": 151,
+        "conditions": ["fasting"],
     }
     saved = client.put(record_path, headers=headers, json=reading)
     assert saved.status_code == 200
@@ -91,8 +94,8 @@ def test_plan_validation_and_authorization(database_app, database, account):
     base = f"/api/v1/circles/{circle.id}/measurement-plans"
     day = datetime.now(ZoneInfo("Asia/Riyadh")).date()
     body = {
-        "kind": "bp",
-        "time_of_day": "08:00",
+        "kind": "blood_pressure",
+        "times": [{"time_of_day": "08:00"}],
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
         "systolic_limit": 130,
@@ -117,8 +120,8 @@ def test_future_plan_can_be_edited_before_its_first_task(
     )
     base = f"/api/v1/circles/{circle.id}/measurement-plans"
     body = {
-        "kind": "bp",
-        "time_of_day": "08:00",
+        "kind": "blood_pressure",
+        "times": [{"time_of_day": "08:00"}],
         "weekdays": [start.isoweekday()],
         "starts_on": start.isoformat(),
         "systolic_limit": 130,
@@ -151,11 +154,12 @@ def _todays_glucose_plan(client, headers, base):
     day = now.astimezone(ZoneInfo("Asia/Riyadh")).date()
     body = {
         "kind": "glucose",
-        "time_of_day": "00:00",
+        "times": [
+            {"time_of_day": "00:00", "measurement_state": "fasting"}
+        ],
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
-        "grace_minutes": 60,
-        "glucose_context": "fasting",
+        "missed_after_minutes": 60,
         "glucose_low": 80,
         "glucose_high": 140,
     }
@@ -201,14 +205,14 @@ def test_a_same_day_edit_after_a_reading_starts_tomorrow(
     now, day, body, plan = _todays_glucose_plan(client, headers, base)
     version_id = plan["version"]["id"]
     saved = client.put(
-        f"{base}/measurement-records/{version_id}/{day.isoformat()}",
+        f"{base}/measurement-readings/{version_id}/{day.isoformat()}",
         headers=headers,
         json={
             "kind": "glucose",
             "outcome": "read",
             "measured_at": (now - timedelta(minutes=1)).isoformat(),
-            "value_one": 120,
-            "glucose_context": "fasting",
+            "glucose_value": 120,
+            "conditions": ["fasting"],
         },
     )
     assert saved.status_code == 200, saved.json
@@ -242,14 +246,14 @@ def test_an_edit_that_starts_tomorrow_can_be_edited_again(
     now, day, body, plan = _todays_glucose_plan(client, headers, base)
     version_id = plan["version"]["id"]
     assert client.put(
-        f"{base}/measurement-records/{version_id}/{day.isoformat()}",
+        f"{base}/measurement-readings/{version_id}/{day.isoformat()}",
         headers=headers,
         json={
             "kind": "glucose",
             "outcome": "read",
             "measured_at": (now - timedelta(minutes=1)).isoformat(),
-            "value_one": 120,
-            "glucose_context": "fasting",
+            "glucose_value": 120,
+            "conditions": ["fasting"],
         },
     ).status_code == 200
     path = f"{base}/measurement-plans/{plan['id']}"
@@ -275,7 +279,7 @@ def test_an_edit_that_starts_tomorrow_can_be_edited_again(
     answer = again.json["measurement_plan"]
     assert answer["version"]["glucose_high"] == 140
     assert answer["pending_version"]["glucose_high"] == 120
-    assert answer["pending_version"]["number"] == 2
+    assert answer["pending_version"]["version_number"] == 2
     assert answer["pending_version"]["effective_from_on"] == tomorrow
 
 
@@ -294,7 +298,9 @@ def test_concurrent_task_records_keep_one_outcome(
         headers=headers,
         json={
             "kind": "glucose",
-            "time_of_day": "00:00",
+            "times": [
+                {"time_of_day": "00:00", "measurement_state": "fasting"}
+            ],
             "weekdays": [day.isoweekday()],
             "starts_on": day.isoformat(),
             "glucose_low": 80,
@@ -302,12 +308,12 @@ def test_concurrent_task_records_keep_one_outcome(
         },
     )
     version_id = created.json["measurement_plan"]["version"]["id"]
-    path = f"{base}/measurement-records/{version_id}/{day.isoformat()}"
+    path = f"{base}/measurement-readings/{version_id}/{day.isoformat()}"
     body = {
         "kind": "glucose",
         "outcome": "read",
         "measured_at": (now - timedelta(minutes=1)).isoformat(),
-        "value_one": 100,
+        "glucose_value": 100,
     }
     barrier = Barrier(2)
 
@@ -324,5 +330,5 @@ def test_concurrent_task_records_keep_one_outcome(
     assert sorted(results) == [200, 409]
     with Session(database) as session:
         assert session.scalar(
-            select(func.count()).select_from(MeasurementRecord)
+            select(func.count()).select_from(MeasurementReading)
         ) == 1

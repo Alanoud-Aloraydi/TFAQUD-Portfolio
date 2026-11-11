@@ -395,7 +395,6 @@ void main() {
           final request = circles.sentRequests.single;
           expect(request.patientPhoneNumber, '+966501234567');
           // The patient names the circle; the request carries no name.
-          expect(request.circleLabel, isNull);
           expect(request.proposedAppMode.name, 'detailed');
         },
       );
@@ -431,7 +430,6 @@ void main() {
           SentCircleRequest(
             id: 'request-1',
             patientPhoneNumber: '+966501234567',
-            circleLabel: 'أمي',
             proposedAppMode: CircleAppMode.simplified,
             status: CircleRequestStatus.accepted,
           ),

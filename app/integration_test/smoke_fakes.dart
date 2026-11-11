@@ -213,6 +213,9 @@ class SmokePhotoRepository implements PrivatePhotoRepository {
   Future<void> chooseAvatar(String path, String code) async {}
 
   @override
+  void invalidateCache() {}
+
+  @override
   void clear() {}
 
   @override

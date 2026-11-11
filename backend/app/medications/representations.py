@@ -58,9 +58,9 @@ def plan_response(plan, version) -> dict:
     return {
         "id": str(plan.id),
         "created_at": plan.created_at.isoformat(),
-        "discontinued_at": (
-            plan.discontinued_at.isoformat()
-            if plan.discontinued_at
+        "stopped_at": (
+            plan.stopped_at.isoformat()
+            if plan.stopped_at
             else None
         ),
         # The medicine as this version defines it, in force from

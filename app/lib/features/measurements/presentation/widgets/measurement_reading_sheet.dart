@@ -72,10 +72,11 @@ class MeasurementReadingSheet extends StatefulWidget {
 class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   late MeasurementKind _kind = widget.occurrence?.kind ?? MeasurementKind.bp;
 
-  /// «ظروف القياس»: a scheduled task starts with its plan's, which the
-  /// reader can change; a free reading starts with none.
-  late List<String> _conditions =
-      widget.occurrence?.conditions ?? const <String>[];
+  /// The planned glucose state is only a starting point; these remain the
+  /// actual conditions of the reading and can be changed by the recorder.
+  late List<String> _conditions = widget.occurrence?.measurementState == null
+      ? const <String>[]
+      : <String>[widget.occurrence!.measurementState!];
 
   /// The time picked; until then, now on the patient's clock.
   TimeOfDay? _picked;

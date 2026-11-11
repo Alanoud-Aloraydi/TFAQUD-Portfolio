@@ -41,6 +41,27 @@ Future<DoseRecordDraft?> selectSkippedDose(BuildContext context) =>
       builder: (_) => const _SkipDoseSheet(),
     );
 
+String doseSkipReasonText(BuildContext context, DoseRecord record) {
+  return doseSkipReasonLabel(
+    context,
+    record.skipReasonCode,
+    record.skipReasonNote,
+  );
+}
+
+String doseSkipReasonLabel(BuildContext context, String? code, String? note) {
+  if (code == null) return '';
+  if (code == 'other' && note?.isNotEmpty == true) {
+    return note!;
+  }
+  final key = switch (code) {
+    'side_effects' => 'sideEffects',
+    'patient_refused' => 'patientRefused',
+    _ => code,
+  };
+  return context.tr('medications.skip_reason.$key');
+}
+
 /// Renders the skip dose sheet element of dose actions.
 class _SkipDoseSheet extends StatefulWidget {
   const _SkipDoseSheet();

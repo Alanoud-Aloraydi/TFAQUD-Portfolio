@@ -26,7 +26,9 @@ bp = Blueprint(
 MEMBERS = (
     CircleRole.MANAGER,
     CircleRole.SIMPLIFIED_PATIENT,
+    CircleRole.MEMBER,
 )
+EDITORS = (CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
 
 
 def _uuid(value: str) -> UUID:
@@ -56,6 +58,16 @@ def _time(value: str | None) -> time | None:
     if parsed.tzinfo is not None:
         raise ValidationFailed(code="invalid_measurement_time")
     return parsed
+
+
+def _recorder(session, reading) -> dict:
+    """Who recorded `reading`, read for its answer."""
+    return accounts_by_id(
+        session,
+        {reading.recorded_by_account_id}
+        if reading.recorded_by_account_id
+        else set(),
+    )
 
 
 def _range() -> ReadingQuery:
@@ -144,7 +156,7 @@ def stop_plan(circle_id, plan_id):
     """Stop future tasks while retaining history."""
     with transaction() as session:
         plan = MeasurementService(session, get_clock().now()).stop(
-            _uuid(circle_id), _uuid(plan_id)
+            _uuid(circle_id), _uuid(plan_id), _uuid(current_auth().user_id)
         )
         values = MeasurementQueries(session, get_clock().now()).plans(
             _uuid(circle_id)
@@ -198,74 +210,61 @@ def export_readings(circle_id):
 
 
 @bp.post("/measurement-readings")
-@require_circle_role(*MEMBERS)
+@require_circle_role(*EDITORS)
 def create_standalone_reading(circle_id):
-    """Save an unlinked reading without completing a scheduled task."""
+    """Save a reading taken outside a plan."""
     body = parse_json_body(ReadingRequest)
     with transaction() as session:
-        record = MeasurementService(session, get_clock().now()).record(
+        reading = MeasurementService(session, get_clock().now()).record(
             _uuid(circle_id), _uuid(current_auth().user_id), body
         )
-        accounts = accounts_by_id(
-            session,
-            {record.recorded_by_account_id}
-            if record.recorded_by_account_id
-            else set(),
+        value = reading_response(
+            reading, accounts=_recorder(session, reading)
         )
-        value = reading_response(record, accounts=accounts)
     return jsonify(measurement_reading=value), 201
 
 
-@bp.put("/measurement-records/<version_id>/<scheduled_on>")
-@require_circle_role(*MEMBERS)
-def record_task(circle_id, version_id, scheduled_on):
+@bp.put("/measurement-readings/<plan_version_id>/<scheduled_on>")
+@require_circle_role(*EDITORS)
+def record_task(circle_id, plan_version_id, scheduled_on):
     """Save the reading or skip for one scheduled occurrence: a version's
     reading time (`?time=HH:MM`) on a day. Without `time`, the version's
-    only reading time (an older app)."""
+    only reading time."""
     body = parse_json_body(ReadingRequest)
-    # The reading time comes in the query (an older app sends none).
     scheduled_time = _time(request.args.get("time"))
     with transaction() as session:
-        record = MeasurementService(session, get_clock().now()).record(
+        reading = MeasurementService(session, get_clock().now()).record(
             _uuid(circle_id),
             _uuid(current_auth().user_id),
             body,
-            version_id=_uuid(version_id),
+            plan_version_id=_uuid(plan_version_id),
             scheduled_on=_date(scheduled_on),
             scheduled_time=scheduled_time,
         )
         # Answer the reading with its target comparison and who recorded it.
-        version = session.get(MeasurementPlanVersion, record.plan_version_id)
-        accounts = accounts_by_id(
-            session,
-            {record.recorded_by_account_id}
-            if record.recorded_by_account_id
-            else set(),
+        version = session.get(MeasurementPlanVersion, reading.plan_version_id)
+        value = reading_response(
+            reading, version, _recorder(session, reading)
         )
-        value = reading_response(record, version, accounts)
     return jsonify(measurement_reading=value)
 
 
 @bp.post("/measurement-readings/<reading_id>/follow-up")
-@require_circle_role(*MEMBERS)
+@require_circle_role(*EDITORS)
 def follow_up(circle_id, reading_id):
     """Mark an out-of-range reading as reviewed."""
     # Mark the reading followed up, and answer it with its target comparison
     # and who recorded it.
     with transaction() as session:
-        record = MeasurementService(session, get_clock().now()).follow_up(
+        reading = MeasurementService(session, get_clock().now()).follow_up(
             _uuid(circle_id), _uuid(reading_id)
         )
         version = (
-            session.get(MeasurementPlanVersion, record.plan_version_id)
-            if record.plan_version_id
+            session.get(MeasurementPlanVersion, reading.plan_version_id)
+            if reading.plan_version_id
             else None
         )
-        accounts = accounts_by_id(
-            session,
-            {record.recorded_by_account_id}
-            if record.recorded_by_account_id
-            else set(),
+        value = reading_response(
+            reading, version, _recorder(session, reading)
         )
-        value = reading_response(record, version, accounts)
     return jsonify(measurement_reading=value)

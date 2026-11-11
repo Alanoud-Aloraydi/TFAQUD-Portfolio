@@ -31,7 +31,7 @@ def plan(times, **changes):
         "times": times,
         "weekdays": [3],
         "starts_on": "2026-10-28",
-        "grace_minutes": 60,
+        "missed_after_minutes": 60,
         "glucose_low": 80,
         "glucose_high": 140,
         **changes,
@@ -39,12 +39,8 @@ def plan(times, **changes):
 
 
 TWO_TIMES = [
-    {"time_of_day": "07:00", "glucose_context": "fasting"},
-    {"time_of_day": "14:00", "glucose_context": "after_meal"},
-]
-# As the server lists them: an older app's context is a condition too.
-TWO_TIMES_LISTED = [
-    {**item, "conditions": [item["glucose_context"]]} for item in TWO_TIMES
+    {"time_of_day": "07:00", "measurement_state": "fasting"},
+    {"time_of_day": "14:00", "measurement_state": "after_meal"},
 ]
 
 
@@ -53,8 +49,8 @@ def reading(value, measured_at="2026-10-28T11:05:00+00:00"):
         "kind": "glucose",
         "outcome": "read",
         "measured_at": measured_at,
-        "value_one": value,
-        "glucose_context": "after_meal",
+        "glucose_value": value,
+        "conditions": ["after_meal"],
     }
 
 
@@ -72,10 +68,7 @@ def test_each_reading_time_is_its_own_task(
     )
     assert created.status_code == 201, created.json
     version = created.json["measurement_plan"]["version"]
-    assert version["times"] == TWO_TIMES_LISTED
-    # The first time stays where an older app reads it.
-    assert version["time_of_day"] == "07:00"
-    assert version["glucose_context"] == "fasting"
+    assert version["times"] == TWO_TIMES
 
     def tasks():
         response = client.get(
@@ -84,7 +77,7 @@ def test_each_reading_time_is_its_own_task(
             query_string={"from": "2026-10-28", "to": "2026-10-28"},
         )
         return [
-            (item["time_of_day"], item["glucose_context"], item["status"])
+            (item["time_of_day"], item["measurement_state"], item["status"])
             for item in response.json["measurement_occurrences"]
         ]
 
@@ -93,7 +86,7 @@ def test_each_reading_time_is_its_own_task(
         ("14:00", "after_meal", "missed"),
     ]
 
-    path = f"{base}/measurement-records/{version['id']}/2026-10-28"
+    path = f"{base}/measurement-readings/{version['id']}/2026-10-28"
     # Two times that day: the app must say which one.
     unnamed = client.put(path, headers=headers, json=reading(120))
     assert unnamed.status_code == 422
@@ -138,7 +131,9 @@ def test_a_same_day_edit_changes_the_times(
     created = client.post(
         f"{base}/measurement-plans",
         headers=headers,
-        json=plan([{"time_of_day": "07:00", "glucose_context": "fasting"}]),
+        json=plan([
+            {"time_of_day": "07:00", "measurement_state": "fasting"}
+        ]),
     )
     plan_id = created.json["measurement_plan"]["id"]
 
@@ -150,5 +145,5 @@ def test_a_same_day_edit_changes_the_times(
 
     assert edited.status_code == 200, edited.json
     version = edited.json["measurement_plan"]["version"]
-    assert version["number"] == 1
-    assert version["times"] == TWO_TIMES_LISTED
+    assert version["version_number"] == 1
+    assert version["times"] == TWO_TIMES

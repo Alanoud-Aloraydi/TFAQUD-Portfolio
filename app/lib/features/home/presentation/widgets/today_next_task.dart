@@ -5,7 +5,9 @@ import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -107,6 +109,27 @@ class NextTaskCard extends StatelessWidget {
                     : 'measurements.glucose',
               ));
     final time = medication?.time ?? measurement?.time ?? appointment!.time;
+    final (
+      String headerKey,
+      IconData icon,
+      Color iconBackground,
+    ) = medication != null
+        ? (
+            'today_dashboard.next_medication',
+            CareVisuals.medicationIcon,
+            CareVisuals.medicationTile,
+          )
+        : measurement != null
+        ? (
+            'today_dashboard.next_measurement',
+            CareVisuals.measurementIcon,
+            CareVisuals.measurementTile,
+          )
+        : (
+            'today_dashboard.next_appointment',
+            CareVisuals.appointmentIcon,
+            CareVisuals.appointmentTile,
+          );
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppSemanticColors.surfaceContent,
@@ -118,12 +141,44 @@ class NextTaskCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              context.tr('today_dashboard.next_task'),
-              style: Theme.of(context).textTheme.labelMedium,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ExcludeSemantics(
+                  child: Container(
+                    width: AppSizes.avatar,
+                    height: AppSizes.avatar,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: iconBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: AppSizes.iconSmall,
+                      color: AppSemanticColors.onSettingsTile,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr(headerKey),
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
             Text(
               '${context.tr('common.weekdays.${task.at.weekday}')} '
               '${formatMedicationDate(context, task.at)} · '

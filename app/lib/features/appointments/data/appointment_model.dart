@@ -34,7 +34,7 @@ class AppointmentModel {
           (json['kind'] == 'follow_up' ? 'followUp' : json['kind']),
       orElse: () => AppointmentKind.other,
     ),
-    otherKind: json['other_kind'] as String?,
+    otherKind: json['other_text'] as String?,
     scheduledOn: DateTime.parse(json['scheduled_on'] as String),
     time: json['time_of_day'] as String,
     place: json['place'] as String?,
@@ -58,7 +58,7 @@ class AppointmentModel {
     'kind': draft.kind == AppointmentKind.followUp
         ? 'follow_up'
         : draft.kind.name,
-    'other_kind': draft.otherKind,
+    'other_text': draft.otherKind,
     'scheduled_on': apiDate(draft.scheduledOn),
     'time_of_day': draft.time,
     'place': draft.place,

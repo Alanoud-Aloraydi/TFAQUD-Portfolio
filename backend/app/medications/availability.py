@@ -9,12 +9,12 @@ from sqlalchemy.orm import Session
 from app.clock import patient_zone
 from app.errors import Conflict
 from app.medications.inputs import PlanRequest
-from app.models import MedicationPlan, MedicationPlanVersion, Patient
+from app.models import MedicationPlan, MedicationPlanVersion, CareCircle
 
 
 def require_available_name(
     session: Session,
-    patient: Patient,
+    patient: CareCircle,
     normalized_name: str,
     body: PlanRequest,
     *,
@@ -23,7 +23,7 @@ def require_available_name(
 ) -> None:
     """Reject overlapping current treatments with the same name.
 
-    A discontinued plan ends on the day it was stopped in the patient's
+    A stopped plan ends on the day it was stopped in the patient's
     own zone."""
     # The days the new or edited medicine would run: from its start (or its
     # edit's start) to the day after its end, or open-ended.
@@ -46,7 +46,7 @@ def require_available_name(
             MedicationPlanVersion.medication_plan_id == MedicationPlan.id,
         )
         .where(
-            MedicationPlan.patient_id == patient.id,
+            MedicationPlan.care_circle_id == patient.id,
             MedicationPlanVersion.normalized_name == normalized_name,
             MedicationPlanVersion.cancelled_at.is_(None),
         )
@@ -70,9 +70,9 @@ def require_available_name(
                 ),
                 version.effective_until_on,
                 (
-                    plan.discontinued_at.astimezone(zone).date()
+                    plan.stopped_at.astimezone(zone).date()
                     + timedelta(days=1)
-                    if plan.discontinued_at is not None
+                    if plan.stopped_at is not None
                     else None
                 ),
             )

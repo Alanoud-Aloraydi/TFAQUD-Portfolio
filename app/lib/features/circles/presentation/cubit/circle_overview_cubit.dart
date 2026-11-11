@@ -176,6 +176,16 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
   Future<String?> cancelInvitation(String invitationId) =>
       _act(() => _circles.cancelManagerInvitation(circleId, invitationId));
 
+  Future<String?> setMemberEditAccess(
+    String accountId, {
+    required bool canEdit,
+  }) => _act(
+    () => _circles.setMemberEditAccess(circleId, accountId, canEdit: canEdit),
+  );
+
+  Future<String?> removeMember(String accountId) =>
+      _act(() => _circles.removeMember(circleId, accountId));
+
   /// Leaves the circle; [confirmDelete] agrees that the circle is deleted
   /// ([CircleOverview.leaveDeletesCircle]). Returns an error key, or null
   /// once the person is out. The circle is not read again after a success:

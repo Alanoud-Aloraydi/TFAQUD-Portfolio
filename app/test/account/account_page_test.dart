@@ -97,7 +97,6 @@ void main() {
             SentCircleRequest(
               id: 'request-1',
               patientPhoneNumber: '+966507654321',
-              circleLabel: 'أمي',
               proposedAppMode: CircleAppMode.simplified,
               status: CircleRequestStatus.pending,
               createdAt: fiveDaysAgo,
@@ -105,14 +104,12 @@ void main() {
             const SentCircleRequest(
               id: 'request-2',
               patientPhoneNumber: '+966501112233',
-              circleLabel: 'أبي',
               proposedAppMode: CircleAppMode.detailed,
               status: CircleRequestStatus.accepted,
             ),
             const SentCircleRequest(
               id: 'request-3',
               patientPhoneNumber: '+966504445566',
-              circleLabel: 'خالتي',
               proposedAppMode: CircleAppMode.simplified,
               status: CircleRequestStatus.declined,
             ),
@@ -148,7 +145,6 @@ void main() {
               SentCircleRequest(
                 id: 'request-1',
                 patientPhoneNumber: '+966507654321',
-                circleLabel: 'أمي',
                 proposedAppMode: CircleAppMode.simplified,
                 status: CircleRequestStatus.pending,
                 createdAt: fiveDaysAgo,

@@ -20,7 +20,7 @@ from app.clock import latest_today
 from app.database import transaction
 from app.errors import NotFound, ValidationFailed
 from app.extensions import get_clock, get_user_store
-from app.models import Account, Patient
+from app.models import Account, CareCircle
 from app.validation import Dto, parse_json_body, parse_optional_json_body
 
 bp = Blueprint("users", __name__, url_prefix="/api/v1/accounts")
@@ -128,8 +128,8 @@ def _patient_circle_id(account_id: str) -> str | None:
         return None  # The in-memory mode of the unit tests has no circles.
     with transaction() as session:
         circle_id = session.scalar(
-            select(Patient.care_circle_id).where(
-                Patient.account_id == UUID(account_id)
+            select(CareCircle.id).where(
+                CareCircle.account_id == UUID(account_id)
             )
         )
     return None if circle_id is None else str(circle_id)

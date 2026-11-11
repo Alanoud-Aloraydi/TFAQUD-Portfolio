@@ -12,5 +12,7 @@ class CircleRole(str, Enum):
 
     # A manager; a patient in the full app manages their own circle too.
     MANAGER = "manager"
+    # A detailed-mode circle member whose owner paused editing access.
+    MEMBER = "member"
     # A patient using Simplified Mode.
     SIMPLIFIED_PATIENT = "simplified_patient"

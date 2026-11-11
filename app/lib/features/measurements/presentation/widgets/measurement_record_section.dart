@@ -14,9 +14,11 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_today_section.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_visuals.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,8 +26,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-/// The «السجل» tab's measurements: a month's charts, calendar and readings
-/// of [circleId], with «تسجيل قراءة» for a free reading.
+/// The «السجل» tab's read-only measurements: a month's charts, calendar,
+/// readings and unrecorded scheduled measurements of [circleId].
 ///
 /// Holds its own [MeasurementReadingsCubit] for the month shown; it reads
 /// again by itself when a reading of the circle is saved anywhere.
@@ -48,6 +50,10 @@ class MeasurementRecordSection extends StatefulWidget {
 
 class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   late final MeasurementReadingsCubit _readings = MeasurementReadingsCubit(
+    GetIt.I<MeasurementRepository>(),
+    GetIt.I<PrivatePhotoRepository>().changes,
+  );
+  late final MeasurementTasksCubit _tasks = MeasurementTasksCubit(
     GetIt.I<MeasurementRepository>(),
     GetIt.I<PrivatePhotoRepository>().changes,
   );
@@ -85,14 +91,15 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   @override
   void dispose() {
     _readings.close();
+    _tasks.close();
     super.dispose();
   }
 
-  void _loadMonth() => _readings.load(
-    widget.circleId,
-    _month,
-    DateTime(_month.year, _month.month + 1, 0),
-  );
+  void _loadMonth() {
+    final end = DateTime(_month.year, _month.month + 1, 0);
+    _readings.load(widget.circleId, _month, end);
+    _tasks.loadRange(widget.circleId, _month, end);
+  }
 
   void _changeMonth(int offset) {
     final candidate = DateTime(_month.year, _month.month + offset);
@@ -104,16 +111,32 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   }
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: _readings,
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      BlocProvider.value(value: _readings),
+      BlocProvider.value(value: _tasks),
+    ],
     child: BlocBuilder<MeasurementReadingsCubit, MeasurementReadingsState>(
       builder: (context, state) {
+        final taskState = context.watch<MeasurementTasksCubit>().state;
         final values = state.readings
             .where((item) => item.outcome == 'read')
             .toList();
         final filtered = state.readings
             .where((item) => _filter == 'all' || item.kind.name == _filter)
             .toList();
+        final missed =
+            taskState.tasks
+                .where(
+                  (item) =>
+                      item.status == MeasurementStatus.missed &&
+                      (_filter == 'all' || item.kind.name == _filter),
+                )
+                .toList()
+              ..sort((a, b) {
+                final byDay = b.scheduledOn.compareTo(a.scheduledOn);
+                return byDay != 0 ? byDay : b.time.compareTo(a.time);
+              });
         return ListView(
           padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
           children: [
@@ -150,19 +173,17 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                 onPressed: _loadMonth,
                 child: Text(context.tr(state.errorKey ?? 'error.unknown')),
               )
+            else if (taskState.status == MeasurementLoadStatus.failure)
+              TextButton(
+                onPressed: _loadMonth,
+                child: Text(context.tr(taskState.errorKey ?? 'error.unknown')),
+              )
             else ...[
               _chartCard(context, MeasurementKind.glucose, values),
               const SizedBox(height: AppSpacing.md),
               _chartCard(context, MeasurementKind.bp, values),
               const SizedBox(height: AppSpacing.xl),
-              SectionHeader(
-                context.tr('measurements.readings'),
-                trailing: TextButton.icon(
-                  onPressed: () => showMeasurementReadingSheet(context),
-                  icon: const Icon(CupertinoIcons.add),
-                  label: Text(context.tr('measurements.record_reading')),
-                ),
-              ),
+              SectionHeader(context.tr('measurements.readings')),
               WhiteFilterMenu<String>(
                 options: {
                   'all': context.tr('measurements.all'),
@@ -173,7 +194,29 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                 onChanged: (value) => setState(() => _filter = value),
               ),
               const SizedBox(height: AppSpacing.md),
-              if (filtered.isEmpty)
+              if (missed.isNotEmpty) ...[
+                SectionHeader(
+                  context.tr('measurements.unrecorded_measurements'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                for (final task in missed) ...[
+                  Text(
+                    '${task.scheduledOn.day}/${task.scheduledOn.month}/'
+                    '${task.scheduledOn.year}',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  MeasurementTaskRow(
+                    task: task,
+                    now: PatientClockScope.of(context).now(),
+                    circleId: widget.circleId,
+                    readOnly: true,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (filtered.isEmpty && missed.isEmpty)
                 Center(child: Text(context.tr('measurements.no_readings')))
               else
                 for (final reading in filtered) ...[
@@ -366,6 +409,13 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
                   // «بعد جهد، بعد القهوة».
                   if (!skipped && reading.conditions.isNotEmpty)
                     Text(readingConditionsText(context, reading)),
+                  if (skipped && reading.skipReasonCode != null)
+                    Text(
+                      context.tr(
+                        'measurements.skip_reason_line',
+                        args: [measurementSkipReasonText(context, reading)],
+                      ),
+                    ),
                   if (reading.note != null) Text(reading.note!),
                   if (reading.recordedByName case final name?) ...[
                     const SizedBox(height: AppSpacing.xs),

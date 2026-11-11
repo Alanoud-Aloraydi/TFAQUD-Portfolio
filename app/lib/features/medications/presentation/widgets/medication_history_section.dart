@@ -17,12 +17,10 @@ class MedicationHistorySection extends StatelessWidget {
   const MedicationHistorySection({
     super.key,
     required this.circleId,
-    required this.canManage,
     required this.header,
   });
 
   final String circleId;
-  final bool canManage;
   final Widget header;
 
   @override
@@ -82,11 +80,7 @@ class MedicationHistorySection extends StatelessWidget {
           Center(child: Text(context.tr('medications.no_records')))
         else
           for (final plan in visible) ...[
-            MedicationRecordCard(
-              circleId: circleId,
-              plan: plan,
-              canManage: canManage,
-            ),
+            MedicationRecordCard(circleId: circleId, plan: plan),
             const SizedBox(height: AppSpacing.md),
           ],
       ],

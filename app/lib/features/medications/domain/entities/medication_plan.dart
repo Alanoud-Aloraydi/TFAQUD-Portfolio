@@ -114,6 +114,8 @@ class MedicationLastRecord extends Equatable {
     required this.scheduledOn,
     required this.time,
     this.takenAt,
+    this.skipReasonCode,
+    this.skipReasonNote,
     this.recordedByAccountId,
     this.recordedByName,
     this.recordedByAvatarCode,
@@ -123,6 +125,8 @@ class MedicationLastRecord extends Equatable {
   final DateTime scheduledOn;
   final String time;
   final DateTime? takenAt;
+  final String? skipReasonCode;
+  final String? skipReasonNote;
   final String? recordedByAccountId;
   final String? recordedByName;
   final String? recordedByAvatarCode;
@@ -133,6 +137,8 @@ class MedicationLastRecord extends Equatable {
     scheduledOn,
     time,
     takenAt,
+    skipReasonCode,
+    skipReasonNote,
     recordedByAccountId,
     recordedByName,
     recordedByAvatarCode,

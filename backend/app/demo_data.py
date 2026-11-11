@@ -64,8 +64,10 @@ INVITED_PHONE = "+966559876543"
 
 RIYADH_POINT = (24.7136, 46.6753)
 JEDDAH_POINT = (21.4858, 39.1925)
-# Every demo patient lives in a listed Saudi city (Riyadh or Jeddah), so
-# `CareService` gives each of them this zone and the story is told in it.
+LONDON_POINT = (51.5072, -0.1276)
+# The story is told in Riyadh's time: every demo patient lives in a listed
+# Saudi city and has this zone, except Lina's aunt in London, whose doses
+# follow her own zone (`DemoBuilder.aunt`).
 DEMO_ZONE = ZoneInfo(DEFAULT_ZONE)
 
 # How far back the dose records go.
@@ -228,11 +230,13 @@ class DemoBuilder:
         # shows those as due).
         if item.get("record") is not None:
             return
+        # A dose's time is wall clock in the patient's own zone.
+        zone = ZoneInfo(circle.time_zone)
         scheduled_on = date.fromisoformat(item["scheduled_on"])
         due = datetime.combine(
             scheduled_on,
             time.fromisoformat(item["time_of_day"]),
-            tzinfo=DEMO_ZONE,
+            tzinfo=zone,
         )
         if due > self.now:
             return
@@ -244,7 +248,7 @@ class DemoBuilder:
             f"{item['name']}|{item['scheduled_on']}|{item['time_of_day']}"
         )
         roll = chance.random()
-        today = scheduled_on == self.today
+        today = scheduled_on == self.now.astimezone(zone).date()
         # Taken (every dose of today, and 80% of the others): up to 10 minutes
         # early or 45 late, recorded a few minutes after.
         if today or roll < 0.80:
@@ -307,7 +311,7 @@ class DemoBuilder:
         """
         care = CareService(self.session, self.at(-10))
         request = care.request_creation(
-            lina.id, khaled.phone_number, None, "simplified"
+            lina.id, khaled.phone_number, "simplified"
         )
         care.respond_creation(khaled.id, request.id, True)
         circle = care.complete_creation(
@@ -403,8 +407,8 @@ class DemoBuilder:
             )
 
         self.measure(lina, circle, {
-            "kind": "bp",
-            "times": [{"time_of_day": self.clock_in(20), "conditions": []}],
+            "kind": "blood_pressure",
+            "times": [{"time_of_day": self.clock_in(20)}],
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
             "systolic_limit": 140,
@@ -413,10 +417,10 @@ class DemoBuilder:
         self.measure(lina, circle, {
             "kind": "glucose",
             "times": [
-                {"time_of_day": "07:00", "conditions": ["fasting"]},
+                {"time_of_day": "07:00", "measurement_state": "fasting"},
                 {
                     "time_of_day": self.clock_in(90),
-                    "conditions": ["after_meal"],
+                    "measurement_state": "after_meal",
                 },
             ],
             "weekdays": list(EVERY_DAY),
@@ -432,7 +436,7 @@ class DemoBuilder:
                 "kind": "glucose",
                 "outcome": "read",
                 "measured_at": self.now - timedelta(hours=1),
-                "value_one": 135,
+                "glucose_value": 135,
                 "conditions": ["after_meal"],
             }),
         )
@@ -457,16 +461,71 @@ class DemoBuilder:
             })
         return circle
 
+    def aunt(self, lina) -> CareCircle:
+        """6. Lina's aunt Huda, who lives in London and has no account.
+        Her day is London's: an evening dose at 21:00 there, and a medicine
+        the family stopped yesterday at 20:00 London time, so yesterday's
+        21:00 dose of it is not a dose (the database checks it in her zone,
+        not in Riyadh's)."""
+        care = CareService(self.session, self.at(-14))
+        circle = care.create_without_account(
+            lina.id,
+            "هدى",
+            "العتيبي",
+            date(1960, 2, 14),
+            "لندن",
+            *LONDON_POINT,
+            time_zone="Europe/London",
+        )
+        self.create(
+            lina,
+            circle,
+            _plan(
+                "ليفوثيروكسين",
+                "50",
+                "mcg",
+                "tablet",
+                [_schedule("21:00", "1", "tablet")],
+                self.day(-10),
+                reason_for_use="الغدة الدرقية",
+            ),
+            self.at(-11),
+        )
+        stopped = self.create(
+            lina,
+            circle,
+            _plan(
+                "باراسيتامول",
+                "500",
+                "mg",
+                "tablet",
+                [_schedule("21:00", "1", "tablet")],
+                self.day(-6),
+                reason_for_use="الصداع",
+            ),
+            self.at(-7),
+        )
+        london = ZoneInfo("Europe/London")
+        yesterday_evening = datetime.combine(
+            self.now.astimezone(london).date() - timedelta(days=1),
+            time(20, 0),
+            tzinfo=london,
+        )
+        MedicationPlanService(self.session, yesterday_evening).stop(
+            circle.id, stopped.id, lina.id
+        )
+        return circle
+
     def mother_checks(self, lina, mother) -> None:
         """The detailed mode's measurement and appointment: Noura's blood
         pressure twice a day, and a visit Lina takes her to."""
         # Blood pressure twice a day, and an endocrinology visit in two days
         # that Lina takes her to.
         self.measure(lina, mother, {
-            "kind": "bp",
+            "kind": "blood_pressure",
             "times": [
-                {"time_of_day": "08:00", "conditions": []},
-                {"time_of_day": "20:00", "conditions": []},
+                {"time_of_day": "08:00"},
+                {"time_of_day": "20:00"},
             ],
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
@@ -778,12 +837,12 @@ class DemoBuilder:
 
         # 4. Lina asked her father's number for a circle; it waits for him.
         CareService(self.session, self.at(-2)).request_creation(
-            lina.id, REQUEST_PHONE, None, "simplified"
+            lina.id, REQUEST_PHONE, "simplified"
         )
 
         # The stop and the coming change first, so the dose history follows
         # them: the stopped medicine has no doses after it stopped.
-        MedicationPlanService(self.session, self.at(-3, 15)).discontinue(
+        MedicationPlanService(self.session, self.at(-3, 15)).stop(
             mother.id, aspirin.id, lina.id
         )
         plan, later = revise_metformin
@@ -791,17 +850,20 @@ class DemoBuilder:
 
         self.mother_checks(lina, mother)
         uncle = self.uncle(lina, sara, khaled)
+        aunt = self.aunt(lina)
 
         # The doses of the past month.
         self.history(lina, own)
         self.history(lina, mother)
         self.history(sara, grandfather)
         self.history(lina, uncle)
+        self.history(lina, aunt)
 
         self.summary.circles = [
             "رعايتي",
             "دائرة نورة",
             "دائرة عبدالله",
+            "دائرة هدى",
             "دائرة خالد",
         ]
         return self.summary

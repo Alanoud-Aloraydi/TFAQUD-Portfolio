@@ -41,7 +41,7 @@ const SpeechWords _words = SpeechWords(
     'مل': 'مِلِّيلِتر',
     '%': 'بالمئة',
   },
-  say: <String, String>{'تفقد': 'تَفَقُّد', 'حبة': 'حَبَّة'},
+  say: <String, String>{'تفقد': 'تَفَقُّد', 'حبة': 'حَبَّة', 'كذا': 'كِذَا'},
 );
 
 void main() {
@@ -109,6 +109,10 @@ void main() {
 
     test('toSpeech gives the vowel marks of a word the voice says wrongly', () {
       expect(toSpeech('2 حبة', _words), '2 حَبَّة');
+      expect(
+        toSpeech('كذا بتكون سرعة القراءة', _words),
+        'كِذَا بتكون سرعة القراءة',
+      );
     });
 
     test('sentences makes one spoken part of a card\'s lines', () {
@@ -175,6 +179,7 @@ void main() {
       expect(words.hours[8], 'التاسعة');
       expect(words.units['ملغ/دل'], 'مِلِّيغرام لكل دِيسِيلِتر');
       expect(words.say['تفقد'], 'تَفَقُّد');
+      expect(words.say['كذا'], 'كِذَا');
       expect(
         toSpeech('الساعة 9:30 م · 120 ملغ/دل', words),
         'الساعة التاسعة والنصف مساءً، 120 مِلِّيغرام لكل دِيسِيلِتر',

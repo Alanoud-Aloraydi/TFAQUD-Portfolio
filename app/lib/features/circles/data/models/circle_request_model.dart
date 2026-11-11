@@ -11,7 +11,6 @@ class NewCircleRequestModel {
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'patient_phone_number': _request.patientPhoneNumber,
-    'circle_label': ?_request.circleLabel,
     'proposed_app_mode': _request.proposedAppMode.name,
   };
 }
@@ -36,7 +35,6 @@ class SentCircleRequestModel {
       SentCircleRequest(
         id: request['id'] as String,
         patientPhoneNumber: request['patient_phone_number'] as String,
-        circleLabel: request['circle_label'] as String,
         proposedAppMode: parseMode(request['proposed_app_mode'] as String?),
         status: parseStatus(request['status'] as String?),
         createdAt: parseTime(request['created_at']),
@@ -87,7 +85,6 @@ class CircleRequestsModel {
   }
 
   static ReceivedCircleRequest _received(Map<String, dynamic> item) {
-    final String label = item['circle_label'] as String;
     final Map<String, dynamic> by =
         (item['requested_by'] as Map<String, dynamic>?) ??
         const <String, dynamic>{};
@@ -97,8 +94,7 @@ class CircleRequestsModel {
     return ReceivedCircleRequest(
       id: item['id'] as String,
       status: SentCircleRequestModel.parseStatus(item['status'] as String?),
-      circleLabel: label,
-      circleName: (item['circle_name'] as String?) ?? label,
+      circleName: (item['circle_name'] as String?) ?? '',
       proposedAppMode: SentCircleRequestModel.parseMode(
         item['proposed_app_mode'] as String?,
       ),

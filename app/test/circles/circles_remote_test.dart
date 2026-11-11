@@ -111,7 +111,6 @@ Map<String, dynamic> _request(String status) => <String, dynamic>{
   'request': <String, dynamic>{
     'id': 'r-1',
     'patient_phone_number': '+966501234567',
-    'circle_label': 'أمي',
     'proposed_app_mode': 'simplified',
     'status': status,
   },

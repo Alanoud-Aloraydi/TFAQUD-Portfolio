@@ -5,6 +5,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -158,33 +159,15 @@ class TodayPrayerPeriod extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              if (current)
+              if (current) ...[
                 CompactStatusBadge(
                   text: context.tr('today_dashboard.current_period'),
                   background: AppSemanticColors.surfaceAttention,
-                  foreground: AppSemanticColors.statusWarning,
-                )
-              else if (summary.attentionCount + missedMeasurements > 0)
-                CompactStatusBadge(
-                  text: (summary.attentionCount + missedMeasurements)
-                      .toString(),
-                  background: summary.hasMissed || missedMeasurements > 0
-                      ? Theme.of(context).colorScheme.errorContainer
-                      : AppSemanticColors.surfaceAttention,
-                  foreground: summary.hasMissed || missedMeasurements > 0
-                      ? context.tokens.errorText
-                      : context.tokens.warningText,
-                )
-              else if (summary.allResolved &&
-                  measures.isEmpty &&
-                  visits.isEmpty)
-                MedicationPeriodMarks(occurrences: items, now: now)
-              else if (entries.isNotEmpty)
-                CompactStatusBadge(
-                  text: '${entries.length}',
-                  background: AppSemanticColors.surfaceContent,
-                  foreground: AppSemanticColors.textPrimary,
+                  foreground: context.tokens.warningText,
                 ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              if (entries.isNotEmpty) _TaskCountBadge(count: entries.length),
             ],
           ),
           children: [
@@ -208,6 +191,35 @@ class TodayPrayerPeriod extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The number of all tasks in a prayer period. It is deliberately the same
+/// yellow circle for medication, measurement and appointment counts; task
+/// state stays on each row instead of changing the meaning of this number.
+class _TaskCountBadge extends StatelessWidget {
+  const _TaskCountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: context.tr('today_dashboard.task_count', args: ['$count']),
+    excludeSemantics: true,
+    child: Container(
+      width: AppSizes.iconAction,
+      height: AppSizes.iconAction,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: AppSemanticColors.accentWarm,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        '$count',
+        style: Theme.of(context).textTheme.labelMedium
+            ?.copyWith(color: AppSemanticColors.textPrimary),
+      ),
+    ),
+  );
 }
 
 /// Tells its [builder] whether any of the medicines [planIds] of [circleId]

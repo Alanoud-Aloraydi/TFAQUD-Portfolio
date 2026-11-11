@@ -12,7 +12,7 @@ from app.medications.inputs import DoseRecordRequest
 from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
-from app.models import Patient
+from app.models import CareCircle
 
 
 class MedicationDoseService:
@@ -35,7 +35,7 @@ class MedicationDoseService:
         accepted as it is, a different one is a conflict.
         """
         patient = self.session.scalar(
-            select(Patient).where(Patient.care_circle_id == circle_id)
+            select(CareCircle).where(CareCircle.id == circle_id)
         )
         if patient is None:
             raise NotFound("The scheduled dose does not exist.")
@@ -89,7 +89,7 @@ class MedicationDoseService:
 
     def _require_occurrence(
         self,
-        patient: Patient,
+        patient: CareCircle,
         schedule_id: UUID,
         scheduled_on: date,
     ) -> None:
@@ -113,7 +113,7 @@ class MedicationDoseService:
                 == MedicationPlanVersion.id,
             )
             .where(
-                MedicationPlan.patient_id == patient.id,
+                MedicationPlan.care_circle_id == patient.id,
                 MedicationSchedule.id == schedule_id,
                 MedicationPlanVersion.treatment_starts_on <= scheduled_on,
                 MedicationPlanVersion.cancelled_at.is_(None),
@@ -144,10 +144,10 @@ class MedicationDoseService:
         ):
             raise NotFound("The scheduled dose does not exist.")
         if (
-            plan.discontinued_at is not None
+            plan.stopped_at is not None
             and local_moment(
                 scheduled_on, schedule.time_of_day, patient_zone(patient)
-            ) >= plan.discontinued_at
+            ) >= plan.stopped_at
         ):
             raise NotFound("The scheduled dose does not exist.")
 

@@ -281,14 +281,14 @@ void main() {
     );
 
     group('MeasurementTasksCubit', () {
-      test('reads 30 calendar days from the day given', () async {
+      test('reads yesterday through 30 calendar days ahead', () async {
         final repository = _Repository();
         final cubit = MeasurementTasksCubit(repository);
 
         await cubit.load('circle-1', DateTime(2026, 3, 20));
 
         expect(repository.occurrenceRanges.single, (
-          DateTime(2026, 3, 20),
+          DateTime(2026, 3, 19),
           DateTime(2026, 4, 19),
         ));
         await cubit.close();
@@ -316,7 +316,16 @@ void main() {
         final cubit = MeasurementTasksCubit(repository);
         await cubit.load('circle-1', DateTime(2026, 11, 3));
 
-        expect(await cubit.skip(_task), 'measurements.future_task');
+        expect(
+          await cubit.skip(
+            _task,
+            const MeasurementReadingDraft(
+              kind: MeasurementKind.glucose,
+              outcome: 'skipped',
+            ),
+          ),
+          'measurements.future_task',
+        );
         await cubit.close();
       });
     });

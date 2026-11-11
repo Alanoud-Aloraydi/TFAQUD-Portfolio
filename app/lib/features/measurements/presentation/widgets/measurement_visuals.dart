@@ -10,6 +10,7 @@ import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -82,26 +83,29 @@ class _MeasurementChartState extends State<MeasurementChart> {
       }).toList();
       for (var index = 0; index < dayReadings.length; index++) {
         final reading = dayReadings[index];
-        final barWidth = math.max(
-          2.0,
-          math.min(8.0, (slot - 2) / dayReadings.length - 1),
-        );
+        final barWidth = _readingWidth(slot, dayReadings.length);
+        final step = _readingStep(slot, dayReadings.length, barWidth);
         final center =
             width -
             29 -
             (day - .5) * slot +
-            (index - (dayReadings.length - 1) / 2) * (barWidth + 1);
+            (index - (dayReadings.length - 1) / 2) * step;
         final first = y(reading.valueOne!);
         final second = y(
           widget.kind == MeasurementKind.glucose ? 0 : reading.valueTwo!,
         );
-        final gap = (center - details.localPosition.dx).abs();
-        if (gap < distance &&
-            gap <= math.max(12, slot / 2) &&
-            details.localPosition.dy >= math.min(first, second) - 8 &&
-            details.localPosition.dy <= math.max(first, second) + 8) {
+        final horizontal = (center - details.localPosition.dx).abs();
+        final top = math.min(first, second);
+        final bottom = math.max(first, second);
+        final vertical = details.localPosition.dy < top
+            ? top - details.localPosition.dy
+            : details.localPosition.dy > bottom
+            ? details.localPosition.dy - bottom
+            : 0.0;
+        final score = horizontal + vertical;
+        if (score < distance && horizontal <= 22 && vertical <= 18) {
           nearest = reading;
-          distance = gap;
+          distance = score;
         }
       }
     }
@@ -133,27 +137,7 @@ class _MeasurementChartState extends State<MeasurementChart> {
       ),
       if (_selected case final reading?) ...[
         const SizedBox(height: AppSpacing.sm),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppSemanticColors.surfaceContent,
-            border: Border.all(color: AppSemanticColors.borderSubtle),
-            borderRadius: BorderRadius.circular(AppRadius.s),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Text(
-              '${context.tr(widget.kind == MeasurementKind.glucose ? 'measurements.glucose' : 'measurements.bp')} '
-              '${reading.valueText} · '
-              '${_readingDateTime(reading.measuredAt!)} · '
-              '${context.tr(reading.outsideTarget == true
-                  ? 'measurements.outside_target'
-                  : reading.outsideTarget == false
-                  ? 'measurements.in_target'
-                  : 'measurements.without_target')}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ),
+        _ReadingDetails(reading: reading, showDate: true),
       ],
       const SizedBox(height: AppSpacing.sm),
       Wrap(
@@ -183,12 +167,13 @@ class _MeasurementChartState extends State<MeasurementChart> {
       ),
     ],
   );
-
-  String _readingDateTime(DateTime instant) {
-    final at = PatientClockScope.of(context).wallTime(instant);
-    return '${at.day}/${at.month} ${wallTimeText(at)}';
-  }
 }
+
+double _readingWidth(double slot, int count) =>
+    math.min(8, math.max(5, slot / count - 1));
+
+double _readingStep(double slot, int count, double width) =>
+    math.min(width + 1, math.max(3, slot / count));
 
 class _ChartKey extends StatelessWidget {
   const _ChartKey(this.color, this.label);
@@ -310,14 +295,12 @@ class _MeasurementPainter extends CustomPainter {
       byDay.putIfAbsent(at.day, () => []).add(reading);
     }
     for (final entry in byDay.entries) {
-      final width = math.max(
-        2.0,
-        math.min(8.0, (slot - 2) / entry.value.length - 1),
-      );
+      final width = _readingWidth(slot, entry.value.length);
+      final step = _readingStep(slot, entry.value.length, width);
       for (var index = 0; index < entry.value.length; index++) {
         final reading = entry.value[index];
         final center =
-            x(entry.key) + (index - (entry.value.length - 1) / 2) * (width + 1);
+            x(entry.key) + (index - (entry.value.length - 1) / 2) * step;
         final color = reading.outsideTarget == true
             ? AppSemanticColors.statusWarning
             : AppSemanticColors.textPrimary;
@@ -454,10 +437,10 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
           if (selectedReadings.isEmpty)
             EmptyStateNote(context.tr('measurements.no_readings'))
           else
-            for (final reading in selectedReadings)
-              Text(
-                '${reading.valueText} · ${wallTimeText(PatientClockScope.of(context).wallTime(reading.measuredAt!))}',
-              ),
+            for (final reading in selectedReadings) ...[
+              _ReadingDetails(reading: reading),
+              const SizedBox(height: AppSpacing.xs),
+            ],
         ],
       ],
     );
@@ -524,6 +507,74 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadingDetails extends StatelessWidget {
+  const _ReadingDetails({required this.reading, this.showDate = false});
+
+  final MeasurementReading reading;
+  final bool showDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final at = PatientClockScope.of(context).wallTime(reading.measuredAt!);
+    final targetKey = reading.outsideTarget == true
+        ? 'measurements.outside_target'
+        : reading.outsideTarget == false
+        ? 'measurements.in_target'
+        : 'measurements.without_target';
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: reading.outsideTarget == true
+            ? AppSemanticColors.surfaceAttention
+            : AppSemanticColors.surfaceContent,
+        border: Border.all(color: AppSemanticColors.borderSubtle),
+        borderRadius: BorderRadius.circular(AppRadius.s),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr(
+                      reading.kind == MeasurementKind.glucose
+                          ? 'measurements.glucose'
+                          : 'measurements.bp',
+                    ),
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  Text(
+                    '${showDate ? '${at.day}/${at.month} · ' : ''}'
+                    '${wallTimeText(at)} · ${context.tr(targetKey)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  if (reading.conditions.isNotEmpty)
+                    Text(
+                      readingConditionsText(context, reading),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              reading.valueText,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: reading.outsideTarget == true
+                    ? AppSemanticColors.statusWarning
+                    : AppSemanticColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );

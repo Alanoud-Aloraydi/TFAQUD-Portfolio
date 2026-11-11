@@ -61,7 +61,6 @@ void main() {
             proposedAppMode: CircleAppMode.simplified,
           ),
         );
-        expect(circles.sentRequests.single.circleLabel, isNull);
       },
     );
 

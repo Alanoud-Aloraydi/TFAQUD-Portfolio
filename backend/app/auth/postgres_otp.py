@@ -15,7 +15,8 @@ from app.auth.otp_store import (
     next_send_at,
 )
 from app.database import transaction
-from app.models import OtpChallenge, OtpSendAttempt
+from app.models import OtpRequest as OtpRequestRow
+from app.models import OtpSend
 
 
 def _key(value):
@@ -47,14 +48,14 @@ class PostgresOtpStore(OtpStore):
         if key is None:
             return None
         with transaction() as session:
-            row = session.get(OtpChallenge, key)
+            row = session.get(OtpRequestRow, key)
             if row is None:
                 return None
             return OtpRequest(
                 id=row.id.hex,
                 phone=row.phone_number,
                 created_at=row.created_at,
-                wrong_tries=row.attempt_count,
+                wrong_tries=row.wrong_try_count,
                 verified_at=row.verified_at,
                 status=row.status,
                 expires_at=row.expires_at,
@@ -81,7 +82,7 @@ class PostgresOtpStore(OtpStore):
             # open request with tries left.
             _lock_phone(session, phone)
             row = (
-                self._challenge(session, request_id, phone, now, max_tries)
+                self._open_request(session, request_id, phone, now, max_tries)
                 if request_id is not None
                 else None
             )
@@ -90,39 +91,39 @@ class PostgresOtpStore(OtpStore):
             known = False
             if rules is not None:
                 verified = session.scalar(
-                    select(func.max(OtpChallenge.verified_at)).where(
-                        OtpChallenge.phone_number == phone
+                    select(func.max(OtpRequestRow.verified_at)).where(
+                        OtpRequestRow.phone_number == phone
                     )
                 )
                 if verified is not None:
                     since = max(since, verified)
                 known = self._is_known_phone(session, phone, rules.device_id)
             # The number's codes that count: in the window, not failed.
-            counted = select(OtpSendAttempt.created_at).join(
-                OtpChallenge,
-                OtpChallenge.id == OtpSendAttempt.challenge_id,
+            counted = select(OtpSend.created_at).join(
+                OtpRequestRow,
+                OtpRequestRow.id == OtpSend.otp_request_id,
             ).where(
-                OtpChallenge.phone_number == phone,
-                OtpSendAttempt.status != "failed",
-                OtpSendAttempt.created_at > since,
+                OtpRequestRow.phone_number == phone,
+                OtpSend.status != "failed",
+                OtpSend.created_at > since,
             )
             if known:
                 # The owner's phone: strangers' codes do not block it.
                 counted = counted.where(
-                    OtpSendAttempt.device_id == rules.device_id
+                    OtpSend.device_id == rules.device_id
                 )
             phone_times = list(session.scalars(counted))
             # The asking device's and IP's codes in the last hour, for any
             # number (no IP cap for a known phone).
             device_times = self._asker_times(
                 session,
-                OtpSendAttempt.device_id,
+                OtpSend.device_id,
                 judged.device_id if rules is not None else None,
                 now - judged.requester_window,
             )
             ip_times = self._asker_times(
                 session,
-                OtpSendAttempt.client_ip,
+                OtpSend.client_ip,
                 judged.client_ip if rules is not None and not known else None,
                 now - judged.requester_window,
             )
@@ -141,10 +142,10 @@ class PostgresOtpStore(OtpStore):
             # Make the request when there is none, reserve the send, and say
             # when the next code may come.
             if row is None:
-                row = self._challenge(session, None, phone, now, max_tries)
-            send = OtpSendAttempt(
+                row = self._open_request(session, None, phone, now, max_tries)
+            send = OtpSend(
                 id=uuid4(),
-                challenge_id=row.id,
+                otp_request_id=row.id,
                 created_at=now,
                 device_id=judged.device_id,
                 client_ip=judged.client_ip,
@@ -167,14 +168,14 @@ class PostgresOtpStore(OtpStore):
         if not device_id:
             return False
         return session.scalar(
-            select(OtpSendAttempt.id)
+            select(OtpSend.id)
             .join(
-                OtpChallenge, OtpChallenge.id == OtpSendAttempt.challenge_id
+                OtpRequestRow, OtpRequestRow.id == OtpSend.otp_request_id
             )
             .where(
-                OtpChallenge.phone_number == phone,
-                OtpChallenge.verified_at.is_not(None),
-                OtpSendAttempt.device_id == device_id,
+                OtpRequestRow.phone_number == phone,
+                OtpRequestRow.verified_at.is_not(None),
+                OtpSend.device_id == device_id,
             )
             .limit(1)
         ) is not None
@@ -186,22 +187,22 @@ class PostgresOtpStore(OtpStore):
             return []
         return list(
             session.scalars(
-                select(OtpSendAttempt.created_at).where(
+                select(OtpSend.created_at).where(
                     column == value,
-                    OtpSendAttempt.status != "failed",
-                    OtpSendAttempt.created_at > start,
+                    OtpSend.status != "failed",
+                    OtpSend.created_at > start,
                 )
             )
         )
 
     @staticmethod
-    def _challenge(session, request_id, phone, now, max_tries):
+    def _open_request(session, request_id, phone, now, max_tries):
         """Recheck a resend under lock, or supersede older open requests."""
         # A resend: this number's open request, locked, with tries left.
         if request_id is not None:
             key = _key(request_id)
             row = (
-                session.get(OtpChallenge, key, with_for_update=True)
+                session.get(OtpRequestRow, key, with_for_update=True)
                 if key
                 else None
             )
@@ -211,19 +212,19 @@ class PostgresOtpStore(OtpStore):
                 or row.status != "pending"
             ):
                 raise KeyError(request_id)
-            if max_tries is not None and row.attempt_count >= max_tries:
+            if max_tries is not None and row.wrong_try_count >= max_tries:
                 raise AttemptsExhausted()
             return row
         # A new request replaces the number's open one.
         session.execute(
-            update(OtpChallenge)
+            update(OtpRequestRow)
             .where(
-                OtpChallenge.phone_number == phone,
-                OtpChallenge.status == "pending",
+                OtpRequestRow.phone_number == phone,
+                OtpRequestRow.status == "pending",
             )
             .values(status="superseded")
         )
-        row = OtpChallenge(id=uuid4(), phone_number=phone, created_at=now)
+        row = OtpRequestRow(id=uuid4(), phone_number=phone, created_at=now)
         session.add(row)
         session.flush()
         return row
@@ -236,18 +237,18 @@ class PostgresOtpStore(OtpStore):
         # this code's end, never shorter.
         with transaction() as session:
             send = session.get(
-                OtpSendAttempt, _key(send_id), with_for_update=True
+                OtpSend, _key(send_id), with_for_update=True
             )
             if send is None or send.status != "reserved":
                 return
             send.status, send.sent_at = "sent", at
             session.execute(
-                update(OtpChallenge)
+                update(OtpRequestRow)
                 .where(
-                    OtpChallenge.id == send.challenge_id,
-                    OtpChallenge.status == "pending",
-                    (OtpChallenge.expires_at.is_(None))
-                    | (OtpChallenge.expires_at < expires_at),
+                    OtpRequestRow.id == send.otp_request_id,
+                    OtpRequestRow.status == "pending",
+                    (OtpRequestRow.expires_at.is_(None))
+                    | (OtpRequestRow.expires_at < expires_at),
                 )
                 .values(expires_at=expires_at)
             )
@@ -260,10 +261,10 @@ class PostgresOtpStore(OtpStore):
             return
         with transaction() as session:
             session.execute(
-                update(OtpSendAttempt)
+                update(OtpSend)
                 .where(
-                    OtpSendAttempt.id == key,
-                    OtpSendAttempt.status == "reserved",
+                    OtpSend.id == key,
+                    OtpSend.status == "reserved",
                 )
                 .values(status="failed")
             )
@@ -275,9 +276,9 @@ class PostgresOtpStore(OtpStore):
             return None
         with transaction() as session:
             return session.scalar(
-                select(func.max(OtpSendAttempt.sent_at)).where(
-                    OtpSendAttempt.challenge_id == key,
-                    OtpSendAttempt.status == "sent",
+                select(func.max(OtpSend.sent_at)).where(
+                    OtpSend.otp_request_id == key,
+                    OtpSend.status == "sent",
                 )
             )
 
@@ -287,16 +288,16 @@ class PostgresOtpStore(OtpStore):
         """
         return self._update_request(
             request_id,
-            OtpChallenge.attempt_count < max_tries,
-            attempt_count=OtpChallenge.attempt_count + 1,
+            OtpRequestRow.wrong_try_count < max_tries,
+            wrong_try_count=OtpRequestRow.wrong_try_count + 1,
         )
 
     def release_try(self, request_id):
         """Take back a try the provider could not decide, never below zero."""
         self._update_request(
             request_id,
-            OtpChallenge.attempt_count > 0,
-            attempt_count=OtpChallenge.attempt_count - 1,
+            OtpRequestRow.wrong_try_count > 0,
+            wrong_try_count=OtpRequestRow.wrong_try_count - 1,
         )
 
     def mark_verified(self, request_id, at):
@@ -305,7 +306,7 @@ class PostgresOtpStore(OtpStore):
         """
         return self._update_request(
             request_id,
-            OtpChallenge.verified_at.is_(None),
+            OtpRequestRow.verified_at.is_(None),
             status="verified",
             verified_at=at,
         )
@@ -321,10 +322,10 @@ class PostgresOtpStore(OtpStore):
         with transaction() as session:
             return (
                 session.execute(
-                    update(OtpChallenge)
+                    update(OtpRequestRow)
                     .where(
-                        OtpChallenge.id == key,
-                        OtpChallenge.status == "pending",
+                        OtpRequestRow.id == key,
+                        OtpRequestRow.status == "pending",
                         condition,
                     )
                     .values(**values)

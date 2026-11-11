@@ -197,7 +197,6 @@ Map<String, dynamic> _requestAnswer({
   'request': <String, dynamic>{
     'id': '7c054a73-e522-4d1d-ae65-8fac8cf01e85',
     'patient_phone_number': '+966501234567',
-    'circle_label': 'أمي',
     'proposed_app_mode': mode,
     'status': status,
     'created_at': '2026-10-26T08:03:19.816997+00:00',
@@ -236,7 +235,6 @@ NewPatientCircle _patientCircle({String city = 'بريدة'}) => NewPatientCircl
 
 const NewCircleRequest _request = NewCircleRequest(
   patientPhoneNumber: '+966501234567',
-  circleLabel: 'أمي',
   proposedAppMode: CircleAppMode.simplified,
 );
 
@@ -284,7 +282,6 @@ void main() {
       test('the request body has the number, the label and the mode', () {
         expect(NewCircleRequestModel(_request).toJson(), <String, dynamic>{
           'patient_phone_number': '+966501234567',
-          'circle_label': 'أمي',
           'proposed_app_mode': 'simplified',
         });
       });
@@ -306,7 +303,6 @@ void main() {
       test('the detailed mode is written as the API names it', () {
         const NewCircleRequest detailed = NewCircleRequest(
           patientPhoneNumber: '+966501234567',
-          circleLabel: 'أمي',
           proposedAppMode: CircleAppMode.detailed,
         );
         expect(
@@ -321,7 +317,6 @@ void main() {
         ).toEntity();
         expect(sent.id, '7c054a73-e522-4d1d-ae65-8fac8cf01e85');
         expect(sent.patientPhoneNumber, '+966501234567');
-        expect(sent.circleLabel, 'أمي');
         expect(sent.proposedAppMode, CircleAppMode.detailed);
         expect(sent.status, CircleRequestStatus.pending);
       });
@@ -353,7 +348,6 @@ void main() {
           <String, dynamic>{
             'id': 'in-1',
             'status': 'pending',
-            'circle_label': 'أمي',
             'circle_name': 'أمي نورة',
             'proposed_app_mode': 'detailed',
             'requested_by': <String, dynamic>{
@@ -372,7 +366,6 @@ void main() {
         final ReceivedCircleRequest received = model.received.single;
         expect(received.id, 'in-1');
         expect(received.status, CircleRequestStatus.pending);
-        expect(received.circleLabel, 'أمي');
         expect(received.circleName, 'أمي نورة');
         expect(received.proposedAppMode, CircleAppMode.detailed);
         expect(received.requesterName, 'سارة');
@@ -732,7 +725,6 @@ void main() {
                 <String, dynamic>{
                   'id': 'in-1',
                   'status': 'pending',
-                  'circle_label': 'أمي',
                   'circle_name': 'أمي نورة',
                   'proposed_app_mode': 'simplified',
                   'requested_by': <String, dynamic>{'display_name': 'سارة'},

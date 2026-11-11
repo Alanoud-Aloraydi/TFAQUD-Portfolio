@@ -91,6 +91,7 @@ class MedicationDoseHistory extends StatelessWidget {
                       child: DoseOccurrenceCard(
                         occurrence: item,
                         historyLayout: true,
+                        showControls: false,
                         circleId: circleId,
                       ),
                     ),

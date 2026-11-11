@@ -30,6 +30,7 @@ class CircleOverviewModel {
         patientBirthDate: DateTime.parse(patient['birth_date'] as String),
         city: patient['city'] as String,
         canManage: circle['role'] == 'manager',
+        canManageMembers: circle['can_manage_members'] as bool? ?? false,
         members: <CircleMember>[
           for (final raw in members)
             CircleMember(
@@ -41,6 +42,7 @@ class CircleOverviewModel {
               accountId: raw['account_id'] as String?,
               avatarCode: raw['avatar_code'] as String?,
               isManager: raw['role'] == 'manager',
+              canEdit: raw['can_edit'] as bool? ?? raw['role'] == 'manager',
               phoneNumber: raw['phone_number'] as String?,
             ),
         ],

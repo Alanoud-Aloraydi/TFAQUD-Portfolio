@@ -54,7 +54,7 @@ def test_home_excludes_other_circles_and_pending_invitations(
     assert response.json["care_circles"] == [
         {
             "id": str(visible.id),
-            "name": visible.name,
+            "name": "دائرة Nora",
             "can_manage_medications": True,
             "is_patient": False,
             "patient_name": "Nora",
@@ -94,7 +94,6 @@ def test_home_includes_patient_without_management(
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Care for",
         "simplified",
     )
     run(database, "respond_creation", patient.id, request.id, True)

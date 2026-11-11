@@ -139,7 +139,6 @@ void main() {
             SentCircleRequest(
               id: 'request-1',
               patientPhoneNumber: '+966501234567',
-              circleLabel: 'أمي',
               proposedAppMode: CircleAppMode.simplified,
               status: CircleRequestStatus.declined,
             ),
@@ -285,7 +284,6 @@ void main() {
               ReceivedCircleRequest(
                 id: 'request-in-2',
                 status: CircleRequestStatus.pending,
-                circleLabel: 'أبي',
                 circleName: 'أبي سعد',
                 proposedAppMode: CircleAppMode.detailed,
                 requesterName: 'خالد',
