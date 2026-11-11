@@ -109,6 +109,33 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   }
 
   @override
+  Future<Result<void, Failure>> setMemberEditAccess(
+    String circleId,
+    String accountId, {
+    required bool canEdit,
+  }) async {
+    try {
+      await _remote.setMemberEditAccess(circleId, accountId, canEdit: canEdit);
+      return const Success(null);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> removeMember(
+    String circleId,
+    String accountId,
+  ) async {
+    try {
+      await _remote.removeMember(circleId, accountId);
+      return const Success(null);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
   Future<Result<void, Failure>> leaveCircle(
     String circleId, {
     required bool confirmDelete,

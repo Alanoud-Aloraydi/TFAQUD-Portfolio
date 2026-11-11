@@ -10,7 +10,7 @@ from app.circles.naming import name_for
 from app.database import transaction
 from app.errors import ServiceUnavailable, Unauthorized
 from app.extensions import get_user_store
-from app.models import Account, CareCircle, CareCircleManager, Patient
+from app.models import Account, CareCircle, CareCircleManager
 
 bp = Blueprint("home", __name__, url_prefix="/api/v1")
 
@@ -47,11 +47,15 @@ def _circles(account_id: UUID) -> list[dict]:
     """Select authorized IDs without duplicating patient-manager circles."""
     if "sqlalchemy" not in current_app.extensions:
         raise ServiceUnavailable()
-    manages = select(CareCircleManager.care_circle_id).where(
+    memberships = select(CareCircleManager.care_circle_id).where(
         CareCircleManager.account_id == account_id
     )
-    receives_care = select(Patient.care_circle_id).where(
-        Patient.account_id == account_id
+    manages = select(CareCircleManager.care_circle_id).where(
+        CareCircleManager.account_id == account_id,
+        CareCircleManager.can_edit.is_(True),
+    )
+    receives_care = select(CareCircle.id).where(
+        CareCircle.account_id == account_id
     )
     with transaction() as session:
         managed_ids = set(session.scalars(manages))
@@ -59,17 +63,16 @@ def _circles(account_id: UUID) -> list[dict]:
             select(
                 CareCircle.id,
                 CareCircle.name,
-                Patient.avatar_code,
-                Patient.account_id,
-                Patient.first_name,
-                Patient.time_zone,
+                CareCircle.avatar_code,
+                CareCircle.account_id,
+                CareCircle.first_name,
+                CareCircle.time_zone,
                 Account.display_name,
                 Account.first_name.label("account_first_name"),
                 Account.avatar_code.label("account_avatar_code"),
             )
-            .join(Patient, Patient.care_circle_id == CareCircle.id)
-            .outerjoin(Account, Account.id == Patient.account_id)
-            .where(CareCircle.id.in_(manages.union(receives_care)))
+            .outerjoin(Account, Account.id == CareCircle.account_id)
+            .where(CareCircle.id.in_(memberships.union(receives_care)))
         )
         circles = [
             {

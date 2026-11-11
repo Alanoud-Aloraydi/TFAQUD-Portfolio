@@ -30,7 +30,8 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
   final Listenable? _photoChanges;
   late final List<StreamSubscription<String>> _subscriptions;
   String? _circleId;
-  DateTime? _day;
+  DateTime? _from;
+  DateTime? _to;
 
   /// Goes up at each [load], so an older reading that ends later is dropped.
   int _revision = 0;
@@ -53,18 +54,30 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
     return super.close();
   }
 
-  /// Reads [circleId]'s tasks from the patient's [day] to 30 calendar days
-  /// later; the list of another circle or day is cleared first.
+  /// Reads [circleId]'s tasks from the day before the patient's [day] to 30
+  /// calendar days later. Yesterday is retained only so «يحتاج انتباهك» can
+  /// keep an unrecorded task for its second and final day.
   /// With [silent] a list already shown stays while it is read again (no
   /// loading state), and a failure keeps it.
-  Future<void> load(
+  Future<void> load(String circleId, DateTime day, {bool silent = false}) =>
+      loadRange(
+        circleId,
+        DateTime(day.year, day.month, day.day - 1),
+        DateTime(day.year, day.month, day.day + 30),
+        silent: silent,
+      );
+
+  /// Reads an exact patient-calendar range for read-only history views.
+  Future<void> loadRange(
     String circleId,
-    DateTime day, {
+    DateTime from,
+    DateTime to, {
     bool silent = false,
   }) async {
-    final changedQuery = _circleId != circleId || _day != day;
+    final changedQuery = _circleId != circleId || _from != from || _to != to;
     _circleId = circleId;
-    _day = day;
+    _from = from;
+    _to = to;
     final revision = ++_revision;
     final bool keep =
         silent && !changedQuery && state.status == MeasurementLoadStatus.ready;
@@ -77,13 +90,7 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
       );
     }
     try {
-      final tasks = await _repository.occurrences(
-        circleId,
-        day,
-        // Calendar days, not 30 × 24 hours: a phone's own DST would make
-        // it one day short.
-        DateTime(day.year, day.month, day.day + 30),
-      );
+      final tasks = await _repository.occurrences(circleId, from, to);
       if (isClosed || revision != _revision) return;
       emit(
         MeasurementTasksState(
@@ -109,23 +116,22 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
 
   /// Reads the last [load] again, quietly: what is shown stays meanwhile.
   Future<void> reload() async {
-    if (_circleId != null && _day != null) {
-      await load(_circleId!, _day!, silent: true);
+    if (_circleId != null && _from != null && _to != null) {
+      await loadRange(_circleId!, _from!, _to!, silent: true);
     }
   }
 
   /// «تخطي» on [occurrence], the task the person chose. Null when skipped
   /// (the list reads again through the repository), else the message key
   /// to show; a second tap while it saves is ignored (null).
-  Future<String?> skip(MeasurementOccurrence occurrence) async {
+  Future<String?> skip(
+    MeasurementOccurrence occurrence,
+    MeasurementReadingDraft draft,
+  ) async {
     final circleId = _circleId;
     if (circleId == null || !_skipping.add(occurrence)) return null;
     try {
-      await _repository.record(
-        circleId,
-        MeasurementReadingDraft(kind: occurrence.kind, outcome: 'skipped'),
-        occurrence: occurrence,
-      );
+      await _repository.record(circleId, draft, occurrence: occurrence);
       return null;
     } catch (error) {
       return FailureExceptions.getException(error).messageKey;

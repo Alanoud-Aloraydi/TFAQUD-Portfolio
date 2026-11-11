@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.clock import ManualClock
 from app.database import db
-from app.models import CareCircle, Patient
+from app.models import CareCircle
 from integration_tests.helpers import BIRTH, Api, add_manager, count
 from integration_tests.helpers import error_code, run
 
@@ -29,8 +29,8 @@ def close_app_session(database_app):
 def zone_of(engine, circle_id):
     with Session(engine) as session:
         return session.scalar(
-            select(Patient.time_zone).where(
-                Patient.care_circle_id == circle_id
+            select(CareCircle.time_zone).where(
+                CareCircle.id == circle_id
             )
         )
 
@@ -115,7 +115,7 @@ def test_a_member_elsewhere_follows_the_patients_day(
         return {
             "specialty": "السكري",
             "kind": "follow_up",
-            "other_kind": None,
+            "other_text": None,
             "scheduled_on": "2026-10-22",
             "time_of_day": time_of_day,
             "place": "الحبيب",
@@ -152,12 +152,14 @@ def test_migration_0030_backfills_riyadh_and_keeps_other_zones(
 
     with database.begin() as connection:
         connection.execute(text(
-            "UPDATE patient SET time_zone = 'Europe/London'"
+            "UPDATE care_circle SET time_zone = 'Europe/London'"
         ))
     with pytest.raises(SystemExit):
         downgrade(directory=DIRECTORY, revision="0029")
     try:
-        columns = {c["name"] for c in inspect(database).get_columns("patient")}
+        columns = {
+            c["name"] for c in inspect(database).get_columns("care_circle")
+        }
         assert "time_zone" in columns
         assert zone_of(database, circle.id) == "Europe/London"
     finally:

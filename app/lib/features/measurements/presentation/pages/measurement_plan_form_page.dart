@@ -5,6 +5,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
@@ -12,10 +13,8 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,12 +41,12 @@ class MeasurementPlanFormPage extends StatefulWidget {
       _MeasurementPlanFormPageState();
 }
 
-/// One reading time of the form («القراءة 1»), with its conditions.
+/// One reading time and its glucose «حالة القياس».
 class _Reading {
-  _Reading(this.time, this.conditions);
+  _Reading(this.time, this.measurementState);
 
   TimeOfDay time;
-  List<String> conditions;
+  String? measurementState;
 }
 
 /// The schedule of one kind: glucose and blood pressure each keep their own
@@ -58,7 +57,7 @@ class _Schedule {
 
   /// The reading times of a day, like a medicine's dose times: one or more,
   /// up to [_MeasurementPlanFormPageState._maxReadings], each with its own
-  /// conditions.
+  /// glucose measurement state.
   final List<_Reading> readings;
   final Set<int> days = {1, 2, 3, 4, 5, 6, 7};
 
@@ -74,10 +73,10 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   /// starts on it.
   late final Map<MeasurementKind, _Schedule> _schedules = {
     MeasurementKind.glucose: _Schedule(<_Reading>[
-      _Reading(const TimeOfDay(hour: 7, minute: 30), <String>['fasting']),
+      _Reading(const TimeOfDay(hour: 7, minute: 30), 'fasting'),
     ], PatientClockScope.of(context).today()),
     MeasurementKind.bp: _Schedule(<_Reading>[
-      _Reading(const TimeOfDay(hour: 8, minute: 0), <String>[]),
+      _Reading(const TimeOfDay(hour: 8, minute: 0), null),
     ], PatientClockScope.of(context).today()),
   };
 
@@ -99,7 +98,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
 
   static const _weekOrder = [6, 7, 1, 2, 3, 4, 5];
 
-  /// Fasting, after each meal, at bedtime: the server allows six.
+  /// Several planned readings can share the same day.
   static const int _maxReadings = 6;
 
   @override
@@ -122,7 +121,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       ..clear()
       ..addAll(<_Reading>[
         for (final MeasurementTime item in version.readingTimes)
-          _Reading(_parseTime(item.time), item.conditions),
+          _Reading(_parseTime(item.time), item.measurementState),
       ]);
     final earliest = PatientClockScope.of(context).today();
     _start = version.effectiveFromOn.isAfter(earliest)
@@ -185,7 +184,10 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       kind: _kind,
       times: <MeasurementTime>[
         for (final item in readings)
-          MeasurementTime(time: _clock(item.time), conditions: item.conditions),
+          MeasurementTime(
+            time: _clock(item.time),
+            measurementState: item.measurementState,
+          ),
       ],
       weekdays: _days.toList()..sort(),
       startsOn: _start,
@@ -537,16 +539,38 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
           }
         },
       ),
-      InsetBlock(
-        semanticLabel:
-            '$label، ${context.tr('measurements.condition_optional')}',
-        child: MeasurementConditionChips(
-          kind: _kind,
-          selected: reading.conditions,
-          caption: context.tr('measurements.conditions_caption'),
-          onChanged: (value) => setState(() => reading.conditions = value),
+      if (_kind == MeasurementKind.glucose)
+        InsetBlock(
+          semanticLabel: '$label، ${context.tr('measurements.state')}',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                context.tr('measurements.state'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OptionChips(
+                options: [
+                  for (final value in const [
+                    'fasting',
+                    'before_meal',
+                    'after_meal',
+                  ])
+                    ChipOption(
+                      value,
+                      context.tr('measurements.condition.$value'),
+                    ),
+                ],
+                isSelected: (value) => reading.measurementState == value,
+                onTap: (value) => setState(() {
+                  reading.measurementState = value;
+                  _errorKey = null;
+                }),
+              ),
+            ],
+          ),
         ),
-      ),
     ];
   }
 
@@ -557,16 +581,16 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     final TimeOfDay last = _readings.last.time;
     final int next = last.hour * 60 + last.minute + 180;
     final int minutes = next > 23 * 60 ? 23 * 60 : next;
-    final Set<String> used = {for (final item in _readings) ...item.conditions};
+    final Set<String> used = {
+      for (final item in _readings) ?item.measurementState,
+    };
+    const mealStates = <String>['fasting', 'before_meal', 'after_meal'];
     final String? meal = _kind == MeasurementKind.glucose
-        ? MeasurementConditions.mealStates
-              .take(3)
-              .where((value) => !used.contains(value))
-              .firstOrNull
+        ? mealStates.where((value) => !used.contains(value)).firstOrNull
         : null;
     setState(() {
       _readings.add(
-        _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), [?meal]),
+        _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), meal),
       );
       _errorKey = null;
     });

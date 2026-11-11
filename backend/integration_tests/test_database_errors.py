@@ -9,8 +9,7 @@ import pytest
 from app import create_app
 from app.database import db
 from app.models import Account
-from app.models import CareCircle, CareCircleManager, Patient
-from integration_tests.helpers import BIRTH
+from app.models import CareCircle, CareCircleManager
 
 
 def test_conflict_is_safe_and_next_request_still_works(database):
@@ -72,21 +71,16 @@ def test_patient_activation_waits_for_account_profile_update(
             with pytest.raises(OperationalError) as captured:
                 with Session(database) as session, session.begin():
                     session.execute(text("SET LOCAL lock_timeout = '200ms'"))
-                    circle = CareCircle(name="Concurrent care")
+                    circle = CareCircle(
+                        name="Concurrent care",
+                        account_id=patient.id,
+                        time_zone="Asia/Riyadh",
+                    )
                     session.add(circle)
                     session.flush()
                     session.add(
                         CareCircleManager(
                             care_circle_id=circle.id, account_id=owner.id
-                        )
-                    )
-                    session.add(
-                        Patient(
-                            care_circle_id=circle.id,
-                            account_id=patient.id,
-                            birth_date=BIRTH,
-                            city="Riyadh",
-                            time_zone="Asia/Riyadh",
                         )
                     )
                     session.flush()

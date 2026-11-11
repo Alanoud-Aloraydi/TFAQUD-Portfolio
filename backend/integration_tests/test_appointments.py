@@ -39,7 +39,7 @@ def visit(companion, **changes):
     return {
         "specialty": "السكري",
         "kind": "follow_up",
-        "other_kind": None,
+        "other_text": None,
         "scheduled_on": "2026-11-11",
         "time_of_day": "10:00",
         "place": "الحبيب",

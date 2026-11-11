@@ -21,7 +21,7 @@ class MedicationPlanModel {
       MedicationPlan(
         id: json['id'] as String,
         createdAt: DateTime.parse(json['created_at'] as String),
-        discontinuedAt: _optionalDateTime(json['discontinued_at']),
+        discontinuedAt: _optionalDateTime(json['stopped_at']),
         version: version,
         createdByAccountId: createdBy?['account_id'] as String?,
         createdByName: createdBy?['name'] as String?,
@@ -37,6 +37,8 @@ class MedicationPlanModel {
                 scheduledOn: DateTime.parse(lastJson['scheduled_on'] as String),
                 time: lastJson['time_of_day'] as String,
                 takenAt: _optionalDateTime(lastJson['taken_at']),
+                skipReasonCode: lastJson['skip_reason_code'] as String?,
+                skipReasonNote: lastJson['skip_reason_note'] as String?,
                 recordedByAccountId: lastRecordedBy?['account_id'] as String?,
                 recordedByName: lastRecordedBy?['name'] as String?,
                 recordedByAvatarCode: lastRecordedBy?['avatar_code'] as String?,

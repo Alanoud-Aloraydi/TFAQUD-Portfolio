@@ -68,6 +68,8 @@ class ApiEndpoints {
   static String resendCircleInvitation(String circleId, String invitationId) =>
       '${circleInvitation(circleId, invitationId)}/resend';
   static String leaveCircle(String circleId) => '${circle(circleId)}/leave';
+  static String circleMember(String circleId, String accountId) =>
+      '${circle(circleId)}/members/$accountId';
 
   /// «ذكّرني لاحقًا», shared by the circle.
   static String taskSnoozes(String circleId) =>
@@ -126,7 +128,7 @@ class ApiEndpoints {
     String scheduledOn, {
     String? time,
   }) =>
-      '/circles/$circleId/measurement-records/$versionId/$scheduledOn'
+      '/circles/$circleId/measurement-readings/$versionId/$scheduledOn'
       '${time == null ? '' : '?${Uri(queryParameters: <String, String>{'time': time}).query}'}';
   static String measurementFollowUp(String circleId, String readingId) =>
       '${measurementReadings(circleId)}/$readingId/follow-up';
@@ -140,7 +142,7 @@ class ApiEndpoints {
       '${medicationPlan(circleId, planId)}/photo';
 
   static String discontinueMedication(String circleId, String planId) =>
-      '${medicationPlan(circleId, planId)}/discontinue';
+      '${medicationPlan(circleId, planId)}/stop';
 
   static String cancelPendingMedication(String circleId, String planId) =>
       '${medicationPlan(circleId, planId)}/cancel-pending';

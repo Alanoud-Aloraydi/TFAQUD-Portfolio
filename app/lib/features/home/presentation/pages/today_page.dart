@@ -16,6 +16,7 @@ import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/home/presentation/widgets/today_prayer_period.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
@@ -135,8 +136,17 @@ class _TodayPageState extends State<TodayPage> {
     );
     final taskState = context.watch<MeasurementTasksCubit>().state;
     final readingState = context.watch<MeasurementReadingsCubit>().state;
-    final measurementTasks = taskState.tasks
+    final todayMeasurementTasks = taskState.tasks
         .where((task) => DateUtils.isSameDay(task.scheduledOn, now))
+        .toList();
+    final yesterday = DateUtils.dateOnly(now).subtract(const Duration(days: 1));
+    final attentionMeasurementTasks = taskState.tasks
+        .where(
+          (task) =>
+              task.status == MeasurementStatus.missed &&
+              (DateUtils.isSameDay(task.scheduledOn, now) ||
+                  DateUtils.isSameDay(task.scheduledOn, yesterday)),
+        )
         .toList();
     final measurementReadings = readingState.readings;
     final appointmentState = context.watch<AppointmentsCubit>().state;
@@ -156,7 +166,7 @@ class _TodayPageState extends State<TodayPage> {
     );
     final attention = medications.attention;
     final measurementAttention = MeasurementAttentionSection.count(
-      measurementTasks,
+      attentionMeasurementTasks,
       measurementReadings,
       PatientClockScope.of(context),
     );
@@ -218,7 +228,7 @@ class _TodayPageState extends State<TodayPage> {
         if (state.status == MedicationOccurrencesStatus.ready &&
             loadErrorKey == null &&
             todayOccurrences.isEmpty &&
-            measurementTasks.isEmpty &&
+            todayMeasurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
           EmptyStateNote(
             CareVoice.tr(context, circleId, 'today_dashboard.no_tasks_today'),
@@ -239,7 +249,7 @@ class _TodayPageState extends State<TodayPage> {
             loadErrorKey == null &&
             todayOccurrences.isNotEmpty &&
             attention.isEmpty &&
-            measurementTasks.isEmpty &&
+            todayMeasurementTasks.isEmpty &&
             todayAppointments.isEmpty) ...[
           EmptyStateNote(
             context.tr('today_dashboard.no_remaining_tasks'),
@@ -257,7 +267,7 @@ class _TodayPageState extends State<TodayPage> {
             extraCount: measurementAttention,
             extra: measurementAttention > 0
                 ? MeasurementAttentionSection(
-                    tasks: measurementTasks,
+                    tasks: attentionMeasurementTasks,
                     readings: measurementReadings,
                     boxed: false,
                   )
@@ -282,7 +292,7 @@ class _TodayPageState extends State<TodayPage> {
                   : null,
               prayerTimes: day.times,
               occurrences: todayOccurrences,
-              measurementTasks: measurementTasks,
+              measurementTasks: todayMeasurementTasks,
               appointments: todayAppointments,
               circleId: circleId,
               canManage: canManage,
@@ -299,7 +309,7 @@ class _TodayPageState extends State<TodayPage> {
               circleId: circleId,
             ),
         if (day == null)
-          for (final task in measurementTasks)
+          for (final task in todayMeasurementTasks)
             MeasurementTaskRow(task: task, now: now, circleId: circleId),
         if (day == null)
           for (final item in todayAppointments)

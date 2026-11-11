@@ -5,6 +5,7 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -349,12 +350,10 @@ class AppointmentRecordSection extends StatefulWidget {
   const AppointmentRecordSection({
     super.key,
     required this.circleId,
-    required this.canManage,
     required this.header,
   });
 
   final String circleId;
-  final bool canManage;
   final Widget header;
 
   @override
@@ -400,29 +399,18 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
             child: Text(context.tr(state.errorKey ?? 'error.unknown')),
           )
         else if (values.isEmpty)
-          EmptyStateNote(
-            context.tr('appointments.no_records'),
-            actionLabel: widget.canManage
-                ? context.tr('add.appointment')
-                : null,
-            onAction: widget.canManage ? () => _addAppointment(context) : null,
-          )
+          EmptyStateNote(context.tr('appointments.no_records'))
         else
           for (final value in values) ...[
             AppointmentCard(
               value: value,
               circleId: widget.circleId,
-              canManage: widget.canManage,
+              canManage: false,
             ),
             const SizedBox(height: AppSpacing.md),
           ],
       ],
     );
-  }
-
-  /// The cubit reloads by itself when the form saves.
-  Future<void> _addAppointment(BuildContext context) async {
-    await context.push<bool>(Routes.newAppointment(widget.circleId));
   }
 }
 
@@ -432,22 +420,58 @@ class AppointmentTodayRow extends StatelessWidget {
   final CareAppointment value;
 
   @override
-  Widget build(BuildContext context) => TodayRowCard(
-    child: Row(
-      children: [
-        const Icon(CupertinoIcons.calendar),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(appointmentTitle(context, value)),
-              Text(appointmentCompanionLine(context, value)),
-            ],
+  Widget build(BuildContext context) {
+    final bool waitingForConfirmation = !value.scheduledAt.isAfter(
+      PatientClockScope.of(context).now(),
+    );
+    return TodayRowCard(
+      tone: waitingForConfirmation
+          ? TodayRowTone.attention
+          : TodayRowTone.normal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 48,
+            child: Text(
+              clockText(value.time),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
           ),
-        ),
-        Text(clockText(value.time)),
-      ],
-    ),
-  );
+          const SizedBox(width: AppSpacing.sm),
+          const TodayTaskKindIcon(
+            icon: CareVisuals.appointmentIcon,
+            background: CareVisuals.appointmentTile,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  appointmentTitle(context, value),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                Text(
+                  appointmentCompanionLine(context, value),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          TodayTaskStatusBadge(
+            text: context.tr(
+              waitingForConfirmation
+                  ? 'today_dashboard.status.appointment_waiting'
+                  : 'today_dashboard.status.upcoming',
+            ),
+            tone: waitingForConfirmation
+                ? TodayStatusTone.attention
+                : TodayStatusTone.neutral,
+          ),
+        ],
+      ),
+    );
+  }
 }

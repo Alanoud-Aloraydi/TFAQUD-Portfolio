@@ -10,7 +10,6 @@ class ReceivedCircleRequest extends Equatable {
   const ReceivedCircleRequest({
     required this.id,
     required this.status,
-    required this.circleLabel,
     required this.circleName,
     required this.proposedAppMode,
     required this.requesterName,
@@ -22,9 +21,6 @@ class ReceivedCircleRequest extends Equatable {
   /// `pending` until the patient answers, then `accepted` until the patient
   /// completes the basic data and the circle is created.
   final CircleRequestStatus status;
-
-  /// The word the circle is named with, for example "أمي".
-  final String circleLabel;
 
   /// The label and the patient's first name, for example "أمي نورة".
   final String circleName;
@@ -41,7 +37,6 @@ class ReceivedCircleRequest extends Equatable {
   List<Object?> get props => [
     id,
     status,
-    circleLabel,
     circleName,
     proposedAppMode,
     requesterName,

@@ -1,4 +1,7 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_sections.dart';
+import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
@@ -141,6 +144,8 @@ void main() {
       expect(find.text('measurements.record_reading'.tr()), findsOneWidget);
       await tester.tap(find.text('measurements.skip'.tr()));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('measurements.skip_confirm'.tr()));
+      await tester.pumpAndSettle();
 
       expect(repository.drafts.single.outcome, 'skipped');
     });
@@ -152,6 +157,74 @@ void main() {
 
       expect(find.text('measurements.record_reading'.tr()), findsNothing);
       expect(find.text('measurements.skip'.tr()), findsNothing);
+      expect(find.text('today_dashboard.status.upcoming'.tr()), findsOneWidget);
+    });
+  });
+
+  group('unified rows of «اليوم»', () {
+    CareAppointment appointment(String time) => CareAppointment(
+      id: 'a-$time',
+      specialty: 'diabetes',
+      kind: AppointmentKind.followUp,
+      otherKind: null,
+      scheduledOn: DateTime(2026, 11, 9),
+      time: time,
+      place: 'clinic',
+      remoteMethod: null,
+      companions: const <AppointmentCompanion>[],
+      status: AppointmentStatus.scheduled,
+      updatedAt: noonInRiyadh,
+    );
+
+    testWidgets('appointment uses the same upcoming wording', (tester) async {
+      await pumpArabic(
+        tester,
+        home: Scaffold(body: AppointmentTodayRow(value: appointment('14:00'))),
+      );
+
+      expect(find.text('today_dashboard.status.upcoming'.tr()), findsOneWidget);
+    });
+
+    testWidgets('a passed appointment asks for attendance confirmation', (
+      tester,
+    ) async {
+      await pumpArabic(
+        tester,
+        home: Scaffold(body: AppointmentTodayRow(value: appointment('10:00'))),
+      );
+
+      expect(
+        find.text('today_dashboard.status.appointment_waiting'.tr()),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the large card names a measurement, never a dose', (
+      tester,
+    ) async {
+      final measurement = _measurement('14:00');
+      await pumpArabic(
+        tester,
+        home: Scaffold(
+          body: NextTaskCard(
+            task: (
+              at: DateTime(2026, 11, 9, 14),
+              medication: null,
+              measurement: measurement,
+              appointment: null,
+            ),
+            circleId: 'c-1',
+            canManage: false,
+            now: DateTime(2026, 11, 9, 12),
+          ),
+        ),
+      );
+
+      expect(
+        find.text('today_dashboard.next_measurement'.tr()),
+        findsOneWidget,
+      );
+      expect(find.text('today_dashboard.next_dose'.tr()), findsNothing);
     });
   });
 

@@ -598,8 +598,8 @@ class _CircleFeatureTile extends StatelessWidget {
 /// One switch per category (doses, measurements, appointments), each this
 /// circle's own setting — someone in several circles may want only one
 /// circle's appointments on their phone's calendar, say.
-/// «الأعضاء», and at the end how many managers and pending invitations
-/// there are: «3 مديرين · دعوة معلّقة».
+/// «الأعضاء», and at the end how many members and pending invitations
+/// there are: «3 أعضاء · دعوة معلّقة».
 class _MembersHeader extends StatelessWidget {
   const _MembersHeader({required this.overview});
 
@@ -610,11 +610,7 @@ class _MembersHeader extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final int invitations = overview.pendingInvitations.length;
     final String summary = <String>[
-      _count(
-        context,
-        'managers',
-        overview.members.where((member) => member.isManager).length,
-      ),
+      _count(context, 'members_count', overview.members.length),
       if (invitations > 0) _count(context, 'invitations', invitations),
     ].join(' · ');
     return Padding(
@@ -646,7 +642,7 @@ class _MembersHeader extends StatelessWidget {
     );
   }
 
-  /// Arabic counting: «مدير واحد», «مديران», «3 مديرين», «11 مديرًا».
+  /// Arabic counting for members and invitations.
   /// The number is written 0-9.
   static String _count(BuildContext context, String noun, int count) {
     final String key = switch (count) {
@@ -676,6 +672,7 @@ class _MembersList extends StatelessWidget {
           circleId: circleId,
           patientUsesApp: overview.patientUsesApp,
           patientIsYou: overview.patientIsYou,
+          canManageMembers: overview.canManageMembers,
         ),
       for (final CirclePendingInvitation invitation
           in overview.pendingInvitations)
@@ -738,12 +735,14 @@ class _MemberRow extends StatelessWidget {
     required this.circleId,
     required this.patientUsesApp,
     required this.patientIsYou,
+    required this.canManageMembers,
   });
 
   final CircleMember member;
   final String circleId;
   final bool patientUsesApp;
   final bool patientIsYou;
+  final bool canManageMembers;
 
   @override
   Widget build(BuildContext context) {
@@ -800,31 +799,122 @@ class _MemberRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                if (member.isManager)
-                  StatusPill(
-                    text: context.tr('circle_overview.manager'),
-                    background: AppSemanticColors.borderPlan,
-                    foreground: AppSemanticColors.textSupporting,
-                    icon: AppIcons.crown,
-                  ),
-                if (member.isPatient) ...<Widget>[
-                  const SizedBox(height: AppSpacing.xs),
-                  StatusPill(
-                    text: context.tr('circle_overview.owner'),
-                    background: AppSemanticColors.selectedSurface,
-                    foreground: AppSemanticColors.statusSuccess,
-                    icon: AppIcons.user,
-                  ),
+            if (canManageMembers && !member.isYou && !member.isPatient)
+              _MemberAccessControls(member: member)
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  if (member.isManager)
+                    StatusPill(
+                      text: context.tr('circle_overview.manager'),
+                      background: AppSemanticColors.borderPlan,
+                      foreground: AppSemanticColors.textSupporting,
+                      icon: AppIcons.crown,
+                    ),
+                  if (member.isPatient) ...<Widget>[
+                    const SizedBox(height: AppSpacing.xs),
+                    StatusPill(
+                      text: context.tr('circle_overview.owner'),
+                      background: AppSemanticColors.selectedSurface,
+                      foreground: AppSemanticColors.statusSuccess,
+                      icon: AppIcons.user,
+                    ),
+                  ],
                 ],
-              ],
-            ),
+              ),
           ],
         ),
       ),
     );
+  }
+}
+
+class _MemberAccessControls extends StatelessWidget {
+  const _MemberAccessControls({required this.member});
+
+  final CircleMember member;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool acting = context.select(
+      (CircleOverviewCubit cubit) => cubit.state.acting,
+    );
+    final String? accountId = member.accountId;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              context.tr('circle_overview.allow_editing'),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            Switch.adaptive(
+              value: member.canEdit,
+              onChanged: acting || accountId == null
+                  ? null
+                  : (bool value) =>
+                        _changeAccess(context, accountId, canEdit: value),
+            ),
+          ],
+        ),
+        IconButton(
+          tooltip: context.tr('circle_overview.remove_member'),
+          onPressed: acting || accountId == null
+              ? null
+              : () => _confirmRemove(context, accountId),
+          icon: const Icon(CupertinoIcons.trash),
+          color: AppSemanticColors.statusError,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _changeAccess(
+    BuildContext context,
+    String accountId, {
+    required bool canEdit,
+  }) async {
+    final error = await context.read<CircleOverviewCubit>().setMemberEditAccess(
+      accountId,
+      canEdit: canEdit,
+    );
+    if (context.mounted && error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr(error))));
+    }
+  }
+
+  Future<void> _confirmRemove(BuildContext context, String accountId) async {
+    final confirmed = await showAppAlert<bool>(
+      context,
+      title: context.tr('circle_overview.remove_member_title'),
+      message: context.tr(
+        'circle_overview.remove_member_message',
+        args: <String>[member.name],
+      ),
+      actions: <AppAlertAction<bool>>[
+        AppAlertAction<bool>(
+          label: context.tr('circle_overview.cancel'),
+          value: false,
+        ),
+        AppAlertAction<bool>(
+          label: context.tr('circle_overview.remove_member'),
+          value: true,
+          destructive: true,
+        ),
+      ],
+    );
+    if (confirmed != true || !context.mounted) return;
+    final error = await context.read<CircleOverviewCubit>().removeMember(
+      accountId,
+    );
+    if (context.mounted && error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr(error))));
+    }
   }
 }
 

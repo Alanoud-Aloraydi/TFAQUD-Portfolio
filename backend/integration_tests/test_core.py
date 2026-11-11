@@ -12,8 +12,8 @@ from app.database import db
 from app.authz.postgres import PostgresCircleAccess
 from app.authz.roles import CircleRole
 from app.errors import Forbidden, ValidationFailed
-from app.models import Account, CareCircle, CareCircleCreationRequest
-from app.models import CareCircleManager, CareCircleManagerInvitation, Patient
+from app.models import Account, CareCircle, CareCircleRequest
+from app.models import CareCircleManager, CareCircleInvitation
 from app.users.postgres import PostgresUserStore
 from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run
@@ -36,14 +36,13 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
     assert set(inspect(database).get_table_names()) == {
         "account",
         "care_circle",
-        "patient",
         "care_circle_manager",
-        "care_circle_creation_request",
-        "care_circle_manager_invitation",
+        "care_circle_request",
+        "care_circle_invitation",
         "alembic_version",
         "account_session",
-        "otp_challenge",
-        "otp_send_attempt",
+        "otp_request",
+        "otp_send",
         "patient_condition",
         "patient_allergy",
         "emergency_contact",
@@ -54,12 +53,15 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
         "medication_schedule_month_day",
         "medication_dose_record",
         "push_device",
-        "photo",
+        "account_photo",
+        "care_circle_photo",
+        "medication_plan_photo",
+        "measurement_plan_weekday",
         "measurement_plan",
         "measurement_plan_version",
         "measurement_plan_time",
         "measurement_target",
-        "measurement_record",
+        "measurement_reading",
         "appointment",
         "appointment_companion",
         "appointment_visit",
@@ -81,10 +83,10 @@ def test_self_care_has_patient_and_manager(database, account):
     owner = account()
     circle = run(database, "create_self", owner.id, "My care", BIRTH, "Riyadh")
     with Session(database) as session:
-        patient = session.scalar(select(Patient))
+        patient = session.scalar(select(CareCircle))
         assert patient.account_id == owner.id
         assert patient.first_name is None
-        assert patient.care_circle_id == circle.id
+        assert patient.id == circle.id
         assert session.get(Account, owner.id).app_mode == "detailed"
     assert count(database, CareCircleManager) == 1
 
@@ -94,37 +96,41 @@ def test_no_account_patient_does_not_create_an_account(database, account):
     offline_circle(database, account())
     assert count(database, Account) == 1
     with Session(database) as session:
-        patient = session.scalar(select(Patient))
+        patient = session.scalar(select(CareCircle))
         assert patient.account_id is None
         assert (patient.first_name, patient.last_name) == ("Nora", "Family")
 
 
-@pytest.mark.parametrize("missing", ["patient", "manager"])
-def test_deferred_checks_reject_incomplete_circles(database, account, missing):
-    """Existence checks execute at commit, after all inserts could finish."""
+def test_a_circle_without_a_manager_is_refused_at_commit(database, account):
+    """The manager check runs at commit, after all inserts could finish."""
+    with pytest.raises(IntegrityError):
+        with Session(database) as session, session.begin():
+            session.add(
+                CareCircle(
+                    first_name="Nora",
+                    last_name="Family",
+                    birth_date=BIRTH,
+                    city="Riyadh",
+                    time_zone="Asia/Riyadh",
+                )
+            )
+    assert count(database, CareCircle) == 0
+
+
+def test_a_circle_needs_an_account_or_a_name_of_its_own(database, account):
+    """A circle with neither a linked account nor a patient's own name is
+    refused at once."""
     owner = account("detailed")
     with pytest.raises(IntegrityError):
         with Session(database) as session, session.begin():
-            circle = CareCircle(name="Incomplete")
+            circle = CareCircle(name=None, time_zone="Asia/Riyadh")
             session.add(circle)
             session.flush()
-            if missing == "patient":
-                session.add(
-                    CareCircleManager(
-                        account_id=owner.id, care_circle_id=circle.id
-                    )
+            session.add(
+                CareCircleManager(
+                    account_id=owner.id, care_circle_id=circle.id
                 )
-            else:
-                session.add(
-                    Patient(
-                        care_circle_id=circle.id,
-                        first_name="Nora",
-                        last_name="Family",
-                        birth_date=BIRTH,
-                        city="Riyadh",
-                        time_zone="Asia/Riyadh",
-                    )
-                )
+            )
     assert count(database, CareCircle) == 0
 
 
@@ -162,7 +168,9 @@ def test_names_have_one_source(database, account):
     run(database, "create_self", owner.id, "My care", BIRTH, "Riyadh")
     with pytest.raises(IntegrityError):
         with database.begin() as connection:
-            connection.execute(update(Patient).values(first_name="Different"))
+            connection.execute(
+                update(CareCircle).values(first_name="Different")
+            )
 
 
 def test_detailed_patient_must_remain_a_manager(database, account):
@@ -187,7 +195,6 @@ def test_creation_requires_consent_and_completion(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "simplified",
     )
     assert count(database, CareCircle) == 0
@@ -222,7 +229,7 @@ def test_creation_requires_consent_and_completion(database, account):
     assert count(database, CareCircleManager) == 1
     with Session(database) as session:
         assert session.get(Account, patient.id).app_mode == "simplified"
-        saved = session.get(CareCircleCreationRequest, request.id)
+        saved = session.get(CareCircleRequest, request.id)
         assert saved.status == "completed"
         assert saved.completed_at == NOW
 
@@ -236,7 +243,6 @@ def test_completion_supersedes_competing_requests(database, account):
             "request_creation",
             owner.id,
             patient.phone_number,
-            "Mother",
             "detailed",
         )
         for owner in (first, second)
@@ -252,7 +258,7 @@ def test_completion_supersedes_competing_requests(database, account):
     )
     with Session(database) as session:
         assert (
-            session.get(CareCircleCreationRequest, requests[1].id).status
+            session.get(CareCircleRequest, requests[1].id).status
             == "superseded"
         )
     assert count(database, CareCircleManager) == 2
@@ -266,13 +272,12 @@ def test_self_creation_supersedes_pending_request(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "detailed",
     )
     run(database, "create_self", patient.id, "My care", BIRTH, "Riyadh")
     with Session(database) as session:
         assert (
-            session.get(CareCircleCreationRequest, request.id).status
+            session.get(CareCircleRequest, request.id).status
             == "superseded"
         )
 
@@ -294,7 +299,7 @@ def test_invitation_resend_and_acceptance_are_idempotent(database, account):
     run(database, "leave_circle", target.id, circle.id)
     with Session(database) as session:
         assert (
-            session.get(CareCircleManagerInvitation, first.id).status
+            session.get(CareCircleInvitation, first.id).status
             == "accepted"
         )
 
@@ -319,7 +324,6 @@ def test_wrong_account_cannot_respond(database, account):
         "request_creation",
         owner.id,
         target.phone_number,
-        "Mother",
         "detailed",
     )
     with pytest.raises(Forbidden):
@@ -341,7 +345,7 @@ def test_last_manager_requires_explicit_deletion(database, account):
     assert count(database, CareCircle) == 1
     run(database, "leave_circle", owner.id, circle.id, confirm_delete=True)
     assert count(database, CareCircle) == 0
-    assert count(database, Patient) == 0
+    assert count(database, CareCircle) == 0
     assert count(database, Account) == 1
 
 
@@ -366,7 +370,7 @@ def test_continued_care_detaches_names_atomically(database, account):
     add_manager(database, patient, circle, other)
     run(database, "delete_account", patient.id, patient_choice="continue")
     with Session(database) as session:
-        saved = session.scalar(select(Patient))
+        saved = session.scalar(select(CareCircle))
         assert saved.account_id is None
         assert (saved.first_name, saved.last_name) == ("Nora", "Family")
     assert count(database, CareCircleManager) == 1
@@ -382,7 +386,7 @@ def test_invitation_survives_sender_account_deletion(database, account):
     )
     run(database, "delete_account", owner.id)
     with Session(database) as session:
-        saved = session.get(CareCircleManagerInvitation, invitation.id)
+        saved = session.get(CareCircleInvitation, invitation.id)
         assert saved.status == "pending"
         assert saved.invited_by_account_id is None
     run(database, "respond_invitation", target.id, invitation.id, True)
@@ -417,7 +421,6 @@ def test_parallel_self_and_request_creation_make_one_circle(database, account):
         "request_creation",
         owner.id,
         patient.phone_number,
-        "Mother",
         "detailed",
     )
     run(database, "respond_creation", patient.id, request.id, True)
@@ -451,7 +454,7 @@ def test_parallel_self_and_request_creation_make_one_circle(database, account):
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(create, ("self", "request")))
     assert sorted(results) == ["created", "rejected"]
-    assert count(database, Patient) == 1
+    assert count(database, CareCircle) == 1
 
 
 def test_postgres_adapter_preserves_user_contract(database, database_app):
@@ -477,10 +480,10 @@ def test_schema_rejects_completed_request_without_circle(database, account):
         with database.begin() as connection:
             connection.execute(
                 text(
-                    "INSERT INTO care_circle_creation_request "
+                    "INSERT INTO care_circle_request "
                     "(requested_by_account_id, patient_phone_number, "
-                    "proposed_circle_label, proposed_app_mode, status) "
-                    "VALUES (:owner, '+966501234568', 'Mother', "
+                    "proposed_app_mode, status) "
+                    "VALUES (:owner, '+966501234568', "
                     "'detailed', 'completed')"
                 ),
                 {"owner": owner.id},

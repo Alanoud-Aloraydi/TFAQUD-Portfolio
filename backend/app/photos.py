@@ -3,21 +3,22 @@
 import zlib
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.errors import NotFound, ValidationFailed
-from app.models import Account, MedicationPlan, Patient, Photo
+from app.models import Account, AccountPhoto, CareCircle, CareCirclePhoto
+from app.models import MedicationPlan, MedicationPlanPhoto
 
 MAX_PHOTO_BYTES = 4 * 1024 * 1024
 AVATAR_CODES = frozenset((
     "w1_1", "w1_3", "w6_1", "w6_3", "w7_1", "w7_3",
     "m1_1", "m1_3", "m2_1", "m2_3", "m6_1", "m6_3",
 ))
+# Each owner kind: its own row, and the table of its photo.
 _OWNERS = {
-    "account": (Account, Photo.account_id),
-    "patient": (Patient, Photo.patient_id),
-    "medication": (MedicationPlan, Photo.medication_plan_id),
+    "account": (Account, AccountPhoto),
+    "patient": (CareCircle, CareCirclePhoto),
+    "medication": (MedicationPlan, MedicationPlanPhoto),
 }
 
 
@@ -93,10 +94,10 @@ class PhotoService:
         """Work inside the caller's database session."""
         self.session = session
 
-    def get(self, kind: str, owner_id: UUID) -> Photo | None:
+    def get(self, kind: str, owner_id: UUID):
         """Return the owner's image without exposing another owner."""
-        _, column = _OWNERS[kind]
-        return self.session.scalar(select(Photo).where(column == owner_id))
+        _, table = _OWNERS[kind]
+        return self.session.get(table, owner_id)
 
     def put(self, kind: str, owner_id: UUID, data: bytes) -> None:
         """Replace the image after locking the owner row."""
@@ -104,11 +105,9 @@ class PhotoService:
         self._lock_owner(kind, owner_id)
         photo = self.get(kind, owner_id)
         if photo is None:
-            field = (
-                "medication_plan_id"
-                if kind == "medication" else f"{kind}_id"
-            )
-            photo = Photo(**{field: owner_id}, data=data)
+            _, table = _OWNERS[kind]
+            key = table.__table__.primary_key.columns.keys()[0]
+            photo = table(**{key: owner_id}, data=data)
             self.session.add(photo)
         else:
             photo.data = data

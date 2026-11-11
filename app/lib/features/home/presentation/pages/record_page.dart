@@ -51,6 +51,7 @@ class _RecordPageState extends State<RecordPage>
                           context,
                           circleId: circle.id,
                           plans: state.plans,
+                          measurementPlans: measurementPlans,
                         ),
                         icon: const Icon(CupertinoIcons.share),
                         label: Text(context.tr('record_export.share_action')),
@@ -68,21 +69,13 @@ class _RecordPageState extends State<RecordPage>
               return FadingBranches(
                 currentIndex: category.index,
                 children: [
-                  MedicationHistorySection(
-                    circleId: circle.id,
-                    canManage: circle.canManageMedications,
-                    header: header,
-                  ),
+                  MedicationHistorySection(circleId: circle.id, header: header),
                   MeasurementRecordSection(
                     circleId: circle.id,
                     header: header,
                     plans: measurementPlans,
                   ),
-                  AppointmentRecordSection(
-                    circleId: circle.id,
-                    canManage: circle.canManageMedications,
-                    header: header,
-                  ),
+                  AppointmentRecordSection(circleId: circle.id, header: header),
                 ],
               );
             },

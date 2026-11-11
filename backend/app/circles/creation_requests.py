@@ -12,7 +12,7 @@ from app.authz.roles import CircleRole
 from app.circles import views
 from app.circles.inputs import (
     CompleteRequestInput,
-    CreationRequestInput,
+    CircleRequestInput,
     RespondInput,
 )
 from app.circles.support import answer, care_work, parse_id, save_medical
@@ -41,12 +41,11 @@ def send_request():
     If an open request from the caller to the same number already exists,
     that request is returned instead of a second one.
     """
-    body = parse_json_body(CreationRequestInput)
+    body = parse_json_body(CircleRequestInput)
     with care_work() as work:
         row = work.care.request_creation(
             work.actor,
             body.patient_phone_number,
-            body.circle_label,
             body.proposed_app_mode,
         )
         view = views.sent_request_view(row)

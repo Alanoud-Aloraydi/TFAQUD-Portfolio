@@ -52,8 +52,8 @@ def build_occurrences(
                     current, schedule.time_of_day, zone
                 )
                 if (
-                    plan.discontinued_at is not None
-                    and scheduled_at >= plan.discontinued_at
+                    plan.stopped_at is not None
+                    and scheduled_at >= plan.stopped_at
                 ):
                     continue
                 # The dose, with its record and whether it is to come, due or

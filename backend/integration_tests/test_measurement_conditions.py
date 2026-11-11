@@ -1,4 +1,4 @@
-"""«ظروف القياس»: one or more conditions per reading time and reading."""
+"""Planned measurement state is separate from actual reading conditions."""
 
 from datetime import datetime, timezone
 
@@ -43,7 +43,7 @@ def circle_api(database_app, database, account, evening):
 
 
 BP = {
-    "kind": "bp",
+    "kind": "blood_pressure",
     "glucose_low": None,
     "glucose_high": None,
     "systolic_limit": 130,
@@ -51,73 +51,62 @@ BP = {
 }
 
 
-def test_a_reading_time_keeps_its_conditions(circle_api):
+def test_a_glucose_time_keeps_its_measurement_state(circle_api):
     created = circle_api(
         "post",
         "/measurement-plans",
         json=plan([
-            {"time_of_day": "07:00", "conditions": ["fasting"]},
-            {"time_of_day": "14:00", "conditions": ["after_meal", "exertion"]},
+            {"time_of_day": "07:00", "measurement_state": "fasting"},
+            {"time_of_day": "14:00", "measurement_state": "after_meal"},
         ]),
     )
 
     assert created.status_code == 201, created.json
     version = created.json["measurement_plan"]["version"]
     assert version["times"] == [
-        {
-            "time_of_day": "07:00",
-            "glucose_context": "fasting",
-            "conditions": ["fasting"],
-        },
-        {
-            "time_of_day": "14:00",
-            "glucose_context": "after_meal",
-            "conditions": ["after_meal", "exertion"],
-        },
+        {"time_of_day": "07:00", "measurement_state": "fasting"},
+        {"time_of_day": "14:00", "measurement_state": "after_meal"},
     ]
     tasks = circle_api(
         "get",
         "/measurement-occurrences",
         query_string={"from": "2026-10-28", "to": "2026-10-28"},
     ).json["measurement_occurrences"]
-    assert [item["conditions"] for item in tasks] == [
-        ["fasting"],
-        ["after_meal", "exertion"],
+    assert [item["measurement_state"] for item in tasks] == [
+        "fasting",
+        "after_meal",
     ]
 
 
-def test_blood_pressure_reads_after_exercise_or_stress(circle_api):
+def test_blood_pressure_plan_has_no_measurement_state(circle_api):
     created = circle_api(
         "post",
         "/measurement-plans",
         json=plan(
-            [{"time_of_day": "08:00", "conditions": ["exertion", "stress"]}],
+            [{"time_of_day": "08:00"}],
             **BP,
         ),
     )
 
     assert created.status_code == 201, created.json
     version = created.json["measurement_plan"]["version"]
-    assert version["glucose_context"] is None
-    assert version["times"][0]["conditions"] == ["exertion", "stress"]
+    assert version["times"][0]["measurement_state"] is None
 
 
 @pytest.mark.parametrize(
-    "kind, conditions",
+    "kind, measurement_state",
     [
-        ("bp", ["fasting"]),
-        ("bp", ["bedtime"]),
-        ("glucose", ["fasting", "after_meal"]),
-        ("glucose", ["stress", "stress"]),
-        ("glucose", ["hungry"]),
+        ("blood_pressure", "fasting"),
+        ("glucose", None),
+        ("glucose", "bedtime"),
     ],
 )
-def test_conditions_that_do_not_fit_are_refused(
-    circle_api, kind, conditions
+def test_measurement_states_that_do_not_fit_are_refused(
+    circle_api, kind, measurement_state
 ):
     body = plan(
-        [{"time_of_day": "08:00", "conditions": conditions}],
-        **(BP if kind == "bp" else {}),
+        [{"time_of_day": "08:00", "measurement_state": measurement_state}],
+        **(BP if kind == "blood_pressure" else {}),
     )
 
     created = circle_api("post", "/measurement-plans", json=body)
@@ -133,7 +122,7 @@ def test_a_reading_has_several_conditions(circle_api):
             "kind": "glucose",
             "outcome": "read",
             "measured_at": "2026-10-28T16:00:00+00:00",
-            "value_one": 150,
+            "glucose_value": 150,
             "conditions": ["after_meal", "stress", "other"],
             "glucose_low": 80,
             "glucose_high": 140,
@@ -143,32 +132,6 @@ def test_a_reading_has_several_conditions(circle_api):
     assert saved.status_code == 201, saved.json
     reading = saved.json["measurement_reading"]
     assert reading["conditions"] == ["after_meal", "stress", "other"]
-    # One of each, where an older app reads them.
-    assert reading["glucose_context"] == "after_meal"
-    assert reading["condition"] == "stress"
-
-
-def test_an_older_app_sends_one_context_and_one_condition(circle_api):
-    saved = circle_api(
-        "post",
-        "/measurement-readings",
-        json={
-            "kind": "glucose",
-            "outcome": "read",
-            "measured_at": "2026-10-28T16:00:00+00:00",
-            "value_one": 150,
-            "glucose_context": "fasting",
-            "condition": "after_meal",
-            "glucose_low": 80,
-            "glucose_high": 140,
-        },
-    )
-
-    assert saved.status_code == 201, saved.json
-    reading = saved.json["measurement_reading"]
-    assert reading["conditions"] == ["fasting", "after_meal"]
-    assert reading["glucose_context"] == "fasting"
-    assert reading["condition"] == "after_meal"
 
 
 def test_a_reading_sends_one_shape_only(circle_api):
@@ -179,9 +142,9 @@ def test_a_reading_sends_one_shape_only(circle_api):
             "kind": "glucose",
             "outcome": "read",
             "measured_at": "2026-10-28T16:00:00+00:00",
-            "value_one": 150,
-            "glucose_context": "fasting",
+            "glucose_value": 150,
             "conditions": ["fasting"],
+            "measurement_state": "fasting",
             "glucose_low": 80,
             "glucose_high": 140,
         },
@@ -192,11 +155,11 @@ def test_a_reading_sends_one_shape_only(circle_api):
 
 def test_other_says_what_it_was(circle_api):
     reading = {
-        "kind": "bp",
+        "kind": "blood_pressure",
         "outcome": "read",
         "measured_at": "2026-10-28T16:00:00+00:00",
-        "value_one": 128,
-        "value_two": 82,
+        "systolic_value": 128,
+        "diastolic_value": 82,
         "systolic_limit": 130,
         "diastolic_limit": 80,
     }
@@ -207,14 +170,14 @@ def test_other_says_what_it_was(circle_api):
         json={
             **reading,
             "conditions": ["other"],
-            "other_condition": "  بعد القهوة ",
+            "other_text": "  بعد القهوة ",
         },
     )
 
     assert saved.status_code == 201, saved.json
     answer = saved.json["measurement_reading"]
     assert answer["conditions"] == ["other"]
-    assert answer["other_condition"] == "بعد القهوة"
+    assert answer["other_text"] == "بعد القهوة"
     # Words without «أخرى» are refused.
     assert circle_api(
         "post",
@@ -222,6 +185,6 @@ def test_other_says_what_it_was(circle_api):
         json={
             **reading,
             "conditions": ["stress"],
-            "other_condition": "بعد القهوة",
+            "other_text": "بعد القهوة",
         },
     ).status_code == 422

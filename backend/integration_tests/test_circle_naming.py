@@ -146,7 +146,6 @@ def test_an_older_app_that_sends_no_name_gets_the_default(
         REQUESTS,
         {
             "patient_phone_number": noura.account.phone_number,
-            "circle_label": "Mother",
             "proposed_app_mode": "simplified",
         },
     ).json["request"]["id"]

@@ -2,7 +2,7 @@ import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -13,8 +13,8 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -160,11 +160,13 @@ class MeasurementTaskRow extends StatelessWidget {
     required this.task,
     required this.now,
     required this.circleId,
+    this.readOnly = false,
   });
 
   final MeasurementOccurrence task;
   final DateTime now;
   final String circleId;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -177,37 +179,26 @@ class MeasurementTaskRow extends StatelessWidget {
       scheduledAt: wallClockAt(task.scheduledOn, task.time),
       now: now,
     );
-    final status = switch (task.status) {
-      MeasurementStatus.read => 'measurements.read',
-      MeasurementStatus.readLate => 'measurements.read_late',
-      MeasurementStatus.skipped => 'measurements.skipped',
-      MeasurementStatus.missed => 'measurements.missed',
-      MeasurementStatus.due => 'measurements.due',
-      MeasurementStatus.upcoming => 'measurements.upcoming',
+    final String statusKey = switch (task.status) {
+      MeasurementStatus.read => 'today_dashboard.status.recorded',
+      MeasurementStatus.readLate => 'today_dashboard.status.recorded_late',
+      MeasurementStatus.skipped => 'today_dashboard.status.skipped',
+      MeasurementStatus.missed => _missedStatusKey(context, task.scheduledOn),
+      MeasurementStatus.due => 'today_dashboard.status.due',
+      MeasurementStatus.upcoming => 'today_dashboard.status.upcoming',
     };
-    // The same pill as a dose's: green once read, red when missed, honey
-    // while it is due.
     final bool read =
         task.status == MeasurementStatus.read ||
         task.status == MeasurementStatus.readLate;
-    final (Color statusBackground, Color statusColor) = switch (task.status) {
-      MeasurementStatus.missed => (
-        Theme.of(context).colorScheme.errorContainer,
-        context.tokens.errorText,
-      ),
-      MeasurementStatus.due => (
-        AppSemanticColors.surfaceAttention,
-        context.tokens.warningText,
-      ),
-      _ when read => (
-        AppSemanticColors.selectedSurface,
-        context.tokens.successText,
-      ),
-      _ => (AppSemanticColors.surfaceContent, context.tokens.textSecondary),
+    final bool trulyMissed = statusKey == 'measurements.missed';
+    final TodayStatusTone statusTone = switch (task.status) {
+      MeasurementStatus.missed when trulyMissed => TodayStatusTone.danger,
+      MeasurementStatus.missed ||
+      MeasurementStatus.due => TodayStatusTone.attention,
+      _ when read => TodayStatusTone.success,
+      _ => TodayStatusTone.neutral,
     };
-    final MeasurementReading? record = task.record?.outcome == 'read'
-        ? task.record
-        : null;
+    final MeasurementReading? record = task.record;
     // Put off by someone in the circle («ذكّرني لاحقًا»), while it waits.
     final PatientClock clock = PatientClockScope.of(context);
     final SharedSnooze? snooze = task.snooze;
@@ -229,7 +220,11 @@ class MeasurementTaskRow extends StatelessWidget {
             ],
           );
     return TodayRowCard(
-      isAttention: task.status == MeasurementStatus.missed,
+      tone: trulyMissed
+          ? TodayRowTone.danger
+          : task.status == MeasurementStatus.missed
+          ? TodayRowTone.attention
+          : TodayRowTone.normal,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -239,15 +234,19 @@ class MeasurementTaskRow extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(clockText(task.time)),
-              const SizedBox(width: AppSpacing.sm),
-              Icon(
-                task.kind == MeasurementKind.glucose
-                    ? CupertinoIcons.drop
-                    : CupertinoIcons.heart,
-                size: 18,
+              SizedBox(
+                width: 48,
+                child: Text(
+                  clockText(task.time),
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
               ),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.sm),
+              const TodayTaskKindIcon(
+                icon: CareVisuals.measurementIcon,
+                background: CareVisuals.measurementTile,
+              ),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,10 +255,12 @@ class MeasurementTaskRow extends StatelessWidget {
                       _title(context, task.kind),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    if (task.conditions.isNotEmpty) ...[
+                    if (task.measurementState != null) ...[
                       const SizedBox(height: AppSpacing.xs),
                       CompactStatusBadge(
-                        text: conditionsText(context, task.conditions),
+                        text: context.tr(
+                          'measurements.condition.${task.measurementState}',
+                        ),
                         background: AppSemanticColors.surfaceContent,
                         foreground: AppSemanticColors.textSupporting,
                       ),
@@ -285,10 +286,11 @@ class MeasurementTaskRow extends StatelessWidget {
                     ],
                     if (record != null) ...[
                       const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        record.valueText,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
+                      if (record.outcome == 'read')
+                        Text(
+                          record.valueText,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
                       Text(
                         context.tr(
                           'measurements.recorded_at',
@@ -323,19 +325,29 @@ class MeasurementTaskRow extends StatelessWidget {
                           ],
                         ),
                       ],
+                      if (record.outcome == 'skipped' &&
+                          record.skipReasonCode != null) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          context.tr(
+                            'measurements.skip_reason_line',
+                            args: [measurementSkipReasonText(context, record)],
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ],
                   ],
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              CompactStatusBadge(
-                text: context.tr(status),
-                background: statusBackground,
-                foreground: statusColor,
+              TodayTaskStatusBadge(
+                text: context.tr(statusKey),
+                tone: statusTone,
               ),
             ],
           ),
-          if (canRecord)
+          if (canRecord && !readOnly)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),
               child: Row(
@@ -376,6 +388,14 @@ class MeasurementTaskRow extends StatelessWidget {
   }
 }
 
+String _missedStatusKey(BuildContext context, DateTime scheduledOn) {
+  final today = PatientClockScope.of(context).today();
+  final yesterday = DateUtils.dateOnly(today).subtract(const Duration(days: 1));
+  return DateUtils.dateOnly(scheduledOn).isBefore(yesterday)
+      ? 'measurements.missed'
+      : 'measurements.unrecorded';
+}
+
 String _title(BuildContext context, MeasurementKind kind) => context.tr(
   kind == MeasurementKind.glucose ? 'measurements.glucose' : 'measurements.bp',
 );
@@ -383,8 +403,11 @@ String _title(BuildContext context, MeasurementKind kind) => context.tr(
 /// «تخطي» on [task]; a refused answer shows its message. The tasks read
 /// again by themselves once it is saved.
 Future<void> _skip(BuildContext context, MeasurementOccurrence task) async {
+  final draft = await selectSkippedMeasurement(context, task.kind);
+  if (draft == null || !context.mounted) return;
   final String? messageKey = await context.read<MeasurementTasksCubit>().skip(
     task,
+    draft,
   );
   if (context.mounted) _show(context, messageKey);
 }

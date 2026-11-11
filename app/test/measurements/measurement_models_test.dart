@@ -3,16 +3,19 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Map<String, dynamic> _task({String kind = 'bp', String status = 'read_late'}) =>
-    <String, dynamic>{
-      'plan_id': 'plan-1',
-      'version_id': 'version-1',
-      'kind': kind,
-      'scheduled_on': '2026-11-03',
-      'time_of_day': '08:00',
-      'deadline_at': '2026-11-03T06:00:00+00:00',
-      'status': status,
-    };
+Map<String, dynamic> _task({
+  String kind = 'blood_pressure',
+  String status = 'read_late',
+}) => <String, dynamic>{
+  'plan_id': 'plan-1',
+  'plan_version_id': 'version-1',
+  'measurement_state': null,
+  'kind': kind,
+  'scheduled_on': '2026-11-03',
+  'time_of_day': '08:00',
+  'deadline_at': '2026-11-03T06:00:00+00:00',
+  'status': status,
+};
 
 void main() {
   group('MeasurementModels', () {
@@ -20,7 +23,7 @@ void main() {
       final draft = MeasurementPlanDraft(
         kind: MeasurementKind.glucose,
         times: const [
-          MeasurementTime(time: '07:30', conditions: ['fasting']),
+          MeasurementTime(time: '07:30', measurementState: 'fasting'),
         ],
         weekdays: const [1, 3],
         startsOn: DateTime(2026, 11, 3),
@@ -30,10 +33,10 @@ void main() {
       );
       final json = draft.toJson();
       expect(json['starts_on'], '2026-11-03');
-      // One reading time is sent as before, for a server without several.
-      expect(json['time_of_day'], '07:30');
-      expect(json['glucose_context'], 'fasting');
-      expect(json.containsKey('times'), isFalse);
+      expect(json['times'], [
+        {'time_of_day': '07:30', 'measurement_state': 'fasting'},
+      ]);
+      expect(json['missed_after_minutes'], 60);
       expect(json['glucose_low'], 80);
       expect(json['glucose_high'], 140);
       expect(json.containsKey('expected_version_number'), isFalse);
@@ -47,20 +50,21 @@ void main() {
     test('computed occurrence maps a late reading and its target result', () {
       final occurrence = MeasurementOccurrence.fromJson({
         'plan_id': 'plan',
-        'version_id': 'version',
+        'plan_version_id': 'version',
         'kind': 'glucose',
         'scheduled_on': '2026-11-03',
         'time_of_day': '07:30',
         'deadline_at': '2026-11-03T08:30:00+03:00',
         'status': 'read_late',
-        'glucose_context': 'fasting',
-        'record': {
+        'measurement_state': 'fasting',
+        'reading': {
           'id': 'record',
           'kind': 'glucose',
           'outcome': 'read',
           'recorded_at': '2026-11-03T09:00:00+03:00',
           'measured_at': '2026-11-03T08:45:00+03:00',
-          'value_one': 151,
+          'glucose_value': 151,
+          'conditions': ['fasting'],
           'outside_target': true,
         },
       });
@@ -73,11 +77,8 @@ void main() {
       final draft = MeasurementPlanDraft(
         kind: MeasurementKind.glucose,
         times: const [
-          MeasurementTime(time: '07:00', conditions: ['fasting']),
-          MeasurementTime(
-            time: '14:00',
-            conditions: ['after_meal', 'exertion'],
-          ),
+          MeasurementTime(time: '07:00', measurementState: 'fasting'),
+          MeasurementTime(time: '14:00', measurementState: 'after_meal'),
         ],
         weekdays: const [1],
         startsOn: DateTime(2026, 11, 3),
@@ -88,47 +89,25 @@ void main() {
       final json = draft.toJson();
       expect(json.containsKey('time_of_day'), isFalse);
       expect(json['times'], [
-        {'time_of_day': '07:00', 'glucose_context': 'fasting'},
-        // Two conditions: only a list holds them.
-        {
-          'time_of_day': '14:00',
-          'conditions': ['after_meal', 'exertion'],
-        },
+        {'time_of_day': '07:00', 'measurement_state': 'fasting'},
+        {'time_of_day': '14:00', 'measurement_state': 'after_meal'},
       ]);
 
       final version = MeasurementVersion.fromJson({
         'id': 'v',
-        'number': 1,
+        'version_number': 1,
         'effective_from_on': '2026-11-03',
-        'time_of_day': '07:00',
         'weekdays': [1],
-        'grace_minutes': 60,
-        'glucose_context': 'fasting',
+        'missed_after_minutes': 60,
         'times': json['times'],
       });
       expect(version.readingTimes, draft.times);
-
-      // An older server lists no times: the one time it has.
-      final older = MeasurementVersion.fromJson({
-        'id': 'v',
-        'number': 1,
-        'effective_from_on': '2026-11-03',
-        'time_of_day': '08:00',
-        'weekdays': [1],
-        'grace_minutes': 60,
-        'glucose_context': 'before_meal',
-      });
-      expect(older.readingTimes, const [
-        MeasurementTime(time: '08:00', conditions: ['before_meal']),
-      ]);
     });
 
-    test('one time with conditions only a list holds goes as times', () {
+    test('a blood-pressure time has no measurement state', () {
       final draft = MeasurementPlanDraft(
         kind: MeasurementKind.bp,
-        times: const [
-          MeasurementTime(time: '08:00', conditions: ['exertion']),
-        ],
+        times: const [MeasurementTime(time: '08:00')],
         weekdays: const [1],
         startsOn: DateTime(2026, 11, 3),
         graceMinutes: 60,
@@ -138,41 +117,31 @@ void main() {
       final json = draft.toJson();
       expect(json.containsKey('time_of_day'), isFalse);
       expect(json['times'], [
-        {
-          'time_of_day': '08:00',
-          'conditions': ['exertion'],
-        },
+        {'time_of_day': '08:00', 'measurement_state': null},
       ]);
     });
 
-    test('a reading sends one context and one condition when they fit', () {
-      const fits = MeasurementReadingDraft(
+    test('a reading sends its values and all its conditions', () {
+      const draft = MeasurementReadingDraft(
         kind: MeasurementKind.glucose,
         outcome: 'read',
-        conditions: ['after_meal', 'stress'],
-      );
-      expect(fits.toJson()['glucose_context'], 'after_meal');
-      expect(fits.toJson()['condition'], 'stress');
-      expect(fits.toJson().containsKey('conditions'), isFalse);
-
-      const more = MeasurementReadingDraft(
-        kind: MeasurementKind.glucose,
-        outcome: 'read',
+        valueOne: 150,
         conditions: ['after_meal', 'stress', 'exertion'],
       );
-      expect(more.toJson()['conditions'], ['after_meal', 'stress', 'exertion']);
-      expect(more.toJson().containsKey('glucose_context'), isFalse);
+      final json = draft.toJson();
+      expect(json['glucose_value'], 150);
+      expect(json['conditions'], ['after_meal', 'stress', 'exertion']);
 
-      // An older server's one of each reads back as a list.
-      final reading = MeasurementReading.fromJson({
-        'id': 'r',
-        'kind': 'glucose',
-        'outcome': 'read',
-        'recorded_at': '2026-11-03T09:00:00+03:00',
-        'glucose_context': 'fasting',
-        'condition': 'exertion',
-      });
-      expect(reading.conditions, ['fasting', 'exertion']);
+      const pressure = MeasurementReadingDraft(
+        kind: MeasurementKind.bp,
+        outcome: 'read',
+        valueOne: 130,
+        valueTwo: 80,
+        conditions: [],
+      );
+      expect(pressure.toJson()['kind'], 'blood_pressure');
+      expect(pressure.toJson()['systolic_value'], 130);
+      expect(pressure.toJson()['diastolic_value'], 80);
     });
 
     test('a meal state replaces another; other conditions add up', () {
@@ -192,7 +161,7 @@ void main() {
         conditions: ['other'],
         otherCondition: 'بعد القهوة',
       );
-      expect(other.toJson()['other_condition'], 'بعد القهوة');
+      expect(other.toJson()['other_text'], 'بعد القهوة');
 
       const without = MeasurementReadingDraft(
         kind: MeasurementKind.bp,
@@ -200,15 +169,15 @@ void main() {
         conditions: ['stress'],
         otherCondition: 'بعد القهوة',
       );
-      expect(without.toJson().containsKey('other_condition'), isFalse);
+      expect(without.toJson().containsKey('other_text'), isFalse);
 
       final reading = MeasurementReading.fromJson({
         'id': 'r',
-        'kind': 'bp',
+        'kind': 'blood_pressure',
         'outcome': 'read',
         'recorded_at': '2026-11-09T10:00:00+03:00',
         'conditions': ['other'],
-        'other_condition': 'بعد القهوة',
+        'other_text': 'بعد القهوة',
       });
       expect(reading.otherCondition, 'بعد القهوة');
     });

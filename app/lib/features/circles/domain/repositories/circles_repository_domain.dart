@@ -40,6 +40,14 @@ abstract class CirclesRepositoryDomain {
     String invitationId,
   );
 
+  Future<Result<void, Failure>> setMemberEditAccess(
+    String circleId,
+    String accountId, {
+    required bool canEdit,
+  });
+
+  Future<Result<void, Failure>> removeMember(String circleId, String accountId);
+
   Future<Result<void, Failure>> leaveCircle(
     String circleId, {
     required bool confirmDelete,

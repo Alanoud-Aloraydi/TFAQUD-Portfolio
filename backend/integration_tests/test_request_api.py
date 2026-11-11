@@ -8,12 +8,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.clock import ManualClock
-from app.models import Account, CareCircle, CareCircleCreationRequest
-from app.models import CareCircleManager, Patient
+from app.models import Account, CareCircle, CareCircleRequest
+from app.models import CareCircleManager
 from integration_tests.helpers import Api, count, error_code
 
 BASE = "/api/v1/circle-requests"
-REQUEST = {"circle_label": "Mother", "proposed_app_mode": "simplified"}
+REQUEST = {"proposed_app_mode": "simplified"}
 BASICS = {"birth_date": "1950-01-02", "city": "Buraydah"}
 
 
@@ -95,7 +95,7 @@ def test_request_from_sending_to_the_new_circle(
             }
         ]
     with Session(database) as session:
-        row = session.get(CareCircleCreationRequest, UUID(request_id))
+        row = session.get(CareCircleRequest, UUID(request_id))
         assert row.status == "completed"
         assert str(row.care_circle_id) == circle["id"]
 
@@ -170,7 +170,7 @@ def test_a_failed_completion_keeps_the_accepted_request(
 
     assert error_code(bad, 422) == "empty_selection"
     assert count(database, CareCircle) == 0
-    assert count(database, Patient) == 0
+    assert count(database, CareCircle) == 0
     assert receiver.get(BASE).json["received"][0]["status"] == "accepted"
     retry = receiver.post(f"{BASE}/{request_id}/complete", BASICS)
     assert retry.status_code == 201
@@ -211,7 +211,7 @@ def test_the_sender_cannot_give_the_consent(database_app, database, account):
 
     assert error_code(response, 404) == "not_found"
     with Session(database) as session:
-        row = session.scalar(select(CareCircleCreationRequest))
+        row = session.scalar(select(CareCircleRequest))
         assert row.status == "pending"
 
 
@@ -246,7 +246,7 @@ def test_declining_is_shown_to_the_sender_for_a_week(
     assert [r["status"] for r in sender.get(BASE).json["sent"]] == ["declined"]
     with Session(database) as session:
         responded = session.scalar(
-            select(CareCircleCreationRequest.responded_at)
+            select(CareCircleRequest.responded_at)
         )
     later = ManualClock(responded + timedelta(days=8))
     monkeypatch.setitem(database_app.extensions, "clock", later)
@@ -265,7 +265,7 @@ def test_asking_the_same_person_twice_returns_the_open_request(
     second = send(sender, patient).json["request"]
 
     assert first["id"] == second["id"]
-    assert count(database, CareCircleCreationRequest) == 1
+    assert count(database, CareCircleRequest) == 1
 
 
 def test_sender_and_patient_can_cancel_an_open_request(

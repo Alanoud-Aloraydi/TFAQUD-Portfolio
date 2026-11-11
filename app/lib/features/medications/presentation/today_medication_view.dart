@@ -29,8 +29,7 @@ class TodayMedicationView {
           return item != next &&
               !scheduledOn.isAfter(today) &&
               item.record == null &&
-              (status == DoseTimingState.late ||
-                  status == DoseTimingState.missed);
+              status == DoseTimingState.missed;
         }).toList()..sort((a, b) {
           final byDate = b.scheduledOn.compareTo(a.scheduledOn);
           return byDate != 0 ? byDate : a.time.compareTo(b.time);

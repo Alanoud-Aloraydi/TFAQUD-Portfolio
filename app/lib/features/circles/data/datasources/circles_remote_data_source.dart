@@ -32,6 +32,14 @@ abstract class BaseCirclesRemoteDataSource {
 
   Future<void> cancelManagerInvitation(String circleId, String invitationId);
 
+  Future<void> setMemberEditAccess(
+    String circleId,
+    String accountId, {
+    required bool canEdit,
+  });
+
+  Future<void> removeMember(String circleId, String accountId);
+
   Future<void> leaveCircle(String circleId, {required bool confirmDelete});
 
   /// POST /api/v1/circles/self.
@@ -143,6 +151,23 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
     String invitationId,
   ) async {
     await _client.delete(ApiEndpoints.circleInvitation(circleId, invitationId));
+  }
+
+  @override
+  Future<void> setMemberEditAccess(
+    String circleId,
+    String accountId, {
+    required bool canEdit,
+  }) async {
+    await _client.patch(
+      ApiEndpoints.circleMember(circleId, accountId),
+      data: <String, bool>{'can_edit': canEdit},
+    );
+  }
+
+  @override
+  Future<void> removeMember(String circleId, String accountId) async {
+    await _client.delete(ApiEndpoints.circleMember(circleId, accountId));
   }
 
   @override

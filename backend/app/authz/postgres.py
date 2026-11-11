@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.authz.circle_access import CircleAccess
 from app.authz.roles import CircleRole
 from app.database import db, transaction
-from app.models import Account, CareCircleManager, Patient
+from app.models import Account, CareCircle, CareCircleManager
 
 
 class PostgresCircleAccess(CircleAccess):
@@ -22,24 +22,23 @@ class PostgresCircleAccess(CircleAccess):
             return None
         with transaction():
             # A manager (a patient in the full app manages their own circle).
-            manager = db.session.scalar(
-                select(CareCircleManager.id).where(
+            membership = db.session.scalar(
+                select(CareCircleManager.can_edit).where(
                     CareCircleManager.account_id == account_id,
                     CareCircleManager.care_circle_id == care_circle_id,
                 )
             )
-            if manager is not None:
-                return CircleRole.MANAGER
+            if membership is not None:
+                return (
+                    CircleRole.MANAGER if membership else CircleRole.MEMBER
+                )
             # Else the circle's patient in the simplified mode.
             mode = db.session.scalar(
                 select(Account.app_mode)
-                .join(
-                    Patient,
-                    Patient.account_id == Account.id,
-                )
+                .join(CareCircle, CareCircle.account_id == Account.id)
                 .where(
                     Account.id == account_id,
-                    Patient.care_circle_id == care_circle_id,
+                    CareCircle.id == care_circle_id,
                 )
             )
             if mode == "simplified":

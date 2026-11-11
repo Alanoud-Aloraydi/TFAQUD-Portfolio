@@ -151,8 +151,13 @@ void main() {
       home.response = Success(homeData(circles: <CareCircleSummary>[]));
       await pumpApp(tester);
       expect(find.text('home.no_circles'.tr()), findsOneWidget);
-      expect(find.text('home.create_circle'.tr()), findsOneWidget);
-      // With no circle yet, the switcher is «إضافة دائرة» itself.
+      // The button under the message; the switcher above has the same
+      // words.
+      expect(
+        find.widgetWithText(FilledButton, 'home.create_circle'.tr()),
+        findsOneWidget,
+      );
+      // With no circle yet, the switcher is «إضافة فرد لمتابعته» itself.
       final GlassCapsuleButton addCircle = tester.widget<GlassCapsuleButton>(
         find.descendant(
           of: find.byType(HomeWidget),

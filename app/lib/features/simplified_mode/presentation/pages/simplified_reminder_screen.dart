@@ -176,8 +176,8 @@ class SimplifiedReminderScreen extends StatelessWidget {
           : simplifiedTime(context, item.time),
       chips: <String>[
         if (bp) context.tr('simplified_mode.bp_arm'),
-        for (final String code in item.conditions)
-          context.tr('measurements.condition.$code'),
+        if (item.measurementState case final state?)
+          context.tr('measurements.condition.$state'),
       ],
       hero: Icon(
         measurementIcon(item.kind),

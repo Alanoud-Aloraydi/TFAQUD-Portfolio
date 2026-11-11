@@ -63,6 +63,11 @@ class PrivatePhotoRepository {
     _changes.value++;
   }
 
+  /// Drops photos that may have changed on another circle member's phone.
+  /// The caller is already refreshing its page, so this does not emit a
+  /// second change and start a duplicate data load.
+  void invalidateCache() => _photos.clear();
+
   void clear() {
     _photos.clear();
     _changes.value++;

@@ -289,6 +289,14 @@ class _RecordedStatus extends StatelessWidget {
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                if (!taken && record.skipReasonCode != null)
+                  Text(
+                    context.tr(
+                      'medications.skip_reason_line',
+                      args: [doseSkipReasonText(context, record)],
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (circleId case final circleId?)
                   if (record.recordedByName case final name?) ...[
                     const SizedBox(height: AppSpacing.xs),

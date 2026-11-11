@@ -15,7 +15,7 @@ from app.medications.representations import schedule_responses
 from app.medications.schedule_days import load_days
 from app.models import MedicationDoseRecord, MedicationPlan
 from app.models import MedicationPlanVersion, MedicationSchedule
-from app.models import Patient
+from app.models import CareCircle
 from app.snoozes.queries import attach_snoozes
 
 
@@ -40,7 +40,7 @@ class MedicationQueries:
                 == MedicationPlan.id,
             )
             .where(
-                MedicationPlan.patient_id == patient.id,
+                MedicationPlan.care_circle_id == patient.id,
                 MedicationPlanVersion.cancelled_at.is_(None),
             )
         )
@@ -59,13 +59,13 @@ class MedicationQueries:
         return sorted(
             result,
             key=lambda item: (
-                item["discontinued_at"] is not None,
+                item["stopped_at"] is not None,
                 item["version"]["name"],
                 item["id"],
             ),
         )
 
-    def _latest_records(self, patient_id: UUID) -> dict[str, dict]:
+    def _latest_records(self, care_circle_id: UUID) -> dict[str, dict]:
         """Find the latest explicit dose outcome for each medication plan."""
         # Number each plan's dose records from the latest (by day, then dose
         # time, then when it was recorded), across all its versions, every
@@ -76,6 +76,8 @@ class MedicationQueries:
                 MedicationDoseRecord.outcome,
                 MedicationDoseRecord.scheduled_on,
                 MedicationDoseRecord.taken_at,
+                MedicationDoseRecord.skip_reason_code,
+                MedicationDoseRecord.skip_reason_note,
                 MedicationDoseRecord.recorded_by_account_id,
                 MedicationSchedule.time_of_day,
                 func.row_number().over(
@@ -102,7 +104,7 @@ class MedicationQueries:
                 MedicationDoseRecord.schedule_id
                 == MedicationSchedule.id,
             )
-            .where(MedicationPlan.patient_id == patient_id)
+            .where(MedicationPlan.care_circle_id == care_circle_id)
             .subquery()
         )
         # Keep the first of each plan, and who recorded it.
@@ -129,6 +131,8 @@ class MedicationQueries:
                 "taken_at": (
                     row.taken_at.isoformat() if row.taken_at else None
                 ),
+                "skip_reason_code": row.skip_reason_code,
+                "skip_reason_note": row.skip_reason_note,
                 "recorded_by": recorder_response(
                     accounts.get(row.recorded_by_account_id)
                 ),
@@ -151,7 +155,7 @@ class MedicationQueries:
             )
             .where(
                 MedicationPlan.id == plan_id,
-                MedicationPlan.patient_id == patient.id,
+                MedicationPlan.care_circle_id == patient.id,
                 MedicationPlanVersion.cancelled_at.is_(None),
             )
         ).all()
@@ -236,7 +240,7 @@ class MedicationQueries:
                 == MedicationPlanVersion.id,
             )
             .where(
-                MedicationPlan.patient_id == patient.id,
+                MedicationPlan.care_circle_id == patient.id,
                 MedicationPlanVersion.treatment_starts_on <= to_date,
                 MedicationPlanVersion.cancelled_at.is_(None),
                 (
@@ -273,10 +277,10 @@ class MedicationQueries:
             to_date, self.now,
         )
 
-    def _patient(self, circle_id: UUID) -> Patient:
+    def _patient(self, circle_id: UUID) -> CareCircle:
         """The circle's patient; 404 when there is none."""
         patient = self.session.scalar(
-            select(Patient).where(Patient.care_circle_id == circle_id)
+            select(CareCircle).where(CareCircle.id == circle_id)
         )
         if patient is None:
             raise NotFound("The patient does not exist.")

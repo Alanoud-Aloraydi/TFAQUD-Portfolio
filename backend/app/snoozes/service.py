@@ -85,7 +85,7 @@ class SnoozeService:
                 item
                 for item in MeasurementQueries(self.session, self.now)
                 .occurrences(circle_id, day, day)
-                if item["version_id"] == str(body.task_id)
+                if item["plan_version_id"] == str(body.task_id)
                 and item["time_of_day"] == wanted
             ]
             answered = bool(found) and found[0]["status"] in _ANSWERED

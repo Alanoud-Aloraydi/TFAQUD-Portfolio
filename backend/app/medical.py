@@ -16,7 +16,7 @@ from sqlalchemy import delete, select
 
 from app.care import CareService
 from app.errors import NotFound, ValidationFailed
-from app.models import EmergencyContact, Patient, PatientAllergy
+from app.models import CareCircle, EmergencyContact, PatientAllergy
 from app.models import PatientCondition
 from app.models.medical import (
     BLOOD_TYPES,
@@ -157,35 +157,38 @@ class MedicalService(CareService):
         self._lock_accounts(actor_id)
         if lock:
             self._lock_circle(circle_id)
-        patient = self._get_patient(circle_id)
-        self.session.refresh(patient)
-        if patient.account_id != actor_id:
+        circle = self.session.get(
+            CareCircle, circle_id, populate_existing=True
+        )
+        if circle is None:
+            raise NotFound("The care circle does not exist.")
+        if circle.account_id != actor_id:
             self._require_manager(actor_id, circle_id)
-        return patient
+        return circle
 
     # ---- profile ----------------------------------------------------
 
     def get_file(
         self, actor_id: UUID, circle_id: UUID
-    ) -> tuple[Patient, MedicalProfile, list[EmergencyContact]]:
+    ) -> tuple[CareCircle, MedicalProfile, list[EmergencyContact]]:
         """Return the patient, the health data and the contacts."""
         patient = self._open_for(actor_id, circle_id, lock=False)
         return patient, self._read_profile(patient), self._contacts(patient)
 
-    def _read_profile(self, patient: Patient) -> MedicalProfile:
+    def _read_profile(self, patient: CareCircle) -> MedicalProfile:
         """The patient's blood type, conditions and allergies, as saved."""
         profile = MedicalProfile(blood_type=patient.blood_type)
-        # Conditions: no rows means not answered yet; one «none» row means
-        # none; otherwise the codes in the app's order, with the words for
-        # «أخرى».
+        # Conditions: the circle's status says not answered yet (null),
+        # none, or listed; listed gives the codes in the app's order, with
+        # the words for «أخرى».
         conditions = self.session.scalars(
             select(PatientCondition).where(
-                PatientCondition.patient_id == patient.id
+                PatientCondition.care_circle_id == patient.id
             )
         ).all()
-        if conditions:
+        if patient.conditions_status is not None:
             codes = {row.code for row in conditions}
-            if codes == {"none"}:
+            if patient.conditions_status == "none":
                 profile.conditions = {
                     "status": "none",
                     "codes": [],
@@ -205,11 +208,11 @@ class MedicalService(CareService):
         # own words for «أخرى».
         allergies = self.session.scalars(
             select(PatientAllergy).where(
-                PatientAllergy.patient_id == patient.id
+                PatientAllergy.care_circle_id == patient.id
             )
         ).all()
-        if allergies:
-            if {row.kind for row in allergies} == {"none"}:
+        if patient.allergies_status is not None:
+            if patient.allergies_status == "none":
                 profile.allergies = {
                     "status": "none",
                     "medication": [],
@@ -267,46 +270,55 @@ class MedicalService(CareService):
         if update.blood_type is not UNSET:
             patient.blood_type = update.blood_type
         if "conditions" in rows:
+            patient.conditions_status, items = rows["conditions"]
             self.session.execute(
                 delete(PatientCondition).where(
-                    PatientCondition.patient_id == patient.id
+                    PatientCondition.care_circle_id == patient.id
                 )
             )
             self.session.add_all(
                 PatientCondition(
-                    patient_id=patient.id, code=code, other_text=text
+                    care_circle_id=patient.id, code=code, other_text=text
                 )
-                for code, text in rows["conditions"]
+                for code, text in items
             )
         if "allergies" in rows:
+            patient.allergies_status, items = rows["allergies"]
             self.session.execute(
                 delete(PatientAllergy).where(
-                    PatientAllergy.patient_id == patient.id
+                    PatientAllergy.care_circle_id == patient.id
                 )
             )
             self.session.add_all(
                 PatientAllergy(
-                    patient_id=patient.id,
+                    care_circle_id=patient.id,
                     kind=kind,
                     code=code,
                     other_text=text,
                 )
-                for kind, code, text in rows["allergies"]
+                for kind, code, text in items
             )
         self.session.flush()
         return self._read_profile(patient)
 
     def _rows_for(self, update: MedicalUpdate) -> dict:
-        """Turn the requested parts into rows, or raise a field error."""
+        """Turn the requested parts into (status, rows), or raise a field
+        error; a part cleared to unknown is (None, [])."""
         rows = {}
         if isinstance(update.conditions, Conditions):
-            rows["conditions"] = self._condition_rows(update.conditions)
+            rows["conditions"] = (
+                update.conditions.status,
+                self._condition_rows(update.conditions),
+            )
         elif update.conditions is None:
-            rows["conditions"] = []
+            rows["conditions"] = (None, [])
         if isinstance(update.allergies, Allergies):
-            rows["allergies"] = self._allergy_rows(update.allergies)
+            rows["allergies"] = (
+                update.allergies.status,
+                self._allergy_rows(update.allergies),
+            )
         elif update.allergies is None:
-            rows["allergies"] = []
+            rows["allergies"] = (None, [])
         return rows
 
     @staticmethod
@@ -314,7 +326,7 @@ class MedicalService(CareService):
         """The rows to save for the conditions; «none» cannot come with any
         condition.
         """
-        # «None» is one row, alone.
+        # «None» is the status alone, with no rows.
         if value.status == "none":
             if value.codes or value.other:
                 raise _invalid(
@@ -322,7 +334,7 @@ class MedicalService(CareService):
                     "none_is_exclusive",
                     "'No conditions' cannot be combined with other choices.",
                 )
-            return [("none", None)]
+            return []
         # A list needs one item at least, known codes each once, and words when
         # «أخرى» is chosen; the rows in the app's order.
         if value.status != "listed":
@@ -356,7 +368,7 @@ class MedicalService(CareService):
                     "none_is_exclusive",
                     "'No allergies' cannot be combined with other choices.",
                 )
-            return [("none", "none", None)]
+            return []
         # A list needs one item at least, known codes each once, and words for
         # each «أخرى» chosen.
         if value.status != "listed":
@@ -390,12 +402,12 @@ class MedicalService(CareService):
 
     # ---- emergency contacts ------------------------------------------
 
-    def _contacts(self, patient: Patient) -> list[EmergencyContact]:
+    def _contacts(self, patient: CareCircle) -> list[EmergencyContact]:
         """The patient's emergency contacts, the first added first."""
         return list(
             self.session.scalars(
                 select(EmergencyContact)
-                .where(EmergencyContact.patient_id == patient.id)
+                .where(EmergencyContact.care_circle_id == patient.id)
                 .order_by(EmergencyContact.created_at, EmergencyContact.id)
             )
         )
@@ -426,7 +438,7 @@ class MedicalService(CareService):
                 code="duplicate_contact",
             )
         contact = EmergencyContact(
-            patient_id=patient.id,
+            care_circle_id=patient.id,
             name=name,
             relation=relation,
             phone_number=phone,
@@ -474,7 +486,7 @@ class MedicalService(CareService):
         self.session.flush()
 
     def _get_contact(
-        self, patient: Patient, contact_id: UUID
+        self, patient: CareCircle, contact_id: UUID
     ) -> EmergencyContact:
         """A contact is only reachable through its own patient's circle."""
         contact = self.session.get(
@@ -483,7 +495,7 @@ class MedicalService(CareService):
             with_for_update=True,
             populate_existing=True,
         )
-        if contact is None or contact.patient_id != patient.id:
+        if contact is None or contact.care_circle_id != patient.id:
             raise NotFound("The emergency contact does not exist.")
         return contact
 

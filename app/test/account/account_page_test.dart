@@ -97,7 +97,6 @@ void main() {
             SentCircleRequest(
               id: 'request-1',
               patientPhoneNumber: '+966507654321',
-              circleLabel: 'أمي',
               proposedAppMode: CircleAppMode.simplified,
               status: CircleRequestStatus.pending,
               createdAt: fiveDaysAgo,
@@ -105,14 +104,12 @@ void main() {
             const SentCircleRequest(
               id: 'request-2',
               patientPhoneNumber: '+966501112233',
-              circleLabel: 'أبي',
               proposedAppMode: CircleAppMode.detailed,
               status: CircleRequestStatus.accepted,
             ),
             const SentCircleRequest(
               id: 'request-3',
               patientPhoneNumber: '+966504445566',
-              circleLabel: 'خالتي',
               proposedAppMode: CircleAppMode.simplified,
               status: CircleRequestStatus.declined,
             ),
@@ -148,7 +145,6 @@ void main() {
               SentCircleRequest(
                 id: 'request-1',
                 patientPhoneNumber: '+966507654321',
-                circleLabel: 'أمي',
                 proposedAppMode: CircleAppMode.simplified,
                 status: CircleRequestStatus.pending,
                 createdAt: fiveDaysAgo,
@@ -216,7 +212,11 @@ void main() {
         await tester.tap(find.text('circles.cancel_request'.tr()));
         await tester.pumpAndSettle();
         await tester.tap(find.text('circles.cancel_confirm_yes'.tr()));
-        await tester.pumpAndSettle();
+        // Let the dialog close and the failed request rebuild the sheet. A
+        // snackbar deliberately remains visible for a few seconds, so waiting
+        // for every animation to settle makes this test unnecessarily hang.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('error.network'.tr()), findsOneWidget);
         expect(find.text('account.request_sheet_title'.tr()), findsOneWidget);

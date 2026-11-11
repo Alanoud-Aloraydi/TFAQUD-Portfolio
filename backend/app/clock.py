@@ -7,7 +7,7 @@ Code never calls `datetime.now()` directly. It calls `clock.now()`.
                  how token expiry is checked without waiting 15 minutes.
 
 Every calendar rule of a circle (schedules, "today", birth dates) follows
-the patient's own IANA zone, `Patient.time_zone`, whoever records and
+the patient's own IANA zone, `CareCircle.time_zone`, whoever records and
 wherever their phone is. `patient_zone`, `patient_today` and `local_moment`
 are the only ways the server reads it; `latest_today` is the bound for a
 date that has no patient yet.
@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Protocol
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 if TYPE_CHECKING:
-    from app.models import Patient
+    from app.models import CareCircle
 
 # The zone of every patient made before zones were stored (migration 0030),
 # and of a Saudi city when the app sends none.
@@ -44,12 +44,12 @@ def is_zone(name: str) -> bool:
     return True
 
 
-def patient_zone(patient: "Patient") -> ZoneInfo:
+def patient_zone(patient: "CareCircle") -> ZoneInfo:
     """The zone where the patient lives, with its real DST rules."""
     return ZoneInfo(patient.time_zone)
 
 
-def patient_today(patient: "Patient", now: datetime) -> date:
+def patient_today(patient: "CareCircle", now: datetime) -> date:
     """The patient's calendar day at the instant `now`."""
     return now.astimezone(patient_zone(patient)).date()
 

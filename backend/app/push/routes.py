@@ -51,11 +51,7 @@ def register_push_device():
     # phone that signed in again).
     auth = current_auth()
     now = get_clock().now()
-    values = {
-        "account_id": UUID(auth.user_id),
-        "session_id": UUID(auth.session_id),
-        "updated_at": now,
-    }
+    values = {"session_id": UUID(auth.session_id), "updated_at": now}
     token = body.token.lower()
     with transaction() as session:
         # The token this sign-in sent before, if iOS has given a new one.

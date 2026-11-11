@@ -100,7 +100,9 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
   /// Shows [kind], starting its conditions from the task when there is one.
   void _show(SimplifiedMeasurementState state, MeasurementKind? kind) {
     _kind = kind;
-    _conditions = state.task?.conditions ?? const <String>[];
+    _conditions = state.task?.measurementState == null
+        ? const <String>[]
+        : <String>[state.task!.measurementState!];
     _errorKey = null;
   }
 

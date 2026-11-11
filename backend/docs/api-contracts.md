@@ -101,10 +101,10 @@ English and for developers; the app shows its own Arabic text for the `code`.
 | `self_request` | A circle request to your own number. |
 | `accepted_request_exists` | The patient accepted another request that is not finished. |
 | `request_not_pending` | The request was already answered the other way, or is finished. |
-| `request_not_cancelable` | Only a pending or accepted request can be canceled. |
+| `request_not_cancelable` | Only a pending or accepted request can be cancelled. |
 | `consent_required` | The patient has not accepted this request, so the circle cannot be created. |
 | `self_invitation`, `already_manager` | An invitation to yourself, or to a number that already manages the circle. |
-| `invitation_not_pending`, `invitation_not_cancelable` | The invitation is already answered or canceled. |
+| `invitation_not_pending`, `invitation_not_cancelable` | The invitation is already answered or cancelled. |
 | `confirmation_required` | Leaving as the last manager, or deleting the circle, needs the explicit confirmation. |
 | `last_manager` | Deleting the account would leave a circle without a manager. |
 | `patient_choice_required` | A patient who deletes the account must choose `delete` or `continue`. |
@@ -723,8 +723,7 @@ The flow has three steps. The circle exists only after step 3.
 
 1. The sender calls `POST /api/v1/circle-requests` with
    `{ "patient_phone_number": "+9665XXXXXXXX", "proposed_app_mode": "simplified" }`.
-   `circle_label` (1 to 30 characters) is optional and no longer names the circle;
-   an older app still sends it, and it is kept (`دائرة` when left out). The number
+   The request has no circle name (the circle is named from its patient). The number
    need not have an account yet; the request waits for it. If the sender already has an open request to that number,
    it is returned instead of a second one.
 2. The patient sees it in `GET /api/v1/circle-requests` under `received`, and calls
@@ -750,7 +749,6 @@ Accepting sets the mode of the patient's account, once.
     {
       "id": "7c054a73-e522-4d1d-ae65-8fac8cf01e85",
       "patient_phone_number": "+966506666663",
-      "circle_label": "دائرة",
       "proposed_app_mode": "simplified",
       "status": "pending",
       "created_at": "2026-10-26T08:03:19.816997+00:00",
@@ -762,7 +760,6 @@ Accepting sets the mode of the patient's account, once.
     {
       "id": "...",
       "status": "pending",
-      "circle_label": "دائرة",
       "circle_name": null,
       "proposed_app_mode": "simplified",
       "requested_by": { "display_name": "Reem", "first_name": "Reem", "last_name": "Family" },
@@ -890,23 +887,22 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 |---|---|---|
 | `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `birth_date`, `city`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. `birth_date` (not before 1900) and `city` (1 to 60 characters) are optional; onboarding fills them (migration 0009). |
 | `account_session` | One row per sign-in: the hash of the refresh token, `created_at`, `revoked_at` (no end date since migration 0031). | Deleted with the account. The hash is unique. No device and no IP address are stored. |
-| `otp_challenge`, `otp_send_attempt` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
-| `care_circle` | A circle: `name`. | A circle always has exactly one patient and at least one manager (checked when the transaction commits). |
-| `patient` | The patient of a circle: `account_id` (empty for a patient without an account), names (only when there is no account), `birth_date`, `city`, `time_zone` (IANA), `latitude`, `longitude`, `blood_type`. | One per circle. `time_zone` is not blank (the server checks it is a real zone). An account is the patient of at most one circle. Names come from the account while it is linked. Coordinates are in range. |
+| `otp_request`, `otp_send` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
+| `care_circle` | A circle and its patient in one row (migration 0037): `name` when the patient has an account (`account_id`), otherwise the patient's own `first_name`, `last_name`, `birth_date`, `city`; `time_zone` (IANA), `latitude`, `longitude`, `blood_type`, `conditions_status` and `allergies_status` (`none` or `listed`). | One source of identity: the account or the own names, never both. At least one manager (checked when the transaction commits). A detailed patient manages their own circle. |
 | `care_circle_manager` | Who manages a circle. | Once per account and circle. A manager has a complete account in `detailed` mode. A detailed patient manages their own circle. |
-| `care_circle_creation_request` | A request to create a circle for a patient: status `pending`, `accepted`, `completed`, `declined`, `canceled` or `superseded`. | One open request per sender and number. A patient can have one accepted request at a time. A completed request points to its circle. |
-| `care_circle_manager_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `canceled`. | One pending invitation per circle and number. |
+| `care_circle_request` | A request to create a circle for a patient: status `pending`, `accepted`, `completed`, `declined`, `cancelled` or `superseded`. | One open request per sender and number. A patient can have one accepted request. |
+| `care_circle_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `cancelled`. | One pending invitation per circle and number. |
 | `patient_condition` | Chronic conditions of a patient (`code`, and `other_text` for `other`). | Codes from the official list; `other_text` exactly when the code is `other`; a code once per patient. |
-| `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or one row `none`. | The same rules; the code must belong to the kind. |
+| `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or none when `allergies_status` is `none`. | The same rules; the code must belong to the kind. |
 | `emergency_contact` | Contacts of a patient: `name`, `relation`, `phone_number`. | Phone format, relation from the list, a number once per patient. The limit of 5 is checked by the server, not by the database. |
-| `push_device` | A phone's Apple push `token`, its `account_id` and `session_id` (migration 0010). | The token is hexadecimal (64 to 200 characters) and unique. Deleted with its sign-in and with its account. |
+| `push_device` | A phone's Apple push `token` and its `session_id` (its account is the session's). | The token is hexadecimal (64 to 200 characters) and unique. Deleted with its sign-in. |
 
-The medical tables (`patient.blood_type`, `patient_condition`, `patient_allergy`,
+The medical tables (`care_circle.blood_type`, `patient_condition`, `patient_allergy`,
 `emergency_contact`) are **To confirm**: they are the design of 26 October 2026,
 made from the Figma screens, and the team has not approved them. They are migration
 `0005`; it only adds, so it can be reverted without touching care data.
 
-**Migrations.** `migrations/versions/0001` to `0005`, run by Alembic through
+**Migrations.** `migrations/versions/0001` to `0044`, run by Alembic through
 `flask --app wsgi db upgrade`. The tests start from an empty database and run the
 migrations, so the migrations are tested too (`test_migrations_round_trip`).
 
@@ -929,7 +925,7 @@ other and cannot deadlock. The sign-in operations use the same ideas: `INSERT ..
 ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limits
 on its codes.
 
-The phone number is personal data. Rows of `otp_challenge` and `otp_send_attempt`
+The phone number is personal data. Rows of `otp_request` and `otp_send`
 older than 24 hours serve no purpose and can be deleted by a cleanup job (not built
 yet).
 
@@ -1311,7 +1307,7 @@ change in the pull request review.
    handles a missing one. To decide with TFQD-7 and the circle features. The code
    now does the first: every circle action of an account without names is refused
    with 422 `profile_incomplete`. The team confirms it.
-8. The medical tables (`patient.blood_type`, `patient_condition`, `patient_allergy`,
+8. The medical tables (`care_circle.blood_type`, `patient_condition`, `patient_allergy`,
    `emergency_contact`, section 5) are a design made on 26 October 2026 from the
    Figma screens. The team approves or changes them. Nothing else depends on
    them, and the migration (`0005`) can be reverted.
@@ -1353,3 +1349,18 @@ the team has not reviewed them yet.
 | I | A declined request stays visible | The sender sees a declined circle request for 7 days, then it leaves the list. |
 | J | Emergency contacts | At most 5 per patient, a number once, Saudi mobile numbers only. |
 | K | Leaving as a patient | A manager who is also the patient cannot leave without deleting the circle (`confirm_delete`), because the circle must keep its patient. |
+
+## Database and API names (migrations 0034 to 0044)
+
+The patient is the circle: one table, one id. Renamed in the API with the database
+(old app builds must update): `canceled` → `cancelled`; measurement
+`grace_minutes` → `missed_after_minutes`; `value_one`/`value_two` →
+`glucose_value` or `systolic_value`/`diastolic_value`; `other_kind` and
+`other_condition` → `other_text`; kind `bp` → `blood_pressure`; version `number` →
+`version_number`; occurrence `version_id` → `plan_version_id` and `record` →
+`reading`; `PUT /measurement-records/{version}/{day}` →
+`PUT /measurement-readings/{plan_version_id}/{scheduled_on}`;
+`POST /medication-plans/{id}/discontinue` → `/stop`, `discontinued_at` →
+`stopped_at`, error `medication_discontinued` → `medication_stopped`. Removed:
+`circle_label` of a circle request, and the older `glucose_context` and
+`condition` fields of measurements (use `conditions`).
