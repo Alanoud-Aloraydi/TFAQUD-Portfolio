@@ -196,6 +196,7 @@ def test_a_member_leaves_other_circles_untouched(
             "is_you": True,
             "is_patient": False,
             "role": "manager",
+            "can_edit": True,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }

@@ -44,7 +44,9 @@ def test_simplified_patient_can_edit_own_profile(database, account):
         latitude=26.35,
         longitude=43.97,
     )
-    assert saved.city == "Buraidah"
+    assert saved.id == circle.id
+    with Session(database) as session:
+        assert session.get(Account, patient.id).city == "Buraidah"
     assert count(database, CareCircleManager) == 1
     # The patient names their own circle; the manager cannot.
     run(database, "rename_circle", patient.id, circle.id, "New name")
@@ -130,8 +132,8 @@ def test_canceling_consent_leaves_the_mode_unset(database, account):
         )
 
 
-def test_deleting_patient_account_cancels_accepted_request(database, account):
-    """SET NULL cannot leave accepted consent without its patient account."""
+def test_deleting_patient_account_removes_accepted_request(database, account):
+    """An accepted request addressed to a deleted phone is removed."""
     owner, patient = account(), account()
     request = run(
         database,
@@ -143,9 +145,7 @@ def test_deleting_patient_account_cancels_accepted_request(database, account):
     run(database, "respond_creation", patient.id, request.id, True)
     run(database, "delete_account", patient.id)
     with Session(database) as session:
-        saved = session.get(CareCircleRequest, request.id)
-        assert saved.status == "cancelled"
-        assert saved.responded_by_account_id is None
+        assert session.get(CareCircleRequest, request.id) is None
 
 
 def test_only_one_accepted_incomplete_request(database, account):

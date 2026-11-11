@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import PushDevice
+from app.models import AccountSession, PushDevice
 from app.push import NoPushSender, RecordingPushSender
 from integration_tests.helpers import offline_circle
 
@@ -60,6 +60,15 @@ def devices(database):
         }
 
 
+def device_accounts(database):
+    with Session(database) as session:
+        rows = session.execute(
+            select(PushDevice.token, AccountSession.account_id)
+            .join(AccountSession, AccountSession.id == PushDevice.session_id)
+        )
+        return dict(rows)
+
+
 def test_a_phone_registers_its_token(database_app, database, account):
     reem = account(name="Reem")
     phone = Phone(database_app, reem, "a")
@@ -68,7 +77,7 @@ def test_a_phone_registers_its_token(database_app, database, account):
 
     assert response.status_code == 204
     row = devices(database)[phone.token]
-    assert row.account_id == reem.id
+    assert device_accounts(database)[phone.token] == reem.id
     assert row.session_id.hex == phone.issued.session_id.replace("-", "")
     # Upper case is the same token.
     assert phone.register(phone.token.upper()).status_code == 204
@@ -81,7 +90,7 @@ def test_a_token_moves_with_the_phone(database_app, database, account):
 
     Phone(database_app, khaled, "a").register()
 
-    assert devices(database)["a" * 64].account_id == khaled.id
+    assert device_accounts(database)["a" * 64] == khaled.id
 
 
 def test_an_invitation_reaches_the_invited_phone(

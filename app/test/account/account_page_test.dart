@@ -212,7 +212,11 @@ void main() {
         await tester.tap(find.text('circles.cancel_request'.tr()));
         await tester.pumpAndSettle();
         await tester.tap(find.text('circles.cancel_confirm_yes'.tr()));
-        await tester.pumpAndSettle();
+        // Let the dialog close and the failed request rebuild the sheet. A
+        // snackbar deliberately remains visible for a few seconds, so waiting
+        // for every animation to settle makes this test unnecessarily hang.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('error.network'.tr()), findsOneWidget);
         expect(find.text('account.request_sheet_title'.tr()), findsOneWidget);

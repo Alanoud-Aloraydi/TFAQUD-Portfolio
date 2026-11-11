@@ -50,7 +50,7 @@ def test_demo_data_makes_the_whole_story(database_app, database):
     assert result.exit_code == 0, result.output
     assert "Demo data is ready." in result.output
     assert _count(database, Account) == 3
-    assert _count(database, CareCircle) == 4
+    assert _count(database, CareCircle) == 5
     assert _count(database, MedicationPlan) == 17
     # Two medicines have a second version: one past change, one coming.
     assert _count(database, MedicationPlanVersion) == 19
@@ -75,6 +75,7 @@ def test_the_demo_account_reads_it_like_the_app(database_app, database):
     assert {circle["name"] for circle in circles} == {
         "رعايتي",
         "دائرة نورة",
+        "دائرة هدى",
         "دائرة خالد",
     }
     mother = next(c["id"] for c in circles if c["name"] == "دائرة نورة")
@@ -118,7 +119,7 @@ def test_it_runs_once_and_resets_on_request(database_app, database):
     assert reset.exit_code == 0, reset.output
     assert "The old demo data was deleted." in reset.output
     assert _count(database, Account) == 3
-    assert _count(database, CareCircle) == 4
+    assert _count(database, CareCircle) == 5
 
 
 def test_if_missing_makes_it_once_then_nothing(database_app, database):
@@ -131,7 +132,7 @@ def test_if_missing_makes_it_once_then_nothing(database_app, database):
     assert again.exit_code == 0, again.output
     assert "The demo data is already there." in again.output
     assert _count(database, Account) == 3
-    assert _count(database, CareCircle) == 4
+    assert _count(database, CareCircle) == 5
 
 
 def test_a_reset_works_after_lina_joined_saras_circle(database_app, database):
@@ -193,7 +194,7 @@ def test_a_reset_works_after_lina_joined_saras_circle(database_app, database):
 
     assert reset.exit_code == 0, reset.output
     assert _count(database, Account) == 3
-    assert _count(database, CareCircle) == 4
+    assert _count(database, CareCircle) == 5
     assert _count(database, CareCircleInvitation) == 3
 
 
@@ -318,7 +319,7 @@ def test_the_refresh_endpoint_makes_the_demo_again(database_app, database):
     assert again.status_code == 200, again.get_json()
     assert "دائرة خالد" in again.get_json()["circles"]
     assert _count(database, Account) == 3
-    assert _count(database, CareCircle) == 4
+    assert _count(database, CareCircle) == 5
 
 
 def test_the_refresh_endpoint_needs_a_safe_server(database_app, database):

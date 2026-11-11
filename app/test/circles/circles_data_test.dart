@@ -413,7 +413,7 @@ void main() {
         expect(model.received.single.requesterName, 'سارة الحربي');
       });
 
-      test('the circle name is the label when the server sent no name', () {
+      test('the circle name is empty when the server sent no name', () {
         final Map<String, dynamic> item = Map<String, dynamic>.of(
           (listed['received'] as List<dynamic>).single as Map<String, dynamic>,
         )..remove('circle_name');
@@ -422,7 +422,7 @@ void main() {
             'received': <dynamic>[item],
           },
         );
-        expect(model.received.single.circleName, 'أمي');
+        expect(model.received.single.circleName, isEmpty);
         // A list that is left out is an empty list, not a crash.
         expect(model.sent, isEmpty);
       });

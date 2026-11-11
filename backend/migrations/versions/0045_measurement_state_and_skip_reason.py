@@ -75,7 +75,7 @@ def downgrade() -> None:
     )
     op.execute(
         f"UPDATE {_TIME} SET conditions = CASE WHEN measurement_state IS "
-        "NULL THEN '{{}}'::text[] ELSE ARRAY[measurement_state] END"
+        "NULL THEN ARRAY[]::text[] ELSE ARRAY[measurement_state] END"
     )
     op.create_check_constraint(
         op.f("ck_measurement_plan_time_conditions"), _TIME,
