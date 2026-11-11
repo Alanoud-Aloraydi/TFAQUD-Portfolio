@@ -296,6 +296,51 @@ def test_0037_moves_a_patient_without_an_account_both_ways(
     assert row.first_name == "Nora"
 
 
+def test_0043_reads_the_tick_log_and_drops_its_oldest_shapes(database):
+    """The tick's log in a real database also holds the first server's
+    keys (6 to 8 November 2026): 0043 drops those and splits the two
+    shapes the tick still writes into columns."""
+    directory = str(Path(__file__).resolve().parents[1] / "migrations")
+    dose, version, visit = (
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        "33333333-3333-4333-8333-333333333333",
+    )
+    keys = (
+        f"dose_missed:{dose}:2026-11-11",
+        f"measurement_missed:{version}:2026-11-11:08:00",
+        # The first server's.
+        f"dose_due:{dose}:2026-11-07",
+        f"measurement_due:{version}:2026-11-07",
+        f"measurement_missed:{version}:2026-11-07",
+        f"appointment_reminder:{visit}",
+    )
+    downgrade(directory=directory, revision="0042")
+    try:
+        with database.begin() as connection:
+            for key in keys:
+                connection.execute(
+                    text(
+                        "INSERT INTO notification_log (dedupe_key) "
+                        "VALUES (:key)"
+                    ),
+                    {"key": key},
+                )
+    finally:
+        upgrade(directory=directory)
+
+    with database.connect() as connection:
+        rows = connection.execute(text(
+            "SELECT kind, target_id::text AS target, "
+            "scheduled_on::text AS day, time_of_day::text AS at "
+            "FROM notification_log ORDER BY kind"
+        )).all()
+    assert [tuple(row) for row in rows] == [
+        ("dose_missed", dose, "2026-11-11", None),
+        ("measurement_missed", version, "2026-11-11", "08:00:00"),
+    ]
+
+
 def test_sign_in_survives_deletion_before_account_read(database):
     """A conflicting account may disappear before the following SELECT."""
     store = PostgresUserStore()
