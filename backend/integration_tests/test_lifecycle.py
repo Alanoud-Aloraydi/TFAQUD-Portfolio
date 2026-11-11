@@ -7,7 +7,7 @@ from threading import Barrier
 
 import pytest
 from flask_migrate import downgrade, upgrade
-from sqlalchemy import delete, event, inspect, select
+from sqlalchemy import delete, event, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -265,6 +265,35 @@ def test_migrations_round_trip(database, database_app):
     assert set(inspect(database).get_table_names()) == {"alembic_version"}
     upgrade(directory=directory)
     assert "care_circle" in inspect(database).get_table_names()
+
+
+def test_0037_moves_a_patient_without_an_account_both_ways(
+    database, database_app, account
+):
+    """A real database has circles whose patient has no account: 0037 gives
+    each one back «دائرة» and the first name as its name going down, and
+    takes the name away again going up (everyone reads it computed)."""
+    directory = str(Path(__file__).resolve().parents[1] / "migrations")
+    circle = offline_circle(database, account())
+    db.session.remove()
+    downgrade(directory=directory, revision="0036")
+    try:
+        with database.connect() as connection:
+            name = connection.execute(
+                text("SELECT name FROM care_circle WHERE id = :id"),
+                {"id": circle.id},
+            ).scalar_one()
+        assert name == "دائرة Nora"
+    finally:
+        upgrade(directory=directory)
+
+    with database.connect() as connection:
+        row = connection.execute(
+            text("SELECT name, first_name FROM care_circle WHERE id = :id"),
+            {"id": circle.id},
+        ).one()
+    assert row.name is None
+    assert row.first_name == "Nora"
 
 
 def test_sign_in_survives_deletion_before_account_read(database):

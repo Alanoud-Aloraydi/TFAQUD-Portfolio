@@ -61,12 +61,16 @@ def devices(database):
 
 
 def device_accounts(database):
+    """Each token's account, through its sign-in (a phone's token keeps no
+    account of its own)."""
     with Session(database) as session:
         rows = session.execute(
             select(PushDevice.token, AccountSession.account_id)
             .join(AccountSession, AccountSession.id == PushDevice.session_id)
         )
-        return dict(rows)
+        # A Result has keys() (its column names), so dict(rows) would read
+        # it as a mapping; unpack the rows instead.
+        return {token: account_id for token, account_id in rows}
 
 
 def test_a_phone_registers_its_token(database_app, database, account):

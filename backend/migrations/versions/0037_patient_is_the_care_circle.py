@@ -259,12 +259,14 @@ def upgrade() -> None:
         "avatar_code = NULL, birth_date = NULL, city = NULL "
         "WHERE account_id IS NOT NULL"
     )
-    op.execute("UPDATE care_circle SET name = NULL WHERE account_id IS NULL")
-    op.alter_column("care_circle", "time_zone", nullable=False)
+    # `name` may be empty from here on: allow it before emptying it, or a
+    # circle whose patient has no account stops the upgrade.
     op.alter_column("care_circle", "name", nullable=True)
     op.drop_constraint(
         op.f("ck_care_circle_name"), "care_circle", type_="check"
     )
+    op.execute("UPDATE care_circle SET name = NULL WHERE account_id IS NULL")
+    op.alter_column("care_circle", "time_zone", nullable=False)
     for name, rule in _CIRCLE_CHECKS:
         op.create_check_constraint(
             op.f(f"ck_care_circle_{name}"), "care_circle", rule
@@ -393,14 +395,16 @@ def downgrade() -> None:
         "uq_care_circle_manager_care_circle_id_account_id TO "
         "uq_care_circle_manager_care_circle_id"
     )
-    op.execute(
-        "UPDATE care_circle SET name = 'دائرة ' || first_name "
-        "WHERE name IS NULL"
-    )
+    # The merged circle's checks go first: `account_source` allows no name
+    # on a circle without an account, and the old circle needs one.
     for name, _ in reversed(_CIRCLE_CHECKS):
         op.drop_constraint(
             op.f(f"ck_care_circle_{name}"), "care_circle", type_="check"
         )
+    op.execute(
+        "UPDATE care_circle SET name = 'دائرة ' || first_name "
+        "WHERE name IS NULL"
+    )
     op.drop_constraint(
         op.f("uq_care_circle_account_id"), "care_circle", type_="unique"
     )

@@ -2,12 +2,14 @@
 # shared test server (APP_ENV=staging), with real sign-in codes by SMS
 # (Authentica).
 #
-# In Render: New, then Blueprint, then pick this repository and the branch to
-# deploy. Render reads this file, asks for the values marked `sync: false`,
-# and creates both. A push to that branch deploys the API again by itself
-# once every GitHub check on the commit has passed (.github/workflows/ci.yml);
-# a failed check, or a commit with no checks, deploys nothing. The start
-# command runs the new database migrations first.
+# In Render: New, then Blueprint, then pick this repository and a branch.
+# Render reads this file from that branch, asks for the values marked
+# `sync: false`, and creates both. The API itself always deploys from main
+# (`branch: main` below), so only what is merged into main reaches the
+# server: a push to main deploys the API again by itself once every GitHub
+# check on the commit has passed (.github/workflows/ci.yml); a failed check,
+# or a commit with no checks, deploys nothing. The start command runs the new
+# database migrations first.
 #
 # backend/README.md ("Deploy to Render") has the steps.
 
@@ -24,6 +26,9 @@ services:
   - type: web
     runtime: docker
     name: tfaqud-api
+    # Deploy only what is merged into main (through a pull request), whatever
+    # branch the Blueprint reads this file from.
+    branch: main
     plan: free
     region: frankfurt
     # The paths are from the top of the repository (no rootDir, so they mean

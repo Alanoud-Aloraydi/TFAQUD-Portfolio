@@ -51,9 +51,10 @@ def test_demo_data_makes_the_whole_story(database_app, database):
     assert "Demo data is ready." in result.output
     assert _count(database, Account) == 3
     assert _count(database, CareCircle) == 5
-    assert _count(database, MedicationPlan) == 17
+    # Huda's two (one stopped yesterday) among them.
+    assert _count(database, MedicationPlan) == 19
     # Two medicines have a second version: one past change, one coming.
-    assert _count(database, MedicationPlanVersion) == 19
+    assert _count(database, MedicationPlanVersion) == 21
     assert _count(database, MedicationDoseRecord) > 100
     # Sara invites Lina; Lina invites her sister's number, and Sara into
     # Khaled's circle.
