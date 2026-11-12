@@ -167,10 +167,11 @@ void main() {
       await openFirstStep(tester);
       await tester.tap(find.text('circles.city_hint'.tr()));
       await tester.pumpAndSettle();
-      // The page below shows the same words as a hint, so look inside the sheet.
+      // The page below shows the same words as a hint, so look inside the
+      // sheet, whose glass draws the title.
       expect(
         find.descendant(
-          of: find.byType(CitySheet),
+          of: find.byType(BottomSheet),
           matching: find.text('circles.city_sheet_title'.tr()),
         ),
         findsOneWidget,
@@ -530,9 +531,10 @@ void main() {
         await tester.tap(find.text('circles.patient_city_hint'.tr()));
         await tester.pumpAndSettle();
 
+        // The sheet's glass draws the title.
         expect(
           find.descendant(
-            of: find.byType(CitySheet),
+            of: find.byType(BottomSheet),
             matching: find.text('circles.patient_city_sheet_title'.tr()),
           ),
           findsOneWidget,
