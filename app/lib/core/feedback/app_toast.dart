@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -46,11 +47,13 @@ class _ToastBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: <Widget>[
+      // White, as the text: the toast is dark.
       Icon(
         kind == ToastKind.success
             ? Icons.check_circle_outline
             : Icons.error_outline,
         size: AppSizes.iconSmall,
+        color: AppSemanticColors.surfaceContent,
       ),
       const SizedBox(width: AppSpacing.sm),
       Expanded(child: Text(message)),

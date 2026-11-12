@@ -10,6 +10,7 @@ import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
@@ -283,16 +284,9 @@ class VisitPage extends StatelessWidget {
   }
 
   Future<void> _edit(BuildContext context, VisitPaper? paper) =>
-      showModalBottomSheet<void>(
-        context: context,
-        // Above the top bar and the tab bar, below the Dynamic Island.
-        useRootNavigator: true,
-        useSafeArea: true,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-        ),
-        isScrollControlled: true,
-        showDragHandle: true,
+      showGlassSheet<void>(
+        context,
+        title: context.tr('appointments.edit_visit'),
         builder: (_) => BlocProvider.value(
           value: context.read<VisitCubit>(),
           child: _VisitEditSheet(paper: paper),
@@ -318,7 +312,7 @@ class VisitPage extends StatelessWidget {
   }
 }
 
-/// Renders the visit edit sheet element of visit page.
+/// What the «تعديل ورقة الزيارة» sheet holds: the three texts and «حفظ».
 class _VisitEditSheet extends StatefulWidget {
   const _VisitEditSheet({required this.paper});
 
@@ -344,80 +338,52 @@ class _VisitEditSheetState extends State<_VisitEditSheet> {
   }
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    child: Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
+  // The glass sheet draws the title, scrolls, and stays above the keyboard.
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      InsetGroup(
+        header: context.tr('appointments.visit_summary'),
+        children: [InsetBlock(child: _paperInput(context, _summary, 2000))],
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * .82,
+      const SizedBox(height: AppSpacing.md),
+      InsetGroup(
+        header: context.tr('appointments.visit_recommendations'),
+        children: [
+          InsetBlock(child: _paperInput(context, _recommendations, 2000)),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.md),
+      InsetGroup(
+        header: context.tr('appointments.visit_follow_up'),
+        children: [InsetBlock(child: _paperInput(context, _followUp, 500))],
+      ),
+      if (context.watch<VisitCubit>().state.errorKey case final error?)
+        Text(
+          context.tr(error),
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                context.tr('appointments.edit_visit'),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              InsetGroup(
-                header: context.tr('appointments.visit_summary'),
-                children: [
-                  InsetBlock(child: _paperInput(context, _summary, 2000)),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              InsetGroup(
-                header: context.tr('appointments.visit_recommendations'),
-                children: [
-                  InsetBlock(
-                    child: _paperInput(context, _recommendations, 2000),
+      const SizedBox(height: AppSpacing.md),
+      FilledButton(
+        onPressed: context.watch<VisitCubit>().state.saving
+            ? null
+            : () async {
+                final saved = await context.read<VisitCubit>().save(
+                  VisitPaperDraft(
+                    summary: _summary.text,
+                    recommendations: _recommendations.text,
+                    followUp: _followUp.text,
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              InsetGroup(
-                header: context.tr('appointments.visit_follow_up'),
-                children: [
-                  InsetBlock(child: _paperInput(context, _followUp, 500)),
-                ],
-              ),
-              if (context.watch<VisitCubit>().state.errorKey case final error?)
-                Text(
-                  context.tr(error),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton(
-                onPressed: context.watch<VisitCubit>().state.saving
-                    ? null
-                    : () async {
-                        final saved = await context.read<VisitCubit>().save(
-                          VisitPaperDraft(
-                            summary: _summary.text,
-                            recommendations: _recommendations.text,
-                            followUp: _followUp.text,
-                          ),
-                        );
-                        if (saved && context.mounted) {
-                          AppToast.show(context, 'toast.visit_saved');
-                          Navigator.of(context).pop();
-                        }
-                      },
-                child: Text(context.tr('appointments.save')),
-              ),
-            ],
-          ),
-        ),
+                );
+                if (saved && context.mounted) {
+                  AppToast.show(context, 'toast.visit_saved');
+                  Navigator.of(context).pop();
+                }
+              },
+        child: Text(context.tr('appointments.save')),
       ),
-    ),
+    ],
   );
 
   Widget _paperInput(

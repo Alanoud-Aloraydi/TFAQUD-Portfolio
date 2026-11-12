@@ -13,8 +13,9 @@
     "request_accepted": "وافقت على الطلب",
     "request_declined": "رفضت الطلب",
     "member_removed": "تمت إزالة العضو من الدائرة",
-    "editing_paused": "أوقفت صلاحية التعديل عن العضو",
-    "editing_restored": "رجّعت صلاحية التعديل للعضو",
+    "editing_paused": "أوقفت تعديله على {}",
+    "editing_allowed": "صار يقدر يعدّل {}",
+    "leader_changed": "تم تسليم قيادة الدائرة",
     "circle_left": "غادرت الدائرة",
     "medication_saved": "انحفظ الدواء",
     "medication_stopped": "أوقفت الدواء",
@@ -30,6 +31,7 @@
   },
   "plan_limits": {
     "minutes_hint": "بالدقائق",
+    "minutes_unit": "دقيقة",
     "missed_after_range": "اكتب رقم من {} إلى {} دقيقة"
   },
   "plan_status": {
@@ -62,7 +64,11 @@
       "few": "{} أيام",
       "many": "{} يوم",
       "other": "{} يوم"
-    }
+    },
+    "and": "{} و{}",
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "ago": "قبل {}"
   },
   "photos": {
     "medication": "صورة الدواء (اختياري)",
@@ -129,9 +135,18 @@
     "invitations_two": "دعوتان معلّقتان",
     "invitations_few": "{} دعوات معلّقة",
     "invitations_many": "{} دعوة معلّقة",
-    "manager": "مدير",
     "view_only": "مشاهدة فقط",
-    "allow_editing": "السماح بالتعديل",
+    "leader": "قائد الدائرة",
+    "limited_editing": "تعديل محدود",
+    "allow_editing": "يقدر يعدّل",
+    "area": {
+      "medications": "الأدوية",
+      "measurements": "القياسات",
+      "appointments": "المواعيد"
+    },
+    "hand_over": "تسليم القيادة",
+    "hand_over_title": "تسليم قيادة الدائرة؟",
+    "hand_over_message": "يصير {} قائد الدائرة: هو اللي يزيل الأعضاء ويحدد من يعدّل. وأنت تبقى عضوًا فيها.",
     "remove_member": "إزالة العضو",
     "remove_member_title": "إزالة العضو من الدائرة؟",
     "remove_member_message": "راح يفقد {} الوصول إلى هذه الدائرة وبياناتها.",
@@ -201,6 +216,8 @@
     "skip_reason": "سبب التخطي",
     "recorded_by": "سجّلها",
     "period": "الفترة",
+    "custom_start": "بداية الفترة",
+    "custom_end": "نهاية الفترة",
     "include_contacts": "تضمين أسماء وأرقام جهات الاتصال",
     "preview_title": "مراجعة محتوى الملف",
     "preview_text": "{} أدوية حالية\n{} جرعات مسجلة\n{} مهام غير مسجلة أو فائتة\n{} قراءات\n{} مواعيد",
@@ -247,9 +264,10 @@
       "late": "بانتظار التسجيل",
       "missed": "ما تسجّلت",
       "taken": "تم أخذها",
-      "taken_late": "تم أخذها بعد الموعد",
+      "taken_late_by": "تم أخذها بعد {} من الموعد",
       "recorded": "تم تسجيلها",
       "recorded_late": "تسجّلت بعد الموعد",
+      "recorded_late_by": "تسجّلت بعد {} من الموعد",
       "skipped": "تم تخطيها",
       "appointment_waiting": "تأكيد الحضور"
     }
@@ -386,7 +404,7 @@
     "actual_time_other": "متى انأخذت الجرعة؟",
     "recorded_at": "تم تسجيل أخذها الساعة {}",
     "skip_title": "تبغى تتخطى هالجرعة؟",
-    "skip_reason_optional": "إذا ودّك، اختر السبب. وتقدر تكمل بدون تحديده.",
+    "skip_reason_optional": "السبب (اختياري)",
     "skip_reason_note": "اكتب السبب هنا",
     "skip_confirm": "تأكيد تخطي الجرعة",
     "skip_reason_line": "سبب التخطي: {}",
@@ -403,6 +421,7 @@
       "after_food": "بعد الأكل",
       "empty_stomach": "على الريق",
       "before_sleep": "قبل النوم",
+      "other": "أخرى",
       "none": "بدون"
     },
     "effective_question": "متى يبدأ التعديل؟",
@@ -438,6 +457,8 @@
     "dosage_form": "شكل الدواء",
     "reason": "سبب استخدام الدواء",
     "instructions": "تعليمات الاستخدام",
+    "instructions_other": "تعليمات أخرى",
+    "instructions_other_hint": "اكتبها، مثل: بعد العشاء بساعة",
     "treatment_period": "مدة العلاج",
     "duration": "مدة الاستخدام",
     "continuous": "مستمر",
@@ -638,8 +659,8 @@
     "app_mode": "وضع التطبيق",
     "mode_simplified": "مبسّط",
     "mode_detailed": "تفصيلي",
-    "mode_simplified_hint": "المبسط: شاشة واحدة بمهامه اليومية وأزرار كبيرة.",
-    "mode_detailed_hint": "التفصيلي: اليوم والخطة والسجل والدائرة.",
+    "mode_simplified_hint": "شاشة واحدة بأزرار كبيرة: يسجّل مهام يومه فقط، وأنتم تديرون خطته.",
+    "mode_detailed_hint": "التطبيق كاملًا: يتابع يومه ويدير أدويته وقياساته ومواعيده بنفسه.",
     "request_notice": "بنرسل له طلب، والدائرة ما تشتغل إلا إذا وافق.",
     "send_request": "إرسال الطلب",
     "request_waiting_title": "بانتظار موافقته",
@@ -657,8 +678,46 @@
     "show_all_requests": "عرض الكل",
     "needs_reply_pill": "بانتظار ردّك",
     "inbox_empty": "ما عندك شي يحتاج ردّك الحين.",
-    "none_current": "ما عندك طلبات جديدة الحين.",
-    "previous_title": "الطلبات السابقة",
+    "tab_current": "الحالية",
+    "tab_previous": "السابقة",
+    "previous_empty": "ما فيه إشعارات سابقة.",
+    "previous_kept": "تبقى الإشعارات السابقة 30 يومًا بعد الرد عليها.",
+    "previous": {
+      "someone": "شخص",
+      "a_circle": "دائرة رعاية",
+      "invitationReceived_accepted": {
+        "title": "قبلت دعوة",
+        "body": "دعاك {} وانضممت إلى «{}»."
+      },
+      "invitationReceived_declined": {
+        "title": "رفضت دعوة",
+        "body": "دعاك {} إلى «{}» ورفضت الدعوة."
+      },
+      "invitationSent_accepted": {
+        "title": "قُبلت دعوتك",
+        "body": "{} قبل دعوتك وانضم إلى «{}»."
+      },
+      "invitationSent_declined": {
+        "title": "رُفضت دعوتك",
+        "body": "{} رفض دعوتك للانضمام إلى «{}»."
+      },
+      "requestReceived_accepted": {
+        "title": "وافقت على طلب رعاية",
+        "body": "وافقت على طلب {}، وانعملت دائرتك «{}»."
+      },
+      "requestReceived_declined": {
+        "title": "رفضت طلب رعاية",
+        "body": "رفضت طلب {} لإنشاء دائرة رعاية لك."
+      },
+      "requestSent_accepted": {
+        "title": "وافق على طلبك",
+        "body": "{} وافق على طلبك، وانعملت الدائرة «{}»."
+      },
+      "requestSent_declined": {
+        "title": "ما وافق على طلبك",
+        "body": "{} ما وافق على طلبك، وما انعملت أي دائرة."
+      }
+    },
     "invitation_title": "دعوة للانضمام",
     "invitation_body": "تمت دعوتك للانضمام إلى «{}».",
     "invitation_body_by": "{} يدعوك للانضمام إلى «{}».",
@@ -675,9 +734,6 @@
     "cancel_confirm_body_sender": "بنلغي الطلب وما بيوصل له.",
     "cancel_confirm_yes": "نعم، ألغِ الطلب",
     "cancel_confirm_no": "تراجع",
-    "declined_title": "ما وافق على طلبك",
-    "declined_body": "ما انقبل طلبك لهذا الرقم، وما انعملت أي دائرة.",
-    "declined_on": "ردّ في {}",
     "reply_title": "طلب رعاية",
     "reply_subtitle": "طلب إنشاء دائرة رعاية لك",
     "reply_mode": "وضع التطبيق المطلوب",
@@ -725,8 +781,7 @@
     "patient_privacy_note": "بياناته ما يشوفها إلا أعضاء الدائرة. أنت اللي تدعوهم وتحدد مين يعدّل ومين يشاهد فقط، ومن يُدعى ما يشوف شيء قبل ما يقبل.",
     "created_notice": "تم إنشاء الدائرة. كمّل ملفها الطبي وقت ما تحب.",
     "shared_name": "دائرة {}",
-    "shared_name_hint": "الكل يشوفها «دائرة» واسمه الأول.",
-    "request_name_note": "ستظهر لك الدائرة باسم «دائرة» متبوعًا باسم المريض، والمريض يختار اسمها عنده حين يكمل بياناته."
+    "shared_name_hint": "الكل يشوفها «دائرة» واسمه الأول."
   },
   "account": {
     "title": "حسابي",
@@ -1029,7 +1084,7 @@
     "follow_up": "تمت المتابعة",
     "skip": "تخطي",
     "skip_title": "تبغى تتخطى هالقياس؟",
-    "skip_reason_optional": "إذا ودّك، اختر السبب. وتقدر تكمل بدون تحديده.",
+    "skip_reason_optional": "السبب (اختياري)",
     "skip_reason_note": "اكتب السبب هنا",
     "skip_confirm": "تأكيد تخطي القياس",
     "skip_reason_line": "سبب التخطي: {}",
@@ -1192,6 +1247,12 @@
     "keep_body": "افتح تفقّد عشان نكمّل تذكيرك بأدويتك وقياساتك ومواعيدك، براحة واطمئنان.",
     "snooze": "ذكّرني لاحقًا",
     "snooze_title": "متى نذكّرك؟",
+    "snooze_at": "الساعة {}",
+    "snooze_hours_tick": "{} س",
+    "snooze_limit": "تقدر تؤجّل حتى {}.",
+    "snooze_limit_next": "تقدر تؤجّل حتى {}: نصف الوقت قبل الجرعة التالية من نفس الدواء.",
+    "snooze_confirm": "ذكّرني",
+    "snooze_none": "ما يمديك تؤجّلها: الجرعة التالية من نفس الدواء قريبة.",
     "snoozed": "بنذكّرك {}",
     "snoozed_by": "مؤجّلة إلى {} · {}",
     "snoozed_shared": "مؤجّلة إلى {}"

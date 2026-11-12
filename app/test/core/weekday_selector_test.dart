@@ -81,12 +81,17 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('every box is at least 44 high', (tester) async {
+    testWidgets('every day is a chip at least 44 high', (tester) async {
       await pumpArabic(tester, home: _Host(<int>{1}, <Set<int>>[]));
       final Size box = tester.getSize(
         find.ancestor(of: find.text(_short(1)), matching: find.byType(InkWell)),
       );
       expect(box.height, greaterThanOrEqualTo(44));
+      // «كل الأيام» is the app's chip.
+      expect(
+        find.widgetWithText(FilterChip, 'weekday_picker.all_days'.tr()),
+        findsOneWidget,
+      );
     });
   });
 

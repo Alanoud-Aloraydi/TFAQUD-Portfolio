@@ -8,7 +8,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -86,10 +86,9 @@ class _Organize extends StatelessWidget {
                 ),
                 title: context.tr('intro.demo.reading'),
                 note: context.tr('intro.demo.reading_note'),
-                trailing: StatusPill(
+                trailing: StatusBadge(
                   text: context.tr('intro.demo.reading_value'),
-                  background: AppSemanticColors.selectedSurface,
-                  foreground: AppSemanticColors.statusSuccess,
+                  tone: StatusTone.success,
                 ),
               ),
             ),
@@ -112,10 +111,9 @@ class _Organize extends StatelessWidget {
                 ),
                 title: context.tr('intro.demo.visit'),
                 note: context.tr('intro.demo.visit_note'),
-                trailing: StatusPill(
+                trailing: StatusBadge(
                   text: context.tr('intro.demo.visit_in'),
-                  background: AppSemanticColors.segmentTrack,
-                  foreground: AppSemanticColors.textSupporting,
+                  tone: StatusTone.neutral,
                 ),
               ),
             ),
@@ -135,10 +133,9 @@ class _Share extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final Widget admin = StatusPill(
+    final Widget admin = StatusBadge(
       text: context.tr('intro.demo.admin'),
-      background: AppSemanticColors.segmentTrack,
-      foreground: AppSemanticColors.textSupporting,
+      tone: StatusTone.neutral,
     );
     return Stack(
       clipBehavior: Clip.none,
@@ -425,12 +422,9 @@ class _NextDoseCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              StatusPill(
+              StatusBadge(
                 text: context.tr('intro.demo.next_in'),
-                background: AppSemanticColors.surfaceContent.withValues(
-                  alpha: 0.14,
-                ),
-                foreground: AppSemanticColors.surfaceContent,
+                tone: StatusTone.onDark,
               ),
             ],
           ),

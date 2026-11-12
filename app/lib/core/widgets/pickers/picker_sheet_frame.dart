@@ -2,17 +2,16 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:flutter/material.dart';
 
-/// Displays the picker sheet frame UI.
+/// What a picker puts in its glass sheet (`showGlassSheet`, which draws the
+/// title): the wheels, then the confirm button.
 class PickerSheetFrame extends StatelessWidget {
   const PickerSheetFrame({
     super.key,
-    required this.title,
     required this.confirmLabel,
     required this.onConfirm,
     required this.child,
   });
 
-  final String title;
   final String confirmLabel;
 
   /// Null turns the confirm button off.
@@ -21,34 +20,14 @@ class PickerSheetFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          // The sheet's own drag handle comes from the bottom sheet theme;
-          // a second one here drew two lines.
-          children: [
-            Semantics(
-              header: true,
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            child,
-            const SizedBox(height: AppSpacing.lg),
-            PillButton(label: confirmLabel, onPressed: onConfirm),
-          ],
-        ),
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        child,
+        const SizedBox(height: AppSpacing.lg),
+        PillButton(label: confirmLabel, onPressed: onConfirm),
+      ],
     );
   }
 }

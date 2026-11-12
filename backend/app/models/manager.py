@@ -1,7 +1,9 @@
 """Current management memberships, without global manager roles."""
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, UniqueConstraint, text
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
@@ -31,8 +33,35 @@ class CareCircleManager(db.Model):
         ForeignKey("account.id", ondelete="RESTRICT"),
         index=True,
     )
-    # A membership stays in the circle when its owner pauses editing. This
-    # keeps the circle visible and readable without granting write routes.
-    can_edit: Mapped[bool] = mapped_column(
+    # The circle's leader lets each member edit the medicines, the
+    # measurements and the appointments, or not (`app.circles.leader`). A
+    # membership with all three off stays in the circle, readable, without
+    # any write route.
+    can_edit_medications: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default=text("true")
     )
+    can_edit_measurements: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    can_edit_appointments: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    # When the account joined: the leadership falls to the member who joined
+    # first when the leader leaves.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    def may_edit(self, area: str) -> bool:
+        """Whether this member may edit the `area` («medications»,
+        «measurements» or «appointments»)."""
+        return bool(getattr(self, f"can_edit_{area}"))
+
+    @property
+    def can_edit_any(self) -> bool:
+        """Whether this member may edit at least one area."""
+        return (
+            self.can_edit_medications
+            or self.can_edit_measurements
+            or self.can_edit_appointments
+        )

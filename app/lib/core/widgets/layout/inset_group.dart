@@ -1,14 +1,13 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/utils/text_limits.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:app/core/widgets/overlays/choice_row.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -496,8 +495,9 @@ class InsetChoiceButton extends StatelessWidget {
   }
 }
 
-/// iOS action sheet to pick one option. The current option is bold.
-/// Returns null when the person cancels.
+/// A glass sheet to pick one option of a short list, such as a unit: a row
+/// for each, with a check on the current one. Returns the tapped option, or
+/// null when the person closes the sheet.
 Future<T?> showOptionSheet<T>(
   BuildContext context, {
   required String title,
@@ -505,23 +505,20 @@ Future<T?> showOptionSheet<T>(
   required String Function(T option) labelOf,
   T? selected,
 }) {
-  const TextStyle style = TextStyle(fontFamily: AppTextTheme.fontFamily);
-  return showCupertinoModalPopup<T>(
-    context: context,
-    builder: (BuildContext sheetContext) => CupertinoActionSheet(
-      title: Text(title, style: style),
-      actions: <Widget>[
+  return showGlassSheet<T>(
+    context,
+    title: title,
+    builder: (BuildContext sheetContext) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
         for (final T option in options)
-          CupertinoActionSheetAction(
-            isDefaultAction: option == selected,
-            onPressed: () => Navigator.pop(sheetContext, option),
-            child: Text(labelOf(option), style: style),
+          ChoiceRow(
+            label: labelOf(option),
+            selected: option == selected,
+            onTap: () => Navigator.pop(sheetContext, option),
           ),
       ],
-      cancelButton: CupertinoActionSheetAction(
-        onPressed: () => Navigator.pop(sheetContext),
-        child: Text(sheetContext.tr('common.cancel'), style: style),
-      ),
     ),
   );
 }

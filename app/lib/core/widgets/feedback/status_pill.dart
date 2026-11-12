@@ -4,8 +4,8 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// A small rounded label. The icon, when there is one, keeps the colour from
-/// being the only signal.
+/// The shape of every status label: a small rounded pill. Pages use
+/// `StatusBadge`, which picks the colours from the status's tone.
 class StatusPill extends StatelessWidget {
   const StatusPill({
     super.key,
@@ -13,12 +13,16 @@ class StatusPill extends StatelessWidget {
     required this.background,
     required this.foreground,
     this.icon,
+    this.border,
   });
 
   final String text;
   final Color background;
   final Color foreground;
   final IconData? icon;
+
+  /// An outline, for a fill that matches what the pill sits on.
+  final Color? border;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +33,7 @@ class StatusPill extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: background,
+        border: border == null ? null : Border.all(color: border!),
         borderRadius: BorderRadius.circular(AppRadius.capsule),
       ),
       child: Row(

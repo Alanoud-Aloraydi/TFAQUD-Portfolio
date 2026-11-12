@@ -51,8 +51,19 @@ class CirclesUseCase {
   Future<Result<void, Failure>> setMemberEditAccess(
     String circleId,
     String accountId, {
-    required bool canEdit,
-  }) => _repository.setMemberEditAccess(circleId, accountId, canEdit: canEdit);
+    required String area,
+    required bool allowed,
+  }) => _repository.setMemberEditAccess(
+    circleId,
+    accountId,
+    area: area,
+    allowed: allowed,
+  );
+
+  Future<Result<void, Failure>> handOverLeadership(
+    String circleId,
+    String accountId,
+  ) => _repository.handOverLeadership(circleId, accountId);
 
   Future<Result<void, Failure>> removeMember(
     String circleId,

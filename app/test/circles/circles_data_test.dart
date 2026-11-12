@@ -18,6 +18,7 @@ import 'package:app/features/circles/domain/entities/complete_circle_request.dar
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 import 'package:app/features/circles/domain/entities/new_self_circle.dart';
+import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
@@ -50,6 +51,8 @@ class _Remote extends Fake implements BaseCirclesRemoteDataSource {
     received: <ReceivedCircleRequest>[],
   );
   List<ReceivedInvitation> invitations = const <ReceivedInvitation>[];
+  List<PreviousNotification> previous = const <PreviousNotification>[];
+  Object? previousError;
   bool? answeredAccept;
   String? completedId;
   Map<String, dynamic>? completedBody;
@@ -114,6 +117,12 @@ class _Remote extends Fake implements BaseCirclesRemoteDataSource {
   Future<List<ReceivedInvitation>> getInvitations() async {
     if (error != null) throw error!;
     return invitations;
+  }
+
+  @override
+  Future<List<PreviousNotification>> getPreviousNotifications() async {
+    if (previousError != null) throw previousError!;
+    return previous;
   }
 
   @override
@@ -458,6 +467,66 @@ void main() {
         expect(ReceivedInvitationsModel.fromJson(<String, dynamic>{}), isEmpty);
       });
 
+      test('reads what was answered lately, and skips what it cannot', () {
+        final List<PreviousNotification> previous =
+            PreviousNotificationsModel.fromJson(<String, dynamic>{
+              'previous': <dynamic>[
+                <String, dynamic>{
+                  'id': 'inv-1',
+                  'kind': 'invitation_sent',
+                  'status': 'accepted',
+                  'answered_at': '2026-11-08T22:30:00+00:00',
+                  'circle_name': 'أمي نورة',
+                  'other_name': 'خالد',
+                  'other_phone_number': null,
+                },
+                <String, dynamic>{
+                  'id': 'req-1',
+                  'kind': 'request_sent',
+                  'status': 'declined',
+                  'answered_at': '2026-11-07T10:00:00+00:00',
+                  'circle_name': null,
+                  'other_name': null,
+                  'other_phone_number': '+966501234567',
+                },
+                // A kind from a newer server, and an item with no time.
+                <String, dynamic>{
+                  'id': 'x',
+                  'kind': 'something_new',
+                  'status': 'accepted',
+                  'answered_at': '2026-11-07T10:00:00+00:00',
+                },
+                <String, dynamic>{
+                  'id': 'y',
+                  'kind': 'request_received',
+                  'status': 'completed',
+                },
+              ],
+            });
+
+        expect(previous, <PreviousNotification>[
+          PreviousNotification(
+            id: 'inv-1',
+            kind: PreviousKind.invitationSent,
+            accepted: true,
+            answeredAt: DateTime.utc(2026, 11, 8, 22, 30),
+            circleName: 'أمي نورة',
+            otherName: 'خالد',
+          ),
+          PreviousNotification(
+            id: 'req-1',
+            kind: PreviousKind.requestSent,
+            accepted: false,
+            answeredAt: DateTime.utc(2026, 11, 7, 10),
+            otherPhoneNumber: '+966501234567',
+          ),
+        ]);
+        expect(
+          PreviousNotificationsModel.fromJson(<String, dynamic>{}),
+          isEmpty,
+        );
+      });
+
       test('the inbox counts what waits for an answer', () {
         final CircleRequestsModel model = CircleRequestsModel.fromJson(listed);
         final CircleInbox inbox = CircleInbox(
@@ -743,6 +812,38 @@ void main() {
             }, (failure) => fail('Expected an inbox, got $failure'));
           },
         );
+
+        test('adds what was answered lately', () async {
+          remote.previous = <PreviousNotification>[
+            PreviousNotification(
+              id: 'inv-9',
+              kind: PreviousKind.invitationReceived,
+              accepted: true,
+              answeredAt: DateTime.utc(2026, 11, 8),
+            ),
+          ];
+
+          final result = await repository.getInbox();
+
+          expect(result.tryGetSuccess()!.previous.single.id, 'inv-9');
+        });
+
+        test('still opens when what was answered cannot be read', () async {
+          remote.invitations = const <ReceivedInvitation>[
+            ReceivedInvitation(id: 'inv-1', circleName: 'أبي'),
+          ];
+          // A server from before «السابقة» answers 404.
+          remote.previousError = DioException(
+            requestOptions: RequestOptions(path: '/notifications/previous'),
+            type: DioExceptionType.badResponse,
+          );
+
+          final result = await repository.getInbox();
+
+          final CircleInbox inbox = result.tryGetSuccess()!;
+          expect(inbox.invitations.single.id, 'inv-1');
+          expect(inbox.previous, isEmpty);
+        });
 
         test('is a failure when either list cannot be read', () async {
           remote.error = DioException(

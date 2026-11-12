@@ -5,6 +5,7 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -44,13 +45,13 @@ class AppointmentTodayRow extends StatelessWidget {
       ),
       title: appointmentTitle(context, value),
       subtitle: appointmentCompanionLine(context, value),
-      status: TodayTaskStatusBadge(
+      status: StatusBadge(
         text: context.tr(
           waiting
               ? 'today_dashboard.status.appointment_waiting'
               : 'today_dashboard.status.upcoming',
         ),
-        tone: waiting ? TodayStatusTone.attention : TodayStatusTone.neutral,
+        tone: waiting ? StatusTone.attention : StatusTone.info,
       ),
       onTap: circleId == null || value.status != AppointmentStatus.completed
           ? null

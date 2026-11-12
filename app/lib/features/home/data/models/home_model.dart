@@ -23,6 +23,8 @@ class HomeModel {
             name: circle['name'] as String,
             canManageMedications:
                 circle['can_manage_medications'] as bool? ?? false,
+            canManageMeasurements: circle['can_manage_measurements'] as bool?,
+            canManageAppointments: circle['can_manage_appointments'] as bool?,
             patientAvatarCode: circle['patient_avatar_code'] as String?,
             isPatient: circle['is_patient'] as bool? ?? true,
             patientName: circle['patient_name'] as String?,

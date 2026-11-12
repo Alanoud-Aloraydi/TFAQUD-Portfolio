@@ -92,6 +92,12 @@ class CareCircle(db.Model):
     account_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("account.id", ondelete="RESTRICT"), unique=True
     )
+    # Who leads the circle while its patient does not (a patient in the
+    # detailed mode always does): whoever made it, or whoever the leader
+    # handed it to (`app.circles.leader`).
+    leader_account_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("account.id", ondelete="SET NULL")
+    )
     # Only for a patient without an account (the account holds them
     # otherwise).
     first_name: Mapped[str | None] = mapped_column(Text)

@@ -8,6 +8,7 @@ import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
@@ -30,18 +31,9 @@ Future<bool> showMeasurementReadingSheet(
   BuildContext context, {
   MeasurementOccurrence? occurrence,
 }) async =>
-    await showModalBottomSheet<bool>(
-      context: context,
-      // Above the top bar and the tab bar, below the status bar and the
-      // Dynamic Island, with a gap above it to see it is a sheet; the grip
-      // stays in reach to pull it down.
-      useRootNavigator: true,
-      useSafeArea: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-      ),
-      isScrollControlled: true,
-      showDragHandle: true,
+    await showGlassSheet<bool>(
+      context,
+      title: context.tr('measurements.record_reading'),
       builder: (_) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: context.read<MeasurementReadingsCubit>()),
@@ -223,280 +215,234 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    // The glass sheet draws the title, scrolls, and stays above the
+    // keyboard.
     return BlocListener<MeasurementTargetsCubit, MeasurementTargetsState>(
       listener: (context, state) {
         if (!state.loading && state.errorKey == null) _showTarget(_kind);
       },
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: size.height * .84),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  child: Text(
-                    context.tr('measurements.record_reading'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GlassSegmentedControl<MeasurementKind>(
+                segments: {
+                  MeasurementKind.bp: context.tr('measurements.bp'),
+                  MeasurementKind.glucose: context.tr('measurements.glucose'),
+                },
+                selected: _kind,
+                onChanged: widget.occurrence == null
+                    ? (value) => setState(() {
+                        _kind = value;
+                        _showTarget(value);
+                        // Fasting is not for blood pressure.
+                        final offered = MeasurementConditions.offered(value);
+                        _conditions = [
+                          for (final code in _conditions)
+                            if (offered.contains(code)) code,
+                        ];
+                      })
+                    : null,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (widget.occurrence == null) ...[
+                if (context.watch<MeasurementTargetsCubit>().state.loading)
+                  const Center(child: CircularProgressIndicator())
+                else if (context.watch<MeasurementTargetsCubit>().state.errorKey
+                    case final error?)
+                  TextButton(
+                    onPressed: () =>
+                        context.read<MeasurementTargetsCubit>().load(
+                          context.read<MeasurementReadingsCubit>().circleId!,
+                        ),
+                    // Tapping the message reads the targets again,
+                    // as the other measurement lists retry.
+                    child: Text(context.tr(error)),
+                  )
+                else ...[
+                  InsetGroup(
+                    header: context.tr('measurements.target'),
+                    footer: context.tr(
+                      _targetFor(_kind)?.planId == null
+                          ? 'measurements.free_target_hint'
+                          : 'measurements.plan_target_hint',
+                    ),
                     children: [
-                      GlassSegmentedControl<MeasurementKind>(
-                        segments: {
-                          MeasurementKind.bp: context.tr('measurements.bp'),
-                          MeasurementKind.glucose: context.tr(
-                            'measurements.glucose',
-                          ),
-                        },
-                        selected: _kind,
-                        onChanged: widget.occurrence == null
-                            ? (value) => setState(() {
-                                _kind = value;
-                                _showTarget(value);
-                                // Fasting is not for blood pressure.
-                                final offered = MeasurementConditions.offered(
-                                  value,
-                                );
-                                _conditions = [
-                                  for (final code in _conditions)
-                                    if (offered.contains(code)) code,
-                                ];
-                              })
-                            : null,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      if (widget.occurrence == null) ...[
-                        if (context
-                            .watch<MeasurementTargetsCubit>()
-                            .state
-                            .loading)
-                          const Center(child: CircularProgressIndicator())
-                        else if (context
-                                .watch<MeasurementTargetsCubit>()
-                                .state
-                                .errorKey
-                            case final error?)
-                          TextButton(
-                            onPressed: () =>
-                                context.read<MeasurementTargetsCubit>().load(
-                                  context
-                                      .read<MeasurementReadingsCubit>()
-                                      .circleId!,
-                                ),
-                            // Tapping the message reads the targets again,
-                            // as the other measurement lists retry.
-                            child: Text(context.tr(error)),
-                          )
-                        else ...[
-                          InsetGroup(
-                            header: context.tr('measurements.target'),
-                            footer: context.tr(
-                              _targetFor(_kind)?.planId == null
-                                  ? 'measurements.free_target_hint'
-                                  : 'measurements.plan_target_hint',
-                            ),
-                            children: [
-                              InsetBlock(
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: _numberField(
-                                        _kind == MeasurementKind.bp
-                                            ? 'measurements.systolic_limit'
-                                            : 'measurements.glucose_low',
-                                        _kind == MeasurementKind.bp
-                                            ? _targetHigh
-                                            : _targetLow,
-                                        enabled:
-                                            _targetFor(_kind)?.planId == null,
-                                      ),
-                                    ),
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Expanded(
-                                      child: _numberField(
-                                        _kind == MeasurementKind.bp
-                                            ? 'measurements.diastolic_limit'
-                                            : 'measurements.glucose_high',
-                                        _kind == MeasurementKind.bp
-                                            ? _targetLow
-                                            : _targetHigh,
-                                        enabled:
-                                            _targetFor(_kind)?.planId == null,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // A target from a plan is changed in the plan:
-                              // an action row, as «إضافة قراءة» is.
-                              if (_targetFor(_kind)?.planId case final planId?)
-                                InsetRow(
-                                  label: context.tr(
-                                    'measurements.edit_plan_target',
-                                  ),
-                                  leading: const Icon(AppIcons.pencil),
-                                  showChevron: true,
-                                  onTap: () => _editPlan(planId),
-                                ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _numberField(
-                              _kind == MeasurementKind.bp
-                                  ? 'measurements.systolic'
-                                  : 'measurements.value',
-                              _kind == MeasurementKind.bp
-                                  ? _systolic
-                                  : _glucose,
-                            ),
-                          ),
-                          if (_kind == MeasurementKind.bp) ...[
-                            Padding(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              child: Text(
-                                '/',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium,
-                              ),
-                            ),
+                      InsetBlock(
+                        child: Row(
+                          children: [
                             Expanded(
                               child: _numberField(
-                                'measurements.diastolic',
-                                _diastolic,
+                                _kind == MeasurementKind.bp
+                                    ? 'measurements.systolic_limit'
+                                    : 'measurements.glucose_low',
+                                _kind == MeasurementKind.bp
+                                    ? _targetHigh
+                                    : _targetLow,
+                                enabled: _targetFor(_kind)?.planId == null,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _numberField(
+                                _kind == MeasurementKind.bp
+                                    ? 'measurements.diastolic_limit'
+                                    : 'measurements.glucose_high',
+                                _kind == MeasurementKind.bp
+                                    ? _targetLow
+                                    : _targetHigh,
+                                enabled: _targetFor(_kind)?.planId == null,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                      Text(
-                        context.tr(
-                          _kind == MeasurementKind.bp
-                              ? 'measurements.bp_unit'
-                              : 'measurements.glucose_unit',
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      InsetGroup(
-                        header: context.tr('measurements.condition_optional'),
-                        children: [
-                          InsetBlock(
-                            semanticLabel: context.tr(
-                              'measurements.condition_optional',
-                            ),
-                            child: MeasurementConditionChips(
-                              kind: _kind,
-                              selected: _conditions,
-                              caption: context.tr(
-                                'measurements.conditions_hint',
-                              ),
-                              onChanged: (value) =>
-                                  setState(() => _conditions = value),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // «أخرى» in the reader's own words, as the medical
-                      // file's «أخرى» takes them.
-                      if (_conditions.contains('other')) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        LabeledTextField(
-                          label: context.tr('measurements.other_condition'),
-                          helperText: context.tr(
-                            'measurements.other_condition_hint',
-                          ),
-                          controller: _otherCondition,
-                          maxLength: _otherConditionLength,
-                          textInputAction: TextInputAction.done,
-                          onChanged: (_) {},
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.lg),
-                      InsetGroup(
-                        children: [
-                          InsetRow(
-                            label: context.tr('measurements.actual_time'),
-                            value: timeOfDayText(_time),
-                            onTap: () async {
-                              final selected = await showTafaqodTimeSheet(
-                                context,
-                                title: context.tr('measurements.actual_time'),
-                                initialTime: _time,
-                              );
-                              if (selected != null && mounted) {
-                                setState(() => _picked = selected);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      InsetGroup(
-                        children: [
-                          InsetTextRow(
-                            label: context.tr('measurements.note'),
-                            controller: _note,
-                            onChanged: (_) {},
-                            maxLength: 250,
-                          ),
-                        ],
-                      ),
-                      if (_errorKey != null)
-                        Padding(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          child: Text(
-                            context.tr(_errorKey!),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
+                      // A target from a plan is changed in the plan:
+                      // an action row, as «إضافة قراءة» is.
+                      if (_targetFor(_kind)?.planId case final planId?)
+                        InsetRow(
+                          label: context.tr('measurements.edit_plan_target'),
+                          leading: const Icon(AppIcons.pencil),
+                          showChevron: true,
+                          onTap: () => _editPlan(planId),
                         ),
                     ],
                   ),
+                ],
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: _numberField(
+                      _kind == MeasurementKind.bp
+                          ? 'measurements.systolic'
+                          : 'measurements.value',
+                      _kind == MeasurementKind.bp ? _systolic : _glucose,
+                    ),
+                  ),
+                  if (_kind == MeasurementKind.bp) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: Text(
+                        '/',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                    ),
+                    Expanded(
+                      child: _numberField('measurements.diastolic', _diastolic),
+                    ),
+                  ],
+                ],
+              ),
+              Text(
+                context.tr(
+                  _kind == MeasurementKind.bp
+                      ? 'measurements.bp_unit'
+                      : 'measurements.glucose_unit',
                 ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              InsetGroup(
+                header: context.tr('measurements.condition_optional'),
+                children: [
+                  InsetBlock(
+                    semanticLabel: context.tr(
+                      'measurements.condition_optional',
+                    ),
+                    child: MeasurementConditionChips(
+                      kind: _kind,
+                      selected: _conditions,
+                      caption: context.tr('measurements.conditions_hint'),
+                      onChanged: (value) => setState(() => _conditions = value),
+                    ),
+                  ),
+                ],
+              ),
+              // «أخرى» in the reader's own words, as the medical
+              // file's «أخرى» takes them.
+              if (_conditions.contains('other')) ...[
+                const SizedBox(height: AppSpacing.md),
+                LabeledTextField(
+                  label: context.tr('measurements.other_condition'),
+                  helperText: context.tr('measurements.other_condition_hint'),
+                  controller: _otherCondition,
+                  maxLength: _otherConditionLength,
+                  textInputAction: TextInputAction.done,
+                  onChanged: (_) {},
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              InsetGroup(
+                children: [
+                  InsetRow(
+                    label: context.tr('measurements.actual_time'),
+                    value: timeOfDayText(_time),
+                    onTap: () async {
+                      final selected = await showTafaqodTimeSheet(
+                        context,
+                        title: context.tr('measurements.actual_time'),
+                        initialTime: _time,
+                      );
+                      if (selected != null && mounted) {
+                        setState(() => _picked = selected);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              InsetGroup(
+                children: [
+                  InsetTextRow(
+                    label: context.tr('measurements.note'),
+                    controller: _note,
+                    onChanged: (_) {},
+                    maxLength: 250,
+                  ),
+                ],
+              ),
+              if (_errorKey != null)
                 Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed:
-                          _saving ||
-                              widget.occurrence == null &&
-                                  (context
-                                          .watch<MeasurementTargetsCubit>()
-                                          .state
-                                          .loading ||
-                                      context
-                                              .watch<MeasurementTargetsCubit>()
-                                              .state
-                                              .errorKey !=
-                                          null)
-                          ? null
-                          : _save,
-                      child: Text(context.tr('measurements.save_reading')),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  child: Text(
+                    context.tr(_errorKey!),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ),
-              ],
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.lg),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed:
+                    _saving ||
+                        widget.occurrence == null &&
+                            (context
+                                    .watch<MeasurementTargetsCubit>()
+                                    .state
+                                    .loading ||
+                                context
+                                        .watch<MeasurementTargetsCubit>()
+                                        .state
+                                        .errorKey !=
+                                    null)
+                    ? null
+                    : _save,
+                child: Text(context.tr('measurements.save_reading')),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

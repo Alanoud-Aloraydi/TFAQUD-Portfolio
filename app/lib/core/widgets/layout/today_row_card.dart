@@ -3,7 +3,6 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:flutter/material.dart';
 
 enum TodayRowTone { normal, attention, danger }
@@ -74,45 +73,4 @@ class TodayTaskKindIcon extends StatelessWidget {
       ),
     ),
   );
-}
-
-enum TodayStatusTone { neutral, attention, success, danger }
-
-/// One status colour language shared by every kind of task in «اليوم».
-class TodayTaskStatusBadge extends StatelessWidget {
-  const TodayTaskStatusBadge({
-    super.key,
-    required this.text,
-    required this.tone,
-  });
-
-  final String text;
-  final TodayStatusTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final (Color background, Color foreground) = switch (tone) {
-      TodayStatusTone.neutral => (
-        AppSemanticColors.surfaceContent,
-        context.tokens.textSecondary,
-      ),
-      TodayStatusTone.attention => (
-        AppSemanticColors.surfaceAttention,
-        context.tokens.warningText,
-      ),
-      TodayStatusTone.success => (
-        AppSemanticColors.selectedSurface,
-        context.tokens.successText,
-      ),
-      TodayStatusTone.danger => (
-        Theme.of(context).colorScheme.errorContainer,
-        context.tokens.errorText,
-      ),
-    };
-    return CompactStatusBadge(
-      text: text,
-      background: background,
-      foreground: foreground,
-    );
-  }
 }

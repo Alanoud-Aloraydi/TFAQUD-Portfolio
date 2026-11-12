@@ -96,6 +96,7 @@ class InboxCubit extends Cubit<InboxState> {
                 for (final ReceivedInvitation invitation in now.invitations)
                   if (invitation.id != id) invitation,
               ],
+              previous: now.previous,
             ),
           ),
         );

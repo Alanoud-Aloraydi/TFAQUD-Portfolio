@@ -45,6 +45,10 @@ class ApiEndpoints {
   static const String circleRequests = '/circle-requests';
   static const String invitations = '/invitations';
 
+  /// The invitations and requests answered in the last 30 days, for the
+  /// bell's «السابقة».
+  static const String previousNotifications = '/notifications/previous';
+
   /// One request: `/circle-requests/{id}`. A request is read from the list; the
   /// patient answers it with [respondCircleRequest] and completes it with
   /// [completeCircleRequest]; either side cancels it with DELETE on this path.
@@ -70,6 +74,9 @@ class ApiEndpoints {
   static String leaveCircle(String circleId) => '${circle(circleId)}/leave';
   static String circleMember(String circleId, String accountId) =>
       '${circle(circleId)}/members/$accountId';
+
+  /// Who leads the circle («قائد الدائرة»).
+  static String circleLeader(String circleId) => '${circle(circleId)}/leader';
 
   /// «ذكّرني لاحقًا», shared by the circle.
   static String taskSnoozes(String circleId) =>

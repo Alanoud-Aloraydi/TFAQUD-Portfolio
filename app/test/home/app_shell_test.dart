@@ -98,6 +98,31 @@ void main() {
       }
     });
 
+    testWidgets('the add sheet offers only the areas the member may edit', (
+      WidgetTester tester,
+    ) async {
+      home.response = Success(
+        homeData(
+          circles: const <CareCircleSummary>[
+            CareCircleSummary(
+              id: 'one',
+              name: 'Circle one',
+              canManageMeasurements: true,
+              canManageAppointments: false,
+            ),
+          ],
+        ),
+      );
+      await pumpApp(tester);
+
+      await tester.tap(find.byTooltip('tab.add'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('add.measurement'.tr()), findsOneWidget);
+      expect(find.text('add.medication'.tr()), findsNothing);
+      expect(find.text('add.appointment'.tr()), findsNothing);
+    });
+
     testWidgets('an admin opens the add sheet', (WidgetTester tester) async {
       home.response = Success(
         homeData(

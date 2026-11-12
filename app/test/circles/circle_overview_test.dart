@@ -88,6 +88,62 @@ void main() {
       );
     });
 
+    test('reads the leader and what each member may edit', () {
+      final Map<String, dynamic> json = _circle(<Map<String, dynamic>>[
+        <String, dynamic>{
+          'display_name': 'ريم',
+          'is_you': true,
+          'is_leader': true,
+          'role': 'manager',
+          'can_edit': true,
+          'edit_access': <String, dynamic>{
+            'medications': true,
+            'measurements': true,
+            'appointments': true,
+          },
+        },
+        <String, dynamic>{
+          'display_name': 'لينا',
+          'is_you': false,
+          'role': 'manager',
+          'can_edit': true,
+          'edit_access': <String, dynamic>{
+            'medications': false,
+            'measurements': true,
+            'appointments': false,
+          },
+        },
+        // A server from before the areas: one answer for all three.
+        <String, dynamic>{
+          'display_name': 'خالد',
+          'is_you': false,
+          'role': 'member',
+          'can_edit': false,
+        },
+      ]);
+      (json['circle'] as Map<String, dynamic>)['can_hand_over'] = true;
+
+      final CircleOverview overview = CircleOverviewModel.fromJson(json)
+          .overview;
+
+      expect(overview.canHandOver, isTrue);
+      expect(overview.members.map((m) => m.isLeader), <bool>[
+        true,
+        false,
+        false,
+      ]);
+      expect(
+        overview.members[1].editAccess,
+        const EditAccess(
+          medications: false,
+          measurements: true,
+          appointments: false,
+        ),
+      );
+      expect(overview.members[2].editAccess, const EditAccess.all(false));
+      expect(overview.members[2].isViewOnly, isTrue);
+    });
+
     test('a server without "is_patient" reads as not the patient', () {
       final overview = CircleOverviewModel.fromJson(
         _circle(<Map<String, dynamic>>[

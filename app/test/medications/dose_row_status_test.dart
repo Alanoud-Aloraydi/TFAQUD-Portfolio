@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_status.dart';
@@ -46,10 +46,10 @@ void main() {
     );
 
     expect(status.unrecorded, isTrue);
-    expect(status.tone, TodayStatusTone.attention);
+    expect(status.tone, StatusTone.attention);
   });
 
-  testWidgets('an upcoming dose is neutral and not unrecorded', (tester) async {
+  testWidgets('an upcoming dose is ahead and not unrecorded', (tester) async {
     late DoseRowStatus status;
     await pumpArabic(
       tester,
@@ -66,6 +66,6 @@ void main() {
     );
 
     expect(status.unrecorded, isFalse);
-    expect(status.tone, TodayStatusTone.neutral);
+    expect(status.tone, StatusTone.info);
   });
 }

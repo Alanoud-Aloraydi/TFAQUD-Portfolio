@@ -1,6 +1,7 @@
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,10 +17,7 @@ Widget _row({VoidCallback? onTap, Widget? actions}) => Scaffold(
     ),
     title: 'ميتفورمين 500 ملغ',
     subtitle: 'حبة واحدة',
-    status: const TodayTaskStatusBadge(
-      text: 'ينتظر',
-      tone: TodayStatusTone.attention,
-    ),
+    status: const StatusBadge(text: 'ينتظر', tone: StatusTone.attention),
     onTap: onTap,
     actions: actions,
   ),

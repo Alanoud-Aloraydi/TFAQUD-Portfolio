@@ -1,5 +1,4 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,14 +14,13 @@ class ReadingStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool? outside = reading.outsideTarget;
     if (outside == true) {
-      return StatusPill(
+      return StatusBadge(
         icon: CupertinoIcons.exclamationmark_triangle,
         text: context.tr('measurements.outside_target'),
-        background: AppSemanticColors.surfaceAttention,
-        foreground: AppSemanticColors.statusWarning,
+        tone: StatusTone.attention,
       );
     }
-    return StatusPill(
+    return StatusBadge(
       icon: outside == false
           ? CupertinoIcons.checkmark_circle
           : CupertinoIcons.minus_circle,
@@ -31,8 +29,7 @@ class ReadingStatusPill extends StatelessWidget {
             ? 'measurements.in_target'
             : 'measurements.without_target',
       ),
-      background: AppSemanticColors.background,
-      foreground: AppSemanticColors.textPrimary,
+      tone: outside == false ? StatusTone.success : StatusTone.neutral,
     );
   }
 }

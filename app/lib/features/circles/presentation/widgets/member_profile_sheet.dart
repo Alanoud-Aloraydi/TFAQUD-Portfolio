@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -11,9 +10,9 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/circles/presentation/widgets/member_badges.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -87,22 +86,7 @@ class _MemberProfile extends StatelessWidget {
           alignment: WrapAlignment.center,
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.xs,
-          children: <Widget>[
-            if (member.isManager)
-              StatusPill(
-                text: context.tr('circle_overview.manager'),
-                background: AppSemanticColors.borderPlan,
-                foreground: AppSemanticColors.textSupporting,
-                icon: AppIcons.crown,
-              ),
-            if (member.isPatient)
-              StatusPill(
-                text: context.tr('circle_overview.owner'),
-                background: AppSemanticColors.selectedSurface,
-                foreground: AppSemanticColors.statusSuccess,
-                icon: AppIcons.user,
-              ),
-          ],
+          children: memberBadges(context, member),
         ),
         const SizedBox(height: AppSpacing.lg),
         DecoratedBox(

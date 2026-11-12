@@ -500,7 +500,9 @@ minutes. Body:
 
 A reading time is `"task": "measurement"` with its plan version as `task_id` and
 its `"time_of_day": "08:00"` (a version can read more than once a day). `minutes`
-is 1 to 240. Put off again, the same task moves to the new time.
+is 1 to 720 (12 hours); the app also keeps a dose before the halfway point to
+the same medicine's next dose. Put off again, the same task moves to the new
+time.
 
 200:
 
@@ -556,6 +558,37 @@ the team has not approved them yet.
 | `GET /api/v1/circle-requests` | any signed-in account | 200 `sent`, `received` |
 | `POST /api/v1/circle-requests/{request_id}/respond` | the patient the request names | 200 `request` |
 | `POST /api/v1/circle-requests/{request_id}/complete` | the same | 201 `circle` |
+| `PATCH /api/v1/circles/{circle_id}/members/{account_id}` | the circle's leader | 200 `circle` |
+| `DELETE /api/v1/circles/{circle_id}/members/{account_id}` | the circle's leader | 204 |
+| `PUT /api/v1/circles/{circle_id}/leader` | the circle's leader | 200 `circle` |
+| `GET /api/v1/notifications/previous` | any signed-in account | 200 `previous` |
+
+**The leader (Built 12 November 2026, migration 0048).** One member leads each
+circle («قائد الدائرة»): the patient while they use the detailed mode;
+otherwise whoever made the circle, or whoever the leader handed it to (`PUT
+…/leader` with `{"account_id": "…"}`; 409 `patient_leads` while the patient
+leads). When the leader leaves, the member who joined first leads. Only the
+leader removes members and lets each one edit an area, or not: `PATCH
+…/members/{account_id}` with `{"edit_access": {"medications": false}}` (an area
+left out stays; `{"can_edit": false}` sets all three, as the app before the
+areas sends). The leader always edits everything (422 `circle_leader` for the
+leader's own row). Adding, changing and stopping medicines need
+`medications`, measurement plans `measurements`, appointments `appointments`;
+recording a dose or a reading, putting a task off and the visit sheet need any
+one of them. In `GET …/circles/{circle_id}` each member has `is_leader` and
+`edit_access`, and the circle has `leader_account_id`, `can_manage_members`,
+`can_hand_over` and `your_edit_access`. `GET /api/v1/home` gives each circle
+`can_manage_medications`, `can_manage_measurements` and
+`can_manage_appointments`.
+
+**The bell's «السابقة» (Built 12 November 2026).** `GET
+/api/v1/notifications/previous` lists, newest first, what was answered in the
+last 30 days: invitations to and from the caller (`kind`
+`invitation_received`, `invitation_sent`; `status` `accepted` or `declined`)
+and circle requests about and from the caller (`request_received`,
+`request_sent`; `completed` or `declined`). Each item has `id`, `answered_at`,
+`circle_name` as the caller reads it (null before a circle exists),
+`other_name` and, for someone with no name here, `other_phone_number`.
 | `DELETE /api/v1/circle-requests/{request_id}` | the sender or the patient | 204 |
 | `GET /api/v1/circles/{circle_id}/medical-profile` | manager, simplified patient | 200 |
 | `GET /api/v1/circles/{circle_id}/emergency-card` | manager, simplified patient | 200 `emergency_card` |

@@ -21,7 +21,7 @@ class SnoozeRequest(Dto):
     task_id: UUID
     scheduled_on: date
     time_of_day: time | None = None
-    minutes: int = Field(ge=1, le=240)
+    minutes: int = Field(ge=1, le=720)
 
     @model_validator(mode="after")
     def reading_time_given(self):

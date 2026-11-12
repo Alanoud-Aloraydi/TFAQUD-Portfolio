@@ -98,8 +98,8 @@ class SnoozeShare extends Equatable {
 /// another shape.
 SnoozeShare? snoozeShareOf(String key, Duration after) {
   final List<String> parts = key.split('|');
-  // The server takes 1 to 240 minutes.
-  final int minutes = after.inMinutes.clamp(1, 240);
+  // The server takes 1 to 720 minutes (12 hours).
+  final int minutes = after.inMinutes.clamp(1, 720);
   if (parts.length == 3) {
     final String? day = _isoDay(parts[2]);
     if (day == null) return null;

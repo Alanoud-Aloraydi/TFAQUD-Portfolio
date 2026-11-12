@@ -1,13 +1,12 @@
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/layout/recorder_line.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -29,10 +28,9 @@ List<Widget> measurementTaskDetails(
     if (task.measurementState != null)
       Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
-        child: CompactStatusBadge(
+        child: StatusBadge(
           text: context.tr('measurements.condition.${task.measurementState}'),
-          background: AppSemanticColors.surfaceContent,
-          foreground: AppSemanticColors.textSupporting,
+          tone: StatusTone.neutral,
         ),
       ),
     if (putOff != null)

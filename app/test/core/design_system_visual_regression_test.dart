@@ -1,10 +1,10 @@
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/forms/choice_card.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
-import 'package:app/features/onboarding/presentation/widgets/choice_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

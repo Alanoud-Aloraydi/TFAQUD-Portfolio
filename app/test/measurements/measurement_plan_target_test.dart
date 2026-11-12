@@ -78,7 +78,10 @@ void main() {
               BlocProvider.value(value: readings),
               BlocProvider.value(value: targets),
             ],
-            child: const Scaffold(body: MeasurementReadingSheet()),
+            child: const Scaffold(
+              // As in its glass sheet, which scrolls it.
+              body: SingleChildScrollView(child: MeasurementReadingSheet()),
+            ),
           ),
         ),
         GoRoute(

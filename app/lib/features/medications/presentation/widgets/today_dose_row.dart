@@ -6,6 +6,7 @@ import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/recorder_line.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
@@ -78,7 +79,7 @@ class TodayDoseRow extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
       ],
-      status: TodayTaskStatusBadge(text: status.label, tone: status.tone),
+      status: StatusBadge(text: status.label, tone: status.tone),
       onTap: () => context.push(
         Routes.medicationDetails(circleId, occurrence.planId),
         extra: canManage,

@@ -6,7 +6,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -129,30 +129,26 @@ class _DetailsCard extends StatelessWidget {
           const Divider(height: AppSizes.divider),
           _DetailRow(
             label: context.tr('circles.app_mode'),
-            child: StatusPill(
+            child: StatusBadge(
               text: context.tr(
                 request.proposedAppMode == CircleAppMode.detailed
                     ? 'circles.mode_detailed'
                     : 'circles.mode_simplified',
               ),
-              background: AppSemanticColors.selectedSurface,
-              foreground: AppSemanticColors.textPrimary,
+              tone: StatusTone.success,
             ),
           ),
           const Divider(height: AppSizes.divider),
           _DetailRow(
             label: context.tr('circles.request_status'),
-            child: StatusPill(
+            child: StatusBadge(
               icon: accepted ? AppIcons.check : AppIcons.clock,
               text: context.tr(
                 accepted
                     ? 'circles.request_status_accepted'
                     : 'circles.request_status_pending',
               ),
-              background: AppSemanticColors.background,
-              foreground: accepted
-                  ? AppSemanticColors.statusSuccess
-                  : context.tokens.textSecondary,
+              tone: accepted ? StatusTone.success : StatusTone.attention,
             ),
           ),
         ],

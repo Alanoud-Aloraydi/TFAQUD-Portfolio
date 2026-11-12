@@ -361,11 +361,12 @@ void main() {
 
         expect(find.byType(RequestPatientScreen), findsOneWidget);
         expect(find.text('circles.request_title'.tr()), findsOneWidget);
-        // No name to choose: the note says how the circle will be named.
-        // Then the mode and the note about the patient's consent.
-        expect(find.text('circles.request_name_note'.tr()), findsOneWidget);
+        // No name to choose. The two modes, each with what it means, and
+        // the note about the patient's consent.
         expect(find.text('circles.mode_simplified'.tr()), findsOneWidget);
+        expect(find.text('circles.mode_simplified_hint'.tr()), findsOneWidget);
         expect(find.text('circles.mode_detailed'.tr()), findsOneWidget);
+        expect(find.text('circles.mode_detailed_hint'.tr()), findsOneWidget);
         expect(find.text('circles.request_notice'.tr()), findsOneWidget);
       });
 

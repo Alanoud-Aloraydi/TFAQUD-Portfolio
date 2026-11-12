@@ -40,13 +40,22 @@ abstract class CirclesRepositoryDomain {
     String invitationId,
   );
 
+  /// Whether a member may edit [area] («medications», «measurements»,
+  /// «appointments»); only the circle's leader may say.
   Future<Result<void, Failure>> setMemberEditAccess(
     String circleId,
     String accountId, {
-    required bool canEdit,
+    required String area,
+    required bool allowed,
   });
 
   Future<Result<void, Failure>> removeMember(String circleId, String accountId);
+
+  /// Hands the circle's leadership to another member.
+  Future<Result<void, Failure>> handOverLeadership(
+    String circleId,
+    String accountId,
+  );
 
   Future<Result<void, Failure>> leaveCircle(
     String circleId, {

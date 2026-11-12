@@ -1,14 +1,15 @@
 import 'dart:math' as math;
 
 import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Opens the app's one date picker: an iOS wheel of day, month and year with
-/// one selection band across the row. Returns the confirmed date, or null
+/// Opens the app's one date picker, in a glass sheet: an iOS wheel of day,
+/// month and year with one selection band across the row. Returns the confirmed date, or null
 /// when the sheet is closed without confirming.
 ///
 /// [confirmLabel] defaults to «تأكيد».
@@ -19,13 +20,10 @@ Future<DateTime?> showTafaqodDateSheet(
   required DateTime firstDate,
   required DateTime lastDate,
   String? confirmLabel,
-}) => showModalBottomSheet<DateTime>(
-  context: context,
-  useSafeArea: true,
-  useRootNavigator: true,
-  isScrollControlled: true,
+}) => showGlassSheet<DateTime>(
+  context,
+  title: title,
   builder: (_) => DateWheelSheet(
-    title: title,
     initialDate: initialDate,
     firstDate: firstDate,
     lastDate: lastDate,
@@ -40,14 +38,12 @@ Future<DateTime?> showTafaqodDateSheet(
 class DateWheelSheet extends StatefulWidget {
   const DateWheelSheet({
     super.key,
-    required this.title,
     required this.initialDate,
     required this.firstDate,
     required this.lastDate,
     this.confirmLabel,
   });
 
-  final String title;
   final DateTime initialDate;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -114,7 +110,6 @@ class _DateWheelSheetState extends State<DateWheelSheet> {
   @override
   Widget build(BuildContext context) {
     return PickerSheetFrame(
-      title: widget.title,
       confirmLabel: widget.confirmLabel ?? context.tr('common.confirm'),
       onConfirm: () => Navigator.pop(context, DateTime(_year, _month, _day)),
       child: SizedBox(
