@@ -1,7 +1,5 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -29,22 +27,18 @@ class DoseTimingBadge extends StatelessWidget {
     final bool recentMissed =
         state == DoseTimingState.missed &&
         !DateUtils.dateOnly(scheduledOn).isBefore(yesterday);
-    final bool attention =
-        state == DoseTimingState.late || state == DoseTimingState.missed;
-    return CompactStatusBadge(
+    return StatusBadge(
       text: context.tr(
         recentMissed
             ? 'medications.timing.unrecorded'
             : 'medications.timing.${state.name}',
       ),
-      background: attention
-          ? AppSemanticColors.surfaceAttention
-          : AppSemanticColors.surfaceContent,
-      foreground: attention
-          ? context.tokens.warningText
-          : state == DoseTimingState.due
-          ? AppSemanticColors.textPrimary
-          : context.tokens.textSecondary,
+      tone: switch (state) {
+        DoseTimingState.upcoming => StatusTone.info,
+        DoseTimingState.due || DoseTimingState.late => StatusTone.attention,
+        DoseTimingState.missed =>
+          recentMissed ? StatusTone.attention : StatusTone.danger,
+      },
     );
   }
 }

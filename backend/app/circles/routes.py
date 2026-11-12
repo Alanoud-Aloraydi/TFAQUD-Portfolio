@@ -17,6 +17,7 @@ from app.circles.inputs import (
     CreateSelfCircleInput,
     EmergencyContactInput,
     InviteInput,
+    LeaderInput,
     LeaveCircleInput,
     MedicalProfileInput,
     MemberAccessInput,
@@ -102,7 +103,9 @@ def get_circle(circle_id):
 @bp.patch("/<circle_id>/members/<account_id>")
 @require_circle_role(MANAGER)
 def update_member_access(circle_id, account_id):
-    """Pause or restore another member's editing; owner-only in service."""
+    """Let another member edit the medicines, the measurements and the
+    appointments, or not; only the circle's leader (`app.circles.leader`).
+    """
     body = parse_json_body(MemberAccessInput)
     with care_work() as work:
         cid = parse_id(circle_id, "care circle")
@@ -110,8 +113,21 @@ def update_member_access(circle_id, account_id):
             work.actor,
             cid,
             parse_id(account_id, "account"),
-            body.can_edit,
+            body.areas(),
         )
+        view = views.circle_view(work.session, cid, work.actor, MANAGER)
+    return answer({"circle": view})
+
+
+@bp.put("/<circle_id>/leader")
+@require_circle_role(MANAGER)
+def hand_over_leadership(circle_id):
+    """The leader hands the circle to another member; a patient in the
+    detailed mode always leads their own (409 `patient_leads`)."""
+    body = parse_json_body(LeaderInput)
+    with care_work() as work:
+        cid = parse_id(circle_id, "care circle")
+        work.care.hand_over_leadership(work.actor, cid, body.account_id)
         view = views.circle_view(work.session, cid, work.actor, MANAGER)
     return answer({"circle": view})
 
@@ -119,7 +135,7 @@ def update_member_access(circle_id, account_id):
 @bp.delete("/<circle_id>/members/<account_id>")
 @require_circle_role(MANAGER)
 def remove_member(circle_id, account_id):
-    """Remove another member; owner-only in service."""
+    """Remove another member; only the circle's leader."""
     with care_work() as work:
         work.care.remove_member(
             work.actor,

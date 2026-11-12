@@ -4,8 +4,9 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// One option of a single-choice question on the start step: an icon, a
-/// title, a hint and a radio mark. The whole card is the tap target, and
+/// One option of a single-choice question (who the circle is for, the mode
+/// of the patient's app): an icon, a title, a hint and a radio mark. Every
+/// option and what it means stay on the screen. The whole card is the tap target, and
 /// screen readers hear it as a checked or unchecked option of one group.
 class ChoiceCard extends StatelessWidget {
   const ChoiceCard({

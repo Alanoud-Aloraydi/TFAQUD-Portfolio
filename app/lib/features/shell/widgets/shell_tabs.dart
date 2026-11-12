@@ -1,6 +1,10 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:flutter/widgets.dart';
 
+/// A tab of the bottom bar: its label, its icons (filled while selected,
+/// outlined otherwise), and the names of the same drawings in the iOS
+/// asset catalog for the native bar ([symbol], [selectedSymbol]). They are
+/// images, not system symbols: iOS fills every system symbol of a tab bar.
 typedef ShellTab = ({
   String labelKey,
   IconData icon,
@@ -12,30 +16,30 @@ typedef ShellTab = ({
 const List<ShellTab> shellTabs = <ShellTab>[
   (
     labelKey: 'tab.today',
-    icon: CupertinoIcons.house_fill,
-    unselectedIcon: CupertinoIcons.house,
-    symbol: 'house',
-    selectedSymbol: 'house.fill',
+    icon: AppIcons.tabTodayFill,
+    unselectedIcon: AppIcons.tabToday,
+    symbol: 'tab_today',
+    selectedSymbol: 'tab_today_fill',
   ),
   (
     labelKey: 'tab.plan',
-    icon: Icons.medical_services,
-    unselectedIcon: Icons.medical_services_outlined,
-    symbol: 'cross.case',
-    selectedSymbol: 'cross.case.fill',
+    icon: AppIcons.tabPlanFill,
+    unselectedIcon: AppIcons.tabPlan,
+    symbol: 'tab_plan',
+    selectedSymbol: 'tab_plan_fill',
   ),
   (
     labelKey: 'tab.record',
-    icon: CupertinoIcons.square_list_fill,
-    unselectedIcon: CupertinoIcons.square_list,
-    symbol: 'list.bullet.rectangle',
-    selectedSymbol: 'list.bullet.rectangle.fill',
+    icon: AppIcons.tabRecordFill,
+    unselectedIcon: AppIcons.tabRecord,
+    symbol: 'tab_record',
+    selectedSymbol: 'tab_record_fill',
   ),
   (
     labelKey: 'tab.circle',
-    icon: CupertinoIcons.person_2_fill,
-    unselectedIcon: CupertinoIcons.person_2,
-    symbol: 'person.2',
-    selectedSymbol: 'person.2.fill',
+    icon: AppIcons.tabCircleFill,
+    unselectedIcon: AppIcons.users,
+    symbol: 'tab_circle',
+    selectedSymbol: 'tab_circle_fill',
   ),
 ];

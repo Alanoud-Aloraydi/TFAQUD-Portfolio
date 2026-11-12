@@ -49,7 +49,6 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
         widget.header,
         const SizedBox(height: AppSpacing.md),
         WhiteFilterMenu<String>(
-          glass: true,
           options: <String, String>{
             for (final String key in _filters)
               key: context.tr('appointments.filters.$key'),

@@ -33,9 +33,10 @@ class PlanEditButton extends StatelessWidget {
 }
 
 /// The card's last line: on the start side, when the plan starts or
-/// started ([start], «بدأ في 7 نوفمبر 2026»); on the end side, «تفاصيل
-/// الدواء» ([label]) with its arrow last, which opens and closes the
-/// details. The whole line is the button.
+/// started ([start], «بدأ في 7 نوفمبر 2026»); at the far end (the left, in
+/// Arabic), «تفاصيل الدواء» ([label]) with its arrow last, which opens and
+/// closes the details. The label is small, as the date is, so the card
+/// reads from its title down. The whole line is the button.
 class PlanDetailsToggle extends StatelessWidget {
   const PlanDetailsToggle({
     super.key,
@@ -67,17 +68,16 @@ class PlanDetailsToggle extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(child: Text(start, style: text.bodySmall)),
                 const SizedBox(width: AppSpacing.sm),
-                Flexible(child: Text(label, style: text.labelLarge)),
-              ] else
-                // Takes the free width so a long label wraps beside the
-                // arrow at large text.
-                Expanded(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.end,
-                    style: text.labelLarge,
-                  ),
+              ],
+              // Takes the free width and sits at its end, beside the
+              // arrow; a long label wraps there at large text.
+              Expanded(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.end,
+                  style: text.labelMedium,
                 ),
+              ),
               const SizedBox(width: AppSpacing.xs),
               Icon(
                 expanded

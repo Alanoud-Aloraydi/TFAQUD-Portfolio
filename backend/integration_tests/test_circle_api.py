@@ -7,6 +7,9 @@ from app.models import Account, CareCircle, CareCircleManager
 from integration_tests.helpers import Api, BIRTH, add_manager, count
 from integration_tests.helpers import error_code, offline_circle, run
 
+# What the leader (and anyone allowed everything) may edit.
+EDIT_ALL = {"medications": True, "measurements": True, "appointments": True}
+
 SELF = {"name": "My care", "birth_date": "1954-06-05", "city": "Riyadh"}
 OFFLINE = {
     "name": "Mother Nora",
@@ -76,6 +79,8 @@ def test_self_care_circle_is_created_and_listed(
             "is_patient": True,
             "role": "manager",
             "can_edit": True,
+            "is_leader": True,
+            "edit_access": EDIT_ALL,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }
@@ -88,6 +93,8 @@ def test_self_care_circle_is_created_and_listed(
             "id": circle["id"],
             "name": "My care",
             "can_manage_medications": True,
+            "can_manage_measurements": True,
+            "can_manage_appointments": True,
             "is_patient": True,
             "patient_name": "Nora",
             "patient_avatar_code": None,
@@ -236,11 +243,14 @@ def test_circle_for_a_patient_without_an_account(
             "is_patient": False,
             "role": "manager",
             "can_edit": True,
+            "is_leader": True,
+            "edit_access": EDIT_ALL,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }
     ]
-    assert circle["can_manage_members"] is False
+    # Whoever makes a circle for someone without an account leads it.
+    assert circle["can_manage_members"] is True
     with Session(database) as session:
         patient = session.scalar(select(CareCircle))
         assert patient.account_id is None

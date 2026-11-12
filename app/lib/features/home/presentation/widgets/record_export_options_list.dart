@@ -1,8 +1,15 @@
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The sections of the record the person can include, and how detailed.
+/// How detailed the file is, and the sections of the record the person
+/// includes, as rows with a check on each chosen one.
 class RecordExportOptionsList extends StatelessWidget {
   const RecordExportOptionsList({
     super.key,
@@ -20,66 +27,95 @@ class RecordExportOptionsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        SegmentedButton<bool>(
-          segments: <ButtonSegment<bool>>[
-            ButtonSegment(
-              value: false,
-              label: Text(context.tr('record_export.mode.summary')),
+        GlassSegmentedControl<bool>(
+          segments: <bool, String>{
+            false: context.tr('record_export.mode.summary'),
+            true: context.tr('record_export.mode.detailed'),
+          },
+          selected: options.detailed,
+          onChanged: (bool detailed) =>
+              onChanged(options.copyWith(detailed: detailed)),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        InsetGroup(
+          children: <Widget>[
+            _CheckRow(
+              label: context.tr('record_export.medical_file'),
+              checked: hasMedicalFile && options.patient,
+              onChanged: hasMedicalFile
+                  ? (bool v) => onChanged(options.copyWith(patient: v))
+                  : null,
             ),
-            ButtonSegment(
-              value: true,
-              label: Text(context.tr('record_export.mode.detailed')),
+            if (hasMedicalFile && options.patient)
+              _CheckRow(
+                label: context.tr('record_export.include_contacts'),
+                checked: options.contacts,
+                onChanged: (bool v) => onChanged(options.copyWith(contacts: v)),
+              ),
+            _CheckRow(
+              label: context.tr('record_export.measurements'),
+              checked: options.measurements,
+              onChanged: (bool v) =>
+                  onChanged(options.copyWith(measurements: v)),
+            ),
+            _CheckRow(
+              label: context.tr('record_export.medications'),
+              checked: options.medications,
+              onChanged: (bool v) =>
+                  onChanged(options.copyWith(medications: v)),
+            ),
+            _CheckRow(
+              label: context.tr('record_export.appointments'),
+              checked: options.appointments,
+              onChanged: (bool v) =>
+                  onChanged(options.copyWith(appointments: v)),
             ),
           ],
-          selected: <bool>{options.detailed},
-          onSelectionChanged: (v) =>
-              onChanged(options.copyWith(detailed: v.first)),
-        ),
-        _check(
-          context,
-          'record_export.medical_file',
-          hasMedicalFile && options.patient,
-          hasMedicalFile
-              ? (v) => onChanged(options.copyWith(patient: v))
-              : null,
-        ),
-        if (hasMedicalFile && options.patient)
-          SwitchListTile(
-            title: Text(context.tr('record_export.include_contacts')),
-            value: options.contacts,
-            onChanged: (v) => onChanged(options.copyWith(contacts: v)),
-          ),
-        _check(
-          context,
-          'record_export.measurements',
-          options.measurements,
-          (v) => onChanged(options.copyWith(measurements: v)),
-        ),
-        _check(
-          context,
-          'record_export.medications',
-          options.medications,
-          (v) => onChanged(options.copyWith(medications: v)),
-        ),
-        _check(
-          context,
-          'record_export.appointments',
-          options.appointments,
-          (v) => onChanged(options.copyWith(appointments: v)),
         ),
       ],
     );
   }
+}
 
-  Widget _check(
-    BuildContext context,
-    String titleKey,
-    bool value,
-    ValueChanged<bool>? onChanged,
-  ) => CheckboxListTile(
-    title: Text(context.tr(titleKey)),
-    value: value,
-    onChanged: onChanged == null ? null : (v) => onChanged(v ?? false),
-  );
+/// A section as a row: a tap includes it or leaves it out, and a check at
+/// its end marks it included, as in the app's other lists of choices. Null
+/// [onChanged] greys it.
+class _CheckRow extends StatelessWidget {
+  const _CheckRow({
+    required this.label,
+    required this.checked,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool checked;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled = onChanged != null;
+    return Semantics(
+      checked: checked,
+      enabled: enabled,
+      child: InsetRow(
+        label: label,
+        labelColor: enabled ? null : AppSemanticColors.borderControlBase,
+        // The words take the row; the check (or its room) sits at the end.
+        leading: const SizedBox.shrink(),
+        onTap: enabled ? () => onChanged!(!checked) : null,
+        trailing: SizedBox.square(
+          dimension: AppSizes.iconSmall,
+          child: checked
+              ? const Icon(
+                  AppIcons.check,
+                  size: AppSizes.iconSmall,
+                  color: AppSemanticColors.textPrimary,
+                )
+              : null,
+        ),
+      ),
+    );
+  }
 }

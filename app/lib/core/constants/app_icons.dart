@@ -15,6 +15,7 @@ abstract class AppIcons {
   AppIcons._();
 
   static const String _family = 'PhosphorRegular';
+  static const String _fillFamily = 'PhosphorFill';
   static const String _package = 'phosphor_flutter';
 
   /// Back. Points right in Arabic, as in the handoff. Phosphor `arrowLeft`.
@@ -342,6 +343,60 @@ abstract class AppIcons {
   static const IconData house = IconData(
     0xe2c6,
     fontFamily: _family,
+    fontPackage: _package,
+  );
+
+  // The bottom bar: each tab's outline icon, and its filled one while the tab
+  // is selected. The native bar on iOS shows the same drawings
+  // (ios/Runner/Assets.xcassets/tab_*.imageset), because iOS draws its own
+  // symbols filled in a tab bar whether selected or not.
+
+  /// «اليوم». Phosphor `house`.
+  static const IconData tabToday = IconData(
+    0xe2c2,
+    fontFamily: _family,
+    fontPackage: _package,
+  );
+
+  /// «اليوم», selected. Phosphor `house` fill.
+  static const IconData tabTodayFill = IconData(
+    0xe2c2,
+    fontFamily: _fillFamily,
+    fontPackage: _package,
+  );
+
+  /// «الخطة». Phosphor `firstAidKit`.
+  static const IconData tabPlan = IconData(
+    0xe570,
+    fontFamily: _family,
+    fontPackage: _package,
+  );
+
+  /// «الخطة», selected. Phosphor `firstAidKit` fill.
+  static const IconData tabPlanFill = IconData(
+    0xe570,
+    fontFamily: _fillFamily,
+    fontPackage: _package,
+  );
+
+  /// «السجل». Phosphor `notebook`.
+  static const IconData tabRecord = IconData(
+    0xe34e,
+    fontFamily: _family,
+    fontPackage: _package,
+  );
+
+  /// «السجل», selected. Phosphor `notebook` fill.
+  static const IconData tabRecordFill = IconData(
+    0xe34e,
+    fontFamily: _fillFamily,
+    fontPackage: _package,
+  );
+
+  /// «الدائرة», selected. Phosphor `users` fill; [users] is its outline.
+  static const IconData tabCircleFill = IconData(
+    0xe4d6,
+    fontFamily: _fillFamily,
     fontPackage: _package,
   );
 }

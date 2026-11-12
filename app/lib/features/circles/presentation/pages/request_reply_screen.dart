@@ -7,9 +7,9 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/presentation/cubit/request_reply_cubit.dart';
@@ -184,12 +184,11 @@ class _RequestDetails extends StatelessWidget {
           const Divider(height: 32),
           _Row(
             label: context.tr('circles.reply_mode'),
-            child: StatusPill(
+            child: StatusBadge(
               text: context.tr(
                 detailed ? 'circles.mode_detailed' : 'circles.mode_simplified',
               ),
-              background: AppSemanticColors.selectedSurface,
-              foreground: AppSemanticColors.textPrimary,
+              tone: StatusTone.success,
             ),
           ),
           const SizedBox(height: AppSpacing.md),

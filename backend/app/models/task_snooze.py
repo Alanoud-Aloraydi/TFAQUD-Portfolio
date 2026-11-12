@@ -23,7 +23,7 @@ class TaskSnooze(db.Model):
     __tablename__ = "task_snooze"
     __table_args__ = (
         CheckConstraint("task IN ('dose', 'measurement')", name="task_kind"),
-        CheckConstraint("minutes BETWEEN 1 AND 240", name="minutes_range"),
+        CheckConstraint("minutes BETWEEN 1 AND 720", name="minutes_range"),
         CheckConstraint("remind_at > snoozed_at", name="remind_order"),
         UniqueConstraint(
             "task", "task_id", "scheduled_on", "time_of_day",

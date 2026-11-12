@@ -47,6 +47,11 @@ class MedicationFormData {
   StrengthUnit strengthUnit;
   final TextEditingController reason;
   final TextEditingController instructions;
+
+  /// Whether «أخرى» is chosen among the instructions, so their text field
+  /// shows, even while it is still empty. Instructions of their own words
+  /// already saved count as «أخرى» too.
+  bool otherInstructions = false;
   final FocusNode nameFocus = FocusNode();
   final FocusNode strengthFocus = FocusNode();
   final FocusNode periodFocus = FocusNode();

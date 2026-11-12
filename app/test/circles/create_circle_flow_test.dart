@@ -167,10 +167,11 @@ void main() {
       await openFirstStep(tester);
       await tester.tap(find.text('circles.city_hint'.tr()));
       await tester.pumpAndSettle();
-      // The page below shows the same words as a hint, so look inside the sheet.
+      // The page below shows the same words as a hint, so look inside the
+      // sheet, whose glass draws the title.
       expect(
         find.descendant(
-          of: find.byType(CitySheet),
+          of: find.byType(BottomSheet),
           matching: find.text('circles.city_sheet_title'.tr()),
         ),
         findsOneWidget,
@@ -361,11 +362,12 @@ void main() {
 
         expect(find.byType(RequestPatientScreen), findsOneWidget);
         expect(find.text('circles.request_title'.tr()), findsOneWidget);
-        // No name to choose: the note says how the circle will be named.
-        // Then the mode and the note about the patient's consent.
-        expect(find.text('circles.request_name_note'.tr()), findsOneWidget);
+        // No name to choose. The two modes, each with what it means, and
+        // the note about the patient's consent.
         expect(find.text('circles.mode_simplified'.tr()), findsOneWidget);
+        expect(find.text('circles.mode_simplified_hint'.tr()), findsOneWidget);
         expect(find.text('circles.mode_detailed'.tr()), findsOneWidget);
+        expect(find.text('circles.mode_detailed_hint'.tr()), findsOneWidget);
         expect(find.text('circles.request_notice'.tr()), findsOneWidget);
       });
 
@@ -529,9 +531,10 @@ void main() {
         await tester.tap(find.text('circles.patient_city_hint'.tr()));
         await tester.pumpAndSettle();
 
+        // The sheet's glass draws the title.
         expect(
           find.descendant(
-            of: find.byType(CitySheet),
+            of: find.byType(BottomSheet),
             matching: find.text('circles.patient_city_sheet_title'.tr()),
           ),
           findsOneWidget,

@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// The notifications page: what needs an answer, then the requests that were
-/// already answered. Needs an [InboxCubit] above it.
+/// The notifications page, in two tabs: what needs an answer, and what was
+/// answered in the last 30 days. Needs an [InboxCubit] above it.
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 

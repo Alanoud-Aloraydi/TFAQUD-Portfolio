@@ -105,7 +105,7 @@ def list_targets(circle_id):
 
 
 @bp.post("/measurement-plans")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="measurements")
 def create_plan(circle_id):
     """Add a scheduled measurement plan."""
     body = parse_json_body(PlanRequest)
@@ -128,7 +128,7 @@ def create_plan(circle_id):
 
 
 @bp.put("/measurement-plans/<plan_id>")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="measurements")
 def revise_plan(circle_id, plan_id):
     """Apply a plan revision from a future date."""
     body = parse_json_body(RevisePlanRequest)
@@ -151,7 +151,7 @@ def revise_plan(circle_id, plan_id):
 
 
 @bp.post("/measurement-plans/<plan_id>/stop")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="measurements")
 def stop_plan(circle_id, plan_id):
     """Stop future tasks while retaining history."""
     with transaction() as session:

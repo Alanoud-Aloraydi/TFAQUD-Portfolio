@@ -8,10 +8,10 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
+import 'package:app/core/widgets/forms/choice_card.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
@@ -22,10 +22,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// The page that asks a patient who uses the app for a circle (CREAT-04): the
-/// patient's phone number and the mode proposed for the patient's app. The
-/// circle is not named here: the patient names it for themself, and the
-/// sender sees «دائرة» and the patient's name. Once the request is sent, the same page shows
-/// the waiting state (CREAT-05). Needs a [SendCircleRequestCubit] above it.
+/// patient's phone number and the mode proposed for the patient's app, as
+/// two cards that each say what the mode means. The circle is not named
+/// here: the patient names it for themself, and the sender sees «دائرة» and
+/// the patient's name. Once the request is sent, the same page shows the
+/// waiting state (CREAT-05). Needs a [SendCircleRequestCubit] above it.
 class RequestPatientScreen extends StatefulWidget {
   const RequestPatientScreen({super.key});
 
@@ -98,30 +99,24 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   onChanged: (String typed) =>
                       cubit.phoneChanged(ArabicDigits.digitsOnly(typed)),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                InsetText.note(context.tr('circles.request_name_note')),
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.proposed_mode')),
                 const SizedBox(height: AppSpacing.sm),
-                // In a right-to-left language the first segment is on the
-                // right: detailed, then simplified, as in the design.
-                GlassSegmentedControl<CircleAppMode>(
-                  segments: <CircleAppMode, String>{
-                    CircleAppMode.detailed: context.tr('circles.mode_detailed'),
-                    CircleAppMode.simplified: context.tr(
-                      'circles.mode_simplified',
-                    ),
-                  },
-                  selected: state.mode,
-                  onChanged: cubit.chooseMode,
+                // Both modes and what each one means, on the screen at once.
+                ChoiceCard(
+                  icon: AppIcons.user,
+                  title: context.tr('circles.mode_detailed'),
+                  hint: context.tr('circles.mode_detailed_hint'),
+                  selected: state.mode == CircleAppMode.detailed,
+                  onTap: () => cubit.chooseMode(CircleAppMode.detailed),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                InsetText.note(
-                  context.tr(
-                    state.mode == CircleAppMode.simplified
-                        ? 'circles.mode_simplified_hint'
-                        : 'circles.mode_detailed_hint',
-                  ),
+                ChoiceCard(
+                  icon: AppIcons.heart,
+                  title: context.tr('circles.mode_simplified'),
+                  hint: context.tr('circles.mode_simplified_hint'),
+                  selected: state.mode == CircleAppMode.simplified,
+                  onTap: () => cubit.chooseMode(CircleAppMode.simplified),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 _Notice(text: context.tr('circles.request_notice')),

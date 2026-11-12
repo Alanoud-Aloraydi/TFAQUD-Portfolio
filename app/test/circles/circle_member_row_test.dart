@@ -30,48 +30,73 @@ void main() {
 
   tearDown(() => cubit.close());
 
-  Future<void> show(WidgetTester tester, {required bool canManageMembers}) =>
-      pumpArabic(
-        tester,
-        home: Scaffold(
-          body: BlocProvider<CircleOverviewCubit>.value(
-            value: cubit,
-            child: CircleMemberRow(
-              member: _paused,
-              circleId: 'circle-1',
-              patientUsesApp: true,
-              patientIsYou: true,
-              canManageMembers: canManageMembers,
-            ),
-          ),
+  Future<void> show(
+    WidgetTester tester, {
+    required bool canManageMembers,
+    bool canHandOver = false,
+  }) => pumpArabic(
+    tester,
+    home: Scaffold(
+      body: BlocProvider<CircleOverviewCubit>.value(
+        value: cubit,
+        child: CircleMemberRow(
+          member: _paused,
+          circleId: 'circle-1',
+          patientUsesApp: true,
+          patientIsYou: true,
+          canManageMembers: canManageMembers,
+          canHandOver: canHandOver,
         ),
-      );
+      ),
+    ),
+  );
 
-  testWidgets('the owner sees the switch and the remove button', (
+  FilterChip chip(WidgetTester tester, String label) =>
+      tester.widget(find.widgetWithText(FilterChip, label));
+
+  testWidgets('the leader sees a chip for each area and the remove button', (
     tester,
   ) async {
     await show(tester, canManageMembers: true);
 
-    expect(find.byType(Switch), findsOneWidget);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    for (final String label in <String>['الأدوية', 'القياسات', 'المواعيد']) {
+      expect(chip(tester, label).selected, isFalse);
+    }
     expect(find.byTooltip('إزالة العضو'), findsOneWidget);
+    // Handing over is offered only where the leader may.
+    expect(find.text('تسليم القيادة'), findsNothing);
   });
 
   testWidgets('anyone else sees only the view-only badge', (tester) async {
     await show(tester, canManageMembers: false);
 
-    expect(find.byType(Switch), findsNothing);
+    expect(find.byType(FilterChip), findsNothing);
     expect(find.byTooltip('إزالة العضو'), findsNothing);
     expect(find.text('مشاهدة فقط'), findsOneWidget);
   });
 
-  testWidgets('the switch sends the new choice', (tester) async {
+  testWidgets('a chip lets the member edit that area only', (tester) async {
     await show(tester, canManageMembers: true);
 
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.widgetWithText(FilterChip, 'القياسات'));
     await tester.pumpAndSettle();
 
-    expect(circles.memberCalls.single, 'access:a-2:true');
+    expect(circles.memberCalls.single, 'access:a-2:measurements:true');
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  testWidgets('the leader hands the circle over after confirming', (
+    tester,
+  ) async {
+    await show(tester, canManageMembers: true, canHandOver: true);
+
+    await tester.tap(find.text('تسليم القيادة'));
+    await tester.pumpAndSettle();
+    expect(circles.memberCalls, isEmpty);
+    // The alert's own button, over the row's.
+    await tester.tap(find.text('تسليم القيادة').last);
+    await tester.pumpAndSettle();
+
+    expect(circles.memberCalls.single, 'leader:a-2');
   });
 }

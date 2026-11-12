@@ -5,9 +5,12 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// Shown when nothing waits for a reply and nothing was answered lately.
+/// Shown in a tab of the bell with nothing in it: the bell and the words of
+/// [messageKey].
 class NotificationsEmpty extends StatelessWidget {
-  const NotificationsEmpty({super.key});
+  const NotificationsEmpty({super.key, required this.messageKey});
+
+  final String messageKey;
 
   static const double _topGap = 96;
 
@@ -23,7 +26,7 @@ class NotificationsEmpty extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          context.tr('circles.inbox_empty'),
+          context.tr(messageKey),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyLarge
               ?.copyWith(color: context.tokens.textSecondary),

@@ -1,9 +1,12 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:flutter/material.dart';
 
-/// One tappable box of the weekday selector: a day, or the whole week.
+/// One day of the weekday selector: a round chip with the day's letter,
+/// drawn as the app's other chips are (an outline, the green fill when it
+/// is on), 44 points high. Seven of them share the row's width, so on a
+/// narrow phone a day is a little narrower than high.
 class WeekdayBox extends StatelessWidget {
   const WeekdayBox({
     super.key,
@@ -11,13 +14,11 @@ class WeekdayBox extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.semanticLabel,
-    this.muted = false,
   });
 
   final String label;
   final String? semanticLabel;
   final bool selected;
-  final bool muted;
   final VoidCallback onTap;
 
   @override
@@ -29,20 +30,26 @@ class WeekdayBox extends StatelessWidget {
     excludeSemantics: true,
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.field),
-      child: Container(
-        alignment: Alignment.center,
-        constraints: const BoxConstraints(minHeight: AppSizes.button),
-        decoration: BoxDecoration(
-          color: selected
-              ? (muted
-                    ? AppSemanticColors.selectedSurface
-                    : AppSemanticColors.actionPrimary)
-              : AppSemanticColors.surfaceContent,
-          border: Border.all(color: AppSemanticColors.borderSubtle),
-          borderRadius: BorderRadius.circular(AppRadius.field),
+      customBorder: const StadiumBorder(),
+      child: SizedBox(
+        height: AppSizes.touch,
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: selected
+                ? AppSemanticColors.selectedSurface
+                : AppSemanticColors.surfaceContent,
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: selected
+                    ? AppSemanticColors.textPrimary
+                    : context.tokens.borderControl,
+              ),
+            ),
+          ),
+          child: Center(
+            child: Text(label, style: Theme.of(context).chipTheme.labelStyle),
+          ),
         ),
-        child: FittedBox(child: Text(label)),
       ),
     ),
   );

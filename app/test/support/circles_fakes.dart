@@ -381,9 +381,19 @@ class CirclesFakeRepository extends Fake implements CirclesRepositoryDomain {
   Future<Result<void, Failure>> setMemberEditAccess(
     String circleId,
     String accountId, {
-    required bool canEdit,
+    required String area,
+    required bool allowed,
   }) async {
-    memberCalls.add('access:$accountId:$canEdit');
+    memberCalls.add('access:$accountId:$area:$allowed');
+    return await pendingMemberChange ?? invitationChanged;
+  }
+
+  @override
+  Future<Result<void, Failure>> handOverLeadership(
+    String circleId,
+    String accountId,
+  ) async {
+    memberCalls.add('leader:$accountId');
     return await pendingMemberChange ?? invitationChanged;
   }
 

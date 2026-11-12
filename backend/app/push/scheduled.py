@@ -37,7 +37,7 @@ from app.models import (
 )
 from app.push.notify import Push, notify
 from app.push.sender import PushMessage
-from app.snoozes.due import send_due_snoozes
+from app.snoozes.due import clock_text, send_due_snoozes
 from app.snoozes.queries import put_off_until
 
 log = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ def _patient(session: Session, circle_id: UUID) -> CareCircle | None:
 
 
 def _scan_doses(circle_id: UUID, now: datetime) -> None:
-    """Send «جرعة ما تسجّلت» once for each of the circle's doses of the
+    """Send «جرعة فائتة» once for each of the circle's doses of the
     patient's today whose time passed with nothing recorded.
     """
     # Today's doses and who to tell, read in one short transaction; the pushes
@@ -177,14 +177,15 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
         ):
             continue
         metrics.increment("tick.missed_dose")
-        # «ما تسجّلت» says only what the app knows: the dose may have been
-        # taken and not recorded.
+        # The dose's time passed with nothing recorded: it is missed
+        # («فائتة»), and it can still be recorded.
         notify(
             Push(
                 recipients,
                 PushMessage(
-                    "جرعة ما تسجّلت",
-                    f"جرعة {occurrence['name']} ما تسجّلت للحين. "
+                    "جرعة فائتة",
+                    f"جرعة {occurrence['name']} موعدها "
+                    f"{_clock(occurrence['time_of_day'])} فاتت. "
                     "تقدر تسجّلها من تفقّد.",
                     "dose_missed",
                 ),
@@ -193,7 +194,7 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
 
 
 def _scan_measurements(circle_id: UUID, now: datetime) -> None:
-    """Send «قياس ما تسجّل» once for each of the circle's reading times of
+    """Send «قياس فائت» once for each of the circle's reading times of
     the patient's today that passed with nothing recorded.
     """
     # Today's reading times and who to tell, read in one short transaction.
@@ -240,10 +241,16 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
             Push(
                 recipients,
                 PushMessage(
-                    "قياس ما تسجّل",
-                    f"قياس {kind_name} ما تسجّل للحين. "
+                    "قياس فائت",
+                    f"قياس {kind_name} موعده "
+                    f"{_clock(occurrence['time_of_day'])} فات. "
                     "تقدر تسجّله من تفقّد.",
                     "measurement_missed",
                 ),
             )
         )
+
+
+def _clock(value: str) -> str:
+    """«8:00 ص» for an occurrence's «08:00» or «08:00:00»."""
+    return clock_text(time.fromisoformat(value))

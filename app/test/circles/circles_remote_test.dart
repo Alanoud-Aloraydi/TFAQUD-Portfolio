@@ -149,6 +149,50 @@ void main() {
       expect(invitations.single.circleName, 'أمي نورة');
     });
 
+    test('reads what was answered from GET /notifications/previous', () async {
+      client.answer = <String, dynamic>{
+        'previous': <dynamic>[
+          <String, dynamic>{
+            'id': 'i-9',
+            'kind': 'invitation_received',
+            'status': 'declined',
+            'answered_at': '2026-11-08T22:30:00+00:00',
+            'circle_name': 'أمي نورة',
+            'other_name': 'خالد',
+          },
+        ],
+      };
+      final previous = await remote.getPreviousNotifications();
+      expect(client.calls.single.method, 'GET');
+      expect(client.calls.single.path, '/notifications/previous');
+      expect(previous.single.accepted, isFalse);
+    });
+
+    group('the circle leader', () {
+      test('lets a member edit one area with PATCH on the member', () async {
+        await remote.setMemberEditAccess(
+          'c-1',
+          'a-2',
+          area: 'appointments',
+          allowed: false,
+        );
+        final _Call call = client.calls.single;
+        expect(call.method, 'PATCH');
+        expect(call.path, '/circles/c-1/members/a-2');
+        expect(call.data, <String, Object>{
+          'edit_access': <String, bool>{'appointments': false},
+        });
+      });
+
+      test('hands the circle over with PUT on its leader', () async {
+        await remote.handOverLeadership('c-1', 'a-2');
+        final _Call call = client.calls.single;
+        expect(call.method, 'PUT');
+        expect(call.path, '/circles/c-1/leader');
+        expect(call.data, <String, String>{'account_id': 'a-2'});
+      });
+    });
+
     group('answering a request', () {
       test('sends the answer to the respond route of this request', () async {
         client.answer = _request('accepted');

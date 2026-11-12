@@ -65,9 +65,9 @@ def test_only_a_missed_dose_is_told_and_only_once(
     tick(database_app)
     [message] = pushes.to(phone.token)
     assert message.kind == "dose_missed"
-    assert message.title == "جرعة ما تسجّلت"
+    assert message.title == "جرعة فائتة"
     assert message.body == (
-        "جرعة Metformin ما تسجّلت للحين. تقدر تسجّلها من تفقّد."
+        "جرعة Metformin موعدها 8:00 ص فاتت. تقدر تسجّلها من تفقّد."
     )
 
     # A later tick does not send it again.

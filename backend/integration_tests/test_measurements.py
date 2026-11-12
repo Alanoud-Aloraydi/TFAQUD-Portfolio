@@ -371,7 +371,9 @@ def test_missed_after_accepts_free_minutes_inside_the_range(
         "kind": "glucose",
         "times": [{"time_of_day": "08:00", "measurement_state": "fasting"}],
         "weekdays": [1],
-        "starts_on": datetime.now(timezone.utc).date().isoformat(),
+        # The patient's today, not UTC's: they differ after midnight in
+        # Riyadh, and a plan cannot start yesterday.
+        "starts_on": datetime.now(ZoneInfo("Asia/Riyadh")).date().isoformat(),
         "glucose_low": 80,
         "glucose_high": 140,
     }

@@ -1,10 +1,6 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/core/utils/text_limits.dart';
-import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/overlays/skip_reason_sheet.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -32,14 +28,30 @@ Future<DateTime?> selectTakenTime(
   return clock.momentOf(scheduledOn, '${selected.hour}:${selected.minute}');
 }
 
-Future<DoseRecordDraft?> selectSkippedDose(BuildContext context) =>
-    showModalBottomSheet<DoseRecordDraft>(
-      context: context,
-      useSafeArea: true,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      builder: (_) => const _SkipDoseSheet(),
-    );
+/// Asks why the dose is skipped (optional) with the app's one skip sheet,
+/// and returns the skipped record to save; null when the sheet is closed.
+Future<DoseRecordDraft?> selectSkippedDose(BuildContext context) async {
+  final SkipReasonChoice? choice = await showSkipReasonSheet(
+    context,
+    title: context.tr('medications.skip_title'),
+    message: context.tr('medications.skip_reason_optional'),
+    reasons: <SkipReasonOption>[
+      for (final DoseSkipReason reason in DoseSkipReason.values)
+        SkipReasonOption(
+          reason.apiValue,
+          context.tr('medications.skip_reason.${reason.name}'),
+        ),
+    ],
+    noteLabel: context.tr('medications.skip_reason_note'),
+    confirmLabel: context.tr('medications.skip_confirm'),
+  );
+  if (choice == null) return null;
+  return DoseRecordDraft(
+    outcome: DoseOutcome.skipped,
+    skipReasonCode: choice.code,
+    skipReasonNote: choice.note,
+  );
+}
 
 String doseSkipReasonText(BuildContext context, DoseRecord record) {
   return doseSkipReasonLabel(
@@ -60,95 +72,4 @@ String doseSkipReasonLabel(BuildContext context, String? code, String? note) {
     _ => code,
   };
   return context.tr('medications.skip_reason.$key');
-}
-
-/// Renders the skip dose sheet element of dose actions.
-class _SkipDoseSheet extends StatefulWidget {
-  const _SkipDoseSheet();
-
-  @override
-  State<_SkipDoseSheet> createState() => _SkipDoseSheetState();
-}
-
-class _SkipDoseSheetState extends State<_SkipDoseSheet> {
-  final _note = TextEditingController();
-  DoseSkipReason? _reason;
-
-  @override
-  void dispose() {
-    _note.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.tr('medications.skip_title'),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Text(context.tr('medications.skip_reason_optional')),
-            const SizedBox(height: AppSpacing.md),
-            ...DoseSkipReason.values.map(_reasonTile),
-            if (_reason == DoseSkipReason.other) ...[
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: _note,
-                maxLength: 250,
-                inputFormatters: const [CodePointLengthFormatter(250)],
-                decoration: InputDecoration(
-                  labelText: context.tr('medications.skip_reason_note'),
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            PillButton(
-              label: context.tr('medications.skip_confirm'),
-              onPressed: _confirm,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _reasonTile(DoseSkipReason reason) {
-    final selected = reason == _reason;
-    return ListTile(
-      minVerticalPadding: 0,
-      onTap: () => setState(() => _reason = selected ? null : reason),
-      title: Text(context.tr('medications.skip_reason.${reason.name}')),
-      // As an iOS list: a check mark on the chosen reason, nothing on the
-      // others.
-      selected: selected,
-      trailing: selected
-          ? const Icon(AppIcons.check, color: AppSemanticColors.textPrimary)
-          : null,
-    );
-  }
-
-  void _confirm() {
-    final note = _note.text.trim();
-    Navigator.pop(
-      context,
-      DoseRecordDraft(
-        outcome: DoseOutcome.skipped,
-        skipReasonCode: _reason?.apiValue,
-        skipReasonNote: _reason == DoseSkipReason.other && note.isNotEmpty
-            ? note
-            : null,
-      ),
-    );
-  }
 }

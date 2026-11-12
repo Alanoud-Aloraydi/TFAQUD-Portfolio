@@ -19,12 +19,19 @@ void main() {
 
     tearDown(() => cubit.close());
 
-    test('pausing a member sends the choice and reads the circle', () async {
+    test('turning off one area sends it and reads the circle', () async {
       final int reads = circles.circleOverviewReads;
 
-      expect(await cubit.setMemberEditAccess('a-2', canEdit: false), isNull);
+      expect(
+        await cubit.setMemberEditAccess(
+          'a-2',
+          area: 'medications',
+          allowed: false,
+        ),
+        isNull,
+      );
 
-      expect(circles.memberCalls.single, 'access:a-2:false');
+      expect(circles.memberCalls.single, 'access:a-2:medications:false');
       expect(circles.circleOverviewReads, reads + 1);
       expect(cubit.state.acting, isFalse);
     });
@@ -43,7 +50,11 @@ void main() {
       final int reads = circles.circleOverviewReads;
 
       expect(
-        await cubit.setMemberEditAccess('a-2', canEdit: true),
+        await cubit.setMemberEditAccess(
+          'a-2',
+          area: 'appointments',
+          allowed: true,
+        ),
         'error.invalid_data',
       );
 
@@ -63,8 +74,21 @@ void main() {
       circles.invitationChanged = const Error(ForbiddenFailure());
       final int reads = circles.circleOverviewReads;
 
-      await cubit.setMemberEditAccess('a-2', canEdit: false);
+      await cubit.setMemberEditAccess(
+        'a-2',
+        area: 'measurements',
+        allowed: false,
+      );
 
+      expect(circles.circleOverviewReads, reads + 1);
+    });
+
+    test('handing over the leadership sends it and reads the circle', () async {
+      final int reads = circles.circleOverviewReads;
+
+      expect(await cubit.handOverLeadership('a-2'), isNull);
+
+      expect(circles.memberCalls.single, 'leader:a-2');
       expect(circles.circleOverviewReads, reads + 1);
     });
 

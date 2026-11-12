@@ -2,7 +2,6 @@ import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/features/home/presentation/today_snapshot.dart';
-import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +16,7 @@ class TodayNextOrEmpty extends StatelessWidget {
     required this.settled,
     required this.circleId,
     required this.canManage,
+    this.onAdd,
   });
 
   final TodaySnapshot snapshot;
@@ -24,6 +24,10 @@ class TodayNextOrEmpty extends StatelessWidget {
   final bool settled;
   final String circleId;
   final bool canManage;
+
+  /// Opens the add sheet; null for a member who only reads, and the notes
+  /// then have no button.
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +64,8 @@ class TodayNextOrEmpty extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: AppSpacing.xl),
     child: EmptyStateNote(
       text,
-      actionLabel: context.tr('add.title'),
-      onAction: () => showHomeAddSheet(context, circleId: circleId),
+      actionLabel: onAdd == null ? null : context.tr('add.title'),
+      onAction: onAdd,
     ),
   );
 }

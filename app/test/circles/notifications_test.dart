@@ -4,6 +4,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
@@ -130,43 +131,94 @@ void main() {
       expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
     });
 
-    testWidgets('a request the patient declined is told under the events', (
+    testWidgets('the page opens on what waits, with the two tabs above', (
+      WidgetTester tester,
+    ) async {
+      circles.inbox = Success(oneOfEach);
+      await openNotifications(tester, 2);
+
+      expect(find.text('circles.tab_current'.tr()), findsOneWidget);
+      expect(find.text('circles.tab_previous'.tr()), findsOneWidget);
+      expect(find.text('circles.invitation_title'.tr()), findsOneWidget);
+    });
+
+    testWidgets('«السابقة» tells what was answered and how long ago', (
       WidgetTester tester,
     ) async {
       circles.inbox = Success(
-        inboxOf(
-          sent: <SentCircleRequest>[
-            SentCircleRequest(
+        CircleInbox(
+          sent: const <SentCircleRequest>[],
+          received: const <ReceivedCircleRequest>[],
+          invitations: const <ReceivedInvitation>[],
+          previous: <PreviousNotification>[
+            // The same time of day 3 days ago: 3 days on the calendar.
+            PreviousNotification(
               id: 'request-1',
-              patientPhoneNumber: '+966501234567',
-              proposedAppMode: CircleAppMode.simplified,
-              status: CircleRequestStatus.declined,
-              // 22:30 UTC is already the next day in Riyadh (9 Nov).
-              respondedAt: DateTime.utc(2026, 11, 8, 22, 30),
+              kind: PreviousKind.requestSent,
+              accepted: false,
+              answeredAt: DateTime.now().toUtc().subtract(
+                const Duration(days: 3),
+              ),
+              otherName: 'نورة',
+            ),
+            PreviousNotification(
+              id: 'invitation-9',
+              kind: PreviousKind.invitationReceived,
+              accepted: true,
+              answeredAt: DateTime.now().toUtc(),
+              circleName: 'أمي نورة',
+              otherName: 'خالد',
             ),
           ],
         ),
       );
-      // A declined request needs no answer, so there is no dot.
+      // What was answered needs no answer, so there is no dot.
       await openNotifications(tester, 0);
+      expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
+      expect(
+        find.text('circles.previous.requestSent_declined.title'.tr()),
+        findsNothing,
+      );
 
-      expect(find.text('circles.previous_title'.tr()), findsOneWidget);
-      expect(find.text('circles.none_current'.tr()), findsOneWidget);
-      expect(find.text('circles.declined_title'.tr()), findsOneWidget);
-      expect(find.text('circles.declined_body'.tr()), findsOneWidget);
-      expect(find.text('+966 50 123 4567'), findsOneWidget);
+      await tester.tap(find.text('circles.tab_previous'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('circles.previous.requestSent_declined.title'.tr()),
+        findsOneWidget,
+      );
       expect(
         find.text(
-          'circles.declined_on'.tr(
-            args: <String>['9 ${'circles.months.11'.tr()} 2026'],
+          'circles.previous.requestSent_declined.body'.tr(
+            args: <String>['نورة', 'circles.previous.a_circle'.tr()],
           ),
         ),
         findsOneWidget,
       );
+      expect(
+        find.text(
+          'circles.previous.invitationReceived_accepted.body'.tr(
+            args: <String>['خالد', 'أمي نورة'],
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('counts.today'.tr()), findsOneWidget);
+      expect(
+        find.text(
+          'counts.ago'.tr(
+            args: <String>[
+              'counts.days.few'.tr(args: <String>['3']),
+            ],
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('circles.previous_kept'.tr()), findsOneWidget);
       expect(find.text('circles.inbox_empty'.tr()), findsNothing);
     });
 
-    testWidgets('a request still waiting for the patient is not an event', (
+    testWidgets('«السابقة» with nothing answered says so', (
       WidgetTester tester,
     ) async {
       circles.inbox = Success(
@@ -175,9 +227,13 @@ void main() {
         ),
       );
       await openNotifications(tester, 0);
-
-      expect(find.text('circles.previous_title'.tr()), findsNothing);
       expect(find.text('circles.inbox_empty'.tr()), findsOneWidget);
+
+      await tester.tap(find.text('circles.tab_previous'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('circles.previous_empty'.tr()), findsOneWidget);
+      expect(find.text('circles.previous_kept'.tr()), findsNothing);
     });
 
     testWidgets(

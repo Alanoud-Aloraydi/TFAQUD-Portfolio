@@ -31,6 +31,7 @@ class CircleOverviewModel {
         city: patient['city'] as String,
         canManage: circle['role'] == 'manager',
         canManageMembers: circle['can_manage_members'] as bool? ?? false,
+        canHandOver: circle['can_hand_over'] as bool? ?? false,
         canLeave: circle['role'] == 'manager' || circle['role'] == 'member',
         members: <CircleMember>[
           for (final raw in members)
@@ -44,6 +45,13 @@ class CircleOverviewModel {
               avatarCode: raw['avatar_code'] as String?,
               isManager: raw['role'] == 'manager',
               canEdit: raw['can_edit'] as bool? ?? raw['role'] == 'manager',
+              isLeader: raw['is_leader'] as bool? ?? false,
+              access: raw['edit_access'] == null
+                  ? null
+                  : EditAccess.fromJson(
+                      raw['edit_access'],
+                      fallback: raw['can_edit'] as bool? ?? false,
+                    ),
               phoneNumber: raw['phone_number'] as String?,
             ),
         ],

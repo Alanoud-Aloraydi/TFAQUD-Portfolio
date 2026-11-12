@@ -5,6 +5,7 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/overdue_appointment_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -37,9 +38,9 @@ class OverdueAppointmentCard extends StatelessWidget {
         ),
         title: appointmentTitle(context, value),
         subtitle: formatMedicationDate(context, value.scheduledOn),
-        status: TodayTaskStatusBadge(
+        status: StatusBadge(
           text: context.tr('today_dashboard.status.appointment_waiting'),
-          tone: TodayStatusTone.attention,
+          tone: StatusTone.attention,
         ),
         actions: canManage
             ? OverdueAppointmentActions(value: value, circleId: circleId)

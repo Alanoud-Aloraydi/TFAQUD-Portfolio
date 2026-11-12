@@ -35,6 +35,9 @@ void main() {
           .dx;
       expect(date, greaterThan(label));
       expect(label, greaterThan(arrow));
+      // The arrow is at the far left of the line, the label right beside
+      // it: no empty room after them.
+      expect(tester.getTopLeft(find.byIcon(CupertinoIcons.chevron_down)).dx, 0);
 
       await tester.tap(find.text('تفاصيل الدواء'));
       expect(taps, 1);

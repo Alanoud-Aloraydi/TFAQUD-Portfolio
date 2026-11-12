@@ -176,13 +176,24 @@ class CircleOverviewCubit extends Cubit<CircleOverviewState> {
   Future<String?> cancelInvitation(String invitationId) =>
       _act(() => _circles.cancelManagerInvitation(circleId, invitationId));
 
-  /// Pauses or restores a member's editing. Returns an error key, or null.
+  /// Lets a member edit [area] or not. Returns an error key, or null.
   Future<String?> setMemberEditAccess(
     String accountId, {
-    required bool canEdit,
+    required String area,
+    required bool allowed,
   }) => _act(
-    () => _circles.setMemberEditAccess(circleId, accountId, canEdit: canEdit),
+    () => _circles.setMemberEditAccess(
+      circleId,
+      accountId,
+      area: area,
+      allowed: allowed,
+    ),
   );
+
+  /// Hands the circle's leadership to a member. Returns an error key, or
+  /// null.
+  Future<String?> handOverLeadership(String accountId) =>
+      _act(() => _circles.handOverLeadership(circleId, accountId));
 
   /// Removes a member from the circle. Returns an error key, or null.
   Future<String?> removeMember(String accountId) =>

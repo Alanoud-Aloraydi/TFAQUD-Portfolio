@@ -327,19 +327,27 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 : null,
           ),
           if (existing != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(context.tr('measurements.active_plan_exists')),
-            TextButton(
-              onPressed: () {
-                final router = GoRouter.of(context);
-                final path = Routes.editMeasurement(
-                  widget.circleId,
-                  existing!.id,
-                );
-                context.pop();
-                router.push(path);
-              },
-              child: Text(context.tr('measurements.edit_plan')),
+            const SizedBox(height: AppSpacing.md),
+            // The same action row as «تعديل الهدف في الخطة» of a free
+            // reading: a pencil, the words, and a chevron.
+            InsetGroup(
+              footer: context.tr('measurements.active_plan_exists'),
+              children: [
+                InsetRow(
+                  label: context.tr('measurements.edit_plan'),
+                  leading: const Icon(AppIcons.pencil),
+                  showChevron: true,
+                  onTap: () {
+                    final router = GoRouter.of(context);
+                    final path = Routes.editMeasurement(
+                      widget.circleId,
+                      existing!.id,
+                    );
+                    context.pop();
+                    router.push(path);
+                  },
+                ),
+              ],
             ),
           ],
           const SizedBox(height: AppSpacing.xl),
