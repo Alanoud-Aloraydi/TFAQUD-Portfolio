@@ -115,8 +115,8 @@ class ApiEndpoints {
 
   static String measurementPlans(String circleId) =>
       '/circles/$circleId/measurement-plans';
-  static String measurementTargets(String circleId) =>
-      '/circles/$circleId/measurement-targets';
+  static String measurementRanges(String circleId) =>
+      '/circles/$circleId/measurement-ranges';
   static String measurementPlan(String circleId, String planId) =>
       '${measurementPlans(circleId)}/$planId';
   static String stopMeasurementPlan(String circleId, String planId) =>

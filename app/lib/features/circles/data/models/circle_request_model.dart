@@ -101,6 +101,7 @@ class CircleRequestsModel {
         item['proposed_app_mode'] as String?,
       ),
       requesterName: display.isNotEmpty ? display : '$first $last'.trim(),
+      requesterAvatarCode: by['avatar_code'] as String?,
       createdAt: SentCircleRequestModel.parseTime(item['created_at']),
     );
   }
@@ -125,6 +126,7 @@ abstract class ReceivedInvitationsModel {
       id: item['id'] as String,
       circleName: item['circle_name'] as String,
       invitedByName: by?['display_name'] as String?,
+      invitedByAvatarCode: by?['avatar_code'] as String?,
       createdAt: SentCircleRequestModel.parseTime(item['created_at']),
     );
   }
@@ -164,6 +166,7 @@ abstract class PreviousNotificationsModel {
       answeredAt: answeredAt,
       circleName: item['circle_name'] as String?,
       otherName: item['other_name'] as String?,
+      otherAvatarCode: item['other_avatar_code'] as String?,
       otherPhoneNumber: item['other_phone_number'] as String?,
     );
   }

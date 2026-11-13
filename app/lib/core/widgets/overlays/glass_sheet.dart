@@ -7,10 +7,12 @@ import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:flutter/material.dart';
 
 /// Shows a floating glass sheet, as iOS 26 shows a sheet: it rises from the
-/// bottom, `space-2` in from the screen edges, with large concentric corners
-/// (`radius-xl`), a grab handle and a light dim behind it. With Reduce
-/// Transparency or Increase Contrast the glass turns into the opaque
-/// surface ([GlassSurface] decides).
+/// bottom, `space-2` in from the screen edges, with the corners of the
+/// app's cards and menus (`radius-l`), a grab handle and a light dim behind
+/// it. However tall its content, its top stays under the page's top bar
+/// ([glassSheetTopGap]), so the page it opened over still shows above it.
+/// With Reduce Transparency or Increase Contrast the glass turns into the
+/// opaque surface ([GlassSurface] decides).
 ///
 /// [title] is centered under the handle (`headline`); [message] is an
 /// optional line under it. The [builder] gives the rest of the sheet.
@@ -26,6 +28,10 @@ Future<T?> showGlassSheet<T>(
     useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
+    // Under the top bar, however tall its content: it scrolls instead.
+    constraints: BoxConstraints(
+      maxHeight: glassSheetMaxHeight(MediaQuery.of(context)),
+    ),
     // The glass draws its own handle; the theme's handle would add a second
     // one above the sheet.
     showDragHandle: false,
@@ -39,6 +45,16 @@ Future<T?> showGlassSheet<T>(
     ),
   );
 }
+
+/// The room a glass sheet leaves above itself, under the status bar: the
+/// height of the page's top bar, so a tall sheet starts below it.
+const double glassSheetTopGap = 64;
+
+/// The tallest a glass sheet grows on a screen of [media]: from the bottom
+/// up to [glassSheetTopGap] under the status bar.
+@visibleForTesting
+double glassSheetMaxHeight(MediaQueryData media) =>
+    media.size.height - media.viewPadding.top - glassSheetTopGap;
 
 /// How far the glass sheet floats above the screen's bottom edge, before its
 /// own gap: over the keyboard while it is open, otherwise over the iPhone's
@@ -73,7 +89,7 @@ class _GlassSheet extends StatelessWidget {
       child: GlassSurface(
         // On top of everything: the tab bar does not show through.
         dense: true,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(AppRadius.l),
         child: Material(
           type: MaterialType.transparency,
           child: SingleChildScrollView(

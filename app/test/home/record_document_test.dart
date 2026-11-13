@@ -5,6 +5,7 @@ import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
 import 'package:app/features/home/presentation/export/record_document.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,10 +27,20 @@ MeasurementReading _reading(
   valueOne: one,
   valueTwo: two,
   outsideTarget: outside,
-  glucoseLow: 70,
-  glucoseHigh: 140,
-  systolicLimit: 140,
-  diastolicLimit: 90,
+  level: outside ? MeasurementLevel.elevated : MeasurementLevel.normal,
+  range: ReadingRange(
+    profile: 'general',
+    state: kind == MeasurementKind.glucose ? 'after_meal' : null,
+    normal: const NormalBand(
+      level: MeasurementLevel.normal,
+      glucoseLow: 70,
+      glucoseHigh: 140,
+      systolicLow: 90,
+      systolicHigh: 120,
+      diastolicLow: 60,
+      diastolicHigh: 80,
+    ),
+  ),
 );
 
 Future<RecordPdfDocument> _build(
@@ -109,6 +120,8 @@ void main() {
     expect(row[1].text, contains('1:30'));
     expect(row[2].text, '180');
     expect(row[2].warn, isTrue);
+    expect(row[3].text, 'measurements.level.elevated_glucose'.tr());
+    expect(row[4].text, '70–140');
   });
 
   testWidgets('leaves out the sections that were not chosen', (tester) async {

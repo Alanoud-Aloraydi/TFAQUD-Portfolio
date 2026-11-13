@@ -73,6 +73,27 @@ class ContactForm extends Equatable {
   ];
 }
 
+/// A circle member who can be picked as an emergency contact: their name,
+/// number and picture fill the form.
+class ContactChoice extends Equatable {
+  const ContactChoice({
+    required this.name,
+    required this.phone,
+    this.accountId,
+    this.avatarCode,
+  });
+
+  final String name;
+
+  /// The nine digits without the country code, as [ContactForm.phone].
+  final String phone;
+  final String? accountId;
+  final String? avatarCode;
+
+  @override
+  List<Object?> get props => [name, phone, accountId, avatarCode];
+}
+
 /// What the medical file page shows: the file read from the server, and the
 /// contact form when one is open.
 class MedicalFileState extends Equatable {
@@ -82,6 +103,7 @@ class MedicalFileState extends Equatable {
     this.messageKey,
     this.form,
     this.sessionEnded = false,
+    this.choices,
   });
 
   final MedicalFileStatus status;
@@ -96,6 +118,9 @@ class MedicalFileState extends Equatable {
   /// True when the server said the sign-in ended; the page goes to sign-in.
   final bool sessionEnded;
 
+  /// The circle members a new contact can be picked from; null until read.
+  final List<ContactChoice>? choices;
+
   MedicalFileState copyWith({
     MedicalFileStatus? status,
     MedicalFile? file,
@@ -103,6 +128,7 @@ class MedicalFileState extends Equatable {
     ContactForm? form,
     bool clearForm = false,
     bool? sessionEnded,
+    List<ContactChoice>? choices,
   }) {
     return MedicalFileState(
       status: status ?? this.status,
@@ -110,9 +136,17 @@ class MedicalFileState extends Equatable {
       messageKey: messageKey ?? this.messageKey,
       form: clearForm ? null : (form ?? this.form),
       sessionEnded: sessionEnded ?? this.sessionEnded,
+      choices: choices ?? this.choices,
     );
   }
 
   @override
-  List<Object?> get props => [status, file, messageKey, form, sessionEnded];
+  List<Object?> get props => [
+    status,
+    file,
+    messageKey,
+    form,
+    sessionEnded,
+    choices,
+  ];
 }

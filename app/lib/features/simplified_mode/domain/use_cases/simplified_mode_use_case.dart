@@ -165,15 +165,9 @@ class SimplifiedModeUseCase {
   /// The tasks put off, by [TodayTask.snoozeKey], until each comes again.
   ValueListenable<Map<String, TaskSnooze>> get snoozes => _reminders.snoozes;
 
-  /// The saved targets: the server refuses a free reading of a kind with
-  /// none.
-  Future<Result<List<MeasurementTarget>, Failure>> measurementTargets(
-    String circleId,
-  ) => _attempt(() => _measurements.targets(circleId));
-
   /// Saves a reading: against [occurrence] when the patient opened it from
-  /// that task, else as a free reading under the saved target. A recorded
-  /// task's snooze goes with the reminders' next reading.
+  /// that task, else as a free reading. A recorded task's snooze goes with
+  /// the reminders' next reading.
   Future<Result<MeasurementReading, Failure>> recordMeasurement(
     String circleId,
     MeasurementReadingDraft draft, {

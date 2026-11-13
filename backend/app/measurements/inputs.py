@@ -52,7 +52,9 @@ MAX_READING_TIMES = 6
 
 
 class PlanRequest(Dto):
-    """The reading times of a day, selected weekdays, and a target."""
+    """The reading times of a day and the selected weekdays. Fixed normal
+    ranges judge the readings (0049): the four target fields are accepted
+    from builds before it and ignored."""
 
     kind: Kind
     times: Annotated[
@@ -73,7 +75,7 @@ class PlanRequest(Dto):
 
     @model_validator(mode="after")
     def valid_plan(self):
-        """Require only the targets appropriate to the selected kind."""
+        """Valid weekdays, and reading times that suit the kind."""
         # Weekdays 1 to 7, each once; reading times without a time zone, each
         # once.
         if len(set(self.weekdays)) != len(self.weekdays) or any(
@@ -85,25 +87,6 @@ class PlanRequest(Dto):
             raise ValueError("Reading times have no time zone.")
         if len(set(moments)) != len(moments):
             raise ValueError("Reading times cannot repeat.")
-        # Glucose has a low and a high, in order; blood pressure has both upper
-        # limits, systolic above diastolic.
-        if self.kind == "glucose":
-            if (
-                self.glucose_low is None
-                or self.glucose_high is None
-                or self.glucose_low >= self.glucose_high
-                or self.systolic_limit is not None
-                or self.diastolic_limit is not None
-            ):
-                raise ValueError("A glucose target needs a valid range.")
-        elif (
-            self.systolic_limit is None
-            or self.diastolic_limit is None
-            or self.systolic_limit <= self.diastolic_limit
-            or self.glucose_low is not None
-            or self.glucose_high is not None
-        ):
-            raise ValueError("Blood pressure needs both upper limits.")
         # A glucose time names its planned state; blood pressure has none.
         for item in self.times:
             if (self.kind == "glucose") != (
@@ -139,6 +122,7 @@ class ReadingRequest(Dto):
     note: Annotated[str | None, Field(max_length=250)] = None
     skip_reason_code: SkipReason | None = None
     skip_reason_note: Annotated[str | None, Field(max_length=250)] = None
+    # Sent by builds before 0049, and ignored: fixed ranges judge readings.
     glucose_low: Value | None = None
     glucose_high: Value | None = None
     systolic_limit: Value | None = None
@@ -192,30 +176,6 @@ class ReadingRequest(Dto):
             and self.systolic_value <= self.diastolic_value
         ):
             raise ValueError("Systolic must exceed diastolic.")
-        # A target sent with a reading fits its kind.
-        target = (
-            self.glucose_low, self.glucose_high,
-            self.systolic_limit, self.diastolic_limit,
-        )
-        if any(value is not None for value in target):
-            if self.outcome != "read":
-                raise ValueError("Skipped readings cannot have a target.")
-            if self.kind == "glucose" and not (
-                self.glucose_low is not None
-                and self.glucose_high is not None
-                and self.glucose_low < self.glucose_high
-                and self.systolic_limit is None
-                and self.diastolic_limit is None
-            ):
-                raise ValueError("A glucose target needs a valid range.")
-            if self.kind == "blood_pressure" and not (
-                self.systolic_limit is not None
-                and self.diastolic_limit is not None
-                and self.systolic_limit > self.diastolic_limit
-                and self.glucose_low is None
-                and self.glucose_high is None
-            ):
-                raise ValueError("Blood pressure needs both upper limits.")
         return self
 
 

@@ -42,6 +42,18 @@ List<Widget> measurementTaskDetails(
             const Icon(CupertinoIcons.bell_fill, size: AppSizes.iconSmall),
             const SizedBox(width: AppSpacing.tight),
             Flexible(child: Text(putOff, style: small)),
+            // Who put it off, with their picture beside their name.
+            if (task.snooze?.byName case final String name) ...<Widget>[
+              const SizedBox(width: AppSpacing.tight),
+              PersonPhoto(
+                name: name,
+                photoPath: task.snooze?.byAccountId == null
+                    ? ''
+                    : personPhotoPath(circleId, task.snooze!.byAccountId),
+                avatarCode: task.snooze?.byAvatarCode,
+                size: AppSizes.iconSmall,
+              ),
+            ],
           ],
         ),
       ),

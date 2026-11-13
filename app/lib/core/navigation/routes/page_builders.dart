@@ -8,13 +8,14 @@ GoRouterRedirect requireExtra<T>(String fallback) =>
     (BuildContext context, GoRouterState state) =>
         state.extra is T ? null : fallback;
 
-// Detail pages change without a horizontal push animation.
+// Detail pages change without a horizontal push animation. A page with
+// «رجوع» goes back too when it is swiped to the right from anywhere on it.
 GoRouterPageBuilder _iosPage(GoRouterWidgetBuilder builder) =>
     (BuildContext context, GoRouterState state) => NoTransitionPage<void>(
       key: state.pageKey,
       name: state.name ?? state.path,
       restorationId: state.pageKey.value,
-      child: builder(context, state),
+      child: SwipeBack(child: builder(context, state)),
     );
 
 // The notifications (the bell) and the account open as an iOS full-screen

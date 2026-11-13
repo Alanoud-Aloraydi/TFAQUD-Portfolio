@@ -28,12 +28,10 @@ class MeasurementRecordSection extends StatefulWidget {
     super.key,
     required this.circleId,
     required this.header,
-    required this.plans,
   });
 
   final String circleId;
   final Widget header;
-  final List<MeasurementPlan> plans;
 
   @override
   State<MeasurementRecordSection> createState() =>
@@ -155,7 +153,6 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
               for (final MeasurementReading r in values)
                 if (r.kind == kind) r,
             ],
-            plans: widget.plans,
             month: _month,
             circleId: widget.circleId,
           ),

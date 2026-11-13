@@ -94,11 +94,6 @@ void main() {
         422,
         const ValidationFailure('measurements.no_follow_up'),
       ),
-      (
-        'measurement_no_target',
-        422,
-        const ValidationFailure('measurements.no_follow_up'),
-      ),
     ];
 
     for (final (String code, int status, Failure failure) in cases) {

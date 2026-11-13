@@ -1,6 +1,8 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
@@ -17,8 +19,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The card that adds an emergency contact or changes one (CIRCLE-05): the
-/// relation chips, the name, the number, and the save and cancel buttons. A
-/// contact that already exists also has a delete button.
+/// relation chips, a new contact's circle members to pick from (their
+/// name and number fill the fields), the name, the number, and the save and
+/// cancel buttons. A contact that already exists also has a delete button.
 ///
 /// The page keeps the answers in a [ContactForm]; this widget only shows them.
 /// The text fields start from the form when the card opens, so the page gives
@@ -33,6 +36,9 @@ class ContactFormCard extends StatefulWidget {
     required this.onSave,
     required this.onCancel,
     this.onDelete,
+    this.choices = const <ContactChoice>[],
+    this.onChoose,
+    this.circleId = '',
   });
 
   final ContactForm form;
@@ -46,6 +52,13 @@ class ContactFormCard extends StatefulWidget {
 
   /// Null for a new contact.
   final VoidCallback? onDelete;
+
+  /// Circle members a new contact can be picked from.
+  final List<ContactChoice> choices;
+  final ValueChanged<ContactChoice>? onChoose;
+
+  /// For a member's photo.
+  final String circleId;
 
   @override
   State<ContactFormCard> createState() => _ContactFormCardState();
@@ -67,6 +80,13 @@ class _ContactFormCardState extends State<ContactFormCard> {
     _name.dispose();
     _phone.dispose();
     super.dispose();
+  }
+
+  /// Puts a member's name and number in the fields and the form.
+  void _choose(ContactChoice choice) {
+    _name.text = choice.name;
+    _phone.text = SaudiMobile.group(choice.phone);
+    widget.onChoose?.call(choice);
   }
 
   @override
@@ -116,6 +136,30 @@ class _ContactFormCardState extends State<ContactFormCard> {
               style: text.bodySmall?.copyWith(
                 color: AppSemanticColors.statusError,
               ),
+            ),
+          ],
+          if (form.isNew && widget.choices.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              context.tr('circles.contact_from_members'),
+              style: text.titleSmall?.copyWith(
+                color: context.tokens.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: <Widget>[
+                for (final ContactChoice choice in widget.choices)
+                  _MemberChip(
+                    choice: choice,
+                    circleId: widget.circleId,
+                    selected:
+                        form.phone == choice.phone && form.name == choice.name,
+                    onTap: form.saving ? null : () => _choose(choice),
+                  ),
+              ],
             ),
           ],
           const SizedBox(height: AppSpacing.lg),
@@ -189,4 +233,71 @@ class _ContactFormCardState extends State<ContactFormCard> {
       ),
     );
   }
+}
+
+/// One circle member to pick: their picture and name in a pill, marked when
+/// the form holds their name and number.
+class _MemberChip extends StatelessWidget {
+  const _MemberChip({
+    required this.choice,
+    required this.circleId,
+    required this.selected,
+    this.onTap,
+  });
+
+  final ContactChoice choice;
+  final String circleId;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: selected,
+    child: Material(
+      color: selected
+          ? AppSemanticColors.selectedSurface
+          : AppSemanticColors.surfaceContent,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: selected
+              ? AppSemanticColors.actionPrimary
+              : AppSemanticColors.borderSubtle,
+        ),
+      ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSizes.touch),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              AppSpacing.xs,
+              AppSpacing.xs,
+              AppSpacing.md,
+              AppSpacing.xs,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.capsule),
+                  child: PersonPhoto(
+                    name: choice.name,
+                    photoPath: choice.accountId == null
+                        ? ''
+                        : personPhotoPath(circleId, choice.accountId),
+                    avatarCode: choice.avatarCode,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(choice.name),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

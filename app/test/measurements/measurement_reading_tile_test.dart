@@ -1,4 +1,5 @@
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_tile.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ MeasurementReading _reading({
   bool? outsideTarget,
   int valueOne = 110,
   int? valueTwo,
+  MeasurementLevel? level,
+  ReadingRange? range,
 }) => MeasurementReading(
   id: 'reading-1',
   kind: kind,
@@ -22,6 +25,8 @@ MeasurementReading _reading({
   valueOne: outcome == 'read' ? valueOne : null,
   valueTwo: valueTwo,
   outsideTarget: outsideTarget,
+  level: level,
+  range: range,
 );
 
 Future<void> _pump(
@@ -75,6 +80,35 @@ void main() {
       expect(value.textDirection, TextDirection.ltr);
       expect(find.text('measurements.bp_unit'.tr()), findsOneWidget);
       expect(find.text('measurements.outside_target'.tr()), findsOneWidget);
+    });
+
+    testWidgets('says the level and the normal range it was judged by', (
+      WidgetTester tester,
+    ) async {
+      await _pump(
+        tester,
+        _reading(
+          valueOne: 151,
+          outsideTarget: true,
+          level: MeasurementLevel.high,
+          range: const ReadingRange(
+            profile: 'general',
+            state: 'fasting',
+            normal: NormalBand(
+              level: MeasurementLevel.normal,
+              glucoseLow: 70,
+              glucoseHigh: 100,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('measurements.level.high'.tr()), findsOneWidget);
+      expect(find.textContaining('70–100'), findsOneWidget);
+      expect(
+        find.textContaining('measurements.range_state.fasting'.tr()),
+        findsOneWidget,
+      );
     });
 
     testWidgets('says a reading has no target when it has none', (

@@ -5,7 +5,6 @@ import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/weekday_selector.dart';
@@ -15,13 +14,16 @@ import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_ranges_box.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 /// «جدولة قياس» (new, [planId] null) or «تعديل جدولة القياس» of [planId].
@@ -91,10 +93,8 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   int? get _missedAfter => _schedule.missedAfter;
   set _missedAfter(int? value) => _schedule.missedAfter = value;
 
-  final _low = TextEditingController();
-  final _high = TextEditingController();
-  final _systolic = TextEditingController();
-  final _diastolic = TextEditingController();
+  /// «المعدل الطبيعي» of the patient: fixed, chosen by the medical file.
+  late final MeasurementRangesCubit _ranges;
   bool _initialized = false;
   bool _saving = false;
   String? _errorKey;
@@ -104,11 +104,15 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   static const int _maxReadings = 6;
 
   @override
+  void initState() {
+    super.initState();
+    _ranges = MeasurementRangesCubit(GetIt.I<MeasurementRepository>())
+      ..load(widget.circleId);
+  }
+
+  @override
   void dispose() {
-    _low.dispose();
-    _high.dispose();
-    _systolic.dispose();
-    _diastolic.dispose();
+    _ranges.close();
     super.dispose();
   }
 
@@ -132,10 +136,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     _days
       ..clear()
       ..addAll(version.weekdays);
-    _low.text = '${version.glucoseLow ?? ''}';
-    _high.text = '${version.glucoseHigh ?? ''}';
-    _systolic.text = '${version.systolicLimit ?? ''}';
-    _diastolic.text = '${version.diastolicLimit ?? ''}';
     _missedAfter = version.missedAfterMinutes;
   }
 
@@ -147,10 +147,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       setState(() => _errorKey = 'measurements.active_plan_exists');
       return;
     }
-    final low = int.tryParse(_low.text);
-    final high = int.tryParse(_high.text);
-    final systolic = int.tryParse(_systolic.text);
-    final diastolic = int.tryParse(_diastolic.text);
     if (_days.isEmpty) {
       setState(() => _errorKey = 'measurements.days_required');
       return;
@@ -162,26 +158,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     final times = <String>{for (final item in _readings) _clock(item.time)};
     if (times.length != _readings.length) {
       setState(() => _errorKey = 'measurements.times_repeat');
-      return;
-    }
-    if (_kind == MeasurementKind.glucose &&
-        (low == null ||
-            high == null ||
-            low <= 0 ||
-            high > 999 ||
-            high <= low)) {
-      setState(() => _errorKey = 'measurements.invalid_glucose_target');
-      return;
-    }
-    if (_kind == MeasurementKind.bp &&
-        (systolic == null ||
-            diastolic == null ||
-            systolic <= 0 ||
-            systolic > 999 ||
-            diastolic <= 0 ||
-            diastolic > 999 ||
-            systolic <= diastolic)) {
-      setState(() => _errorKey = 'measurements.invalid_bp_target');
       return;
     }
     final readings = _readings.toList()
@@ -198,10 +174,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       weekdays: _days.toList()..sort(),
       startsOn: _start,
       missedAfterMinutes: _missedAfter!,
-      glucoseLow: _kind == MeasurementKind.glucose ? low : null,
-      glucoseHigh: _kind == MeasurementKind.glucose ? high : null,
-      systolicLimit: _kind == MeasurementKind.bp ? systolic : null,
-      diastolicLimit: _kind == MeasurementKind.bp ? diastolic : null,
     );
     setState(() {
       _saving = true;
@@ -328,8 +300,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
           ),
           if (existing != null) ...[
             const SizedBox(height: AppSpacing.md),
-            // The same action row as «تعديل الهدف في الخطة» of a free
-            // reading: a pencil, the words, and a chevron.
+            // An action row: a pencil, the words, and a chevron.
             InsetGroup(
               footer: context.tr('measurements.active_plan_exists'),
               children: [
@@ -416,31 +387,17 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          InsetGroup(
-            header: context.tr('measurements.target'),
-            children: _kind == MeasurementKind.glucose
-                ? [
-                    _numberRow(context, 'measurements.glucose_low', _low),
-                    _numberRow(
-                      context,
-                      'measurements.glucose_high',
-                      _high,
-                      errorKey: 'measurements.invalid_glucose_target',
-                    ),
-                  ]
-                : [
-                    _numberRow(
-                      context,
-                      'measurements.systolic_limit',
-                      _systolic,
-                    ),
-                    _numberRow(
-                      context,
-                      'measurements.diastolic_limit',
-                      _diastolic,
-                      errorKey: 'measurements.invalid_bp_target',
-                    ),
-                  ],
+          // Fixed by the meal states above and the medical file: shown,
+          // not typed.
+          BlocProvider<MeasurementRangesCubit>.value(
+            value: _ranges,
+            child: MeasurementRangesBox(
+              circleId: widget.circleId,
+              kind: _kind,
+              states: <String?>[
+                for (final _Reading item in _readings) item.measurementState,
+              ],
+            ),
           ),
           if (plan != null)
             Padding(
@@ -452,9 +409,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 ),
               ),
             ),
-          if (_errorKey != null &&
-              _errorKey != 'measurements.invalid_glucose_target' &&
-              _errorKey != 'measurements.invalid_bp_target')
+          if (_errorKey != null)
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
@@ -466,26 +421,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       ),
     );
   }
-
-  Widget _numberRow(
-    BuildContext context,
-    String key,
-    TextEditingController controller, {
-    String? errorKey,
-  }) => InsetTextRow(
-    label: context.tr(key),
-    controller: controller,
-    errorText: errorKey != null && _errorKey == errorKey
-        ? context.tr(errorKey)
-        : null,
-    onChanged: (_) => setState(() => _errorKey = null),
-    keyboardType: TextInputType.number,
-    inputFormatters: [
-      const WesternDigitsFormatter(),
-      FilteringTextInputFormatter.digitsOnly,
-      LengthLimitingTextInputFormatter(3),
-    ],
-  );
 
   /// One reading: its time («القراءة 2» when there are several), its
   /// glucose context, and «حذف» for all but a single reading.

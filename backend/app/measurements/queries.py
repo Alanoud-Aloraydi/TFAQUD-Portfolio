@@ -8,16 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.accounts import accounts_by_id, recorder_response
 from app.clock import local_moment, patient_today, patient_zone
-from app.measurements.service import (
-    TARGET_FIELDS,
-    circle_for,
-    outside_target,
-    plan_times,
-    plan_weekdays,
-)
+from app.measurements.ranges import all_ranges, judge, patient_codes
+from app.measurements.service import circle_for, plan_times, plan_weekdays
 from app.models import MeasurementPlan, MeasurementPlanTime
-from app.models import MeasurementPlanVersion
-from app.models import MeasurementReading, MeasurementTarget
+from app.models import MeasurementPlanVersion, MeasurementReading
 from app.snoozes.queries import attach_snoozes
 
 
@@ -47,21 +41,21 @@ def version_response(
             }
             for item in times
         ],
-        **{field: getattr(version, field) for field in TARGET_FIELDS},
     }
 
 
 def reading_response(
     reading: MeasurementReading,
-    version: MeasurementPlanVersion | None = None,
     accounts: dict | None = None,
+    *,
+    codes: frozenset[str] = frozenset(),
+    planned: str | None = None,
 ) -> dict:
-    """Return a saved outcome and its target comparison."""
-    # Whether a reading is outside the target it was saved with (a skip has no
-    # answer).
-    outside = None
-    if reading.outcome == "read":
-        outside = outside_target(reading, version)
+    """Return a saved outcome and where it falls in its normal range: the
+    range of the patient's conditions (`codes`) and its meal state (its own,
+    else the `planned` one of its plan time)."""
+    # A skip has neither.
+    level, normal = judge(reading, codes, planned)
     return {
         "id": str(reading.id),
         "plan_version_id": (
@@ -88,9 +82,10 @@ def reading_response(
         "note": reading.note,
         "skip_reason_code": reading.skip_reason_code,
         "skip_reason_note": reading.skip_reason_note,
-        "outside_target": outside,
-        # The target the reading was judged by, saved with it.
-        **{field: getattr(reading, field) for field in TARGET_FIELDS},
+        "level": level,
+        "normal_range": normal,
+        # Kept for builds before 0049: anything but normal.
+        "outside_target": None if level is None else level != "normal",
         "followed_up_at": (
             reading.followed_up_at.isoformat()
             if reading.followed_up_at
@@ -111,56 +106,15 @@ class MeasurementQueries:
         self.session = session
         self.now = now
 
-    def targets(self, circle_id: UUID) -> list[dict]:
-        """Return saved goals and the current active-plan override."""
+    def ranges(self, circle_id: UUID) -> dict:
+        """Return the fixed normal ranges for this patient's conditions."""
         circle = circle_for(self.session, circle_id)
-        # The targets saved with readings, and the versions of the plans not
-        # stopped, newest first.
-        stored = list(self.session.scalars(
-            select(MeasurementTarget).where(
-                MeasurementTarget.care_circle_id == circle.id
-            )
-        ))
-        plans = list(self.session.execute(
-            select(MeasurementPlan, MeasurementPlanVersion)
-            .join(
-                MeasurementPlanVersion,
-                MeasurementPlanVersion.measurement_plan_id
-                == MeasurementPlan.id,
-            )
-            .where(
-                MeasurementPlan.care_circle_id == circle.id,
-                MeasurementPlan.stopped_at.is_(None),
-            )
-            .order_by(MeasurementPlanVersion.version_number.desc())
-        ))
-        # Per kind: the newest version in force today, else the next one to
-        # start.
-        active = {}
-        future = {}
-        today = patient_today(circle, self.now)
-        for plan, version in plans:
-            future[plan.kind] = (plan, version)
-            if version.effective_from_on <= today:
-                active.setdefault(plan.kind, (plan, version))
-        for kind, value in future.items():
-            active.setdefault(kind, value)
-        # A plan's target wins over a saved one; a kind with neither is left
-        # out.
-        result = []
-        for kind in ("glucose", "blood_pressure"):
-            source = active[kind][1] if kind in active else next(
-                (item for item in stored if item.kind == kind), None
-            )
-            if source is None:
-                continue
-            result.append({
-                "kind": kind,
-                **{field: getattr(source, field) for field in TARGET_FIELDS},
-                "plan_id": str(active[kind][0].id)
-                if kind in active else None,
-            })
-        return result
+        codes = patient_codes(self.session, circle.id)
+        return {
+            # The conditions that choose a range, from the medical file.
+            "conditions": sorted(codes & {"diabetes", "hypertension"}),
+            "ranges": all_ranges(codes),
+        }
 
     def plans(self, circle_id: UUID) -> list[dict]:
         """Return active and stopped plans with version history."""
@@ -309,7 +263,9 @@ class MeasurementQueries:
                 ): item
                 for item in readings
             }
-        # Who recorded those readings, read once for all of them.
+        # Who recorded those readings, read once for all of them, and the
+        # patient's conditions that choose their ranges.
+        codes = patient_codes(self.session, circle.id)
         accounts = accounts_by_id(
             self.session,
             {
@@ -335,8 +291,8 @@ class MeasurementQueries:
                     continue
                 for reading_time in times[version.id]:
                     item = self._occurrence(
-                        plan, version, reading_time, day, saved, accounts,
-                        zone,
+                        plan, version, reading_time, day, saved,
+                        (accounts, codes), zone,
                     )
                     if item is not None:
                         result.append(item)
@@ -352,11 +308,12 @@ class MeasurementQueries:
         )
 
     def _occurrence(
-        self, plan, version, reading_time, day, saved, accounts, zone
+        self, plan, version, reading_time, day, saved, people, zone
     ) -> dict | None:
         """One reading time of a version on a day, as a task, or None when
         the plan stopped before it. `deadline_at` keeps the offset of the
-        patient's `zone` on that day."""
+        patient's `zone` on that day; `people` is who recorded readings and
+        the patient's condition codes."""
         # The task's time and its deadline (its time plus the minutes after
         # which it is missed).
         scheduled = local_moment(day, reading_time.time_of_day, zone)
@@ -389,9 +346,11 @@ class MeasurementQueries:
             "deadline_at": deadline.astimezone(zone).isoformat(),
             "status": status,
             "measurement_state": reading_time.measurement_state,
-            **{field: getattr(version, field) for field in TARGET_FIELDS},
             "reading": (
-                reading_response(reading, version, accounts)
+                reading_response(
+                    reading, people[0], codes=people[1],
+                    planned=reading_time.measurement_state,
+                )
                 if reading else None
             ),
         }
@@ -408,7 +367,7 @@ class MeasurementQueries:
             end + timedelta(days=1), datetime.min.time(), zone
         )
         return self._responses(
-            MeasurementReading.care_circle_id == circle.id,
+            circle.id,
             or_(
                 and_(
                     MeasurementReading.outcome == "read",
@@ -425,20 +384,27 @@ class MeasurementQueries:
     def all_readings(self, circle_id: UUID) -> list[dict]:
         """Return all saved outcomes for the circle's PDF export."""
         circle = circle_for(self.session, circle_id)
-        return self._responses(MeasurementReading.care_circle_id == circle.id)
+        return self._responses(circle.id)
 
-    def _responses(self, *conditions) -> list[dict]:
-        """The readings matching `conditions`, the last recorded first, each
-        with its version's target and who recorded it."""
+    def _responses(self, circle_id: UUID, *conditions) -> list[dict]:
+        """The circle's readings matching `conditions`, the last recorded
+        first, each judged by its normal range, with who recorded it."""
         rows = list(
             self.session.execute(
-                select(MeasurementReading, MeasurementPlanVersion)
+                select(MeasurementReading, MeasurementPlanTime)
                 .outerjoin(
-                    MeasurementPlanVersion,
-                    MeasurementPlanVersion.id
-                    == MeasurementReading.plan_version_id,
+                    MeasurementPlanTime,
+                    and_(
+                        MeasurementPlanTime.plan_version_id
+                        == MeasurementReading.plan_version_id,
+                        MeasurementPlanTime.time_of_day
+                        == MeasurementReading.scheduled_time,
+                    ),
                 )
-                .where(*conditions)
+                .where(
+                    MeasurementReading.care_circle_id == circle_id,
+                    *conditions,
+                )
                 .order_by(MeasurementReading.recorded_at.desc())
             )
         )
@@ -450,7 +416,11 @@ class MeasurementQueries:
                 if reading.recorded_by_account_id is not None
             },
         )
+        codes = patient_codes(self.session, circle_id)
         return [
-            reading_response(reading, version, accounts)
-            for reading, version in rows
+            reading_response(
+                reading, accounts, codes=codes,
+                planned=time.measurement_state if time else None,
+            )
+            for reading, time in rows
         ]

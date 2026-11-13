@@ -216,8 +216,6 @@ def test_a_reading_time_is_put_off_by_its_time(
             "weekdays": [3],
             "starts_on": DAY,
             "missed_after_minutes": 60,
-            "glucose_low": 80,
-            "glucose_high": 140,
         },
     )
     assert created.status_code == 201, created.json
