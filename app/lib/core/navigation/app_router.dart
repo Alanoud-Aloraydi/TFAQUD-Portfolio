@@ -5,7 +5,6 @@ import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/services/token_storage.dart';
-import 'package:app/core/widgets/navigation/swipe_back.dart';
 import 'package:app/dev/component_gallery.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';

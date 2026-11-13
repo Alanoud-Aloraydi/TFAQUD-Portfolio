@@ -9,11 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// «صباح الخير، ياسر» from Fajr, «مساء الخير، ياسر» from Asr, with the
-/// patient's date under it; the tab keeps «اليوم».
+/// patient's date under it and [weather] beside the date; the tab keeps
+/// «اليوم».
 class TodayHeader extends StatelessWidget {
-  const TodayHeader({super.key, required this.now});
+  const TodayHeader({super.key, required this.now, this.weather});
 
   final DateTime now;
+  final Widget? weather;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class TodayHeader extends StatelessWidget {
         asr: day?.times[Prayer.asr],
       ),
       subtitle: '$weekday ${now.day} $month',
+      subtitleTrailing: weather,
     );
   }
 }

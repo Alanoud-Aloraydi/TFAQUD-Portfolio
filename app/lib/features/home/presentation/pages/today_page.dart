@@ -44,9 +44,14 @@ class _TodayPageState extends State<TodayPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // The weather where the patient lives, over the greeting.
-          TodayWeather(latitude: circle.latitude, longitude: circle.longitude),
-          TodayHeader(now: PatientClockScope.of(context).now()),
+          TodayHeader(
+            now: PatientClockScope.of(context).now(),
+            // The weather where the patient lives, beside the date.
+            weather: TodayWeather(
+              latitude: circle.latitude,
+              longitude: circle.longitude,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xl),
           TodayContent(
             circleId: circle.id,

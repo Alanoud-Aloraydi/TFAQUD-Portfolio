@@ -270,10 +270,9 @@
       "late": "بانتظار التسجيل",
       "missed": "ما تسجّلت",
       "taken": "تم أخذها",
-      "taken_late_by": "تم أخذها بعد {} من الموعد",
       "recorded": "تم تسجيلها",
       "recorded_late": "تسجّلت بعد الموعد",
-      "recorded_late_by": "تسجّلت بعد {} من الموعد",
+      "late_line": "بعد {} من الموعد",
       "skipped": "تم تخطيها",
       "appointment_waiting": "تأكيد الحضور"
     }
@@ -438,7 +437,6 @@
     "pending_revision": "تعديل مجدول يبدأ {}",
     "pending_schedule": "{} · {} {}",
     "pending_strength": "{} {} · {}",
-    "plan_summary": "{} سارية · {} تبدأ لاحقًا",
     "plan_subtitle": "خطتك الحالية والتعديلات القادمة",
     "plan_subtitle_other": "خطة {} الحالية والتعديلات القادمة",
     "cancel_pending": "إلغاء التعديل المجدول",
@@ -1043,6 +1041,7 @@
     "range_from": "{} فأكثر",
     "range_from_file": "الحالة من الملف الطبي، ويتغيّر المعدل الطبيعي إذا تغيّرت.",
     "change_condition": "تغيير الحالة في الملف الطبي",
+    "range_condition": "الحالة",
     "level": {
       "low": "منخفض",
       "normal": "طبيعي",
@@ -1185,6 +1184,7 @@
     "video": "مكالمة فيديو",
     "phone": "مكالمة هاتفية",
     "companion": "المرافقون",
+    "companion_one": "يرافقه",
     "companion_hint": "المرافق اختياري. لمن يصله التنبيه: المريض، ومن تختاره هنا من المرافقين.",
     "companion_name": "المرافقون: {}",
     "companion_separator": "، ",
@@ -1483,6 +1483,8 @@
   },
   "weather": {
     "degrees": "{}°",
+    "title": "الطقس الآن",
+    "note": "في مدينة المريض.",
     "spoken": "الطقس الآن {} درجة، {}",
     "sources": "مصادر البيانات",
     "condition": {
