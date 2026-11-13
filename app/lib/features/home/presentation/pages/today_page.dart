@@ -7,10 +7,12 @@ import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/home/presentation/widgets/today_content.dart';
 import 'package:app/features/home/presentation/widgets/today_header.dart';
+import 'package:app/features/home/presentation/widgets/today_weather.dart';
 import 'package:flutter/material.dart';
 
-/// «اليوم»: the greeting, what needs attention, the next task and the day's
-/// schedule by prayer period, all on the patient's clock.
+/// «اليوم»: the weather in the patient's city and the greeting, what needs
+/// attention, the next task and the day's schedule by prayer period, all
+/// on the patient's clock.
 class TodayPage extends StatefulWidget {
   const TodayPage({super.key});
 
@@ -42,6 +44,8 @@ class _TodayPageState extends State<TodayPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
+          // The weather where the patient lives, over the greeting.
+          TodayWeather(latitude: circle.latitude, longitude: circle.longitude),
           TodayHeader(now: PatientClockScope.of(context).now()),
           const SizedBox(height: AppSpacing.xl),
           TodayContent(

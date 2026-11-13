@@ -99,6 +99,8 @@ def test_self_care_circle_is_created_and_listed(
             "patient_name": "Nora",
             "patient_avatar_code": None,
             "time_zone": "Asia/Riyadh",
+            "latitude": 24.7136,
+            "longitude": 46.6753,
         }
     ]
     with Session(database) as session:
@@ -684,7 +686,9 @@ def test_invitation_from_sending_to_accepting(database_app, database, account):
     assert len(received) == 1
     assert received[0]["id"] == invitation["id"]
     assert received[0]["circle_name"] == "دائرة Nora"
-    assert received[0]["invited_by"] == {"display_name": "Reem"}
+    assert received[0]["invited_by"] == {
+        "display_name": "Reem", "avatar_code": None,
+    }
     # The invited person is not told the circle id before accepting.
     assert "care_circle_id" not in received[0]
     assert error_code(invited.get(circle_url(circle.id)), 403) == "forbidden"

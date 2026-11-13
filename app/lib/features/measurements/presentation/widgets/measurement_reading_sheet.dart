@@ -1,6 +1,4 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
@@ -14,15 +12,16 @@ import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_targets_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
+import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 
 /// Opens «تسجيل قراءة» over [context], whose [MeasurementReadingsCubit]
 /// saves it: the answer to [occurrence], the task the person chose, or a
@@ -39,7 +38,7 @@ Future<bool> showMeasurementReadingSheet(
           BlocProvider.value(value: context.read<MeasurementReadingsCubit>()),
           BlocProvider(
             create: (_) =>
-                MeasurementTargetsCubit(GetIt.I<MeasurementRepository>())
+                MeasurementRangesCubit(GetIt.I<MeasurementRepository>())
                   ..load(context.read<MeasurementReadingsCubit>().circleId!),
           ),
         ],
@@ -49,8 +48,9 @@ Future<bool> showMeasurementReadingSheet(
     false;
 
 /// «تسجيل قراءة»: the values, conditions and time of one reading. A free
-/// reading also picks its kind and shows the patient's target (editable
-/// when no plan sets it).
+/// reading also picks its kind. «المعدل الطبيعي» under the values follows
+/// the kind and the meal state chosen, and marks where the typed value
+/// falls.
 class MeasurementReadingSheet extends StatefulWidget {
   const MeasurementReadingSheet({super.key, this.occurrence});
 
@@ -84,25 +84,31 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
 
   /// The longest words «أخرى» takes, as the server keeps them.
   static const int _otherConditionLength = 60;
-  final _targetLow = TextEditingController();
-  final _targetHigh = TextEditingController();
   bool _saving = false;
   String? _errorKey;
 
-  MeasurementTarget? _targetFor(MeasurementKind kind) {
-    for (final target
-        in context.read<MeasurementTargetsCubit>().state.targets) {
-      if (target.kind == kind) return target;
-    }
-    return null;
-  }
+  /// The meal state chosen among the conditions, which picks the glucose
+  /// range.
+  String? get _mealState => _conditions
+      .where(
+        (code) => const <String>[
+          'fasting',
+          'before_meal',
+          'after_meal',
+          'bedtime',
+        ].contains(code),
+      )
+      .firstOrNull;
 
-  void _showTarget(MeasurementKind kind) {
-    final target = _targetFor(kind);
-    _targetLow.text =
-        '${kind == MeasurementKind.bp ? target?.diastolicLimit ?? '' : target?.glucoseLow ?? ''}';
-    _targetHigh.text =
-        '${kind == MeasurementKind.bp ? target?.systolicLimit ?? '' : target?.glucoseHigh ?? ''}';
+  /// Where the typed value falls in [range]; null until it is a number.
+  MeasurementLevel? _levelIn(NormalRange range) {
+    final int? one = int.tryParse(
+      _kind == MeasurementKind.bp ? _systolic.text : _glucose.text,
+    );
+    if (one == null || one < 1) return null;
+    if (_kind == MeasurementKind.glucose) return range.levelOf(one);
+    final int? two = int.tryParse(_diastolic.text);
+    return two == null || two < 1 ? null : range.levelOf(one, two);
   }
 
   @override
@@ -112,42 +118,10 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
     _glucose.dispose();
     _note.dispose();
     _otherCondition.dispose();
-    _targetLow.dispose();
-    _targetHigh.dispose();
     super.dispose();
   }
 
-  /// Closes the sheet, saving nothing, and opens the plan whose target it
-  /// shows.
-  void _editPlan(String planId) {
-    final GoRouter router = GoRouter.of(context);
-    final String path = Routes.editMeasurement(
-      context.read<MeasurementReadingsCubit>().circleId!,
-      planId,
-    );
-    Navigator.of(context).pop(false);
-    router.push(path);
-  }
-
   Future<void> _save() async {
-    final freeReading = widget.occurrence == null;
-    final targetsState = context.read<MeasurementTargetsCubit>().state;
-    if (freeReading &&
-        (targetsState.loading || targetsState.errorKey != null)) {
-      return;
-    }
-    final useTarget = freeReading && _targetFor(_kind)?.planId == null;
-    final targetLow = useTarget ? int.tryParse(_targetLow.text) : null;
-    final targetHigh = useTarget ? int.tryParse(_targetHigh.text) : null;
-    if (useTarget &&
-        (targetLow == null ||
-            targetHigh == null ||
-            targetLow < 1 ||
-            targetHigh > 999 ||
-            targetHigh <= targetLow)) {
-      setState(() => _errorKey = 'measurements.invalid_free_target');
-      return;
-    }
     final one = int.tryParse(
       _kind == MeasurementKind.bp ? _systolic.text : _glucose.text,
     );
@@ -182,18 +156,6 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
           ? _otherCondition.text.trim()
           : null,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-      glucoseLow: useTarget && _kind == MeasurementKind.glucose
-          ? targetLow
-          : null,
-      glucoseHigh: useTarget && _kind == MeasurementKind.glucose
-          ? targetHigh
-          : null,
-      systolicLimit: useTarget && _kind == MeasurementKind.bp
-          ? targetHigh
-          : null,
-      diastolicLimit: useTarget && _kind == MeasurementKind.bp
-          ? targetLow
-          : null,
     );
     setState(() {
       _saving = true;
@@ -217,247 +179,166 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
   Widget build(BuildContext context) {
     // The glass sheet draws the title, scrolls, and stays above the
     // keyboard.
-    return BlocListener<MeasurementTargetsCubit, MeasurementTargetsState>(
-      listener: (context, state) {
-        if (!state.loading && state.errorKey == null) _showTarget(_kind);
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GlassSegmentedControl<MeasurementKind>(
-                segments: {
-                  MeasurementKind.bp: context.tr('measurements.bp'),
-                  MeasurementKind.glucose: context.tr('measurements.glucose'),
-                },
-                selected: _kind,
-                onChanged: widget.occurrence == null
-                    ? (value) => setState(() {
-                        _kind = value;
-                        _showTarget(value);
-                        // Fasting is not for blood pressure.
-                        final offered = MeasurementConditions.offered(value);
-                        _conditions = [
-                          for (final code in _conditions)
-                            if (offered.contains(code)) code,
-                        ];
-                      })
-                    : null,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              if (widget.occurrence == null) ...[
-                if (context.watch<MeasurementTargetsCubit>().state.loading)
-                  const Center(child: CircularProgressIndicator())
-                else if (context.watch<MeasurementTargetsCubit>().state.errorKey
-                    case final error?)
-                  TextButton(
-                    onPressed: () =>
-                        context.read<MeasurementTargetsCubit>().load(
-                          context.read<MeasurementReadingsCubit>().circleId!,
-                        ),
-                    // Tapping the message reads the targets again,
-                    // as the other measurement lists retry.
-                    child: Text(context.tr(error)),
-                  )
-                else ...[
-                  InsetGroup(
-                    header: context.tr('measurements.target'),
-                    footer: context.tr(
-                      _targetFor(_kind)?.planId == null
-                          ? 'measurements.free_target_hint'
-                          : 'measurements.plan_target_hint',
-                    ),
-                    children: [
-                      InsetBlock(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _numberField(
-                                _kind == MeasurementKind.bp
-                                    ? 'measurements.systolic_limit'
-                                    : 'measurements.glucose_low',
-                                _kind == MeasurementKind.bp
-                                    ? _targetHigh
-                                    : _targetLow,
-                                enabled: _targetFor(_kind)?.planId == null,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: _numberField(
-                                _kind == MeasurementKind.bp
-                                    ? 'measurements.diastolic_limit'
-                                    : 'measurements.glucose_high',
-                                _kind == MeasurementKind.bp
-                                    ? _targetLow
-                                    : _targetHigh,
-                                enabled: _targetFor(_kind)?.planId == null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // A target from a plan is changed in the plan:
-                      // an action row, as «إضافة قراءة» is.
-                      if (_targetFor(_kind)?.planId case final planId?)
-                        InsetRow(
-                          label: context.tr('measurements.edit_plan_target'),
-                          leading: const Icon(AppIcons.pencil),
-                          showChevron: true,
-                          onTap: () => _editPlan(planId),
-                        ),
-                    ],
+    final NormalRange? range = context
+        .watch<MeasurementRangesCubit>()
+        .state
+        .ranges
+        ?.of(_kind, _mealState);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GlassSegmentedControl<MeasurementKind>(
+              segments: {
+                MeasurementKind.bp: context.tr('measurements.bp'),
+                MeasurementKind.glucose: context.tr('measurements.glucose'),
+              },
+              selected: _kind,
+              onChanged: widget.occurrence == null
+                  ? (value) => setState(() {
+                      _kind = value;
+                      // Fasting is not for blood pressure.
+                      final offered = MeasurementConditions.offered(value);
+                      _conditions = [
+                        for (final code in _conditions)
+                          if (offered.contains(code)) code,
+                      ];
+                    })
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: _numberField(
+                    _kind == MeasurementKind.bp
+                        ? 'measurements.systolic'
+                        : 'measurements.value',
+                    _kind == MeasurementKind.bp ? _systolic : _glucose,
                   ),
-                ],
-                const SizedBox(height: AppSpacing.lg),
-              ],
-              Row(
-                children: [
+                ),
+                if (_kind == MeasurementKind.bp) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    child: Text(
+                      '/',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                  ),
                   Expanded(
-                    child: _numberField(
-                      _kind == MeasurementKind.bp
-                          ? 'measurements.systolic'
-                          : 'measurements.value',
-                      _kind == MeasurementKind.bp ? _systolic : _glucose,
-                    ),
+                    child: _numberField('measurements.diastolic', _diastolic),
                   ),
-                  if (_kind == MeasurementKind.bp) ...[
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: Text(
-                        '/',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                    ),
-                    Expanded(
-                      child: _numberField('measurements.diastolic', _diastolic),
-                    ),
-                  ],
                 ],
+              ],
+            ),
+            Text(
+              context.tr(
+                _kind == MeasurementKind.bp
+                    ? 'measurements.bp_unit'
+                    : 'measurements.glucose_unit',
               ),
-              Text(
-                context.tr(
-                  _kind == MeasurementKind.bp
-                      ? 'measurements.bp_unit'
-                      : 'measurements.glucose_unit',
-                ),
-                textAlign: TextAlign.center,
-              ),
+              textAlign: TextAlign.center,
+            ),
+            // Read-only and never in the way: saving does not wait for
+            // it, the server judges the reading either way.
+            if (range != null) ...[
               const SizedBox(height: AppSpacing.lg),
-              InsetGroup(
-                header: context.tr('measurements.condition_optional'),
-                children: [
-                  InsetBlock(
-                    semanticLabel: context.tr(
-                      'measurements.condition_optional',
-                    ),
-                    child: MeasurementConditionChips(
-                      kind: _kind,
-                      selected: _conditions,
-                      caption: context.tr('measurements.conditions_hint'),
-                      onChanged: (value) => setState(() => _conditions = value),
-                    ),
+              NormalRangeCard(range: range, level: _levelIn(range)),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            InsetGroup(
+              header: context.tr('measurements.condition_optional'),
+              children: [
+                InsetBlock(
+                  semanticLabel: context.tr('measurements.condition_optional'),
+                  child: MeasurementConditionChips(
+                    kind: _kind,
+                    selected: _conditions,
+                    caption: context.tr('measurements.conditions_hint'),
+                    onChanged: (value) => setState(() => _conditions = value),
                   ),
-                ],
-              ),
-              // «أخرى» in the reader's own words, as the medical
-              // file's «أخرى» takes them.
-              if (_conditions.contains('other')) ...[
-                const SizedBox(height: AppSpacing.md),
-                LabeledTextField(
-                  label: context.tr('measurements.other_condition'),
-                  helperText: context.tr('measurements.other_condition_hint'),
-                  controller: _otherCondition,
-                  maxLength: _otherConditionLength,
-                  textInputAction: TextInputAction.done,
-                  onChanged: (_) {},
                 ),
               ],
-              const SizedBox(height: AppSpacing.lg),
-              InsetGroup(
-                children: [
-                  InsetRow(
-                    label: context.tr('measurements.actual_time'),
-                    value: timeOfDayText(_time),
-                    onTap: () async {
-                      final selected = await showTafaqodTimeSheet(
-                        context,
-                        title: context.tr('measurements.actual_time'),
-                        initialTime: _time,
-                      );
-                      if (selected != null && mounted) {
-                        setState(() => _picked = selected);
-                      }
-                    },
-                  ),
-                ],
+            ),
+            // «أخرى» in the reader's own words, as the medical
+            // file's «أخرى» takes them.
+            if (_conditions.contains('other')) ...[
+              const SizedBox(height: AppSpacing.md),
+              LabeledTextField(
+                label: context.tr('measurements.other_condition'),
+                helperText: context.tr('measurements.other_condition_hint'),
+                controller: _otherCondition,
+                maxLength: _otherConditionLength,
+                textInputAction: TextInputAction.done,
+                onChanged: (_) {},
               ),
-              const SizedBox(height: AppSpacing.lg),
-              InsetGroup(
-                children: [
-                  InsetTextRow(
-                    label: context.tr('measurements.note'),
-                    controller: _note,
-                    onChanged: (_) {},
-                    maxLength: 250,
-                  ),
-                ],
-              ),
-              if (_errorKey != null)
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  child: Text(
-                    context.tr(_errorKey!),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
             ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.lg),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed:
-                    _saving ||
-                        widget.occurrence == null &&
-                            (context
-                                    .watch<MeasurementTargetsCubit>()
-                                    .state
-                                    .loading ||
-                                context
-                                        .watch<MeasurementTargetsCubit>()
-                                        .state
-                                        .errorKey !=
-                                    null)
-                    ? null
-                    : _save,
-                child: Text(context.tr('measurements.save_reading')),
+            const SizedBox(height: AppSpacing.lg),
+            InsetGroup(
+              children: [
+                InsetRow(
+                  label: context.tr('measurements.actual_time'),
+                  value: timeOfDayText(_time),
+                  onTap: () async {
+                    final selected = await showTafaqodTimeSheet(
+                      context,
+                      title: context.tr('measurements.actual_time'),
+                      initialTime: _time,
+                    );
+                    if (selected != null && mounted) {
+                      setState(() => _picked = selected);
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            InsetGroup(
+              children: [
+                InsetTextRow(
+                  label: context.tr('measurements.note'),
+                  controller: _note,
+                  onChanged: (_) {},
+                  maxLength: 250,
+                ),
+              ],
+            ),
+            if (_errorKey != null)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                child: Text(
+                  context.tr(_errorKey!),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _saving ? null : _save,
+              child: Text(context.tr('measurements.save_reading')),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _numberField(
-    String label,
-    TextEditingController controller, {
-    bool enabled = true,
-  }) => Column(
+  Widget _numberField(String label, TextEditingController controller) => Column(
     children: [
       Text(context.tr(label)),
       const SizedBox(height: AppSpacing.xs),
       TextField(
         controller: controller,
-        enabled: enabled,
+        // The level under the values follows what is typed.
+        onChanged: (_) => setState(() {}),
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.headlineMedium,

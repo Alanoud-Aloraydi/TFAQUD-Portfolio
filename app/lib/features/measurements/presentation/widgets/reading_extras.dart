@@ -4,12 +4,14 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The lines under a reading: its conditions, the reason it was skipped, the
-/// note and who recorded it. Each one shows only when it has something.
+/// The lines under a reading: the normal range it was judged by, its
+/// conditions, the reason it was skipped, the note and who recorded it.
+/// Each one shows only when it has something.
 class ReadingExtras extends StatelessWidget {
   const ReadingExtras({
     super.key,
@@ -29,13 +31,8 @@ class ReadingExtras extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (!skipped &&
-            reading.planVersionId == null &&
-            reading.outsideTarget != null)
-          Text(
-            '${context.tr('measurements.target')}: ${reading.targetText}',
-            style: style,
-          ),
+        if (!skipped && reading.range != null)
+          Text(readingRangeText(context, reading), style: style),
         if (!skipped && reading.conditions.isNotEmpty)
           Text(readingConditionsText(context, reading), style: style),
         if (skipped && reading.skipReasonCode != null)

@@ -76,6 +76,8 @@ def _circles(account_id: UUID) -> list[dict]:
                 CareCircle.account_id,
                 CareCircle.first_name,
                 CareCircle.time_zone,
+                CareCircle.latitude,
+                CareCircle.longitude,
                 Account.display_name,
                 Account.first_name.label("account_first_name"),
                 Account.avatar_code.label("account_avatar_code"),
@@ -128,6 +130,11 @@ def _circles(account_id: UUID) -> list[dict]:
                 # The patient's IANA zone: the app shows and schedules
                 # every time of this circle in it, wherever the phone is.
                 "time_zone": row.time_zone,
+                # Where the patient's city is, for its weather on «اليوم»
+                # (the phone's own location is never asked for); null when
+                # the city was typed and not picked from the list.
+                "latitude": row.latitude,
+                "longitude": row.longitude,
             }
             for row in session.execute(statement)
         ]

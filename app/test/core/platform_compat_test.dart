@@ -48,6 +48,14 @@ void main() {
         );
         expect(glassSheetBottomInset(media), 300);
       });
+
+      test('stops under the top bar, however tall its content', () {
+        const MediaQueryData media = MediaQueryData(
+          size: Size(393, 852),
+          viewPadding: EdgeInsets.only(top: 59, bottom: 34),
+        );
+        expect(glassSheetMaxHeight(media), 852 - 59 - glassSheetTopGap);
+      });
     });
 
     group('ScaledOverPhone', () {

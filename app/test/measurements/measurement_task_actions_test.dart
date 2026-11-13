@@ -42,4 +42,30 @@ void main() {
       );
     }
   });
+
+  testWidgets('once the next task is due, only «تخطي» stays, with why', (
+    tester,
+  ) async {
+    await pumpArabic(
+      tester,
+      home: Scaffold(
+        body: MeasurementTaskActions(
+          superseded: true,
+          task: MeasurementOccurrence(
+            planId: 'm-1',
+            versionId: 'v-1',
+            kind: MeasurementKind.glucose,
+            scheduledOn: DateTime(2026, 11, 9),
+            time: '07:00',
+            deadlineAt: DateTime.utc(2026, 11, 9, 5),
+            status: MeasurementStatus.missed,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('measurements.record_reading'.tr()), findsNothing);
+    expect(find.text('measurements.skip'.tr()), findsOneWidget);
+    expect(find.text('measurements.superseded'.tr()), findsOneWidget);
+  });
 }

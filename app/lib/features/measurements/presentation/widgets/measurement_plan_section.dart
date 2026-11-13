@@ -4,13 +4,16 @@ import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
+import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 /// The «الخطة» tab's measurements: the active plans of [circleId], each
@@ -35,37 +38,45 @@ class MeasurementPlanSection extends StatelessWidget {
       for (final MeasurementPlan plan in state.plans)
         if (plan.stoppedAt == null) plan,
     ];
-    return ListView(
-      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
-      children: <Widget>[
-        header,
-        const SizedBox(height: AppSpacing.lg),
-        if (state.status == MeasurementLoadStatus.loading &&
-            state.plans.isEmpty)
-          const Center(child: CircularProgressIndicator())
-        else if (state.status == MeasurementLoadStatus.failure)
-          RetryView(
-            messageKey: state.errorKey ?? 'error.unknown',
-            onRetry: () => context.read<MeasurementPlansCubit>().load(circleId),
-          )
-        else if (active.isEmpty)
-          EmptyStateNote(
-            context.tr('measurements.no_plans'),
-            actionLabel: canManage ? context.tr('add.measurement') : null,
-            onAction: canManage
-                ? () => context.push(Routes.newMeasurement(circleId))
-                : null,
-          )
-        else
-          for (final MeasurementPlan plan in active) ...<Widget>[
-            MeasurementPlanCard(
-              circleId: circleId,
-              canManage: canManage,
-              plan: plan,
-            ),
-            const SizedBox(height: AppItemCard.listGap),
-          ],
-      ],
+    // The normal ranges the opened details show, read once for the circle.
+    return BlocProvider<MeasurementRangesCubit>(
+      key: ValueKey<String>('measurement-ranges-$circleId'),
+      create: (_) =>
+          MeasurementRangesCubit(GetIt.I<MeasurementRepository>())
+            ..load(circleId),
+      child: ListView(
+        padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+        children: <Widget>[
+          header,
+          const SizedBox(height: AppSpacing.lg),
+          if (state.status == MeasurementLoadStatus.loading &&
+              state.plans.isEmpty)
+            const Center(child: CircularProgressIndicator())
+          else if (state.status == MeasurementLoadStatus.failure)
+            RetryView(
+              messageKey: state.errorKey ?? 'error.unknown',
+              onRetry: () =>
+                  context.read<MeasurementPlansCubit>().load(circleId),
+            )
+          else if (active.isEmpty)
+            EmptyStateNote(
+              context.tr('measurements.no_plans'),
+              actionLabel: canManage ? context.tr('add.measurement') : null,
+              onAction: canManage
+                  ? () => context.push(Routes.newMeasurement(circleId))
+                  : null,
+            )
+          else
+            for (final MeasurementPlan plan in active) ...<Widget>[
+              MeasurementPlanCard(
+                circleId: circleId,
+                canManage: canManage,
+                plan: plan,
+              ),
+              const SizedBox(height: AppItemCard.listGap),
+            ],
+        ],
+      ),
     );
   }
 }

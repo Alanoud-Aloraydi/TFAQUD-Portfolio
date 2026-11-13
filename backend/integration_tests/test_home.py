@@ -62,6 +62,8 @@ def test_home_excludes_other_circles_and_pending_invitations(
             "patient_name": "Nora",
             "patient_avatar_code": None,
             "time_zone": "Asia/Riyadh",
+            "latitude": None,
+            "longitude": None,
         }
     ]
 
@@ -85,6 +87,8 @@ def test_home_lists_patient_manager_circle_once(
             "patient_name": "Nora",
             "patient_avatar_code": None,
             "time_zone": "Asia/Riyadh",
+            "latitude": None,
+            "longitude": None,
         }
     ]
 

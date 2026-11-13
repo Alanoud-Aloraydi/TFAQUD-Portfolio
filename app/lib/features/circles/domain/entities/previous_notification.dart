@@ -25,6 +25,7 @@ class PreviousNotification extends Equatable {
     required this.answeredAt,
     this.circleName,
     this.otherName,
+    this.otherAvatarCode,
     this.otherPhoneNumber,
   });
 
@@ -43,6 +44,9 @@ class PreviousNotification extends Equatable {
   /// The other person: who invited or asked, or who answered.
   final String? otherName;
 
+  /// Their avatar, shown beside their name.
+  final String? otherAvatarCode;
+
   /// Their number, for someone with no name here (they have no account).
   final String? otherPhoneNumber;
 
@@ -54,6 +58,7 @@ class PreviousNotification extends Equatable {
     answeredAt,
     circleName,
     otherName,
+    otherAvatarCode,
     otherPhoneNumber,
   ];
 }

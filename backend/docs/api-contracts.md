@@ -830,10 +830,16 @@ Errors: 422 `self_request`, `already_has_circle`, `accepted_request_exists`,
     }
   },
   "emergency_contacts": [
-    { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111" }
+    { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111",
+      "verified": true,
+      "account": { "account_id": "...", "name": "Reem", "avatar_code": "w1_1" } }
   ]
 }
 ```
+
+A contact is `verified` («متحقق») when its number is a TFAQUD account's. `account`
+(its name and avatar) is given only when that account is a member of the circle,
+whose members see each other already; for anyone else it is `null`.
 
 `PATCH` changes only the parts that are in the body, and answers with
 `{ "medical_profile": ... }`. A part that is left out stays as it is. A part sent as

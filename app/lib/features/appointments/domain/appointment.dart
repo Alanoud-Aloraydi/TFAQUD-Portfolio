@@ -23,6 +23,8 @@ class CareAppointment extends Equatable {
     required this.updatedAt,
     this.createdByName,
     this.updatedByName,
+    this.createdBy,
+    this.updatedBy,
   });
 
   final String id;
@@ -45,6 +47,10 @@ class CareAppointment extends Equatable {
   final String? createdByName;
   final String? updatedByName;
 
+  /// The same people with their accounts and avatars, for their pictures.
+  final AppointmentCompanion? createdBy;
+  final AppointmentCompanion? updatedBy;
+
   /// The visit's wall time where the patient lives, on the scale of
   /// [PatientClock.now].
   DateTime get scheduledAt => wallClockAt(scheduledOn, time);
@@ -64,10 +70,13 @@ class CareAppointment extends Equatable {
     updatedAt,
     createdByName,
     updatedByName,
+    createdBy,
+    updatedBy,
   ];
 }
 
-/// Identifies a circle member accompanying an appointment.
+/// Identifies a circle member accompanying an appointment, or who added or
+/// changed one.
 class AppointmentCompanion extends Equatable {
   const AppointmentCompanion({
     required this.id,

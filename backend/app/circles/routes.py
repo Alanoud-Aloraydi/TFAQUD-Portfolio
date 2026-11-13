@@ -277,7 +277,7 @@ def get_medical_profile(circle_id):
         view = {
             "patient": views.patient_view(work.session, patient, work.actor),
             "medical_profile": views.medical_view(profile),
-            "emergency_contacts": [views.contact_view(c) for c in contacts],
+            "emergency_contacts": views.contact_views(work.session, contacts),
         }
     return answer(view)
 
@@ -323,7 +323,7 @@ def add_emergency_contact(circle_id):
             body.relation,
             body.phone_number,
         )
-        view = views.contact_view(contact)
+        view = views.contact_view(work.session, contact)
     return answer({"emergency_contact": view}, 201)
 
 
@@ -341,7 +341,7 @@ def update_emergency_contact(circle_id, contact_id):
             body.relation,
             body.phone_number,
         )
-        view = views.contact_view(contact)
+        view = views.contact_view(work.session, contact)
     return answer({"emergency_contact": view})
 
 

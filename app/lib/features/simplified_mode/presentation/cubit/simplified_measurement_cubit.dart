@@ -21,22 +21,13 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
   final String _circleId;
   final DateTime Function() _clock;
 
+  /// Readies the form: nothing to read first, since fixed normal ranges
+  /// judge every reading and a free one needs no target.
   Future<void> load() async {
-    emit(SimplifiedMeasurementState(task: state.task));
-    final result = await _useCase.measurementTargets(_circleId);
-    if (isClosed) return;
-    result.when(
-      (targets) => emit(
-        state.copyWith(
-          status: SimplifiedMeasurementStatus.ready,
-          targets: targets,
-        ),
-      ),
-      (Failure failure) => emit(
-        state.copyWith(
-          status: SimplifiedMeasurementStatus.failure,
-          messageKey: failure.messageKey,
-        ),
+    emit(
+      SimplifiedMeasurementState(
+        task: state.task,
+        status: SimplifiedMeasurementStatus.ready,
       ),
     );
   }

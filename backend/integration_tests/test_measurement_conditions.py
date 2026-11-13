@@ -44,10 +44,6 @@ def circle_api(database_app, database, account, evening):
 
 BP = {
     "kind": "blood_pressure",
-    "glucose_low": None,
-    "glucose_high": None,
-    "systolic_limit": 130,
-    "diastolic_limit": 80,
 }
 
 
@@ -124,8 +120,6 @@ def test_a_reading_has_several_conditions(circle_api):
             "measured_at": "2026-10-28T16:00:00+00:00",
             "glucose_value": 150,
             "conditions": ["after_meal", "stress", "other"],
-            "glucose_low": 80,
-            "glucose_high": 140,
         },
     )
 
@@ -145,8 +139,6 @@ def test_a_reading_sends_one_shape_only(circle_api):
             "glucose_value": 150,
             "conditions": ["fasting"],
             "measurement_state": "fasting",
-            "glucose_low": 80,
-            "glucose_high": 140,
         },
     )
 
@@ -160,8 +152,6 @@ def test_other_says_what_it_was(circle_api):
         "measured_at": "2026-10-28T16:00:00+00:00",
         "systolic_value": 128,
         "diastolic_value": 82,
-        "systolic_limit": 130,
-        "diastolic_limit": 80,
     }
 
     saved = circle_api(

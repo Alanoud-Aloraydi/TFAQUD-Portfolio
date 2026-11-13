@@ -2,6 +2,7 @@ import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:equatable/equatable.dart';
 
 /// Defines the supported measurement kind values.
@@ -15,45 +16,6 @@ enum MeasurementKind {
 
 /// Defines the supported measurement status values.
 enum MeasurementStatus { upcoming, due, missed, read, readLate, skipped }
-
-/// Defines the target range for a measurement type.
-class MeasurementTarget extends Equatable {
-  const MeasurementTarget({
-    required this.kind,
-    this.glucoseLow,
-    this.glucoseHigh,
-    this.systolicLimit,
-    this.diastolicLimit,
-    this.planId,
-  });
-
-  final MeasurementKind kind;
-  final int? glucoseLow;
-  final int? glucoseHigh;
-  final int? systolicLimit;
-  final int? diastolicLimit;
-  final String? planId;
-
-  factory MeasurementTarget.fromJson(Map<String, dynamic> json) =>
-      MeasurementTarget(
-        kind: _kind(json['kind']),
-        glucoseLow: json['glucose_low'] as int?,
-        glucoseHigh: json['glucose_high'] as int?,
-        systolicLimit: json['systolic_limit'] as int?,
-        diastolicLimit: json['diastolic_limit'] as int?,
-        planId: json['plan_id'] as String?,
-      );
-
-  @override
-  List<Object?> get props => [
-    kind,
-    glucoseLow,
-    glucoseHigh,
-    systolicLimit,
-    diastolicLimit,
-    planId,
-  ];
-}
 
 /// One planned reading time and its glucose «حالة القياس».
 class MeasurementTime extends Equatable {
@@ -88,10 +50,6 @@ class MeasurementVersion extends Equatable {
     required this.time,
     required this.weekdays,
     required this.missedAfterMinutes,
-    this.glucoseLow,
-    this.glucoseHigh,
-    this.systolicLimit,
-    this.diastolicLimit,
     this.times = const <MeasurementTime>[],
   });
 
@@ -103,10 +61,6 @@ class MeasurementVersion extends Equatable {
   final String time;
   final List<int> weekdays;
   final int missedAfterMinutes;
-  final int? glucoseLow;
-  final int? glucoseHigh;
-  final int? systolicLimit;
-  final int? diastolicLimit;
 
   /// The reading times as the server listed them; [readingTimes] is what to
   /// use.
@@ -128,10 +82,6 @@ class MeasurementVersion extends Equatable {
       time: times.first.time,
       weekdays: (json['weekdays'] as List<dynamic>).cast<int>(),
       missedAfterMinutes: json['missed_after_minutes'] as int,
-      glucoseLow: json['glucose_low'] as int?,
-      glucoseHigh: json['glucose_high'] as int?,
-      systolicLimit: json['systolic_limit'] as int?,
-      diastolicLimit: json['diastolic_limit'] as int?,
       times: times,
     );
   }
@@ -145,14 +95,10 @@ class MeasurementVersion extends Equatable {
     weekdays,
     missedAfterMinutes,
     times,
-    glucoseLow,
-    glucoseHigh,
-    systolicLimit,
-    diastolicLimit,
   ];
 }
 
-/// Holds a recurring measurement schedule and target.
+/// Holds a recurring measurement schedule.
 class MeasurementPlan extends Equatable {
   const MeasurementPlan({
     required this.id,
@@ -165,6 +111,8 @@ class MeasurementPlan extends Equatable {
     this.createdByName,
     this.createdByAvatarCode,
     this.lastEditedByName,
+    this.lastEditedByAccountId,
+    this.lastEditedByAvatarCode,
   });
 
   final String id;
@@ -182,6 +130,8 @@ class MeasurementPlan extends Equatable {
   /// Who made the version in effect now; same person as [createdByName]
   /// unless the plan was revised since, or null when it predates this field.
   final String? lastEditedByName;
+  final String? lastEditedByAccountId;
+  final String? lastEditedByAvatarCode;
 
   factory MeasurementPlan.fromJson(Map<String, dynamic> json) {
     final createdBy = json['created_by'] as Map<String, dynamic>?;
@@ -210,6 +160,8 @@ class MeasurementPlan extends Equatable {
       createdByName: createdBy?['name'] as String?,
       createdByAvatarCode: createdBy?['avatar_code'] as String?,
       lastEditedByName: lastEditedBy?['name'] as String?,
+      lastEditedByAccountId: lastEditedBy?['account_id'] as String?,
+      lastEditedByAvatarCode: lastEditedBy?['avatar_code'] as String?,
     );
   }
 
@@ -225,6 +177,8 @@ class MeasurementPlan extends Equatable {
     createdByName,
     createdByAvatarCode,
     lastEditedByName,
+    lastEditedByAccountId,
+    lastEditedByAvatarCode,
   ];
 }
 
@@ -244,10 +198,8 @@ class MeasurementReading extends Equatable {
     this.skipReasonCode,
     this.skipReasonNote,
     this.outsideTarget,
-    this.glucoseLow,
-    this.glucoseHigh,
-    this.systolicLimit,
-    this.diastolicLimit,
+    this.level,
+    this.range,
     this.followedUpAt,
     this.scheduledOn,
     this.scheduledTime,
@@ -273,11 +225,16 @@ class MeasurementReading extends Equatable {
   final String? note;
   final String? skipReasonCode;
   final String? skipReasonNote;
+
+  /// Outside its normal range ([level] anything but normal); null for a
+  /// skip.
   final bool? outsideTarget;
-  final int? glucoseLow;
-  final int? glucoseHigh;
-  final int? systolicLimit;
-  final int? diastolicLimit;
+
+  /// Where it falls in [range]; null for a skip.
+  final MeasurementLevel? level;
+
+  /// The normal range it was judged by; null for a skip.
+  final ReadingRange? range;
   final DateTime? followedUpAt;
   final DateTime? scheduledOn;
 
@@ -292,11 +249,6 @@ class MeasurementReading extends Equatable {
 
   String get valueText =>
       kind == MeasurementKind.bp ? '$valueOne/$valueTwo' : '$valueOne';
-
-  /// The target this reading was judged against, written like [valueText].
-  String get targetText => kind == MeasurementKind.bp
-      ? '$systolicLimit/$diastolicLimit'
-      : '$glucoseLow–$glucoseHigh';
 
   factory MeasurementReading.fromJson(Map<String, dynamic> json) =>
       MeasurementReading(
@@ -315,10 +267,8 @@ class MeasurementReading extends Equatable {
         skipReasonCode: json['skip_reason_code'] as String?,
         skipReasonNote: json['skip_reason_note'] as String?,
         outsideTarget: json['outside_target'] as bool?,
-        glucoseLow: json['glucose_low'] as int?,
-        glucoseHigh: json['glucose_high'] as int?,
-        systolicLimit: json['systolic_limit'] as int?,
-        diastolicLimit: json['diastolic_limit'] as int?,
+        level: MeasurementLevel.fromWire(json['level']),
+        range: ReadingRange.fromJson(json['normal_range']),
         followedUpAt: json['followed_up_at'] == null
             ? null
             : DateTime.parse(json['followed_up_at'] as String),
@@ -352,10 +302,8 @@ class MeasurementReading extends Equatable {
     skipReasonCode,
     skipReasonNote,
     outsideTarget,
-    glucoseLow,
-    glucoseHigh,
-    systolicLimit,
-    diastolicLimit,
+    level,
+    range,
     followedUpAt,
     scheduledOn,
     scheduledTime,
@@ -379,6 +327,7 @@ class MeasurementOccurrence extends Equatable {
     this.measurementState,
     this.record,
     this.snooze,
+    this.nextAt,
   });
 
   final String planId;
@@ -394,6 +343,29 @@ class MeasurementOccurrence extends Equatable {
 
   /// Who in the circle put it off, and until when; null when it is not.
   final SharedSnooze? snooze;
+
+  /// The wall time ([wallClockAt]) of the next task of the same kind in
+  /// the list it came in ([linkNextTasks]); null for the last one.
+  final DateTime? nextAt;
+
+  /// Whether the next task of the same kind is due by [now] (a wall time):
+  /// a reading now would answer that one, so this one is only skipped.
+  bool supersededAt(DateTime now) => nextAt != null && !now.isBefore(nextAt!);
+
+  /// This task, knowing when the next one of its kind is.
+  MeasurementOccurrence withNextAt(DateTime? value) => MeasurementOccurrence(
+    planId: planId,
+    versionId: versionId,
+    kind: kind,
+    scheduledOn: scheduledOn,
+    time: time,
+    deadlineAt: deadlineAt,
+    status: status,
+    measurementState: measurementState,
+    record: record,
+    snooze: snooze,
+    nextAt: value,
+  );
 
   factory MeasurementOccurrence.fromJson(Map<String, dynamic> json) =>
       MeasurementOccurrence(
@@ -425,6 +397,29 @@ class MeasurementOccurrence extends Equatable {
     measurementState,
     record,
     snooze,
+    nextAt,
+  ];
+}
+
+/// [tasks] in the same order, each knowing when the next task of its kind
+/// in the list is ([MeasurementOccurrence.nextAt]).
+List<MeasurementOccurrence> linkNextTasks(List<MeasurementOccurrence> tasks) {
+  DateTime at(MeasurementOccurrence task) =>
+      wallClockAt(task.scheduledOn, task.time);
+  return <MeasurementOccurrence>[
+    for (final MeasurementOccurrence task in tasks)
+      task.withNextAt(
+        tasks
+            .where(
+              (other) => other.kind == task.kind && at(other).isAfter(at(task)),
+            )
+            .map(at)
+            .fold<DateTime?>(
+              null,
+              (DateTime? first, DateTime moment) =>
+                  first == null || moment.isBefore(first) ? moment : first,
+            ),
+      ),
   ];
 }
 
@@ -436,10 +431,6 @@ class MeasurementPlanDraft {
     required this.weekdays,
     required this.startsOn,
     required this.missedAfterMinutes,
-    this.glucoseLow,
-    this.glucoseHigh,
-    this.systolicLimit,
-    this.diastolicLimit,
   });
 
   final MeasurementKind kind;
@@ -449,10 +440,6 @@ class MeasurementPlanDraft {
   final List<int> weekdays;
   final DateTime startsOn;
   final int missedAfterMinutes;
-  final int? glucoseLow;
-  final int? glucoseHigh;
-  final int? systolicLimit;
-  final int? diastolicLimit;
 
   /// One reading time is sent as before (`time_of_day`), so it saves on a
   /// server without several times too; more are sent as `times`, and so is
@@ -466,10 +453,6 @@ class MeasurementPlanDraft {
     'starts_on': apiDate(startsOn),
     'effective_from_on': ?(expectedVersion == null ? null : apiDate(startsOn)),
     'missed_after_minutes': missedAfterMinutes,
-    'glucose_low': glucoseLow,
-    'glucose_high': glucoseHigh,
-    'systolic_limit': systolicLimit,
-    'diastolic_limit': diastolicLimit,
     'expected_version_number': ?expectedVersion,
   };
 }
@@ -487,10 +470,6 @@ class MeasurementReadingDraft {
     this.note,
     this.skipReasonCode,
     this.skipReasonNote,
-    this.glucoseLow,
-    this.glucoseHigh,
-    this.systolicLimit,
-    this.diastolicLimit,
   });
 
   final MeasurementKind kind;
@@ -507,10 +486,6 @@ class MeasurementReadingDraft {
   final String? note;
   final String? skipReasonCode;
   final String? skipReasonNote;
-  final int? glucoseLow;
-  final int? glucoseHigh;
-  final int? systolicLimit;
-  final int? diastolicLimit;
 
   Map<String, dynamic> toJson() => {
     'kind': kind.wire,
@@ -528,10 +503,6 @@ class MeasurementReadingDraft {
     'note': note,
     'skip_reason_code': skipReasonCode,
     'skip_reason_note': skipReasonNote,
-    'glucose_low': glucoseLow,
-    'glucose_high': glucoseHigh,
-    'systolic_limit': systolicLimit,
-    'diastolic_limit': diastolicLimit,
   };
 }
 

@@ -9,6 +9,7 @@ import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/services/weather/patient_weather.dart';
 import 'package:app/features/account/di/account_di.dart';
 import 'package:app/features/appointments/data/appointment_remote_data_source.dart';
 import 'package:app/features/appointments/data/appointment_repository.dart';
@@ -52,6 +53,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<MeasurementRepository>(
     () => MeasurementRepository(getIt<DioClient>()),
   );
+  getIt.registerLazySingleton<WeatherSource>(AppleWeather.new);
   getIt.registerLazySingleton<AppointmentRepository>(
     () =>
         AppointmentRepository(AppointmentRemoteDataSource(getIt<DioClient>())),

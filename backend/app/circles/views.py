@@ -11,6 +11,7 @@ from uuid import UUID
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
+from app.accounts import recorder_response
 from app.authz.roles import CircleRole
 from app.circles import naming
 from app.circles.leader import AREAS, edit_access, leader_id
@@ -192,13 +193,66 @@ def invitation_view(invitation: CareCircleInvitation) -> dict:
     }
 
 
-def contact_view(contact: EmergencyContact) -> dict:
-    """One emergency contact, as the app reads it."""
+def contact_views(
+    session: Session, contacts: list[EmergencyContact]
+) -> list[dict]:
+    """Emergency contacts, as the app reads them.
+
+    A contact whose number is a TFAQUD account's is «متحقق» (`verified`).
+    Its name and avatar (`account`) are shown only when that account is in
+    the patient's circle, whose members see each other already; for anyone
+    else only the mark is shown.
+    """
+    phones = {contact.phone_number for contact in contacts}
+    accounts = {
+        account.phone_number: account
+        for account in (
+            session.scalars(
+                select(Account).where(Account.phone_number.in_(phones))
+            )
+            if phones else ()
+        )
+    }
+    # The circle's members and its patient's own account.
+    circles = {contact.care_circle_id for contact in contacts}
+    known = set()
+    if circles:
+        known.update(session.scalars(
+            select(CareCircleManager.account_id).where(
+                CareCircleManager.care_circle_id.in_(circles)
+            )
+        ))
+        known.update(session.scalars(
+            select(CareCircle.account_id).where(
+                CareCircle.id.in_(circles),
+                CareCircle.account_id.is_not(None),
+            )
+        ))
+    return [
+        _contact_view(contact, accounts.get(contact.phone_number), known)
+        for contact in contacts
+    ]
+
+
+def contact_view(session: Session, contact: EmergencyContact) -> dict:
+    """One emergency contact, as `contact_views` reads it."""
+    return contact_views(session, [contact])[0]
+
+
+def _contact_view(
+    contact: EmergencyContact, account: Account | None, known: set
+) -> dict:
     return {
         "id": str(contact.id),
         "name": contact.name,
         "relation": contact.relation,
         "phone_number": contact.phone_number,
+        "verified": account is not None,
+        "account": (
+            recorder_response(account)
+            if account is not None and account.id in known
+            else None
+        ),
     }
 
 
@@ -233,7 +287,7 @@ def emergency_card_view(
         "first_name": source.first_name,
         "last_name": source.last_name,
         **medical_view(profile),
-        "emergency_contacts": [contact_view(c) for c in contacts],
+        "emergency_contacts": contact_views(session, contacts),
     }
 
 
@@ -272,6 +326,7 @@ def received_request_view(
             "display_name": requester.display_name,
             "first_name": requester.first_name,
             "last_name": requester.last_name,
+            "avatar_code": requester.avatar_code,
         },
         "created_at": _time(request.created_at),
     }
@@ -332,6 +387,7 @@ def received_invitations_view(
             invitation,
             CareCircle.name,
             inviter.display_name,
+            inviter.avatar_code,
             CareCircle.account_id,
             CareCircle.first_name,
             patient_account.display_name.label("patient_display_name"),
@@ -363,7 +419,10 @@ def received_invitations_view(
                 patient_first_name=row.first_name,
             ),
             "invited_by": (
-                {"display_name": row.display_name}
+                {
+                    "display_name": row.display_name,
+                    "avatar_code": row.avatar_code,
+                }
                 if row.display_name
                 else None
             ),
@@ -388,8 +447,8 @@ def previous_notifications_view(
 
     Each item says what it was (`kind`), how it ended (`status`), when
     (`answered_at`), the circle's name as this account reads it, and the
-    other person (`other_name`, or `other_phone_number` for someone who
-    has no name here)."""
+    other person (`other_name` and `other_avatar_code`, or
+    `other_phone_number` for someone who has no name here)."""
     since = now - timedelta(days=PREVIOUS_VISIBLE_DAYS)
     items: list[dict] = []
     other = aliased(Account)
@@ -433,6 +492,9 @@ def previous_notifications_view(
                 "answered_at": _time(row.responded_at),
                 "circle_name": circle_name(circle, patient_account),
                 "other_name": naming.account_name(person_account),
+                "other_avatar_code": (
+                    person_account.avatar_code if person_account else None
+                ),
                 "other_phone_number": (
                     row.invitee_phone_number
                     if kind == "invitation_sent" and person_account is None
@@ -465,6 +527,9 @@ def previous_notifications_view(
                 "answered_at": _time(row.completed_at or row.responded_at),
                 "circle_name": circle_name(circle, patient_account),
                 "other_name": naming.account_name(person_account),
+                "other_avatar_code": (
+                    person_account.avatar_code if person_account else None
+                ),
                 "other_phone_number": (
                     row.patient_phone_number
                     if kind == "request_sent" and person_account is None

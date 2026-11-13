@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -23,11 +24,15 @@ class _InboxCard extends StatelessWidget {
     required this.avatarForeground,
     required this.title,
     required this.body,
+    this.avatarCode,
     this.pill,
     this.actions,
   });
 
   final String avatarText;
+
+  /// The person's avatar; their first letter ([avatarText]) without one.
+  final String? avatarCode;
   final Color avatarBackground;
   final Color avatarForeground;
   final String title;
@@ -49,19 +54,27 @@ class _InboxCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: AppSizes.avatar,
-                height: AppSizes.avatar,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: avatarBackground,
-                  shape: BoxShape.circle,
+              if (avatarCodes.contains(avatarCode))
+                PersonPhoto(
+                  name: avatarText,
+                  photoPath: '',
+                  avatarCode: avatarCode,
+                  size: AppSizes.avatar,
+                )
+              else
+                Container(
+                  width: AppSizes.avatar,
+                  height: AppSizes.avatar,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: avatarBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    avatarText,
+                    style: text.titleMedium?.copyWith(color: avatarForeground),
+                  ),
                 ),
-                child: Text(
-                  avatarText,
-                  style: text.titleMedium?.copyWith(color: avatarForeground),
-                ),
-              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -187,6 +200,7 @@ class InvitationCard extends StatelessWidget {
     final String name = by ?? '';
     return _InboxCard(
       avatarText: _initial(name),
+      avatarCode: invitation.invitedByAvatarCode,
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.invitation_title'),
@@ -222,6 +236,7 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
+      avatarCode: request.requesterAvatarCode,
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.request_card_title'),
@@ -265,6 +280,7 @@ class AcceptedRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
+      avatarCode: request.requesterAvatarCode,
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.complete_card_title'),
@@ -330,6 +346,7 @@ class PreviousNotificationCard extends StatelessWidget {
         '${item.accepted ? 'accepted' : 'declined'}';
     return _InboxCard(
       avatarText: _initial(item.otherName ?? ''),
+      avatarCode: item.otherAvatarCode,
       avatarBackground: item.accepted
           ? AppSemanticColors.selectedSurface
           : AppSemanticColors.borderSubtle,

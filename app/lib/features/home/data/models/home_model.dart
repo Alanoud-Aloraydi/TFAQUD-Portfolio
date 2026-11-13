@@ -29,6 +29,8 @@ class HomeModel {
             isPatient: circle['is_patient'] as bool? ?? true,
             patientName: circle['patient_name'] as String?,
             timeZone: circle['time_zone'] as String? ?? defaultPatientZone,
+            latitude: (circle['latitude'] as num?)?.toDouble(),
+            longitude: (circle['longitude'] as num?)?.toDouble(),
           );
         }).toList(),
       ),

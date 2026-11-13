@@ -90,7 +90,8 @@ abstract class MedicalProfileJson {
   }
 }
 
-/// One contact of the API: `{id, name, relation, phone_number}`.
+/// One contact of the API: `{id, name, relation, phone_number, verified,
+/// account}`.
 class EmergencyContactModel {
   const EmergencyContactModel(this._entity);
 
@@ -103,6 +104,13 @@ class EmergencyContactModel {
         name: json['name'] as String,
         relation: json['relation'] as String,
         phoneNumber: json['phone_number'] as String,
+        verified: json['verified'] as bool? ?? false,
+        accountId:
+            (json['account'] as Map<String, dynamic>?)?['account_id']
+                as String?,
+        avatarCode:
+            (json['account'] as Map<String, dynamic>?)?['avatar_code']
+                as String?,
       ),
     );
   }

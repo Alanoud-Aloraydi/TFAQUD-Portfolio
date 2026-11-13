@@ -13,6 +13,7 @@ class ReceivedCircleRequest extends Equatable {
     required this.circleName,
     required this.proposedAppMode,
     required this.requesterName,
+    this.requesterAvatarCode,
     this.createdAt,
   });
 
@@ -28,6 +29,9 @@ class ReceivedCircleRequest extends Equatable {
 
   /// The display name of the sender, or the full name when there is none.
   final String requesterName;
+
+  /// The sender's avatar, shown beside their name.
+  final String? requesterAvatarCode;
   final DateTime? createdAt;
 
   /// The patient agreed and has not finished the basic data yet.
@@ -40,6 +44,7 @@ class ReceivedCircleRequest extends Equatable {
     circleName,
     proposedAppMode,
     requesterName,
+    requesterAvatarCode,
     createdAt,
   ];
 }

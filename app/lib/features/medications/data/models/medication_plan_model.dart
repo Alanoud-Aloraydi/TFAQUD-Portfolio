@@ -28,6 +28,8 @@ class MedicationPlanModel {
         createdByName: createdBy?['name'] as String?,
         createdByAvatarCode: createdBy?['avatar_code'] as String?,
         lastEditedByName: lastEditedBy?['name'] as String?,
+        lastEditedByAccountId: lastEditedBy?['account_id'] as String?,
+        lastEditedByAvatarCode: lastEditedBy?['avatar_code'] as String?,
         pendingVersion: pendingJson == null ? null : _version(pendingJson),
         lastRecord: lastJson == null
             ? null

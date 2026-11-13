@@ -13,6 +13,8 @@ class CareCircleSummary extends Equatable {
     this.isPatient = true,
     this.patientName,
     this.timeZone = defaultPatientZone,
+    this.latitude,
+    this.longitude,
   }) : canManageMeasurements = canManageMeasurements ?? canManageMedications,
        canManageAppointments = canManageAppointments ?? canManageMedications;
 
@@ -54,6 +56,11 @@ class CareCircleSummary extends Equatable {
   /// The patient's clock.
   PatientClock get clock => PatientClock(timeZone);
 
+  /// Where the patient's city is, for its weather on «اليوم»; null for a
+  /// city typed and not picked from the list.
+  final double? latitude;
+  final double? longitude;
+
   @override
   List<Object?> get props => [
     id,
@@ -63,6 +70,8 @@ class CareCircleSummary extends Equatable {
     canManageAppointments,
     patientAvatarCode,
     isPatient,
+    latitude,
+    longitude,
     patientName,
     timeZone,
   ];

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
+import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
@@ -66,12 +67,46 @@ class MedicalFileCubit extends Cubit<MedicalFileState> {
 
   // ---- the contact form ------------------------------------------------
 
-  /// Opens an empty form, when there is room for one more contact.
+  /// Opens an empty form, when there is room for one more contact, and
+  /// reads the circle's members it can be picked from.
   void startAdd() {
     final MedicalFile? file = state.file;
     if (file == null || !file.canAddContact || state.form != null) return;
     emit(state.copyWith(form: const ContactForm()));
+    unawaited(_loadChoices());
   }
+
+  /// The members with a Saudi number, the patient left out, read once. The
+  /// form works without them: a failure only leaves the list out.
+  Future<void> _loadChoices() async {
+    if (state.choices != null) return;
+    final result = await _circles.getCircleOverview(circleId);
+    if (isClosed) return;
+    final CircleOverview? overview = result.tryGetSuccess();
+    if (overview == null) return;
+    emit(
+      state.copyWith(
+        choices: <ContactChoice>[
+          for (final CircleMember member in overview.members)
+            if (!member.isPatient &&
+                member.phoneNumber != null &&
+                SaudiMobile.isValid(SaudiMobile.national(member.phoneNumber!)))
+              ContactChoice(
+                name: member.name,
+                phone: SaudiMobile.national(member.phoneNumber!),
+                accountId: member.accountId,
+                avatarCode: member.avatarCode,
+              ),
+        ],
+      ),
+    );
+  }
+
+  /// Fills the open form with a member's name and number.
+  void memberChosen(ContactChoice choice) => _edit(
+    (ContactForm form) =>
+        form.copyWith(name: choice.name, phone: choice.phone, clearError: true),
+  );
 
   /// Opens the form with the saved values of a contact.
   void startEdit(String contactId) {

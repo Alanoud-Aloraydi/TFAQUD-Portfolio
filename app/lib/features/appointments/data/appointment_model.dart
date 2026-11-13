@@ -48,7 +48,19 @@ class AppointmentModel {
         (json['created_by'] as Map<String, dynamic>?)?['name'] as String?,
     updatedByName:
         (json['updated_by'] as Map<String, dynamic>?)?['name'] as String?,
+    createdBy: _person(json['created_by']),
+    updatedBy: _person(json['updated_by']),
   );
+
+  /// Who did something, as `recorded_by` shapes it; null for nobody.
+  static AppointmentCompanion? _person(Object? value) =>
+      value is Map<String, dynamic> && value['account_id'] is String
+      ? AppointmentCompanion(
+          id: value['account_id'] as String,
+          name: value['name'] as String? ?? '',
+          avatarCode: value['avatar_code'] as String?,
+        )
+      : null;
 
   static Map<String, dynamic> toJson(
     AppointmentDraft draft, {

@@ -4,6 +4,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:dio/dio.dart' show DioException, Response;
 
 /// The server owns plans, readings, and computed measurement tasks.
@@ -29,16 +30,16 @@ class MeasurementRepository {
   /// reading does not change the calendar.
   Stream<String> get recorded => _recorded.stream;
 
-  /// The targets of [circleId]'s patient, one per kind at most.
-
-  Future<List<MeasurementTarget>> targets(String circleId) async {
+  /// The normal ranges [circleId]'s patient's readings are judged by, and
+  /// the conditions of the medical file that chose them.
+  Future<NormalRanges> ranges(String circleId) async {
     final response = await _client.get(
-      ApiEndpoints.measurementTargets(circleId),
+      ApiEndpoints.measurementRanges(circleId),
     );
-    final values =
-        (response.data as Map<String, dynamic>)['measurement_targets']
-            as List<dynamic>;
-    return knownMeasurementItems(values, MeasurementTarget.fromJson);
+    return NormalRanges.fromJson(
+      (response.data as Map<String, dynamic>)['measurement_ranges']
+          as Map<String, dynamic>,
+    );
   }
 
   /// Every plan of [circleId], stopped ones too.
@@ -104,7 +105,9 @@ class MeasurementRepository {
     final values =
         (response.data as Map<String, dynamic>)['measurement_occurrences']
             as List<dynamic>;
-    return knownMeasurementItems(values, MeasurementOccurrence.fromJson);
+    return linkNextTasks(
+      knownMeasurementItems(values, MeasurementOccurrence.fromJson),
+    );
   }
 
   /// The readings of the patient's days [from] to [to], both included (at
@@ -175,7 +178,7 @@ class MeasurementRepository {
     );
   }
 
-  /// Marks [readingId], a reading outside its target, as followed up.
+  /// Marks [readingId], a reading outside its normal range, as followed up.
   Future<MeasurementReading> followUp(String circleId, String readingId) async {
     final response = await _client.post(
       ApiEndpoints.measurementFollowUp(circleId, readingId),
