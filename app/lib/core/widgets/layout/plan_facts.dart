@@ -1,5 +1,6 @@
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -31,7 +32,7 @@ class PlanFactGroup extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               color: context.tokens.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTextTheme.semibold,
             ),
           ),
         ),
@@ -182,7 +183,7 @@ class _FactRow extends StatelessWidget {
                     Text(
                       shown,
                       style: text.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTextTheme.bold,
                       ),
                     ),
                   if (below case final Widget under) ...<Widget>[

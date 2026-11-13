@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -53,7 +54,7 @@ class NormalRangeCard extends StatelessWidget {
                     child: Text(
                       normalBandText(context, kind, range.normal),
                       style: text.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTextTheme.bold,
                       ),
                     ),
                   ),
@@ -144,8 +145,8 @@ class _Scale extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: text.labelSmall?.copyWith(
                         fontWeight: band.level == level
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                            ? AppTextTheme.bold
+                            : AppTextTheme.medium,
                       ),
                     ),
                     const SizedBox(height: 2),

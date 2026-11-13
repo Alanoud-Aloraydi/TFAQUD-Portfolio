@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/services/weather/patient_weather.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -98,7 +99,7 @@ class _TodayWeatherState extends State<TodayWeather> {
                       args: <String>['${weather.degrees}'],
                     ),
                     style: text.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTextTheme.bold,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
