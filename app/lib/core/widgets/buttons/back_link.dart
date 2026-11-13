@@ -2,49 +2,24 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/navigation/swipe_back.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The "رجوع" link at the top of a step page.
 /// The back chevron (SF chevron.backward, AppIcons.back) turns to
-/// point right on an Arabic (right-to-left) screen, as iOS draws it.
-///
-/// Swiping the page to the right, from anywhere on it, does the same
-/// ([SwipeBack]).
-class BackLink extends StatefulWidget {
+/// point right on an Arabic (right-to-left) screen, as iOS draws it. A
+/// swipe from that edge of the screen goes back too (an iOS page).
+class BackLink extends StatelessWidget {
   const BackLink({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
-
-  @override
-  State<BackLink> createState() => _BackLinkState();
-}
-
-class _BackLinkState extends State<BackLink> {
-  SwipeBackState? _swipe;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _swipe?.unregister(this);
-    _swipe = SwipeBack.maybeOf(context)
-      // Always the link's latest action.
-      ?..register(this, () => widget.onPressed());
-  }
-
-  @override
-  void dispose() {
-    _swipe?.unregister(this);
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: TextButton.icon(
-        onPressed: widget.onPressed,
+        onPressed: onPressed,
         icon: const Icon(AppIcons.back, size: AppSizes.iconSmall),
         label: Text(context.tr('common.back')),
         // No padding on the start side: the chevron sits on the page margin,

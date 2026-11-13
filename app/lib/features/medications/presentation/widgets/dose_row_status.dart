@@ -9,12 +9,14 @@ import 'package:flutter/widgets.dart';
 
 /// What a dose row says about the dose: the badge text and colour, and
 /// whether the row itself turns yellow (a dose nobody recorded). A dose
-/// taken after its missed boundary says how long after its time.
+/// taken after its missed boundary says how long after its time, on a line
+/// of its own ([lateBy]).
 class DoseRowStatus {
   const DoseRowStatus({
     required this.label,
     required this.tone,
     required this.unrecorded,
+    this.lateBy,
   });
 
   factory DoseRowStatus.of(
@@ -30,11 +32,15 @@ class DoseRowStatus {
         ? context.tr('today_dashboard.status.${timing!.name}')
         : record.outcome == DoseOutcome.skipped
         ? context.tr('today_dashboard.status.skipped')
-        : !occurrence.isTakenLate(clock) || takenAt == null
-        ? context.tr('today_dashboard.status.taken')
-        // «تم أخذها بعد 5 ساعات من الموعد».
-        : context.tr(
-            'today_dashboard.status.taken_late_by',
+        : context.tr('today_dashboard.status.taken');
+    // «بعد 5 ساعات من الموعد», a line under the name: the badge stays the
+    // short «تم أخذها» of every taken dose.
+    final String? lateBy =
+        record?.outcome == DoseOutcome.taken &&
+            occurrence.isTakenLate(clock) &&
+            takenAt != null
+        ? context.tr(
+            'today_dashboard.status.late_line',
             args: <String>[
               lateByText(
                 context,
@@ -45,12 +51,14 @@ class DoseRowStatus {
                 ),
               ),
             ],
-          );
+          )
+        : null;
     final bool waiting =
         timing == DoseTimingState.due || timing == DoseTimingState.late;
     final bool unrecorded = timing == DoseTimingState.missed;
     return DoseRowStatus(
       label: label,
+      lateBy: lateBy,
       tone: switch (record?.outcome) {
         DoseOutcome.taken => StatusTone.success,
         DoseOutcome.skipped => StatusTone.muted,
@@ -63,4 +71,7 @@ class DoseRowStatus {
   final String label;
   final StatusTone tone;
   final bool unrecorded;
+
+  /// How long after its time a late dose was taken; null otherwise.
+  final String? lateBy;
 }

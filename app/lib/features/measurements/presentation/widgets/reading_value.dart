@@ -4,7 +4,8 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// A reading's number and its unit, stacked. The number is set left to right
+/// A reading's number and its unit, stacked; its level badge says whether
+/// it is in range, so the number keeps the text colour. The number is set left to right
 /// on its own so «120/80» never reverses on an Arabic page; the unit sits
 /// under it so the two never mix directions in one line.
 class ReadingValue extends StatelessWidget {
@@ -15,7 +16,6 @@ class ReadingValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final bool outside = reading.outsideTarget == true;
     final bool bp = reading.kind == MeasurementKind.bp;
     return Semantics(
       label:
@@ -30,9 +30,7 @@ class ReadingValue extends StatelessWidget {
             reading.valueText,
             textDirection: TextDirection.ltr,
             style: text.headlineSmall?.copyWith(
-              color: outside
-                  ? AppSemanticColors.statusWarning
-                  : AppSemanticColors.textPrimary,
+              color: AppSemanticColors.textPrimary,
             ),
           ),
           Text(

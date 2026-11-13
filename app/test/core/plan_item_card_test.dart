@@ -46,10 +46,14 @@ void main() {
 
       await tester.tap(find.text('تفاصيل الدواء'));
       await tester.pump();
+      // Sliding down, part of the way.
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('سارة'), findsOneWidget);
+      await tester.pumpAndSettle();
       expect(find.text('سارة'), findsOneWidget);
 
       await tester.tap(find.text('تفاصيل الدواء'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('سارة'), findsNothing);
     });
 

@@ -8,7 +8,6 @@ import 'package:app/features/medications/presentation/cubit/medications_cubit.da
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
 import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -56,10 +55,7 @@ class MedicationPlansSection extends StatelessWidget {
     final current = state.plans
         .where((plan) => !plan.isPreviousOn(today))
         .toList();
-    final activeCount = current
-        .where((plan) => !plan.isScheduledOn(today))
-        .length;
-    final laterCount = current.length - activeCount;
+    // No count line: the tab shows how many, and each card its status.
     return MedicationPlanList(
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,12 +64,6 @@ class MedicationPlansSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
         ],
       ),
-      title: current.isEmpty
-          ? null
-          : context.tr(
-              'medications.plan_summary',
-              args: [activeCount.toString(), laterCount.toString()],
-            ),
       emptyText: CareVoice.tr(context, circleId, 'medications.no_current'),
       plans: current,
       circleId: circleId,

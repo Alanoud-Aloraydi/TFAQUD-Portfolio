@@ -6,10 +6,19 @@ import 'package:flutter/material.dart';
 /// and an optional line under it, such as today's date. It scrolls with the
 /// content.
 class LargeTitle extends StatelessWidget {
-  const LargeTitle({super.key, required this.title, this.subtitle});
+  const LargeTitle({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.subtitleTrailing,
+  });
 
   final String title;
   final String? subtitle;
+
+  /// Beside [subtitle] on its line, such as the weather by the date; it
+  /// wraps under it when the line is full.
+  final Widget? subtitleTrailing;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +29,17 @@ class LargeTitle extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Semantics(header: true, child: Text(title, style: text.displaySmall)),
-          if (subtitle != null) Text(subtitle!, style: text.bodySmall),
+          if (subtitle != null && subtitleTrailing == null)
+            Text(subtitle!, style: text.bodySmall),
+          if (subtitleTrailing case final Widget trailing)
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.sm,
+              children: <Widget>[
+                if (subtitle != null) Text(subtitle!, style: text.bodySmall),
+                trailing,
+              ],
+            ),
         ],
       ),
     );

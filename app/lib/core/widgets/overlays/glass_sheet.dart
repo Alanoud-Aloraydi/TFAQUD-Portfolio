@@ -15,7 +15,8 @@ import 'package:flutter/material.dart';
 /// opaque surface ([GlassSurface] decides).
 ///
 /// [title] is centered under the handle (`headline`); [message] is an
-/// optional line under it. The [builder] gives the rest of the sheet.
+/// optional line under it. The [builder] gives the rest of the sheet, which
+/// scrolls under them. Dragging the handle or the title down closes it.
 Future<T?> showGlassSheet<T>(
   BuildContext context, {
   required String title,
@@ -92,52 +93,69 @@ class _GlassSheet extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.l),
         child: Material(
           type: MaterialType.transparency,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.lg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Center(
-                  child: Container(
-                    width: _handleWidth,
-                    height: _handleHeight,
-                    decoration: ShapeDecoration(
-                      color: AppSemanticColors.textPrimary.withValues(
-                        alpha: 0.25,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // The handle and the title stay put above what scrolls, so a
+              // drag that starts on them pulls the whole sheet down and
+              // closes it, as a sheet's grabber does on iOS.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Center(
+                      child: Container(
+                        width: _handleWidth,
+                        height: _handleHeight,
+                        decoration: ShapeDecoration(
+                          color: AppSemanticColors.textPrimary.withValues(
+                            alpha: 0.25,
+                          ),
+                          shape: const StadiumBorder(),
+                        ),
                       ),
-                      shape: const StadiumBorder(),
                     ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: text.titleLarge,
-                  ),
-                ),
-                if (message != null) ...<Widget>[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    message!,
-                    textAlign: TextAlign.center,
-                    style: text.bodySmall?.copyWith(
-                      color: AppSemanticColors.textSupporting,
+                    const SizedBox(height: AppSpacing.md),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: text.titleLarge,
+                      ),
                     ),
+                    if (message != null) ...<Widget>[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        message!,
+                        textAlign: TextAlign.center,
+                        style: text.bodySmall?.copyWith(
+                          color: AppSemanticColors.textSupporting,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
                   ),
-                ],
-                const SizedBox(height: AppSpacing.lg),
-                child,
-              ],
-            ),
+                  child: child,
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -10,10 +10,10 @@ import 'package:flutter/cupertino.dart';
 
 /// One glucose or blood pressure reading, the same everywhere it is listed,
 /// in the one card of «السجل» ([RecordItemCard]): the kind and when, the
-/// value with its unit at the end, where it stands against the target,
-/// then the details. A reading outside its target is tinted yellow. At
-/// large text sizes the value drops under the title instead of squeezing
-/// it.
+/// value with its unit at the end, its level in the normal range (words,
+/// an icon and a colour: the card itself stays white), then the details.
+/// At large text sizes the value drops under the title instead of
+/// squeezing it.
 class MeasurementReadingTile extends StatelessWidget {
   const MeasurementReadingTile({
     super.key,
@@ -29,7 +29,6 @@ class MeasurementReadingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RecordItemCard(
-      attention: reading.outsideTarget == true,
       leading: Icon(
         reading.kind == MeasurementKind.glucose
             ? CupertinoIcons.drop

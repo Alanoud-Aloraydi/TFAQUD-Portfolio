@@ -9,6 +9,7 @@ import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
+import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
@@ -17,6 +18,7 @@ import 'package:app/features/measurements/presentation/cubit/measurement_reading
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
+import 'package:app/features/measurements/presentation/widgets/range_condition_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,9 +39,10 @@ Future<bool> showMeasurementReadingSheet(
         providers: [
           BlocProvider.value(value: context.read<MeasurementReadingsCubit>()),
           BlocProvider(
-            create: (_) =>
-                MeasurementRangesCubit(GetIt.I<MeasurementRepository>())
-                  ..load(context.read<MeasurementReadingsCubit>().circleId!),
+            create: (_) => MeasurementRangesCubit(
+              GetIt.I<MeasurementRepository>(),
+              GetIt.I<CirclesUseCase>(),
+            )..load(context.read<MeasurementReadingsCubit>().circleId!),
           ),
         ],
         child: MeasurementReadingSheet(occurrence: occurrence),
@@ -243,11 +246,20 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
               ),
               textAlign: TextAlign.center,
             ),
-            // Read-only and never in the way: saving does not wait for
-            // it, the server judges the reading either way.
+            // Never in the way: saving does not wait for it, the server
+            // judges the reading either way.
             if (range != null) ...[
               const SizedBox(height: AppSpacing.lg),
-              NormalRangeCard(range: range, level: _levelIn(range)),
+              NormalRangeCard(
+                range: range,
+                level: _levelIn(range),
+                footer: context.tr('measurements.range_from_file'),
+                // The condition can change here, as on the plan's form.
+                action: RangeConditionRow(
+                  circleId: context.read<MeasurementReadingsCubit>().circleId!,
+                  range: range,
+                ),
+              ),
             ],
             const SizedBox(height: AppSpacing.lg),
             InsetGroup(

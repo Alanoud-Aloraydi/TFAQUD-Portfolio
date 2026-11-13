@@ -55,7 +55,11 @@ class MeasurementTaskRow extends StatelessWidget {
         background: CareVisuals.measurementTile,
       ),
       title: measurementKindTitle(context, task.kind),
-      details: measurementTaskDetails(context, task, circleId),
+      details: <Widget>[
+        if (status.lateBy case final String lateBy)
+          Text(lateBy, style: Theme.of(context).textTheme.bodySmall),
+        ...measurementTaskDetails(context, task, circleId),
+      ],
       status: StatusBadge(text: status.label, tone: status.badge),
       actions: canRecord
           ? MeasurementTaskActions(

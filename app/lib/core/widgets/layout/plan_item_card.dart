@@ -2,6 +2,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/expand_reveal.dart';
 import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:app/core/widgets/layout/plan_item_header.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ import 'package:flutter/material.dart';
 /// The card of one plan in «الخطة» (a medicine, a measurement, an
 /// appointment), built the same for each: [leading], [title], [subtitle],
 /// the pencil ([edit]) and [status] on top; [body] boxes under them; and a
-/// last line that opens [details].
+/// last line that opens [details], which slide down from it.
 class PlanItemCard extends StatefulWidget {
   const PlanItemCard({
     super.key,
@@ -86,7 +87,15 @@ class _PlanItemCardState extends State<PlanItemCard> {
                 expanded: _expanded,
                 onTap: () => setState(() => _expanded = !_expanded),
               ),
-            if (_expanded) ...<Widget>[const Divider(), ...widget.details],
+            // The details slide down from the line that opens them.
+            if (widget.details.isNotEmpty)
+              ExpandReveal(
+                open: _expanded,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[const Divider(), ...widget.details],
+                ),
+              ),
           ],
         ),
       ),

@@ -63,6 +63,8 @@ class TodayDoseRow extends StatelessWidget {
           ? dose
           : '$dose · ${occurrence.instructions}',
       details: <Widget>[
+        if (status.lateBy case final String lateBy)
+          Text(lateBy, style: Theme.of(context).textTheme.bodySmall),
         if (record?.recordedByName case final String name)
           RecorderLine(
             name: name,

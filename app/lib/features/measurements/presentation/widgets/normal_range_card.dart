@@ -11,8 +11,9 @@ import 'package:flutter/material.dart';
 
 /// «المعدل الطبيعي»: the normal values of one range set large, which range
 /// it is (meal state and the patient's condition) under them, and the four
-/// levels as a scale, the one of [level] marked. Read-only: the ranges are
-/// fixed, and the medical file chooses the condition.
+/// levels as a scale, the one of [level] marked. The ranges are fixed; the
+/// medical file chooses the condition, which [action] can lead to or
+/// change.
 class NormalRangeCard extends StatelessWidget {
   const NormalRangeCard({
     super.key,

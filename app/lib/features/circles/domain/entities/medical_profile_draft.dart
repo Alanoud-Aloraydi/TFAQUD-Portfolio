@@ -22,6 +22,29 @@ class ConditionsDraft extends Equatable {
   /// The typed text of the "other" condition, when "other" is in [codes].
   final String? other;
 
+  /// [current] with [code] added ([has]) or taken out, every other answer
+  /// kept. Taking out the last one answers "none"; an unanswered list
+  /// (null) stays unanswered when [code] is taken out, since saying the
+  /// patient lacks one condition says nothing of the rest.
+  static ConditionsDraft? withCode(
+    ConditionsDraft? current,
+    String code, {
+    required bool has,
+  }) {
+    final List<String> codes = <String>[
+      for (final String one in current?.codes ?? const <String>[])
+        if (one != code) one,
+      if (has) code,
+    ];
+    if (codes.isNotEmpty) {
+      return ConditionsDraft.listed(
+        codes: codes,
+        other: codes.contains('other') ? current?.other : null,
+      );
+    }
+    return current == null ? null : const ConditionsDraft.none();
+  }
+
   @override
   List<Object?> get props => [answer, codes, other];
 }

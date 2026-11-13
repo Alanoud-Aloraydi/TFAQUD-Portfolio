@@ -6,7 +6,7 @@ part of '../app_router.dart';
 List<RouteBase> _careRoutes() => <RouteBase>[
   GoRoute(
     path: Routes.medicationNewPath,
-    pageBuilder: _iosPage((context, state) {
+    pageBuilder: _iosModalPage((context, state) {
       final String circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (context) =>
@@ -17,7 +17,7 @@ List<RouteBase> _careRoutes() => <RouteBase>[
   ),
   GoRoute(
     path: Routes.measurementNewPath,
-    pageBuilder: _iosPage((context, state) {
+    pageBuilder: _iosModalPage((context, state) {
       final circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (_) =>
@@ -29,7 +29,7 @@ List<RouteBase> _careRoutes() => <RouteBase>[
   ),
   GoRoute(
     path: Routes.measurementEditPath,
-    pageBuilder: _iosPage((context, state) {
+    pageBuilder: _iosModalPage((context, state) {
       final circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (_) =>
@@ -44,13 +44,13 @@ List<RouteBase> _careRoutes() => <RouteBase>[
   ),
   GoRoute(
     path: Routes.appointmentNewPath,
-    pageBuilder: _iosPage(
+    pageBuilder: _iosModalPage(
       (context, state) => _appointmentForm(state.pathParameters['circleId']!),
     ),
   ),
   GoRoute(
     path: Routes.appointmentEditPath,
-    pageBuilder: _iosPage(
+    pageBuilder: _iosModalPage(
       (context, state) => _appointmentForm(
         state.pathParameters['circleId']!,
         appointmentId: state.pathParameters['appointmentId'],

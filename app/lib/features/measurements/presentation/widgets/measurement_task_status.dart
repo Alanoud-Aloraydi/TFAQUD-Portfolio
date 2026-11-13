@@ -7,14 +7,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// What a measurement row says about its task: the badge text and colour,
-/// and the row tone. A reading taken after its time says how long after
-/// («تسجّلت بعد 5 ساعات من الموعد»). Red is for an older task that is truly missed;
-/// a recent one is still yellow because it can be recorded.
+/// and the row tone. A reading taken after its time says how long after on
+/// a line of its own («بعد 5 ساعات من الموعد»). Red is for an older task
+/// that is truly missed; a recent one is still yellow because it can be
+/// recorded.
 class MeasurementTaskStatus {
   const MeasurementTaskStatus({
     required this.label,
     required this.badge,
     required this.row,
+    this.lateBy,
   });
 
   factory MeasurementTaskStatus.of(
@@ -26,7 +28,9 @@ class MeasurementTaskStatus {
     return MeasurementTaskStatus(
       label: switch (task.status) {
         MeasurementStatus.read => context.tr('today_dashboard.status.recorded'),
-        MeasurementStatus.readLate => _lateLabel(context, task),
+        MeasurementStatus.readLate => context.tr(
+          'today_dashboard.status.recorded',
+        ),
         MeasurementStatus.skipped => context.tr(
           'today_dashboard.status.skipped',
         ),
@@ -47,6 +51,9 @@ class MeasurementTaskStatus {
         MeasurementStatus.skipped => StatusTone.muted,
         MeasurementStatus.upcoming => StatusTone.info,
       },
+      lateBy: task.status == MeasurementStatus.readLate
+          ? _lateLine(context, task)
+          : null,
       row: truly
           ? TodayRowTone.danger
           : task.status == MeasurementStatus.missed
@@ -59,9 +66,13 @@ class MeasurementTaskStatus {
   final StatusTone badge;
   final TodayRowTone row;
 
-  /// «تسجّلت بعد 5 ساعات من الموعد»; without the reading's time, the
-  /// plain «تسجّلت بعد الموعد».
-  static String _lateLabel(BuildContext context, MeasurementOccurrence task) {
+  /// How long after its time a late reading was taken, a line under the
+  /// title: the badge stays the short «تم تسجيلها».
+  final String? lateBy;
+
+  /// «بعد 5 ساعات من الموعد»; without the reading's time, «تسجّلت بعد
+  /// الموعد».
+  static String _lateLine(BuildContext context, MeasurementOccurrence task) {
     final MeasurementReading? record = task.record;
     if (record == null) {
       return context.tr('today_dashboard.status.recorded_late');
@@ -72,7 +83,7 @@ class MeasurementTaskStatus {
         .toUtc()
         .difference(scheduled.toUtc());
     return context.tr(
-      'today_dashboard.status.recorded_late_by',
+      'today_dashboard.status.late_line',
       args: <String>[lateByText(context, late)],
     );
   }
