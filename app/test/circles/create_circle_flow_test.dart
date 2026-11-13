@@ -480,16 +480,12 @@ void main() {
         expect(find.text('circles.patient_title'.tr()), findsOneWidget);
         expect(find.text('circles.patient_first_name'.tr()), findsOneWidget);
         expect(find.text('circles.patient_last_name'.tr()), findsOneWidget);
-        // What the circle means, what is required and why, and who sees it.
-        for (final String key in <String>[
-          'circles.patient_subtitle',
-          'circles.patient_required_note',
-          'circles.birth_date_why',
-          'circles.patient_city_why',
-          'circles.patient_privacy_note',
-        ]) {
-          expect(find.text(key.tr(), skipOffstage: false), findsOneWidget);
-        }
+        // One plain line under the title, and no other explanation.
+        expect(
+          find.text('circles.patient_subtitle'.tr(), skipOffstage: false),
+          findsOneWidget,
+        );
+        expect(find.text('circles.circle_name'.tr()), findsNothing);
         // The name of the signed-in account is not shown: the patient's names
         // are typed.
         expect(find.text('Reem Alahmadi'), findsNothing);
@@ -506,23 +502,6 @@ void main() {
         expect(find.text('common.field_required'.tr()), findsNWidgets(4));
         expect(find.text('circles.patient_title'.tr()), findsOneWidget);
       });
-
-      testWidgets(
-        'shows how the circle will be named while the name is typed',
-        (WidgetTester tester) async {
-          await openPatientBasics(tester);
-          // Nobody names it: «دائرة» and the patient's first name.
-          expect(find.text('circles.shared_name_hint'.tr()), findsOneWidget);
-
-          await tester.enterText(find.byType(TextField).first, 'نورة');
-          await tester.pump();
-          final String name = 'circles.shared_name'.tr(args: <String>['نورة']);
-          expect(
-            find.text('circles.name_preview'.tr(args: <String>[name])),
-            findsOneWidget,
-          );
-        },
-      );
 
       testWidgets('the city sheet asks for the city of the patient', (
         WidgetTester tester,
