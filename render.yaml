@@ -1,6 +1,6 @@
 # Render Blueprint: the TFAQUD API and its PostgreSQL database, as the team's
-# shared test server (APP_ENV=staging), with real sign-in codes by SMS
-# (Authentica).
+# shared test server (APP_ENV=staging). For now the sign-in codes are written
+# in Render's log, not sent by SMS (Authentica is ready for later).
 #
 # In Render: New, then Blueprint, then pick this repository and a branch.
 # Render reads this file from that branch, asks for the values marked
@@ -53,15 +53,18 @@ services:
         fromDatabase:
           name: tfaqud-db
           property: connectionString
-      # Real sign-in codes by SMS through Authentica. The key is typed in
-      # Render (Environment), never in git. For codes in Render's log instead,
-      # set SMS_BACKEND to fake and FAKE_SMS_LOG_CODES to "true".
+      # For now no SMS is sent: each sign-in code is written in Render's log
+      # ("FAKE SMS ... Your code is ..."), which only the team can read. For
+      # real SMS through Authentica, set SMS_BACKEND to authentica and
+      # FAKE_SMS_LOG_CODES to "false" here, after AUTHENTICA_API_KEY is typed
+      # in Render (Environment), never in git: the API does not start with
+      # authentica and no key.
       - key: SMS_BACKEND
-        value: authentica
+        value: fake
       - key: AUTHENTICA_API_KEY
         sync: false
       - key: FAKE_SMS_LOG_CODES
-        value: "false"
+        value: "true"
       # The demo accounts (0500000001 detailed, 0500000004 simplified):
       # their numbers are made up, so they get no SMS and sign in with
       # DEMO_SIGN_IN_CODE, six digits typed in Render (Environment), never

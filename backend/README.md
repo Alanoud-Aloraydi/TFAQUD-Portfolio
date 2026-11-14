@@ -308,7 +308,8 @@ How the server stays up when something it depends on does not.
 
 `render.yaml` (at the top of the repository) describes the team's shared test
 server on [Render](https://render.com): the API and its PostgreSQL database.
-It runs with `APP_ENV=staging` and real SMS codes (Authentica). The
+It runs with `APP_ENV=staging`, and for now its sign-in codes are written in
+the API's **Logs** instead of sent by SMS. The
 image is the same `Dockerfile`; on Render its start command runs
 `flask --app wsgi db upgrade`, then `demo-data --if-missing` (with
 `DEMO_DATA=true`), then the production server (gunicorn). Photos and voice
@@ -331,9 +332,12 @@ The first time:
 5. Build the app for it: `[testflight api=https://<address>]` in a commit
    message.
 
-Signing in: the code comes by SMS through Authentica (`SMS_BACKEND` is
-`authentica`); add `AUTHENTICA_API_KEY` in **Environment** before the first
-deploy that uses it, or the server cannot start.
+Signing in: for now `SMS_BACKEND` is `fake` and `FAKE_SMS_LOG_CODES` is
+`"true"`, so each code is in the API's **Logs** (search for `FAKE SMS`). For
+real SMS through Authentica, add `AUTHENTICA_API_KEY` in **Environment** first,
+then set `SMS_BACKEND` to `authentica` and `FAKE_SMS_LOG_CODES` to `"false"` in
+`render.yaml` and sync the Blueprint: with `authentica` and no key, the server
+cannot start.
 
 The demo on Render: add `DEMO_SIGN_IN_CODE` (six digits) in **Environment**.
 The demo numbers (`0500000001` detailed, `0500000004` simplified) then get no
