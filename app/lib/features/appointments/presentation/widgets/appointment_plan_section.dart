@@ -7,6 +7,7 @@ import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class AppointmentPlanSection extends StatelessWidget {
             onRetry: () => context.read<AppointmentsCubit>().load(circleId),
           )
         else if (values.isEmpty)
-          EmptyStateNote(
+          EmptyStateNote.section(
             context.tr('appointments.no_upcoming'),
             actionLabel: canManage ? context.tr('add.appointment') : null,
             onAction: canManage

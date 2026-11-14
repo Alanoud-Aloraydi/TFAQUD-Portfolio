@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,21 +12,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// saving one.
 ///
 /// The «اليوم» tab holds one for today; the record page holds one per
-/// month shown. Each reads again whenever the repository says a reading of
+/// month shown. Each reads again whenever the use case says a reading of
 /// its circle was saved, wherever it was saved.
 class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
   /// [photoChanges] reloads the readings when a photo or avatar changes
   /// anywhere (who recorded a reading shows theirs).
-  MeasurementReadingsCubit(this._repository, [Listenable? photoChanges])
+  MeasurementReadingsCubit(this._measurements, [Listenable? photoChanges])
     : _photoChanges = photoChanges,
       super(const MeasurementReadingsState()) {
     _photoChanges?.addListener(_onPhotoChanged);
-    _recorded = _repository.recorded.listen((circleId) {
+    _recorded = _measurements.recorded.listen((circleId) {
       if (circleId == _circleId) unawaited(reload());
     });
   }
 
-  final MeasurementRepository _repository;
+  final MeasurementsUseCase _measurements;
   final Listenable? _photoChanges;
   late final StreamSubscription<String> _recorded;
   String? _circleId;
@@ -69,7 +69,7 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
       );
     }
     try {
-      final readings = await _repository.readings(circleId, from, to);
+      final readings = await _measurements.readings(circleId, from, to);
       if (isClosed || revision != _revision) return;
       emit(
         MeasurementReadingsState(
@@ -106,7 +106,7 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
   ///
   /// A time read still to come on the patient's [clock] is refused here,
   /// as the server would. The reading shows at once when its day is in the
-  /// days read; the list then reads again through the repository.
+  /// days read; the list then reads again through the use case.
   Future<String?> record(
     MeasurementReadingDraft draft, {
     required PatientClock clock,
@@ -120,7 +120,7 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
     }
     _writing = true;
     try {
-      final reading = await _repository.record(
+      final reading = await _measurements.record(
         circleId,
         draft,
         occurrence: occurrence,
@@ -158,7 +158,7 @@ class MeasurementReadingsCubit extends Cubit<MeasurementReadingsState> {
     if (circleId == null || _writing) return null;
     _writing = true;
     try {
-      await _repository.followUp(circleId, reading.id);
+      await _measurements.followUp(circleId, reading.id);
       if (!isClosed) unawaited(reload());
       return null;
     } catch (error) {

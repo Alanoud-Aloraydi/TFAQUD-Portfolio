@@ -125,7 +125,9 @@ def test_plan_validation_and_authorization(database_app, database, account):
     day = datetime.now(ZoneInfo("Asia/Riyadh")).date()
     body = {
         "kind": "blood_pressure",
-        "times": [{"time_of_day": "08:00", "measurement_state": "fasting"}],
+        "times": [
+            {"time_of_day": "08:00", "measurement_state": "fasting"}
+        ],
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
     }
@@ -150,7 +152,9 @@ def test_future_plan_can_be_edited_before_its_first_task(
     base = f"/api/v1/circles/{circle.id}/measurement-plans"
     body = {
         "kind": "blood_pressure",
-        "times": [{"time_of_day": "08:00"}],
+        "times": [
+            {"time_of_day": "08:00", "measurement_state": "morning"}
+        ],
         "weekdays": [start.isoweekday()],
         "starts_on": start.isoformat(),
     }

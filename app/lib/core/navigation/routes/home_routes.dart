@@ -40,27 +40,26 @@ StatefulShellRoute _homeShell() => StatefulShellRoute(
         ),
         BlocProvider(
           create: (context) =>
-              MeasurementPlansCubit(GetIt.I<MeasurementRepository>()),
+              MeasurementPlansCubit(GetIt.I<MeasurementsUseCase>()),
         ),
         BlocProvider(
           create: (context) => MeasurementTasksCubit(
-            GetIt.I<MeasurementRepository>(),
+            GetIt.I<MeasurementsUseCase>(),
             GetIt.I<PrivatePhotoRepository>().changes,
           ),
         ),
         BlocProvider(
           create: (context) => MeasurementReadingsCubit(
-            GetIt.I<MeasurementRepository>(),
+            GetIt.I<MeasurementsUseCase>(),
             GetIt.I<PrivatePhotoRepository>().changes,
           ),
         ),
         BlocProvider(
           create: (context) =>
-              AppointmentsCubit(GetIt.I<AppointmentRepository>()),
+              AppointmentsCubit(GetIt.I<AppointmentsUseCase>()),
         ),
         BlocProvider(
-          create: (context) =>
-              PrayerTimesCubit(GetIt.I<PrayerTimesRepository>()),
+          create: (context) => PrayerTimesCubit(GetIt.I<PrayerTimesUseCase>()),
         ),
       ],
       child: HomeFeatureScreen(navigationShell: navigationShell),

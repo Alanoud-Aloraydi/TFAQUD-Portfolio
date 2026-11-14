@@ -18,6 +18,7 @@ _KINDS_SQL = "kind IN ('glucose', 'blood_pressure')"
 # once (0035).
 CONDITIONS_CHECK = (
     "conditions <@ ARRAY['fasting', 'before_meal', 'after_meal', 'bedtime', "
+    "'before_medicine', 'after_medicine', 'morning', "
     "'exertion', 'stress', 'illness', 'other']::text[]"
 )
 CONDITIONS_ONCE = (
@@ -203,7 +204,8 @@ class MeasurementPlanTime(db.Model):
     __table_args__ = (
         CheckConstraint(
             "measurement_state IS NULL OR measurement_state IN "
-            "('fasting', 'before_meal', 'after_meal')",
+            "('fasting', 'before_meal', 'after_meal', "
+            "'before_medicine', 'after_medicine', 'morning')",
             name="measurement_state",
         ),
     )

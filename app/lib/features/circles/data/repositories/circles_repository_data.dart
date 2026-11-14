@@ -30,8 +30,8 @@ import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// The server owns the circles, their members and their medical files.
 @LazySingleton(as: CirclesRepositoryDomain)
-/// Provides circles repository operations.
 class CirclesRepositoryData implements CirclesRepositoryDomain {
   CirclesRepositoryData(this._remote, this._deviceZone);
 

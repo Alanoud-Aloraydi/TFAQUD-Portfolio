@@ -93,7 +93,7 @@ def test_a_plan_has_several_reading_times_a_day():
                 [{"time_of_day": "07:00", "measurement_state": "fasting"}],
                 kind="blood_pressure",
             ),
-            "Only glucose times require",
+            "a state of its own kind",
         ),
     ],
 )

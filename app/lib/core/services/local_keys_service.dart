@@ -1,7 +1,7 @@
 import 'package:injectable/injectable.dart';
 
+/// The names the tokens are stored under on this phone.
 @Singleton(order: 1)
-/// Provides local keys operations.
 class LocalKeysService {
   LocalKeysService();
 

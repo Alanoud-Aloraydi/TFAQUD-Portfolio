@@ -62,7 +62,7 @@ void main() {
     for (final String label in <String>['الأدوية', 'القياسات', 'المواعيد']) {
       expect(chip(tester, label).selected, isFalse);
     }
-    expect(find.byTooltip('إزالة العضو'), findsOneWidget);
+    expect(find.text('إزالة العضو'), findsOneWidget);
     // Handing over is offered only where the leader may.
     expect(find.text('تسليم القيادة'), findsNothing);
   });
@@ -71,7 +71,7 @@ void main() {
     await show(tester, canManageMembers: false);
 
     expect(find.byType(FilterChip), findsNothing);
-    expect(find.byTooltip('إزالة العضو'), findsNothing);
+    expect(find.text('إزالة العضو'), findsNothing);
     expect(find.text('مشاهدة فقط'), findsOneWidget);
   });
 

@@ -1,5 +1,9 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton_circle.dart';
+import 'package:app/core/widgets/loading/skeleton_details_card.dart';
+import 'package:app/core/widgets/loading/skeleton_line.dart';
+import 'package:app/core/widgets/loading/skeleton_page.dart';
+import 'package:app/core/widgets/loading/skeleton_surface.dart';
 import 'package:flutter/material.dart';
 
 /// The account page while it loads (design system Skeleton): the card with

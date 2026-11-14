@@ -6,14 +6,16 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
+from app.appointments.kinds import APPOINTMENT_KINDS
 from app.validation import Dto
 
 
 class AppointmentRequest(Dto):
     """A single appointment, with the circle members going to it, if any."""
 
-    specialty: Annotated[str, Field(min_length=1, max_length=80)]
-    kind: Literal["follow_up", "test", "imaging", "remote", "other"]
+    # The clinic or doctor, as typed; optional.
+    specialty: Annotated[str | None, Field(max_length=80)] = None
+    kind: str
     other_text: Annotated[str | None, Field(max_length=80)] = None
     scheduled_on: date
     time_of_day: time
@@ -25,10 +27,10 @@ class AppointmentRequest(Dto):
     @model_validator(mode="after")
     def valid_location(self):
         """Remote visits have a method; physical visits have a place."""
-        # A specialty; a type of its own only for «أخرى»; a local time; each
-        # companion once.
-        if not self.specialty.strip():
-            raise ValueError("A specialty is required.")
+        # A known kind; a type of its own only for «أخرى»; a local time;
+        # each companion once.
+        if self.kind not in APPOINTMENT_KINDS:
+            raise ValueError("Unknown appointment kind.")
         if self.kind == "other":
             if not self.other_text or not self.other_text.strip():
                 raise ValueError("A custom appointment type is required.")

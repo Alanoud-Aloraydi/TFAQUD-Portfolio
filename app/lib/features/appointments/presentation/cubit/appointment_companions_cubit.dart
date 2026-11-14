@@ -1,10 +1,10 @@
 import 'package:app/core/errors/network_exceptions.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Holds the appointment companions presentation state.
+/// The circle's members who can go with the patient.
 class AppointmentCompanionsState extends Equatable {
   const AppointmentCompanionsState({
     this.loading = true,
@@ -25,7 +25,7 @@ class AppointmentCompanionsCubit extends Cubit<AppointmentCompanionsState> {
   AppointmentCompanionsCubit(this._repository)
     : super(const AppointmentCompanionsState());
 
-  final AppointmentRepository _repository;
+  final AppointmentsUseCase _repository;
 
   Future<void> load(String circleId) async {
     emit(const AppointmentCompanionsState());

@@ -3,7 +3,6 @@ import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported medical file edit status values.
 enum MedicalFileEditStatus { loading, ready, failure }
 
 /// What the edit page of the medical file shows: the answers as the user is
@@ -61,9 +60,14 @@ class MedicalFileEditState extends Equatable {
   bool get namesComplete =>
       firstName.trim().isNotEmpty && lastName.trim().isNotEmpty;
 
-  /// The «المنطقة الزمنية» row shows only for a city outside the Saudi
-  /// list: a listed city brings Saudi Arabia's zone ([SaudiCities.zoneOf]).
-  bool get zoneEditable => timeZone != null && SaudiCities.zoneOf(city) == null;
+  /// The «المنطقة الزمنية» row shows for every city outside the Saudi
+  /// list: a listed city brings Saudi Arabia's zone ([SaudiCities.zoneOf]),
+  /// any other city needs the zone said out loud, because every reminder,
+  /// plan and reading of the circle is read on it.
+  bool get zoneEditable => city != null && SaudiCities.zoneOf(city) == null;
+
+  /// Whether the zone is still missing for a city that needs one.
+  bool get zoneMissing => zoneEditable && timeZone == null;
 
   MedicalFileEditState copyWith({
     MedicalFileEditStatus? status,
@@ -79,6 +83,7 @@ class MedicalFileEditState extends Equatable {
     bool? saving,
     String? errorKey,
     bool clearError = false,
+    bool clearTimeZone = false,
     bool? sessionEnded,
   }) {
     return MedicalFileEditState(
@@ -89,7 +94,7 @@ class MedicalFileEditState extends Equatable {
       lastName: lastName ?? this.lastName,
       birthDate: birthDate ?? this.birthDate,
       city: city ?? this.city,
-      timeZone: timeZone ?? this.timeZone,
+      timeZone: clearTimeZone ? null : (timeZone ?? this.timeZone),
       form: form ?? this.form,
       showErrors: showErrors ?? this.showErrors,
       saving: saving ?? this.saving,

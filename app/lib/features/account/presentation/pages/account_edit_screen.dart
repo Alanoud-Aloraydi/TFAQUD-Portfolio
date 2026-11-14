@@ -1,13 +1,14 @@
 import 'package:app/core/constants/name_limits.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/core/widgets/layout/info_row.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
-import 'package:app/core/widgets/layout/settings_card.dart';
+import 'package:app/core/widgets/layout/settings_section.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
+import 'package:app/features/account/presentation/widgets/account_name_edit_field.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -129,7 +130,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: _NameField(
+                              child: AccountNameEditField(
                                 label: context.tr('onboarding.first_name'),
                                 controller: _first,
                                 onChanged: (_) =>
@@ -138,7 +139,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
-                              child: _NameField(
+                              child: AccountNameEditField(
                                 label: context.tr('onboarding.last_name'),
                                 controller: _last,
                                 onChanged: (_) =>
@@ -187,43 +188,5 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
         ),
       ),
     ),
-  );
-}
-
-/// Renders the name field element of account edit screen.
-class _NameField extends StatelessWidget {
-  const _NameField({
-    required this.label,
-    required this.controller,
-    required this.onChanged,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
-        child: Text(label, style: Theme.of(context).textTheme.labelSmall),
-      ),
-      const SizedBox(height: AppSpacing.labelGap),
-      TextField(
-        controller: controller,
-        maxLength: NameLimits.name,
-        textAlign: TextAlign.start,
-        textDirection: TextDirection.rtl,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          // White with a line edge, from the theme, so the field shows on
-          // the page.
-          counterText: '',
-          constraints: const BoxConstraints(minHeight: AppSizes.touch),
-        ),
-      ),
-    ],
   );
 }

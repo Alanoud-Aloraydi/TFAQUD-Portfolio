@@ -33,20 +33,22 @@ void main() {
       });
     });
 
-    test('morning is from Fajr until Asr', () {
+    test('morning is from Fajr until Dhuhr', () {
       DateTime at(int hour, int minute) => DateTime(2026, 11, 9, hour, minute);
       const String fajr = '04:52';
-      const String asr = '15:02';
+      const String dhuhr = '11:48';
 
-      expect(isMorning(at(4, 51), fajr: fajr, asr: asr), isFalse);
-      expect(isMorning(at(4, 52), fajr: fajr, asr: asr), isTrue);
-      expect(isMorning(at(12, 30), fajr: fajr, asr: asr), isTrue);
-      expect(isMorning(at(15, 1), fajr: fajr, asr: asr), isTrue);
-      expect(isMorning(at(15, 2), fajr: fajr, asr: asr), isFalse);
+      expect(isMorning(at(4, 51), fajr: fajr, dhuhr: dhuhr), isFalse);
+      expect(isMorning(at(4, 52), fajr: fajr, dhuhr: dhuhr), isTrue);
+      expect(isMorning(at(11, 47), fajr: fajr, dhuhr: dhuhr), isTrue);
+      // From Dhuhr on it is «مساء الخير», all afternoon.
+      expect(isMorning(at(11, 48), fajr: fajr, dhuhr: dhuhr), isFalse);
+      expect(isMorning(at(15, 30), fajr: fajr, dhuhr: dhuhr), isFalse);
       // After midnight is still the evening until Fajr.
-      expect(isMorning(at(0, 30), fajr: fajr, asr: asr), isFalse);
+      expect(isMorning(at(0, 30), fajr: fajr, dhuhr: dhuhr), isFalse);
       // Before the prayer times are loaded: the fallback times.
       expect(isMorning(at(10, 0)), isTrue);
+      expect(isMorning(at(13, 0)), isFalse);
       expect(isMorning(at(20, 0)), isFalse);
     });
   });

@@ -23,10 +23,10 @@ DoseOccurrence _dose(int day, {DoseRecord? record}) => DoseOccurrence(
 
 void main() {
   group('TodayMedicationView.attention', () {
-    test('holds missed doses from two days back, newest day first', () {
+    test('holds missed doses from two days back, oldest day first', () {
       final view = TodayMedicationView([_dose(9), _dose(10), _dose(11)], _now);
 
-      expect(view.attention.map((item) => item.scheduledOn.day), [11, 10, 9]);
+      expect(view.attention.map((item) => item.scheduledOn.day), [9, 10, 11]);
     });
 
     test('drops doses older than two days', () {

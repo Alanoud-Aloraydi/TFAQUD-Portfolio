@@ -2,86 +2,19 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:app/core/errors/network_exceptions.dart';
-import 'package:app/features/appointments/data/visit_audio_service.dart';
-import 'package:app/features/appointments/data/visit_repository.dart';
+import 'package:app/features/appointments/domain/services/visit_audio.dart';
+import 'package:app/features/appointments/domain/use_cases/visits_use_case.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
-import 'package:equatable/equatable.dart';
+import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-/// Holds the visit presentation state.
-class VisitState extends Equatable {
-  const VisitState({
-    this.loading = true,
-    this.loadFailed = false,
-    this.saving = false,
-    this.recording = false,
-    this.playing = false,
-    this.recordedSeconds = 0,
-    this.audioSeconds,
-    this.paper,
-    this.errorKey,
-  });
-
-  final bool loading;
-
-  /// The visit could not be read; the page offers a retry.
-  final bool loadFailed;
-  final bool saving;
-  final bool recording;
-  final bool playing;
-  final int recordedSeconds;
-  final int? audioSeconds;
-  final VisitPaper? paper;
-  final String? errorKey;
-
-  VisitState copyWith({
-    bool? loading,
-    bool? loadFailed,
-    bool? saving,
-    bool? recording,
-    bool? playing,
-    int? recordedSeconds,
-    int? audioSeconds,
-    VisitPaper? paper,
-    bool replacePaper = false,
-    String? errorKey,
-    bool clearError = false,
-  }) => VisitState(
-    loading: loading ?? this.loading,
-    loadFailed: loadFailed ?? this.loadFailed,
-    saving: saving ?? this.saving,
-    recording: recording ?? this.recording,
-    playing: playing ?? this.playing,
-    recordedSeconds: recordedSeconds ?? this.recordedSeconds,
-    audioSeconds: audioSeconds ?? this.audioSeconds,
-    paper: replacePaper ? paper : this.paper,
-    errorKey: clearError ? null : errorKey ?? this.errorKey,
-  );
-
-  @override
-  List<Object?> get props => [
-    loading,
-    loadFailed,
-    saving,
-    recording,
-    playing,
-    recordedSeconds,
-    audioSeconds,
-    paper,
-    errorKey,
-  ];
-}
-
-/// The longest recording; the server keeps 5 MB, this is far below it.
-const int maxRecordingSeconds = 300;
 
 /// Coordinates visit actions and UI state.
 class VisitCubit extends Cubit<VisitState> {
   VisitCubit(this._repository, this._audio, this.circleId, this.appointmentId)
     : super(const VisitState());
 
-  final VisitRepository _repository;
-  final VisitAudioService _audio;
+  final VisitsUseCase _repository;
+  final VisitAudio _audio;
   final String circleId;
   final String appointmentId;
   Timer? _recordingTimer;

@@ -1,8 +1,8 @@
 import 'package:app/features/home/data/record_pdf_item_block.dart';
-import 'package:app/features/home/data/record_pdf_model.dart';
 import 'package:app/features/home/data/record_pdf_rows.dart';
 import 'package:app/features/home/data/record_pdf_style.dart';
 import 'package:app/features/home/data/record_pdf_table_block.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// A section: its heading with a rule under it, then whatever it holds.

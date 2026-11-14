@@ -1,20 +1,19 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/member_access_actions.dart';
+import 'package:app/features/circles/presentation/widgets/member_access_buttons.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// What the circle's leader («قائد الدائرة») decides about one member,
-/// under the member's row: a chip for each area they may edit (the
-/// medicines, the measurements, the appointments), removing them from the
-/// circle, and handing them the leadership when [canHandOver]. Disabled
-/// while another change is on its way.
+/// What the circle's leader («قائد الدائرة») decides about one member, in a
+/// panel of its own under that member's row: a chip for each area they may
+/// edit, then handing over the circle or taking the member out of it. The
+/// panel keeps one member's controls from reading as the next member's.
+/// Disabled while another change is on its way.
 class MemberAccessControls extends StatelessWidget {
   const MemberAccessControls({
     super.key,
@@ -32,57 +31,59 @@ class MemberAccessControls extends StatelessWidget {
     );
     final String? accountId = member.accountId;
     final bool enabled = !acting && accountId != null;
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppSemanticColors.background,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppSemanticColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr('circle_overview.allow_editing'),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _areas(context, accountId, enabled),
+          const Divider(height: AppSpacing.lg),
+          MemberAccessButtons(
+            member: member,
+            accountId: accountId,
+            enabled: enabled,
+            canHandOver: canHandOver,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _areas(BuildContext context, String? accountId, bool enabled) {
     final EditAccess access = member.editAccess;
-    final TextTheme text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
       children: <Widget>[
-        Text(
-          context.tr('circle_overview.allow_editing'),
-          style: text.labelSmall,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.xs,
-          children: <Widget>[
-            for (final String area in EditAccess.areas)
-              FilterChip(
-                label: Text(context.tr('circle_overview.area.$area')),
-                selected: access.of(area),
-                onSelected: enabled
-                    ? (bool allowed) => changeMemberAccess(
-                        context,
-                        accountId,
-                        area: area,
-                        allowed: allowed,
-                      )
-                    : null,
-              ),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            if (canHandOver)
-              TextButton.icon(
-                onPressed: enabled
-                    ? () => confirmHandOver(context, member, accountId)
-                    : null,
-                icon: const Icon(AppIcons.crown, size: AppSizes.iconSmall),
-                label: Text(context.tr('circle_overview.hand_over')),
-              ),
-            const Spacer(),
-            IconButton(
-              tooltip: context.tr('circle_overview.remove_member'),
-              onPressed: enabled
-                  ? () => confirmRemoveMember(context, member, accountId)
-                  : null,
-              icon: const Icon(AppIcons.trash),
-              color: context.tokens.errorText,
-              disabledColor: AppSemanticColors.borderControlBase,
-            ),
-          ],
-        ),
+        for (final String area in EditAccess.areas)
+          FilterChip(
+            label: Text(context.tr('circle_overview.area.$area')),
+            selected: access.of(area),
+            onSelected: enabled && accountId != null
+                ? (bool allowed) => changeMemberAccess(
+                    context,
+                    accountId,
+                    area: area,
+                    allowed: allowed,
+                  )
+                : null,
+          ),
       ],
     );
   }

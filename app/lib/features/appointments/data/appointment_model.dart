@@ -27,13 +27,8 @@ class AppointmentModel {
     AppointmentStatus status,
   ) => CareAppointment(
     id: json['id'] as String,
-    specialty: json['specialty'] as String,
-    kind: AppointmentKind.values.firstWhere(
-      (value) =>
-          value.name ==
-          (json['kind'] == 'follow_up' ? 'followUp' : json['kind']),
-      orElse: () => AppointmentKind.other,
-    ),
+    specialty: json['specialty'] as String?,
+    kind: AppointmentKind.fromCode(json['kind'] as String),
     otherKind: json['other_text'] as String?,
     scheduledOn: DateTime.parse(json['scheduled_on'] as String),
     time: json['time_of_day'] as String,
@@ -67,9 +62,7 @@ class AppointmentModel {
     DateTime? expectedUpdatedAt,
   }) => {
     'specialty': draft.specialty,
-    'kind': draft.kind == AppointmentKind.followUp
-        ? 'follow_up'
-        : draft.kind.name,
+    'kind': draft.kind.code,
     'other_text': draft.otherKind,
     'scheduled_on': apiDate(draft.scheduledOn),
     'time_of_day': draft.time,

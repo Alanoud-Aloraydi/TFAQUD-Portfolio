@@ -49,7 +49,10 @@ class AppointmentCard extends StatelessWidget {
         appointmentTitle(context, value),
         style: Theme.of(context).textTheme.titleMedium,
       ),
-      subtitle: Text(appointmentKindTitle(context, value)),
+      subtitle: switch (appointmentClinic(value)) {
+        final String clinic => Text(clinic),
+        null => null,
+      },
       edit: canManage && open
           ? PlanEditButton(
               onPressed: () => context.push<bool>(

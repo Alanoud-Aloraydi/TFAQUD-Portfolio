@@ -127,6 +127,20 @@ class FakeCalendarSync extends Fake implements CalendarSync {
   }
 
   @override
+  Future<bool> isCircleEnabled(String circleId) async =>
+      CalendarSyncCategory.values.any(
+        (CalendarSyncCategory category) =>
+            on.contains('$circleId:${category.name}'),
+      );
+
+  @override
+  Future<void> setCircleEnabled(String circleId, bool value) async {
+    for (final CalendarSyncCategory category in CalendarSyncCategory.values) {
+      await setEnabled(circleId, category, value);
+    }
+  }
+
+  @override
   Future<void> sync(List<ReminderCircle> circles) async {
     synced.add(circles);
   }

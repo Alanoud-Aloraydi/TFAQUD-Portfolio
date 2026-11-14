@@ -1,15 +1,17 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:app/features/appointments/domain/services/visit_audio.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 
-/// Provides visit audio operations.
-class VisitAudioService {
+/// The microphone and the speaker of the phone.
+class VisitAudioService implements VisitAudio {
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _player = AudioPlayer();
   File? _playbackFile;
 
+  @override
   Future<bool> start() async {
     if (!await _recorder.hasPermission()) return false;
     final path =
@@ -22,6 +24,7 @@ class VisitAudioService {
     return true;
   }
 
+  @override
   Future<Uint8List?> stop() async {
     final path = await _recorder.stop();
     if (path == null) return null;
@@ -33,8 +36,10 @@ class VisitAudioService {
     }
   }
 
+  @override
   Future<void> cancel() => _recorder.cancel();
 
+  @override
   Future<Duration?> prepare(Uint8List bytes) async {
     await _player.stop();
     await _clearPlaybackFile();
@@ -47,10 +52,13 @@ class VisitAudioService {
     return _player.setFilePath(file.path);
   }
 
+  @override
   Future<void> play() => _player.play();
 
+  @override
   Future<void> stopPlayback() => _player.stop();
 
+  @override
   Future<void> dispose() async {
     await _recorder.dispose();
     await _player.dispose();

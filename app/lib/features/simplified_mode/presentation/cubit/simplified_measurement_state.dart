@@ -1,7 +1,6 @@
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported simplified measurement status values.
 enum SimplifiedMeasurementStatus { loading, ready, failure }
 
 /// What the «تسجيل قياس» screen needs: the task this reading answers, if

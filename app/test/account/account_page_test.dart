@@ -316,6 +316,11 @@ void main() {
 
         await tester.tap(find.text('auth.sign_out'.tr()));
         await tester.pumpAndSettle();
+        // Signing out asks first, like leaving a circle and deleting the
+        // account; the alert's own button is the one that ends the session.
+        expect(find.text('auth.sign_out_title'.tr()), findsOneWidget);
+        await tester.tap(inDialog('auth.sign_out'.tr()));
+        await tester.pumpAndSettle();
 
         expect(auth.signOuts, 1);
         expect(
@@ -344,6 +349,8 @@ void main() {
           );
           await openAccount(tester);
           await tester.tap(find.text('auth.sign_out'.tr()));
+          await tester.pumpAndSettle();
+          await tester.tap(inDialog('auth.sign_out'.tr()));
           await tester.pumpAndSettle();
           await tester.tap(find.text('intro.skip'.tr()));
           await tester.pumpAndSettle();

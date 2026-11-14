@@ -22,6 +22,8 @@ import '../support/app_shell_harness.dart';
 import '../support/circles_fakes.dart';
 import '../support/home_fakes.dart';
 
+import 'package:app/features/circles/presentation/widgets/circle_card.dart';
+
 void main() {
   setUpShellApp();
 

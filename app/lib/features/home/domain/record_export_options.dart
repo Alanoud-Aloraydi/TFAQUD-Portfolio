@@ -6,7 +6,7 @@ class RecordExportOptions {
     this.measurements = true,
     this.appointments = true,
     this.contacts = false,
-    this.detailed = false,
+    this.detailed = true,
   });
 
   final bool patient;
@@ -17,7 +17,8 @@ class RecordExportOptions {
   /// Names and numbers of the emergency contacts, off unless asked for.
   final bool contacts;
 
-  /// The dose log, the unrecorded measurements and the visit papers.
+  /// The dose log, the unrecorded measurements and the visit papers. The
+  /// file is one «ملخص صحي» that carries them all; there is no short form.
   final bool detailed;
 
   bool get hasAnySection =>

@@ -2,7 +2,7 @@ import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
-import 'package:app/features/home/data/record_pdf_model.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
@@ -39,7 +39,8 @@ RecordPdfItem _item(
   detail: <RecordPdfRow>[
     RecordPdfRow(value: appointmentDate(context, item.scheduledOn)),
     RecordPdfRow(value: clockText(item.time)),
-    RecordPdfRow(value: appointmentKindTitle(context, item)),
+    if (appointmentClinic(item) case final String clinic)
+      RecordPdfRow(value: clinic),
   ],
   fields: <RecordPdfRow>[
     RecordPdfRow(

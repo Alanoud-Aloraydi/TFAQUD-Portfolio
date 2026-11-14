@@ -8,9 +8,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// «صباح الخير، ياسر» from Fajr, «مساء الخير، ياسر» from Asr, with the
-/// patient's date under it and [weather] beside the date; the tab keeps
-/// «اليوم».
+/// «صباح الخير، ياسر» from Fajr, «مساء الخير، ياسر» from Dhuhr, with
+/// the patient's date under it and [weather] beside the date; the tab
+/// keeps «اليوم».
 class TodayHeader extends StatelessWidget {
   const TodayHeader({super.key, required this.now, this.weather});
 
@@ -31,7 +31,7 @@ class TodayHeader extends StatelessWidget {
         now,
         CareVoice.viewerName,
         fajr: day?.times[Prayer.fajr],
-        asr: day?.times[Prayer.asr],
+        dhuhr: day?.times[Prayer.dhuhr],
       ),
       subtitle: '$weekday ${now.day} $month',
       subtitleTrailing: weather,

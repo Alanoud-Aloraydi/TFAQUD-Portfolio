@@ -1,5 +1,5 @@
-import 'package:app/features/home/data/record_pdf_model.dart';
 import 'package:app/features/home/data/record_pdf_style.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// A value on its own: left to right when it is a number or a code, and

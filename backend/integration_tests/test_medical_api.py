@@ -70,7 +70,7 @@ def test_blood_type_conditions_and_allergies_are_saved(setup):
             },
             "allergies": {
                 "status": "listed",
-                "medication": ["aspirin_nsaids", "penicillin", "other"],
+                "medication": ["nsaids", "penicillin", "other"],
                 "other_medication": "Codeine",
                 "food": ["sesame", "milk"],
             },
@@ -89,7 +89,7 @@ def test_blood_type_conditions_and_allergies_are_saved(setup):
     }
     assert saved["allergies"] == {
         "status": "listed",
-        "medication": ["penicillin", "aspirin_nsaids", "other"],
+        "medication": ["penicillin", "nsaids", "other"],
         "other_medication": "Codeine",
         "food": ["milk", "sesame"],
         "other_food": None,

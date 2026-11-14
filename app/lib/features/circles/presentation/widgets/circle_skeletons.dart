@@ -1,7 +1,13 @@
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton_box.dart';
+import 'package:app/core/widgets/loading/skeleton_circle.dart';
+import 'package:app/core/widgets/loading/skeleton_details_card.dart';
+import 'package:app/core/widgets/loading/skeleton_form_group.dart';
+import 'package:app/core/widgets/loading/skeleton_line.dart';
+import 'package:app/core/widgets/loading/skeleton_page.dart';
+import 'package:app/core/widgets/loading/skeleton_surface.dart';
 import 'package:flutter/material.dart';
 
 // Each circle page has its own skeleton (design system Skeleton), drawn in
@@ -30,7 +36,6 @@ class NotificationsSkeleton extends StatelessWidget {
   }
 }
 
-/// Renders the request card skeleton element of circle skeletons.
 class _RequestCardSkeleton extends StatelessWidget {
   const _RequestCardSkeleton();
 
@@ -116,7 +121,6 @@ class MedicalFileSkeleton extends StatelessWidget {
   }
 }
 
-/// Renders the contact skeleton element of circle skeletons.
 class _ContactSkeleton extends StatelessWidget {
   const _ContactSkeleton();
 
@@ -178,7 +182,6 @@ class EmergencyCardSkeleton extends StatelessWidget {
   }
 }
 
-/// Renders the section skeleton element of circle skeletons.
 class _SectionSkeleton extends StatelessWidget {
   const _SectionSkeleton({required this.valueWidth, this.lines = 1});
 
@@ -234,7 +237,6 @@ class MedicalFileEditSkeleton extends StatelessWidget {
   }
 }
 
-/// Renders the chips skeleton element of circle skeletons.
 class _ChipsSkeleton extends StatelessWidget {
   const _ChipsSkeleton({required this.widths});
 

@@ -1,10 +1,9 @@
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported measurement load status values.
 enum MeasurementLoadStatus { initial, loading, ready, failure }
 
-/// Holds the measurement plans presentation state.
+/// The plans on screen, and whether one is being saved.
 class MeasurementPlansState extends Equatable {
   const MeasurementPlansState({
     this.status = MeasurementLoadStatus.initial,
@@ -20,7 +19,7 @@ class MeasurementPlansState extends Equatable {
   List<Object?> get props => [status, plans, errorKey];
 }
 
-/// Holds the measurement tasks presentation state.
+/// The day's measurement tasks on screen.
 class MeasurementTasksState extends Equatable {
   const MeasurementTasksState({
     this.status = MeasurementLoadStatus.initial,
@@ -36,7 +35,7 @@ class MeasurementTasksState extends Equatable {
   List<Object?> get props => [status, tasks, errorKey];
 }
 
-/// Holds the measurement readings presentation state.
+/// The readings on screen, with the days they cover.
 class MeasurementReadingsState extends Equatable {
   const MeasurementReadingsState({
     this.status = MeasurementLoadStatus.initial,

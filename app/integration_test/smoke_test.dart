@@ -18,14 +18,17 @@ import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/auth/data/datasources/intro_memory.dart';
+import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
+import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -122,24 +125,29 @@ void main() {
     di.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(SmokeMedicationsRepository()),
     );
-    di.registerSingleton<MeasurementRepository>(SmokeMeasurementsRepository());
-    di.registerSingleton<AppointmentRepository>(SmokeAppointmentsRepository());
+    di.registerSingleton<MeasurementsUseCase>(
+      MeasurementsUseCase(SmokeMeasurementsRepository()),
+    );
+    di.registerSingleton<AppointmentsUseCase>(
+      AppointmentsUseCase(SmokeAppointmentsRepository()),
+    );
+    di.registerSingleton<WelcomeMemory>(IntroMemory());
     di.registerSingleton<PhoneNotifications>(phone);
     di.registerSingleton<DoseReminders>(
       DoseReminders(
         di<MedicationsUseCase>(),
         phone,
         texts: doseReminderTexts,
-        measurements: di<MeasurementRepository>(),
-        appointments: di<AppointmentRepository>(),
+        measurements: di<MeasurementsUseCase>(),
+        appointments: di<AppointmentsUseCase>(),
       ),
     );
     di.registerSingleton<CalendarSync>(SmokeCalendarSync());
     di.registerSingleton<PushRegistration>(
       PushRegistration(phone, (String token) async {}),
     );
-    di.registerSingleton<PrayerTimesRepository>(
-      PrayerTimesRepository(SmokePrayerTimes()),
+    di.registerSingleton<PrayerTimesUseCase>(
+      PrayerTimesUseCase(PrayerTimesRepository(SmokePrayerTimes())),
     );
     di.registerSingleton<PrivatePhotoRepository>(SmokePhotoRepository());
   });

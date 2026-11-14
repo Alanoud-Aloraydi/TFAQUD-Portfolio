@@ -439,11 +439,11 @@ class DemoBuilder:
 
         visits = (
             (
-                0, self.clock_in(180), "القلب", "follow_up",
+                0, self.clock_in(180), "عيادة القلب", "follow_up",
                 "مستشفى الملك فيصل التخصصي", [lina.id],
             ),
-            (1, "10:00", "تحاليل السكر", "test", "مختبر البرج", [sara.id]),
-            (5, "11:30", "العيون", "remote", None, [lina.id, sara.id]),
+            (1, "10:00", "مختبر المستشفى", "test", "مختبر البرج", [sara.id]),
+            (5, "11:30", "عيادة العيون", "remote", None, [lina.id, sara.id]),
         )
         for day, clock, specialty, kind, place, going in visits:
             self.appointment(lina, circle, {

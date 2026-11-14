@@ -2,26 +2,25 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:app/core/services/phone_notifications.dart';
+export 'package:app/core/services/reminder_circle.dart';
 import 'package:app/core/services/reminder_circle.dart';
+export 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
+export 'package:app/core/services/reminders/reminder_plan.dart';
 import 'package:app/core/services/reminders/reminder_plan.dart';
+export 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-export 'package:app/core/services/reminder_circle.dart';
-export 'package:app/core/services/reminders/reminder_payloads.dart';
-export 'package:app/core/services/reminders/reminder_plan.dart';
-export 'package:app/core/services/reminders/shared_snooze.dart';
 
 /// The slots of the doses and measurements put off («ذكّرني لاحقًا» on a
 /// card, a full-screen reminder or a notification, in either mode), after
@@ -58,35 +57,25 @@ class TaskSnooze extends Equatable {
 /// A task put off, and the slot of its reminder.
 typedef _Snoozed = ({TaskSnooze snooze, int slot});
 
-/// Keeps the reminders of every circle of the signed-in person on the
-/// phone, for the coming week: each dose time, each measurement time, and
-/// each appointment (a day before, and shortly before). The name stays from
-/// when it reminded of doses only.
+/// Keeps the coming week's reminders on the phone: every dose time, every
+/// measurement time, and every appointment. The name stays from when it
+/// reminded of doses only.
 ///
-/// The phone shows them even when the app is closed, so they work without a
-/// server push; the server only tells of a dose or measurement that was
-/// missed. They are set again when the home data loads ([sync]), when the
-/// app comes back to the front ([refresh]), and after each change of a
-/// medicine, a dose record, a measurement plan or reading, or an
-/// appointment anywhere in the app: a recorded dose or measurement, and a
-/// cancelled appointment, lose their reminders. On sign-out [clear] removes
-/// them all.
+/// The phone shows them with the app closed, so they need no push. They
+/// are set again when the home data loads ([sync]), when the app comes
+/// back to the front ([refresh]), and after any change to a medicine, a
+/// record, a plan or an appointment; [clear] removes them on sign-out.
+/// Without [measurements] or [appointments] only the doses are read.
 ///
-/// Without [measurements] or [appointments] (the tests of doses), only the
-/// doses are read.
-///
-/// A task put off is told to the circle too ([share], the server): every
-/// member's card shows who put it off and until when, and at that time the
-/// server reminds the others. A task someone else put off has its reminder
-/// from the server, so this phone does not remind of it at its planned
-/// time meanwhile.
+/// A task put off is told to the circle too ([share]), which reminds the
+/// other members: this phone then stays quiet at the planned time.
 class DoseReminders {
   DoseReminders(
     this._medications,
     this._phone, {
     required this.texts,
-    MeasurementRepository? measurements,
-    AppointmentRepository? appointments,
+    MeasurementsUseCase? measurements,
+    AppointmentsUseCase? appointments,
     this._share,
     DateTime Function()? clock,
   }) : _measurements = measurements,
@@ -100,8 +89,8 @@ class DoseReminders {
   }
 
   final MedicationsUseCase _medications;
-  final MeasurementRepository? _measurements;
-  final AppointmentRepository? _appointments;
+  final MeasurementsUseCase? _measurements;
+  final AppointmentsUseCase? _appointments;
   final PhoneNotifications _phone;
 
   /// Tells the circle of a task put off; null in tests of one phone.
@@ -504,18 +493,18 @@ class DoseReminders {
         doses.add((circle, dose));
       }
       try {
-        final MeasurementRepository? measurementRepository = _measurements;
-        if (measurementRepository != null) {
-          final List<MeasurementOccurrence> tasks = await measurementRepository
+        final MeasurementsUseCase? measurementTasks = _measurements;
+        if (measurementTasks != null) {
+          final List<MeasurementOccurrence> tasks = await measurementTasks
               .occurrences(circle.id, from, to);
           if (session != _session) return;
           for (final MeasurementOccurrence task in tasks) {
             measurements.add((circle, task));
           }
         }
-        final AppointmentRepository? appointmentRepository = _appointments;
-        if (appointmentRepository != null) {
-          final List<CareAppointment> visits = await appointmentRepository
+        final AppointmentsUseCase? appointmentTasks = _appointments;
+        if (appointmentTasks != null) {
+          final List<CareAppointment> visits = await appointmentTasks
               .appointments(circle.id);
           if (session != _session) return;
           for (final CareAppointment visit in visits) {

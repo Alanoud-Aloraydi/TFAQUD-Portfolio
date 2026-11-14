@@ -5,7 +5,6 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
-import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
@@ -17,12 +16,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../support/simplified_fakes.dart';
 import '../support/widget_harness.dart';
 
 /// 12:00 in Riyadh on 9 November 2026.
@@ -90,11 +87,6 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       await EasyLocalization.ensureInitialized();
     });
-
-    setUp(
-      () => GetIt.I.registerSingleton<SimplifiedVoice>(FakeSimplifiedVoice()),
-    );
-    tearDown(() => GetIt.I.unregister<SimplifiedVoice>());
 
     /// The snooze screen for the 08:00 dose (not the most recent one due,
     /// 11:30), on a small phone at text size [scale]. Each test closes the

@@ -1,7 +1,8 @@
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
-import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_builder.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_image.dart';
 import 'package:flutter/material.dart';
 
 /// The start of a dose row: the medicine's photo when it has one and the

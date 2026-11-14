@@ -7,6 +7,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
+import 'package:app/core/widgets/layout/info_row.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/settings_card.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';

@@ -1,7 +1,6 @@
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported medication occurrences status values.
 enum MedicationOccurrencesStatus {
   loading,
   loadingMore,
@@ -10,7 +9,7 @@ enum MedicationOccurrencesStatus {
   failure,
 }
 
-/// Holds the medication occurrences presentation state.
+/// The doses on screen for the days they cover.
 class MedicationOccurrencesState extends Equatable {
   MedicationOccurrencesState({
     this.status = MedicationOccurrencesStatus.loading,

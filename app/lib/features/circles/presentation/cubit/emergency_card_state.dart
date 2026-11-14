@@ -1,7 +1,6 @@
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported emergency card status values.
 enum EmergencyCardStatus { loading, ready, failure }
 
 /// What the emergency card page shows: the card read from the server.

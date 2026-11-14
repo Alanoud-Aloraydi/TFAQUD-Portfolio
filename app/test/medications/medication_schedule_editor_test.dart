@@ -95,8 +95,8 @@ void main() {
       tester,
     ) async {
       final data = await openEditor(tester, 1);
-      final sunday = find.text('medications.weekday_short.7'.tr());
-      final monday = find.text('medications.weekday_short.1'.tr());
+      final sunday = find.text('medications.weekday_pick.7'.tr());
+      final monday = find.text('medications.weekday_pick.1'.tr());
       await tester.tap(sunday);
       await tester.pump();
       expect(data.weekdays, {7});
@@ -123,7 +123,7 @@ void main() {
       // Every other day to start, said the Arabic way.
       expect(data.intervalDays, 2);
       expect(find.text(arabicDays(2)), findsOneWidget);
-      expect(find.text('medications.weekday_short.7'.tr()), findsNothing);
+      expect(find.text('medications.weekday_pick.7'.tr()), findsNothing);
       expect(find.textContaining('1 نوفمبر 2026'), findsOneWidget);
 
       // VoiceOver reads the ruler as a slider and moves it one day at a time.

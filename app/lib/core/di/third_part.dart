@@ -2,16 +2,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:injectable/injectable.dart';
 
+/// The third-party stores the container hands out.
 @module
-/// Registers external dependencies with the app container.
 abstract class ThirdPartyConfig {
-  //----------------------------------------------------------------------------
   @lazySingleton
   GetStorage get storage => GetStorage();
-  //----------------------------------------------------------------------------
-  AndroidOptions _getAndroidOptions() => const AndroidOptions();
+
+  /// The keychain on iOS; the tokens live here, not in [storage].
   @lazySingleton
   FlutterSecureStorage get flutterSecureStorage =>
-      FlutterSecureStorage(aOptions: _getAndroidOptions());
-  //----------------------------------------------------------------------------
+      FlutterSecureStorage(aOptions: _androidOptions());
+
+  AndroidOptions _androidOptions() => const AndroidOptions();
 }

@@ -1,6 +1,6 @@
-import 'package:app/features/home/data/record_pdf_model.dart';
 import 'package:app/features/home/data/record_pdf_rows.dart';
 import 'package:app/features/home/data/record_pdf_style.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// The top of the first page: app name, title and the header lines.

@@ -1,4 +1,4 @@
-import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 

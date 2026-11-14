@@ -7,8 +7,8 @@ import 'package:app/features/medications/domain/repositories/medications_reposit
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// The server owns the medicines and the dose records.
 @LazySingleton(as: MedicationsRepositoryDomain)
-/// Provides medications repository operations.
 class MedicationsRepositoryData implements MedicationsRepositoryDomain {
   MedicationsRepositoryData(this._remote);
 

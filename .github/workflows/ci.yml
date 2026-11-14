@@ -120,5 +120,12 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # The structure rules of app/docs/code-conventions.md: file size, one
+      # widget per file, and the direction of the dependencies between the
+      # layers. The files that broke them before the check existed are listed
+      # in app/tool/structure_baseline.txt; this fails on a new violation.
+      - name: Check the structure
+        run: dart run tool/check_structure.dart
+
       - name: Run the tests
         run: flutter test

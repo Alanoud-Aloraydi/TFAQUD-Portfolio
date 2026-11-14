@@ -1,5 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/loading/page_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 

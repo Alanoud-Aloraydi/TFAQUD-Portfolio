@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:app/features/appointments/data/appointment_model.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,7 +14,7 @@ Map<String, dynamic> _json({
   String status = 'scheduled',
 }) => <String, dynamic>{
   'id': id,
-  'specialty': 'diabetes',
+  'specialty': 'عيادة السكري',
   'kind': kind,
   'other_text': null,
   'scheduled_on': '2030-01-05',
@@ -26,7 +27,7 @@ Map<String, dynamic> _json({
 };
 
 AppointmentDraft _draft() => AppointmentDraft(
-  specialty: 'diabetes',
+  specialty: 'عيادة السكري',
   kind: AppointmentKind.test,
   otherKind: null,
   scheduledOn: DateTime(2030, 1, 5),
@@ -36,7 +37,7 @@ AppointmentDraft _draft() => AppointmentDraft(
   companionAccountIds: const <String>['u1'],
 );
 
-class _FakeRepository implements AppointmentRepository {
+class _FakeRepository implements AppointmentsRepositoryDomain {
   final StreamController<String> _changes = StreamController<String>.broadcast(
     sync: true,
   );
@@ -76,7 +77,7 @@ void main() {
   group('AppointmentsCubit', () {
     test('an unknown kind reads as other and an unknown status is skipped', () {
       expect(
-        AppointmentModel.tryFromJson(_json(kind: 'surgery'))!.kind,
+        AppointmentModel.tryFromJson(_json(kind: 'teleportation'))!.kind,
         AppointmentKind.other,
       );
       expect(AppointmentModel.tryFromJson(_json(status: 'paused')), isNull);
@@ -90,7 +91,9 @@ void main() {
       'a saved change reloads the circle through the changes stream',
       () async {
         final _FakeRepository repository = _FakeRepository();
-        final AppointmentsCubit cubit = AppointmentsCubit(repository);
+        final AppointmentsCubit cubit = AppointmentsCubit(
+          AppointmentsUseCase(repository),
+        );
         addTearDown(cubit.close);
         await cubit.load('c1');
 
@@ -104,7 +107,9 @@ void main() {
 
     test('a change of another circle does not reload this one', () async {
       final _FakeRepository repository = _FakeRepository();
-      final AppointmentsCubit cubit = AppointmentsCubit(repository);
+      final AppointmentsCubit cubit = AppointmentsCubit(
+        AppointmentsUseCase(repository),
+      );
       addTearDown(cubit.close);
       await cubit.load('c1');
 
@@ -127,7 +132,9 @@ void main() {
             },
           ),
         );
-      final AppointmentsCubit cubit = AppointmentsCubit(repository);
+      final AppointmentsCubit cubit = AppointmentsCubit(
+        AppointmentsUseCase(repository),
+      );
       addTearDown(cubit.close);
 
       expect(await cubit.create('c1', _draft()), 'appointments.time_in_past');
@@ -136,7 +143,9 @@ void main() {
     test('a second write while one is sending is refused', () async {
       final _FakeRepository repository = _FakeRepository()
         ..pendingWrite = Completer<CareAppointment>();
-      final AppointmentsCubit cubit = AppointmentsCubit(repository);
+      final AppointmentsCubit cubit = AppointmentsCubit(
+        AppointmentsUseCase(repository),
+      );
       addTearDown(cubit.close);
       final CareAppointment appointment = AppointmentModel.tryFromJson(
         _json(),

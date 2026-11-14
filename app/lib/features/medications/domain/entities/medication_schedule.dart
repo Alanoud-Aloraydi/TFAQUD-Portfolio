@@ -1,12 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported dosage form values.
 enum DosageForm { tablet, capsule, liquid, drops, inhaler, injection }
 
-/// Defines the supported dose unit values.
 enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }
 
-/// Defines the supported strength unit values.
 enum StrengthUnit {
   milligram('mg'),
   microgram('mcg'),

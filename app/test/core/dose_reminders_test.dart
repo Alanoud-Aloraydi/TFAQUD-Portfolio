@@ -4,10 +4,12 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
@@ -62,7 +64,7 @@ final DoseReminderTexts _texts = DoseReminderTexts(
     AppointmentLead lead,
     CareAppointment visit,
   ) => 'موعد ${circle.name} ${lead.name}',
-  appointmentBody: (CareAppointment visit) => visit.specialty,
+  appointmentBody: (CareAppointment visit) => visit.specialty ?? '',
   keepTitle: () => 'keep',
   keepBody: () => 'open the app',
 );
@@ -111,7 +113,7 @@ CareAppointment _appointment(
 );
 
 /// The measurement tasks of each circle.
-class _Measurements extends Fake implements MeasurementRepository {
+class _Measurements extends Fake implements MeasurementsRepositoryDomain {
   final Map<String, List<MeasurementOccurrence>> tasks =
       <String, List<MeasurementOccurrence>>{};
   final StreamController<String> changed = StreamController<String>.broadcast();
@@ -137,7 +139,7 @@ class _Measurements extends Fake implements MeasurementRepository {
 }
 
 /// The appointments of each circle.
-class _Appointments extends Fake implements AppointmentRepository {
+class _Appointments extends Fake implements AppointmentsRepositoryDomain {
   final Map<String, List<CareAppointment>> visits =
       <String, List<CareAppointment>>{};
   final StreamController<String> changed = StreamController<String>.broadcast();
@@ -842,7 +844,7 @@ void main() {
         useCase,
         phone,
         texts: _texts,
-        measurements: measurements,
+        measurements: MeasurementsUseCase(measurements),
         clock: () => _now,
       );
       final MeasurementOccurrence task = _measurement(3, '07:30');
@@ -977,8 +979,8 @@ void main() {
         MedicationsUseCase(medications),
         phone,
         texts: _texts,
-        measurements: measurements,
-        appointments: appointments,
+        measurements: MeasurementsUseCase(measurements),
+        appointments: AppointmentsUseCase(appointments),
         clock: () => _now,
       );
     });

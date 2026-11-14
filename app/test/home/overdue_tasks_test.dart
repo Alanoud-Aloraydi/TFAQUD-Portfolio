@@ -23,7 +23,7 @@ CareAppointment _visit(
   AppointmentStatus status = AppointmentStatus.scheduled,
 }) => CareAppointment(
   id: 'a-$day',
-  specialty: 'diabetes',
+  specialty: 'عيادة السكري',
   kind: AppointmentKind.followUp,
   otherKind: null,
   scheduledOn: DateTime(2026, 11, day),
@@ -68,7 +68,8 @@ void main() {
         _visit(10),
       ], _today);
 
-      expect(result.map((item) => item.scheduledOn.day), [10, 9]);
+      // «يحتاج انتباهك» reads from the oldest to the newest.
+      expect(result.map((item) => item.scheduledOn.day), [9, 10]);
     });
 
     test('leaves today to the schedule and closed ones out', () {

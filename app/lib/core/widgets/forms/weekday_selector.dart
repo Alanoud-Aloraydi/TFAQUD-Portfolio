@@ -30,21 +30,30 @@ class WeekdaySelector extends StatelessWidget {
           onSelected: (_) => onChanged(<int>{...allWeekdays}),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: <Widget>[
-            for (final int day in weekOrder) ...<Widget>[
-              if (day != weekOrder.first) const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: WeekdayBox(
-                  label: context.tr('medications.weekday_short.$day'),
-                  semanticLabel: context.tr('medications.weekday.$day'),
-                  selected: selected.contains(day),
-                  onTap: () => onChanged(toggleWeekday(selected, day)),
-                ),
-              ),
-            ],
-          ],
-        ),
+        // Four days, then three: a seven-box row leaves each name too
+        // narrow to read.
+        for (final List<int> row in <List<int>>[
+          weekOrder.sublist(0, 4),
+          weekOrder.sublist(4),
+        ])
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: Row(
+              children: <Widget>[
+                for (final int day in row) ...<Widget>[
+                  if (day != row.first) const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: WeekdayBox(
+                      label: context.tr('medications.weekday_pick.$day'),
+                      semanticLabel: context.tr('medications.weekday.$day'),
+                      selected: selected.contains(day),
+                      onTap: () => onChanged(toggleWeekday(selected, day)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }

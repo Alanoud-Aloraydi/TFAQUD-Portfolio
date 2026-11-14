@@ -1,5 +1,6 @@
+import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/features/home/data/record_pdf_model.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -51,7 +52,7 @@ RecordPdfItem _item(
   rows: <RecordPdfRow>[
     for (final schedule in plan.version.schedules)
       RecordPdfRow(
-        label: schedule.time,
+        label: clockText(schedule.time),
         value:
             '${formatMedicationNumber(schedule.doseValue)} '
             '${context.tr('medications.unit.${schedule.doseUnit.name}')}',
