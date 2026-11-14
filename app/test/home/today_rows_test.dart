@@ -21,7 +21,6 @@ import 'package:multiple_result/multiple_result.dart';
 
 import '../support/widget_harness.dart';
 
-
 /// Records what the measurement row sends to the server.
 class _Measurements extends Fake implements MeasurementsRepositoryDomain {
   final List<MeasurementReadingDraft> drafts = <MeasurementReadingDraft>[];
