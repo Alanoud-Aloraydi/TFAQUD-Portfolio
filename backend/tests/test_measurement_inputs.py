@@ -40,6 +40,33 @@ def test_reading_shape_and_blood_pressure_order():
     assert value.diastolic_value == 80
 
 
+def test_a_reading_no_body_can_have_is_refused():
+    """A diastolic typed as 18 instead of 80 reached the health summary a
+    doctor reads, because 1 to 999 took it."""
+    now = datetime.now(timezone.utc)
+    for systolic, diastolic in ((150, 18), (300, 90), (40, 30)):
+        with pytest.raises(ValidationError):
+            ReadingRequest(
+                kind="blood_pressure", outcome="read", measured_at=now,
+                systolic_value=systolic, diastolic_value=diastolic,
+            )
+    for glucose in (5, 700):
+        with pytest.raises(ValidationError):
+            ReadingRequest(
+                kind="glucose", outcome="read", measured_at=now,
+                glucose_value=glucose,
+            )
+    # High enough to call an ambulance over, and still recorded.
+    assert ReadingRequest(
+        kind="blood_pressure", outcome="read", measured_at=now,
+        systolic_value=240, diastolic_value=130,
+    ).systolic_value == 240
+    assert ReadingRequest(
+        kind="glucose", outcome="read", measured_at=now,
+        glucose_value=580,
+    ).glucose_value == 580
+
+
 def _times_plan(times, kind="glucose", **changes):
     return {
         "kind": kind,

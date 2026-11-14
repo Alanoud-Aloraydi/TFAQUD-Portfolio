@@ -106,6 +106,9 @@ def occurrence_response(
         "strength_value": plain_number(version.strength_value),
         "strength_unit": version.strength_unit,
         "dosage_form": version.dosage_form,
+        # What the medicine is for. On the patient's own screen it says
+        # more than the strength does: «حبة الضغط», not «81 ملغ».
+        "reason_for_use": version.reason_for_use,
         "dose_value": plain_number(schedule.dose_value),
         "dose_unit": schedule.dose_unit,
         "instructions": schedule.instructions,

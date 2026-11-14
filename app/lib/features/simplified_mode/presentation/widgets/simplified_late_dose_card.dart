@@ -44,7 +44,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
     context.tr('simplified_mode.late_question'),
     task.dose!.name,
     simplifiedDoseAmount(context, task.dose!),
-    simplifiedStrength(context, task.dose!),
+    ?task.dose!.reason,
     ...simplifiedTaskChips(context, task, day),
     _wasDue(context, task),
     ?snoozed,
@@ -117,7 +117,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
             style: SimplifiedStyle.head(SimplifiedStyle.headline),
           ),
           Text(
-            simplifiedStrength(context, task.dose!),
+            task.dose!.reason ?? simplifiedStrength(context, task.dose!),
             style: SimplifiedStyle.text(
               SimplifiedStyle.body,
               weight: AppTextTheme.medium,

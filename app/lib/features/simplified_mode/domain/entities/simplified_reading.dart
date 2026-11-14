@@ -1,4 +1,5 @@
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_limits.dart';
 import 'package:equatable/equatable.dart';
 
 /// A reading the patient typed on «تسجيل قياس».
@@ -26,16 +27,10 @@ class SimplifiedReading extends Equatable {
   /// What «أخرى» means, when it is chosen.
   final String? note;
 
-  /// Whether the server would take the numbers: 1 to 999, and for blood
-  /// pressure an upper number above the lower one. The conditions are kept
-  /// valid as they are chosen (MeasurementConditions.toggle).
-  bool get isValid {
-    bool inRange(int value) => value >= 1 && value <= 999;
-    if (!inRange(valueOne)) return false;
-    if (kind == MeasurementKind.glucose) return valueTwo == null;
-    final int? lower = valueTwo;
-    return lower != null && inRange(lower) && valueOne > lower;
-  }
+  /// Whether the server would take the numbers ([MeasurementLimits]). The
+  /// conditions are kept valid as they are chosen
+  /// (MeasurementConditions.toggle).
+  bool get isValid => MeasurementLimits.reading(kind, valueOne, valueTwo);
 
   @override
   List<Object?> get props => [kind, valueOne, valueTwo, conditions, note];

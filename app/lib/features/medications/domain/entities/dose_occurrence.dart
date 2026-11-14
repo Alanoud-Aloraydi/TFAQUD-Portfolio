@@ -95,6 +95,7 @@ class DoseOccurrence extends Equatable {
     this.missedAfterMinutes = PlanLimits.defaultMissedAfterMinutes,
     this.timingState,
     this.instructions,
+    this.reason,
     this.record,
     this.snooze,
   });
@@ -111,6 +112,10 @@ class DoseOccurrence extends Equatable {
   final DoseUnit doseUnit;
   final int missedAfterMinutes;
   final String? instructions;
+
+  /// What the medicine is for, as whoever added it wrote it («الضغط»).
+  /// On the patient's own screen this says more than the strength does.
+  final String? reason;
   final DoseRecord? record;
   final DoseTimingState? timingState;
 
@@ -144,6 +149,7 @@ class DoseOccurrence extends Equatable {
     doseUnit: doseUnit,
     missedAfterMinutes: missedAfterMinutes,
     instructions: instructions,
+    reason: reason,
     record: value,
     timingState: null,
   );
@@ -162,6 +168,7 @@ class DoseOccurrence extends Equatable {
     doseUnit: doseUnit,
     missedAfterMinutes: missedAfterMinutes,
     instructions: instructions,
+    reason: reason,
     record: record,
     timingState: timingState,
     snooze: value,
@@ -181,6 +188,7 @@ class DoseOccurrence extends Equatable {
     doseUnit,
     missedAfterMinutes,
     instructions,
+    reason,
     record,
     timingState,
     snooze,

@@ -74,15 +74,26 @@ class DoseRecordControls extends StatelessWidget {
             children: [
               if (isToday)
                 Expanded(
-                  child: FilledButton.icon(
-                    style: compact,
-                    onPressed: () => _takeNow(context),
-                    icon: const Icon(CupertinoIcons.checkmark, size: 16),
-                    label: Text(
-                      CareVoice.tr(
-                        context,
-                        circleId,
-                        'medications.taken_short',
+                  // A day of four doses shows four «أُخذت» buttons. Read
+                  // aloud they are the same word, so the reader cannot
+                  // tell which medicine is being recorded: the label
+                  // names it.
+                  child: Semantics(
+                    button: true,
+                    label:
+                        '${CareVoice.tr(context, circleId, 'medications.taken_short')}'
+                        '، ${occurrence.name}',
+                    excludeSemantics: true,
+                    child: FilledButton.icon(
+                      style: compact,
+                      onPressed: () => _takeNow(context),
+                      icon: const Icon(CupertinoIcons.checkmark, size: 16),
+                      label: Text(
+                        CareVoice.tr(
+                          context,
+                          circleId,
+                          'medications.taken_short',
+                        ),
                       ),
                     ),
                   ),

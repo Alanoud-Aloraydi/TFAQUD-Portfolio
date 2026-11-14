@@ -12,6 +12,7 @@ class CareItemHeader extends StatelessWidget {
     required this.body,
     required this.status,
     this.onTap,
+    this.spoken,
   });
 
   final String time;
@@ -19,6 +20,12 @@ class CareItemHeader extends StatelessWidget {
   final Widget body;
   final Widget status;
   final VoidCallback? onTap;
+
+  /// What a screen reader says for the whole line. Merged alone, the line
+  /// is read in the order it is laid out, which starts with the time: on a
+  /// day of four doses every row then opens with a number. Given here, the
+  /// line names the thing first.
+  final String? spoken;
 
   /// The most of the line the status takes beside the text.
   static const double _statusShare = 0.4;
@@ -55,6 +62,8 @@ class CareItemHeader extends StatelessWidget {
     return MergeSemantics(
       child: Semantics(
         button: onTap != null,
+        label: spoken,
+        excludeSemantics: spoken != null,
         child: InkWell(
           onTap: onTap,
           child: ConstrainedBox(

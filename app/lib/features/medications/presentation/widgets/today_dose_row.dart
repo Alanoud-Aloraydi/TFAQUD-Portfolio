@@ -50,15 +50,27 @@ class TodayDoseRow extends StatelessWidget {
       scheduledAt: wallClockAt(occurrence.scheduledOn, occurrence.time),
       now: now,
     );
+    final String title =
+        '${occurrence.name} ${doseStrengthText(context, occurrence)}';
     return CareItemRow(
       time: clockText(occurrence.time),
+      // The name first, then the clock: a day of four doses otherwise
+      // opens every row with a number. «·» is not read aloud.
+      spoken: <String>[
+        title,
+        clockText(occurrence.time),
+        dose,
+        if (occurrence.instructions case final String how) how,
+        if (status.lateBy case final String lateBy) lateBy,
+        status.label,
+      ].join('، '),
       tone: status.unrecorded ? TodayRowTone.attention : TodayRowTone.normal,
       leading: DoseRowLeading(
         circleId: circleId,
         planId: occurrence.planId,
         showPhoto: showThumbnail,
       ),
-      title: '${occurrence.name} ${doseStrengthText(context, occurrence)}',
+      title: title,
       subtitle: occurrence.instructions == null
           ? dose
           : '$dose · ${occurrence.instructions}',

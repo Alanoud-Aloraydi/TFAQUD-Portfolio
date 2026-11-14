@@ -25,6 +25,15 @@ PRESSURE_STATES = ("before_medicine", "after_medicine", "morning")
 # Blood pressure is not read against a fast or bedtime.
 NOT_FOR_BLOOD_PRESSURE = ("fasting", "before_meal", "bedtime")
 Value = Annotated[int, Field(ge=1, le=999)]
+# What a reading may be. 1 to 999 took a diastolic typed as 18 instead of
+# 80, and the health summary a doctor reads carried it. Wide enough for a
+# reading worth an ambulance, narrow enough to catch a slip of the finger.
+# The app holds the same numbers in
+# features/measurements/domain/measurement_limits.dart; change them
+# together.
+SYSTOLIC_RANGE = (60, 260)
+DIASTOLIC_RANGE = (30, 160)
+GLUCOSE_RANGE = (20, 600)
 Conditions = Annotated[list[Code], Field(max_length=len(CODES))]
 MeasurementState = Literal[
     "fasting", "before_meal", "after_meal",
@@ -182,13 +191,26 @@ class ReadingRequest(Dto):
         check_conditions(self.kind, list(self.conditions))
         if self.other_text is not None and "other" not in self.conditions:
             raise ValueError("Words for «أخرى» need «أخرى».")
-        # A blood pressure's systolic is above its diastolic.
-        if (
-            self.outcome == "read" and self.kind == "blood_pressure"
-            and self.systolic_value <= self.diastolic_value
-        ):
-            raise ValueError("Systolic must exceed diastolic.")
+        # A blood pressure's systolic is above its diastolic, and every
+        # number is one a body can have.
+        if self.outcome == "read":
+            if self.kind == "blood_pressure":
+                if self.systolic_value <= self.diastolic_value:
+                    raise ValueError("Systolic must exceed diastolic.")
+                _in_range(self.systolic_value, SYSTOLIC_RANGE, "systolic")
+                _in_range(self.diastolic_value, DIASTOLIC_RANGE, "diastolic")
+            else:
+                _in_range(self.glucose_value, GLUCOSE_RANGE, "glucose")
         return self
+
+
+def _in_range(value: int, bounds: tuple[int, int], name: str) -> None:
+    """Refuse a number no reading of [name] can be."""
+    low, high = bounds
+    if not low <= value <= high:
+        raise ValueError(
+            f"A {name} reading is between {low} and {high}."
+        )
 
 
 class ReadingQuery(Dto):

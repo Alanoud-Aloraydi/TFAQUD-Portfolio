@@ -94,7 +94,6 @@ void main() {
     expect(document.sections.map((s) => s.title), <String>[
       'record_export.summary'.tr(),
       'record_export.measurements'.tr(),
-      'record_export.unrecorded_measurements'.tr(),
       'record_export.medications'.tr(),
       'record_export.dose_log'.tr(),
       'record_export.appointments'.tr(),

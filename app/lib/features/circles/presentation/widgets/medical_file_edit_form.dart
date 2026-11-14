@@ -135,10 +135,22 @@ class _EditFormState extends State<MedicalFileEditForm> {
     }
   }
 
-  List<ChipOption> _options(String group, List<String> codes) {
+  /// [otherLabel] names the «أخرى» chip of this group. Under «الحساسية»
+  /// the medicines and the foods are one list with no label of their own,
+  /// so two bare «أخرى» chips would be impossible to tell apart.
+  List<ChipOption> _options(
+    String group,
+    List<String> codes, {
+    String? otherLabel,
+  }) {
     return <ChipOption>[
       for (final String code in <String>[...codes, MedicalOptions.other])
-        ChipOption(code, context.tr('medical.$group.$code')),
+        ChipOption(
+          code,
+          code == MedicalOptions.other && otherLabel != null
+              ? otherLabel
+              : context.tr('medical.$group.$code'),
+        ),
     ];
   }
 
@@ -281,14 +293,18 @@ class _EditFormState extends State<MedicalFileEditForm> {
                   isSelected: (String code) => form.noAllergies,
                   onTap: (String code) => cubit.toggleNoAllergies(),
                 ),
-                // «لا توجد حساسية» answers the whole section, so the two
-                // groups under it are only there when it is off.
+                // «لا توجد حساسية» answers the whole section, so the
+                // chips under it are only there when it is off. Medicines
+                // and foods are one flow: each chip names itself, so a
+                // label over each half only pushed them apart.
                 if (!form.noAllergies) ...<Widget>[
-                  const SizedBox(height: AppSpacing.lg),
-                  InsetText.group(context.tr('circles.allergy_medication')),
                   const SizedBox(height: AppSpacing.sm),
                   OptionChips(
-                    options: _options('medication', MedicalOptions.medications),
+                    options: _options(
+                      'medication',
+                      MedicalOptions.medications,
+                      otherLabel: context.tr('circles.allergy_other_medicine'),
+                    ),
                     isSelected: form.medication.contains,
                     onTap: cubit.toggleMedication,
                   ),
@@ -308,11 +324,13 @@ class _EditFormState extends State<MedicalFileEditForm> {
                           : null,
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.lg),
-                  InsetText.group(context.tr('circles.allergy_food')),
                   const SizedBox(height: AppSpacing.sm),
                   OptionChips(
-                    options: _options('food', MedicalOptions.foods),
+                    options: _options(
+                      'food',
+                      MedicalOptions.foods,
+                      otherLabel: context.tr('circles.allergy_other_food'),
+                    ),
                     isSelected: form.food.contains,
                     onTap: cubit.toggleFood,
                   ),

@@ -19,7 +19,7 @@ class ReadingValue extends StatelessWidget {
     final bool bp = reading.kind == MeasurementKind.bp;
     return Semantics(
       label:
-          '${reading.valueText} '
+          '${reading.spokenValue(context.tr('measurements.over'))} '
           '${context.tr(bp ? 'measurements.bp_unit' : 'measurements.glucose_unit')}',
       excludeSemantics: true,
       child: Column(

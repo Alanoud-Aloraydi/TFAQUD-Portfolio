@@ -47,8 +47,13 @@ class EmptyStateNote extends StatelessWidget {
           child: Text(
             message,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: context.tokens.textSecondary),
+            // A whole empty tab has nothing else to read, so it speaks up;
+            // a note under a list stays quiet.
+            style:
+                (_fillsSection
+                        ? Theme.of(context).textTheme.bodyLarge
+                        : Theme.of(context).textTheme.bodySmall)
+                    ?.copyWith(color: context.tokens.textSecondary),
           ),
         ),
         if (actionLabel != null && onAction != null)

@@ -49,9 +49,12 @@ class SimplifiedNextCard extends StatelessWidget {
       simplifiedTime(context, task.time),
       if (period != null) simplifiedPeriod(context, period),
       simplifiedTaskTitle(context, task),
+      // The amount, not the strength. «حبة واحدة» is what the patient
+      // acts on; «81 ملغ» is for whoever manages the plan, and spoken it
+      // is a whole clause between them and the next thing they need.
       if (task.dose case final dose?) ...<String>[
         simplifiedDoseAmount(context, dose),
-        simplifiedStrength(context, dose),
+        if (dose.reason case final String why) why,
       ],
       ...simplifiedTaskChips(context, task, day),
     ];
@@ -191,8 +194,11 @@ class SimplifiedNextCard extends StatelessWidget {
               simplifiedDoseAmount(context, dose),
               style: SimplifiedStyle.head(SimplifiedStyle.headline),
             ),
+            // What it is for, when the plan says: «حبة الضغط» tells the
+            // patient more than «81 ملغ» does. The strength stays for
+            // whoever manages the plan, on the medicine's own page.
             Text(
-              simplifiedStrength(context, dose),
+              dose.reason ?? simplifiedStrength(context, dose),
               style: SimplifiedStyle.text(
                 SimplifiedStyle.body,
                 weight: AppTextTheme.medium,

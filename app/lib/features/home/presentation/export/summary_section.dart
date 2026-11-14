@@ -26,12 +26,9 @@ RecordPdfSection summarySection(BuildContext context, RecordExportData data) {
           data.doses.where((d) => d.record != null).length,
         ),
       ],
-      if (options.medications || options.measurements)
-        count(
-          'record_export.missed_tasks',
-          (options.medications ? data.missedDoses.length : 0) +
-              (options.measurements ? data.missedTasks.length : 0),
-        ),
+      // Only doses: the file carries what was recorded of the readings.
+      if (options.medications)
+        count('record_export.missed_tasks', data.missedDoses.length),
       if (options.appointments)
         count('record_export.appointment_count', data.appointments.length),
     ],

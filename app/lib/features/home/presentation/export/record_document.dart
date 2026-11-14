@@ -5,7 +5,6 @@ import 'package:app/features/home/presentation/export/appointment_section.dart';
 import 'package:app/features/home/presentation/export/dose_log_section.dart';
 import 'package:app/features/home/presentation/export/measurement_section.dart';
 import 'package:app/features/home/presentation/export/medication_section.dart';
-import 'package:app/features/home/presentation/export/missed_measurements_section.dart';
 import 'package:app/features/home/presentation/export/patient_section.dart';
 import 'package:app/features/home/presentation/export/summary_section.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -51,8 +50,6 @@ RecordPdfDocument buildRecordDocument(
       if (options.medications || options.measurements || options.appointments)
         summarySection(context, data),
       if (options.measurements) measurementSection(context, data),
-      if (options.measurements && options.detailed)
-        missedMeasurementsSection(context, data),
       if (options.medications) medicationSection(context, data),
       if (options.medications && options.detailed)
         doseLogSection(context, data),
