@@ -1,7 +1,5 @@
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
@@ -23,9 +21,9 @@ import 'package:app/features/measurements/presentation/cubit/measurement_reading
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
 import 'package:app/features/measurements/presentation/widgets/range_condition_row.dart';
+import 'package:app/features/measurements/presentation/widgets/reading_number_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
@@ -214,30 +212,26 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                   : null,
             ),
             const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: _numberField(
-                    _kind == MeasurementKind.bp
-                        ? 'measurements.systolic'
-                        : 'measurements.value',
-                    _kind == MeasurementKind.bp ? _systolic : _glucose,
-                  ),
-                ),
-                if (_kind == MeasurementKind.bp) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    child: Text(
-                      '/',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                  ),
-                  Expanded(
-                    child: _numberField('measurements.diastolic', _diastolic),
-                  ),
-                ],
-              ],
+            // The upper number on top, the lower under it.
+            ReadingNumberField(
+              label: context.tr(
+                _kind == MeasurementKind.bp
+                    ? 'measurements.systolic'
+                    : 'measurements.value',
+              ),
+              controller: _kind == MeasurementKind.bp ? _systolic : _glucose,
+              onChanged: () => setState(() {}),
+              last: _kind != MeasurementKind.bp,
             ),
+            if (_kind == MeasurementKind.bp) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ReadingNumberField(
+                label: context.tr('measurements.diastolic'),
+                controller: _diastolic,
+                onChanged: () => setState(() {}),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xs),
             Text(
               context.tr(
                 _kind == MeasurementKind.bp
@@ -342,29 +336,4 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
       ],
     );
   }
-
-  Widget _numberField(String label, TextEditingController controller) => Column(
-    children: [
-      Text(context.tr(label)),
-      const SizedBox(height: AppSpacing.xs),
-      TextField(
-        controller: controller,
-        // The level under the values follows what is typed.
-        onChanged: (_) => setState(() {}),
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.headlineMedium,
-        inputFormatters: [
-          const WesternDigitsFormatter(),
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(3),
-        ],
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: AppSemanticColors.surfaceContent,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-        ),
-      ),
-    ],
-  );
 }
