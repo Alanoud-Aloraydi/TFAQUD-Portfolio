@@ -250,6 +250,12 @@ class MeasurementReading extends Equatable {
   String get valueText =>
       kind == MeasurementKind.bp ? '$valueOne/$valueTwo' : '$valueOne';
 
+  /// The same reading for a screen reader. A reader says the slash of
+  /// «150/80» as «مائل» or drops it; «150 على 80» is how a blood pressure
+  /// is said aloud, in the clinic and at home.
+  String spokenValue(String over) =>
+      kind == MeasurementKind.bp ? '$valueOne $over $valueTwo' : '$valueOne';
+
   factory MeasurementReading.fromJson(Map<String, dynamic> json) =>
       MeasurementReading(
         id: json['id'] as String,

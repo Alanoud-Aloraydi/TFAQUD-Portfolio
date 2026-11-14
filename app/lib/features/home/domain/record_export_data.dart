@@ -41,9 +41,6 @@ class RecordExportData {
     (item) => item.record == null && item.timingState == DoseTimingState.missed,
   );
 
-  Iterable<MeasurementOccurrence> get missedTasks =>
-      measurementTasks.where((item) => item.status == MeasurementStatus.missed);
-
   Iterable<MeasurementReading> get takenReadings =>
       readings.where((item) => item.outcome == 'read');
 

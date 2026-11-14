@@ -262,6 +262,11 @@ def test_an_edit_on_the_day_the_medicine_was_added_replaces_it(
     assert [o["strength_value"] for o in occurrences.json[
         "medication_occurrences"
     ]] == ["1000"]
+    # An occurrence says what the medicine is for: the patient's own
+    # screen shows that in place of the strength.
+    assert [o["reason_for_use"] for o in occurrences.json[
+        "medication_occurrences"
+    ]] == ["Diabetes"]
     # The replaced versions stay, cancelled, for the audit.
     with Session(database) as session:
         cancelled = session.scalar(

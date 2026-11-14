@@ -47,8 +47,8 @@ class StatusBadge extends StatelessWidget {
   /// The fill of [tone].
   static Color fill(StatusTone tone) => switch (tone) {
     StatusTone.neutral => AppSemanticColors.segmentTrack,
-    StatusTone.info => AppSemanticColors.borderPlan,
-    StatusTone.success => AppSemanticColors.selectedSurface,
+    StatusTone.info => AppSemanticColors.surfaceInfo,
+    StatusTone.success => AppSemanticColors.surfaceSuccess,
     StatusTone.attention => AppSemanticColors.surfaceAttention,
     StatusTone.danger => AppSemanticColors.surfaceDanger,
     StatusTone.muted => AppSemanticColors.surfaceContent,
@@ -60,7 +60,7 @@ class StatusBadge extends StatelessWidget {
   /// The text and icon colour of [tone], readable on its fill.
   static Color ink(BuildContext context, StatusTone tone) => switch (tone) {
     StatusTone.neutral || StatusTone.muted => context.tokens.textSecondary,
-    StatusTone.info => AppSemanticColors.textPrimary,
+    StatusTone.info => context.tokens.infoText,
     StatusTone.success => context.tokens.successText,
     StatusTone.attention => context.tokens.warningText,
     StatusTone.danger => context.tokens.errorText,

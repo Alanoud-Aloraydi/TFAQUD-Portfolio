@@ -13,6 +13,7 @@ class ChartScale {
     required this.days,
     required this.topValue,
     this.bottomValue = 0,
+    this.step = 0,
   });
 
   factory ChartScale.of(
@@ -42,28 +43,47 @@ class ChartScale {
       MeasurementKind.glucose => (60, 200),
       MeasurementKind.bp => (50, 160),
     };
-    final double bottom =
-        (math.min(floor, lowest - 10) / 10).floorToDouble() * 10;
-    final double top =
-        (math.max(ceiling, highest + 15) / 10).ceilToDouble() * 10;
+    final (double bottom, double top, double step) = _bounds(
+      math.min(floor, values.isEmpty ? floor : lowest),
+      math.max(ceiling, highest),
+    );
     return ChartScale(
       size: size,
       days: DateTime(month.year, month.month + 1, 0).day,
       topValue: top,
       bottomValue: values.isEmpty && targetHigh == null ? 0 : bottom,
+      step: step,
     );
+  }
+
+  /// The axis in round numbers. The smallest step of 5, 10, 20, 25, 50 or
+  /// 100 that covers [lowest] to [highest] in three to five lines, with
+  /// both ends resting on the step. Taking the smallest keeps the axis
+  /// close to the readings: a fixed three steps let one high reading pick a
+  /// step so wide that the axis began at zero and flattened the rest.
+  static (double, double, double) _bounds(int lowest, int highest) {
+    const List<double> steps = <double>[5, 10, 20, 25, 50, 100, 200, 500];
+    for (final double step in steps) {
+      final double bottom = (lowest / step).floorToDouble() * step;
+      final double top = (highest / step).ceilToDouble() * step;
+      if ((top - bottom) / step <= 5) return (bottom, top, step);
+    }
+    final double step = steps.last;
+    final double bottom = (lowest / step).floorToDouble() * step;
+    return (bottom, bottom + step * 3, step);
   }
 
   static const double labelWidth = 29;
   static const double chartLeft = 4;
   static const double chartTop = 16;
   static const double bottomPad = 24;
-  static const int minTop = 180;
-  static const int headroom = 20;
 
   final Size size;
   final int days;
   final double topValue;
+
+  /// The distance between two lines of the axis.
+  final double step;
 
   /// Where the axis starts. Readings live well above zero, so the chart
   /// does too.
@@ -78,19 +98,21 @@ class ChartScale {
               (topValue - bottomValue)) *
           (chartBottom - chartTop);
 
-  /// The four lines the chart draws and labels, in round numbers.
+  /// The lines the chart draws and labels, three to five of them. Both
+  /// ends already rest on the step, so these need no rounding of their own.
   List<int> get ticks {
-    final double step = (topValue - bottomValue) / 3;
+    final double gap = step > 0 ? step : (topValue - bottomValue) / 3;
     return <int>[
-      for (int index = 0; index < 4; index++)
-        ((bottomValue + step * index) / 5).round() * 5,
+      for (double at = bottomValue; at <= topValue + .01; at += gap) at.round(),
     ];
   }
 
   double x(int day) => size.width - labelWidth - (day - .5) * slot;
 
-  /// The width of one bar when [count] readings share a day.
-  double barWidth(int count) => math.min(9, math.max(6, slot / count - 1));
+  /// The width of one bar when [count] readings share a day. A day of a
+  /// month is about nine points wide, so four readings on it have to be
+  /// thin: holding a floor of six made them overlap into one blob.
+  double barWidth(int count) => math.min(9, math.max(2, slot / count - 1));
 
   /// The distance between the centres of bars that share a day.
   double barStep(int count) =>

@@ -8,7 +8,7 @@ Future<bool?> showRecordExportConfirm(
   BuildContext context,
   RecordExportData data,
 ) {
-  final int missed = data.missedDoses.length + data.missedTasks.length;
+  final int missed = data.missedDoses.length;
   return showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(

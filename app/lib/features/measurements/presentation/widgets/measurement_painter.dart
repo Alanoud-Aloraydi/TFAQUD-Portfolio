@@ -59,7 +59,7 @@ class MeasurementPainter extends CustomPainter {
     if (kind == MeasurementKind.glucose) {
       canvas.drawRect(
         Rect.fromLTRB(ChartScale.chartLeft, scale.y(high), right, scale.y(low)),
-        Paint()..color = AppSemanticColors.selectedSurface,
+        Paint()..color = AppSemanticColors.surfaceSuccess,
       );
       return;
     }
@@ -118,7 +118,7 @@ class MeasurementPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = AppSemanticColors.textPrimary.withValues(alpha: .45)
+          ..color = AppSemanticColors.chartInk.withValues(alpha: .45)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
           ..strokeJoin = StrokeJoin.round,
@@ -130,8 +130,8 @@ class MeasurementPainter extends CustomPainter {
         4,
         Paint()
           ..color = outside
-              ? AppSemanticColors.statusWarning
-              : AppSemanticColors.textPrimary,
+              ? AppSemanticColors.statusError
+              : AppSemanticColors.chartInk,
       );
     }
   }
@@ -164,8 +164,8 @@ class MeasurementPainter extends CustomPainter {
           ),
           Paint()
             ..color = reading.outsideTarget == true
-                ? AppSemanticColors.statusWarning
-                : AppSemanticColors.textPrimary,
+                ? AppSemanticColors.statusError
+                : AppSemanticColors.chartInk,
         );
       }
     }

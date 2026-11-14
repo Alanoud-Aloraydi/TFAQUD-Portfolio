@@ -38,6 +38,15 @@ class AppointmentTodayRow extends StatelessWidget {
     final String? circleId = this.circleId;
     return CareItemRow(
       time: clockText(value.time),
+      // The visit first, then the clock.
+      spoken: <String>[
+        appointmentTitle(context, value),
+        if (appointmentClinic(value) case final String clinic) clinic,
+        clockText(value.time),
+        if (appointmentCompanionLine(context, value) case final String who
+            when who.isNotEmpty)
+          who,
+      ].join('، '),
       tone: waiting ? TodayRowTone.attention : TodayRowTone.normal,
       leading: const TodayTaskKindIcon(
         icon: CareVisuals.appointmentIcon,

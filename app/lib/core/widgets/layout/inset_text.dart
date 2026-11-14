@@ -2,7 +2,7 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-enum _InsetKind { plain, header, group, note }
+enum _InsetKind { plain, header, note }
 
 /// Text that stands outside a card: a small section label above a group of
 /// cards or chips, or a note, a hint or an empty-list line under it.
@@ -22,13 +22,6 @@ class InsetText extends StatelessWidget {
       textAlign = null,
       _kind = _InsetKind.header;
 
-  /// A label one level under a header, for a group inside a section
-  /// («الأدوية» inside «الحساسية»).
-  const InsetText.group(this.text, {super.key})
-    : style = null,
-      textAlign = null,
-      _kind = _InsetKind.group;
-
   /// A small grey note or hint under a group.
   const InsetText.note(this.text, {super.key, this.style})
     : textAlign = null,
@@ -45,14 +38,13 @@ class InsetText extends StatelessWidget {
     final Color secondary = context.tokens.textSecondary;
     final TextStyle? resolved = switch (_kind) {
       _InsetKind.header => theme.titleSmall?.copyWith(color: secondary),
-      _InsetKind.group => theme.labelLarge?.copyWith(color: secondary),
       _InsetKind.note => style ?? theme.bodySmall?.copyWith(color: secondary),
       _InsetKind.plain => style,
     };
     final Widget label = Text(text, style: resolved, textAlign: textAlign);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.inset),
-      child: _kind == _InsetKind.header || _kind == _InsetKind.group
+      child: _kind == _InsetKind.header
           ? Semantics(header: true, child: label)
           : label,
     );
