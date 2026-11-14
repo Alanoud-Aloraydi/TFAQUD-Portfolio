@@ -86,7 +86,8 @@ def downgrade() -> None:
         f"AND code IN ({_sql(('quinolones', 'opioids'))})"
     )
     op.execute(
-        f"DELETE FROM patient_condition WHERE code IN ({_sql(_NEW_CONDITIONS)})"
+        "DELETE FROM patient_condition WHERE code IN "
+        f"({_sql(_NEW_CONDITIONS)})"
     )
     _allergies(_OLD_MEDICATIONS)
     _conditions(_OLD_CONDITIONS)

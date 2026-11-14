@@ -29,7 +29,9 @@ _OLD_CODES = {
 
 
 def upgrade() -> None:
-    op.drop_constraint(op.f("ck_appointment_kind"), "appointment", type_="check")
+    op.drop_constraint(
+        op.f("ck_appointment_kind"), "appointment", type_="check"
+    )
     op.create_check_constraint(
         op.f("ck_appointment_kind"), "appointment", f"kind IN ({kinds_sql()})"
     )
@@ -55,7 +57,10 @@ def downgrade() -> None:
         "UPDATE appointment SET other_text = coalesce(other_text, kind), "
         f"kind = 'other' WHERE kind NOT IN ({_OLD_KINDS})"
     )
-    op.execute("UPDATE appointment SET specialty = 'أخرى' WHERE specialty IS NULL")
+    op.execute(
+        "UPDATE appointment SET specialty = 'أخرى' "
+        "WHERE specialty IS NULL"
+    )
     op.drop_constraint(
         op.f("ck_appointment_specialty"), "appointment", type_="check"
     )
@@ -64,7 +69,9 @@ def downgrade() -> None:
         op.f("ck_appointment_specialty"), "appointment",
         "length(btrim(specialty)) > 0 AND char_length(specialty) <= 80",
     )
-    op.drop_constraint(op.f("ck_appointment_kind"), "appointment", type_="check")
+    op.drop_constraint(
+        op.f("ck_appointment_kind"), "appointment", type_="check"
+    )
     op.create_check_constraint(
         op.f("ck_appointment_kind"), "appointment", f"kind IN ({_OLD_KINDS})"
     )
