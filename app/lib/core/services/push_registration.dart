@@ -1,4 +1,5 @@
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -10,8 +11,15 @@ import 'package:flutter/services.dart';
 /// account iOS refuses quietly: no token, no question to the person, and
 /// nothing else happens. Once the app has the capability, the same code
 /// gets a token, asks to show notifications, and sends the token.
+///
+/// It also signs the account in to [RemotePush] (OneSignal), on iOS and
+/// Android, so the server's pushes through OneSignal find this phone.
 class PushRegistration {
-  PushRegistration(this._phone, this._sendToken);
+  PushRegistration(
+    this._phone,
+    this._sendToken, {
+    this._remote = const NoRemotePush(),
+  });
 
   static const MethodChannel channel = MethodChannel('tafaqod/push');
 
@@ -20,12 +28,22 @@ class PushRegistration {
   /// Sends the token to the server (PUT /accounts/me/push-device).
   final Future<void> Function(String token) _sendToken;
 
+  final RemotePush _remote;
+
   bool _listening = false;
 
   /// Asks iOS for the token. Called once the person is signed in; iOS
   /// answers through [channel] (`token`, or `tokenError` without the
-  /// capability).
-  Future<void> start() async {
+  /// capability). With [accountId], also signs this phone in to
+  /// [RemotePush] as that account.
+  Future<void> start({String? accountId}) async {
+    if (accountId != null) {
+      try {
+        await _remote.signIn(accountId);
+      } on Exception {
+        // OneSignal not reachable now: the next start signs in again.
+      }
+    }
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
     if (!_listening) {
       _listening = true;

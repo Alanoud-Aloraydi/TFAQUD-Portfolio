@@ -1,0 +1,12 @@
+// The build settings of the notification service extension
+// (OneSignalNotificationServiceExtension), for every configuration.
+//
+// Flutter's generated settings give it the app's version and build number,
+// which App Store Connect requires an extension to share with its app.
+// `flutter build ios` (or `flutter build ios --config-only`) writes them.
+#include? "../Flutter/Generated.xcconfig"
+
+// Signing: Automatic by default (the project's team, when built in Xcode).
+// The TestFlight workflow (.github/workflows/testflight.yml) appends the
+// distribution certificate and the extension's App Store profile below,
+// as it does to Flutter/Release.xcconfig for the app.

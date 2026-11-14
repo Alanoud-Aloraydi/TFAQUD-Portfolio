@@ -1,5 +1,6 @@
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,6 +75,36 @@ void main() {
       await push.start();
 
       expect(calls, isEmpty);
+    });
+
+    test(
+      'the signed-in account is tied to OneSignal, on Android too',
+      () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        final FakeRemotePush remote = FakeRemotePush();
+        final PushRegistration both = PushRegistration(
+          phone,
+          (String token) async => sent.add(token),
+          remote: remote,
+        );
+
+        await both.start(accountId: 'acc-1');
+
+        expect(remote.signIns, <String>['acc-1']);
+        expect(calls, isEmpty);
+      },
+    );
+
+    test('OneSignal out of reach does not stop the Apple token', () async {
+      final PushRegistration both = PushRegistration(
+        phone,
+        (String token) async => sent.add(token),
+        remote: _FailingRemotePush(),
+      );
+
+      await both.start(accountId: 'acc-1');
+
+      expect(calls, <String>['register']);
     });
   });
 
@@ -161,4 +192,11 @@ void main() {
       expect(phone.takeLaunchTap(), isNull);
     });
   });
+}
+
+/// OneSignal that cannot be reached.
+class _FailingRemotePush extends NoRemotePush {
+  @override
+  Future<void> signIn(String accountId) async =>
+      throw Exception('OneSignal unreachable');
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -152,4 +153,48 @@ class FakeCalendarSync extends Fake implements CalendarSync {
 
   @override
   Future<void> clear() async => clears++;
+}
+
+/// The server's pushes (OneSignal), in memory: who signed in and out, the
+/// permission asks, and a subscription id the test sets with [register].
+class FakeRemotePush implements RemotePush {
+  final List<String> signIns = <String>[];
+  final List<RemotePushObserver> observers = <RemotePushObserver>[];
+  int signOuts = 0;
+  int permissionRequests = 0;
+  String? id;
+
+  /// OneSignal's servers give this phone [subscriptionId].
+  void register(String subscriptionId) {
+    id = subscriptionId;
+    for (final RemotePushObserver observer in List.of(observers)) {
+      observer(subscriptionId);
+    }
+  }
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<void> signIn(String accountId) async => signIns.add(accountId);
+
+  @override
+  Future<void> signOut() async => signOuts++;
+
+  @override
+  String? get subscriptionId => id;
+
+  @override
+  void addSubscriptionObserver(RemotePushObserver observer) =>
+      observers.add(observer);
+
+  @override
+  void removeSubscriptionObserver(RemotePushObserver observer) =>
+      observers.remove(observer);
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return true;
+  }
 }

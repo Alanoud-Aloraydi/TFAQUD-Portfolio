@@ -96,10 +96,10 @@ class _SimplifiedModeFeatureScreenState
   /// Gives the server this phone's push token once the patient's day is
   /// read, as the detailed home does: a missed dose or measurement, and
   /// the circle's news, reach the patient in this mode too.
-  void _startPush() {
+  void _startPush(String accountId) {
     if (_pushStarted) return;
     _pushStarted = true;
-    unawaited(GetIt.I<PushRegistration>().start());
+    unawaited(GetIt.I<PushRegistration>().start(accountId: accountId));
   }
 
   void _openPending(BuildContext context) {
@@ -116,8 +116,8 @@ class _SimplifiedModeFeatureScreenState
           (after.day != null && before.day == null) ||
           (after.messageKey != null && after.messageKey != before.messageKey),
       listener: (context, state) {
-        if (state.day != null) {
-          _startPush();
+        if (state.day case final SimplifiedDay day) {
+          _startPush(day.accountId);
           _openPending(context);
         }
         final String? key = state.messageKey;
