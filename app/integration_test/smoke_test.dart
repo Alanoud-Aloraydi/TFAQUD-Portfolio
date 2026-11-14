@@ -13,6 +13,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
@@ -143,8 +144,10 @@ void main() {
       ),
     );
     di.registerSingleton<CalendarSync>(SmokeCalendarSync());
+    final FakeRemotePush remote = FakeRemotePush();
+    di.registerSingleton<RemotePush>(remote);
     di.registerSingleton<PushRegistration>(
-      PushRegistration(phone, (String token) async {}),
+      PushRegistration(phone, remote: remote),
     );
     di.registerSingleton<PrayerTimesUseCase>(
       PrayerTimesUseCase(PrayerTimesRepository(SmokePrayerTimes())),

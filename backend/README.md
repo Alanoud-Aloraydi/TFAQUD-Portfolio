@@ -205,43 +205,39 @@ dose or measurement due or missed, an appointment the day before). The app
 also sets its own dose reminders on the phone itself, independent of the
 server's.
 
-Apple sends a push only to an app signed with a **paid** Apple Developer
-account that has the Push Notifications capability. The team has one, and
-`.env` sets `PUSH_BACKEND=apns`, so this is live. Without it,
-`PUSH_BACKEND=none` (the default): the app still sends its phone's token
-(`PUT /api/v1/accounts/me/push-device`), but the server sends nothing — the
-state a fresh environment (a new developer's machine, a new paid account)
-starts in.
+Pushes go through [OneSignal](https://onesignal.com), to iOS and Android.
+The app signs its phone in to OneSignal with the account's id (OneSignal's
+external id) and out again at sign-out
+(`app/lib/core/services/one_signal_remote_push.dart`), so the server sends to
+an account and keeps no phone tokens. Only an account with a live sign-in is
+sent to. Without `PUSH_BACKEND=onesignal` (the default is `none`) the server
+sends nothing — the state a fresh environment starts in.
 
-To set it up with a paid account:
+To set it up:
 
-1. In the Apple Developer website: Certificates, Identifiers & Profiles, then
-   Keys, then make a key with **Apple Push Notifications service (APNs)**.
-   Download the `.p8` file (Apple gives it only once) and note its Key ID and
-   the Team ID (top right of the website).
-2. Put the file in `backend/secrets/` (git ignores `*.p8`; never commit it).
-3. In your `.env`:
+1. In OneSignal, make an app. Under **Settings**, **Push & In-App**:
+   - **Apple iOS (APNs)**: upload the team's `.p8` key (from the Apple
+     Developer website, Keys, with **Apple Push Notifications service**;
+     Apple gives the file once), with its Key ID, the Team ID and the bundle
+     id `com.tfaqud.tfaqud`. The key must be for **Sandbox & Production**
+     and **Team Scoped**.
+   - **Google Android (FCM)**: upload the service-account key (`.json`) of a
+     Firebase project whose Android app is `com.tfaqud.tfaqud`.
+2. **Settings**, **Keys & IDs**: the App ID (not a secret; the app has it
+   too) and a new **App API key** (a secret: never in git).
+3. In your `.env` (and in Render, **Environment**):
    ```
-   PUSH_BACKEND=apns
-   APNS_KEY_ID=<the key id>
-   APNS_TEAM_ID=<the team id>
-   APNS_BUNDLE_ID=<the app's bundle id>
-   APNS_PRIVATE_KEY_PATH=/app/secrets/AuthKey_<key id>.p8
-   APNS_ENVIRONMENT=sandbox
+   PUSH_BACKEND=onesignal
+   ONESIGNAL_APP_ID=<the app id>
+   ONESIGNAL_API_KEY=<the App API key>
    ```
-   `production` is for TestFlight and the App Store (the way the team installs
-   the app); `sandbox` is only for builds signed for development.
-4. The app already asks for push (`app/ios/Runner/Runner.entitlements` and
-   `RunnerRelease.entitlements`). Build it with `[testflight]` in the commit
-   message (`.github/workflows/testflight.yml`, which lists the secrets it
-   needs) and install it from TestFlight. The unsigned Sideloadly build
-   (`[ios]`) gets no push.
-5. `docker compose up -d --force-recreate api`, then open the TestFlight app
-   on the phone and sign in.
+4. Build the app with `[testflight]` in the commit message
+   (`.github/workflows/testflight.yml`, which lists the secrets it needs,
+   the notification service extension's profile among them) and install it
+   from TestFlight. On Android, any build of the app gets pushes.
 
 The code is in `app/push/`. A push that cannot be sent never fails the
-request; a token Apple no longer knows is deleted. A signed-out phone gets
-nothing, because the token belongs to the sign-in that sent it.
+request.
 
 ### Scheduled notifications
 
@@ -251,61 +247,57 @@ its time, and each appointment a day before and two hours before
 (`app/lib/core/services/reminders/dose_reminders.dart`). The server
 only tells what a phone cannot know ahead.
 
-`POST /internal/tick` scans every circle for a dose or measurement whose
-time passed with nothing recorded, and sends each exactly once
-(`notification_log` records what was already sent, so a repeat call never
+The scan (`flask --app wsgi tick`) finds every dose or measurement whose
+time passed with nothing recorded, and every appointment two hours past
+that nobody marked done or cancelled, and sends each exactly once
+(`notification_log` records what was already sent, so a repeat scan never
 resends it). The push goes to every manager of that circle and to its
-patient if the patient has an account.
+patient if the patient has an account, each by name.
 
 Every push uses the app's own sound, `tafaqod_chime.wav`, the same as the
 app's reminders (the app copies it to the phone's `Library/Sounds`; until
 the app has run once, iOS plays its default sound).
 
-GitHub runs a scheduled workflow only from the repository's default branch
-(`main`), so the tick below starts once `notify-tick.yml` is on `main`.
+Render runs the scan every 10 minutes as a **Cron Job** (`tfaqud-tick` in
+`render.yaml`): its own short-lived process from the same image, with the
+same database and OneSignal settings as the API, which sends every push of
+the scan before it ends. It needs no URL and no secret, and runs even while
+the free API sleeps. A cron job costs at least $1 a month (billed by the
+second it runs). Locally, run `flask --app wsgi tick` when you want a scan.
 
-The route only runs the scan when the `X-Tick-Secret` header equals
-`TICK_SECRET`; otherwise it answers 404, the same as a route that does not
-exist. Set `TICK_SECRET` in your `.env` (any long random value) and give
-the same value to whatever calls it on a schedule.
-
-Something has to call it on a schedule. The repository's own
-`.github/workflows/notify-tick.yml` does this for free, every 10 minutes,
-using the `TICK_SECRET` repository secret — set that secret once in GitHub
-(Settings, Secrets and variables, Actions) and it runs on its own, no
-server or paid plan required. On a paid Render plan, a Render Cron Job can
-call the same URL and header instead; nothing in the server changes either
-way, so switching is just turning one off and the other on.
+`POST /internal/tick` runs the same scan on request, only with the
+`X-Tick-Secret` header equal to `TICK_SECRET` (otherwise 404, the same as a
+route that does not exist).
 
 ## Deadlines, breakers and counters
 
 How the server stays up when something it depends on does not.
 
-- **Every call has a deadline.** Authentica 10 seconds, Aladhan 8, Apple 10,
+- **Every call has a deadline.** Authentica 10 seconds, Aladhan 8, OneSignal 10,
   and the database too: 5 seconds per query, 3 seconds to wait for a lock,
   30 seconds for a transaction left idle, 5 seconds to connect and 5 to get
   a free connection (`DATABASE_*` settings in `.env.example`). A query past
   its deadline answers 503 `database_unavailable`. Migrations lift the query
   deadline for themselves only (`migrations/env.py`).
 - **A sick service is not called for a while.** After 3 failed calls in a row
-  to Authentica, Aladhan or Apple, that service is not called for 60 seconds
+  to Authentica, Aladhan or OneSignal, that service is not called for 60 seconds
   (`app/resilience.py`): sign-in answers `sms_unavailable` at once (and the
   code is not counted against the number), the home page shows its greeting
-  without prayer times, and a push is kept for the next time. There is no
+  without prayer times, and a push is not sent. There is no
   breaker around our own database.
 - **No one waits for a push.** Push notifications are sent after the answer,
   on two background threads (`app/background.py`), so an invitation or the
-  scheduled scan never waits for Apple. A push still waiting when the server
-  stops is lost; the app shows the same thing when it is opened.
+  scheduled scan never waits for OneSignal. A push still waiting when the
+  server stops is lost; the app shows the same thing when it is opened.
 - **Counters to alert on** (`app/metrics.py`), next to the log lines:
   `sign_in.code_sent`, `sign_in.code_not_sent`, `sign_in.code_not_checked`,
   `sign_in.invalid_code`, `sign_in.completed`, `push.sent`, `push.failed`,
-  `push.gone`, `push.unregistered` (Apple's 410: the app was deleted),
-  `session.signed_out_by_apple`, `snooze.dose_due` and
+  `push.no_device` (no phone of the account shows pushes),
+  `snooze.dose_due` and
   `snooze.measurement_due` (a task put off came again),
   `prayer_times.unavailable`,
-  `tick.missed_dose`,
-  `tick.missed_measurement`, `circuit.<service>.opened` and `.refused`,
+  `tick.missed_dose`, `tick.missed_measurement`, `tick.missed_appointment`,
+  `circuit.<service>.opened` and `.refused`,
   `database.unavailable`, `errors.internal`, `background.failed` and
   `background.dropped`. `GET /internal/metrics` with the `X-Tick-Secret`
   header reads them. Each server process counts on its own from its start
@@ -329,15 +321,14 @@ The first time:
 2. In Render: **New**, then **Blueprint**, pick the repository and a branch:
    Render reads `render.yaml` from it. The API deploys from `main` whatever
    the branch (`branch: main` in `render.yaml`).
-3. Render asks for the values that are not in git: `PUSH_BACKEND` (`none` for
-   now), `APNS_KEY_ID` and `APNS_TEAM_ID`.
+3. Render asks for the values that are not in git: `PUSH_BACKEND`
+   (`onesignal`, or `none` for no pushes), `ONESIGNAL_APP_ID` and
+   `ONESIGNAL_API_KEY` (see "Push notifications"). The cron job
+   `tfaqud-tick` reads them from the API.
 4. **Apply**. The first build takes a few minutes. The API's address is at the
    top of its page, such as `https://tfaqud-api.onrender.com`;
    `https://<address>/api/v1/health` answers when it is ready.
-5. Push: on the API's page, **Environment**, **Secret Files**, add a file named
-   `apns_key.p8` with the text of the `.p8` key. Then set `PUSH_BACKEND` to
-   `apns` and **Save and deploy**.
-6. Build the app for it: `[testflight api=https://<address>]` in a commit
+5. Build the app for it: `[testflight api=https://<address>]` in a commit
    message.
 
 Signing in: the code comes by SMS through Authentica (`SMS_BACKEND` is

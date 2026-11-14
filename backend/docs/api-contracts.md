@@ -170,13 +170,14 @@ There is no endpoint that ends all the sessions at once, because no story asks
 for it. Deleting an account (F05) ends every session of that user.
 
 **A session ends only by a sign-out (Rule, 10 November 2026).** A refresh token
-has no end date. A session ends in one of three ways, and each is a sign-out:
+has no end date. A session ends in one of two ways, and each is a sign-out:
 
 - the person signs out (`POST /api/v1/auth/sign-out`);
-- the account is deleted (F05);
-- the app was deleted from the phone: Apple then answers 410 for the phone's
-  push token, and the server signs out the session that token belongs to
-  (section 6, push-device). Apple's answer can come days later.
+- the account is deleted (F05).
+
+(Until 14 November 2026 a deleted app also signed its session out, through
+Apple's 410 for the phone's push token. Pushes now go through OneSignal, which
+keeps no token on the server, so that third way is gone.)
 
 The app also signs out by itself when it is installed again: iOS keeps the
 tokens in the Keychain after the app is deleted, so the app checks on its
@@ -460,33 +461,21 @@ optional; an account with no circles sends no body):
 204, empty body. Errors: 400 `invalid_json`, 401, 422 `patient_choice_required`,
 `last_manager`, `validation_error`.
 
-### PUT /api/v1/accounts/me/push-device (Built)
+### Push notifications (Built, through OneSignal)
 
-The app sends its phone's Apple push token after the person signs in. Needs a valid
-access token. Body:
-
-```json
-{ "token": "a1b2...(64 hexadecimal characters)" }
-```
-
-The token (64 to 200 hexadecimal characters, any case) is kept with the sign-in
-(session) that sent it: after a sign-out that phone gets no push, and deleting the
-account or the session deletes it. A token that belonged to another sign-in moves to
-this one. A sign-in keeps only the last token it sent: the app sends its token every
-time it opens, and a new one replaces the old. When Apple answers 410 for a token
-(the app was deleted), the token is deleted and its sign-in is signed out; a token
-that is only wrong for the app (`BadDeviceToken`, often a sandbox token on the
-production server) is deleted and the sign-in stays. 204, empty body. Errors: 400 `invalid_json`, 401, 422 `validation_error`,
-503 without a database.
+The app ties its phone to the signed-in account in OneSignal (the account's id is
+OneSignal's external id) after the person signs in, and unties it at sign-out. The
+server keeps no phone token: it sends to accounts, and only to an account with a
+live sign-in. (`PUT /api/v1/accounts/me/push-device`, which kept Apple tokens, was
+removed on 14 November 2026.)
 
 The server sends a push (title and one line, in Arabic) for: a new or resent
 invitation (to the invited number's account), a circle request (to the patient's
 account), the patient's answer (to the sender), and a completed request (to the
 sender). The push carries `kind`: `invitation`, `circle_request`, `request_answer`
 or `circle_ready`. Pushes go out after the commit and never fail the request.
-Apple sends them only to an app signed with a paid Apple Developer account; until
-then `PUSH_BACKEND=none` and nothing is sent (backend README, "Push
-notifications").
+Without `PUSH_BACKEND=onesignal` and its two settings nothing is sent (backend
+README, "Push notifications").
 
 ### PUT /api/v1/circles/{circle_id}/task-snoozes (Built)
 
@@ -934,7 +923,6 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 | `patient_condition` | Chronic conditions of a patient (`code`, and `other_text` for `other`). | Codes from the official list; `other_text` exactly when the code is `other`; a code once per patient. |
 | `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or none when `allergies_status` is `none`. | The same rules; the code must belong to the kind. |
 | `emergency_contact` | Contacts of a patient: `name`, `relation`, `phone_number`. | Phone format, relation from the list, a number once per patient. The limit of 5 is checked by the server, not by the database. |
-| `push_device` | A phone's Apple push `token` and its `session_id` (its account is the session's). | The token is hexadecimal (64 to 200 characters) and unique. Deleted with its sign-in. |
 
 The medical tables (`care_circle.blood_type`, `patient_condition`, `patient_allergy`,
 `emergency_contact`) are **To confirm**: they are the design of 26 October 2026,
