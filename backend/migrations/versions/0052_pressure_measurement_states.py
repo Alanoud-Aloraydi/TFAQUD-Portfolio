@@ -28,12 +28,13 @@ _NEW_CONDITIONS = (
 
 
 def _conditions(codes: str) -> None:
-    for table in ("measurement_plan_time", "measurement_reading"):
-        name = op.f(f"ck_{table}_conditions")
-        op.drop_constraint(name, table, type_="check")
-        op.create_check_constraint(
-            name, table, f"conditions <@ ARRAY[{codes}]::text[]"
-        )
+    # Only a reading carries «ظروف القياس»: 0045 took the column off the
+    # plan's reading times and left them the one measurement_state.
+    name = op.f("ck_measurement_reading_conditions")
+    op.drop_constraint(name, "measurement_reading", type_="check")
+    op.create_check_constraint(
+        name, "measurement_reading", f"conditions <@ ARRAY[{codes}]::text[]"
+    )
 
 
 def _state(codes: str) -> None:
@@ -55,7 +56,9 @@ def upgrade() -> None:
         "CASE WHEN t.time_of_day < TIME '12:00' THEN 'morning' "
         "ELSE 'after_medicine' END "
         "FROM measurement_plan_version AS v "
-        "WHERE v.id = t.plan_version_id AND v.kind = 'blood_pressure' "
+        "JOIN measurement_plan AS p ON p.id = v.measurement_plan_id "
+        "WHERE v.id = t.plan_version_id "
+        "AND p.kind = 'blood_pressure' "
         "AND t.measurement_state IS NULL"
     )
 
@@ -68,11 +71,6 @@ def downgrade() -> None:
     )
     op.execute(
         "UPDATE measurement_reading SET conditions = "
-        f"array_remove(array_remove(array_remove(conditions, 'morning'), "
-        "'before_medicine'), 'after_medicine')"
-    )
-    op.execute(
-        "UPDATE measurement_plan_time SET conditions = "
         f"array_remove(array_remove(array_remove(conditions, 'morning'), "
         "'before_medicine'), 'after_medicine')"
     )
