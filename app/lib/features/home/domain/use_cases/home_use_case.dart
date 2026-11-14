@@ -6,8 +6,8 @@ import 'package:app/features/home/domain/repositories/home_repository_domain.dar
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// The home reads and writes the application is allowed to make.
 @lazySingleton
-/// Exposes home domain operations.
 class HomeUseCase {
   HomeUseCase(this._repository);
 

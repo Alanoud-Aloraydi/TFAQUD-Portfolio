@@ -6,7 +6,6 @@ import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
-import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
@@ -20,11 +19,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-import '../support/simplified_fakes.dart';
 import '../support/widget_harness.dart';
 
 /// 11:30 blood pressure, due before the patient's noon.
@@ -73,10 +70,6 @@ class _UseCase implements SimplifiedModeUseCase {
 void main() {
   group('SimplifiedReminderRoutes', () {
     setUpAll(initTestLocalization);
-    setUp(
-      () => GetIt.I.registerSingleton<SimplifiedVoice>(FakeSimplifiedVoice()),
-    );
-    tearDown(() => GetIt.I.unregister<SimplifiedVoice>());
 
     // The cubit ticks every minute. A test closes it in its own fake time,
     // before the binding checks for pending timers; a tear-down runs only

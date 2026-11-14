@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_page.dart';
@@ -21,7 +22,7 @@ const AppointmentCompanion _nora = AppointmentCompanion(
 );
 
 /// One companion to choose; remembers the appointments the form saves.
-class _Appointments extends Fake implements AppointmentRepository {
+class _Appointments extends Fake implements AppointmentsRepositoryDomain {
   final List<AppointmentDraft> created = <AppointmentDraft>[];
 
   @override
@@ -70,9 +71,11 @@ void main() {
     /// The form for a new visit, opened over a home page.
     Future<_Appointments> open(WidgetTester tester, PatientClock clock) async {
       final _Appointments repository = _Appointments();
-      final AppointmentsCubit appointments = AppointmentsCubit(repository);
+      final AppointmentsCubit appointments = AppointmentsCubit(
+        AppointmentsUseCase(repository),
+      );
       final AppointmentCompanionsCubit companions = AppointmentCompanionsCubit(
-        repository,
+        AppointmentsUseCase(repository),
       );
       addTearDown(appointments.close);
       addTearDown(companions.close);
@@ -116,10 +119,23 @@ void main() {
               .first,
         );
 
-    Future<void> fillAndSave(WidgetTester tester) async {
+    /// The place field, below the clinic field in the form.
+    Finder placeField() =>
+        find.widgetWithText(TextField, 'appointments.place'.tr());
+
+    /// Taps a companion chip, which grows a check mark and pushes the row
+    /// down, so it is brought back on screen before every tap.
+    Future<void> tapCompanion(WidgetTester tester) async {
       await scrollTo(tester, find.text('نورة'));
+      await tester.ensureVisible(find.text('نورة'));
+      await tester.pump();
       await tester.tap(find.text('نورة'));
-      await tester.enterText(find.byType(TextField).first, 'الحبيب');
+      await tester.pump();
+    }
+
+    Future<void> fillAndSave(WidgetTester tester) async {
+      await tapCompanion(tester);
+      await tester.enterText(placeField(), 'الحبيب');
       await tester.tap(find.text('appointments.save'.tr()));
       await tester.pumpAndSettle();
     }
@@ -131,7 +147,7 @@ void main() {
       // Nobody chosen; the place is above the companions.
       await scrollTo(tester, find.text('نورة'));
 
-      await tester.enterText(find.byType(TextField).first, 'الحبيب');
+      await tester.enterText(placeField(), 'الحبيب');
       await tester.tap(find.text('appointments.save'.tr()));
       await tester.pumpAndSettle();
 
@@ -141,17 +157,43 @@ void main() {
 
     testWidgets('the last companion can be taken off again', (tester) async {
       final _Appointments repository = await open(tester, _riyadhAt(8));
-      await scrollTo(tester, find.text('نورة'));
-      await tester.tap(find.text('نورة'));
-      await tester.pump();
-      await tester.tap(find.text('نورة'));
-      await tester.pump();
+      await tapCompanion(tester);
+      await tapCompanion(tester);
 
-      await tester.enterText(find.byType(TextField).first, 'الحبيب');
+      await tester.enterText(placeField(), 'الحبيب');
       await tester.tap(find.text('appointments.save'.tr()));
       await tester.pumpAndSettle();
 
       expect(repository.created.single.companionAccountIds, isEmpty);
+    });
+
+    testWidgets('the kind and the clinic are saved; the clinic is optional', (
+      tester,
+    ) async {
+      final _Appointments repository = await open(tester, _riyadhAt(8));
+
+      // A kind from another group than the first.
+      await scrollTo(tester, find.text('appointments.kinds.vaccine'.tr()));
+      await tester.tap(find.text('appointments.kinds.vaccine'.tr()));
+      await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'appointments.clinic_field'.tr()),
+        'عيادة السكري',
+      );
+      await fillAndSave(tester);
+
+      final AppointmentDraft first = repository.created.single;
+      expect(first.kind, AppointmentKind.vaccine);
+      expect(first.specialty, 'عيادة السكري');
+    });
+
+    testWidgets('a visit saves with no clinic at all', (tester) async {
+      final _Appointments repository = await open(tester, _riyadhAt(8));
+
+      await fillAndSave(tester);
+
+      expect(repository.created.single.specialty, isNull);
+      expect(repository.created.single.kind, AppointmentKind.followUp);
     });
 
     testWidgets('the note says who gets the reminder', (tester) async {

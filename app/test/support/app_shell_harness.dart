@@ -17,17 +17,21 @@ import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/auth/data/datasources/intro_memory.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
+import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
@@ -36,6 +40,7 @@ import 'package:app/features/prayer_times/data/prayer_day_model.dart';
 import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.dart';
 import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -129,7 +134,7 @@ class EmptyMedicationsRepository extends Fake
 
 /// A measurements service with no plans, readings or tasks.
 class EmptyMeasurementsRepository extends Fake
-    implements MeasurementRepository {
+    implements MeasurementsRepositoryDomain {
   @override
   Stream<String> get changes => const Stream.empty();
 
@@ -160,7 +165,7 @@ class EmptyMeasurementsRepository extends Fake
 
 /// An appointments service with no appointments.
 class EmptyAppointmentsRepository extends Fake
-    implements AppointmentRepository {
+    implements AppointmentsRepositoryDomain {
   @override
   Stream<String> get changes => const Stream.empty();
 
@@ -317,11 +322,11 @@ void setUpShellApp() {
     GetIt.I.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(EmptyMedicationsRepository()),
     );
-    GetIt.I.registerSingleton<MeasurementRepository>(
-      EmptyMeasurementsRepository(),
+    GetIt.I.registerSingleton<MeasurementsUseCase>(
+      MeasurementsUseCase(EmptyMeasurementsRepository()),
     );
-    GetIt.I.registerSingleton<AppointmentRepository>(
-      EmptyAppointmentsRepository(),
+    GetIt.I.registerSingleton<AppointmentsUseCase>(
+      AppointmentsUseCase(EmptyAppointmentsRepository()),
     );
     // The phone's notifications in memory, and the dose reminders on them.
     GetIt.I.registerSingleton<PhoneNotifications>(phone);
@@ -330,19 +335,20 @@ void setUpShellApp() {
         GetIt.I<MedicationsUseCase>(),
         phone,
         texts: doseReminderTexts,
-        measurements: GetIt.I<MeasurementRepository>(),
-        appointments: GetIt.I<AppointmentRepository>(),
+        measurements: GetIt.I<MeasurementsUseCase>(),
+        appointments: GetIt.I<AppointmentsUseCase>(),
       ),
     );
     GetIt.I.registerSingleton<CalendarSync>(FakeCalendarSync());
     GetIt.I.registerSingleton<PushRegistration>(
       PushRegistration(phone, (String token) async => pushTokens.add(token)),
     );
-    GetIt.I.registerSingleton<PrayerTimesRepository>(
-      PrayerTimesRepository(OfflinePrayerTimes()),
+    GetIt.I.registerSingleton<PrayerTimesUseCase>(
+      PrayerTimesUseCase(PrayerTimesRepository(OfflinePrayerTimes())),
     );
     GetIt.I.registerSingleton<PrivatePhotoRepository>(photoRepository);
     // The clock of the circle on screen; the home cubit sets it.
+    GetIt.I.registerSingleton<WelcomeMemory>(IntroMemory());
     GetIt.I.registerSingleton<ShownCircleClock>(ShownCircleClock());
 
     home.response = Success(homeData());

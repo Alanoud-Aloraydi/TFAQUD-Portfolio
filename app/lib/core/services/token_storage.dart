@@ -29,8 +29,8 @@ class TokenStorageException implements Exception {
   const TokenStorageException();
 }
 
-@LazySingleton(as: TokenStorage)
 /// Persists authentication tokens in secure storage.
+@LazySingleton(as: TokenStorage)
 class SecureTokenStorage implements TokenStorage {
   SecureTokenStorage(this._storage, this._keys);
 

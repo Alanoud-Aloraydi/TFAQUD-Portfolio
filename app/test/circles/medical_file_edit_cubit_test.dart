@@ -150,9 +150,13 @@ void main() {
       expect(cubit.state.zoneEditable, isFalse);
     });
 
-    test('a city typed by hand keeps the zone until one is picked', () async {
+    test('a city typed by hand empties the zone until one is picked', () async {
       cubit.cityChanged('لندن');
-      expect(cubit.state.timeZone, 'Asia/Riyadh');
+      // Keeping Riyadh would read every plan and reminder on the wrong
+      // clock, so the zone empties and the form asks for one.
+      expect(cubit.state.timeZone, isNull);
+      expect(cubit.state.zoneMissing, isTrue);
+      expect(await cubit.save(), isFalse);
       cubit.timeZoneChanged('Europe/London');
 
       expect(await cubit.save(), isTrue);

@@ -8,14 +8,21 @@ import 'package:app/features/measurements/domain/measurement.dart';
 /// a tap, so the two can never disagree about where a bar is. Days run from
 /// the right edge, as an Arabic page reads.
 class ChartScale {
-  ChartScale({required this.size, required this.days, required this.topValue});
+  ChartScale({
+    required this.size,
+    required this.days,
+    required this.topValue,
+    this.bottomValue = 0,
+  });
 
   factory ChartScale.of(
     Size size,
     DateTime month,
     List<MeasurementReading> readings,
-    int? targetHigh,
-  ) {
+    int? targetHigh, {
+    int? targetLow,
+    MeasurementKind kind = MeasurementKind.glucose,
+  }) {
     final List<int> values = <int>[
       for (final MeasurementReading reading in readings) ...<int>[
         if (reading.valueOne != null) reading.valueOne!,
@@ -26,10 +33,24 @@ class ChartScale {
       targetHigh ?? 0,
       values.fold<int>(0, math.max),
     );
+    final int lowest = values.isEmpty
+        ? 0
+        : math.min(targetLow ?? 999, values.reduce(math.min));
+    // A reading of 150 next to one of 130 has to look different, so the
+    // axis holds the range of the readings, not everything down to zero.
+    final (int floor, int ceiling) = switch (kind) {
+      MeasurementKind.glucose => (60, 200),
+      MeasurementKind.bp => (50, 160),
+    };
+    final double bottom =
+        (math.min(floor, lowest - 10) / 10).floorToDouble() * 10;
+    final double top =
+        (math.max(ceiling, highest + 15) / 10).ceilToDouble() * 10;
     return ChartScale(
       size: size,
       days: DateTime(month.year, month.month + 1, 0).day,
-      topValue: math.max(minTop, highest + headroom).toDouble(),
+      topValue: top,
+      bottomValue: values.isEmpty && targetHigh == null ? 0 : bottom,
     );
   }
 
@@ -44,16 +65,32 @@ class ChartScale {
   final int days;
   final double topValue;
 
+  /// Where the axis starts. Readings live well above zero, so the chart
+  /// does too.
+  final double bottomValue;
+
   double get chartBottom => size.height - bottomPad;
   double get slot => (size.width - labelWidth - chartLeft) / days;
 
   double y(num value) =>
-      chartBottom - (value / topValue) * (chartBottom - chartTop);
+      chartBottom -
+      ((value.clamp(bottomValue, topValue) - bottomValue) /
+              (topValue - bottomValue)) *
+          (chartBottom - chartTop);
+
+  /// The four lines the chart draws and labels, in round numbers.
+  List<int> get ticks {
+    final double step = (topValue - bottomValue) / 3;
+    return <int>[
+      for (int index = 0; index < 4; index++)
+        ((bottomValue + step * index) / 5).round() * 5,
+    ];
+  }
 
   double x(int day) => size.width - labelWidth - (day - .5) * slot;
 
   /// The width of one bar when [count] readings share a day.
-  double barWidth(int count) => math.min(8, math.max(5, slot / count - 1));
+  double barWidth(int count) => math.min(9, math.max(6, slot / count - 1));
 
   /// The distance between the centres of bars that share a day.
   double barStep(int count) =>

@@ -3,7 +3,6 @@ import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/materials/glass_preferences.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
-import 'package:app/features/simplified_mode/data/simplified_voice.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -71,50 +70,6 @@ void main() {
         expect(
           const ScaledOverPhone(TextScaler.noScaling, 1.2),
           const ScaledOverPhone(TextScaler.noScaling, 1.2),
-        );
-      });
-    });
-
-    group('bestArabicVoice on Android', () {
-      Map<String, String> voice(
-        String name, {
-        String quality = 'normal',
-        String network = '0',
-        String features = '',
-      }) => <String, String>{
-        'name': name,
-        'locale': 'ar',
-        'quality': quality,
-        'network_required': network,
-        'features': features,
-      };
-
-      test('leaves out a voice whose data is not downloaded', () {
-        expect(
-          bestArabicVoice(<Map<String, String>>[
-            voice('missing', quality: 'very high', features: 'a\tnotInstalled'),
-            voice('local'),
-          ])?['name'],
-          'local',
-        );
-      });
-
-      test('leaves out a voice that speaks only online', () {
-        expect(
-          bestArabicVoice(<Map<String, String>>[
-            voice('online', quality: 'very high', network: '1'),
-          ]),
-          isNull,
-        );
-      });
-
-      test('takes a very high voice over a normal one', () {
-        expect(
-          bestArabicVoice(<Map<String, String>>[
-            voice('normal'),
-            voice('clear', quality: 'very high'),
-          ])?['name'],
-          'clear',
         );
       });
     });

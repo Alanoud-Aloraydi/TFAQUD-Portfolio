@@ -89,19 +89,19 @@ String afterDuration(BuildContext context, int minutes) {
 }
 
 /// Whether [now] (the patient's wall time) is morning: from Fajr until
-/// Asr. [fajr] and [asr] are today's times («HH:mm»); before they are
-/// loaded, [_fallbackFajr] and [_fallbackAsr], a rough middle of the year
+/// Dhuhr. [fajr] and [dhuhr] are today's times («HH:mm»); before they are
+/// loaded, [_fallbackFajr] and [_fallbackDhuhr], a rough middle of the year
 /// at mid latitudes.
-bool isMorning(DateTime now, {String? fajr, String? asr}) {
+bool isMorning(DateTime now, {String? fajr, String? dhuhr}) {
   final int minute = now.hour * 60 + now.minute;
   final int morning = _minuteOf(fajr) ?? _minuteOf(_fallbackFajr)!;
-  final int evening = _minuteOf(asr) ?? _minuteOf(_fallbackAsr)!;
+  final int evening = _minuteOf(dhuhr) ?? _minuteOf(_fallbackDhuhr)!;
   return minute >= morning && minute < evening;
 }
 
 /// Where morning and evening start while today's prayer times load.
 const String _fallbackFajr = '04:30';
-const String _fallbackAsr = '15:15';
+const String _fallbackDhuhr = '12:00';
 
 /// «HH:mm» in minutes from midnight, or null.
 int? _minuteOf(String? time) {
@@ -112,17 +112,17 @@ int? _minuteOf(String? time) {
   return hour == null || minute == null ? null : hour * 60 + minute;
 }
 
-/// «صباح الخير، ياسر» from Fajr until Asr where the patient lives ([now]
-/// is the patient's wall time), «مساء الخير، ياسر» from Asr until the next
-/// Fajr ([isMorning]); without a name, the greeting alone.
+/// «صباح الخير، ياسر» from Fajr until Dhuhr where the patient lives ([now]
+/// is the patient's wall time), «مساء الخير، ياسر» from Dhuhr until the
+/// next Fajr ([isMorning]); without a name, the greeting alone.
 String greeting(
   BuildContext context,
   DateTime now,
   String? name, {
   String? fajr,
-  String? asr,
+  String? dhuhr,
 }) {
-  final String key = isMorning(now, fajr: fajr, asr: asr)
+  final String key = isMorning(now, fajr: fajr, dhuhr: dhuhr)
       ? 'today_dashboard.good_morning'
       : 'today_dashboard.good_evening';
   final String? shown = name?.trim();

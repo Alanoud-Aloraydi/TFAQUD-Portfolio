@@ -1,6 +1,7 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/repositories/prayer_times_repository_domain.dart';
+import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,7 +9,7 @@ import 'package:multiple_result/multiple_result.dart';
 
 /// Counts the reads and answers with the day it was given, or with
 /// [failure] when it is set.
-class _FakeRepository implements PrayerTimesRepository {
+class _FakeRepository implements PrayerTimesRepositoryDomain {
   int reads = 0;
   Failure? failure;
 
@@ -42,7 +43,7 @@ void main() {
     test('loads once per Riyadh day and again when the day changes', () async {
       final _FakeRepository repository = _FakeRepository();
       final PrayerTimesCubit cubit = PrayerTimesCubit(
-        repository,
+        PrayerTimesUseCase(repository),
         clock: () => clock,
       );
       addTearDown(cubit.close);
@@ -61,7 +62,7 @@ void main() {
     test('a patient in another zone keeps their own day', () async {
       final _FakeRepository repository = _FakeRepository();
       final PrayerTimesCubit cubit = PrayerTimesCubit(
-        repository,
+        PrayerTimesUseCase(repository),
         clock: () => clock,
       );
       addTearDown(cubit.close);
@@ -77,7 +78,7 @@ void main() {
     test('a day read at 23:59 is read again at 00:00 of the patient', () async {
       final _FakeRepository repository = _FakeRepository();
       final PrayerTimesCubit cubit = PrayerTimesCubit(
-        repository,
+        PrayerTimesUseCase(repository),
         clock: () => clock,
       );
       addTearDown(cubit.close);
@@ -98,7 +99,7 @@ void main() {
       final _FakeRepository repository = _FakeRepository()
         ..failure = const ServerFailure('error.unknown');
       final PrayerTimesCubit cubit = PrayerTimesCubit(
-        repository,
+        PrayerTimesUseCase(repository),
         clock: () => clock,
       );
       addTearDown(cubit.close);
@@ -116,7 +117,7 @@ void main() {
     test("a failed refresh keeps today's times", () async {
       final _FakeRepository repository = _FakeRepository();
       final PrayerTimesCubit cubit = PrayerTimesCubit(
-        repository,
+        PrayerTimesUseCase(repository),
         clock: () => clock,
       );
       addTearDown(cubit.close);
@@ -135,7 +136,7 @@ void main() {
       () async {
         final _FakeRepository repository = _FakeRepository();
         final PrayerTimesCubit cubit = PrayerTimesCubit(
-          repository,
+          PrayerTimesUseCase(repository),
           clock: () => clock,
         );
         addTearDown(cubit.close);

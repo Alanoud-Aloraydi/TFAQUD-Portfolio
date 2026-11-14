@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/data/appointment_remote_data_source.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 
-/// Provides appointment data operations.
-class AppointmentRepository {
+/// The server owns the appointments.
+class AppointmentRepository implements AppointmentsRepositoryDomain {
   AppointmentRepository(this._remote);
 
   final AppointmentRemoteDataSource _remote;
@@ -15,9 +16,11 @@ class AppointmentRepository {
 
   /// The circle whose appointments changed, each time the server accepts a
   /// change (so calendar sync can pick it up right away).
+  @override
   Stream<String> get changes => _changes.stream;
 
   /// The circle's appointments; a row with an unknown status is left out.
+  @override
   Future<List<CareAppointment>> appointments(String circleId) async {
     final values = await _remote.appointments(circleId);
     return values
@@ -29,6 +32,7 @@ class AppointmentRepository {
   }
 
   /// The circle's members who can go with the patient.
+  @override
   Future<List<AppointmentCompanion>> companions(String circleId) async {
     final values = await _remote.companions(circleId);
     return values
@@ -40,6 +44,7 @@ class AppointmentRepository {
   }
 
   /// Adds an appointment; announces the change on [changes].
+  @override
   Future<CareAppointment> create(
     String circleId,
     AppointmentDraft draft,
@@ -50,6 +55,7 @@ class AppointmentRepository {
   }
 
   /// Changes a scheduled appointment; announces the change on [changes].
+  @override
   Future<CareAppointment> revise(
     String circleId,
     CareAppointment appointment,
@@ -64,6 +70,7 @@ class AppointmentRepository {
 
   /// Marks an appointment attended or cancelled; announces the change on
   /// [changes].
+  @override
   Future<CareAppointment> setStatus(
     String circleId,
     CareAppointment appointment,

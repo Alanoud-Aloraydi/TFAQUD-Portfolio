@@ -119,8 +119,8 @@ abstract class BaseCirclesRemoteDataSource {
   Future<EmergencyCard> getEmergencyCard(String circleId);
 }
 
-@LazySingleton(as: BaseCirclesRemoteDataSource)
 /// Sends circles requests to the API.
+@LazySingleton(as: BaseCirclesRemoteDataSource)
 class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   CirclesRemoteDataSource(this._client);
 

@@ -1,5 +1,5 @@
 import 'package:app/core/widgets/navigation/glass.dart';
-import 'package:app/core/widgets/overlays/glass_menu.dart';
+import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:flutter/cupertino.dart';
 
 /// A record filter: a glass capsule that opens an anchored glass menu, the

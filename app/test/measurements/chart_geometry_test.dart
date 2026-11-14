@@ -59,6 +59,39 @@ void main() {
       expect(scale.y(scale.topValue), ChartScale.chartTop);
       expect(scale.days, 30);
     });
+
+    test('the axis holds the readings, not everything down to zero', () {
+      final ChartScale scale = ChartScale.of(
+        const Size(400, 176),
+        DateTime(2026, 11),
+        <MeasurementReading>[_glucose(DateTime.utc(2026, 11, 5, 9))],
+        140,
+        targetLow: 70,
+      );
+
+      expect(scale.bottomValue, greaterThan(0));
+      expect(scale.bottomValue, lessThanOrEqualTo(60));
+      expect(scale.topValue, greaterThanOrEqualTo(200));
+      expect(scale.y(scale.bottomValue), scale.chartBottom);
+      // Two readings 20 apart are 20 apart on the chart.
+      expect(scale.y(100) - scale.y(120), greaterThan(8));
+    });
+
+    test('labels four round lines', () {
+      final ChartScale scale = ChartScale.of(
+        const Size(400, 176),
+        DateTime(2026, 11),
+        <MeasurementReading>[_glucose(DateTime.utc(2026, 11, 5, 9))],
+        140,
+        targetLow: 70,
+      );
+
+      expect(scale.ticks, hasLength(4));
+      expect(scale.ticks.first, lessThan(scale.ticks.last));
+      for (final int tick in scale.ticks) {
+        expect(tick % 5, 0);
+      }
+    });
   });
 
   group('ChartTarget', () {

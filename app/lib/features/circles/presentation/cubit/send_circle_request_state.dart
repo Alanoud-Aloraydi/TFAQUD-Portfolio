@@ -3,7 +3,6 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported send status values.
 enum SendStatus { idle, sending, sent }
 
 /// State of the page that asks a patient who uses the app for a circle (CREAT-04)

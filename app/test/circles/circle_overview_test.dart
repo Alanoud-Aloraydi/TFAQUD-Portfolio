@@ -7,6 +7,7 @@ import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/circle_overview_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 

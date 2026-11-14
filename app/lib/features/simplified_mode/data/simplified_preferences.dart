@@ -1,22 +1,19 @@
-import 'package:app/features/simplified_mode/domain/entities/simplified_speech_rate.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
+import 'package:app/features/simplified_mode/domain/repositories/simplified_settings_store.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Keeps the simplified mode's text size, whether «استماع» shows, how fast
-/// it reads, and whether a reminder reads itself, on this phone: they
-/// belong to the device, not the account.
-@lazySingleton
-class SimplifiedPreferences {
+/// Keeps the simplified mode's text size on this phone: it belongs to the
+/// device, not the account.
+@LazySingleton(as: SimplifiedSettingsStore)
+class SimplifiedPreferences implements SimplifiedSettingsStore {
   static const String _textSizeKey = 'simplified_text_size';
-  static const String _voiceKey = 'simplified_voice_enabled';
-  static const String _speechRateKey = 'simplified_speech_rate';
-  static const String _autoReadKey = 'simplified_auto_read';
 
   /// Where the earlier simplified mode kept its text size
   /// («small», «normal», «large»), read once so a choice is not lost.
   static const String _earlierTextSizeKey = 'simplified_text_scale';
 
+  @override
   Future<SimplifiedTextSize> textSize() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? saved = prefs.getString(_textSizeKey);
@@ -33,45 +30,9 @@ class SimplifiedPreferences {
     return size;
   }
 
+  @override
   Future<void> saveTextSize(SimplifiedTextSize size) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(_textSizeKey, size.name);
-  }
-
-  /// On until the person turns it off.
-  Future<bool> voiceEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_voiceKey) ?? true;
-  }
-
-  Future<void> saveVoiceEnabled(bool enabled) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_voiceKey, enabled);
-  }
-
-  Future<SimplifiedSpeechRate> speechRate() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? saved = prefs.getString(_speechRateKey);
-    for (final SimplifiedSpeechRate rate in SimplifiedSpeechRate.values) {
-      if (rate.name == saved) return rate;
-    }
-    return SimplifiedSpeechRate.normal;
-  }
-
-  Future<void> saveSpeechRate(SimplifiedSpeechRate rate) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_speechRateKey, rate.name);
-  }
-
-  /// Whether a full-screen reminder reads itself once it opens; on until
-  /// the person turns it off.
-  Future<bool> autoRead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_autoReadKey) ?? true;
-  }
-
-  Future<void> saveAutoRead(bool enabled) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_autoReadKey, enabled);
   }
 }

@@ -3,7 +3,7 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/media/photo_edit_badge.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -28,6 +28,7 @@ import 'package:app/features/circles/domain/entities/medical_profile_draft.dart'
 import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/circle_overview_state.dart';
 import 'package:app/features/circles/presentation/widgets/circle_member_row.dart';
 import 'package:app/features/circles/presentation/widgets/leave_circle_button.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';

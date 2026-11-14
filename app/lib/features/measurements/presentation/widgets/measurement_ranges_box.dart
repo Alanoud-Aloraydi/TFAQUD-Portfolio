@@ -1,6 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';

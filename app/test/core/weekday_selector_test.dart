@@ -33,6 +33,10 @@ class _HostState extends State<_Host> {
   );
 }
 
+/// The selector's boxes carry the day's name.
+String _pick(int day) => 'medications.weekday_pick.$day'.tr();
+
+/// The strip's narrow columns carry its letter.
 String _short(int day) => 'medications.weekday_short.$day'.tr();
 
 void main() {
@@ -43,7 +47,7 @@ void main() {
       await pumpArabic(tester, home: _Host(allWeekdays, <Set<int>>[]));
       expect(find.text('weekday_picker.all_days'.tr()), findsOneWidget);
       for (final int day in weekOrder) {
-        expect(find.text(_short(day)), findsOneWidget);
+        expect(find.text(_pick(day)), findsOneWidget);
       }
     });
 
@@ -52,7 +56,7 @@ void main() {
     ) async {
       final List<Set<int>> log = <Set<int>>[];
       await pumpArabic(tester, home: _Host(allWeekdays, log));
-      await tester.tap(find.text(_short(3)));
+      await tester.tap(find.text(_pick(3)));
       await tester.pump();
       expect(log.single, <int>{3});
     });
@@ -84,7 +88,7 @@ void main() {
     testWidgets('every day is a chip at least 44 high', (tester) async {
       await pumpArabic(tester, home: _Host(<int>{1}, <Set<int>>[]));
       final Size box = tester.getSize(
-        find.ancestor(of: find.text(_short(1)), matching: find.byType(InkWell)),
+        find.ancestor(of: find.text(_pick(1)), matching: find.byType(InkWell)),
       );
       expect(box.height, greaterThanOrEqualTo(44));
       // «كل الأيام» is the app's chip.

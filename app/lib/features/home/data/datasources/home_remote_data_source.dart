@@ -8,8 +8,8 @@ abstract class BaseHomeRemoteDataSource {
   Future<HomeModel> getHome();
 }
 
-@LazySingleton(as: BaseHomeRemoteDataSource)
 /// Sends home requests to the API.
+@LazySingleton(as: BaseHomeRemoteDataSource)
 class HomeRemoteDataSource implements BaseHomeRemoteDataSource {
   HomeRemoteDataSource(this._client);
 

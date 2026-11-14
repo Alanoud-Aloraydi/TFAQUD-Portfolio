@@ -25,20 +25,31 @@ __all__ = [
     "PatientCondition",
 ]
 
+# Ordered as the app shows them: the most common first.
 CONDITION_CODES = (
     "diabetes",
     "hypertension",
+    "cholesterol",
     "heart",
+    "stroke",
     "asthma",
     "kidney",
     "thyroid",
+    "arthritis",
+    "osteoporosis",
+    "dementia",
+    "depression_anxiety",
+    "cancer",
     "other",
 )
 MEDICATION_ALLERGY_CODES = (
     "penicillin",
     "sulfa",
     "cephalosporins",
-    "aspirin_nsaids",
+    "quinolones",
+    "aspirin",
+    "nsaids",
+    "opioids",
     "contrast_media",
     "anesthesia",
     "other",

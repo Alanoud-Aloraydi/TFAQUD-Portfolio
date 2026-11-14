@@ -2,7 +2,8 @@ import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_builder.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_image.dart';
 import 'package:flutter/material.dart';
 
 /// The start of a medicine's plan or record card: its photo, or a pill when

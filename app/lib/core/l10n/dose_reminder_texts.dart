@@ -45,19 +45,15 @@ final DoseReminderTexts doseReminderTexts = DoseReminderTexts(
             AppointmentLead.soon => 'reminders.appointment_soon',
             AppointmentLead.today => 'reminders.appointment_today',
           }, circle),
-  // «عيادة السكري · الساعة 4:30 م · مستشفى الملك فهد».
+  // «مراجعة · عيادة السكري · الساعة 4:30 م · مستشفى الملك فهد».
   appointmentBody: (CareAppointment visit) {
     final String place = visit.place?.trim() ?? '';
     return place.isEmpty
         ? 'reminders.appointment_body'.tr(
-            args: <String>[clinicName(visit.specialty), clockText(visit.time)],
+            args: <String>[visitName(visit), clockText(visit.time)],
           )
         : 'reminders.appointment_body_place'.tr(
-            args: <String>[
-              clinicName(visit.specialty),
-              clockText(visit.time),
-              place,
-            ],
+            args: <String>[visitName(visit), clockText(visit.time), place],
           );
   },
   keepTitle: () => 'reminders.keep_title'.tr(),

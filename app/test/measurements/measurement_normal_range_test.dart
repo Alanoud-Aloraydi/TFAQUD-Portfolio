@@ -1,7 +1,11 @@
+import '../support/normal_ranges.dart';
+import '../support/widget_harness.dart';
+
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
@@ -10,9 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../support/normal_ranges.dart';
-import '../support/widget_harness.dart';
 
 class _Measurements extends Fake implements MeasurementRepository {
   @override
@@ -80,7 +81,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final _Measurements repository = _Measurements();
       final MeasurementReadingsCubit readings = MeasurementReadingsCubit(
-        repository,
+        MeasurementsUseCase(repository),
       );
       final MeasurementRangesCubit ranges = MeasurementRangesCubit(repository);
       addTearDown(readings.close);

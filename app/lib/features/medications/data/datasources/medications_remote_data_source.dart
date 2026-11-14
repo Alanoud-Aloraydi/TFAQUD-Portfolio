@@ -39,8 +39,8 @@ abstract class BaseMedicationsRemoteDataSource {
   );
 }
 
-@LazySingleton(as: BaseMedicationsRemoteDataSource)
 /// Sends medications requests to the API.
+@LazySingleton(as: BaseMedicationsRemoteDataSource)
 class MedicationsRemoteDataSource implements BaseMedicationsRemoteDataSource {
   MedicationsRemoteDataSource(this._client);
 

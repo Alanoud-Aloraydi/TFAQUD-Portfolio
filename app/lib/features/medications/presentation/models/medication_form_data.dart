@@ -5,7 +5,6 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:flutter/material.dart';
 
-/// Defines the supported medication form field values.
 enum MedicationFormField { name, strength, period, dose, weekdays, missedAfter }
 
 /// Describes one medication form validation issue.

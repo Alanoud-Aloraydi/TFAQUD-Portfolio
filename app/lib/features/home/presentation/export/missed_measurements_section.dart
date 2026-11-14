@@ -1,6 +1,6 @@
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
-import 'package:app/features/home/data/record_pdf_model.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';

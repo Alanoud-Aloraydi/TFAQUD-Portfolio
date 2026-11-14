@@ -8,6 +8,7 @@ from sqlalchemy import LargeBinary, Text, Time
 from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.appointments.kinds import kinds_sql
 from app.database import db
 
 
@@ -17,7 +18,7 @@ class Appointment(db.Model):
     __tablename__ = "appointment"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('follow_up', 'test', 'imaging', 'remote', 'other')",
+            f"kind IN ({kinds_sql()})",
             name="kind",
         ),
         CheckConstraint(
@@ -40,8 +41,8 @@ class Appointment(db.Model):
             name="location_shape",
         ),
         CheckConstraint(
-            "length(btrim(specialty)) > 0 AND "
-            "char_length(specialty) <= 80",
+            "specialty IS NULL OR (length(btrim(specialty)) > 0 AND "
+            "char_length(specialty) <= 80)",
             name="specialty",
         ),
         CheckConstraint(
@@ -60,7 +61,8 @@ class Appointment(db.Model):
     care_circle_id: Mapped[UUID] = mapped_column(
         ForeignKey("care_circle.id", ondelete="CASCADE"), index=True
     )
-    specialty: Mapped[str] = mapped_column(Text)
+    # The clinic or doctor, as typed; null when not given.
+    specialty: Mapped[str | None] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(Text)
     # The words of «أخرى»; null for every other kind.
     other_text: Mapped[str | None] = mapped_column(Text)

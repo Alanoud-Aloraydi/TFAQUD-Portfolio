@@ -1,10 +1,9 @@
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported home status values.
 enum HomeStatus { loading, ready, failure, signIn, onboarding }
 
-/// Holds the home presentation state.
+/// The day on screen and which circle it belongs to.
 class HomeState extends Equatable {
   const HomeState({
     this.status = HomeStatus.loading,

@@ -3,7 +3,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-/// Provides medications domain operations.
+/// The medicine operations the application needs, whatever provides them.
 abstract class MedicationsRepositoryDomain {
   Future<Result<List<MedicationPlan>, Failure>> getPlans(String circleId);
   Future<Result<MedicationPlan, Failure>> getPlan(

@@ -1,15 +1,14 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// How detailed the file is, and the sections of the record the person
-/// includes, as rows with a check on each chosen one.
+/// The sections of «الملخص الصحي» the person includes, as rows with a check
+/// on each chosen one. The file always carries the full detail.
 class RecordExportOptionsList extends StatelessWidget {
   const RecordExportOptionsList({
     super.key,
@@ -29,16 +28,6 @@ class RecordExportOptionsList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        GlassSegmentedControl<bool>(
-          segments: <bool, String>{
-            false: context.tr('record_export.mode.summary'),
-            true: context.tr('record_export.mode.detailed'),
-          },
-          selected: options.detailed,
-          onChanged: (bool detailed) =>
-              onChanged(options.copyWith(detailed: detailed)),
-        ),
-        const SizedBox(height: AppSpacing.md),
         InsetGroup(
           children: <Widget>[
             _CheckRow(

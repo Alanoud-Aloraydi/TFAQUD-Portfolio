@@ -1,9 +1,7 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/features/auth/presentation/widgets/otp_box.dart';
+import 'package:app/features/auth/presentation/widgets/otp_digits_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -92,7 +90,7 @@ class _OtpFieldState extends State<OtpField> {
                 for (int i = 0; i < widget.length; i++) ...<Widget>[
                   if (i > 0) const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: _OtpBox(
+                    child: OtpBox(
                       digit: i < filled ? widget.value[i] : '',
                       isActive: _focus.hasFocus && i == active,
                       hasError: widget.hasError,
@@ -117,7 +115,7 @@ class _OtpFieldState extends State<OtpField> {
                 style: const TextStyle(color: AppSemanticColors.transparent),
                 cursorColor: AppSemanticColors.transparent,
                 inputFormatters: <TextInputFormatter>[
-                  _DigitsFormatter(widget.length),
+                  OtpDigitsFormatter(widget.length),
                 ],
                 onChanged: _changed,
                 decoration: const InputDecoration(
@@ -135,63 +133,6 @@ class _OtpFieldState extends State<OtpField> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Keeps only digits (Western or Arabic-Indic) and cuts the text at [length].
-class _DigitsFormatter extends TextInputFormatter {
-  _DigitsFormatter(this.length);
-
-  final int length;
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    String digits = ArabicDigits.digitsOnly(newValue.text);
-    if (digits.length > length) digits = digits.substring(0, length);
-    return TextEditingValue(
-      text: digits,
-      selection: TextSelection.collapsed(offset: digits.length),
-    );
-  }
-}
-
-/// Renders the otp box element of otp field.
-class _OtpBox extends StatelessWidget {
-  const _OtpBox({
-    required this.digit,
-    required this.isActive,
-    required this.hasError,
-    required this.style,
-  });
-
-  final String digit;
-  final bool isActive;
-  final bool hasError;
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context) {
-    // Control borders use stone (3.98:1), as the other fields do; the active
-    // box shows the focus color.
-    final Color border = hasError
-        ? AppSemanticColors.statusError
-        : (isActive ? context.tokens.focus : context.tokens.borderControl);
-    return AnimatedContainer(
-      duration: AppMotion.fieldFeedback,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceContent,
-        borderRadius: BorderRadius.circular(AppRadius.field),
-        border: Border.all(
-          color: border,
-          width: (isActive || hasError) ? 2 : 1,
-        ),
-      ),
-      child: Text(digit, style: style),
     );
   }
 }

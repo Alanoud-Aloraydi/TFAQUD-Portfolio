@@ -5,8 +5,8 @@ import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_chart_card.dart';
@@ -40,7 +40,7 @@ class MeasurementRecordSection extends StatefulWidget {
 
 class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   late final MeasurementReadingsCubit _readings = MeasurementReadingsCubit(
-    GetIt.I<MeasurementRepository>(),
+    GetIt.I<MeasurementsUseCase>(),
     GetIt.I<PrivatePhotoRepository>().changes,
   );
 

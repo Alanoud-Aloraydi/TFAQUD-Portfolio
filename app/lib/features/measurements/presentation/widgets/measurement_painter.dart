@@ -6,8 +6,9 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter/material.dart';
 
-/// Draws a month of readings: glucose columns or blood pressure capsules,
-/// over the target band.
+/// Draws a month of readings: glucose as a line of dots, blood pressure as
+/// a capsule from the lower number to the upper one, over the target band.
+/// The axis holds the range the readings live in, never down to zero.
 class MeasurementPainter extends CustomPainter {
   MeasurementPainter(
     this.kind,
@@ -29,10 +30,21 @@ class MeasurementPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final ChartScale scale = ChartScale.of(size, month, readings, targetHigh);
+    final ChartScale scale = ChartScale.of(
+      size,
+      month,
+      readings,
+      targetHigh,
+      targetLow: targetLow,
+      kind: kind,
+    );
     _target(canvas, scale);
     _grid(canvas, scale);
-    _bars(canvas, scale);
+    if (kind == MeasurementKind.glucose) {
+      _line(canvas, scale);
+    } else {
+      _bars(canvas, scale);
+    }
     for (final int day in <int>[1, 8, 15, 22, 29]) {
       if (day > scale.days) continue;
       _label(canvas, '$day', Offset(scale.x(day) - 3, size.height - 9));
@@ -64,17 +76,63 @@ class MeasurementPainter extends CustomPainter {
 
   void _grid(Canvas canvas, ChartScale scale) {
     final double right = scale.size.width - ChartScale.labelWidth;
-    for (final int tick in <int>[
-      0,
-      (scale.topValue / 2).round(),
-      scale.topValue.round(),
-    ]) {
+    for (final int tick in scale.ticks) {
       canvas.drawLine(
         Offset(ChartScale.chartLeft, scale.y(tick)),
         Offset(right, scale.y(tick)),
         Paint()..color = AppSemanticColors.borderSubtle,
       );
       _label(canvas, '$tick', Offset(right + 3, scale.y(tick)));
+    }
+  }
+
+  /// Glucose over the month: every reading a dot, the dots of the month
+  /// joined, so a rise or a fall is the shape of the line. Out of range
+  /// dots keep the warning colour.
+  void _line(Canvas canvas, ChartScale scale) {
+    final List<(Offset, bool)> points = <(Offset, bool)>[];
+    final Map<int, List<MeasurementReading>> byDay = readingsByDay(
+      readings,
+      month,
+      clock,
+    );
+    final List<int> days = byDay.keys.toList()..sort();
+    for (final int day in days) {
+      final List<MeasurementReading> ofDay = byDay[day]!;
+      for (int index = 0; index < ofDay.length; index++) {
+        final MeasurementReading reading = ofDay[index];
+        points.add((
+          Offset(
+            scale.center(day, index, ofDay.length),
+            scale.y(reading.valueOne!),
+          ),
+          reading.outsideTarget == true,
+        ));
+      }
+    }
+    if (points.length > 1) {
+      final Path path = Path()..moveTo(points.first.$1.dx, points.first.$1.dy);
+      for (final (Offset at, _) in points.skip(1)) {
+        path.lineTo(at.dx, at.dy);
+      }
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = AppSemanticColors.textPrimary.withValues(alpha: .45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeJoin = StrokeJoin.round,
+      );
+    }
+    for (final (Offset at, bool outside) in points) {
+      canvas.drawCircle(
+        at,
+        4,
+        Paint()
+          ..color = outside
+              ? AppSemanticColors.statusWarning
+              : AppSemanticColors.textPrimary,
+      );
     }
   }
 
@@ -93,9 +151,7 @@ class MeasurementPainter extends CustomPainter {
           index,
           entry.value.length,
         );
-        final num second = kind == MeasurementKind.glucose
-            ? 0
-            : reading.valueTwo!;
+        final num second = reading.valueTwo!;
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTRB(

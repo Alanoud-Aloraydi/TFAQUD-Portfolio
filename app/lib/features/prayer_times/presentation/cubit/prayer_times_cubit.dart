@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,7 +14,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     : _clock = clock ?? DateTime.now,
       super(const PrayerTimesState());
 
-  final PrayerTimesRepository _repository;
+  final PrayerTimesUseCase _repository;
   final DateTime Function() _clock;
   String? _circleId;
   PatientClock? _patient;

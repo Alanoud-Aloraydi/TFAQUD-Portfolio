@@ -21,7 +21,7 @@ List<RouteBase> _careRoutes() => <RouteBase>[
       final circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (_) =>
-            MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
+            MeasurementPlansCubit(GetIt.I<MeasurementsUseCase>())
               ..load(circleId),
         child: MeasurementPlanFormPage(circleId: circleId),
       );
@@ -33,7 +33,7 @@ List<RouteBase> _careRoutes() => <RouteBase>[
       final circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (_) =>
-            MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
+            MeasurementPlansCubit(GetIt.I<MeasurementsUseCase>())
               ..load(circleId),
         child: MeasurementPlanFormPage(
           circleId: circleId,
@@ -66,13 +66,13 @@ List<RouteBase> _careRoutes() => <RouteBase>[
         providers: [
           BlocProvider(
             create: (_) =>
-                AppointmentsCubit(GetIt.I<AppointmentRepository>())
+                AppointmentsCubit(GetIt.I<AppointmentsUseCase>())
                   ..load(circleId),
           ),
           BlocProvider(
             create: (_) => VisitCubit(
-              GetIt.I<VisitRepository>(),
-              VisitAudioService(),
+              GetIt.I<VisitsUseCase>(),
+              GetIt.I<VisitAudio>(),
               circleId,
               appointmentId,
             )..load(),
@@ -127,11 +127,11 @@ Widget _appointmentForm(String circleId, {String? appointmentId}) {
     providers: [
       BlocProvider(
         create: (_) =>
-            AppointmentsCubit(GetIt.I<AppointmentRepository>())..load(circleId),
+            AppointmentsCubit(GetIt.I<AppointmentsUseCase>())..load(circleId),
       ),
       BlocProvider(
         create: (_) =>
-            AppointmentCompanionsCubit(GetIt.I<AppointmentRepository>())
+            AppointmentCompanionsCubit(GetIt.I<AppointmentsUseCase>())
               ..load(circleId),
       ),
     ],

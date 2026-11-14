@@ -1,10 +1,9 @@
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported record export status values.
 enum RecordExportStatus { loading, ready }
 
-/// Holds the record export presentation state.
+/// How far the record export has got, and what it refused.
 class RecordExportState extends Equatable {
   const RecordExportState({
     this.status = RecordExportStatus.loading,

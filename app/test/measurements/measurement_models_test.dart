@@ -256,4 +256,28 @@ void main() {
       });
     });
   });
+
+  group('what the form offers', () {
+    test('glucose asks about the stomach; pressure about the medicine', () {
+      expect(MeasurementConditions.offered(MeasurementKind.glucose), <String>[
+        'fasting',
+        'before_meal',
+        'after_meal',
+        'other',
+      ]);
+      expect(MeasurementConditions.offered(MeasurementKind.bp), <String>[
+        'before_medicine',
+        'after_medicine',
+        'morning',
+        'exertion',
+        'stress',
+        'other',
+      ]);
+      expect(MeasurementConditions.planStates(MeasurementKind.bp), <String>[
+        'before_medicine',
+        'after_medicine',
+        'morning',
+      ]);
+    });
+  });
 }

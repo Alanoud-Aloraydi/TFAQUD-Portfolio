@@ -3,6 +3,7 @@ import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';

@@ -5,6 +5,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/widgets/export_before_leaving.dart';
 import 'package:app/features/circles/presentation/widgets/leave_circle_alert.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -38,8 +39,20 @@ class LeaveCircleButton extends StatelessWidget {
 
   Future<void> _leave(BuildContext context) async {
     final bool deletesCircle = overview.leaveDeletesCircle;
-    if (await askLeaveConfirmation(context, deletesCircle) != true) return;
-    if (!context.mounted) return;
+    final String circleId = context.read<CircleOverviewCubit>().circleId;
+    final LeaveCircleChoice? choice = await askLeaveConfirmation(
+      context,
+      deletesCircle,
+    );
+    if (!context.mounted ||
+        choice == null ||
+        choice == LeaveCircleChoice.cancel) {
+      return;
+    }
+    if (choice == LeaveCircleChoice.export) {
+      await exportBeforeLeaving(context, circleId);
+      return;
+    }
     final String? error = await context.read<CircleOverviewCubit>().leave(
       confirmDelete: deletesCircle,
     );

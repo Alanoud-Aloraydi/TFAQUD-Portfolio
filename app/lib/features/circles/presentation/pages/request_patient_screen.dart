@@ -1,9 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
@@ -15,6 +11,7 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
+import 'package:app/features/circles/presentation/widgets/request_patient_notice.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -119,7 +116,9 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   onTap: () => cubit.chooseMode(CircleAppMode.simplified),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                _Notice(text: context.tr('circles.request_notice')),
+                RequestPatientNotice(
+                  text: context.tr('circles.request_notice'),
+                ),
                 if (state.errorKey != null) ...<Widget>[
                   const SizedBox(height: AppSpacing.lg),
                   InlineError(messageKey: state.errorKey!),
@@ -135,45 +134,6 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
           onPressed: () => cubit.send(),
         ),
       ],
-    );
-  }
-}
-
-/// The yellow note above the send button: the patient is asked, and nothing is
-/// created without the patient's agreement. The icon keeps the colour from being
-/// the only signal.
-class _Notice extends StatelessWidget {
-  const _Notice({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.inset),
-      decoration: BoxDecoration(
-        color: AppSemanticColors.background,
-        borderRadius: BorderRadius.circular(AppRadius.field),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Icon(
-            AppIcons.info,
-            size: AppSizes.iconSmall,
-            color: context.tokens.textSecondary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: context.tokens.textSecondary),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

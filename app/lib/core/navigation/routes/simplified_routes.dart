@@ -19,7 +19,7 @@ ShellRoute _simplifiedShell() {
           ),
           BlocProvider(
             create: (context) =>
-                SimplifiedSettingsCubit(GetIt.I<SimplifiedPreferences>())
+                SimplifiedSettingsCubit(GetIt.I<SimplifiedSettingsStore>())
                   ..load(),
           ),
         ],

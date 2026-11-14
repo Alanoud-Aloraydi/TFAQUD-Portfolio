@@ -1,19 +1,19 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
-import 'package:app/features/appointments/data/visit_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/appointments/domain/use_cases/visits_use_case.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/home/data/record_pdf_exporter.dart';
-import 'package:app/features/home/data/record_pdf_model.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/export_period.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
+import 'package:app/features/home/domain/services/record_exporter.dart';
 import 'package:app/features/home/presentation/cubit/record_export_state.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -34,11 +34,11 @@ class RecordExportCubit extends Cubit<RecordExportState> {
   static const int _chunkDays = 31;
 
   final CirclesUseCase _circles;
-  final RecordPdfExporter _exporter;
-  final MeasurementRepository _measurements;
+  final RecordExporter _exporter;
+  final MeasurementsUseCase _measurements;
   final MedicationsUseCase _medications;
-  final AppointmentRepository _appointments;
-  final VisitRepository _visits;
+  final AppointmentsUseCase _appointments;
+  final VisitsUseCase _visits;
   final String circleId;
 
   Future<void> load() async {

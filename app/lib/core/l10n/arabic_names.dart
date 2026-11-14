@@ -1,3 +1,5 @@
+import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart' show TimeOfDay;
 
@@ -13,12 +15,14 @@ String withArticle(String name) {
   return arabic ? 'ال$value' : value;
 }
 
-/// «عيادة السكري» for a specialty of the list (saved as its code,
-/// «diabetes»); one the person wrote, as written.
-String clinicName(String specialty) {
-  final String key = 'appointments.specialties.$specialty';
-  if (specialty == 'other' || !key.trExists()) return specialty;
-  return '${'appointments.clinic'.tr()} ${key.tr()}';
+/// «مراجعة · عيادة السكري»: the visit's kind, then the clinic or doctor
+/// when one was typed. For notifications and the calendar, with no context.
+String visitName(CareAppointment visit) {
+  final String kind = visit.kind == AppointmentKind.other
+      ? visit.otherKind ?? 'appointments.kinds.other'.tr()
+      : 'appointments.kinds.${visit.kind.name}'.tr();
+  final String? clinic = appointmentClinic(visit);
+  return clinic == null ? kind : '$kind · $clinic';
 }
 
 /// «4:30 م» for "16:30", the same as the app's pages show a time.

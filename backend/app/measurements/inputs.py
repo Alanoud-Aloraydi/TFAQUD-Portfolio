@@ -12,16 +12,24 @@ Kind = Literal["glucose", "blood_pressure"]
 # «ظروف القياس»: what was going on at a reading, one or more of them.
 Code = Literal[
     "fasting", "before_meal", "after_meal", "bedtime",
+    "before_medicine", "after_medicine", "morning",
     "exertion", "stress", "illness", "other",
 ]
 CODES = Code.__args__
 # Where the stomach is: one of these at a time.
 MEAL_STATES = ("fasting", "before_meal", "after_meal", "bedtime")
+# «حالة القياس» of a reading time: the stomach for glucose, the medicine
+# and the time of day for pressure. One at a time, and only for its kind.
+GLUCOSE_STATES = ("fasting", "before_meal", "after_meal")
+PRESSURE_STATES = ("before_medicine", "after_medicine", "morning")
 # Blood pressure is not read against a fast or bedtime.
 NOT_FOR_BLOOD_PRESSURE = ("fasting", "before_meal", "bedtime")
 Value = Annotated[int, Field(ge=1, le=999)]
 Conditions = Annotated[list[Code], Field(max_length=len(CODES))]
-MeasurementState = Literal["fasting", "before_meal", "after_meal"]
+MeasurementState = Literal[
+    "fasting", "before_meal", "after_meal",
+    "before_medicine", "after_medicine", "morning",
+]
 SkipReason = Literal[
     "forgotten", "equipment_unavailable", "patient_refused", "unwell",
     "other",
@@ -87,13 +95,15 @@ class PlanRequest(Dto):
             raise ValueError("Reading times have no time zone.")
         if len(set(moments)) != len(moments):
             raise ValueError("Reading times cannot repeat.")
-        # A glucose time names its planned state; blood pressure has none.
+        # Every reading time names a state of its own kind: the stomach for
+        # glucose, the medicine or the morning for pressure.
+        allowed = (
+            GLUCOSE_STATES if self.kind == "glucose" else PRESSURE_STATES
+        )
         for item in self.times:
-            if (self.kind == "glucose") != (
-                item.measurement_state is not None
-            ):
+            if item.measurement_state not in allowed:
                 raise ValueError(
-                    "Only glucose times require a measurement state."
+                    "A reading time needs a state of its own kind."
                 )
         return self
 

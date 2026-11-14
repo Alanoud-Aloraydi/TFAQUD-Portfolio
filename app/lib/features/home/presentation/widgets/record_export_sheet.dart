@@ -4,22 +4,22 @@ import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
-import 'package:app/features/appointments/data/visit_repository.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/appointments/domain/use_cases/visits_use_case.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/home/data/record_pdf_exporter.dart';
 import 'package:app/features/home/domain/export_filename.dart';
 import 'package:app/features/home/domain/export_period.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
+import 'package:app/features/home/domain/services/record_exporter.dart';
 import 'package:app/features/home/presentation/cubit/record_export_cubit.dart';
 import 'package:app/features/home/presentation/cubit/record_export_state.dart';
 import 'package:app/features/home/presentation/export/record_document.dart';
 import 'package:app/features/home/presentation/widgets/record_export_confirm.dart';
 import 'package:app/features/home/presentation/widgets/record_export_options_list.dart';
 import 'package:app/features/home/presentation/widgets/record_export_range_field.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -39,11 +39,11 @@ Future<void> showRecordExportSheet(
   builder: (_) => BlocProvider(
     create: (_) => RecordExportCubit(
       GetIt.I<CirclesUseCase>(),
-      RecordPdfExporter(),
-      GetIt.I<MeasurementRepository>(),
+      GetIt.I<RecordExporter>(),
+      GetIt.I<MeasurementsUseCase>(),
       GetIt.I<MedicationsUseCase>(),
-      GetIt.I<AppointmentRepository>(),
-      GetIt.I<VisitRepository>(),
+      GetIt.I<AppointmentsUseCase>(),
+      GetIt.I<VisitsUseCase>(),
       circleId,
     )..load(),
     child: _RecordExportSheet(

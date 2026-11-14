@@ -8,7 +8,9 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/text_limits.dart';
+import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -16,13 +18,15 @@ import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Displays the appointment form page UI.
+/// Adds or edits a visit: its kind, clinic, date, time, place and companions.
 class AppointmentFormPage extends StatefulWidget {
   const AppointmentFormPage({
     super.key,
@@ -38,17 +42,7 @@ class AppointmentFormPage extends StatefulWidget {
 }
 
 class _AppointmentFormPageState extends State<AppointmentFormPage> {
-  static const _specialties = [
-    'internal',
-    'diabetes',
-    'cardiology',
-    'eyes',
-    'dental',
-    'neurology',
-    'other',
-  ];
   AppointmentKind _kind = AppointmentKind.followUp;
-  String _specialty = 'diabetes';
 
   /// A new visit starts on the patient's today.
   late DateTime _date = PatientClockScope.of(context).today();
@@ -56,7 +50,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   String _remoteMethod = 'video';
   final Set<String> _companionIds = <String>{};
   final _place = TextEditingController();
-  final _otherSpecialty = TextEditingController();
+  final _clinic = TextEditingController();
   final _otherKind = TextEditingController();
   bool _initialized = false;
   bool _saving = false;
@@ -65,7 +59,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   @override
   void dispose() {
     _place.dispose();
-    _otherSpecialty.dispose();
+    _clinic.dispose();
     _otherKind.dispose();
     super.dispose();
   }
@@ -73,10 +67,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   void _fill(CareAppointment value) {
     if (_initialized) return;
     _initialized = true;
-    _specialty = _specialties.contains(value.specialty)
-        ? value.specialty
-        : 'other';
-    _otherSpecialty.text = _specialty == 'other' ? value.specialty : '';
+    _clinic.text = value.specialty ?? '';
     _kind = value.kind;
     _otherKind.text = value.otherKind ?? '';
     _date = value.scheduledOn;
@@ -93,10 +84,6 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   /// leaves with `true`; the cubit's message key shows when the server says no.
   Future<void> _save(CareAppointment? value) async {
     if (_saving) return;
-    if (_specialty == 'other' && _otherSpecialty.text.trim().isEmpty) {
-      setState(() => _errorKey = 'appointments.specialty_required');
-      return;
-    }
     if (_kind == AppointmentKind.other && _otherKind.text.trim().isEmpty) {
       setState(() => _errorKey = 'appointments.kind_required');
       return;
@@ -106,9 +93,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       return;
     }
     final draft = AppointmentDraft(
-      specialty: _specialty == 'other'
-          ? _otherSpecialty.text.trim()
-          : _specialty,
+      specialty: _clinic.text.trim().isEmpty ? null : _clinic.text.trim(),
       kind: _kind,
       otherKind: _kind == AppointmentKind.other ? _otherKind.text.trim() : null,
       scheduledOn: _date,
@@ -221,50 +206,19 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
             header: context.tr('appointments.appointment_group'),
             children: [
               InsetBlock(
-                semanticLabel: context.tr('appointments.specialty'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _choices(
-                      _specialties,
-                      _specialty,
-                      (value) => setState(() {
-                        _specialty = value;
-                        _errorKey = null;
-                      }),
-                      (value) => context.tr('appointments.specialties.$value'),
-                    ),
-                    if (_specialty == 'other')
-                      TextField(
-                        controller: _otherSpecialty,
-                        maxLength: 80,
-                        inputFormatters: const [CodePointLengthFormatter(80)],
-                        textAlign: TextAlign.start,
-                        onChanged: (_) => setState(() => _errorKey = null),
-                        decoration: InputDecoration(
-                          labelText: context.tr(
-                            'appointments.custom_specialty',
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              InsetBlock(
                 semanticLabel: context.tr('appointments.type'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _choices(
-                      AppointmentKind.values.map((kind) => kind.name).toList(),
-                      _kind.name,
-                      (value) => setState(() {
-                        _kind = AppointmentKind.values.byName(value);
+                    AppointmentKindChoices(
+                      selected: _kind,
+                      onSelected: (kind) => setState(() {
+                        _kind = kind;
                         _errorKey = null;
                       }),
-                      (value) => context.tr('appointments.kinds.$value'),
                     ),
-                    if (_kind == AppointmentKind.other)
+                    if (_kind == AppointmentKind.other) ...[
+                      const SizedBox(height: AppSpacing.md),
                       TextField(
                         controller: _otherKind,
                         maxLength: 80,
@@ -275,7 +229,21 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                           labelText: context.tr('appointments.custom_kind'),
                         ),
                       ),
+                    ],
                   ],
+                ),
+              ),
+              InsetBlock(
+                semanticLabel: context.tr('appointments.clinic_field'),
+                child: TextField(
+                  controller: _clinic,
+                  maxLength: 80,
+                  inputFormatters: const [CodePointLengthFormatter(80)],
+                  textAlign: TextAlign.start,
+                  decoration: InputDecoration(
+                    labelText: context.tr('appointments.clinic_field'),
+                    hintText: context.tr('appointments.clinic_hint'),
+                  ),
                 ),
               ),
             ],
@@ -415,22 +383,4 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       ),
     );
   }
-
-  Widget _choices(
-    List<String> options,
-    String? selected,
-    ValueChanged<String> onSelected,
-    String Function(String) label,
-  ) => Wrap(
-    spacing: AppSpacing.sm,
-    runSpacing: AppSpacing.sm,
-    children: [
-      for (final value in options)
-        ChoiceChip(
-          label: Text(label(value)),
-          selected: selected == value,
-          onSelected: (_) => onSelected(value),
-        ),
-    ],
-  );
 }

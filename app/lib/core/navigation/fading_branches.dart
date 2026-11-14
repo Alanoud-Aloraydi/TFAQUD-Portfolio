@@ -29,7 +29,6 @@ class FadingBranches extends StatelessWidget {
   }
 }
 
-/// Renders the branch element of fading branches.
 class _Branch extends StatefulWidget {
   const _Branch({
     required this.active,

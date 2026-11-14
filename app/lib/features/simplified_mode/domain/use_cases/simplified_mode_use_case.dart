@@ -3,17 +3,17 @@ import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
+import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
@@ -38,10 +38,10 @@ class SimplifiedModeUseCase {
 
   final HomeUseCase _home;
   final MedicationsUseCase _medications;
-  final MeasurementRepository _measurements;
-  final AppointmentRepository _appointments;
+  final MeasurementsUseCase _measurements;
+  final AppointmentsUseCase _appointments;
   final CirclesUseCase _circles;
-  final PrayerTimesRepository _prayers;
+  final PrayerTimesUseCase _prayers;
   final DoseReminders _reminders;
   final CalendarSync _calendar;
 

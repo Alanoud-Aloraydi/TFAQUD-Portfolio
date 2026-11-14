@@ -1,17 +1,83 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported appointment kind values.
-enum AppointmentKind { followUp, test, imaging, remote, other }
+/// What the visit is for; the form groups these by [AppointmentKindGroup].
+enum AppointmentKind {
+  followUp,
+  newVisit,
+  remote,
+  emergency,
+  test,
+  imaging,
+  eyeExam,
+  hearingTest,
+  surgery,
+  physio,
+  dialysis,
+  therapySession,
+  dressing,
+  vaccine,
+  checkup,
+  dental,
+  pharmacy,
+  mental,
+  speech,
+  other;
 
-/// Defines the supported appointment status values.
+  /// The wire name: «follow_up» for [followUp].
+  String get code => name.replaceAllMapped(
+    RegExp('[A-Z]'),
+    (Match m) => '_${m[0]!.toLowerCase()}',
+  );
+
+  /// The kind with this wire name; [other] for one this app does not know.
+  static AppointmentKind fromCode(String code) => values.firstWhere(
+    (AppointmentKind kind) => kind.code == code,
+    orElse: () => other,
+  );
+}
+
+/// The rows of the form's type choice; [AppointmentKind.other] stands alone.
+enum AppointmentKindGroup {
+  visit(<AppointmentKind>[
+    AppointmentKind.followUp,
+    AppointmentKind.newVisit,
+    AppointmentKind.remote,
+    AppointmentKind.emergency,
+  ]),
+  checks(<AppointmentKind>[
+    AppointmentKind.test,
+    AppointmentKind.imaging,
+    AppointmentKind.eyeExam,
+    AppointmentKind.hearingTest,
+  ]),
+  treatment(<AppointmentKind>[
+    AppointmentKind.surgery,
+    AppointmentKind.physio,
+    AppointmentKind.dialysis,
+    AppointmentKind.therapySession,
+    AppointmentKind.dressing,
+  ]),
+  routine(<AppointmentKind>[
+    AppointmentKind.vaccine,
+    AppointmentKind.checkup,
+    AppointmentKind.dental,
+    AppointmentKind.pharmacy,
+  ]),
+  sessions(<AppointmentKind>[AppointmentKind.mental, AppointmentKind.speech]);
+
+  const AppointmentKindGroup(this.kinds);
+
+  final List<AppointmentKind> kinds;
+}
+
 enum AppointmentStatus { scheduled, completed, cancelled }
 
-/// Represents a scheduled care appointment.
+/// One planned visit: what for, when, where, and who goes along.
 class CareAppointment extends Equatable {
   const CareAppointment({
     required this.id,
-    required this.specialty,
+    this.specialty,
     required this.kind,
     required this.otherKind,
     required this.scheduledOn,
@@ -28,7 +94,9 @@ class CareAppointment extends Equatable {
   });
 
   final String id;
-  final String specialty;
+
+  /// The clinic or doctor as typed; null when not given.
+  final String? specialty;
   final AppointmentKind kind;
   final String? otherKind;
   final DateTime scheduledOn;
@@ -95,7 +163,7 @@ class AppointmentCompanion extends Equatable {
 /// Holds editable appointment values before saving.
 class AppointmentDraft extends Equatable {
   const AppointmentDraft({
-    required this.specialty,
+    this.specialty,
     required this.kind,
     required this.otherKind,
     required this.scheduledOn,
@@ -105,7 +173,8 @@ class AppointmentDraft extends Equatable {
     required this.companionAccountIds,
   });
 
-  final String specialty;
+  /// The clinic or doctor as typed; null when not given.
+  final String? specialty;
   final AppointmentKind kind;
   final String? otherKind;
   final DateTime scheduledOn;

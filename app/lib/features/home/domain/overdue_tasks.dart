@@ -10,13 +10,19 @@ abstract final class OverdueTasks {
   static List<MeasurementOccurrence> measurements(
     List<MeasurementOccurrence> tasks,
     DateTime today,
-  ) => tasks
-      .where(
-        (task) =>
-            task.status == MeasurementStatus.missed &&
-            _inWindow(task.scheduledOn, today),
-      )
-      .toList();
+  ) =>
+      tasks
+          .where(
+            (task) =>
+                task.status == MeasurementStatus.missed &&
+                _inWindow(task.scheduledOn, today),
+          )
+          .toList()
+        // The oldest first, as «يحتاج انتباهك» reads.
+        ..sort((a, b) {
+          final int byDay = a.scheduledOn.compareTo(b.scheduledOn);
+          return byDay != 0 ? byDay : a.time.compareTo(b.time);
+        });
 
   /// The appointments of the days before today that nobody closed. Today's
   /// own wait for confirmation in the day's schedule.
@@ -32,7 +38,8 @@ abstract final class OverdueTasks {
                 scheduleDay(item.scheduledOn).isBefore(scheduleDay(today)),
           )
           .toList()
-        ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+        // The oldest first, as «يحتاج انتباهك» reads.
+        ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
   static bool _inWindow(DateTime day, DateTime today) {
     final DateTime scheduled = scheduleDay(day);

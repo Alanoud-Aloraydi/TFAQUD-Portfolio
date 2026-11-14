@@ -8,7 +8,9 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/weekday_selector.dart';
+import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -16,8 +18,9 @@ import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
+import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_ranges_box.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -81,7 +84,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       _Reading(const TimeOfDay(hour: 7, minute: 30), 'fasting'),
     ], PatientClockScope.of(context).today()),
     MeasurementKind.bp: _Schedule(<_Reading>[
-      _Reading(const TimeOfDay(hour: 8, minute: 0), null),
+      _Reading(const TimeOfDay(hour: 8, minute: 0), 'morning'),
     ], PatientClockScope.of(context).today()),
   };
 
@@ -460,44 +463,38 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
           }
         },
       ),
-      if (_kind == MeasurementKind.glucose)
-        InsetBlock(
-          semanticLabel: '$label، ${context.tr('measurements.state')}',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                context.tr('measurements.state'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              OptionChips(
-                options: [
-                  for (final value in const [
-                    'fasting',
-                    'before_meal',
-                    'after_meal',
-                  ])
-                    ChipOption(
-                      value,
-                      context.tr('measurements.condition.$value'),
-                    ),
-                ],
-                isSelected: (value) => reading.measurementState == value,
-                onTap: (value) => setState(() {
-                  reading.measurementState = value;
-                  _errorKey = null;
-                }),
-              ),
-            ],
-          ),
+      InsetBlock(
+        semanticLabel: '$label، ${context.tr('measurements.state')}',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.tr('measurements.state'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            OptionChips(
+              options: [
+                for (final value in MeasurementConditions.planStates(_kind))
+                  ChipOption(
+                    value,
+                    context.tr('measurements.condition.$value'),
+                  ),
+              ],
+              isSelected: (value) => reading.measurementState == value,
+              onTap: (value) => setState(() {
+                reading.measurementState = value;
+                _errorKey = null;
+              }),
+            ),
+          ],
         ),
+      ),
     ];
   }
 
-  /// A new reading three hours after the last one (the same day); a
-  /// glucose one with the next meal state not used yet: fasting, then
-  /// before a meal, then after it.
+  /// A new reading three hours after the last one (the same day), with the
+  /// first «حالة القياس» of its kind not used yet.
   void _addReading() {
     final TimeOfDay last = _readings.last.time;
     final int next = last.hour * 60 + last.minute + 180;
@@ -505,10 +502,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     final Set<String> used = {
       for (final item in _readings) ?item.measurementState,
     };
-    const mealStates = <String>['fasting', 'before_meal', 'after_meal'];
-    final String? meal = _kind == MeasurementKind.glucose
-        ? mealStates.where((value) => !used.contains(value)).firstOrNull
-        : null;
+    final String? meal = MeasurementConditions.planStates(_kind)
+        .where((String value) => !used.contains(value))
+        .firstOrNull;
     setState(() {
       _readings.add(
         _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), meal),

@@ -11,10 +11,10 @@ import 'package:app/core/services/reminders/reminder_payloads.dart'
 import 'package:app/core/services/service_texts.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:device_calendar_plus/device_calendar_plus.dart';
@@ -84,7 +84,7 @@ final CalendarEventTexts calendarEventTexts = CalendarEventTexts(
   },
   appointment: (String circleId, CareAppointment visit) {
     final String? patient = CareVoice.patientOf(circleId);
-    final String clinic = clinicName(visit.specialty);
+    final String clinic = visitName(visit);
     return patient == null
         ? 'reminders.calendar_appointment'.tr(args: <String>[clinic])
         : 'reminders.calendar_appointment_for'.tr(
@@ -94,7 +94,7 @@ final CalendarEventTexts calendarEventTexts = CalendarEventTexts(
   appointmentNote: (CareAppointment visit) {
     final String place = visit.place?.trim() ?? '';
     final List<String> args = <String>[
-      clinicName(visit.specialty),
+      visitName(visit),
       clockText(visit.time),
       if (place.isNotEmpty) place,
     ];
@@ -183,41 +183,26 @@ class _SavedEvent {
   };
 }
 
-/// Mirrors active medication and measurement schedules, and upcoming
-/// appointments, onto the phone's own Calendar app — a backup to the push
-/// and local-notification reminders, for a dose that must not be missed.
+/// Mirrors doses, measurement times and appointments onto the phone's own
+/// Calendar app, as a backup to the reminders.
 ///
-/// Opt-in ([setEnabled]), off by default, and chosen per circle and per
-/// category: someone in several circles may want only one circle's
-/// appointments on their calendar, say. A dose or appointment written into
-/// the phone's shared calendar is visible to anything else with calendar
-/// access, unlike the rest of this app's circle-scoped data. Turning a
-/// switch off takes its events off the phone's calendar again.
+/// Off by default, turned on per circle and per category ([setEnabled]).
+/// The events are visible to anything else with calendar access, unlike
+/// the rest of this app's data.
 ///
-/// The events go in the app's own calendar ([ServiceTexts.calendarName]), so
-/// they can all go in one step: signing out deletes the whole calendar,
-/// and the person can delete it in the Calendar app too. Deleting the app
-/// leaves a calendar behind (iOS tells an app nothing when it is deleted),
-/// so a repeating event repeats only two weeks ahead ([_ahead]) and is made
-/// again, further ahead, by a refresh when one week is left: while the app
-/// is used its events go on, and after it is deleted their alerts stop
-/// within two weeks. A «تفقّد» calendar left by an earlier install is
-/// deleted before a new one is made. Without full calendar access the
-/// events go in the phone's default calendar, as before.
+/// They go in the app's own calendar ([ServiceTexts.calendarName]), so
+/// signing out deletes all of them in one step. iOS tells an app nothing
+/// when it is deleted, so a repeating event repeats two weeks ahead
+/// ([_ahead]) and is made again while the app is used: after a deletion
+/// its alerts stop within two weeks.
 ///
-/// Nothing here is stored on the server. Each phone keeps its own small map
-/// of "key it created" → "calendar event" in [SharedPreferences], and on
-/// every [refresh] recomputes the full desired set from the plans and
-/// appointments the signed-in person can see, deleting what is no longer
-/// wanted and creating what is missing — the same reconcile-from-scratch
-/// shape as [ReminderCircle]'s own local notifications, so an edited or
-/// discontinued plan is picked up automatically, never left stale. An event
-/// the calendar would not delete yet (no full access, say) stays in the map
-/// and is deleted at a later refresh.
+/// Nothing is stored on the server. Each phone keeps its own map of
+/// "key it created" to "calendar event", and every [refresh] works out the
+/// wanted set again from the plans on screen, deleting what is no longer
+/// wanted — so an edited or stopped plan is never left behind.
 ///
-/// A dose or measurement put off with «ذكّرني لاحقًا» ([snoozes]) gets one
-/// more event, once, at its new time, in a category that is turned on; it
-/// goes when the task is recorded or its time has come.
+/// A task put off with «ذكّرني لاحقًا» ([snoozes]) gets one more event at
+/// its new time; it goes once the task is recorded or its time has come.
 class CalendarSync {
   CalendarSync(
     this._medications,
@@ -241,8 +226,8 @@ class CalendarSync {
   }
 
   final MedicationsUseCase _medications;
-  final MeasurementRepository _measurements;
-  final AppointmentRepository _appointments;
+  final MeasurementsUseCase _measurements;
+  final AppointmentsUseCase _appointments;
   final ValueListenable<Map<String, TaskSnooze>>? _snoozes;
   final DeviceCalendar _calendar;
   final CalendarEventTexts _texts;
@@ -261,7 +246,7 @@ class CalendarSync {
   static const String _calendarKey = 'calendar_sync_calendar';
 
   /// The app's green («leaf»), for the calendar's dot.
-  static const String _calendarColor = '#A8D5BA';
+  static const String _calendarColor = '#C4B5E0';
 
   /// How far ahead a repeating event repeats.
   static const Duration _ahead = Duration(days: 14);
@@ -327,6 +312,33 @@ class CalendarSync {
     await refresh();
   }
 
+  /// Whether this circle is copied to the calendar at all.
+  Future<bool> isCircleEnabled(String circleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final selections = await _selections(prefs);
+    return CalendarSyncCategory.values.any(
+      (CalendarSyncCategory category) =>
+          selections.contains(_selectionKey(circleId, category)),
+    );
+  }
+
+  /// Turns the whole circle on or off: its doses, its measurement times and
+  /// its appointments together. One write and one [refresh], rather than
+  /// one of each per kind.
+  Future<void> setCircleEnabled(String circleId, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    final selections = await _selections(prefs);
+    bool changed = false;
+    for (final CalendarSyncCategory category in CalendarSyncCategory.values) {
+      final String key = _selectionKey(circleId, category);
+      changed |= value ? selections.add(key) : selections.remove(key);
+    }
+    if (!changed) return;
+    await prefs.setStringList(_selectionsKey, selections.toList());
+    if (value) _calendar.autoPermissions = AutoPermissionMode.full;
+    await refresh();
+  }
+
   /// The circles to mirror, from now on. Called when the home data loads.
   Future<void> sync(List<ReminderCircle> circles) {
     _circles = List<ReminderCircle>.unmodifiable(circles);
@@ -339,17 +351,17 @@ class CalendarSync {
   Future<void> refresh() => _runner.run();
 
   /// Removes every event this feature made, with the app's own calendar:
-  /// the person signed out. Also clears every selection — they are stored
-  /// on the device, not the account, so the next person to sign in on this
-  /// device must opt in themselves. An event the calendar would not delete
-  /// now is deleted at the next refresh.
+  /// the person signed out. The switches themselves are kept, so signing
+  /// back in puts the events the person had asked for back by itself; they
+  /// are per circle, so another account on this phone sees none of them.
+  /// An event the calendar would not delete now is deleted at the next
+  /// refresh.
   Future<void> clear() async {
     _session++;
     _circles = const <ReminderCircle>[];
     _synced = false;
     _runner.dropPending();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_selectionsKey);
     await _removeAll(prefs);
   }
 

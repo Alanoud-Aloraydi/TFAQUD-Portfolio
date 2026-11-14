@@ -14,18 +14,38 @@ abstract final class MeasurementConditions {
     'bedtime',
   ];
 
-  /// What the form offers for [kind], in order. «قبل النوم» and «مرض» are
-  /// still shown on a reading that has them.
+  /// What the form offers for [kind], in order. A code the form no longer
+  /// offers («قبل النوم», «مرض») still shows on a reading that has it.
   static List<String> offered(MeasurementKind kind) => switch (kind) {
     MeasurementKind.glucose => const <String>[
       'fasting',
       'before_meal',
       'after_meal',
+      'other',
+    ],
+    MeasurementKind.bp => const <String>[
+      'before_medicine',
+      'after_medicine',
+      'morning',
       'exertion',
       'stress',
       'other',
     ],
-    MeasurementKind.bp => const <String>['exertion', 'stress', 'other'],
+  };
+
+  /// «حالة القياس» of a plan's reading time: one of these, or none. The
+  /// stomach for glucose; the medicine and the time of day for pressure.
+  static List<String> planStates(MeasurementKind kind) => switch (kind) {
+    MeasurementKind.glucose => const <String>[
+      'fasting',
+      'before_meal',
+      'after_meal',
+    ],
+    MeasurementKind.bp => const <String>[
+      'before_medicine',
+      'after_medicine',
+      'morning',
+    ],
   };
 
   /// [selected] with [code] switched on or off; a meal state replaces the

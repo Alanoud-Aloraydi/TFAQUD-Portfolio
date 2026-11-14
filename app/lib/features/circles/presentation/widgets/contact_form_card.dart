@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';

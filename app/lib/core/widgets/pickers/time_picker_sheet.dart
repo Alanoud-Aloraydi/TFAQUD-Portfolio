@@ -18,7 +18,6 @@ Future<TimeOfDay?> showTafaqodTimeSheet(
   builder: (_) => _TimePickerSheet(initialTime: initialTime),
 );
 
-/// Renders the time picker sheet element of time picker sheet.
 class _TimePickerSheet extends StatefulWidget {
   const _TimePickerSheet({required this.initialTime});
 

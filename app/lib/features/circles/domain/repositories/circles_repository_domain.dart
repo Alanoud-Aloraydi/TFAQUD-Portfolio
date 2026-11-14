@@ -16,7 +16,7 @@ import 'package:app/features/circles/domain/entities/patient_update.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-/// Provides circles domain operations.
+/// The circle operations the application needs, whatever provides them.
 abstract class CirclesRepositoryDomain {
   /// The signed-in account: GET /api/v1/accounts/me.
   Future<Result<AccountSummary, Failure>> getAccount();
