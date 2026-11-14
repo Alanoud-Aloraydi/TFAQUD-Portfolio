@@ -25,6 +25,12 @@ dependencies:
   flutter_dotenv: ^6.0.1
   # The dose reminders, set on the phone itself (no push server needed).
   flutter_local_notifications: ^22.3.3
+  # The server's pushes on iOS and Android (missed tasks, the circle's
+  # news), through OneSignal. Pinned to OneSignal's Stable release; only
+  # lib/core/services/one_signal_remote_push.dart uses it. Its iOS package
+  # pins OneSignal-XCFramework 5.5.1, the version the notification service
+  # extension links in ios/Runner.xcodeproj: change both together.
+  onesignal_flutter: 5.5.2
   flutter_secure_storage: ^11.2.0
   freezed_annotation: ^3.1.0
   get_it: ^9.3.0

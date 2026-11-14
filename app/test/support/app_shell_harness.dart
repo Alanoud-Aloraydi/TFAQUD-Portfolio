@@ -8,6 +8,7 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/core/services/token_storage.dart';
@@ -300,7 +301,7 @@ final auth = OfflineAuthRepository();
 final onboarding = OfflineProfileRepository();
 final photoRepository = OfflinePhotoRepository();
 final phone = FakePhoneNotifications();
-final pushTokens = <String>[];
+final remotePush = FakeRemotePush();
 
 /// Registers the services the shell's pages read from GetIt (as
 /// `configureDependencies` does in the app) with in-memory ones before
@@ -340,8 +341,9 @@ void setUpShellApp() {
       ),
     );
     GetIt.I.registerSingleton<CalendarSync>(FakeCalendarSync());
+    GetIt.I.registerSingleton<RemotePush>(remotePush);
     GetIt.I.registerSingleton<PushRegistration>(
-      PushRegistration(phone, (String token) async => pushTokens.add(token)),
+      PushRegistration(phone, remote: remotePush),
     );
     GetIt.I.registerSingleton<PrayerTimesUseCase>(
       PrayerTimesUseCase(PrayerTimesRepository(OfflinePrayerTimes())),

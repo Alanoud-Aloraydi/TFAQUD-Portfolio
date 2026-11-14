@@ -36,10 +36,9 @@ class ApiEndpoints {
   static const String profile = '/accounts/me/profile';
   static const String account = '/accounts/me';
 
-  /// The phone's Apple push token, kept with the sign-in.
-  static const String pushDevice = '/accounts/me/push-device';
   static const String accountPhoto = '/accounts/me/photo';
   static const String accountAvatar = '/accounts/me/avatar';
+  static const String pushSubscription = '/accounts/me/push-subscription';
   static const String selfCircle = '/circles/self';
   static const String patientCircle = '/circles/patient-without-account';
   static const String circleRequests = '/circle-requests';

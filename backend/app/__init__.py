@@ -164,6 +164,12 @@ def create_app(
     app.register_blueprint(tick_bp)
     app.register_blueprint(snoozes_bp)
     app.register_blueprint(demo_bp)
+    if database_enabled:
+        # `flask --app wsgi tick`: the scheduled notification scan, which
+        # Render's cron job runs every 10 minutes (render.yaml).
+        from app.push.tick_command import tick_command
+
+        app.cli.add_command(tick_command)
     if database_enabled and env != "production":
         # `flask --app wsgi demo-data`: demo circles, medicines and doses for
         # trying the app on a local server (app/demo_data.py).

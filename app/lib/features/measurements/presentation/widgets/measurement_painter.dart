@@ -2,28 +2,28 @@ import 'dart:ui' as ui;
 
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/presentation/widgets/chart_colors.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter/material.dart';
 
 /// Draws a month of readings: glucose as a line of dots, blood pressure as
-/// a capsule from the lower number to the upper one, over the target band.
+/// a capsule from the lower number to the upper one, over the normal bands.
 /// The axis holds the range the readings live in, never down to zero.
 class MeasurementPainter extends CustomPainter {
   MeasurementPainter(
     this.kind,
     this.readings,
     this.month,
-    this.targetLow,
-    this.targetHigh,
+    this.target,
     this.clock,
   );
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
   final DateTime month;
-  final int? targetLow;
-  final int? targetHigh;
+  final ChartTarget target;
 
   /// The patient's clock: a reading falls on its day where they live.
   final PatientClock clock;
@@ -34,8 +34,8 @@ class MeasurementPainter extends CustomPainter {
       size,
       month,
       readings,
-      targetHigh,
-      targetLow: targetLow,
+      target.high,
+      targetLow: target.low,
       kind: kind,
     );
     _target(canvas, scale);
@@ -51,25 +51,18 @@ class MeasurementPainter extends CustomPainter {
     }
   }
 
+  /// The normal bands, the outer first so an inner one shows over it.
   void _target(Canvas canvas, ChartScale scale) {
-    final int? low = targetLow;
-    final int? high = targetHigh;
-    if (low == null || high == null) return;
     final double right = scale.size.width - ChartScale.labelWidth;
-    if (kind == MeasurementKind.glucose) {
+    for (final ChartBand band in target.bands) {
       canvas.drawRect(
-        Rect.fromLTRB(ChartScale.chartLeft, scale.y(high), right, scale.y(low)),
-        Paint()..color = AppSemanticColors.surfaceSuccess,
-      );
-      return;
-    }
-    for (final int limit in <int>[low, high]) {
-      canvas.drawLine(
-        Offset(ChartScale.chartLeft, scale.y(limit)),
-        Offset(right, scale.y(limit)),
-        Paint()
-          ..color = AppSemanticColors.statusSuccess
-          ..strokeWidth = 1.5,
+        Rect.fromLTRB(
+          ChartScale.chartLeft,
+          scale.y(band.high),
+          right,
+          scale.y(band.low),
+        ),
+        Paint()..color = ChartColors.band(band),
       );
     }
   }
@@ -118,7 +111,7 @@ class MeasurementPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = AppSemanticColors.chartInk.withValues(alpha: .45)
+          ..color = ChartColors.line
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
           ..strokeJoin = StrokeJoin.round,
@@ -128,10 +121,7 @@ class MeasurementPainter extends CustomPainter {
       canvas.drawCircle(
         at,
         4,
-        Paint()
-          ..color = outside
-              ? AppSemanticColors.statusError
-              : AppSemanticColors.chartInk,
+        Paint()..color = outside ? ChartColors.outside : ChartColors.reading,
       );
     }
   }
@@ -164,8 +154,8 @@ class MeasurementPainter extends CustomPainter {
           ),
           Paint()
             ..color = reading.outsideTarget == true
-                ? AppSemanticColors.statusError
-                : AppSemanticColors.chartInk,
+                ? ChartColors.outside
+                : ChartColors.reading,
         );
       }
     }
@@ -189,7 +179,6 @@ class MeasurementPainter extends CustomPainter {
   bool shouldRepaint(covariant MeasurementPainter oldDelegate) =>
       oldDelegate.readings != readings ||
       oldDelegate.month != month ||
-      oldDelegate.targetLow != targetLow ||
-      oldDelegate.targetHigh != targetHigh ||
+      oldDelegate.target != target ||
       oldDelegate.clock != clock;
 }

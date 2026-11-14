@@ -13,12 +13,14 @@ import 'core/network/api_options.dart';
 import 'core/services/app_accessibility.dart';
 import 'core/services/fresh_install.dart';
 import 'core/services/phone_notifications.dart';
+import 'core/services/remote_push.dart';
 import 'core/services/shown_circle_clock.dart';
 import 'core/services/token_storage.dart';
 import 'core/setup.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/components/navigation_themes.dart';
 import 'core/theme/materials/glass_preferences.dart';
+import 'core/widgets/feedback/push_setup_check.dart';
 import 'core/widgets/forms/keyboard_dismiss.dart';
 import 'core/widgets/patient_clock_scope.dart';
 
@@ -35,6 +37,9 @@ Future<void> main() async {
   }
   // Early, so the tap on a reminder that opened the app is not lost.
   await GetIt.I<PhoneNotifications>().initialize();
+  // The server's pushes (OneSignal), after the phone's own reminders so
+  // both keep answering the phone's notification taps on iOS.
+  await GetIt.I<RemotePush>().initialize();
 
   runApp(
     EasyLocalization(
@@ -73,7 +78,13 @@ class MainApp extends StatelessWidget {
                     valueListenable: GetIt.I<ShownCircleClock>(),
                     builder: (context, clock, _) => PatientClockScope(
                       clock: clock,
-                      child: KeyboardDismissOnTap(child: child!),
+                      // OneSignal's setup check, in a debug build only.
+                      child: PushSetupCheck(
+                        push: GetIt.I<RemotePush>(),
+                        navigatorKey:
+                            AppRouter.router.routerDelegate.navigatorKey,
+                        child: KeyboardDismissOnTap(child: child!),
+                      ),
                     ),
                   ),
                 ),

@@ -19,6 +19,13 @@
 #   P12_PASSWORD                    the password of that .p12
 #   BUILD_PROVISION_PROFILE_BASE64  the App Store profile of com.tfaqud.tfaqud
 #                                   (.mobileprovision), in base64
+#   BUILD_NSE_PROVISION_PROFILE_BASE64
+#                                   the App Store profile of the OneSignal
+#                                   notification service extension,
+#                                   com.tfaqud.tfaqud.OneSignalNotificationServiceExtension,
+#                                   in base64. Both App IDs need the App Group
+#                                   group.com.tfaqud.tfaqud.onesignal, and both
+#                                   profiles must be made after it was added.
 #   KEYCHAIN_PASSWORD               any long random text (a temporary keychain)
 #   ASC_KEY_ID, ASC_ISSUER_ID       the App Store Connect API key's ids
 #   ASC_API_KEY                     the text of that key's .p8 file
@@ -97,10 +104,15 @@ jobs:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          BUILD_NSE_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_NSE_PROVISION_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           if [ -z "$BUILD_CERTIFICATE_BASE64" ] || [ -z "$BUILD_PROVISION_PROFILE_BASE64" ]; then
             echo "::error::The signing secrets are missing. See the top of .github/workflows/testflight.yml."
+            exit 1
+          fi
+          if [ -z "$BUILD_NSE_PROVISION_PROFILE_BASE64" ]; then
+            echo "::error::BUILD_NSE_PROVISION_PROFILE_BASE64 is missing: the profile of the OneSignal notification service extension. See the top of .github/workflows/testflight.yml."
             exit 1
           fi
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
@@ -131,6 +143,17 @@ jobs:
           echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
           echo "TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
 
+          # The OneSignal notification service extension's own profile.
+          NSE_PP_PATH=$RUNNER_TEMP/nse_pp.mobileprovision
+          echo -n "$BUILD_NSE_PROVISION_PROFILE_BASE64" | base64 --decode -o "$NSE_PP_PATH"
+          for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            cp "$NSE_PP_PATH" "$dir/"
+          done
+          security cms -D -i "$NSE_PP_PATH" > "$RUNNER_TEMP/nse_profile.plist"
+          NSE_PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" "$RUNNER_TEMP/nse_profile.plist")
+          echo "Extension profile: $NSE_PROFILE_NAME"
+          echo "NSE_PROFILE_NAME=$NSE_PROFILE_NAME" >> "$GITHUB_ENV"
+
       # Manual signing for the app target only: Flutter's Release.xcconfig is
       # used by the Runner target and not by the Swift packages, which must
       # not get a provisioning profile. This change is not committed.
@@ -145,6 +168,15 @@ jobs:
           PROVISIONING_PROFILE_SPECIFIER = $PROFILE_NAME
           EOF
           cat ios/Flutter/Release.xcconfig
+          # The extension signs with the same certificate and its own profile.
+          cat >> ios/OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.xcconfig <<EOF
+          CODE_SIGN_STYLE = Manual
+          DEVELOPMENT_TEAM = $TEAM_ID
+          CODE_SIGN_IDENTITY = Apple Distribution
+          CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER = $NSE_PROFILE_NAME
+          EOF
+          cat ios/OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.xcconfig
 
       - name: Archive
         run: |
@@ -181,6 +213,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.tfaqud.tfaqud</key><string>$PROFILE_NAME</string>
+              <key>com.tfaqud.tfaqud.OneSignalNotificationServiceExtension</key><string>$NSE_PROFILE_NAME</string>
             </dict>
             <key>manageAppVersionAndBuildNumber</key><false/>
             <key>uploadSymbols</key><true/>

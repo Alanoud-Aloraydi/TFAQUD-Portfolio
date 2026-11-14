@@ -1,49 +1,34 @@
-"""Push notifications without a database: choosing the sender, Apple's
-request, and checking the token the app sends."""
+"""Push notifications without a database: choosing the sender, OneSignal's
+request and answers, and the scan command."""
 
 import json
 
 import httpx
-import jwt
 import pytest
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ec
 
 from app import create_app
 from app.config import ConfigError, load_config
 from app.push import (
-    ApnsPushSender,
     NoPushSender,
+    OneSignalPushSender,
     PushMessage,
     create_push_sender,
 )
-from app.push.sender import FAILED, GONE, SENT, UNREGISTERED
-from tests.conftest import bearer
+from app.push.sender import FAILED, NO_DEVICE, SENT
 
-TOKEN = "ab" * 32
+ACCOUNT = "6f1c2b9e-3a4d-4c5e-8f70-1a2b3c4d5e6f"
 MESSAGE = PushMessage("دعوة إلى دائرة رعاية", "دعوة من ريم.", "invitation")
+SETTINGS = {
+    "PUSH_BACKEND": "onesignal",
+    "ONESIGNAL_APP_ID": "50e5581f-1938-47b7-a23a-c65c70c4a26d",
+    "ONESIGNAL_API_KEY": "os_v2_app_test",
+}
 
 
-@pytest.fixture
-def key():
-    return ec.generate_private_key(ec.SECP256R1())
-
-
-def pem(key) -> str:
-    return key.private_bytes(
-        serialization.Encoding.PEM,
-        serialization.PrivateFormat.PKCS8,
-        serialization.NoEncryption(),
-    ).decode()
-
-
-def apns(key, handler, environment="sandbox"):
-    return ApnsPushSender(
-        key_id="KEY1234567",
-        team_id="TEAM123456",
-        bundle_id="com.tafaqod.app",
-        private_key=pem(key),
-        environment=environment,
+def onesignal(handler):
+    return OneSignalPushSender(
+        app_id=SETTINGS["ONESIGNAL_APP_ID"],
+        api_key=SETTINGS["ONESIGNAL_API_KEY"],
         client=httpx.Client(transport=httpx.MockTransport(handler)),
     )
 
@@ -57,8 +42,8 @@ def test_nothing_is_sent_unless_set_up():
     assert sender.enabled is False
 
 
-def test_tests_never_use_apple(monkeypatch):
-    monkeypatch.setenv("PUSH_BACKEND", "apns")
+def test_tests_never_use_onesignal(monkeypatch):
+    monkeypatch.setenv("PUSH_BACKEND", "onesignal")
     assert load_config("testing")["PUSH_BACKEND"] == "none"
 
 
@@ -67,151 +52,19 @@ def test_an_unknown_backend_stops_the_app():
         create_push_sender({"PUSH_BACKEND": "firebase"})
 
 
-def test_apple_needs_every_setting():
-    with pytest.raises(ConfigError, match="APNS_KEY_ID"):
-        create_push_sender(
-            {
-                "PUSH_BACKEND": "apns",
-                "APNS_TEAM_ID": "TEAM123456",
-                "APNS_BUNDLE_ID": "com.tafaqod.app",
-                "APNS_PRIVATE_KEY_PATH": "/nowhere/AuthKey.p8",
-            }
-        )
+def test_the_old_apple_setting_says_what_to_set_instead():
+    with pytest.raises(ConfigError, match="onesignal"):
+        create_push_sender({"PUSH_BACKEND": "apns"})
 
 
-def test_apple_with_its_key(tmp_path, key):
-    path = tmp_path / "AuthKey_KEY1234567.p8"
-    path.write_text(pem(key))
-    config = {
-        "PUSH_BACKEND": "apns",
-        "APNS_KEY_ID": "KEY1234567",
-        "APNS_TEAM_ID": "TEAM123456",
-        "APNS_BUNDLE_ID": "com.tafaqod.app",
-        "APNS_PRIVATE_KEY_PATH": str(path),
-        "APNS_ENVIRONMENT": "production",
-    }
-    assert isinstance(create_push_sender(config), ApnsPushSender)
-
-    with pytest.raises(ConfigError, match="cannot be read"):
-        create_push_sender({**config, "APNS_PRIVATE_KEY_PATH": "/nowhere"})
-    with pytest.raises(ConfigError, match="APNS_ENVIRONMENT"):
-        create_push_sender({**config, "APNS_ENVIRONMENT": "test"})
+@pytest.mark.parametrize("missing", ["ONESIGNAL_APP_ID", "ONESIGNAL_API_KEY"])
+def test_onesignal_needs_both_settings(missing):
+    with pytest.raises(ConfigError, match=missing):
+        create_push_sender({**SETTINGS, missing: None})
 
 
-# ---- Apple's request ------------------------------------------------------
-
-
-def test_the_request_apple_expects(key):
-    seen = []
-
-    def handler(request):
-        seen.append(request)
-        return httpx.Response(200)
-
-    assert apns(key, handler).send(TOKEN, MESSAGE) == SENT
-
-    request = seen[0]
-    assert str(request.url) == (
-        f"https://api.sandbox.push.apple.com/3/device/{TOKEN}"
-    )
-    assert request.headers["apns-topic"] == "com.tafaqod.app"
-    assert request.headers["apns-push-type"] == "alert"
-    assert request.headers["apns-priority"] == "10"
-    scheme, _, token = request.headers["authorization"].partition(" ")
-    assert scheme == "bearer"
-    assert jwt.get_unverified_header(token) == {
-        "alg": "ES256",
-        "kid": "KEY1234567",
-        "typ": "JWT",
-    }
-    claims = jwt.decode(token, key.public_key(), algorithms=["ES256"])
-    assert claims["iss"] == "TEAM123456"
-    assert json.loads(request.content) == {
-        "aps": {
-            "alert": {"title": MESSAGE.title, "body": MESSAGE.body},
-            "sound": "tafaqod_chime.wav",
-            "thread-id": "invitation",
-        },
-        "kind": "invitation",
-    }
-
-
-def test_production_goes_to_apples_main_server(key):
-    hosts = []
-
-    def handler(request):
-        hosts.append(request.url.host)
-        return httpx.Response(200)
-
-    apns(key, handler, "production").send(TOKEN, MESSAGE)
-    assert hosts == ["api.push.apple.com"]
-
-
-def test_the_provider_token_is_reused(key):
-    tokens = []
-
-    def handler(request):
-        tokens.append(request.headers["authorization"])
-        return httpx.Response(200)
-
-    sender = apns(key, handler)
-    sender.send(TOKEN, MESSAGE)
-    sender.send(TOKEN, MESSAGE)
-    assert tokens[0] == tokens[1]
-
-
-@pytest.mark.parametrize(
-    ("status", "reason", "result"),
-    [
-        (410, "Unregistered", UNREGISTERED),
-        (410, "ExpiredToken", UNREGISTERED),
-        # Often a sandbox token sent to the production server: the app may
-        # well still be on the phone.
-        (400, "BadDeviceToken", GONE),
-        (400, "DeviceTokenNotForTopic", GONE),
-        (403, "InvalidProviderToken", FAILED),
-        (500, "InternalServerError", FAILED),
-    ],
-)
-def test_apples_answers(key, status, reason, result):
-    def handler(request):
-        return httpx.Response(status, json={"reason": reason})
-
-    assert apns(key, handler).send(TOKEN, MESSAGE) == result
-
-
-def test_apple_out_of_reach(key):
-    def handler(request):
-        raise httpx.ConnectError("no route")
-
-    assert apns(key, handler).send(TOKEN, MESSAGE) == FAILED
-
-
-# ---- the token the app sends ----------------------------------------------
-
-URL = "/api/v1/accounts/me/push-device"
-
-
-def test_registering_needs_a_sign_in(client):
-    response = client.put(URL, json={"token": TOKEN})
-    assert response.status_code == 401
-
-
-@pytest.mark.parametrize(
-    "token", ["", "xyz", "ab" * 31, "ab" * 101, "ab" * 31 + "a g"]
-)
-def test_a_token_that_is_not_apples_is_refused(client, signed_in, token):
-    response = client.put(
-        URL, json={"token": token}, headers=bearer(signed_in.access_token)
-    )
-    assert response.status_code == 422
-
-
-def test_without_a_database_the_token_cannot_be_kept(client, signed_in):
-    response = client.put(
-        URL, json={"token": TOKEN}, headers=bearer(signed_in.access_token)
-    )
-    assert response.status_code == 503
+def test_onesignal_with_its_settings():
+    assert isinstance(create_push_sender(SETTINGS), OneSignalPushSender)
 
 
 def test_the_app_can_be_given_a_sender():
@@ -222,36 +75,165 @@ def test_the_app_can_be_given_a_sender():
     assert app.extensions["push_sender"] is sender
 
 
-# ---- a sick Apple -----------------------------------------------------------
+# ---- OneSignal's request and answers ----------------------------------------
 
 
-def test_after_three_failures_apple_is_not_called_for_a_while(key):
+def test_the_request_onesignal_expects():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"id": "n-1"})
+
+    assert onesignal(handler).send(ACCOUNT, MESSAGE) == SENT
+
+    request = seen[0]
+    assert str(request.url) == (
+        "https://api.onesignal.com/notifications?c=push"
+    )
+    assert request.headers["authorization"] == "Key os_v2_app_test"
+    assert json.loads(request.content) == {
+        "app_id": SETTINGS["ONESIGNAL_APP_ID"],
+        "target_channel": "push",
+        "include_aliases": {"external_id": [ACCOUNT]},
+        "headings": {"en": MESSAGE.title, "ar": MESSAGE.title},
+        "contents": {"en": MESSAGE.body, "ar": MESSAGE.body},
+        "data": {"kind": "invitation"},
+        "ios_sound": "tafaqod_chime.wav",
+        "thread_id": "invitation",
+        "android_group": "invitation",
+    }
+
+
+@pytest.mark.parametrize(
+    ("status", "answer", "result"),
+    [
+        # No phone of the account shows pushes: not a failure.
+        (
+            200,
+            {"id": "", "errors": ["All included players are not subscribed"]},
+            NO_DEVICE,
+        ),
+        (200, {"errors": {"invalid_aliases": {"external_id": [ACCOUNT]}}},
+         NO_DEVICE),
+        (400, {"errors": ["app_id not found"]}, FAILED),
+        (403, {"errors": ["Access denied"]}, FAILED),
+        (500, {}, FAILED),
+    ],
+)
+def test_onesignals_answers(status, answer, result):
+    def handler(request):
+        return httpx.Response(status, json=answer)
+
+    assert onesignal(handler).send(ACCOUNT, MESSAGE) == result
+
+
+def test_onesignal_out_of_reach():
+    def handler(request):
+        raise httpx.ConnectError("no route")
+
+    assert onesignal(handler).send(ACCOUNT, MESSAGE) == FAILED
+
+
+# ---- a sick OneSignal -------------------------------------------------------
+
+
+def test_after_three_failures_onesignal_is_not_called_for_a_while():
     calls = []
 
     def handler(request):
         calls.append(request)
         if len(calls) == 1:
             raise httpx.ConnectError("no route")
-        return httpx.Response(503, json={"reason": "ServiceUnavailable"})
+        return httpx.Response(503, json={})
 
-    sender = apns(key, handler)
+    sender = onesignal(handler)
     for _ in range(3):
-        assert sender.send(TOKEN, MESSAGE) == FAILED
+        assert sender.send(ACCOUNT, MESSAGE) == FAILED
 
-    # Answered at once; the token is kept for the next time.
-    assert sender.send(TOKEN, MESSAGE) == FAILED
+    # Answered at once.
+    assert sender.send(ACCOUNT, MESSAGE) == FAILED
     assert len(calls) == 3
 
 
-def test_an_answer_about_one_phone_opens_nothing(key):
+def test_an_answer_about_one_account_opens_nothing():
     calls = []
 
     def handler(request):
         calls.append(request)
-        return httpx.Response(410, json={"reason": "Unregistered"})
+        return httpx.Response(200, json={"id": "", "errors": ["x"]})
 
-    sender = apns(key, handler)
+    sender = onesignal(handler)
     for _ in range(4):
-        assert sender.send(TOKEN, MESSAGE) == UNREGISTERED
+        assert sender.send(ACCOUNT, MESSAGE) == NO_DEVICE
 
     assert len(calls) == 4
+
+
+# ---- phones whose app was deleted -------------------------------------------
+
+
+def test_onesignal_reports_the_phones_whose_app_was_deleted():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={
+            "identity": {"external_id": ACCOUNT},
+            "subscriptions": [
+                {"id": "gone", "type": "iOSPush", "notification_types": -10},
+                # Notifications turned off: the app is still there.
+                {"id": "off", "type": "AndroidPush", "notification_types": 0},
+                {"id": "out", "type": "iOSPush", "notification_types": -2},
+                {"id": "on", "type": "AndroidPush", "notification_types": 1},
+                {"type": "iOSPush", "notification_types": -10},
+            ],
+        })
+
+    deleted = onesignal(handler).deleted_apps(ACCOUNT)
+
+    assert deleted == {"gone"}
+    [request] = seen
+    assert request.method == "GET"
+    assert str(request.url) == (
+        "https://api.onesignal.com/apps/"
+        f"{SETTINGS['ONESIGNAL_APP_ID']}/users/by/external_id/{ACCOUNT}"
+    )
+    assert request.headers["Authorization"] == "Key os_v2_app_test"
+
+
+@pytest.mark.parametrize(
+    "status, body",
+    [
+        (404, {"errors": ["User not found"]}),
+        (401, {"errors": ["Access denied"]}),
+        (503, {}),
+        (200, {"subscriptions": "nothing"}),
+        (200, ["not", "an", "object"]),
+    ],
+)
+def test_any_doubt_reports_no_deleted_app(status, body):
+    sender = onesignal(lambda request: httpx.Response(status, json=body))
+
+    assert sender.deleted_apps(ACCOUNT) == set()
+
+
+def test_out_of_reach_reports_no_deleted_app():
+    def handler(request):
+        raise httpx.ConnectError("no route")
+
+    assert onesignal(handler).deleted_apps(ACCOUNT) == set()
+
+
+def test_without_a_push_service_no_app_is_deleted():
+    assert NoPushSender().deleted_apps(ACCOUNT) == set()
+
+
+# ---- the scan command -------------------------------------------------------
+
+
+def test_the_scan_command_needs_the_database():
+    app = create_app("testing")
+    result = app.test_cli_runner().invoke(args=["tick"])
+    # Without a database the command is not there at all.
+    assert result.exit_code != 0

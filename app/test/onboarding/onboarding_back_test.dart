@@ -1,6 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
@@ -65,12 +66,14 @@ void main() {
       await EasyLocalization.ensureInitialized();
       GetIt.I
         ..registerSingleton<DoseReminders>(FakeDoseReminders())
-        ..registerSingleton<CalendarSync>(FakeCalendarSync());
+        ..registerSingleton<CalendarSync>(FakeCalendarSync())
+        ..registerSingleton<RemotePush>(FakeRemotePush());
     });
 
     tearDownAll(() async {
       await GetIt.I.unregister<DoseReminders>();
       await GetIt.I.unregister<CalendarSync>();
+      await GetIt.I.unregister<RemotePush>();
     });
 
     setUp(() {

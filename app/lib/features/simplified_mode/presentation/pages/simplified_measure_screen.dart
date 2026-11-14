@@ -266,7 +266,8 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
           active: true,
         )
       else
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             for (final (SimplifiedMeasureField field, String label)
                 in <(SimplifiedMeasureField, String)>[
@@ -280,20 +281,18 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
                   ),
                 ]) ...<Widget>[
               if (field == SimplifiedMeasureField.lower)
-                const SizedBox(width: 12),
-              Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: _upperOrLower == field,
-                  label: spoken(label),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _upperOrLower = field),
-                    child: SimplifiedMeasureValueCard(
-                      value: _values[field]!,
-                      unit: label,
-                      active: _upperOrLower == field,
-                      small: true,
-                    ),
+                const SizedBox(height: 8),
+              Semantics(
+                button: true,
+                selected: _upperOrLower == field,
+                label: spoken(label),
+                child: GestureDetector(
+                  onTap: () => setState(() => _upperOrLower = field),
+                  child: SimplifiedMeasureValueCard(
+                    value: _values[field]!,
+                    unit: label,
+                    active: _upperOrLower == field,
+                    small: true,
                   ),
                 ),
               ),

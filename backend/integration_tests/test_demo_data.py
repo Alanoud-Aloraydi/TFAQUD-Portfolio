@@ -6,7 +6,12 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.demo_data import DEMO_PHONES, INVITED_PHONE, REQUEST_PHONE
+from app.demo_data import (
+    DEMO_PHONES,
+    INVITED_PHONE,
+    REQUEST_PHONE,
+    rebuild_demo,
+)
 from app.models import (
     Account,
     Appointment,
@@ -68,6 +73,23 @@ def test_demo_data_makes_the_whole_story(database_app, database):
     # health summary are not empty on the first screen.
     assert _count(database, MeasurementReading) > 100
     assert _count(database, Appointment) == 4
+
+
+def test_it_is_made_in_the_last_minutes_before_midnight(
+    database_app, database
+):
+    """At 23:58 in Riyadh, today has no room for the visit three hours
+    ahead, so it falls tomorrow instead of in the past (CI failed on it)."""
+    late = datetime(2026, 11, 14, 23, 58, tzinfo=RIYADH)
+
+    with database_app.app_context():
+        removed, _ = rebuild_demo(late, reset=False)
+
+    assert removed is False
+    with Session(database) as session:
+        days = set(session.scalars(select(Appointment.scheduled_on)))
+    assert late.date() not in days
+    assert (late + timedelta(days=1)).date() in days
 
 
 def test_the_demo_account_reads_it_like_the_app(database_app, database):

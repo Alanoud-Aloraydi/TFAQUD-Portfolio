@@ -1,11 +1,12 @@
 import 'package:app/core/di/configure_dependencies.config.dart';
+import 'package:app/core/di/push_di.dart';
 import 'package:app/core/l10n/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/core/services/token_storage.dart';
@@ -98,7 +99,9 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<VisitAudio>(VisitAudioService.new);
   // The notifications set on the phone, and the reminders that use them:
   // doses, measurements and appointments.
-  getIt.registerLazySingleton<PhoneNotifications>(PluginPhoneNotifications.new);
+  getIt.registerLazySingleton<PhoneNotifications>(
+    () => PluginPhoneNotifications(pushTaps: getIt<RemotePush>().taps),
+  );
   getIt.registerLazySingleton<DoseReminders>(
     () => DoseReminders(
       getIt<MedicationsUseCase>(),
@@ -124,15 +127,7 @@ Future<void> configureDependencies() async {
       snoozes: getIt<DoseReminders>().snoozes,
     ),
   );
-  // Circle updates from the server (Apple push, with the paid account).
-  getIt.registerLazySingleton<PushRegistration>(
-    () => PushRegistration(
-      getIt<PhoneNotifications>(),
-      (String token) => getIt<DioClient>().put(
-        ApiEndpoints.pushDevice,
-        data: <String, String>{'token': token},
-      ),
-    ),
-  );
+  // The server's pushes (OneSignal, and the Apple token for now).
+  configurePush(getIt);
   configureSimplifiedMode(getIt);
 }

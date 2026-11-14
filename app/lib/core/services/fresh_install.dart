@@ -58,8 +58,8 @@ abstract final class FreshInstall {
 ///
 /// [end] takes the tokens out at once, so the app opens signed out, and
 /// signs that session out on the server without making the start wait. If
-/// the phone is offline the server ends it later by itself: Apple tells it
-/// the deleted app's push token is no longer active.
+/// the phone is offline the server ends it later by itself: OneSignal tells
+/// it the deleted app's subscription is no longer active.
 class LeftoverSignIn {
   /// [api] is a client without the sign-in interceptor: these tokens are not
   /// the app's any more, so nothing may renew or keep them.

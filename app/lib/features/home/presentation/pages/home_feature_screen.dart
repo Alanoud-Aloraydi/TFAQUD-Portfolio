@@ -163,7 +163,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
         // Circle updates from the server need the phone's push token. With
         // the free Apple account iOS gives none, and nothing happens.
         _pushStarted = true;
-        unawaited(GetIt.I<PushRegistration>().start());
+        unawaited(GetIt.I<PushRegistration>().start(accountId: data.accountId));
       }
       _taps.onReady();
     }

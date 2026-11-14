@@ -1,6 +1,6 @@
 # Render Blueprint: the TFAQUD API and its PostgreSQL database, as the team's
-# shared test server (APP_ENV=staging), with real sign-in codes by SMS
-# (Authentica).
+# shared test server (APP_ENV=staging). For now the sign-in codes are written
+# in Render's log, not sent by SMS (Authentica is ready for later).
 #
 # In Render: New, then Blueprint, then pick this repository and a branch.
 # Render reads this file from that branch, asks for the values marked
@@ -53,15 +53,18 @@ services:
         fromDatabase:
           name: tfaqud-db
           property: connectionString
-      # Real sign-in codes by SMS through Authentica. The key is typed in
-      # Render (Environment), never in git. For codes in Render's log instead,
-      # set SMS_BACKEND to fake and FAKE_SMS_LOG_CODES to "true".
+      # For now no SMS is sent: each sign-in code is written in Render's log
+      # ("FAKE SMS ... Your code is ..."), which only the team can read. For
+      # real SMS through Authentica, set SMS_BACKEND to authentica and
+      # FAKE_SMS_LOG_CODES to "false" here, after AUTHENTICA_API_KEY is typed
+      # in Render (Environment), never in git: the API does not start with
+      # authentica and no key.
       - key: SMS_BACKEND
-        value: authentica
+        value: fake
       - key: AUTHENTICA_API_KEY
         sync: false
       - key: FAKE_SMS_LOG_CODES
-        value: "false"
+        value: "true"
       # The demo accounts (0500000001 detailed, 0500000004 simplified):
       # their numbers are made up, so they get no SMS and sign in with
       # DEMO_SIGN_IN_CODE, six digits typed in Render (Environment), never
@@ -72,22 +75,67 @@ services:
         value: "true"
       - key: DEMO_SIGN_IN_CODE
         sync: false
-      # Apple push. Type "none" first; after the key file is added as the
-      # secret file apns_key.p8, change it to "apns".
+      # Pushes to iOS and Android through OneSignal: "onesignal", once
+      # ONESIGNAL_API_KEY (the OneSignal app's App API key, a secret typed
+      # in Render only) is set; "none" sends nothing.
       - key: PUSH_BACKEND
         sync: false
-      - key: APNS_KEY_ID
+      # The OneSignal app's id: not a secret (the app has it too).
+      - key: ONESIGNAL_APP_ID
+        value: 50e5581f-1938-47b7-a23a-c65c70c4a26d
+      - key: ONESIGNAL_API_KEY
         sync: false
-      - key: APNS_TEAM_ID
-        sync: false
-      - key: APNS_BUNDLE_ID
-        value: com.tfaqud.tfaqud
-      - key: APNS_PRIVATE_KEY_PATH
-        value: /etc/secrets/apns_key.p8
-      # TestFlight and the App Store use Apple's production push service.
-      - key: APNS_ENVIRONMENT
-        value: production
-      # The scheduler (a GitHub Actions cron, see .github/workflows) calls
-      # POST /internal/tick with this value as the X-Tick-Secret header.
+      # The X-Tick-Secret header of POST /internal/tick, /internal/metrics
+      # and /internal/demo-data (.github/workflows/demo-refresh.yml).
       - key: TICK_SECRET
         sync: false
+
+  # The scheduled notification scan (backend/app/push/scheduled.py): every
+  # 10 minutes, a missed dose, measurement or appointment, and a task put
+  # off that came again, each told once. Its own short-lived process from
+  # the API's image, so it runs even while the free API sleeps. A cron job
+  # costs at least $1 a month, billed by the second it runs.
+  - type: cron
+    name: tfaqud-tick
+    runtime: docker
+    branch: main
+    plan: starter
+    region: frankfurt
+    schedule: "*/10 * * * *"
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: flask --app wsgi tick
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tfaqud-db
+          property: connectionString
+      # The scan sends no SMS: no Authentica key here.
+      - key: SMS_BACKEND
+        value: fake
+      # The same secret key and push settings as the API.
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: tfaqud-api
+          envVarKey: SECRET_KEY
+      - key: PUSH_BACKEND
+        fromService:
+          type: web
+          name: tfaqud-api
+          envVarKey: PUSH_BACKEND
+      - key: ONESIGNAL_APP_ID
+        fromService:
+          type: web
+          name: tfaqud-api
+          envVarKey: ONESIGNAL_APP_ID
+      - key: ONESIGNAL_API_KEY
+        fromService:
+          type: web
+          name: tfaqud-api
+          envVarKey: ONESIGNAL_API_KEY

@@ -56,11 +56,9 @@ class ChartScale {
     );
   }
 
-  /// The axis in round numbers. The smallest step of 5, 10, 20, 25, 50 or
-  /// 100 that covers [lowest] to [highest] in three to five lines, with
-  /// both ends resting on the step. Taking the smallest keeps the axis
-  /// close to the readings: a fixed three steps let one high reading pick a
-  /// step so wide that the axis began at zero and flattened the rest.
+  /// The axis in round numbers: the smallest step that covers [lowest] to
+  /// [highest] in three to five lines, both ends on the step, so one high
+  /// reading cannot widen the axis down to zero and flatten the rest.
   static (double, double, double) _bounds(int lowest, int highest) {
     const List<double> steps = <double>[5, 10, 20, 25, 50, 100, 200, 500];
     for (final double step in steps) {
@@ -85,8 +83,7 @@ class ChartScale {
   /// The distance between two lines of the axis.
   final double step;
 
-  /// Where the axis starts. Readings live well above zero, so the chart
-  /// does too.
+  /// Where the axis starts: readings live well above zero.
   final double bottomValue;
 
   double get chartBottom => size.height - bottomPad;
@@ -98,8 +95,7 @@ class ChartScale {
               (topValue - bottomValue)) *
           (chartBottom - chartTop);
 
-  /// The lines the chart draws and labels, three to five of them. Both
-  /// ends already rest on the step, so these need no rounding of their own.
+  /// The three to five lines the chart draws and labels.
   List<int> get ticks {
     final double gap = step > 0 ? step : (topValue - bottomValue) / 3;
     return <int>[
@@ -109,22 +105,23 @@ class ChartScale {
 
   double x(int day) => size.width - labelWidth - (day - .5) * slot;
 
-  /// The width of one bar when [count] readings share a day. A day of a
-  /// month is about nine points wide, so four readings on it have to be
-  /// thin: holding a floor of six made them overlap into one blob.
+  /// The width of one bar when [count] readings share a day: thin enough
+  /// that four on a nine-point day do not overlap into one blob.
   double barWidth(int count) => math.min(9, math.max(2, slot / count - 1));
 
   /// The distance between the centres of bars that share a day.
   double barStep(int count) =>
       math.min(barWidth(count) + 1, math.max(3, slot / count));
 
-  /// The centre of the [index]th of [count] bars on [day].
+  /// The centre of the [index]th of [count] bars on [day], the earliest at
+  /// the right: time runs right to left inside a day too.
   double center(int day, int index, int count) =>
-      x(day) + (index - (count - 1) / 2) * barStep(count);
+      x(day) - (index - (count - 1) / 2) * barStep(count);
 }
 
 /// The readings of [month] grouped by the day they fall on where the patient
-/// lives, never the phone's zone.
+/// lives, never the phone's zone, each day in the order they were measured
+/// (the server sends the last recorded first).
 Map<int, List<MeasurementReading>> readingsByDay(
   List<MeasurementReading> readings,
   DateTime month,
@@ -138,6 +135,9 @@ Map<int, List<MeasurementReading>> readingsByDay(
     final DateTime at = clock.wallTime(moment);
     if (at.year != month.year || at.month != month.month) continue;
     byDay.putIfAbsent(at.day, () => <MeasurementReading>[]).add(reading);
+  }
+  for (final List<MeasurementReading> day in byDay.values) {
+    day.sort((a, b) => a.measuredAt!.compareTo(b.measuredAt!));
   }
   return byDay;
 }

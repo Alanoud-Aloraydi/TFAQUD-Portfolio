@@ -289,6 +289,21 @@ class DemoBuilder:
         moment = min(max(moment, start), end)
         return f"{moment.hour:02d}:{moment.minute - moment.minute % 5:02d}"
 
+    def visit_in(self, minutes: int) -> tuple[int, str]:
+        """The day (0 today, 1 tomorrow) and «HH:MM» of a visit `minutes`
+        from now: today at `clock_in(minutes)` while that is still ahead;
+        in the last minutes before midnight, when it is not, tomorrow at
+        that time from now, since a visit cannot be made in the past."""
+        clock = self.clock_in(minutes)
+        hour, minute = (int(part) for part in clock.split(":"))
+        today = datetime.combine(
+            self.today, time(hour, minute), tzinfo=DEMO_ZONE
+        )
+        if today >= self.now:
+            return 0, clock
+        moment = self.now + timedelta(minutes=minutes)
+        return 1, f"{moment.hour:02d}:{moment.minute - moment.minute % 5:02d}"
+
     def measure(self, actor, circle, body) -> None:
         """Add a demo measurement plan."""
         MeasurementService(self.session, self.now).create(
@@ -486,7 +501,7 @@ class DemoBuilder:
 
         visits = (
             (
-                0, self.clock_in(180), "عيادة القلب", "follow_up",
+                *self.visit_in(180), "عيادة القلب", "follow_up",
                 "مستشفى الملك فيصل التخصصي", [lina.id],
             ),
             (1, "10:00", "مختبر المستشفى", "test", "مختبر البرج", [sara.id]),

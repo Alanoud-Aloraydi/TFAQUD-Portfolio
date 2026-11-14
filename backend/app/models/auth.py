@@ -33,6 +33,11 @@ class AccountSession(db.Model):
     revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
+    # The OneSignal subscription of the phone this sign-in is on, which its
+    # app sends after signing in (PUT /accounts/me/push-subscription). When
+    # OneSignal reports that phone's app deleted, the sign-in ends
+    # (app/push/notify.py). One phone belongs to one sign-in at a time.
+    push_subscription_id: Mapped[UUID | None] = mapped_column(unique=True)
 
 
 class OtpRequest(db.Model):
