@@ -5,8 +5,8 @@ import 'package:app/features/auth/domain/repositories/auth_repository_domain.dar
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// The sign-in steps the application is allowed to take.
 @lazySingleton
-/// Exposes auth domain operations.
 class AuthUseCase {
   AuthUseCase(this._repository);
 

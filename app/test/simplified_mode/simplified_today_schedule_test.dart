@@ -72,7 +72,7 @@ CareAppointment _appointment(
   AppointmentStatus status = AppointmentStatus.scheduled,
 }) => CareAppointment(
   id: 'a-$time',
-  specialty: 'diabetes',
+  specialty: 'عيادة السكري',
   kind: AppointmentKind.followUp,
   otherKind: null,
   scheduledOn: day ?? _today,

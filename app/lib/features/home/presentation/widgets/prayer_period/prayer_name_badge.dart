@@ -1,7 +1,5 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -21,10 +19,9 @@ class PrayerNameBadge extends StatelessWidget {
     children: [
       Text(name, style: Theme.of(context).textTheme.titleMedium),
       if (current)
-        CompactStatusBadge(
+        StatusBadge(
           text: context.tr('today_dashboard.current_period'),
-          background: AppSemanticColors.surfaceAttention,
-          foreground: context.tokens.warningText,
+          tone: StatusTone.attention,
         ),
     ],
   );

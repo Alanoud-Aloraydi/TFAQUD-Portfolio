@@ -22,6 +22,8 @@ import '../support/app_shell_harness.dart';
 import '../support/circles_fakes.dart';
 import '../support/home_fakes.dart';
 
+import 'package:app/features/circles/presentation/widgets/circle_card.dart';
+
 void main() {
   setUpShellApp();
 
@@ -165,7 +167,7 @@ void main() {
             city: 'بريدة',
             canManage: true,
             members: const <CircleMember>[
-              CircleMember(name: 'Reem', isYou: true),
+              CircleMember(name: 'Reem', isYou: true, isLeader: true),
               CircleMember(name: 'نورة', isYou: false, isPatient: true),
             ],
             pendingInvitations: <CirclePendingInvitation>[
@@ -190,7 +192,7 @@ void main() {
           findsOneWidget,
         );
         expect(find.text('circle_overview.you'.tr()), findsOneWidget);
-        expect(find.text('circle_overview.manager'.tr()), findsNWidgets(2));
+        expect(find.text('circle_overview.leader'.tr()), findsOneWidget);
         expect(find.text('circle_overview.owner'.tr()), findsOneWidget);
         expect(find.text('circle_overview.patient_line'.tr()), findsOneWidget);
         expect(find.text('+966 55 987 6543'), findsOneWidget);

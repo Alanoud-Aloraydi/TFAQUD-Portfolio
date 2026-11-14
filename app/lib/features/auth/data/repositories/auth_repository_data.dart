@@ -13,8 +13,8 @@ import 'package:app/features/auth/domain/repositories/auth_repository_domain.dar
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// Signs in through the API, turning a refusal into a [Failure].
 @LazySingleton(as: AuthRepositoryDomain)
-/// Provides auth repository operations.
 class AuthRepositoryData implements AuthRepositoryDomain {
   AuthRepositoryData(this._remote, this._tokens);
 

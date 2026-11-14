@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

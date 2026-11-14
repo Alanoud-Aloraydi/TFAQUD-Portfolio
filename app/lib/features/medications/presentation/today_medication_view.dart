@@ -33,7 +33,9 @@ class TodayMedicationView {
               item.record == null &&
               status == DoseTimingState.missed;
         }).toList()..sort((a, b) {
-          final byDate = b.scheduledOn.compareTo(a.scheduledOn);
+          // «يحتاج انتباهك» reads from the oldest to the newest, so a new
+          // one joins at the end of the box instead of moving the rest.
+          final byDate = a.scheduledOn.compareTo(b.scheduledOn);
           return byDate != 0 ? byDate : a.time.compareTo(b.time);
         });
   }

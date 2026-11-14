@@ -1,5 +1,6 @@
 import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -14,11 +15,9 @@ Future<DateTime?> showBirthDateSheet(
   DateTime? selected,
   DateTime? today,
 }) {
-  return showModalBottomSheet<DateTime>(
-    context: context,
-    useSafeArea: true,
-    useRootNavigator: true,
-    isScrollControlled: true,
+  return showGlassSheet<DateTime>(
+    context,
+    title: context.tr('circles.birth_date'),
     builder: (BuildContext context) => BirthDateSheet(
       selected: selected,
       // The newest day anywhere on Earth: a birth date may be today
@@ -48,7 +47,6 @@ class BirthDateSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final DateTime last = DateUtils.dateOnly(today);
     return DateWheelSheet(
-      title: context.tr('circles.birth_date'),
       confirmLabel: context.tr('circles.date_confirm'),
       initialDate: BirthDateRules.clamp(
         selected?.year ?? today.year - 40,

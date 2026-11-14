@@ -126,6 +126,15 @@ def test_at_the_new_time_every_other_member_is_reminded_once(
     assert len(pushes.to(khaled.token)) == 1
 
 
+def test_a_dose_can_be_put_off_for_12_hours(care, morning):
+    circle, reem, _, schedule_id = care
+
+    answer = snooze_dose(reem, circle, schedule_id, minutes=720)
+
+    assert answer.status_code == 200, answer.json
+    assert answer.json["snooze"]["remind_at"] == "2026-10-28T17:05:00+00:00"
+
+
 def test_put_off_again_it_moves_and_reminds_once(care, morning):
     clock, pushes = morning
     circle, reem, khaled, schedule_id = care
@@ -182,8 +191,8 @@ def test_a_dose_the_circle_does_not_have_cannot_be_put_off(care, morning):
     assert answer.status_code == 404
 
 
-@pytest.mark.parametrize("minutes", [0, 241])
-def test_the_minutes_are_from_1_to_240(care, morning, minutes):
+@pytest.mark.parametrize("minutes", [0, 721])
+def test_the_minutes_are_from_1_to_720(care, morning, minutes):
     circle, reem, _, schedule_id = care
 
     answer = snooze_dose(reem, circle, schedule_id, minutes=minutes)
@@ -207,8 +216,6 @@ def test_a_reading_time_is_put_off_by_its_time(
             "weekdays": [3],
             "starts_on": DAY,
             "missed_after_minutes": 60,
-            "glucose_low": 80,
-            "glucose_high": 140,
         },
     )
     assert created.status_code == 201, created.json

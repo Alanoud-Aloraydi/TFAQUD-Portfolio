@@ -1,9 +1,10 @@
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/widgets/layout/settings_card.dart';
+import 'package:app/core/widgets/layout/action_row.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
+import 'package:app/features/auth/presentation/widgets/sign_out_alert.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,9 +39,15 @@ class SignOutRow extends StatelessWidget {
           // Signing out is a destructive action: the error red.
           color: AppSemanticColors.statusError,
           busy: state is AuthLoadingState,
-          onPressed: () => context.read<AuthCubit>().signOut(),
+          onPressed: () => _signOut(context),
         );
       },
     );
+  }
+
+  Future<void> _signOut(BuildContext context) async {
+    if (await askSignOutConfirmation(context) != true) return;
+    if (!context.mounted) return;
+    await context.read<AuthCubit>().signOut();
   }
 }

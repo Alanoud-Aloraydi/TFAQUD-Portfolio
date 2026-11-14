@@ -50,7 +50,7 @@ def list_appointments(circle_id):
 
 
 @bp.get("/appointments/companions")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="appointments")
 def list_companions(circle_id):
     """List current members eligible to accompany the patient."""
     with transaction() as session:
@@ -61,7 +61,7 @@ def list_companions(circle_id):
 
 
 @bp.post("/appointments")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="appointments")
 def create_appointment(circle_id):
     """Save one appointment."""
     body = parse_json_body(AppointmentRequest)
@@ -92,7 +92,7 @@ def create_appointment(circle_id):
 
 
 @bp.put("/appointments/<appointment_id>")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="appointments")
 def revise_appointment(circle_id, appointment_id):
     """Change a scheduled appointment."""
     body = parse_json_body(ReviseAppointmentRequest)

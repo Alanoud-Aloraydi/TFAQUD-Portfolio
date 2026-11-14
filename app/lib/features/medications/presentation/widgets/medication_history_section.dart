@@ -69,7 +69,6 @@ class MedicationHistorySection extends StatelessWidget {
         header,
         const SizedBox(height: AppSpacing.md),
         WhiteFilterMenu<MedicationRecordFilter>(
-          glass: true,
           options: {
             for (final filter in MedicationRecordFilter.values)
               filter: context.tr('medications.filter.${filter.name}'),
@@ -79,7 +78,7 @@ class MedicationHistorySection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         if (visible.isEmpty)
-          EmptyStateNote(context.tr('medications.no_records'))
+          EmptyStateNote.section(context.tr('medications.no_records'))
         else
           for (final plan in visible) ...[
             MedicationRecordCard(circleId: circleId, plan: plan),

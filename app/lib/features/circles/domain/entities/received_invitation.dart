@@ -8,6 +8,7 @@ class ReceivedInvitation extends Equatable {
     required this.id,
     required this.circleName,
     this.invitedByName,
+    this.invitedByAvatarCode,
     this.createdAt,
   });
 
@@ -16,8 +17,17 @@ class ReceivedInvitation extends Equatable {
 
   /// The display name of the manager who invited, when the server knows it.
   final String? invitedByName;
+
+  /// Their avatar, shown beside their name.
+  final String? invitedByAvatarCode;
   final DateTime? createdAt;
 
   @override
-  List<Object?> get props => [id, circleName, invitedByName, createdAt];
+  List<Object?> get props => [
+    id,
+    circleName,
+    invitedByName,
+    invitedByAvatarCode,
+    createdAt,
+  ];
 }

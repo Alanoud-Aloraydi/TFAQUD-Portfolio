@@ -49,6 +49,27 @@ def visit(companion, **changes):
     }
 
 
+def test_a_visit_needs_no_clinic_and_any_known_kind(
+    database_app, circle, evening
+):
+    owner, care = circle
+    api = Api(database_app, owner)
+    base = f"/api/v1/circles/{care.id}/appointments"
+
+    created = api.post(base, visit(owner, specialty=None, kind="vaccine"))
+    assert created.status_code == 201, created.get_json()
+    saved = created.get_json()["appointment"]
+    assert saved["specialty"] is None
+    assert saved["kind"] == "vaccine"
+
+    blank = api.post(base, visit(owner, specialty="   "))
+    assert blank.status_code == 201, blank.get_json()
+    assert blank.get_json()["appointment"]["specialty"] is None
+
+    unknown = api.post(base, visit(owner, kind="cardiology"))
+    assert unknown.status_code == 422, unknown.get_json()
+
+
 def test_an_appointment_is_saved_and_listed(database_app, circle, evening):
     owner, care = circle
     api = Api(database_app, owner)

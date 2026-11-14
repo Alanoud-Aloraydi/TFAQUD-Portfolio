@@ -2,6 +2,7 @@ import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/forms/keyboard_dismiss.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -27,13 +27,8 @@ class AppointmentModel {
     AppointmentStatus status,
   ) => CareAppointment(
     id: json['id'] as String,
-    specialty: json['specialty'] as String,
-    kind: AppointmentKind.values.firstWhere(
-      (value) =>
-          value.name ==
-          (json['kind'] == 'follow_up' ? 'followUp' : json['kind']),
-      orElse: () => AppointmentKind.other,
-    ),
+    specialty: json['specialty'] as String?,
+    kind: AppointmentKind.fromCode(json['kind'] as String),
     otherKind: json['other_text'] as String?,
     scheduledOn: DateTime.parse(json['scheduled_on'] as String),
     time: json['time_of_day'] as String,
@@ -48,16 +43,26 @@ class AppointmentModel {
         (json['created_by'] as Map<String, dynamic>?)?['name'] as String?,
     updatedByName:
         (json['updated_by'] as Map<String, dynamic>?)?['name'] as String?,
+    createdBy: _person(json['created_by']),
+    updatedBy: _person(json['updated_by']),
   );
+
+  /// Who did something, as `recorded_by` shapes it; null for nobody.
+  static AppointmentCompanion? _person(Object? value) =>
+      value is Map<String, dynamic> && value['account_id'] is String
+      ? AppointmentCompanion(
+          id: value['account_id'] as String,
+          name: value['name'] as String? ?? '',
+          avatarCode: value['avatar_code'] as String?,
+        )
+      : null;
 
   static Map<String, dynamic> toJson(
     AppointmentDraft draft, {
     DateTime? expectedUpdatedAt,
   }) => {
     'specialty': draft.specialty,
-    'kind': draft.kind == AppointmentKind.followUp
-        ? 'follow_up'
-        : draft.kind.name,
+    'kind': draft.kind.code,
     'other_text': draft.otherKind,
     'scheduled_on': apiDate(draft.scheduledOn),
     'time_of_day': draft.time,

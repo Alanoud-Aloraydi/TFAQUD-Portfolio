@@ -2,7 +2,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/weekdays.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -16,10 +16,9 @@ class WeekdayStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isEveryDay(days)) {
-      return CompactStatusBadge(
+      return StatusBadge(
         text: context.tr('weekday_picker.every_day'),
-        background: AppSemanticColors.selectedSurface,
-        foreground: AppSemanticColors.textPrimary,
+        tone: StatusTone.success,
       );
     }
     return Row(

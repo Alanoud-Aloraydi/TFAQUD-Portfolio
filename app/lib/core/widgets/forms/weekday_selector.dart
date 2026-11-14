@@ -4,11 +4,10 @@ import 'package:app/core/widgets/forms/weekday_box.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The days of the week a plan repeats on, for every kind of plan.
-///
-/// A wide «كل الأيام» button on top selects the whole week. While all seven
-/// days are on, that button is the only highlighted thing and the seven
-/// days below are muted; tapping a day then picks that day alone.
+/// The days of the week a plan repeats on, for every kind of plan, in the
+/// app's chip style: a «كل الأيام» chip that selects the whole week, then a
+/// round chip for each day. While the whole week is on, tapping a day picks
+/// that day alone.
 class WeekdaySelector extends StatelessWidget {
   const WeekdaySelector({
     super.key,
@@ -23,31 +22,38 @@ class WeekdaySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool every = isEveryDay(selected);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        WeekdayBox(
-          label: context.tr('weekday_picker.all_days'),
+        FilterChip(
+          label: Text(context.tr('weekday_picker.all_days')),
           selected: every,
-          onTap: () => onChanged(<int>{...allWeekdays}),
+          onSelected: (_) => onChanged(<int>{...allWeekdays}),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: <Widget>[
-            for (final int day in weekOrder)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
-                  child: WeekdayBox(
-                    label: context.tr('medications.weekday_short.$day'),
-                    semanticLabel: context.tr('medications.weekday.$day'),
-                    selected: selected.contains(day),
-                    muted: every,
-                    onTap: () => onChanged(toggleWeekday(selected, day)),
+        // Four days, then three: a seven-box row leaves each name too
+        // narrow to read.
+        for (final List<int> row in <List<int>>[
+          weekOrder.sublist(0, 4),
+          weekOrder.sublist(4),
+        ])
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: Row(
+              children: <Widget>[
+                for (final int day in row) ...<Widget>[
+                  if (day != row.first) const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: WeekdayBox(
+                      label: context.tr('medications.weekday_pick.$day'),
+                      semanticLabel: context.tr('medications.weekday.$day'),
+                      selected: selected.contains(day),
+                      onTap: () => onChanged(toggleWeekday(selected, day)),
+                    ),
                   ),
-                ),
-              ),
-          ],
-        ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }

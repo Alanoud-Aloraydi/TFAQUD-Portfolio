@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, jsonify
 from sqlalchemy import select
 
 from app.auth.decorators import current_auth, require_auth
+from app.circles.leader import AREAS, edit_access, leader_id
 from app.circles.naming import name_for
 from app.database import transaction
 from app.errors import ServiceUnavailable, Unauthorized
@@ -50,15 +51,23 @@ def _circles(account_id: UUID) -> list[dict]:
     memberships = select(CareCircleManager.care_circle_id).where(
         CareCircleManager.account_id == account_id
     )
-    manages = select(CareCircleManager.care_circle_id).where(
-        CareCircleManager.account_id == account_id,
-        CareCircleManager.can_edit.is_(True),
-    )
     receives_care = select(CareCircle.id).where(
         CareCircle.account_id == account_id
     )
     with transaction() as session:
-        managed_ids = set(session.scalars(manages))
+        # What this account may edit in each circle it is a member of: the
+        # leader everything, the others what the leader allows.
+        access = {}
+        for membership in session.scalars(
+            select(CareCircleManager).where(
+                CareCircleManager.account_id == account_id
+            )
+        ):
+            circle = session.get(CareCircle, membership.care_circle_id)
+            access[membership.care_circle_id] = edit_access(
+                membership, leader_id(session, circle) == account_id
+            )
+        none = {area: False for area in AREAS}
         statement = (
             select(
                 CareCircle.id,
@@ -67,6 +76,8 @@ def _circles(account_id: UUID) -> list[dict]:
                 CareCircle.account_id,
                 CareCircle.first_name,
                 CareCircle.time_zone,
+                CareCircle.latitude,
+                CareCircle.longitude,
                 Account.display_name,
                 Account.first_name.label("account_first_name"),
                 Account.avatar_code.label("account_avatar_code"),
@@ -89,7 +100,17 @@ def _circles(account_id: UUID) -> list[dict]:
                     ),
                     patient_first_name=row.first_name,
                 ),
-                "can_manage_medications": row.id in managed_ids,
+                # Whether this account may add and change medicines,
+                # measurements, appointments here (`app.circles.leader`).
+                "can_manage_medications": access.get(row.id, none)[
+                    "medications"
+                ],
+                "can_manage_measurements": access.get(row.id, none)[
+                    "measurements"
+                ],
+                "can_manage_appointments": access.get(row.id, none)[
+                    "appointments"
+                ],
                 # Who the app speaks to about this circle: the patient
                 # («أخذت الجرعة»), or someone caring for them, who reads
                 # the patient's name instead («… أخذ نورة للجرعة»).
@@ -109,6 +130,11 @@ def _circles(account_id: UUID) -> list[dict]:
                 # The patient's IANA zone: the app shows and schedules
                 # every time of this circle in it, wherever the phone is.
                 "time_zone": row.time_zone,
+                # Where the patient's city is, for its weather on «اليوم»
+                # (the phone's own location is never asked for); null when
+                # the city was typed and not picked from the list.
+                "latitude": row.latitude,
+                "longitude": row.longitude,
             }
             for row in session.execute(statement)
         ]

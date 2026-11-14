@@ -6,22 +6,30 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from app.plan_limits import DEFAULT_MISSED_AFTER_MINUTES, MissedAfter
-from app.validation import Dto
+from app.validation import MAX_RANGE_DAYS, Dto
 
 Kind = Literal["glucose", "blood_pressure"]
 # «ظروف القياس»: what was going on at a reading, one or more of them.
 Code = Literal[
     "fasting", "before_meal", "after_meal", "bedtime",
+    "before_medicine", "after_medicine", "morning",
     "exertion", "stress", "illness", "other",
 ]
 CODES = Code.__args__
 # Where the stomach is: one of these at a time.
 MEAL_STATES = ("fasting", "before_meal", "after_meal", "bedtime")
+# «حالة القياس» of a reading time: the stomach for glucose, the medicine
+# and the time of day for pressure. One at a time, and only for its kind.
+GLUCOSE_STATES = ("fasting", "before_meal", "after_meal")
+PRESSURE_STATES = ("before_medicine", "after_medicine", "morning")
 # Blood pressure is not read against a fast or bedtime.
 NOT_FOR_BLOOD_PRESSURE = ("fasting", "before_meal", "bedtime")
 Value = Annotated[int, Field(ge=1, le=999)]
 Conditions = Annotated[list[Code], Field(max_length=len(CODES))]
-MeasurementState = Literal["fasting", "before_meal", "after_meal"]
+MeasurementState = Literal[
+    "fasting", "before_meal", "after_meal",
+    "before_medicine", "after_medicine", "morning",
+]
 SkipReason = Literal[
     "forgotten", "equipment_unavailable", "patient_refused", "unwell",
     "other",
@@ -52,7 +60,9 @@ MAX_READING_TIMES = 6
 
 
 class PlanRequest(Dto):
-    """The reading times of a day, selected weekdays, and a target."""
+    """The reading times of a day and the selected weekdays. Fixed normal
+    ranges judge the readings (0049): the four target fields are accepted
+    from builds before it and ignored."""
 
     kind: Kind
     times: Annotated[
@@ -73,7 +83,7 @@ class PlanRequest(Dto):
 
     @model_validator(mode="after")
     def valid_plan(self):
-        """Require only the targets appropriate to the selected kind."""
+        """Valid weekdays, and reading times that suit the kind."""
         # Weekdays 1 to 7, each once; reading times without a time zone, each
         # once.
         if len(set(self.weekdays)) != len(self.weekdays) or any(
@@ -85,32 +95,17 @@ class PlanRequest(Dto):
             raise ValueError("Reading times have no time zone.")
         if len(set(moments)) != len(moments):
             raise ValueError("Reading times cannot repeat.")
-        # Glucose has a low and a high, in order; blood pressure has both upper
-        # limits, systolic above diastolic.
-        if self.kind == "glucose":
-            if (
-                self.glucose_low is None
-                or self.glucose_high is None
-                or self.glucose_low >= self.glucose_high
-                or self.systolic_limit is not None
-                or self.diastolic_limit is not None
-            ):
-                raise ValueError("A glucose target needs a valid range.")
-        elif (
-            self.systolic_limit is None
-            or self.diastolic_limit is None
-            or self.systolic_limit <= self.diastolic_limit
-            or self.glucose_low is not None
-            or self.glucose_high is not None
-        ):
-            raise ValueError("Blood pressure needs both upper limits.")
-        # A glucose time names its planned state; blood pressure has none.
+        # A reading time may name no state at all. When it names one, the
+        # state belongs to its own kind: the stomach for glucose, the
+        # medicine or the morning for pressure.
+        allowed = (
+            GLUCOSE_STATES if self.kind == "glucose" else PRESSURE_STATES
+        )
         for item in self.times:
-            if (self.kind == "glucose") != (
-                item.measurement_state is not None
-            ):
+            state = item.measurement_state
+            if state is not None and state not in allowed:
                 raise ValueError(
-                    "Only glucose times require a measurement state."
+                    "A reading time needs a state of its own kind."
                 )
         return self
 
@@ -139,6 +134,7 @@ class ReadingRequest(Dto):
     note: Annotated[str | None, Field(max_length=250)] = None
     skip_reason_code: SkipReason | None = None
     skip_reason_note: Annotated[str | None, Field(max_length=250)] = None
+    # Sent by builds before 0049, and ignored: fixed ranges judge readings.
     glucose_low: Value | None = None
     glucose_high: Value | None = None
     systolic_limit: Value | None = None
@@ -192,30 +188,6 @@ class ReadingRequest(Dto):
             and self.systolic_value <= self.diastolic_value
         ):
             raise ValueError("Systolic must exceed diastolic.")
-        # A target sent with a reading fits its kind.
-        target = (
-            self.glucose_low, self.glucose_high,
-            self.systolic_limit, self.diastolic_limit,
-        )
-        if any(value is not None for value in target):
-            if self.outcome != "read":
-                raise ValueError("Skipped readings cannot have a target.")
-            if self.kind == "glucose" and not (
-                self.glucose_low is not None
-                and self.glucose_high is not None
-                and self.glucose_low < self.glucose_high
-                and self.systolic_limit is None
-                and self.diastolic_limit is None
-            ):
-                raise ValueError("A glucose target needs a valid range.")
-            if self.kind == "blood_pressure" and not (
-                self.systolic_limit is not None
-                and self.diastolic_limit is not None
-                and self.systolic_limit > self.diastolic_limit
-                and self.glucose_low is None
-                and self.glucose_high is None
-            ):
-                raise ValueError("Blood pressure needs both upper limits.")
         return self
 
 
@@ -230,6 +202,8 @@ class ReadingQuery(Dto):
         """Prevent oversized or reversed requests."""
         if self.to_date < self.from_date:
             raise ValueError("The end date cannot precede the start.")
-        if (self.to_date - self.from_date).days > 31:
-            raise ValueError("A request can cover at most 32 days.")
+        if (self.to_date - self.from_date).days >= MAX_RANGE_DAYS:
+            raise ValueError(
+                f"A request can cover at most {MAX_RANGE_DAYS} days."
+            )
         return self

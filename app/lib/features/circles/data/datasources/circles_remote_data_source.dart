@@ -14,6 +14,7 @@ import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/entities/patient_update.dart';
+import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:injectable/injectable.dart';
 
@@ -32,13 +33,19 @@ abstract class BaseCirclesRemoteDataSource {
 
   Future<void> cancelManagerInvitation(String circleId, String invitationId);
 
+  /// PATCH /api/v1/circles/{id}/members/{account}: whether the member may
+  /// edit [area] («medications», «measurements», «appointments»).
   Future<void> setMemberEditAccess(
     String circleId,
     String accountId, {
-    required bool canEdit,
+    required String area,
+    required bool allowed,
   });
 
   Future<void> removeMember(String circleId, String accountId);
+
+  /// PUT /api/v1/circles/{id}/leader.
+  Future<void> handOverLeadership(String circleId, String accountId);
 
   Future<void> leaveCircle(String circleId, {required bool confirmDelete});
 
@@ -56,6 +63,10 @@ abstract class BaseCirclesRemoteDataSource {
 
   /// GET /api/v1/invitations: invitations to manage a circle.
   Future<List<ReceivedInvitation>> getInvitations();
+
+  /// GET /api/v1/notifications/previous: the invitations and requests
+  /// answered in the last 30 days, newest first.
+  Future<List<PreviousNotification>> getPreviousNotifications();
 
   /// POST /api/v1/circle-requests/{id}/respond.
   Future<SentCircleRequestModel> respondToRequest(
@@ -108,8 +119,8 @@ abstract class BaseCirclesRemoteDataSource {
   Future<EmergencyCard> getEmergencyCard(String circleId);
 }
 
-@LazySingleton(as: BaseCirclesRemoteDataSource)
 /// Sends circles requests to the API.
+@LazySingleton(as: BaseCirclesRemoteDataSource)
 class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   CirclesRemoteDataSource(this._client);
 
@@ -157,11 +168,22 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   Future<void> setMemberEditAccess(
     String circleId,
     String accountId, {
-    required bool canEdit,
+    required String area,
+    required bool allowed,
   }) async {
     await _client.patch(
       ApiEndpoints.circleMember(circleId, accountId),
-      data: <String, bool>{'can_edit': canEdit},
+      data: <String, Object>{
+        'edit_access': <String, bool>{area: allowed},
+      },
+    );
+  }
+
+  @override
+  Future<void> handOverLeadership(String circleId, String accountId) async {
+    await _client.put(
+      ApiEndpoints.circleLeader(circleId),
+      data: <String, String>{'account_id': accountId},
     );
   }
 
@@ -222,6 +244,14 @@ class CirclesRemoteDataSource implements BaseCirclesRemoteDataSource {
   Future<List<ReceivedInvitation>> getInvitations() async {
     final response = await _client.get(ApiEndpoints.invitations);
     return ReceivedInvitationsModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<List<PreviousNotification>> getPreviousNotifications() async {
+    final response = await _client.get(ApiEndpoints.previousNotifications);
+    return PreviousNotificationsModel.fromJson(
       response.data as Map<String, dynamic>,
     );
   }

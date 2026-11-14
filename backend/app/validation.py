@@ -26,6 +26,12 @@ class Dto(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
+# The most calendar days, both ends counted, that one list of doses or
+# readings may cover. The app's «اليوم» reads 2 overdue days, today and 30
+# days ahead: 33 days. 35 leaves it room.
+MAX_RANGE_DAYS = 35
+
+
 T = TypeVar("T", bound=Dto)
 
 

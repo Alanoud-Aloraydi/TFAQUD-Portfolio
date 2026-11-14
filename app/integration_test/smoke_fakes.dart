@@ -6,13 +6,13 @@ import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/reminder_circle.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
 import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
@@ -109,7 +109,7 @@ class SmokeMedicationsRepository extends Fake
 
 /// No measurement plans and no readings.
 class SmokeMeasurementsRepository extends Fake
-    implements MeasurementRepository {
+    implements MeasurementsRepositoryDomain {
   @override
   Stream<String> get changes => const Stream<String>.empty();
 
@@ -141,7 +141,7 @@ class SmokeMeasurementsRepository extends Fake
 
 /// No appointments.
 class SmokeAppointmentsRepository extends Fake
-    implements AppointmentRepository {
+    implements AppointmentsRepositoryDomain {
   @override
   Stream<String> get changes => const Stream<String>.empty();
 

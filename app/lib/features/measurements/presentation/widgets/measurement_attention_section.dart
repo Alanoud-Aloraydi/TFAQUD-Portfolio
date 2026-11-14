@@ -23,15 +23,18 @@ class MeasurementAttentionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clock = PatientClockScope.of(context);
     final missed = MeasurementAttention.missed(tasks);
-    final outside = MeasurementAttention.outside(
-      readings,
-      PatientClockScope.of(context),
-    );
+    final outside = MeasurementAttention.outside(readings, clock);
     if (missed.isEmpty && outside.isEmpty) return const SizedBox.shrink();
     final Widget cards = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: measurementAttentionCards(context, missed, outside),
+      children: measurementAttentionCards(
+        context,
+        missed,
+        outside,
+        now: clock.now(),
+      ),
     );
     if (!boxed) return cards;
     return AttentionBox(

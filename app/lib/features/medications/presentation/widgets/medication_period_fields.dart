@@ -1,14 +1,14 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
+import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/features/medications/presentation/widgets/medication_date_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -67,7 +67,7 @@ class MedicationPeriodFields extends StatelessWidget {
                 },
               ),
             ),
-            _DateRow(
+            MedicationDateRow(
               label: context.tr('medications.starts'),
               value: data.startsOn,
               firstDate: data.effectiveFromOn == null
@@ -80,7 +80,7 @@ class MedicationPeriodFields extends StatelessWidget {
               },
             ),
             if (data.endsOn != null)
-              _DateRow(
+              MedicationDateRow(
                 label: context.tr('medications.ends'),
                 value: data.endsOn,
                 focusNode: data.periodFocus,
@@ -119,124 +119,5 @@ class MedicationPeriodFields extends StatelessWidget {
           ),
       ],
     );
-  }
-}
-
-/// A revision starts right away or on a later selected day.
-class MedicationEffectiveDateGroup extends StatelessWidget {
-  const MedicationEffectiveDateGroup({
-    super.key,
-    required this.data,
-    required this.onChanged,
-    this.circleId,
-  });
-
-  final MedicationFormData data;
-  final VoidCallback onChanged;
-
-  /// For the words: the patient's «جدولك» or the patient's name.
-  final String? circleId;
-
-  @override
-  Widget build(BuildContext context) {
-    final today = PatientClockScope.of(context).today();
-    final selected = data.effectiveFromOn ?? today;
-    final isNow = DateUtils.isSameDay(selected, today);
-    return InsetGroup(
-      header: context.tr('medications.effective_question'),
-      footer: CareVoice.tr(context, circleId, 'medications.effective_hint'),
-      children: <Widget>[
-        InsetBlock(
-          semanticLabel: context.tr('medications.effective_question'),
-          child: OptionChips(
-            options: <ChipOption>[
-              ChipOption('now', context.tr('medications.now')),
-              ChipOption('date', context.tr('medications.specific_date')),
-            ],
-            isSelected: (String code) => code == 'now' ? isNow : !isNow,
-            onTap: (String code) {
-              if (code == 'now') {
-                data.effectiveFromOn = today;
-                onChanged();
-              } else {
-                _chooseDate(context, today, selected);
-              }
-            },
-          ),
-        ),
-        if (!isNow)
-          _DateRow(
-            label: context.tr('medications.effective_from'),
-            value: selected,
-            firstDate: today,
-            onChanged: (DateTime? date) {
-              if (date == null) return;
-              data.effectiveFromOn = date;
-              onChanged();
-            },
-          ),
-      ],
-    );
-  }
-
-  Future<void> _chooseDate(
-    BuildContext context,
-    DateTime today,
-    DateTime selected,
-  ) async {
-    final date = await showTafaqodDateSheet(
-      context,
-      title: context.tr('medications.effective_from'),
-      initialDate: selected,
-      firstDate: today,
-      lastDate: today.add(const Duration(days: 3650)),
-    );
-    if (date == null) return;
-    data.effectiveFromOn = date;
-    onChanged();
-  }
-}
-
-/// Renders the date row element of medication period fields.
-class _DateRow extends StatelessWidget {
-  const _DateRow({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    this.firstDate,
-    this.focusNode,
-  });
-
-  final String label;
-  final DateTime? value;
-  final ValueChanged<DateTime?> onChanged;
-  final DateTime? firstDate;
-  final FocusNode? focusNode;
-
-  @override
-  Widget build(BuildContext context) {
-    final DateTime? date = value;
-    return InsetRow(
-      label: label,
-      value: date == null ? null : formatMedicationDate(context, date),
-      focusNode: focusNode,
-      onTap: () => _select(context),
-      showChevron: true,
-    );
-  }
-
-  Future<void> _select(BuildContext context) async {
-    final DateTime now = PatientClockScope.of(context).today();
-    final DateTime? selected = await showTafaqodDateSheet(
-      context,
-      title: label,
-      initialDate:
-          value != null && firstDate != null && value!.isBefore(firstDate!)
-          ? firstDate!
-          : value ?? now,
-      firstDate: firstDate ?? DateTime(1900),
-      lastDate: now.add(const Duration(days: 3650)),
-    );
-    if (selected != null) onChanged(selected);
   }
 }

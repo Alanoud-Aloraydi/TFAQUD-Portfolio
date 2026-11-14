@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 
 /// The "رجوع" link at the top of a step page.
 /// The back chevron (SF chevron.backward, AppIcons.back) turns to
-/// point right on an Arabic (right-to-left) screen, as iOS draws it.
+/// point right on an Arabic (right-to-left) screen, as iOS draws it. A
+/// swipe from that edge of the screen goes back too (an iOS page).
 class BackLink extends StatelessWidget {
   const BackLink({super.key, required this.onPressed});
 

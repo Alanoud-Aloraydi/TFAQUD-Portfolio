@@ -6,7 +6,7 @@ part of '../app_router.dart';
 List<RouteBase> _careRoutes() => <RouteBase>[
   GoRoute(
     path: Routes.medicationNewPath,
-    pageBuilder: _iosPage((context, state) {
+    pageBuilder: _iosModalPage((context, state) {
       final String circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (context) =>
@@ -17,11 +17,11 @@ List<RouteBase> _careRoutes() => <RouteBase>[
   ),
   GoRoute(
     path: Routes.measurementNewPath,
-    pageBuilder: _iosPage((context, state) {
+    pageBuilder: _iosModalPage((context, state) {
       final circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (_) =>
-            MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
+            MeasurementPlansCubit(GetIt.I<MeasurementsUseCase>())
               ..load(circleId),
         child: MeasurementPlanFormPage(circleId: circleId),
       );
@@ -29,11 +29,11 @@ List<RouteBase> _careRoutes() => <RouteBase>[
   ),
   GoRoute(
     path: Routes.measurementEditPath,
-    pageBuilder: _iosPage((context, state) {
+    pageBuilder: _iosModalPage((context, state) {
       final circleId = state.pathParameters['circleId']!;
       return BlocProvider(
         create: (_) =>
-            MeasurementPlansCubit(GetIt.I<MeasurementRepository>())
+            MeasurementPlansCubit(GetIt.I<MeasurementsUseCase>())
               ..load(circleId),
         child: MeasurementPlanFormPage(
           circleId: circleId,
@@ -44,13 +44,13 @@ List<RouteBase> _careRoutes() => <RouteBase>[
   ),
   GoRoute(
     path: Routes.appointmentNewPath,
-    pageBuilder: _iosPage(
+    pageBuilder: _iosModalPage(
       (context, state) => _appointmentForm(state.pathParameters['circleId']!),
     ),
   ),
   GoRoute(
     path: Routes.appointmentEditPath,
-    pageBuilder: _iosPage(
+    pageBuilder: _iosModalPage(
       (context, state) => _appointmentForm(
         state.pathParameters['circleId']!,
         appointmentId: state.pathParameters['appointmentId'],
@@ -66,13 +66,13 @@ List<RouteBase> _careRoutes() => <RouteBase>[
         providers: [
           BlocProvider(
             create: (_) =>
-                AppointmentsCubit(GetIt.I<AppointmentRepository>())
+                AppointmentsCubit(GetIt.I<AppointmentsUseCase>())
                   ..load(circleId),
           ),
           BlocProvider(
             create: (_) => VisitCubit(
-              GetIt.I<VisitRepository>(),
-              VisitAudioService(),
+              GetIt.I<VisitsUseCase>(),
+              GetIt.I<VisitAudio>(),
               circleId,
               appointmentId,
             )..load(),
@@ -127,11 +127,11 @@ Widget _appointmentForm(String circleId, {String? appointmentId}) {
     providers: [
       BlocProvider(
         create: (_) =>
-            AppointmentsCubit(GetIt.I<AppointmentRepository>())..load(circleId),
+            AppointmentsCubit(GetIt.I<AppointmentsUseCase>())..load(circleId),
       ),
       BlocProvider(
         create: (_) =>
-            AppointmentCompanionsCubit(GetIt.I<AppointmentRepository>())
+            AppointmentCompanionsCubit(GetIt.I<AppointmentsUseCase>())
               ..load(circleId),
       ),
     ],

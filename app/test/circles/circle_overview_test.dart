@@ -7,6 +7,7 @@ import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/cubit/circle_overview_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -86,6 +87,62 @@ void main() {
         overview.pendingInvitations.single.sentAt,
         DateTime.parse('2026-11-01T10:00:00Z'),
       );
+    });
+
+    test('reads the leader and what each member may edit', () {
+      final Map<String, dynamic> json = _circle(<Map<String, dynamic>>[
+        <String, dynamic>{
+          'display_name': 'ريم',
+          'is_you': true,
+          'is_leader': true,
+          'role': 'manager',
+          'can_edit': true,
+          'edit_access': <String, dynamic>{
+            'medications': true,
+            'measurements': true,
+            'appointments': true,
+          },
+        },
+        <String, dynamic>{
+          'display_name': 'لينا',
+          'is_you': false,
+          'role': 'manager',
+          'can_edit': true,
+          'edit_access': <String, dynamic>{
+            'medications': false,
+            'measurements': true,
+            'appointments': false,
+          },
+        },
+        // A server from before the areas: one answer for all three.
+        <String, dynamic>{
+          'display_name': 'خالد',
+          'is_you': false,
+          'role': 'member',
+          'can_edit': false,
+        },
+      ]);
+      (json['circle'] as Map<String, dynamic>)['can_hand_over'] = true;
+
+      final CircleOverview overview = CircleOverviewModel.fromJson(json)
+          .overview;
+
+      expect(overview.canHandOver, isTrue);
+      expect(overview.members.map((m) => m.isLeader), <bool>[
+        true,
+        false,
+        false,
+      ]);
+      expect(
+        overview.members[1].editAccess,
+        const EditAccess(
+          medications: false,
+          measurements: true,
+          appointments: false,
+        ),
+      );
+      expect(overview.members[2].editAccess, const EditAccess.all(false));
+      expect(overview.members[2].isViewOnly, isTrue);
     });
 
     test('a server without "is_patient" reads as not the patient', () {

@@ -55,9 +55,6 @@ dependencies:
   # Calls from the emergency card: a contact, and the ambulance (997).
   url_launcher: ^6.3.1
   uuid: ^4.6.0
-  # Reads a simplified-mode screen aloud («استماع»); iOS's own
-  # AVSpeechSynthesizer, so Arabic speech works fully offline.
-  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:

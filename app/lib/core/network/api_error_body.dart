@@ -41,14 +41,10 @@ abstract class ApiErrorCodes {
   static const String measurementStartInPast = 'measurement_start_in_past';
   static const String measurementPlanChanged = 'measurement_plan_changed';
   static const String measurementEffectiveDate = 'measurement_effective_date';
-  static const String measurementTargetRequired = 'measurement_target_required';
-  static const String measurementTargetFromPlan =
-      'measurement_target_from_plan';
   static const String measurementRecordConflict = 'measurement_record_conflict';
   static const String futureMeasurement = 'future_measurement';
   static const String futureMeasurementTask = 'future_measurement_task';
   static const String measurementWithinTarget = 'measurement_within_target';
-  static const String measurementNoTarget = 'measurement_no_target';
 
   // Sign-in (backend/app/auth/sign_in.py) and the profile.
   static const String verificationNotFound = 'verification_not_found';

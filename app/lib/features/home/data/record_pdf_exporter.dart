@@ -1,7 +1,8 @@
-import 'package:app/features/home/data/record_pdf_model.dart';
 import 'package:app/features/home/data/record_pdf_page.dart';
 import 'package:app/features/home/data/record_pdf_section_block.dart';
 import 'package:app/features/home/data/record_pdf_style.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
+import 'package:app/features/home/domain/services/record_exporter.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -14,11 +15,12 @@ import 'package:printing/printing.dart';
 /// page number. The fonts have no glyph for the invisible direction marks the
 /// app uses on screen, so they are taken out of every text; numbers keep
 /// their order by being set left to right on their own.
-class RecordPdfExporter {
+class RecordPdfExporter implements RecordExporter {
   static const String _regularFont =
       'assets/fonts/IBMPlexSansArabic-Regular.ttf';
   static const String _boldFont = 'assets/fonts/IBMPlexSansArabic-Bold.ttf';
 
+  @override
   Future<void> share({
     required RecordPdfDocument document,
     required String Function(int page, int pages) pageLabel,

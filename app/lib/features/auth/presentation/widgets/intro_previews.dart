@@ -1,14 +1,23 @@
-import 'dart:math' as math;
-
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
+import 'package:app/features/auth/presentation/widgets/intro_card_header.dart';
+import 'package:app/features/auth/presentation/widgets/intro_done.dart';
+import 'package:app/features/auth/presentation/widgets/intro_first_letter.dart';
+import 'package:app/features/auth/presentation/widgets/intro_floating_card.dart';
+import 'package:app/features/auth/presentation/widgets/intro_initial.dart';
+import 'package:app/features/auth/presentation/widgets/intro_line.dart';
+import 'package:app/features/auth/presentation/widgets/intro_next_dose_card.dart';
+import 'package:app/features/auth/presentation/widgets/intro_person.dart';
+import 'package:app/features/auth/presentation/widgets/intro_rise.dart';
+import 'package:app/features/auth/presentation/widgets/intro_row_card.dart';
+import 'package:app/features/auth/presentation/widgets/intro_tile.dart';
+import 'package:app/features/auth/presentation/widgets/intro_turned.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -67,29 +76,32 @@ class _Organize extends StatelessWidget {
           top: 24,
           left: 0,
           right: 0,
-          child: _Rise(enter: enter, order: 0, child: const _NextDoseCard()),
+          child: IntroRise(
+            enter: enter,
+            order: 0,
+            child: const IntroNextDoseCard(),
+          ),
         ),
         Positioned(
           top: 214,
           left: -6,
           right: 18,
-          child: _Rise(
+          child: IntroRise(
             enter: enter,
             order: 1,
-            child: _Turned(
+            child: IntroTurned(
               degrees: -2,
-              child: _RowCard(
-                tile: const _Tile(
+              child: IntroRowCard(
+                tile: const IntroTile(
                   icon: AppIcons.drop,
                   background: AppSemanticColors.selectedSurface,
                   foreground: AppSemanticColors.statusSuccess,
                 ),
                 title: context.tr('intro.demo.reading'),
                 note: context.tr('intro.demo.reading_note'),
-                trailing: StatusPill(
+                trailing: StatusBadge(
                   text: context.tr('intro.demo.reading_value'),
-                  background: AppSemanticColors.selectedSurface,
-                  foreground: AppSemanticColors.statusSuccess,
+                  tone: StatusTone.success,
                 ),
               ),
             ),
@@ -99,23 +111,22 @@ class _Organize extends StatelessWidget {
           top: 300,
           left: 18,
           right: -6,
-          child: _Rise(
+          child: IntroRise(
             enter: enter,
             order: 2,
-            child: _Turned(
+            child: IntroTurned(
               degrees: 1.5,
-              child: _RowCard(
-                tile: const _Tile(
+              child: IntroRowCard(
+                tile: const IntroTile(
                   icon: AppIcons.calendar,
                   background: AppSemanticColors.surfaceAttention,
                   foreground: AppSemanticColors.statusWarning,
                 ),
                 title: context.tr('intro.demo.visit'),
                 note: context.tr('intro.demo.visit_note'),
-                trailing: StatusPill(
+                trailing: StatusBadge(
                   text: context.tr('intro.demo.visit_in'),
-                  background: AppSemanticColors.segmentTrack,
-                  foreground: AppSemanticColors.textSupporting,
+                  tone: StatusTone.neutral,
                 ),
               ),
             ),
@@ -135,10 +146,9 @@ class _Share extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final Widget admin = StatusPill(
+    final Widget admin = StatusBadge(
       text: context.tr('intro.demo.admin'),
-      background: AppSemanticColors.segmentTrack,
-      foreground: AppSemanticColors.textSupporting,
+      tone: StatusTone.neutral,
     );
     return Stack(
       clipBehavior: Clip.none,
@@ -147,34 +157,34 @@ class _Share extends StatelessWidget {
           top: 24,
           left: 0,
           right: 0,
-          child: _Rise(
+          child: IntroRise(
             enter: enter,
             order: 0,
-            child: _FloatingCard(
+            child: IntroFloatingCard(
               child: Column(
                 children: <Widget>[
-                  _CardHeader(
+                  IntroCardHeader(
                     title: context.tr('intro.demo.circle'),
                     note: context.tr('intro.demo.members'),
                   ),
-                  _Person(
-                    initial: _first(context.tr('intro.demo.reem')),
+                  IntroPerson(
+                    initial: firstLetter(context.tr('intro.demo.reem')),
                     color: AppSemanticColors.selectedSurface,
                     name: context.tr('intro.demo.reem'),
                     note: context.tr('intro.demo.you'),
                     trailing: admin,
                   ),
-                  const _Line(),
-                  _Person(
-                    initial: _first(context.tr('intro.demo.khalid')),
+                  const IntroLine(),
+                  IntroPerson(
+                    initial: firstLetter(context.tr('intro.demo.khalid')),
                     color: AppSemanticColors.surfaceAttention,
                     name: context.tr('intro.demo.khalid'),
                     note: context.tr('intro.demo.khalid_note'),
                     trailing: admin,
                   ),
-                  const _Line(),
-                  _Person(
-                    initial: _first(context.tr('intro.demo.nouf')),
+                  const IntroLine(),
+                  IntroPerson(
+                    initial: firstLetter(context.tr('intro.demo.nouf')),
                     color: AppSemanticColors.segmentTrack,
                     name: context.tr('intro.demo.nouf'),
                     note: context.tr('intro.demo.nouf_note'),
@@ -188,7 +198,7 @@ class _Share extends StatelessWidget {
           top: 300,
           left: 8,
           right: 8,
-          child: _Rise(
+          child: IntroRise(
             enter: enter,
             order: 1,
             child: Container(
@@ -203,8 +213,8 @@ class _Share extends StatelessWidget {
               ),
               child: Row(
                 children: <Widget>[
-                  _Initial(
-                    letter: _first(context.tr('intro.demo.khalid')),
+                  IntroInitial(
+                    letter: firstLetter(context.tr('intro.demo.khalid')),
                     color: AppSemanticColors.surfaceAttention,
                     size: 30,
                   ),
@@ -230,7 +240,7 @@ class _Share extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const _Done(),
+                  const IntroDone(),
                 ],
               ),
             ),
@@ -258,7 +268,7 @@ class _Follow extends StatelessWidget {
           top: 8,
           left: 0,
           right: 0,
-          child: _Rise(
+          child: IntroRise(
             enter: enter,
             order: 0,
             child: Center(
@@ -281,7 +291,7 @@ class _Follow extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    _Initial(
+                    IntroInitial(
                       letter: context.tr('intro.demo.mother_initial'),
                       color: AppSemanticColors.surfaceAttention,
                       size: 28,
@@ -304,14 +314,14 @@ class _Follow extends StatelessWidget {
           top: 74,
           left: 0,
           right: 0,
-          child: _Rise(
+          child: IntroRise(
             enter: enter,
             order: 1,
-            child: _FloatingCard(
+            child: IntroFloatingCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  _CardHeader(title: context.tr('intro.demo.who')),
+                  IntroCardHeader(title: context.tr('intro.demo.who')),
                   // The person on show, picked.
                   DecoratedBox(
                     decoration: ShapeDecoration(
@@ -322,7 +332,7 @@ class _Follow extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm,
                       ),
-                      child: _Person(
+                      child: IntroPerson(
                         initial: context.tr('intro.demo.mother_initial'),
                         color: AppSemanticColors.surfaceAttention,
                         size: 44,
@@ -340,7 +350,7 @@ class _Follow extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
                     ),
-                    child: _Person(
+                    child: IntroPerson(
                       initial: context.tr('intro.demo.uncle_initial'),
                       color: AppSemanticColors.selectedSurface,
                       size: 44,
@@ -348,7 +358,7 @@ class _Follow extends StatelessWidget {
                       note: context.tr('intro.demo.uncle_note'),
                     ),
                   ),
-                  const _Line(),
+                  const IntroLine(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
@@ -394,403 +404,4 @@ class _Follow extends StatelessWidget {
       ],
     );
   }
-}
-
-/// The dark card of the next dose: the medicine, its time, and a bar of the
-/// time left.
-class _NextDoseCard extends StatelessWidget {
-  const _NextDoseCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: ShapeDecoration(
-        color: AppSemanticColors.textPrimary,
-        shape: AppRadius.shape(AppRadius.l),
-        shadows: AppSurfaces.floatShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  context.tr('intro.demo.next_dose'),
-                  style: text.labelSmall?.copyWith(
-                    color: AppSemanticColors.onInkSupporting,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              StatusPill(
-                text: context.tr('intro.demo.next_in'),
-                background: AppSemanticColors.surfaceContent.withValues(
-                  alpha: 0.14,
-                ),
-                foreground: AppSemanticColors.surfaceContent,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: <Widget>[
-              const _Tile(
-                icon: AppIcons.pill,
-                background: AppSemanticColors.selectedSurface,
-                foreground: AppSemanticColors.statusSuccess,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      context.tr('intro.demo.medicine'),
-                      style: text.titleSmall?.copyWith(
-                        color: AppSemanticColors.surfaceContent,
-                      ),
-                    ),
-                    Text(
-                      context.tr('intro.demo.medicine_note'),
-                      style: text.bodySmall?.copyWith(
-                        color: AppSemanticColors.onInkSupporting,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text.rich(
-                TextSpan(
-                  children: <InlineSpan>[
-                    TextSpan(
-                      text: context.tr('intro.demo.medicine_time'),
-                      style: text.headlineLarge?.copyWith(
-                        color: AppSemanticColors.surfaceContent,
-                      ),
-                    ),
-                    const TextSpan(text: ' '),
-                    TextSpan(
-                      text: context.tr('intro.demo.evening'),
-                      style: text.labelSmall?.copyWith(
-                        color: AppSemanticColors.onInkSupporting,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          // The time left until the dose: the bar fills from the start side.
-          Container(
-            height: _bar,
-            decoration: ShapeDecoration(
-              color: AppSemanticColors.surfaceContent.withValues(alpha: 0.14),
-              shape: const StadiumBorder(),
-            ),
-            alignment: AlignmentDirectional.centerStart,
-            child: const FractionallySizedBox(
-              widthFactor: 0.72,
-              heightFactor: 1,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: AppSemanticColors.actionPrimary,
-                  shape: StadiumBorder(),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static const double _bar = 6;
-}
-
-/// A white card with an icon tile, two lines and a pill at the end.
-class _RowCard extends StatelessWidget {
-  const _RowCard({
-    required this.tile,
-    required this.title,
-    required this.note,
-    required this.trailing,
-  });
-
-  final Widget tile;
-  final String title;
-  final String note;
-  final Widget trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: AppSurfaces.floating(AppRadius.m),
-      child: Row(
-        children: <Widget>[
-          tile,
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(title, style: text.titleSmall),
-                Text(note, style: text.bodySmall),
-              ],
-            ),
-          ),
-          trailing,
-        ],
-      ),
-    );
-  }
-}
-
-/// A white floating card with the rows' side padding.
-class _FloatingCard extends StatelessWidget {
-  const _FloatingCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.xs,
-        AppSpacing.lg,
-        AppSpacing.xs,
-      ),
-      decoration: AppSurfaces.floating(AppRadius.l),
-      child: child,
-    );
-  }
-}
-
-/// The bold title of a card, and a small note at its end.
-class _CardHeader extends StatelessWidget {
-  const _CardHeader({required this.title, this.note});
-
-  final String title;
-  final String? note;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final String? small = note;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      child: Row(
-        children: <Widget>[
-          Expanded(child: Text(title, style: text.titleMedium)),
-          if (small != null) ...<Widget>[
-            const SizedBox(width: AppSpacing.sm),
-            Text(small, style: text.bodySmall),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// A person: a round letter, the name, a small line under it, and maybe
-/// something at the end.
-class _Person extends StatelessWidget {
-  const _Person({
-    required this.initial,
-    required this.color,
-    required this.name,
-    required this.note,
-    this.size = AppSizes.avatar,
-    this.trailing,
-  });
-
-  final String initial;
-  final Color color;
-  final String name;
-  final String note;
-  final double size;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final Widget? end = trailing;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      child: Row(
-        children: <Widget>[
-          _Initial(letter: initial, color: color, size: size),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(name, style: text.titleSmall),
-                Text(note, style: text.bodySmall),
-              ],
-            ),
-          ),
-          ?end,
-        ],
-      ),
-    );
-  }
-}
-
-/// A round letter on a soft color.
-class _Initial extends StatelessWidget {
-  const _Initial({
-    required this.letter,
-    required this.color,
-    required this.size,
-  });
-
-  final String letter;
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: ShapeDecoration(color: color, shape: const CircleBorder()),
-      child: Text(
-        letter,
-        style: (size < AppSizes.avatar ? text.labelMedium : text.titleMedium)
-            ?.copyWith(
-              color: AppSemanticColors.textPrimary,
-              fontWeight: AppTextTheme.bold,
-            ),
-      ),
-    );
-  }
-}
-
-/// A rounded square with an icon, as on the dose and reading cards.
-class _Tile extends StatelessWidget {
-  const _Tile({
-    required this.icon,
-    required this.background,
-    required this.foreground,
-  });
-
-  final IconData icon;
-  final Color background;
-  final Color foreground;
-
-  static const double _size = 42;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _size,
-      height: _size,
-      decoration: ShapeDecoration(
-        color: background,
-        shape: AppRadius.shape(AppRadius.s),
-      ),
-      child: Icon(icon, size: AppSizes.iconSmall, color: foreground),
-    );
-  }
-}
-
-/// The green round check of a recorded dose.
-class _Done extends StatelessWidget {
-  const _Done();
-
-  static const double _size = 28;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _size,
-      height: _size,
-      decoration: const ShapeDecoration(
-        color: AppSemanticColors.statusSuccess,
-        shape: CircleBorder(),
-      ),
-      child: const Icon(
-        AppIcons.check,
-        size: AppSizes.iconSmall - 4,
-        color: AppSemanticColors.surfaceContent,
-      ),
-    );
-  }
-}
-
-/// The thin line between two rows of a card.
-class _Line extends StatelessWidget {
-  const _Line();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(
-      height: AppSizes.divider,
-      thickness: AppSizes.divider,
-      color: AppSemanticColors.segmentTrack,
-    );
-  }
-}
-
-/// A card turned by a few degrees.
-class _Turned extends StatelessWidget {
-  const _Turned({required this.degrees, required this.child});
-
-  final double degrees;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(angle: degrees * math.pi / 180, child: child);
-  }
-}
-
-/// A card that fades in and rises 18 points into place, after the cards
-/// before it ([order] 0 comes first).
-class _Rise extends StatelessWidget {
-  const _Rise({required this.enter, required this.order, required this.child});
-
-  final Animation<double> enter;
-  final int order;
-  final Widget child;
-
-  static const double _distance = 18;
-
-  @override
-  Widget build(BuildContext context) {
-    final Interval curve = Interval(
-      order * 0.15,
-      order * 0.15 + 0.55,
-      curve: AppMotion.easeOutCubic,
-    );
-    return AnimatedBuilder(
-      animation: enter,
-      child: child,
-      builder: (BuildContext context, Widget? child) {
-        final double t = curve.transform(enter.value);
-        return Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * _distance),
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// The first letter of a name, for its round letter.
-String _first(String name) {
-  final String trimmed = name.trim();
-  return trimmed.isEmpty ? '' : trimmed.characters.first;
 }

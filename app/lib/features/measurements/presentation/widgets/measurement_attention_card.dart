@@ -1,43 +1,43 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/today_row_card.dart';
-import 'package:flutter/material.dart';
+import 'package:app/core/widgets/layout/record_item_card.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:flutter/cupertino.dart';
 
-/// One card of the measurement attention box: what needs attention, why,
-/// and the buttons that answer it.
+/// One card of the measurement attention box, drawn as a reading is in
+/// «السجل» ([RecordItemCard]): the kind's icon (a drop for glucose, a heart
+/// for blood pressure), [title] with when, [status] at the end (the value,
+/// or why it waits), [lines] under them, then the buttons that answer it.
 class MeasurementAttentionCard extends StatelessWidget {
   const MeasurementAttentionCard({
     super.key,
+    required this.kind,
     required this.title,
-    required this.subtitle,
+    required this.status,
     required this.actions,
-    this.dateText,
+    this.lines = const <Widget>[],
   });
 
-  final String title;
-  final String subtitle;
+  final MeasurementKind kind;
+  final Widget title;
+  final Widget status;
+  final List<Widget> lines;
   final List<Widget> actions;
 
-  /// The day of a missed task; null for a reading outside its target.
-  final String? dateText;
-
   @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: TodayRowCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(title, style: text.titleSmall),
-            if (dateText case final String date)
-              Text(date, style: text.bodySmall),
-            Text(subtitle, style: text.bodySmall),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(spacing: AppSpacing.sm, children: actions),
-          ],
-        ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+    child: RecordItemCard(
+      leading: Icon(
+        kind == MeasurementKind.glucose
+            ? CupertinoIcons.drop
+            : CupertinoIcons.heart,
       ),
-    );
-  }
+      title: title,
+      status: status,
+      body: <Widget>[
+        ...lines,
+        Wrap(spacing: AppSpacing.sm, children: actions),
+      ],
+    ),
+  );
 }

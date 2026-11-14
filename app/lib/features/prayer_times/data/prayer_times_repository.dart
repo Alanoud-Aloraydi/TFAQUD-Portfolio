@@ -2,14 +2,16 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/repositories/prayer_times_repository_domain.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-/// Provides prayer times data operations.
-class PrayerTimesRepository {
+/// The server owns the prayer times.
+class PrayerTimesRepository implements PrayerTimesRepositoryDomain {
   const PrayerTimesRepository(this._remote);
 
   final PrayerTimesRemoteDataSource _remote;
 
+  @override
   Future<Result<PrayerDay, Failure>> getToday(String circleId) async {
     try {
       return Success((await _remote.getToday(circleId)).day);

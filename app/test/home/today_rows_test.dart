@@ -1,9 +1,10 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
-import 'package:app/features/home/presentation/widgets/today_next_task.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/home/presentation/widgets/next_task_card.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_row.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -21,7 +22,7 @@ import 'package:multiple_result/multiple_result.dart';
 import '../support/widget_harness.dart';
 
 /// Records what the measurement row sends to the server.
-class _Measurements extends Fake implements MeasurementRepository {
+class _Measurements extends Fake implements MeasurementsRepositoryDomain {
   final List<MeasurementReadingDraft> drafts = <MeasurementReadingDraft>[];
 
   @override
@@ -113,7 +114,9 @@ void main() {
       MeasurementOccurrence task,
     ) async {
       final _Measurements repository = _Measurements();
-      final MeasurementTasksCubit cubit = MeasurementTasksCubit(repository);
+      final MeasurementTasksCubit cubit = MeasurementTasksCubit(
+        MeasurementsUseCase(repository),
+      );
       addTearDown(cubit.close);
       await cubit.load('c-1', DateTime(2026, 11, 9));
       await pumpArabic(
@@ -164,7 +167,7 @@ void main() {
   group('unified rows of «اليوم»', () {
     CareAppointment appointment(String time) => CareAppointment(
       id: 'a-$time',
-      specialty: 'diabetes',
+      specialty: 'عيادة السكري',
       kind: AppointmentKind.followUp,
       otherKind: null,
       scheduledOn: DateTime(2026, 11, 9),

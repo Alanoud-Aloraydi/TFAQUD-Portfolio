@@ -1,9 +1,13 @@
+import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
+import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/home/domain/export_period.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The period picker: a ready-made span, or the person's own dates.
+/// «الفترة»: a row that opens the glass menu of the ready-made spans and
+/// «فترة مخصصة», like every other menu of the app.
 class RecordExportRangeField extends StatelessWidget {
   const RecordExportRangeField({
     super.key,
@@ -18,19 +22,36 @@ class RecordExportRangeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<ExportRange>(
-      initialValue: range,
-      decoration: InputDecoration(
-        labelText: context.tr('record_export.period'),
-      ),
-      items: <DropdownMenuItem<ExportRange>>[
-        for (final ExportRange value in ExportRange.values)
-          DropdownMenuItem(value: value, child: Text(_label(context, value))),
+    return InsetGroup(
+      children: <Widget>[
+        Builder(
+          builder: (BuildContext anchor) => InsetRow(
+            label: context.tr('record_export.period'),
+            value: _label(context, range),
+            showChevron: true,
+            onTap: () => _open(anchor),
+          ),
+        ),
       ],
-      onChanged: (value) {
-        if (value != null) onSelected(value);
-      },
     );
+  }
+
+  Future<void> _open(BuildContext anchor) async {
+    final ExportRange? picked = await showGlassMenu<ExportRange>(
+      anchorContext: anchor,
+      semanticLabel: anchor.tr('record_export.period'),
+      sections: <List<GlassMenuItem<ExportRange>>>[
+        <GlassMenuItem<ExportRange>>[
+          for (final ExportRange value in ExportRange.values)
+            GlassMenuItem<ExportRange>(
+              value: value,
+              label: anchor.tr('record_export.range.${value.name}'),
+              selected: value == range,
+            ),
+        ],
+      ],
+    );
+    if (picked != null) onSelected(picked);
   }
 
   String _label(BuildContext context, ExportRange value) {

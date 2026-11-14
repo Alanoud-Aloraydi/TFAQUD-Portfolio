@@ -9,16 +9,14 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_plan_status.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_details.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_target_box.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_times_box.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// One measurement plan as a plan card: its kind and status with the
-/// pencil, reading times and days, the target, a change waiting for later,
-/// and «تفاصيل القياس» for who added or changed it and stopping it.
+/// pencil, a change waiting for later, and «تفاصيل القياس» with its times,
+/// days, normal range, who added or changed it, and stopping it.
 class MeasurementPlanCard extends StatelessWidget {
   const MeasurementPlanCard({
     super.key,
@@ -58,9 +56,9 @@ class MeasurementPlanCard extends StatelessWidget {
             )
           : null,
       status: PlanStatusBadge(plan.statusOn(today)),
+      // The times, days and normal range are in «تفاصيل القياس», so the
+      // closed card is only what tells the plans apart.
       body: <Widget>[
-        MeasurementPlanTimesBox(version: version),
-        MeasurementPlanTargetBox(kind: plan.kind, version: version),
         if (plan.pendingVersion case final MeasurementVersion pending)
           PlanInfoBox(
             emphasis: true,
@@ -76,6 +74,7 @@ class MeasurementPlanCard extends StatelessWidget {
       detailsLabel: context.tr('measurements.details'),
       details: measurementPlanDetails(
         context,
+        circleId: circleId,
         plan: plan,
         canManage: canManage,
       ),

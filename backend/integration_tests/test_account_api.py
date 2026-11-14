@@ -10,6 +10,9 @@ from app.models import Account, CareCircle
 from integration_tests.helpers import Api, BIRTH, add_manager, count
 from integration_tests.helpers import error_code, offline_circle, run
 
+# What the leader (and anyone allowed everything) may edit.
+EDIT_ALL = {"medications": True, "measurements": True, "appointments": True}
+
 URL = "/api/v1/accounts/me"
 
 
@@ -197,6 +200,8 @@ def test_a_member_leaves_other_circles_untouched(
             "is_patient": False,
             "role": "manager",
             "can_edit": True,
+            "is_leader": True,
+            "edit_access": EDIT_ALL,
             "avatar_code": None,
             "phone_number": owner.phone_number,
         }

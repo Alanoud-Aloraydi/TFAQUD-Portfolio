@@ -7,6 +7,7 @@ import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,6 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
         widget.header,
         const SizedBox(height: AppSpacing.md),
         WhiteFilterMenu<String>(
-          glass: true,
           options: <String, String>{
             for (final String key in _filters)
               key: context.tr('appointments.filters.$key'),
@@ -67,7 +67,7 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
                 context.read<AppointmentsCubit>().load(widget.circleId),
           )
         else if (values.isEmpty)
-          EmptyStateNote(context.tr('appointments.no_records'))
+          EmptyStateNote.section(context.tr('appointments.no_records'))
         else
           for (final CareAppointment value in values) ...<Widget>[
             AppointmentCard(

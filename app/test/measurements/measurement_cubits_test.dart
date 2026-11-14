@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
@@ -26,7 +27,7 @@ DioException _refused(int status, String code) {
   );
 }
 
-class _Repository extends Fake implements MeasurementRepository {
+class _Repository extends Fake implements MeasurementsRepositoryDomain {
   final requests = <String, Completer<List<MeasurementReading>>>{};
   final changesController = StreamController<String>.broadcast();
   final recordedController = StreamController<String>.broadcast();
@@ -142,7 +143,7 @@ void main() {
   group('MeasurementCubits', () {
     test('switching circles clears the previous patient readings', () async {
       final repository = _Repository();
-      final cubit = MeasurementReadingsCubit(repository);
+      final cubit = MeasurementReadingsCubit(MeasurementsUseCase(repository));
       final day = DateTime(2026, 11, 3);
       final first = cubit.load('patient-a', day, day);
       repository.requests['patient-a']!.complete([
@@ -175,7 +176,7 @@ void main() {
 
       test('a time read still to come is refused before the server', () async {
         final repository = _Repository();
-        final cubit = MeasurementReadingsCubit(repository);
+        final cubit = MeasurementReadingsCubit(MeasurementsUseCase(repository));
         final day = DateTime(2026, 11, 3);
         final loading = cubit.load('circle-1', day, day);
         repository.requests['circle-1']!.complete([]);
@@ -199,7 +200,7 @@ void main() {
       test('a second tap while one saves records nothing', () async {
         final repository = _Repository()
           ..pendingRecord = Completer<MeasurementReading>();
-        final cubit = MeasurementReadingsCubit(repository);
+        final cubit = MeasurementReadingsCubit(MeasurementsUseCase(repository));
         final day = DateTime(2026, 11, 3);
         final loading = cubit.load('circle-1', day, day);
         repository.requests['circle-1']!.complete([]);
@@ -235,7 +236,7 @@ void main() {
       test('a refused reading returns its message', () async {
         final repository = _Repository()
           ..recordError = _refused(409, 'measurement_record_conflict');
-        final cubit = MeasurementReadingsCubit(repository);
+        final cubit = MeasurementReadingsCubit(MeasurementsUseCase(repository));
         final day = DateTime(2026, 11, 3);
         final loading = cubit.load('circle-1', day, day);
         repository.requests['circle-1']!.complete([]);
@@ -261,7 +262,7 @@ void main() {
       'a reading saved anywhere in the circle reads the list again',
       () async {
         final repository = _Repository();
-        final cubit = MeasurementReadingsCubit(repository);
+        final cubit = MeasurementReadingsCubit(MeasurementsUseCase(repository));
         final day = DateTime(2026, 11, 3);
         final loading = cubit.load('circle-1', day, day);
         repository.requests['circle-1']!.complete([]);
@@ -283,7 +284,7 @@ void main() {
     group('MeasurementTasksCubit', () {
       test('reads two days back through 30 calendar days ahead', () async {
         final repository = _Repository();
-        final cubit = MeasurementTasksCubit(repository);
+        final cubit = MeasurementTasksCubit(MeasurementsUseCase(repository));
 
         await cubit.load('circle-1', DateTime(2026, 3, 20));
 
@@ -296,7 +297,7 @@ void main() {
 
       test('reads again when a task or plan of its circle changes', () async {
         final repository = _Repository();
-        final cubit = MeasurementTasksCubit(repository);
+        final cubit = MeasurementTasksCubit(MeasurementsUseCase(repository));
         await cubit.load('circle-1', DateTime(2026, 11, 3));
 
         repository.recordedController.add('circle-1');
@@ -313,7 +314,7 @@ void main() {
       test('a refused skip returns its message', () async {
         final repository = _Repository()
           ..recordError = _refused(422, 'future_measurement_task');
-        final cubit = MeasurementTasksCubit(repository);
+        final cubit = MeasurementTasksCubit(MeasurementsUseCase(repository));
         await cubit.load('circle-1', DateTime(2026, 11, 3));
 
         expect(
@@ -333,7 +334,7 @@ void main() {
     test('a refused follow-up returns its message', () async {
       final repository = _Repository()
         ..followUpError = _refused(422, 'measurement_within_target');
-      final cubit = MeasurementReadingsCubit(repository);
+      final cubit = MeasurementReadingsCubit(MeasurementsUseCase(repository));
       final day = DateTime(2026, 11, 3);
       final loading = cubit.load('circle-1', day, day);
       repository.requests['circle-1']!.complete([]);
@@ -355,7 +356,7 @@ void main() {
     group('MeasurementPlansCubit', () {
       test('a stop saves once and the plans read again', () async {
         final repository = _Repository();
-        final cubit = MeasurementPlansCubit(repository);
+        final cubit = MeasurementPlansCubit(MeasurementsUseCase(repository));
         await cubit.load('circle-1');
 
         final first = cubit.stop(_plan);
@@ -370,7 +371,7 @@ void main() {
 
       test('reads again when its circle plans change elsewhere', () async {
         final repository = _Repository();
-        final cubit = MeasurementPlansCubit(repository);
+        final cubit = MeasurementPlansCubit(MeasurementsUseCase(repository));
         await cubit.load('circle-1');
 
         repository.changesController.add('circle-1');
@@ -385,7 +386,7 @@ void main() {
         () async {
           final repository = _Repository()
             ..reviseError = _refused(409, 'measurement_plan_changed');
-          final cubit = MeasurementPlansCubit(repository);
+          final cubit = MeasurementPlansCubit(MeasurementsUseCase(repository));
           await cubit.load('circle-1');
 
           expect(

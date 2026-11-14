@@ -27,6 +27,30 @@ def signed_in(app, account):
     return {"Authorization": "Bearer " + issued.access_token}
 
 
+@pytest.mark.parametrize(
+    "page", ["medication-occurrences", "measurement-occurrences"]
+)
+def test_the_app_today_window_is_answered(
+    database_app, database, account, page
+):
+    """«اليوم» asks for 2 overdue days, today and 30 days ahead in one
+    request (33 days). Refusing it left the tab with «صار خطأ غير متوقع»."""
+    owner = account()
+    circle = offline_circle(database, owner)
+    today = datetime.now(ZoneInfo("Asia/Riyadh")).date()
+
+    answer = database_app.test_client().get(
+        f"/api/v1/circles/{circle.id}/{page}",
+        headers=signed_in(database_app, owner),
+        query_string={
+            "from": (today - timedelta(days=2)).isoformat(),
+            "to": (today + timedelta(days=30)).isoformat(),
+        },
+    )
+
+    assert answer.status_code == 200, answer.json
+
+
 def test_plan_occurrence_reading_and_export(database_app, database, account):
     """Pending tasks stay computed; one explicit reading is saved."""
     owner = account()
@@ -45,8 +69,6 @@ def test_plan_occurrence_reading_and_export(database_app, database, account):
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
         "missed_after_minutes": 60,
-        "glucose_low": 80,
-        "glucose_high": 140,
     }
     created = client.post(
         f"{base}/measurement-plans", headers=headers, json=body
@@ -76,7 +98,14 @@ def test_plan_occurrence_reading_and_export(database_app, database, account):
     }
     saved = client.put(record_path, headers=headers, json=reading)
     assert saved.status_code == 200
-    assert saved.json["measurement_reading"]["outside_target"] is True
+    # 151 fasting is above 125: high, with the fasting normal band.
+    answer = saved.json["measurement_reading"]
+    assert answer["level"] == "high"
+    assert answer["outside_target"] is True
+    assert answer["normal_range"] == {
+        "profile": "general", "state": "fasting",
+        "glucose_low": 70, "glucose_high": 100,
+    }
     conflict = client.put(record_path, headers=headers, json=reading)
     assert conflict.status_code == 409
     exported = client.get(
@@ -87,7 +116,8 @@ def test_plan_occurrence_reading_and_export(database_app, database, account):
 
 
 def test_plan_validation_and_authorization(database_app, database, account):
-    """Reject invalid targets and unauthenticated writes."""
+    """Reject a reading time that does not suit the kind, and
+    unauthenticated writes."""
     owner = account()
     circle = offline_circle(database, owner)
     client = database_app.test_client()
@@ -95,10 +125,11 @@ def test_plan_validation_and_authorization(database_app, database, account):
     day = datetime.now(ZoneInfo("Asia/Riyadh")).date()
     body = {
         "kind": "blood_pressure",
-        "times": [{"time_of_day": "08:00"}],
+        "times": [
+            {"time_of_day": "08:00", "measurement_state": "fasting"}
+        ],
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
-        "systolic_limit": 130,
     }
     assert client.post(base, json=body).status_code == 401
     invalid = client.post(
@@ -121,11 +152,11 @@ def test_future_plan_can_be_edited_before_its_first_task(
     base = f"/api/v1/circles/{circle.id}/measurement-plans"
     body = {
         "kind": "blood_pressure",
-        "times": [{"time_of_day": "08:00"}],
+        "times": [
+            {"time_of_day": "08:00", "measurement_state": "morning"}
+        ],
         "weekdays": [start.isoweekday()],
         "starts_on": start.isoformat(),
-        "systolic_limit": 130,
-        "diastolic_limit": 80,
     }
     created = client.post(base, headers=headers, json=body)
     assert created.status_code == 201
@@ -136,15 +167,15 @@ def test_future_plan_can_be_edited_before_its_first_task(
         headers=headers,
         json={
             **body,
-            "systolic_limit": 125,
+            "missed_after_minutes": 90,
             "expected_version_number": 1,
             "effective_from_on": start.isoformat(),
         },
     )
     assert changed.status_code == 200
     assert changed.json["measurement_plan"]["version"][
-        "systolic_limit"
-    ] == 125
+        "missed_after_minutes"
+    ] == 90
     assert len(changed.json["measurement_plan"]["history"]) == 1
 
 
@@ -160,8 +191,6 @@ def _todays_glucose_plan(client, headers, base):
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),
         "missed_after_minutes": 60,
-        "glucose_low": 80,
-        "glucose_high": 140,
     }
     created = client.post(
         f"{base}/measurement-plans", headers=headers, json=body
@@ -183,12 +212,14 @@ def test_an_edit_on_the_day_the_plan_was_added_replaces_it(
     changed = client.put(
         f"{base}/measurement-plans/{plan['id']}",
         headers=headers,
-        json={**body, "glucose_high": 130, "expected_version_number": 1},
+        json={
+            **body, "missed_after_minutes": 90, "expected_version_number": 1
+        },
     )
 
     assert changed.status_code == 200, changed.json
     answer = changed.json["measurement_plan"]
-    assert answer["version"]["glucose_high"] == 130
+    assert answer["version"]["missed_after_minutes"] == 90
     assert answer["version"]["effective_from_on"] == day.isoformat()
     assert answer["pending_version"] is None
     assert len(answer["history"]) == 1
@@ -220,14 +251,16 @@ def test_a_same_day_edit_after_a_reading_starts_tomorrow(
     changed = client.put(
         f"{base}/measurement-plans/{plan['id']}",
         headers=headers,
-        json={**body, "glucose_high": 130, "expected_version_number": 1},
+        json={
+            **body, "missed_after_minutes": 90, "expected_version_number": 1
+        },
     )
 
     # Today's reading keeps the plan it was taken under.
     assert changed.status_code == 200, changed.json
     answer = changed.json["measurement_plan"]
-    assert answer["version"]["glucose_high"] == 140
-    assert answer["pending_version"]["glucose_high"] == 130
+    assert answer["version"]["missed_after_minutes"] == 60
+    assert answer["pending_version"]["missed_after_minutes"] == 90
     assert answer["pending_version"]["effective_from_on"] == (
         day + timedelta(days=1)
     ).isoformat()
@@ -261,7 +294,9 @@ def test_an_edit_that_starts_tomorrow_can_be_edited_again(
     assert client.put(
         path,
         headers=headers,
-        json={**body, "glucose_high": 130, "expected_version_number": 1},
+        json={
+            **body, "missed_after_minutes": 90, "expected_version_number": 1
+        },
     ).status_code == 200
 
     again = client.put(
@@ -269,7 +304,7 @@ def test_an_edit_that_starts_tomorrow_can_be_edited_again(
         headers=headers,
         json={
             **body,
-            "glucose_high": 120,
+            "missed_after_minutes": 120,
             "effective_from_on": tomorrow,
             "expected_version_number": 2,
         },
@@ -277,8 +312,8 @@ def test_an_edit_that_starts_tomorrow_can_be_edited_again(
 
     assert again.status_code == 200, again.json
     answer = again.json["measurement_plan"]
-    assert answer["version"]["glucose_high"] == 140
-    assert answer["pending_version"]["glucose_high"] == 120
+    assert answer["version"]["missed_after_minutes"] == 60
+    assert answer["pending_version"]["missed_after_minutes"] == 120
     assert answer["pending_version"]["version_number"] == 2
     assert answer["pending_version"]["effective_from_on"] == tomorrow
 
@@ -303,8 +338,6 @@ def test_concurrent_task_records_keep_one_outcome(
             ],
             "weekdays": [day.isoweekday()],
             "starts_on": day.isoformat(),
-            "glucose_low": 80,
-            "glucose_high": 140,
         },
     )
     version_id = created.json["measurement_plan"]["version"]["id"]
@@ -347,9 +380,9 @@ def test_missed_after_accepts_free_minutes_inside_the_range(
         "kind": "glucose",
         "times": [{"time_of_day": "08:00", "measurement_state": "fasting"}],
         "weekdays": [1],
-        "starts_on": datetime.now(timezone.utc).date().isoformat(),
-        "glucose_low": 80,
-        "glucose_high": 140,
+        # The patient's today, not UTC's: they differ after midnight in
+        # Riyadh, and a plan cannot start yesterday.
+        "starts_on": datetime.now(ZoneInfo("Asia/Riyadh")).date().isoformat(),
     }
     for minutes, status in ((4, 422), (361, 422), (360, 201)):
         response = client.post(

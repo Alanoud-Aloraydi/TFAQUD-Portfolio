@@ -1,4 +1,5 @@
-import 'package:app/core/widgets/layout/plan_detail_line.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/core/widgets/layout/plan_item_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,10 +46,14 @@ void main() {
 
       await tester.tap(find.text('تفاصيل الدواء'));
       await tester.pump();
+      // Sliding down, part of the way.
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('سارة'), findsOneWidget);
+      await tester.pumpAndSettle();
       expect(find.text('سارة'), findsOneWidget);
 
       await tester.tap(find.text('تفاصيل الدواء'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('سارة'), findsNothing);
     });
 
@@ -81,15 +86,33 @@ void main() {
     });
   });
 
-  testWidgets('PlanDetailLine puts label and value on one line', (
+  testWidgets('a fact group shows its title, labels and bold values', (
     tester,
   ) async {
     await pumpArabic(
       tester,
-      home: const Scaffold(body: PlanDetailLine('سارة', label: 'أضافه')),
+      home: const Scaffold(
+        body: PlanFactGroup(
+          title: 'الأشخاص',
+          children: <Widget>[
+            PlanFact(icon: AppIcons.clock, label: 'الوقت', value: '9:00 ص'),
+            PlanPersonFact(
+              label: 'أضافه',
+              name: 'سارة',
+              circleId: 'circle-1',
+              avatarCode: 'w1_1',
+            ),
+          ],
+        ),
+      ),
     );
 
+    expect(find.text('الأشخاص'), findsOneWidget);
     expect(find.text('أضافه'), findsOneWidget);
     expect(find.text('سارة'), findsOneWidget);
+    final Text value = tester.widget<Text>(find.text('9:00 ص'));
+    expect(value.style?.fontWeight, FontWeight.w700);
+    // The person's avatar beside their name.
+    expect(find.byType(Image), findsOneWidget);
   });
 }

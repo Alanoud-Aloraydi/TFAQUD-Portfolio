@@ -1,28 +1,26 @@
 import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Asks for a time of day in a bottom sheet of 12-hour wheels; null when the
+/// Asks for a time of day in a glass sheet of 12-hour wheels; null when the
 /// sheet is dismissed.
 Future<TimeOfDay?> showTafaqodTimeSheet(
   BuildContext context, {
   required String title,
   required TimeOfDay initialTime,
-}) => showModalBottomSheet<TimeOfDay>(
-  context: context,
-  useSafeArea: true,
-  useRootNavigator: true,
-  builder: (_) => _TimePickerSheet(title: title, initialTime: initialTime),
+}) => showGlassSheet<TimeOfDay>(
+  context,
+  title: title,
+  builder: (_) => _TimePickerSheet(initialTime: initialTime),
 );
 
-/// Renders the time picker sheet element of time picker sheet.
 class _TimePickerSheet extends StatefulWidget {
-  const _TimePickerSheet({required this.title, required this.initialTime});
+  const _TimePickerSheet({required this.initialTime});
 
-  final String title;
   final TimeOfDay initialTime;
 
   @override
@@ -39,7 +37,6 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
   @override
   Widget build(BuildContext context) {
     return PickerSheetFrame(
-      title: widget.title,
       confirmLabel: context.tr('common.confirm'),
       onConfirm: () => Navigator.pop(
         context,

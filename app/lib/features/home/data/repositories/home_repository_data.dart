@@ -8,8 +8,8 @@ import 'package:app/features/home/domain/repositories/home_repository_domain.dar
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// The server owns the home screen's day.
 @LazySingleton(as: HomeRepositoryDomain)
-/// Provides home repository operations.
 class HomeRepositoryData implements HomeRepositoryDomain {
   HomeRepositoryData(this._remote, this._local);
 

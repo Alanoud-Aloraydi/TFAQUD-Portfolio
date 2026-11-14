@@ -67,6 +67,8 @@ class MedicationPlan extends Equatable {
     this.createdByName,
     this.createdByAvatarCode,
     this.lastEditedByName,
+    this.lastEditedByAccountId,
+    this.lastEditedByAvatarCode,
   });
 
   final String id;
@@ -85,6 +87,8 @@ class MedicationPlan extends Equatable {
   /// Who made the version in effect now; same person as [createdByName]
   /// unless the plan was revised since, or null when it predates this field.
   final String? lastEditedByName;
+  final String? lastEditedByAccountId;
+  final String? lastEditedByAvatarCode;
 
   bool isPreviousOn(DateTime day) =>
       discontinuedAt != null ||
@@ -105,6 +109,8 @@ class MedicationPlan extends Equatable {
     createdByName,
     createdByAvatarCode,
     lastEditedByName,
+    lastEditedByAccountId,
+    lastEditedByAvatarCode,
   ];
 }
 

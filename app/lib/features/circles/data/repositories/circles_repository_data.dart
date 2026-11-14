@@ -22,6 +22,7 @@ import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 import 'package:app/features/circles/domain/entities/new_self_circle.dart';
 import 'package:app/features/circles/domain/entities/patient_update.dart';
+import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/domain/repositories/circles_repository_domain.dart';
@@ -29,8 +30,8 @@ import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+/// The server owns the circles, their members and their medical files.
 @LazySingleton(as: CirclesRepositoryDomain)
-/// Provides circles repository operations.
 class CirclesRepositoryData implements CirclesRepositoryDomain {
   CirclesRepositoryData(this._remote, this._deviceZone);
 
@@ -112,10 +113,29 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
   Future<Result<void, Failure>> setMemberEditAccess(
     String circleId,
     String accountId, {
-    required bool canEdit,
+    required String area,
+    required bool allowed,
   }) async {
     try {
-      await _remote.setMemberEditAccess(circleId, accountId, canEdit: canEdit);
+      await _remote.setMemberEditAccess(
+        circleId,
+        accountId,
+        area: area,
+        allowed: allowed,
+      );
+      return const Success(null);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> handOverLeadership(
+    String circleId,
+    String accountId,
+  ) async {
+    try {
+      await _remote.handOverLeadership(circleId, accountId);
       return const Success(null);
     } catch (error) {
       return Error(FailureExceptions.getException(error));
@@ -193,13 +213,25 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
     }
   }
 
+  /// What was answered lately. It is only history: when it cannot be read
+  /// (a server from before it, a dropped connection), what waits for an
+  /// answer still shows, with nothing under «السابقة».
+  Future<List<PreviousNotification>> _previousNotifications() async {
+    try {
+      return await _remote.getPreviousNotifications();
+    } catch (_) {
+      return const <PreviousNotification>[];
+    }
+  }
+
   @override
   Future<Result<CircleInbox, Failure>> getInbox() async {
     try {
-      // The two lists are independent, so they are read at the same time.
+      // The lists are independent, so they are read at the same time.
       final List<Object> answers = await Future.wait<Object>(<Future<Object>>[
         _remote.getCircleRequests(),
         _remote.getInvitations(),
+        _previousNotifications(),
       ]);
       final CircleRequestsModel requests = answers[0] as CircleRequestsModel;
       return Success(
@@ -207,6 +239,7 @@ class CirclesRepositoryData implements CirclesRepositoryDomain {
           sent: requests.sent,
           received: requests.received,
           invitations: answers[1] as List<ReceivedInvitation>,
+          previous: answers[2] as List<PreviousNotification>,
         ),
       );
     } catch (error) {

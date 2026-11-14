@@ -3,18 +3,19 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_actions.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_details.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_status.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// One measurement task of «اليوم»: a [CareItemRow] with its condition,
 /// status and the reading that answered it, and «تسجيل قراءة»/«تخطي» while
-/// it can be answered ([now] is the patient's wall time). The row itself is
-/// not tappable: editing lives in «الخطة».
+/// it can be answered ([now] is the patient's wall time); only «تخطي» once
+/// the next task of its kind is due. The row itself is not tappable:
+/// editing lives in «الخطة».
 class MeasurementTaskRow extends StatelessWidget {
   const MeasurementTaskRow({
     super.key,
@@ -54,12 +55,18 @@ class MeasurementTaskRow extends StatelessWidget {
         background: CareVisuals.measurementTile,
       ),
       title: measurementKindTitle(context, task.kind),
-      details: measurementTaskDetails(context, task, circleId),
-      status: TodayTaskStatusBadge(
-        text: context.tr(status.labelKey),
-        tone: status.badge,
-      ),
-      actions: canRecord ? MeasurementTaskActions(task: task) : null,
+      details: <Widget>[
+        if (status.lateBy case final String lateBy)
+          Text(lateBy, style: Theme.of(context).textTheme.bodySmall),
+        ...measurementTaskDetails(context, task, circleId),
+      ],
+      status: StatusBadge(text: status.label, tone: status.badge),
+      actions: canRecord
+          ? MeasurementTaskActions(
+              task: task,
+              superseded: task.supersededAt(now),
+            )
+          : null,
     );
   }
 }

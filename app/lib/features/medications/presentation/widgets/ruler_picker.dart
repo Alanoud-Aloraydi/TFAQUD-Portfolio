@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// A whole number on a ruler that slides under a fixed mark: the number
-/// under the mark is the value. It snaps to each number with a light
+/// under the mark is the value. It snaps to each mark with a light
 /// selection haptic, the way a picker wheel does, and reads to VoiceOver as
-/// a slider (swipe up or down to change it).
+/// a slider (swipe up or down to change it). Each mark is [step] apart
+/// («نذكّرك كل» counts days one by one; «ذكّرني لاحقًا» goes 5 minutes at a
+/// time).
 ///
 /// The numbers grow in the reading direction: to the left in Arabic.
 class RulerPicker extends StatefulWidget {
@@ -18,7 +20,10 @@ class RulerPicker extends StatefulWidget {
     required this.onChanged,
     required this.semanticLabel,
     required this.valueLabel,
-  }) : assert(min < max && value >= min && value <= max);
+    this.step = 1,
+    this.isMajor,
+    this.tickLabel,
+  }) : assert(min < max && value >= min && value <= max && step > 0);
 
   final int min;
   final int max;
@@ -31,6 +36,16 @@ class RulerPicker extends StatefulWidget {
   /// The value as said: «3 أيام».
   final String Function(int value) valueLabel;
 
+  /// How far apart two marks are; [min], [max] and [value] are on them.
+  final int step;
+
+  /// Whether a value's mark is long; by default the first one and every
+  /// fifth number.
+  final bool Function(int value)? isMajor;
+
+  /// The words under a long mark; by default the number.
+  final String Function(int value)? tickLabel;
+
   @override
   State<RulerPicker> createState() => _RulerPickerState();
 }
@@ -41,12 +56,16 @@ class _RulerPickerState extends State<RulerPicker> {
   static const double _height = 64;
 
   late final FixedExtentScrollController _controller =
-      FixedExtentScrollController(initialItem: widget.value - widget.min);
+      FixedExtentScrollController(initialItem: _indexOf(widget.value));
+
+  int _indexOf(int value) => (value - widget.min) ~/ widget.step;
+
+  int _valueAt(int index) => widget.min + index * widget.step;
 
   @override
   void didUpdateWidget(RulerPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final int index = widget.value - widget.min;
+    final int index = _indexOf(widget.value);
     if (_controller.hasClients && _controller.selectedItem != index) {
       _controller.jumpToItem(index);
     }
@@ -59,28 +78,33 @@ class _RulerPickerState extends State<RulerPicker> {
   }
 
   void _select(int index) {
-    final int value = widget.min + index;
+    final int value = _valueAt(index);
     if (value == widget.value) return;
     HapticFeedback.selectionClick();
     widget.onChanged(value);
   }
 
   void _jump(int value) =>
-      _controller.jumpToItem(value.clamp(widget.min, widget.max) - widget.min);
+      _controller.jumpToItem(_indexOf(value.clamp(widget.min, widget.max)));
 
   @override
   Widget build(BuildContext context) {
     final bool rtl = Directionality.of(context) == TextDirection.rtl;
     final int value = widget.value;
+    final int step = widget.step;
     return Semantics(
       container: true,
       slider: true,
       label: widget.semanticLabel,
       value: widget.valueLabel(value),
-      increasedValue: value < widget.max ? widget.valueLabel(value + 1) : null,
-      decreasedValue: value > widget.min ? widget.valueLabel(value - 1) : null,
-      onIncrease: value < widget.max ? () => _jump(value + 1) : null,
-      onDecrease: value > widget.min ? () => _jump(value - 1) : null,
+      increasedValue: value < widget.max
+          ? widget.valueLabel(value + step)
+          : null,
+      decreasedValue: value > widget.min
+          ? widget.valueLabel(value - step)
+          : null,
+      onIncrease: value < widget.max ? () => _jump(value + step) : null,
+      onDecrease: value > widget.min ? () => _jump(value - step) : null,
       child: ExcludeSemantics(
         child: SizedBox(
           height: _height,
@@ -99,11 +123,22 @@ class _RulerPickerState extends State<RulerPicker> {
                   physics: const FixedExtentScrollPhysics(),
                   onSelectedItemChanged: _select,
                   childDelegate: ListWheelChildBuilderDelegate(
-                    childCount: widget.max - widget.min + 1,
-                    builder: (BuildContext context, int index) => RotatedBox(
-                      quarterTurns: rtl ? 3 : 1,
-                      child: _Tick(number: widget.min + index),
-                    ),
+                    childCount: _indexOf(widget.max) + 1,
+                    builder: (BuildContext context, int index) {
+                      final int number = _valueAt(index);
+                      final bool major =
+                          widget.isMajor?.call(number) ??
+                          (number == 1 || number % 5 == 0);
+                      return RotatedBox(
+                        quarterTurns: rtl ? 3 : 1,
+                        child: _Tick(
+                          major: major,
+                          label: major
+                              ? (widget.tickLabel?.call(number) ?? '$number')
+                              : null,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -129,16 +164,15 @@ class _RulerPickerState extends State<RulerPicker> {
   }
 }
 
-/// One number's mark: a long one with its number every five, a short one
-/// between.
+/// One mark: a long one with its words under it, or a short one between.
 class _Tick extends StatelessWidget {
-  const _Tick({required this.number});
+  const _Tick({required this.major, this.label});
 
-  final int number;
+  final bool major;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
-    final bool major = number == 1 || number % 5 == 0;
     return Column(
       children: <Widget>[
         Container(
@@ -152,11 +186,11 @@ class _Tick extends StatelessWidget {
         // A number is wider than its mark: it overflows to both sides.
         SizedBox(
           height: 18,
-          child: major
+          child: label != null
               ? OverflowBox(
                   maxWidth: 40,
                   child: Text(
-                    '$number',
+                    label!,
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     style: Theme.of(context).textTheme.labelSmall

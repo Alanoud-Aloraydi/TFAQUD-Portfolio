@@ -4,10 +4,12 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 import 'package:dio/dio.dart' show DioException, Response;
 
 /// The server owns plans, readings, and computed measurement tasks.
-class MeasurementRepository {
+class MeasurementRepository implements MeasurementsRepositoryDomain {
   MeasurementRepository(this._client);
 
   final DioClient _client;
@@ -17,6 +19,7 @@ class MeasurementRepository {
 
   /// The circle whose measurement plans changed, each time the server
   /// accepts a change (so calendar sync can pick it up right away).
+  @override
   Stream<String> get changes => _changes.stream;
 
   final StreamController<String> _recorded =
@@ -27,21 +30,23 @@ class MeasurementRepository {
   /// gone), so its reminder is taken off and the lists showing it read
   /// again. Apart from [changes], which the calendar also follows: a
   /// reading does not change the calendar.
+  @override
   Stream<String> get recorded => _recorded.stream;
 
-  /// The targets of [circleId]'s patient, one per kind at most.
-
-  Future<List<MeasurementTarget>> targets(String circleId) async {
+  /// The normal ranges [circleId]'s patient's readings are judged by, and
+  /// the conditions of the medical file that chose them.
+  Future<NormalRanges> ranges(String circleId) async {
     final response = await _client.get(
-      ApiEndpoints.measurementTargets(circleId),
+      ApiEndpoints.measurementRanges(circleId),
     );
-    final values =
-        (response.data as Map<String, dynamic>)['measurement_targets']
-            as List<dynamic>;
-    return knownMeasurementItems(values, MeasurementTarget.fromJson);
+    return NormalRanges.fromJson(
+      (response.data as Map<String, dynamic>)['measurement_ranges']
+          as Map<String, dynamic>,
+    );
   }
 
   /// Every plan of [circleId], stopped ones too.
+  @override
   Future<List<MeasurementPlan>> plans(String circleId) async {
     final response = await _client.get(ApiEndpoints.measurementPlans(circleId));
     final values =
@@ -52,6 +57,7 @@ class MeasurementRepository {
 
   /// Adds a plan from [draft]; the server refuses a second active plan of
   /// one kind and a start before the patient's today.
+  @override
   Future<MeasurementPlan> createPlan(
     String circleId,
     MeasurementPlanDraft draft,
@@ -66,6 +72,7 @@ class MeasurementRepository {
 
   /// Changes [plan] from [draft]'s start on; readings already taken keep
   /// the version they were taken under.
+  @override
   Future<MeasurementPlan> revisePlan(
     String circleId,
     MeasurementPlan plan,
@@ -83,6 +90,7 @@ class MeasurementRepository {
   }
 
   /// Stops [planId]: no task after now.
+  @override
   Future<MeasurementPlan> stopPlan(String circleId, String planId) async {
     final response = await _client.post(
       ApiEndpoints.stopMeasurementPlan(circleId, planId),
@@ -92,6 +100,7 @@ class MeasurementRepository {
   }
 
   /// The tasks of the patient's days [from] to [to], both included.
+  @override
   Future<List<MeasurementOccurrence>> occurrences(
     String circleId,
     DateTime from,
@@ -104,11 +113,14 @@ class MeasurementRepository {
     final values =
         (response.data as Map<String, dynamic>)['measurement_occurrences']
             as List<dynamic>;
-    return knownMeasurementItems(values, MeasurementOccurrence.fromJson);
+    return linkNextTasks(
+      knownMeasurementItems(values, MeasurementOccurrence.fromJson),
+    );
   }
 
   /// The readings of the patient's days [from] to [to], both included (at
   /// most 32 days, as the server allows).
+  @override
   Future<List<MeasurementReading>> readings(
     String circleId,
     DateTime from,
@@ -125,6 +137,7 @@ class MeasurementRepository {
   }
 
   /// Every reading of [circleId], for the record export.
+  @override
   Future<List<MeasurementReading>> allReadings(String circleId) async {
     final response = await _client.get(
       ApiEndpoints.measurementReadingsExport(circleId),
@@ -137,6 +150,7 @@ class MeasurementRepository {
 
   /// Saves [draft]: the answer to [occurrence], the task the person chose,
   /// or a free reading without it.
+  @override
   Future<MeasurementReading> record(
     String circleId,
     MeasurementReadingDraft draft, {
@@ -175,7 +189,8 @@ class MeasurementRepository {
     );
   }
 
-  /// Marks [readingId], a reading outside its target, as followed up.
+  /// Marks [readingId], a reading outside its normal range, as followed up.
+  @override
   Future<MeasurementReading> followUp(String circleId, String readingId) async {
     final response = await _client.post(
       ApiEndpoints.measurementFollowUp(circleId, readingId),

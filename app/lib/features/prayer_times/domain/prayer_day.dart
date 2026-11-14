@@ -1,7 +1,6 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported prayer values.
 enum Prayer { fajr, dhuhr, asr, maghrib, isha }
 
 /// Holds prayer times for one calendar day of the patient's city.

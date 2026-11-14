@@ -1,7 +1,13 @@
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/loading/skeleton.dart';
+import 'package:app/core/widgets/loading/skeleton_block.dart';
+import 'package:app/core/widgets/loading/skeleton_box.dart';
+import 'package:app/core/widgets/loading/skeleton_form_group.dart';
+import 'package:app/core/widgets/loading/skeleton_large_title.dart';
+import 'package:app/core/widgets/loading/skeleton_line.dart';
+import 'package:app/core/widgets/loading/skeleton_page.dart';
+import 'package:app/core/widgets/loading/skeleton_surface.dart';
 import 'package:flutter/material.dart';
 
 // Each medicine page has its own skeleton (design system Skeleton), drawn in
@@ -156,7 +162,6 @@ class PlanCardSkeleton extends StatelessWidget {
   }
 }
 
-/// Renders the icon line element of medication skeletons.
 class _IconLine extends StatelessWidget {
   const _IconLine({required this.widthFactor});
 
@@ -210,7 +215,6 @@ class MedicationDetailsSkeleton extends StatelessWidget {
   }
 }
 
-/// Renders the label value element of medication skeletons.
 class _LabelValue extends StatelessWidget {
   const _LabelValue({required this.valueWidth});
 

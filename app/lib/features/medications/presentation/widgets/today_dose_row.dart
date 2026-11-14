@@ -1,11 +1,12 @@
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/recorder_line.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
@@ -62,6 +63,8 @@ class TodayDoseRow extends StatelessWidget {
           ? dose
           : '$dose · ${occurrence.instructions}',
       details: <Widget>[
+        if (status.lateBy case final String lateBy)
+          Text(lateBy, style: Theme.of(context).textTheme.bodySmall),
         if (record?.recordedByName case final String name)
           RecorderLine(
             name: name,
@@ -78,7 +81,7 @@ class TodayDoseRow extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
       ],
-      status: TodayTaskStatusBadge(text: status.label, tone: status.tone),
+      status: StatusBadge(text: status.label, tone: status.tone),
       onTap: () => context.push(
         Routes.medicationDetails(circleId, occurrence.planId),
         extra: canManage,

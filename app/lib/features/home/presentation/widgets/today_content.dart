@@ -16,10 +16,15 @@ class TodayContent extends StatelessWidget {
     super.key,
     required this.circleId,
     required this.canManage,
+    this.onAdd,
   });
 
   final String circleId;
   final bool canManage;
+
+  /// Opens the add sheet from the note of an empty day; null for a member
+  /// who only reads.
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +45,7 @@ class TodayContent extends StatelessWidget {
               status == MedicationOccurrencesStatus.ready && errorKey == null,
           circleId: circleId,
           canManage: canManage,
+          onAdd: onAdd,
         ),
         TodayBody(snapshot: snapshot, circleId: circleId, canManage: canManage),
       ],

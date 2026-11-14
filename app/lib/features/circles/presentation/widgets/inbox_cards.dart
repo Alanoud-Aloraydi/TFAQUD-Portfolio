@@ -1,17 +1,19 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
-import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
+import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The white card every item of the notifications page sits in.
@@ -22,20 +24,20 @@ class _InboxCard extends StatelessWidget {
     required this.avatarForeground,
     required this.title,
     required this.body,
+    this.avatarCode,
     this.pill,
-    this.extra,
     this.actions,
   });
 
   final String avatarText;
+
+  /// The person's avatar; their first letter ([avatarText]) without one.
+  final String? avatarCode;
   final Color avatarBackground;
   final Color avatarForeground;
   final String title;
   final String body;
   final Widget? pill;
-
-  /// A widget between the text and the buttons.
-  final Widget? extra;
   final Widget? actions;
 
   @override
@@ -52,19 +54,27 @@ class _InboxCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: AppSizes.avatar,
-                height: AppSizes.avatar,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: avatarBackground,
-                  shape: BoxShape.circle,
+              if (avatarCodes.contains(avatarCode))
+                PersonPhoto(
+                  name: avatarText,
+                  photoPath: '',
+                  avatarCode: avatarCode,
+                  size: AppSizes.avatar,
+                )
+              else
+                Container(
+                  width: AppSizes.avatar,
+                  height: AppSizes.avatar,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: avatarBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    avatarText,
+                    style: text.titleMedium?.copyWith(color: avatarForeground),
+                  ),
                 ),
-                child: Text(
-                  avatarText,
-                  style: text.titleMedium?.copyWith(color: avatarForeground),
-                ),
-              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -90,10 +100,6 @@ class _InboxCard extends StatelessWidget {
               ],
             ],
           ),
-          if (extra != null) ...<Widget>[
-            const SizedBox(height: AppSpacing.sm),
-            extra!,
-          ],
           if (actions != null) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
             actions!,
@@ -110,11 +116,10 @@ String _initial(String name) {
   return trimmed.isEmpty ? '؟' : trimmed.characters.first;
 }
 
-StatusPill _needsReplyPill(BuildContext context) => StatusPill(
+StatusBadge _needsReplyPill(BuildContext context) => StatusBadge(
   icon: AppIcons.clock,
   text: context.tr('circles.needs_reply_pill'),
-  background: AppSemanticColors.background,
-  foreground: context.tokens.textSecondary,
+  tone: StatusTone.attention,
 );
 
 /// Accept and decline side by side. While [busy] the buttons are off.
@@ -195,6 +200,7 @@ class InvitationCard extends StatelessWidget {
     final String name = by ?? '';
     return _InboxCard(
       avatarText: _initial(name),
+      avatarCode: invitation.invitedByAvatarCode,
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.invitation_title'),
@@ -230,6 +236,7 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
+      avatarCode: request.requesterAvatarCode,
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.request_card_title'),
@@ -273,6 +280,7 @@ class AcceptedRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _InboxCard(
       avatarText: _initial(request.requesterName),
+      avatarCode: request.requesterAvatarCode,
       avatarBackground: AppSemanticColors.selectedSurface,
       avatarForeground: AppSemanticColors.textPrimary,
       title: context.tr('circles.complete_card_title'),
@@ -316,52 +324,58 @@ class AcceptedRequestCard extends StatelessWidget {
   }
 }
 
-/// The patient declined a request the signed-in person sent. The server keeps
-/// it for a few days so that the sender learns of it.
-class DeclinedRequestCard extends StatelessWidget {
-  const DeclinedRequestCard({super.key, required this.request});
+/// An invitation or a request that was already answered (the bell's
+/// «السابقة»): what it was and how it ended, who it was with, and how long
+/// ago at the end of the first line, where a waiting one says «بانتظار
+/// ردّك».
+class PreviousNotificationCard extends StatelessWidget {
+  const PreviousNotificationCard({super.key, required this.item});
 
-  final SentCircleRequest request;
+  final PreviousNotification item;
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final DateTime? answered = request.respondedAt;
+    final PatientClock clock = PatientClockScope.of(context);
+    // Days on the patient's calendar, never the phone's zone.
+    final int days = clock
+        .today()
+        .difference(clock.today(item.answeredAt))
+        .inDays;
+    final String key =
+        'circles.previous.${item.kind.name}_'
+        '${item.accepted ? 'accepted' : 'declined'}';
     return _InboxCard(
-      avatarText: '!',
-      avatarBackground: AppSemanticColors.borderSubtle,
-      avatarForeground: context.tokens.textSecondary,
-      title: context.tr('circles.declined_title'),
-      // The number below says which request it was.
-      body: context.tr('circles.declined_body'),
-      extra: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            SaudiMobile.display(request.patientPhoneNumber),
-            textDirection: TextDirection.ltr,
-            style: text.bodyMedium?.copyWith(
-              color: context.tokens.textSecondary,
-            ),
-          ),
-          // The day on the patient's calendar, never the phone's zone.
-          if (answered != null)
-            Text(
-              context.tr(
-                'circles.declined_on',
-                args: <String>[
-                  formatBirthDate(
-                    context,
-                    PatientClockScope.of(context).today(answered),
-                  ),
-                ],
-              ),
-              style: text.bodySmall?.copyWith(
-                color: context.tokens.textSecondary,
-              ),
-            ),
+      avatarText: _initial(item.otherName ?? ''),
+      avatarCode: item.otherAvatarCode,
+      avatarBackground: item.accepted
+          ? AppSemanticColors.selectedSurface
+          : AppSemanticColors.borderSubtle,
+      avatarForeground: item.accepted
+          ? AppSemanticColors.textPrimary
+          : context.tokens.textSecondary,
+      title: context.tr('$key.title'),
+      body: context.tr(
+        '$key.body',
+        args: <String>[
+          _who(context),
+          item.circleName ?? context.tr('circles.previous.a_circle'),
         ],
       ),
+      pill: StatusBadge(
+        icon: AppIcons.clock,
+        text: daysAgo(context, days),
+        tone: StatusTone.neutral,
+      ),
     );
+  }
+
+  /// The other person: their name, else their number (read left to right
+  /// inside the Arabic sentence), else «شخص».
+  String _who(BuildContext context) {
+    final String name = item.otherName?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    final String? phone = item.otherPhoneNumber;
+    if (phone == null) return context.tr('circles.previous.someone');
+    return '\u2066${SaudiMobile.display(phone)}\u2069';
   }
 }

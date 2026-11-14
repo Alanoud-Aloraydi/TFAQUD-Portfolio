@@ -104,11 +104,11 @@ ShellRoute _onboardingShell() => ShellRoute(
   ],
 );
 
-/// The welcome shows once per install ([IntroMemory]). After it, a
+/// The welcome shows once per install ([WelcomeMemory]). After it, a
 /// signed-out phone opens on the phone number page, and what was the last
 /// person's goes, as the welcome would have removed it.
 Future<String?> _welcomeOnce(BuildContext context, GoRouterState state) async {
-  if (!await IntroMemory.seen()) return null;
+  if (!await GetIt.I<WelcomeMemory>().seen()) return null;
   unawaited(forgetSignedOutPerson());
   return Routes.authPhone;
 }

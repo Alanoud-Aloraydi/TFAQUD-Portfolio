@@ -77,12 +77,6 @@ class FailureExceptions {
       ApiErrorCodes.measurementEffectiveDate => const ValidationFailure(
         'measurements.effective_date',
       ),
-      ApiErrorCodes.measurementTargetRequired => const ValidationFailure(
-        'measurements.target_required',
-      ),
-      ApiErrorCodes.measurementTargetFromPlan => const ConflictFailure(
-        'measurements.target_from_plan',
-      ),
       ApiErrorCodes.measurementRecordConflict => const ConflictFailure(
         'measurements.record_conflict',
       ),
@@ -92,8 +86,7 @@ class FailureExceptions {
       ApiErrorCodes.futureMeasurementTask => const ValidationFailure(
         'measurements.future_task',
       ),
-      ApiErrorCodes.measurementWithinTarget ||
-      ApiErrorCodes.measurementNoTarget => const ValidationFailure(
+      ApiErrorCodes.measurementWithinTarget => const ValidationFailure(
         'measurements.no_follow_up',
       ),
       ApiErrorCodes.doseRecordConflict => const ConflictFailure(

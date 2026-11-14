@@ -1,12 +1,14 @@
 import 'dart:async';
 
-import 'package:app/features/appointments/data/visit_audio_service.dart';
-import 'package:app/features/appointments/data/visit_repository.dart';
+import 'package:app/features/appointments/domain/repositories/visits_repository_domain.dart';
+import 'package:app/features/appointments/domain/services/visit_audio.dart';
+import 'package:app/features/appointments/domain/use_cases/visits_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// A recorder whose permission answer the test releases by hand.
-class _FakeAudio implements VisitAudioService {
+class _FakeAudio implements VisitAudio {
   final Completer<bool> permission = Completer<bool>();
   int disposed = 0;
   int starts = 0;
@@ -24,7 +26,7 @@ class _FakeAudio implements VisitAudioService {
   dynamic noSuchMethod(Invocation invocation) => Future<void>.value();
 }
 
-class _FakeRepository implements VisitRepository {
+class _FakeRepository implements VisitsRepositoryDomain {
   @override
   dynamic noSuchMethod(Invocation invocation) => Future<void>.value();
 }
@@ -34,7 +36,7 @@ void main() {
     test('a cubit closed during the permission prompt does not emit', () async {
       final _FakeAudio audio = _FakeAudio();
       final VisitCubit cubit = VisitCubit(
-        _FakeRepository(),
+        VisitsUseCase(_FakeRepository()),
         audio,
         'circle-1',
         'visit-1',
@@ -56,7 +58,7 @@ void main() {
     test('a denied permission shows the microphone message', () async {
       final _FakeAudio audio = _FakeAudio();
       final VisitCubit cubit = VisitCubit(
-        _FakeRepository(),
+        VisitsUseCase(_FakeRepository()),
         audio,
         'circle-1',
         'visit-1',
@@ -74,7 +76,7 @@ void main() {
     test('a second tap during the permission prompt starts nothing', () async {
       final _FakeAudio audio = _FakeAudio();
       final VisitCubit cubit = VisitCubit(
-        _FakeRepository(),
+        VisitsUseCase(_FakeRepository()),
         audio,
         'circle-1',
         'visit-1',

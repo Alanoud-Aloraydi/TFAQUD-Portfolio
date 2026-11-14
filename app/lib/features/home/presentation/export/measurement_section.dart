@@ -1,9 +1,10 @@
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
-import 'package:app/features/home/data/record_pdf_model.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
@@ -83,16 +84,22 @@ List<RecordPdfCell> _row(
     RecordPdfCell(at == null ? '—' : wallTimeText(at)),
     RecordPdfCell(skipped ? '—' : reading.valueText, ltr: true, warn: outside),
     RecordPdfCell(_status(context, reading), warn: outside),
-    RecordPdfCell(
-      skipped || reading.outsideTarget == null ? '—' : reading.targetText,
-      ltr: true,
-    ),
+    RecordPdfCell(switch (reading.range) {
+      final range? when !skipped => normalBandNumbers(
+        reading.kind,
+        range.normal,
+      ),
+      _ => '—',
+    }, ltr: true),
     RecordPdfCell(_notes(context, reading)),
   ];
 }
 
 String _status(BuildContext context, MeasurementReading reading) {
   if (reading.outcome == 'skipped') return context.tr('measurements.skipped');
+  if (reading.level case final level?) {
+    return level.label(context, reading.kind);
+  }
   return context.tr(switch (reading.outsideTarget) {
     true => 'measurements.outside_target',
     false => 'measurements.in_target',

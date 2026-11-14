@@ -23,7 +23,9 @@ class NotificationLog(db.Model):
     __tablename__ = "notification_log"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('dose_missed', 'measurement_missed')", name="kind"
+            "kind IN ('dose_missed', 'measurement_missed', "
+            "'appointment_missed')",
+            name="kind",
         ),
         CheckConstraint(
             "(kind = 'measurement_missed') = (time_of_day IS NOT NULL)",
@@ -41,12 +43,13 @@ class NotificationLog(db.Model):
         primary_key=True, server_default=text("gen_random_uuid()")
     )
     kind: Mapped[str] = mapped_column(Text)
-    # The dose time (`medication_schedule.id`) or the reading plan version
-    # (`measurement_plan_version.id`); no foreign key, so the log outlives
-    # an edited plan until it is purged.
+    # The dose time (`medication_schedule.id`), the reading plan version
+    # (`measurement_plan_version.id`) or the appointment; no foreign key, so
+    # the log outlives an edited plan until it is purged.
     target_id: Mapped[UUID]
     scheduled_on: Mapped[date] = mapped_column(Date)
-    # The reading time; null for a dose (one per schedule and day).
+    # The reading time; null for a dose (one per schedule and day) and an
+    # appointment (one per appointment).
     time_of_day: Mapped[time | None] = mapped_column(Time)
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), index=True

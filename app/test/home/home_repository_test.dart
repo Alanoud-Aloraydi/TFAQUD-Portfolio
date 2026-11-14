@@ -93,6 +93,40 @@ void main() {
       },
     );
 
+    test('reads what the account may edit, area by area', () {
+      final circles = HomeModel.fromJson({
+        ...remote.payload,
+        'care_circles': [
+          {
+            'id': 'a',
+            'name': 'A',
+            'can_manage_medications': false,
+            'can_manage_measurements': true,
+            'can_manage_appointments': false,
+          },
+          // An older server says it once, for all three.
+          {'id': 'b', 'name': 'B', 'can_manage_medications': true},
+          {'id': 'c', 'name': 'C'},
+        ],
+      }).toEntity().circles;
+
+      expect(
+        circles.map(
+          (circle) => (
+            circle.canManageMedications,
+            circle.canManageMeasurements,
+            circle.canManageAppointments,
+            circle.canRecord,
+          ),
+        ),
+        [
+          (false, true, false, true),
+          (true, true, true, true),
+          (false, false, false, false),
+        ],
+      );
+    });
+
     test(
       'maps UUID strings and account identity from the API contract',
       () async {

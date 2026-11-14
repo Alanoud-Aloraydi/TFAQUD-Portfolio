@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:app/core/media/photo_edit_badge.dart';
+import 'package:app/core/media/photo_source.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +60,7 @@ class MedicationPhotoField extends StatelessWidget {
                   width: double.infinity,
                   child: bytes == null
                       ? CustomPaint(
-                          painter: _PhotoBorder(),
+                          painter: MedicationPhotoBorder(),
                           child: const Center(
                             child: Icon(CupertinoIcons.camera, size: 30),
                           ),
@@ -96,98 +98,4 @@ class MedicationPhotoField extends StatelessWidget {
     final bytes = await pickAndCropPhoto(context, source);
     if (bytes != null) onChanged(bytes, false);
   }
-}
-
-/// Displays the medication photo builder UI.
-class MedicationPhotoBuilder extends StatelessWidget {
-  const MedicationPhotoBuilder({
-    super.key,
-    required this.circleId,
-    required this.planId,
-    required this.builder,
-  });
-
-  final String circleId;
-  final String planId;
-  final Widget Function(BuildContext context, Uint8List? bytes) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    final repository = RepositoryProvider.of<PrivatePhotoRepository>(context);
-    final path = ApiEndpoints.medicationPhoto(circleId, planId);
-    return ListenableBuilder(
-      listenable: repository.changes,
-      builder: (context, _) => FutureBuilder<Uint8List?>(
-        future: repository.load(path),
-        builder: (context, snapshot) => builder(context, snapshot.data),
-      ),
-    );
-  }
-}
-
-/// Displays the medication photo image UI.
-class MedicationPhotoImage extends StatelessWidget {
-  const MedicationPhotoImage({
-    super.key,
-    required this.bytes,
-    required this.height,
-    this.width = double.infinity,
-    this.radius = AppRadius.m,
-  });
-
-  final Uint8List bytes;
-  final double height;
-  final double width;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: () => openPhotoViewer(context, bytes),
-    child: Semantics(
-      button: true,
-      label: context.tr('photos.enlarge'),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Image.memory(
-          bytes,
-          width: width,
-          height: height,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-        ),
-      ),
-    ),
-  );
-}
-
-/// Draws the empty medication photo placeholder border.
-class _PhotoBorder extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppSemanticColors.borderControlBase
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Offset.zero & size,
-          Radius.circular(AppRadius.m),
-        ),
-      );
-    for (final metric in path.computeMetrics()) {
-      for (double start = 0; start < metric.length; start += 12) {
-        canvas.drawPath(metric.extractPath(start, start + 7), paint);
-      }
-    }
-    final iconPaint = Paint()
-      ..color = AppSemanticColors.textSupporting
-      ..strokeWidth = 2;
-    final center = Offset(size.width / 2 + 24, size.height / 2 - 16);
-    canvas.drawLine(center.translate(-5, 0), center.translate(5, 0), iconPaint);
-    canvas.drawLine(center.translate(0, -5), center.translate(0, 5), iconPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

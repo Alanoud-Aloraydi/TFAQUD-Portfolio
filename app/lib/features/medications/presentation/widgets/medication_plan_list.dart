@@ -45,7 +45,7 @@ class MedicationPlanList extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
       ],
       if (plans.isEmpty)
-        EmptyStateNote(
+        EmptyStateNote.section(
           emptyText,
           actionLabel: canManage ? context.tr('add.medication') : null,
           onAction: canManage ? onAdd : null,

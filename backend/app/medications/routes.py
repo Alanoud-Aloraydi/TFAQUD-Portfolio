@@ -49,7 +49,7 @@ def list_plans(circle_id):
 
 
 @bp.post("/medication-plans")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="medications")
 def create_plan(circle_id):
     """Add a medicine (a manager only)."""
     body = parse_json_body(PlanRequest)
@@ -81,7 +81,7 @@ def get_plan(circle_id, plan_id):
 
 
 @bp.put("/medication-plans/<plan_id>")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="medications")
 def revise_plan(circle_id, plan_id):
     """Edit a medicine (a manager only); `expected_version_number` stops an
     edit made on data that changed meanwhile.
@@ -103,7 +103,7 @@ def revise_plan(circle_id, plan_id):
 
 
 @bp.post("/medication-plans/<plan_id>/stop")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="medications")
 def stop_plan(circle_id, plan_id):
     """Stop a medicine (a manager only); its history stays."""
     with transaction() as session:
@@ -121,7 +121,7 @@ def stop_plan(circle_id, plan_id):
 
 
 @bp.post("/medication-plans/<plan_id>/cancel-pending")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="medications")
 def cancel_pending_plan(circle_id, plan_id):
     """Cancel an edit that has not started yet (a manager only)."""
     body = parse_json_body(CancelPendingRequest)
@@ -142,7 +142,7 @@ def cancel_pending_plan(circle_id, plan_id):
 @bp.get("/medication-occurrences")
 @require_circle_role(*_READ_ROLES)
 def list_occurrences(circle_id):
-    """The doses due between two dates (at most 32 days), each with its record
+    """The doses due between two dates (at most 35 days), each with its record
     when there is one.
     """
     query = occurrence_query()

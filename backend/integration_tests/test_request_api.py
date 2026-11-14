@@ -48,6 +48,7 @@ def test_request_from_sending_to_the_new_circle(
         "display_name": "Reem",
         "first_name": "Reem",
         "last_name": "Family",
+        "avatar_code": None,
     }
     assert count(database, CareCircle) == 0
 
@@ -88,10 +89,14 @@ def test_request_from_sending_to_the_new_circle(
                 "id": circle["id"],
                 "name": name,
                 "can_manage_medications": can_manage,
+                "can_manage_measurements": can_manage,
+                "can_manage_appointments": can_manage,
                 "is_patient": is_patient,
                 "patient_name": "Noura",
                 "patient_avatar_code": None,
                 "time_zone": "Asia/Riyadh",
+                "latitude": None,
+                "longitude": None,
             }
         ]
     with Session(database) as session:

@@ -18,6 +18,7 @@ _KINDS_SQL = "kind IN ('glucose', 'blood_pressure')"
 # once (0035).
 CONDITIONS_CHECK = (
     "conditions <@ ARRAY['fasting', 'before_meal', 'after_meal', 'bedtime', "
+    "'before_medicine', 'after_medicine', 'morning', "
     "'exertion', 'stress', 'illness', 'other']::text[]"
 )
 CONDITIONS_ONCE = (
@@ -79,8 +80,9 @@ class MeasurementPlan(db.Model):
 
 
 class MeasurementTarget(db.Model):
-    """The saved target for one patient and measurement kind, used by a
-    reading taken without a plan."""
+    """The target once saved for one patient and measurement kind, for
+    readings without a plan. Fixed ranges replaced it (0049): it is kept
+    with its data and no longer read or written."""
 
     __tablename__ = "measurement_target"
     __table_args__ = (
@@ -106,7 +108,7 @@ class MeasurementTarget(db.Model):
 
 
 class MeasurementPlanVersion(db.Model):
-    """A plan's days, grace and target over an immutable date range; its
+    """A plan's days and grace over an immutable date range; its
     reading times are `MeasurementPlanTime` rows and its weekdays
     `MeasurementPlanWeekday` rows."""
 
@@ -132,7 +134,10 @@ class MeasurementPlanVersion(db.Model):
             "effective_until_on > effective_from_on",
             name="effective_period",
         ),
+        # None since fixed ranges judge readings (0049), or an old target.
         CheckConstraint(
+            "(glucose_low IS NULL AND glucose_high IS NULL "
+            "AND systolic_limit IS NULL AND diastolic_limit IS NULL) OR "
             "(glucose_low IS NOT NULL AND glucose_high IS NOT NULL "
             "AND glucose_low BETWEEN 1 AND 999 "
             "AND glucose_high BETWEEN 1 AND 999 "
@@ -160,7 +165,8 @@ class MeasurementPlanVersion(db.Model):
     # Null for the version in force with no successor.
     effective_until_on: Mapped[date | None] = mapped_column(Date)
     missed_after_minutes: Mapped[int] = mapped_column(SmallInteger)
-    # Snapshot: the target this version judged readings by.
+    # The target this version judged readings by, before fixed ranges
+    # (0049); none for a newer version.
     glucose_low: Mapped[int | None] = mapped_column(SmallInteger)
     glucose_high: Mapped[int | None] = mapped_column(SmallInteger)
     systolic_limit: Mapped[int | None] = mapped_column(SmallInteger)
@@ -198,7 +204,8 @@ class MeasurementPlanTime(db.Model):
     __table_args__ = (
         CheckConstraint(
             "measurement_state IS NULL OR measurement_state IN "
-            "('fasting', 'before_meal', 'after_meal')",
+            "('fasting', 'before_meal', 'after_meal', "
+            "'before_medicine', 'after_medicine', 'morning')",
             name="measurement_state",
         ),
     )
@@ -331,7 +338,8 @@ class MeasurementReading(db.Model):
     note: Mapped[str | None] = mapped_column(Text)
     skip_reason_code: Mapped[str | None] = mapped_column(Text)
     skip_reason_note: Mapped[str | None] = mapped_column(Text)
-    # Snapshot: the target a reading outside a plan was judged by.
+    # The target a reading outside a plan was judged by, before fixed
+    # ranges (0049); none for a newer reading.
     glucose_low: Mapped[int | None] = mapped_column(SmallInteger)
     glucose_high: Mapped[int | None] = mapped_column(SmallInteger)
     systolic_limit: Mapped[int | None] = mapped_column(SmallInteger)

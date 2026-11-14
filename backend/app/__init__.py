@@ -21,6 +21,7 @@ from app.auth.store import InMemorySessionStore, SessionStore
 from app.authz import CircleAccess, DenyAllCircleAccess
 from app.circles.creation_requests import bp as creation_requests_bp
 from app.circles.invitations import bp as invitations_bp
+from app.circles.previous import bp as previous_notifications_bp
 from app.circles.routes import bp as circles_bp
 from app.clock import SystemClock
 from app.config import ConfigError, load_config
@@ -152,6 +153,7 @@ def create_app(
     app.register_blueprint(circles_bp)
     app.register_blueprint(creation_requests_bp)
     app.register_blueprint(invitations_bp)
+    app.register_blueprint(previous_notifications_bp)
     app.register_blueprint(medications_bp)
     app.register_blueprint(photos_bp)
     app.register_blueprint(measurements_bp)

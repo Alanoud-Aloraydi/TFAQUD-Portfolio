@@ -70,11 +70,7 @@ class _RecordPageState extends State<RecordPage>
                 currentIndex: category.index,
                 children: [
                   MedicationHistorySection(circleId: circle.id, header: header),
-                  MeasurementRecordSection(
-                    circleId: circle.id,
-                    header: header,
-                    plans: measurementPlans,
-                  ),
+                  MeasurementRecordSection(circleId: circle.id, header: header),
                   AppointmentRecordSection(circleId: circle.id, header: header),
                 ],
               );

@@ -3,6 +3,7 @@ import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -11,11 +12,12 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
-import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/snooze_limit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
+import 'package:app/features/medications/presentation/widgets/snooze_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -333,13 +335,12 @@ class _RecordedStatus extends StatelessWidget {
   }
 }
 
-/// «ذكّرني لاحقًا»: the dose's own reminder again in 15 minutes, half an
-/// hour or an hour, with the same words as its notification. The choices
-/// open as a small Liquid Glass menu out of the button, like the circle
-/// switcher, not a sheet from the bottom. Once put off, the button says
-/// when it comes («بنذكّرك 2:36 م»), and opens the choices again. Put off
-/// by someone else in the circle, it says until when and who
-/// («مؤجّلة إلى 2:36 م · لين»).
+/// «ذكّرني لاحقًا»: the dose's own reminder again, as late as the person
+/// slides the ruler of [showSnoozeSheet] (5 minutes a mark, up to 12 hours,
+/// and never past halfway to the medicine's next dose), with the same
+/// words as its notification. Once put off, the button says when it comes
+/// («بنذكّرك 2:36 م»), and opens the ruler again. Put off by someone else
+/// in the circle, it says until when and who («مؤجّلة إلى 2:36 م · لين»).
 class _SnoozeButton extends StatefulWidget {
   const _SnoozeButton({
     required this.occurrence,
@@ -356,12 +357,6 @@ class _SnoozeButton extends StatefulWidget {
 }
 
 class _SnoozeButtonState extends State<_SnoozeButton> {
-  /// While the menu is open the button hides: the menu grows out of it, so
-  /// there is one piece of glass.
-  bool _open = false;
-
-  static const List<int> _choices = <int>[15, 30, 60];
-
   /// The reminders, where the app has them (a test of a card may not).
   DoseReminders? get _reminders =>
       GetIt.I.isRegistered<DoseReminders>() ? GetIt.I<DoseReminders>() : null;
@@ -394,51 +389,31 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
       ? CupertinoIcons.bell
       : CupertinoIcons.bell_fill;
 
-  Widget _content(BuildContext context, DateTime? at, SharedSnooze? shared) =>
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(
-            _icon(at, shared),
-            size: 16,
-            color: AppSemanticColors.textPrimary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Flexible(
-            child: Text(
-              _label(context, at, shared),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge
-                  ?.copyWith(color: AppSemanticColors.textPrimary),
-            ),
-          ),
-        ],
-      );
+  /// How long the dose may still be put off: 12 hours, and never past
+  /// halfway to the next dose of the same medicine.
+  Duration _limit(BuildContext context) {
+    final PatientClock clock = PatientClockScope.of(context);
+    return doseSnoozeLimit(
+      widget.occurrence,
+      context.read<MedicationOccurrencesCubit>().state.occurrences,
+      clock,
+      DateTime.now().toUtc(),
+    );
+  }
 
-  Future<void> _snooze(
-    BuildContext anchor,
-    DateTime? at,
-    SharedSnooze? shared,
-  ) async {
-    setState(() => _open = true);
-    final int? minutes = await showGlassMenu<int>(
-      anchorContext: anchor,
-      semanticLabel: context.tr('reminders.snooze_title'),
-      anchorContent: _content(context, at, shared),
-      sections: <List<GlassMenuItem<int>>>[
-        <GlassMenuItem<int>>[
-          for (final int value in _choices)
-            GlassMenuItem<int>(
-              value: value,
-              label: afterDuration(context, value),
-              icon: CupertinoIcons.clock,
-            ),
-        ],
-      ],
+  Future<void> _snooze() async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final Duration limit = _limit(context);
+    if (limit.inMinutes < snoozeStepMinutes) {
+      AppToast.showText(messenger, context.tr('reminders.snooze_none'));
+      return;
+    }
+    final int? minutes = await showSnoozeSheet(
+      context,
+      limit: limit,
+      clock: PatientClockScope.of(context),
     );
     if (!mounted) return;
-    setState(() => _open = false);
     final DoseReminders? reminders = _reminders;
     if (minutes == null || reminders == null) return;
     await reminders.snoozeDose(
@@ -448,7 +423,7 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
     );
     if (!mounted) return;
     AppToast.showText(
-      ScaffoldMessenger.of(context),
+      messenger,
       context.tr(
         'reminders.snoozed',
         args: <String>[afterDuration(context, minutes)],
@@ -457,23 +432,18 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
   }
 
   Widget _button(BuildContext context, DateTime? at, SharedSnooze? shared) =>
-      Opacity(
-        opacity: _open ? 0 : 1,
-        child: Builder(
-          builder: (BuildContext anchor) => FilledButton.tonalIcon(
-            style: widget.style.copyWith(
-              backgroundColor: const WidgetStatePropertyAll<Color>(
-                AppSemanticColors.surfaceContent,
-              ),
-              foregroundColor: const WidgetStatePropertyAll<Color>(
-                AppSemanticColors.textPrimary,
-              ),
-            ),
-            onPressed: () => _snooze(anchor, at, shared),
-            icon: Icon(_icon(at, shared), size: 16),
-            label: Text(_label(context, at, shared)),
+      FilledButton.tonalIcon(
+        style: widget.style.copyWith(
+          backgroundColor: const WidgetStatePropertyAll<Color>(
+            AppSemanticColors.surfaceContent,
+          ),
+          foregroundColor: const WidgetStatePropertyAll<Color>(
+            AppSemanticColors.textPrimary,
           ),
         ),
+        onPressed: _snooze,
+        icon: Icon(_icon(at, shared), size: 16),
+        label: Text(_label(context, at, shared)),
       );
 
   @override

@@ -7,8 +7,8 @@ import 'package:app/features/measurements/presentation/widgets/measurement_paint
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_tile.dart';
 import 'package:flutter/material.dart';
 
-/// RTL month chart: glucose columns and blood-pressure range capsules. A tap
-/// on a bar shows that reading under the chart.
+/// RTL month chart: a line of glucose dots, or a capsule per blood-pressure
+/// reading. A tap near a reading shows it under the chart.
 class MeasurementChart extends StatefulWidget {
   const MeasurementChart({
     super.key,
@@ -53,6 +53,8 @@ class _MeasurementChartState extends State<MeasurementChart> {
       widget.month,
       widget.readings,
       widget.targetHigh,
+      targetLow: widget.targetLow,
+      kind: widget.kind,
     );
     final byDay = readingsByDay(
       widget.readings,
@@ -84,9 +86,11 @@ class _MeasurementChartState extends State<MeasurementChart> {
 
   double _verticalMiss(ChartScale scale, MeasurementReading r, double dy) {
     final double first = scale.y(r.valueOne!);
-    final double second = scale.y(
-      widget.kind == MeasurementKind.glucose ? 0 : r.valueTwo!,
-    );
+    // A glucose reading is a dot; a pressure reading is the capsule
+    // between its two numbers.
+    final double second = widget.kind == MeasurementKind.glucose
+        ? first
+        : scale.y(r.valueTwo!);
     final double top = first < second ? first : second;
     final double bottom = first < second ? second : first;
     return dy < top ? top - dy : (dy > bottom ? dy - bottom : 0);

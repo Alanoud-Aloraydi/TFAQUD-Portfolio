@@ -161,7 +161,8 @@ class AppointmentService:
     @staticmethod
     def _fill(appointment: Appointment, body: AppointmentRequest) -> None:
         """Copy the request into the appointment, with the texts trimmed."""
-        appointment.specialty = body.specialty.strip()
+        clinic = body.specialty.strip() if body.specialty else ""
+        appointment.specialty = clinic or None
         appointment.kind = body.kind
         appointment.other_text = (
             body.other_text.strip() if body.other_text else None

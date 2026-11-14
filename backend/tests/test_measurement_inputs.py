@@ -8,21 +8,19 @@ from pydantic import ValidationError
 from app.measurements.inputs import PlanRequest, ReadingRequest
 
 
-def test_plan_requires_user_target_and_unique_days():
-    """Reject missing targets and duplicate schedule days."""
+def test_plan_needs_no_target_and_unique_days():
+    """Fixed ranges judge readings (0049): a plan sends no target; an old
+    build's target is still accepted. Schedule days cannot repeat."""
     base = dict(
         kind="glucose",
         times=[{"time_of_day": time(8), "measurement_state": "fasting"}],
         weekdays=[1, 3],
         starts_on=date.today(),
     )
+    assert PlanRequest(**base).weekdays == [1, 3]
+    assert PlanRequest(**base, glucose_low=80, glucose_high=140)
     with pytest.raises(ValidationError):
-        PlanRequest(**base)
-    with pytest.raises(ValidationError):
-        PlanRequest(**{**base, "weekdays": [1, 1]},
-                    glucose_low=80, glucose_high=140)
-    value = PlanRequest(**base, glucose_low=80, glucose_high=140)
-    assert value.glucose_low == 80
+        PlanRequest(**{**base, "weekdays": [1, 1]})
 
 
 def test_reading_shape_and_blood_pressure_order():
@@ -43,17 +41,11 @@ def test_reading_shape_and_blood_pressure_order():
 
 
 def _times_plan(times, kind="glucose", **changes):
-    target = (
-        {"glucose_low": 80, "glucose_high": 140}
-        if kind == "glucose"
-        else {"systolic_limit": 140, "diastolic_limit": 90}
-    )
     return {
         "kind": kind,
         "times": times,
         "weekdays": [1, 3],
         "starts_on": date.today().isoformat(),
-        **target,
         **changes,
     }
 
@@ -101,7 +93,7 @@ def test_a_plan_has_several_reading_times_a_day():
                 [{"time_of_day": "07:00", "measurement_state": "fasting"}],
                 kind="blood_pressure",
             ),
-            "Only glucose times require",
+            "a state of its own kind",
         ),
     ],
 )

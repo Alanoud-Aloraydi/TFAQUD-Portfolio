@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/overdue_window.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,23 +11,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// The measurement tasks of one circle, from the patient's day to a month
 /// ahead, and «تخطي» on one.
 ///
-/// Reads again whenever the repository says the circle's plans changed or
+/// Reads again whenever the use case says the circle's plans changed or
 /// one of its tasks was answered (here, in a reading sheet, or elsewhere
 /// as the server said), so no screen has to reload it by hand.
 class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
   /// [photoChanges] reloads the tasks when a photo or avatar changes
   /// anywhere (who recorded a measurement shows theirs).
-  MeasurementTasksCubit(this._repository, [Listenable? photoChanges])
+  MeasurementTasksCubit(this._measurements, [Listenable? photoChanges])
     : _photoChanges = photoChanges,
       super(const MeasurementTasksState()) {
     _photoChanges?.addListener(_onPhotoChanged);
     _subscriptions = [
-      _repository.changes.listen(_onCircleChanged),
-      _repository.recorded.listen(_onCircleChanged),
+      _measurements.changes.listen(_onCircleChanged),
+      _measurements.recorded.listen(_onCircleChanged),
     ];
   }
 
-  final MeasurementRepository _repository;
+  final MeasurementsUseCase _measurements;
   final Listenable? _photoChanges;
   late final List<StreamSubscription<String>> _subscriptions;
   String? _circleId;
@@ -91,7 +91,7 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
       );
     }
     try {
-      final tasks = await _repository.occurrences(circleId, from, to);
+      final tasks = await _measurements.occurrences(circleId, from, to);
       if (isClosed || revision != _revision) return;
       emit(
         MeasurementTasksState(
@@ -123,7 +123,7 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
   }
 
   /// «تخطي» on [occurrence], the task the person chose. Null when skipped
-  /// (the list reads again through the repository), else the message key
+  /// (the list reads again through the use case), else the message key
   /// to show; a second tap while it saves is ignored (null).
   Future<String?> skip(
     MeasurementOccurrence occurrence,
@@ -132,7 +132,7 @@ class MeasurementTasksCubit extends Cubit<MeasurementTasksState> {
     final circleId = _circleId;
     if (circleId == null || !_skipping.add(occurrence)) return null;
     try {
-      await _repository.record(circleId, draft, occurrence: occurrence);
+      await _measurements.record(circleId, draft, occurrence: occurrence);
       return null;
     } catch (error) {
       return FailureExceptions.getException(error).messageKey;

@@ -5,10 +5,12 @@ import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart'
     show ReminderCircle, SnoozedTask, TaskSnooze;
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -248,7 +250,7 @@ class _Medications extends Fake implements MedicationsRepositoryDomain {
   ) async => const Success(<MedicationPlan>[]);
 }
 
-class _Measurements extends Fake implements MeasurementRepository {
+class _Measurements extends Fake implements MeasurementsRepositoryDomain {
   List<MeasurementPlan> list = const <MeasurementPlan>[];
 
   @override
@@ -273,7 +275,7 @@ final MeasurementPlan _reading = MeasurementPlan(
   history: const <MeasurementVersion>[],
 );
 
-class _Appointments extends Fake implements AppointmentRepository {
+class _Appointments extends Fake implements AppointmentsRepositoryDomain {
   final Map<String, List<CareAppointment>> visits =
       <String, List<CareAppointment>>{};
   bool offline = false;
@@ -288,12 +290,12 @@ class _Appointments extends Fake implements AppointmentRepository {
   }
 }
 
-/// A diabetes follow-up in three days at [time], at «الحبيب».
+/// A follow-up at «عيادة السكري» in three days at [time], at «الحبيب».
 CareAppointment _visit({String id = 'a-1', String time = '16:30'}) {
   final DateTime day = DateTime.now().add(const Duration(days: 3));
   return CareAppointment(
     id: id,
-    specialty: 'diabetes',
+    specialty: 'عيادة السكري',
     kind: AppointmentKind.followUp,
     otherKind: null,
     scheduledOn: DateTime(day.year, day.month, day.day),
@@ -342,8 +344,8 @@ void main() {
         ..visits[_circle.id] = <CareAppointment>[_visit()];
       sync = CalendarSync(
         MedicationsUseCase(_Medications()),
-        _Measurements(),
-        appointments,
+        MeasurementsUseCase(_Measurements()),
+        AppointmentsUseCase(appointments),
         calendar: calendar,
         texts: _texts,
       );
@@ -367,7 +369,7 @@ void main() {
         await turnOn();
 
         final _Event event = calendar.events.values.single;
-        expect(event.title, 'visit diabetes');
+        expect(event.title, 'visit عيادة السكري');
         expect(event.note, 'at 16:30');
         expect(event.place, 'الحبيب');
         expect(event.repeats, isFalse);
@@ -418,8 +420,8 @@ void main() {
             .toLocal();
         final CalendarSync lateSync = CalendarSync(
           MedicationsUseCase(_Medications()),
-          _Measurements(),
-          appointments,
+          MeasurementsUseCase(_Measurements()),
+          AppointmentsUseCase(appointments),
           calendar: calendar,
           texts: _texts,
           clock: () => at.add(const Duration(minutes: 1)),
@@ -519,15 +521,15 @@ void main() {
       await sync.sync(<ReminderCircle>[_circle]);
 
       expect(calendar.events.keys, isNot(contains('old-1')));
-      expect(calendar.events.values.single.title, 'visit diabetes');
+      expect(calendar.events.values.single.title, 'visit عيادة السكري');
     });
 
     test('before the circles are known, nothing is taken off', () async {
       await turnOn();
       final CalendarSync later = CalendarSync(
         MedicationsUseCase(_Medications()),
-        _Measurements(),
-        appointments,
+        MeasurementsUseCase(_Measurements()),
+        AppointmentsUseCase(appointments),
         calendar: calendar,
         texts: _texts,
       );
@@ -538,15 +540,17 @@ void main() {
       expect(calendar.events, hasLength(1));
     });
 
-    test('signing out takes every event off', () async {
+    test('signing out takes every event off but keeps the switches', () async {
       await turnOn();
 
       await sync.clear();
 
       expect(calendar.events, isEmpty);
+      // Signing back in puts them back: the person asked for this circle's
+      // appointments once and does not have to ask again.
       expect(
         await sync.isEnabled(_circle.id, CalendarSyncCategory.appointments),
-        isFalse,
+        isTrue,
       );
     });
 
@@ -565,7 +569,7 @@ void main() {
         prefs.getString('calendar_sync_events')!,
       ) as Map<String, dynamic>;
       final DateTime start = DateTime.now().add(const Duration(days: 5));
-      calendar.events['old-1'] = _older('visit diabetes', start);
+      calendar.events['old-1'] = _older('visit عيادة السكري', start);
       saved['appointment:a-0:old'] = 'old-1';
       await prefs.setString('calendar_sync_events', jsonEncode(saved));
 
@@ -589,7 +593,7 @@ void main() {
       // Deleting the app left its calendar; this install never made it.
       calendar.calendars['left'] = 'تفقّد';
       calendar.events['left-1'] = _older(
-        'visit diabetes',
+        'visit عيادة السكري',
         DateTime.now().add(const Duration(days: 3)),
       ).withCalendar('left');
 
@@ -642,8 +646,8 @@ void main() {
         measurements = _Measurements()..list = <MeasurementPlan>[_reading];
         repeating = CalendarSync(
           MedicationsUseCase(_Medications()),
-          measurements,
-          _Appointments(),
+          MeasurementsUseCase(measurements),
+          AppointmentsUseCase(_Appointments()),
           calendar: calendar,
           texts: _texts,
           clock: () => now,
@@ -750,15 +754,15 @@ void main() {
       );
       expect(
         calendarEventTexts.appointment('c-me', _visit()),
-        'لا ننسى موعدك: عيادة السكري',
+        'لا ننسى موعدك: مراجعة · عيادة السكري',
       );
       expect(
         calendarEventTexts.appointment('c-noura', _visit()),
-        'لا ننسى موعد نورة: عيادة السكري',
+        'لا ننسى موعد نورة: مراجعة · عيادة السكري',
       );
       expect(
         calendarEventTexts.appointmentNote(_visit()),
-        'عيادة السكري · الساعة 4:30 م · الحبيب',
+        'مراجعة · عيادة السكري · الساعة 4:30 م · الحبيب',
       );
     });
 
@@ -773,8 +777,8 @@ void main() {
         );
         putOff = CalendarSync(
           MedicationsUseCase(_Medications()),
-          _Measurements(),
-          appointments,
+          MeasurementsUseCase(_Measurements()),
+          AppointmentsUseCase(appointments),
           snoozes: snoozes,
           calendar: calendar,
           texts: _texts,

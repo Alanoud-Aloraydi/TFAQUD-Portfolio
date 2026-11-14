@@ -2,7 +2,6 @@ import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
-/// Defines the supported sign in status values.
 enum SignInStatus { idle, sendingCode, codeSent, verifying, verified }
 
 /// State of the sign-in pages (phone number, then code). One cubit serves both

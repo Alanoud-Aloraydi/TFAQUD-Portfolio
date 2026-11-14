@@ -15,24 +15,63 @@ void _showResult(BuildContext context, String? errorKey, String doneKey) {
   AppToast.show(context, errorKey, kind: ToastKind.error);
 }
 
-/// Pauses or restores a member's editing, then tells the user how it went.
+/// Lets a member edit [area] («medications», …) or not, then tells the
+/// leader how it went.
 Future<void> changeMemberAccess(
   BuildContext context,
   String accountId, {
-  required bool canEdit,
+  required String area,
+  required bool allowed,
 }) async {
   final String? error = await context
       .read<CircleOverviewCubit>()
-      .setMemberEditAccess(accountId, canEdit: canEdit);
+      .setMemberEditAccess(accountId, area: area, allowed: allowed);
   if (!context.mounted) return;
-  _showResult(
-    context,
-    error,
-    canEdit ? 'toast.editing_restored' : 'toast.editing_paused',
+  if (error != null) {
+    AppToast.show(context, error, kind: ToastKind.error);
+    return;
+  }
+  AppToast.showText(
+    ScaffoldMessenger.of(context),
+    context.tr(
+      allowed ? 'toast.editing_allowed' : 'toast.editing_paused',
+      args: <String>[context.tr('circle_overview.area.$area')],
+    ),
   );
 }
 
-/// Asks the owner to confirm, then removes the member from the circle.
+/// Asks the leader to confirm, then hands the circle's leadership to the
+/// member: the circle has one leader at a time.
+Future<void> confirmHandOver(
+  BuildContext context,
+  CircleMember member,
+  String accountId,
+) async {
+  final bool? confirmed = await showAppAlert<bool>(
+    context,
+    title: context.tr('circle_overview.hand_over_title'),
+    message: context.tr(
+      'circle_overview.hand_over_message',
+      args: <String>[member.name],
+    ),
+    actions: <AppAlertAction<bool>>[
+      AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
+      AppAlertAction<bool>(
+        label: context.tr('circle_overview.hand_over'),
+        value: true,
+        primary: true,
+      ),
+    ],
+  );
+  if (confirmed != true || !context.mounted) return;
+  final String? error = await context
+      .read<CircleOverviewCubit>()
+      .handOverLeadership(accountId);
+  if (!context.mounted) return;
+  _showResult(context, error, 'toast.leader_changed');
+}
+
+/// Asks the leader to confirm, then removes the member from the circle.
 Future<void> confirmRemoveMember(
   BuildContext context,
   CircleMember member,

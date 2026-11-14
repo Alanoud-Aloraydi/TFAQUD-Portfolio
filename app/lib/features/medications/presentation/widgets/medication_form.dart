@@ -9,6 +9,7 @@ import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -18,6 +19,7 @@ import 'package:app/features/medications/presentation/cubit/medications_cubit.da
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_basic_fields.dart';
+import 'package:app/features/medications/presentation/widgets/medication_effective_date_group.dart';
 import 'package:app/features/medications/presentation/widgets/medication_period_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';

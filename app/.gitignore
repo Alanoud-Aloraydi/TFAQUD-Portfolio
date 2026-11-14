@@ -47,3 +47,8 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 .env
+
+# The watcher's output, and the test report dart_test.yaml writes.
+tool/checks.txt
+tool/tests.txt
+tool/test_report.json

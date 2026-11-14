@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,8 +15,17 @@ MeasurementReading _glucose(DateTime at, {int? low, int? high}) =>
       recordedAt: at,
       measuredAt: at,
       valueOne: 100,
-      glucoseLow: low,
-      glucoseHigh: high,
+      range: low == null
+          ? null
+          : ReadingRange(
+              profile: 'general',
+              state: 'after_meal',
+              normal: NormalBand(
+                level: MeasurementLevel.normal,
+                glucoseLow: low,
+                glucoseHigh: high,
+              ),
+            ),
     );
 
 void main() {
@@ -49,10 +59,43 @@ void main() {
       expect(scale.y(scale.topValue), ChartScale.chartTop);
       expect(scale.days, 30);
     });
+
+    test('the axis holds the readings, not everything down to zero', () {
+      final ChartScale scale = ChartScale.of(
+        const Size(400, 176),
+        DateTime(2026, 11),
+        <MeasurementReading>[_glucose(DateTime.utc(2026, 11, 5, 9))],
+        140,
+        targetLow: 70,
+      );
+
+      expect(scale.bottomValue, greaterThan(0));
+      expect(scale.bottomValue, lessThanOrEqualTo(60));
+      expect(scale.topValue, greaterThanOrEqualTo(200));
+      expect(scale.y(scale.bottomValue), scale.chartBottom);
+      // Two readings 20 apart are 20 apart on the chart.
+      expect(scale.y(100) - scale.y(120), greaterThan(8));
+    });
+
+    test('labels four round lines', () {
+      final ChartScale scale = ChartScale.of(
+        const Size(400, 176),
+        DateTime(2026, 11),
+        <MeasurementReading>[_glucose(DateTime.utc(2026, 11, 5, 9))],
+        140,
+        targetLow: 70,
+      );
+
+      expect(scale.ticks, hasLength(4));
+      expect(scale.ticks.first, lessThan(scale.ticks.last));
+      for (final int tick in scale.ticks) {
+        expect(tick % 5, 0);
+      }
+    });
   });
 
   group('ChartTarget', () {
-    test('is the target every reading shares', () {
+    test('is the normal band every reading shares', () {
       final DateTime at = DateTime.utc(2026, 11, 5, 9);
       final ChartTarget target = ChartTarget.of(
         kind: MeasurementKind.glucose,
@@ -60,14 +103,12 @@ void main() {
           _glucose(at, low: 70, high: 140),
           _glucose(at.add(const Duration(days: 1)), low: 70, high: 140),
         ],
-        plans: const <MeasurementPlan>[],
-        month: DateTime(2026, 11),
       );
 
       expect((target.low, target.high), (70, 140));
     });
 
-    test('is empty when readings were judged against different targets', () {
+    test('is empty when readings were judged by different ranges', () {
       final DateTime at = DateTime.utc(2026, 11, 5, 9);
       final ChartTarget target = ChartTarget.of(
         kind: MeasurementKind.glucose,
@@ -75,8 +116,6 @@ void main() {
           _glucose(at, low: 70, high: 140),
           _glucose(at, low: 80, high: 150),
         ],
-        plans: const <MeasurementPlan>[],
-        month: DateTime(2026, 11),
       );
 
       expect(target.isSet, isFalse);

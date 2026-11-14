@@ -1,13 +1,15 @@
-"""The scheduled tick: a dose or measurement that was missed, each told
-once to the circle and logged so a repeat tick never resends it.
+"""The scheduled tick: a dose, a measurement or an appointment that was
+missed, each told once to the circle and logged so a repeat tick never
+resends it. Each person is called by name (app/push/missed_texts.py).
 
 The reminders before a dose, a measurement or an appointment (at its time,
 and for an appointment a day before and two hours before) are set on each
 phone by the app itself, so they come on time without this tick and without
 the server. The server tells only what a phone cannot know ahead: that a
-task's time passed and nothing was recorded, and that a task someone else
-put off came again (app/snoozes/due.py; this tick catches what its timer
-missed). A task put off is not called missed while it waits.
+task's time passed and nothing was recorded, that an appointment passed two
+hours ago and nobody marked it visited or cancelled, and that a task someone
+else put off came again (app/snoozes/due.py; this tick catches what its
+timer missed). A task put off is not called missed while it waits.
 
 Called by `/internal/tick` on an external schedule (see README). Never
 raises: a failed scan or send is logged and the tick moves on, so one bad
@@ -17,6 +19,8 @@ a device id and an IP address), and its own log after 14 days.
 """
 
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
@@ -30,10 +34,20 @@ from app.database import transaction
 from app.medications.queries import MedicationQueries
 from app.measurements.queries import MeasurementQueries
 from app.models import (
+    Account,
     CareCircle,
     CareCircleManager,
     NotificationLog,
     OtpRequest,
+)
+from app.models.appointment import Appointment
+from app.push.missed_texts import (
+    APPOINTMENT_TITLE,
+    DOSE_TITLE,
+    MEASUREMENT_TITLE,
+    appointment_missed_text,
+    dose_missed_text,
+    measurement_missed_text,
 )
 from app.push.notify import Push, notify
 from app.push.sender import PushMessage
@@ -45,6 +59,12 @@ log = logging.getLogger(__name__)
 # How long a row that is only needed for a while is kept.
 OTP_KEPT = timedelta(days=30)
 LOG_KEPT = timedelta(days=14)
+
+# An appointment nobody marked visited or cancelled is called missed this
+# long after its time; past `APPOINTMENT_TOO_LATE` after that it is no
+# longer told (a tick that was down for long sends no stale news).
+APPOINTMENT_MISSED_AFTER = timedelta(hours=2)
+APPOINTMENT_TOO_LATE = timedelta(hours=12)
 
 
 def run_tick(now: datetime) -> None:
@@ -64,6 +84,7 @@ def run_tick(now: datetime) -> None:
         try:
             _scan_doses(circle_id, now)
             _scan_measurements(circle_id, now)
+            _scan_appointments(circle_id, now)
         except Exception:  # noqa: BLE001 - one circle must not stop the rest
             log.warning(
                 "Scheduled scan failed for a circle.", exc_info=True
@@ -104,11 +125,19 @@ def _claim(
     return True
 
 
-def _circle_recipients(
-    session: Session, patient: CareCircle
-) -> tuple[UUID, ...]:
-    """Every manager of the patient's circle, plus the patient if they have
-    an account."""
+@dataclass(frozen=True)
+class _Audience:
+    """Who hears of one circle's missed tasks: every manager, plus the
+    patient if they have an account, each with the name they are called
+    by; and the patient's account and name, which the others hear."""
+
+    names: dict[UUID, str | None]
+    patient_account_id: UUID | None
+    patient_name: str | None
+
+
+def _audience(session: Session, patient: CareCircle) -> _Audience:
+    """Read the circle's audience in the open transaction."""
     recipients = set(
         session.scalars(
             select(CareCircleManager.account_id).where(
@@ -118,7 +147,31 @@ def _circle_recipients(
     )
     if patient.account_id is not None:
         recipients.add(patient.account_id)
-    return tuple(recipients)
+    # Each account's display name, else its first name, in one read.
+    rows = session.execute(
+        select(Account.id, Account.display_name, Account.first_name).where(
+            Account.id.in_(recipients)
+        )
+    ) if recipients else ()
+    known = {row.id: row.display_name or row.first_name for row in rows}
+    return _Audience(
+        names={account_id: known.get(account_id) for account_id in recipients},
+        patient_account_id=patient.account_id,
+        patient_name=known.get(patient.account_id) or patient.first_name,
+    )
+
+
+def _tell(
+    audience: _Audience,
+    title: str,
+    kind: str,
+    text: Callable[[str | None, bool], str],
+) -> None:
+    """Send each person of `audience` their own message: `text(name, own)`,
+    where `own` is true for the patient."""
+    for account_id, name in audience.names.items():
+        own = account_id == audience.patient_account_id
+        notify(Push((account_id,), PushMessage(title, text(name, own), kind)))
 
 
 def _key(task_id: str, occurrence: dict) -> tuple:
@@ -139,7 +192,7 @@ def _patient(session: Session, circle_id: UUID) -> CareCircle | None:
 
 
 def _scan_doses(circle_id: UUID, now: datetime) -> None:
-    """Send «جرعة ما تسجّلت» once for each of the circle's doses of the
+    """Send «جرعة فائتة» once for each of the circle's doses of the
     patient's today whose time passed with nothing recorded.
     """
     # Today's doses and who to tell, read in one short transaction; the pushes
@@ -153,7 +206,7 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
             circle_id, today, today
         )
         moved = put_off_until(session, circle_id, "dose", today)
-        recipients = _circle_recipients(session, patient)
+        audience = _audience(session, patient)
     for occurrence in occurrences:
         if (
             occurrence["record"] is not None
@@ -177,23 +230,21 @@ def _scan_doses(circle_id: UUID, now: datetime) -> None:
         ):
             continue
         metrics.increment("tick.missed_dose")
-        # «ما تسجّلت» says only what the app knows: the dose may have been
-        # taken and not recorded.
-        notify(
-            Push(
-                recipients,
-                PushMessage(
-                    "جرعة ما تسجّلت",
-                    f"جرعة {occurrence['name']} ما تسجّلت للحين. "
-                    "تقدر تسجّلها من تفقّد.",
-                    "dose_missed",
-                ),
-            )
+        # The dose's time passed with nothing recorded: it is missed
+        # («فائتة»), and it can still be taken and recorded.
+        medicine = occurrence["name"]
+        _tell(
+            audience,
+            DOSE_TITLE,
+            "dose_missed",
+            lambda name, own, medicine=medicine: dose_missed_text(
+                medicine, name=name, own=own, patient=audience.patient_name
+            ),
         )
 
 
 def _scan_measurements(circle_id: UUID, now: datetime) -> None:
-    """Send «قياس ما تسجّل» once for each of the circle's reading times of
+    """Send «قياس فائت» once for each of the circle's reading times of
     the patient's today that passed with nothing recorded.
     """
     # Today's reading times and who to tell, read in one short transaction.
@@ -207,7 +258,7 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         )
         moved = put_off_until(session, circle_id, "measurement", today)
         zone = patient_zone(patient)
-        recipients = _circle_recipients(session, patient)
+        audience = _audience(session, patient)
     for occurrence in occurrences:
         if occurrence["status"] != "missed":
             continue
@@ -224,9 +275,6 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
             )
             if now <= until + grace:
                 continue
-        kind_name = "سكر الدم" if occurrence["kind"] == "glucose" else (
-            "ضغط الدم"
-        )
         # One alert per reading time of the day.
         if not _claim(
             "measurement_missed",
@@ -236,14 +284,58 @@ def _scan_measurements(circle_id: UUID, now: datetime) -> None:
         ):
             continue
         metrics.increment("tick.missed_measurement")
-        notify(
-            Push(
-                recipients,
-                PushMessage(
-                    "قياس ما تسجّل",
-                    f"قياس {kind_name} ما تسجّل للحين. "
-                    "تقدر تسجّله من تفقّد.",
-                    "measurement_missed",
-                ),
+        reading = occurrence["kind"]
+        _tell(
+            audience,
+            MEASUREMENT_TITLE,
+            "measurement_missed",
+            lambda name, own, reading=reading: measurement_missed_text(
+                reading, name=name, own=own, patient=audience.patient_name
+            ),
+        )
+
+
+def _scan_appointments(circle_id: UUID, now: datetime) -> None:
+    """Send «موعد فائت» once for each of the circle's appointments whose
+    time passed `APPOINTMENT_MISSED_AFTER` ago and that nobody marked
+    done («تم الموعد») or cancelled.
+    """
+    with transaction() as session:
+        patient = _patient(session, circle_id)
+        if patient is None:
+            return
+        zone = patient_zone(patient)
+        today = patient_today(patient, now)
+        # Yesterday's too: one late at night is missed after midnight.
+        appointments = [
+            (item.id, item.scheduled_on, item.time_of_day)
+            for item in session.scalars(
+                select(Appointment).where(
+                    Appointment.care_circle_id == circle_id,
+                    Appointment.status == "scheduled",
+                    Appointment.scheduled_on.between(
+                        today - timedelta(days=1), today
+                    ),
+                )
             )
+        ]
+        audience = _audience(session, patient)
+    for appointment_id, day, wall_time in appointments:
+        missed_at = (
+            local_moment(day, wall_time, zone) + APPOINTMENT_MISSED_AFTER
+        )
+        if not missed_at <= now < missed_at + APPOINTMENT_TOO_LATE:
+            continue
+        if not _claim(
+            "appointment_missed", str(appointment_id), day.isoformat(), None
+        ):
+            continue
+        metrics.increment("tick.missed_appointment")
+        _tell(
+            audience,
+            APPOINTMENT_TITLE,
+            "appointment_missed",
+            lambda name, own: appointment_missed_text(
+                name=name, own=own, patient=audience.patient_name
+            ),
         )

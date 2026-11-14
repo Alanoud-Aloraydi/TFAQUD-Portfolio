@@ -59,7 +59,7 @@ String? simplifiedSnoozed(
 }
 
 /// The app's one greeting, the detailed mode's too: «صباح الخير، مريم»
-/// from Fajr until Asr, «مساء الخير، مريم» after ([prayers] is today's;
+/// from Fajr until Dhuhr, «مساء الخير، مريم» after ([prayers] is today's;
 /// without it, the fallback times of [isMorning]).
 String simplifiedGreeting(
   BuildContext context,
@@ -71,7 +71,7 @@ String simplifiedGreeting(
   PatientClockScope.of(context).wallTime(now),
   name,
   fajr: prayers?.times[Prayer.fajr],
-  asr: prayers?.times[Prayer.asr],
+  dhuhr: prayers?.times[Prayer.dhuhr],
 );
 
 /// «اليوم · الجمعة 6 نوفمبر».

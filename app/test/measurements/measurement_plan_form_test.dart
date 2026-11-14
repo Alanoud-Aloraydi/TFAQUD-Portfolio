@@ -1,17 +1,21 @@
+import '../support/normal_ranges.dart';
+import '../support/widget_harness.dart';
+
 import 'dart:async';
 
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/pages/measurement_plan_form_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-
-import '../support/widget_harness.dart';
 
 /// No plans yet; remembers the plans the form saves.
 class _Measurements extends Fake implements MeasurementRepository {
@@ -23,6 +27,9 @@ class _Measurements extends Fake implements MeasurementRepository {
   @override
   Future<List<MeasurementPlan>> plans(String circleId) async =>
       const <MeasurementPlan>[];
+
+  @override
+  Future<NormalRanges> ranges(String circleId) async => generalRanges();
 
   @override
   Future<MeasurementPlan> createPlan(
@@ -53,7 +60,12 @@ void main() {
   /// has somewhere to go.
   Future<_Measurements> open(WidgetTester tester) async {
     final _Measurements repository = _Measurements();
-    final MeasurementPlansCubit cubit = MeasurementPlansCubit(repository);
+    // The form reads the normal ranges itself.
+    GetIt.I.registerSingleton<MeasurementRepository>(repository);
+    addTearDown(() => GetIt.I.unregister<MeasurementRepository>());
+    final MeasurementPlansCubit cubit = MeasurementPlansCubit(
+      MeasurementsUseCase(repository),
+    );
     addTearDown(cubit.close);
     await cubit.load('c-1');
     final GoRouter router = GoRouter(
@@ -79,19 +91,16 @@ void main() {
     return repository;
   }
 
-  testWidgets('a target left empty is refused and nothing is sent', (
+  testWidgets('shows the fixed normal range, with nothing to type', (
     tester,
   ) async {
-    final _Measurements repository = await open(tester);
+    await open(tester);
 
-    await tester.tap(find.text('measurements.save'.tr()));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('measurements.invalid_glucose_target'.tr()),
-      findsOneWidget,
-    );
-    expect(repository.created, isEmpty);
+    // The default glucose time is fasting: the fasting range only.
+    expect(find.text('measurements.normal_range'.tr()), findsWidgets);
+    expect(find.textContaining('70–100'), findsWidgets);
+    expect(find.textContaining('70–140'), findsNothing);
+    expect(find.text('measurements.change_condition'.tr()), findsOneWidget);
   });
 
   testWidgets('a new plan starts on the patient today and closes the form', (
@@ -99,14 +108,12 @@ void main() {
   ) async {
     final _Measurements repository = await open(tester);
 
-    await tester.enterText(find.byType(TextField).at(1), '70');
-    await tester.enterText(find.byType(TextField).at(2), '130');
     await tester.tap(find.text('measurements.save'.tr()));
     await tester.pumpAndSettle();
 
     final MeasurementPlanDraft draft = repository.created.single;
     expect(draft.kind, MeasurementKind.glucose);
-    expect((draft.glucoseLow, draft.glucoseHigh), (70, 130));
+    expect(draft.toJson().containsKey('glucose_low'), isFalse);
     // Noon in Riyadh on 9 November, whatever zone the test machine is in.
     expect(draft.startsOn, DateTime(2026, 11, 9));
     expect(find.text('home'), findsOneWidget);
@@ -122,8 +129,6 @@ void main() {
   ) async {
     final _Measurements repository = await open(tester);
 
-    await tester.enterText(find.byType(TextField).at(1), '70');
-    await tester.enterText(find.byType(TextField).at(2), '130');
     await tester.enterText(missedAfterBox(), '45');
     await tester.tap(find.text('measurements.save'.tr()));
     await tester.pumpAndSettle();
@@ -136,8 +141,6 @@ void main() {
   ) async {
     final _Measurements repository = await open(tester);
 
-    await tester.enterText(find.byType(TextField).at(1), '70');
-    await tester.enterText(find.byType(TextField).at(2), '130');
     await tester.enterText(missedAfterBox(), '400');
     await tester.tap(find.text('measurements.save'.tr()));
     await tester.pumpAndSettle();
@@ -154,8 +157,6 @@ void main() {
   testWidgets('saving a plan says so', (tester) async {
     await open(tester);
 
-    await tester.enterText(find.byType(TextField).at(1), '70');
-    await tester.enterText(find.byType(TextField).at(2), '130');
     await tester.tap(find.text('measurements.save'.tr()));
     await tester.pumpAndSettle();
 

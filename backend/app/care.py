@@ -7,7 +7,8 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.clock import DEFAULT_ZONE, is_zone, patient_today
-from app.errors import Forbidden, NotFound, ValidationFailed
+from app.errors import Conflict, Forbidden, NotFound, ValidationFailed
+from app.circles.leader import AREAS, leader_id, patient_leads
 from app.circles.naming import OWN_NAME_DEFAULT
 from app.models import Account, CareCircle, CareCircleInvitation
 from app.models import CareCircleManager, CareCircleRequest, OtpRequest
@@ -81,16 +82,30 @@ class CareService:
         return circle
 
     def _require_manager(self, actor_id: UUID, circle_id: UUID) -> None:
-        """Require a current management membership in the given circle."""
-        manager_id = self.session.scalar(
-            select(CareCircleManager.id).where(
+        """Require a membership that edits something: one the leader lets
+        edit nothing only reads (`app.circles.leader`)."""
+        membership = self.session.scalar(
+            select(CareCircleManager).where(
                 CareCircleManager.account_id == actor_id,
                 CareCircleManager.care_circle_id == circle_id,
-                CareCircleManager.can_edit.is_(True),
             )
         )
-        if manager_id is None:
+        if membership is None or not (
+            membership.can_edit_any or self._leads(actor_id, circle_id)
+        ):
             raise Forbidden("A current manager membership is required.")
+
+    def _leads(self, actor_id: UUID, circle_id: UUID) -> bool:
+        """Whether the actor leads the circle now."""
+        circle = self.session.get(CareCircle, circle_id)
+        return circle is not None and leader_id(self.session, circle) == (
+            actor_id
+        )
+
+    def _require_leader(self, actor_id: UUID, circle: CareCircle) -> None:
+        """Only the circle's leader manages its members."""
+        if leader_id(self.session, circle) != actor_id:
+            raise Forbidden("Only the circle's leader manages its members.")
 
     def _require_membership(self, actor_id: UUID, circle_id: UUID) -> None:
         """Require any membership, including one whose editing is paused."""
@@ -133,18 +148,51 @@ class CareService:
         )
 
     def update_member_access(
-        self, actor_id: UUID, circle_id: UUID, member_id: UUID, can_edit: bool
+        self,
+        actor_id: UUID,
+        circle_id: UUID,
+        member_id: UUID,
+        areas: dict[str, bool],
     ) -> None:
-        """Let only the detailed patient pause or restore another member."""
+        """Let only the leader turn another member's editing of each area
+        (`app.circles.leader.AREAS`) on or off; an area left out stays."""
         self._lock_accounts(actor_id, member_id)
         circle = self._lock_circle(circle_id)
-        actor = self.session.get(Account, actor_id)
-        if circle.account_id != actor_id or actor.app_mode != "detailed":
-            raise Forbidden("Only the detailed circle owner manages access.")
+        self._require_leader(actor_id, circle)
         if member_id == actor_id:
             raise ValidationFailed(
-                "The owner access cannot be changed.", code="circle_owner"
+                "The leader always edits everything.", code="circle_owner"
             )
+        membership = self._membership_for_update(circle_id, member_id)
+        for area, allowed in areas.items():
+            if area not in AREAS:
+                raise ValidationFailed(
+                    "Unknown area.", code="validation_error"
+                )
+            setattr(membership, f"can_edit_{area}", allowed)
+        self.session.flush()
+
+    def hand_over_leadership(
+        self, actor_id: UUID, circle_id: UUID, member_id: UUID
+    ) -> None:
+        """Let the leader hand the circle to another member. A patient in
+        the detailed mode always leads their own circle."""
+        self._lock_accounts(actor_id, member_id)
+        circle = self._lock_circle(circle_id)
+        self._require_leader(actor_id, circle)
+        if patient_leads(self.session, circle):
+            raise Conflict(
+                "The patient leads their own circle.", code="patient_leads"
+            )
+        if member_id == actor_id:
+            return
+        self._membership_for_update(circle_id, member_id)
+        circle.leader_account_id = member_id
+        self.session.flush()
+
+    def _membership_for_update(
+        self, circle_id: UUID, member_id: UUID
+    ) -> CareCircleManager:
         membership = self.session.scalar(
             select(CareCircleManager).where(
                 CareCircleManager.care_circle_id == circle_id,
@@ -153,17 +201,16 @@ class CareService:
         )
         if membership is None:
             raise NotFound("The circle member does not exist.")
-        membership.can_edit = can_edit
+        return membership
 
     def remove_member(
         self, actor_id: UUID, circle_id: UUID, member_id: UUID
     ) -> None:
-        """Let only the detailed patient remove another circle member."""
+        """Let only the leader remove another circle member; never the
+        patient."""
         self._lock_accounts(actor_id, member_id)
         circle = self._lock_circle(circle_id)
-        actor = self.session.get(Account, actor_id)
-        if circle.account_id != actor_id or actor.app_mode != "detailed":
-            raise Forbidden("Only the detailed circle owner removes members.")
+        self._require_leader(actor_id, circle)
         if member_id == actor_id or member_id == circle.account_id:
             raise ValidationFailed(
                 "The circle owner cannot be removed.", code="circle_owner"
@@ -268,6 +315,7 @@ class CareService:
         city: str,
         managers: set[UUID],
         patient_account: Account | None = None,
+        leader: UUID | None = None,
         first_name: str | None = None,
         last_name: str | None = None,
         latitude: float | None = None,
@@ -287,6 +335,11 @@ class CareService:
         circle = CareCircle(
             name=name.strip() if patient_account is not None else None,
             account_id=patient_account.id if patient_account else None,
+            # Whoever made the circle leads it while its patient does not
+            # (`app.circles.leader`); alone, its one manager.
+            leader_account_id=(
+                leader if leader is not None else min(managers, default=None)
+            ),
             time_zone=self._zone_for(time_zone),
             latitude=latitude,
             longitude=longitude,
@@ -538,6 +591,7 @@ class CareService:
             city,
             managers,
             patient_account=account,
+            leader=request.requested_by_account_id,
             latitude=latitude,
             longitude=longitude,
             time_zone=time_zone,

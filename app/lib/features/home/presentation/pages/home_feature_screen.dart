@@ -211,8 +211,8 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
               ? () => _openNotifications(context)
               : null,
         ),
-        onAdd: state.selectedCircle?.canManageMedications ?? false
-            ? () => showHomeAddSheet(context, circleId: state.selectedCircleId!)
+        onAdd: state.selectedCircle?.canRecord ?? false
+            ? () => showHomeAddSheet(context, circle: state.selectedCircle!)
             : null,
         body: HomeBody(
           state: state,

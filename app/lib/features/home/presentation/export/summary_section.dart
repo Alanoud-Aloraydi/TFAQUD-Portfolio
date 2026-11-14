@@ -1,4 +1,4 @@
-import 'package:app/features/home/data/record_pdf_model.dart';
+import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';

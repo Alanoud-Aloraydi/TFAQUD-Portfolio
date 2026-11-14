@@ -5,7 +5,6 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:flutter/material.dart';
 
-/// Defines the supported medication form field values.
 enum MedicationFormField { name, strength, period, dose, weekdays, missedAfter }
 
 /// Describes one medication form validation issue.
@@ -47,6 +46,11 @@ class MedicationFormData {
   StrengthUnit strengthUnit;
   final TextEditingController reason;
   final TextEditingController instructions;
+
+  /// Whether «أخرى» is chosen among the instructions, so their text field
+  /// shows, even while it is still empty. Instructions of their own words
+  /// already saved count as «أخرى» too.
+  bool otherInstructions = false;
   final FocusNode nameFocus = FocusNode();
   final FocusNode strengthFocus = FocusNode();
   final FocusNode periodFocus = FocusNode();

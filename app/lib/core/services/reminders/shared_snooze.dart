@@ -11,6 +11,7 @@ class SharedSnooze extends Equatable {
     required this.minutes,
     this.byAccountId,
     this.byName,
+    this.byAvatarCode,
   });
 
   /// In UTC.
@@ -20,6 +21,7 @@ class SharedSnooze extends Equatable {
   /// Who put it off; null once that account was deleted.
   final String? byAccountId;
   final String? byName;
+  final String? byAvatarCode;
 
   /// The `snooze` of an occurrence; null when the task is not put off.
   static SharedSnooze? fromJson(Object? json) {
@@ -37,6 +39,9 @@ class SharedSnooze extends Equatable {
           ? by['account_id'] as String?
           : null,
       byName: by is Map<String, dynamic> ? by['name'] as String? : null,
+      byAvatarCode: by is Map<String, dynamic>
+          ? by['avatar_code'] as String?
+          : null,
     );
   }
 
@@ -44,7 +49,13 @@ class SharedSnooze extends Equatable {
   bool waitsAt(DateTime now) => remindAt.isAfter(now.toUtc());
 
   @override
-  List<Object?> get props => [remindAt, minutes, byAccountId, byName];
+  List<Object?> get props => [
+    remindAt,
+    minutes,
+    byAccountId,
+    byName,
+    byAvatarCode,
+  ];
 }
 
 /// What the server is told when a task is put off on this phone: the
@@ -98,8 +109,8 @@ class SnoozeShare extends Equatable {
 /// another shape.
 SnoozeShare? snoozeShareOf(String key, Duration after) {
   final List<String> parts = key.split('|');
-  // The server takes 1 to 240 minutes.
-  final int minutes = after.inMinutes.clamp(1, 240);
+  // The server takes 1 to 720 minutes (12 hours).
+  final int minutes = after.inMinutes.clamp(1, 720);
   if (parts.length == 3) {
     final String? day = _isoDay(parts[2]);
     if (day == null) return null;

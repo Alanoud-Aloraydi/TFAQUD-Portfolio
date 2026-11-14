@@ -1,6 +1,7 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _task({
@@ -19,7 +20,7 @@ Map<String, dynamic> _task({
 
 void main() {
   group('MeasurementModels', () {
-    test('plan draft sends the entered target and Western date digits', () {
+    test('plan draft sends no target, and Western date digits', () {
       final draft = MeasurementPlanDraft(
         kind: MeasurementKind.glucose,
         times: const [
@@ -28,8 +29,6 @@ void main() {
         weekdays: const [1, 3],
         startsOn: DateTime(2026, 11, 3),
         missedAfterMinutes: 60,
-        glucoseLow: 80,
-        glucoseHigh: 140,
       );
       final json = draft.toJson();
       expect(json['starts_on'], '2026-11-03');
@@ -37,8 +36,7 @@ void main() {
         {'time_of_day': '07:30', 'measurement_state': 'fasting'},
       ]);
       expect(json['missed_after_minutes'], 60);
-      expect(json['glucose_low'], 80);
-      expect(json['glucose_high'], 140);
+      expect(json.containsKey('glucose_low'), isFalse);
       expect(json.containsKey('expected_version_number'), isFalse);
       expect(draft.toJson(expectedVersion: 2)['expected_version_number'], 2);
       expect(
@@ -47,7 +45,7 @@ void main() {
       );
     });
 
-    test('computed occurrence maps a late reading and its target result', () {
+    test('computed occurrence maps a late reading and its level', () {
       final occurrence = MeasurementOccurrence.fromJson({
         'plan_id': 'plan',
         'plan_version_id': 'version',
@@ -66,10 +64,20 @@ void main() {
           'glucose_value': 151,
           'conditions': ['fasting'],
           'outside_target': true,
+          'level': 'high',
+          'normal_range': {
+            'profile': 'general',
+            'state': 'fasting',
+            'glucose_low': 70,
+            'glucose_high': 100,
+          },
         },
       });
       expect(occurrence.status, MeasurementStatus.readLate);
       expect(occurrence.record?.outsideTarget, isTrue);
+      expect(occurrence.record?.level, MeasurementLevel.high);
+      expect(occurrence.record?.range?.normal.glucoseHigh, 100);
+      expect(occurrence.record?.range?.state, 'fasting');
       expect(occurrence.record?.valueText, '151');
     });
 
@@ -83,8 +91,6 @@ void main() {
         weekdays: const [1],
         startsOn: DateTime(2026, 11, 3),
         missedAfterMinutes: 60,
-        glucoseLow: 80,
-        glucoseHigh: 140,
       );
       final json = draft.toJson();
       expect(json.containsKey('time_of_day'), isFalse);
@@ -111,8 +117,6 @@ void main() {
         weekdays: const [1],
         startsOn: DateTime(2026, 11, 3),
         missedAfterMinutes: 60,
-        systolicLimit: 130,
-        diastolicLimit: 80,
       );
       final json = draft.toJson();
       expect(json.containsKey('time_of_day'), isFalse);
@@ -195,6 +199,41 @@ void main() {
       expect(tasks.single.status, MeasurementStatus.readLate);
     });
 
+    group('linkNextTasks', () {
+      MeasurementOccurrence task(String kind, String day, String time) =>
+          MeasurementOccurrence.fromJson(<String, dynamic>{
+            ..._task(kind: kind, status: 'missed'),
+            'scheduled_on': day,
+            'time_of_day': time,
+          });
+
+      final List<MeasurementOccurrence> tasks = linkNextTasks(
+        <MeasurementOccurrence>[
+          task('glucose', '2026-11-03', '07:00'),
+          task('blood_pressure', '2026-11-03', '09:00'),
+          task('glucose', '2026-11-03', '14:00'),
+          task('glucose', '2026-11-04', '07:00'),
+        ],
+      );
+
+      test('each task knows when the next of its kind is', () {
+        expect(tasks[0].nextAt, wallClockAt(DateTime(2026, 11, 3), '14:00'));
+        expect(tasks[1].nextAt, isNull);
+        expect(tasks[2].nextAt, wallClockAt(DateTime(2026, 11, 4), '07:00'));
+        expect(tasks[3].nextAt, isNull);
+      });
+
+      test('a task is superseded once the next of its kind is due', () {
+        final DateTime before = wallClockAt(DateTime(2026, 11, 3), '13:59');
+        final DateTime at = wallClockAt(DateTime(2026, 11, 3), '14:00');
+
+        expect(tasks[0].supersededAt(before), isFalse);
+        expect(tasks[0].supersededAt(at), isTrue);
+        // Another kind's task does not count.
+        expect(tasks[1].supersededAt(at), isFalse);
+      });
+    });
+
     group('latestReadingMoment', () {
       // 00:10 on 4 November in Riyadh (UTC+3).
       final PatientClock clock = PatientClock(
@@ -215,6 +254,30 @@ void main() {
           clock.momentOf(DateTime(2026, 11, 4), '00:05'),
         );
       });
+    });
+  });
+
+  group('what the form offers', () {
+    test('glucose asks about the stomach; pressure about the medicine', () {
+      expect(MeasurementConditions.offered(MeasurementKind.glucose), <String>[
+        'fasting',
+        'before_meal',
+        'after_meal',
+        'other',
+      ]);
+      expect(MeasurementConditions.offered(MeasurementKind.bp), <String>[
+        'before_medicine',
+        'after_medicine',
+        'morning',
+        'exertion',
+        'stress',
+        'other',
+      ]);
+      expect(MeasurementConditions.planStates(MeasurementKind.bp), <String>[
+        'before_medicine',
+        'after_medicine',
+        'morning',
+      ]);
     });
   });
 }

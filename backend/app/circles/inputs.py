@@ -4,6 +4,7 @@ import re
 import unicodedata
 from datetime import date
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import AfterValidator, BeforeValidator, Field, model_validator
 from pydantic_core import PydanticCustomError
@@ -73,10 +74,43 @@ Flag = Annotated[bool, Field(strict=True)]
 AppMode = Literal["detailed", "simplified"]
 
 
-class MemberAccessInput(Dto):
-    """The circle owner's persistent edit permission for one member."""
+class EditAreasInput(Dto):
+    """What a member may edit, area by area; an area left out stays."""
 
-    can_edit: Flag
+    medications: Flag | None = None
+    measurements: Flag | None = None
+    appointments: Flag | None = None
+
+
+class MemberAccessInput(Dto):
+    """The leader's edit permissions for one member: per area
+    (`edit_access`), or `can_edit` for all three at once (the app before
+    the areas sends it)."""
+
+    edit_access: EditAreasInput | None = None
+    can_edit: Flag | None = None
+
+    @model_validator(mode="after")
+    def one_form(self):
+        """Exactly one of the two."""
+        if (self.edit_access is None) == (self.can_edit is None):
+            raise ValueError("Send either edit_access or can_edit.")
+        return self
+
+    def areas(self) -> dict[str, bool]:
+        """The areas to change, with their new value."""
+        if self.can_edit is not None:
+            return {
+                area: self.can_edit
+                for area in ("medications", "measurements", "appointments")
+            }
+        return self.edit_access.model_dump(exclude_none=True)
+
+
+class LeaderInput(Dto):
+    """The member the leader hands the circle to."""
+
+    account_id: UUID
 
 
 # ---- medical profile --------------------------------------------------

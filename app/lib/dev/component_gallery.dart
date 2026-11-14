@@ -204,7 +204,6 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   }
 }
 
-/// Renders the section element of component gallery.
 class _Section extends StatelessWidget {
   const _Section({required this.title, required this.children});
 

@@ -2,15 +2,17 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/features/appointments/data/appointment_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
+import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/photo_probe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _Appointments extends Fake implements AppointmentRepository {
+class _Appointments extends Fake implements AppointmentsRepositoryDomain {
   final StreamController<String> changed = StreamController<String>.broadcast();
 
   /// When true, every read fails as offline.
@@ -42,7 +44,7 @@ class _Photos extends Fake implements PrivatePhotoRepository {
 void main() {
   group('HomeQuietReload', () {
     test('a quiet load never shows the loading state', () async {
-      final cubit = AppointmentsCubit(_Appointments());
+      final cubit = AppointmentsCubit(AppointmentsUseCase(_Appointments()));
       addTearDown(cubit.close);
       await cubit.load('circle-1');
       final states = <AppointmentsLoadStatus>[];
@@ -59,7 +61,7 @@ void main() {
 
     test('a change saved elsewhere reads the list again quietly', () async {
       final repository = _Appointments();
-      final cubit = AppointmentsCubit(repository);
+      final cubit = AppointmentsCubit(AppointmentsUseCase(repository));
       addTearDown(cubit.close);
       await cubit.load('circle-1');
       final states = <AppointmentsLoadStatus>[];
@@ -68,7 +70,7 @@ void main() {
 
       final visit = CareAppointment(
         id: 'v-1',
-        specialty: 'diabetes',
+        specialty: 'عيادة السكري',
         kind: AppointmentKind.followUp,
         otherKind: null,
         scheduledOn: DateTime(2026, 11, 10),
@@ -90,7 +92,7 @@ void main() {
 
     test('a quiet load after a failure still shows the failure', () async {
       final repository = _Appointments()..offline = true;
-      final cubit = AppointmentsCubit(repository);
+      final cubit = AppointmentsCubit(AppointmentsUseCase(repository));
       addTearDown(cubit.close);
       await cubit.load('circle-1');
       expect(cubit.state.status, AppointmentsLoadStatus.failure);

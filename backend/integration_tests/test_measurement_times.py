@@ -32,8 +32,6 @@ def plan(times, **changes):
         "weekdays": [3],
         "starts_on": "2026-10-28",
         "missed_after_minutes": 60,
-        "glucose_low": 80,
-        "glucose_high": 140,
         **changes,
     }
 

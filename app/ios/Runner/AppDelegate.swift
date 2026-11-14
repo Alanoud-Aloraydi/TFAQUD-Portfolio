@@ -1,12 +1,15 @@
+import CoreLocation
 import Flutter
 import UIKit
 import UserNotifications
+import WeatherKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var accessibilityChannel: FlutterMethodChannel?
   private var pushChannel: FlutterMethodChannel?
   private var pushTapChannel: FlutterMethodChannel?
+  private var weatherChannel: FlutterMethodChannel?
   /// The kind of a push tapped before Dart listened (the push that launched
   /// the app); Dart takes it once with "launchTap".
   private var launchPushKind: String?
@@ -83,6 +86,63 @@ import UserNotifications
       } else {
         result(FlutterMethodNotImplemented)
       }
+    }
+
+    // The weather now in the patient's city, for «اليوم»: Apple Weather
+    // (WeatherKit) on the phone, with no key and no location permission;
+    // Dart sends the city's coordinates. Before iOS 16, or when WeatherKit
+    // cannot answer (no capability, no network), the answer is nil and the
+    // app shows no weather.
+    let weather = FlutterMethodChannel(
+      name: "tafaqod/weather",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    weatherChannel = weather
+    weather.setMethodCallHandler { call, result in
+      guard call.method == "current",
+        let place = call.arguments as? [String: Any],
+        let latitude = place["latitude"] as? Double,
+        let longitude = place["longitude"] as? Double
+      else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      if #available(iOS 16.0, *) {
+        Task { @MainActor in
+          result(
+            await AppDelegate.currentWeather(
+              latitude: latitude, longitude: longitude))
+        }
+      } else {
+        result(nil)
+      }
+    }
+  }
+
+  /// The weather now at a place, with Apple's attribution that must show
+  /// beside it (the Apple Weather mark and the legal page); nil when
+  /// WeatherKit cannot answer.
+  @available(iOS 16.0, *)
+  private static func currentWeather(
+    latitude: Double, longitude: Double
+  ) async -> [String: Any]? {
+    let service = WeatherService.shared
+    do {
+      let current = try await service.weather(
+        for: CLLocation(latitude: latitude, longitude: longitude),
+        including: .current
+      )
+      let attribution = try await service.attribution
+      return [
+        "temperature": current.temperature.converted(to: .celsius).value,
+        "condition": current.condition.rawValue,
+        "is_daylight": current.isDaylight,
+        "mark_light": attribution.combinedMarkLightURL.absoluteString,
+        "mark_dark": attribution.combinedMarkDarkURL.absoluteString,
+        "legal_page": attribution.legalPageURL.absoluteString,
+      ]
+    } catch {
+      return nil
     }
   }
 

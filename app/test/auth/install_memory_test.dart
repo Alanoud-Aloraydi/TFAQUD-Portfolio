@@ -35,13 +35,13 @@ void main() {
     setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
 
     test('a new install has not seen the welcome', () async {
-      expect(await IntroMemory.seen(), isFalse);
+      expect(await IntroMemory().seen(), isFalse);
     });
 
     test('after «ابدأ» or «تخطي» the welcome is seen', () async {
-      await IntroMemory.markSeen();
+      await IntroMemory().markSeen();
 
-      expect(await IntroMemory.seen(), isTrue);
+      expect(await IntroMemory().seen(), isTrue);
     });
   });
 }

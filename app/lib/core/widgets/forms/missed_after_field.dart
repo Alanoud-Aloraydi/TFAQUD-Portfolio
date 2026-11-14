@@ -1,13 +1,19 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/constants/plan_limits.dart';
-import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// The minutes after which a dose or reading counts as missed, typed freely
 /// between [PlanLimits.minMissedAfterMinutes] and
-/// [PlanLimits.maxMissedAfterMinutes]. The same row serves every kind of
-/// plan; [onChanged] gets null while the text is not a whole number.
+/// [PlanLimits.maxMissedAfterMinutes]. The number is followed by «دقيقة»
+/// and a pencil, so the row reads as one to edit, in minutes. The same row
+/// serves every kind of plan; [onChanged] gets null while the text is not a
+/// whole number.
 class MissedAfterField extends StatefulWidget {
   const MissedAfterField({
     super.key,
@@ -61,6 +67,22 @@ class _MissedAfterFieldState extends State<MissedAfterField> {
       maxLength: 3,
       textInputAction: TextInputAction.done,
       hint: context.tr('plan_limits.minutes_hint'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            context.tr('plan_limits.minutes_unit'),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.tokens.textSecondary),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Icon(
+            AppIcons.pencil,
+            size: AppSizes.iconSmall,
+            color: context.tokens.textSecondary,
+          ),
+        ],
+      ),
       errorText: invalid
           ? context.tr(
               'plan_limits.missed_after_range',

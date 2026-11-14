@@ -26,22 +26,34 @@ abstract class MedicalOptions {
     'O-',
   ];
 
-  /// Chronic conditions, without "none" and "other".
+  /// Chronic conditions, without "none" and "other"; the ones older people
+  /// have most often come first.
   static const List<String> conditions = <String>[
     'diabetes',
     'hypertension',
+    'cholesterol',
     'heart',
+    'stroke',
     'asthma',
     'kidney',
     'thyroid',
+    'arthritis',
+    'osteoporosis',
+    'dementia',
+    'depression_anxiety',
+    'cancer',
   ];
 
-  /// Medicines a person can be allergic to, without "other".
+  /// Medicines a person can be allergic to, without "other". Aspirin and
+  /// the other anti-inflammatories are two choices, not one.
   static const List<String> medications = <String>[
     'penicillin',
     'sulfa',
     'cephalosporins',
-    'aspirin_nsaids',
+    'quinolones',
+    'aspirin',
+    'nsaids',
+    'opioids',
     'contrast_media',
     'anesthesia',
   ];

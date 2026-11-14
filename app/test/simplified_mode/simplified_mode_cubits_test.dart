@@ -67,9 +67,6 @@ class _UseCase implements SimplifiedModeUseCase {
     DoseRecord(id: 'r', outcome: DoseOutcome.taken, recordedAt: _noon),
   );
   final List<DoseOccurrence> taken = <DoseOccurrence>[];
-  Result<List<MeasurementTarget>, Failure> targets = const Success(
-    <MeasurementTarget>[],
-  );
   final List<(MeasurementReadingDraft, MeasurementOccurrence?)> recorded =
       <(MeasurementReadingDraft, MeasurementOccurrence?)>[];
 
@@ -125,11 +122,6 @@ class _UseCase implements SimplifiedModeUseCase {
 
   @override
   Future<bool> snoozeFromNotification(String tap) async => false;
-
-  @override
-  Future<Result<List<MeasurementTarget>, Failure>> measurementTargets(
-    String circleId,
-  ) async => targets;
 
   @override
   Future<Result<MeasurementReading, Failure>> recordMeasurement(
@@ -314,19 +306,12 @@ void main() {
 
     setUp(() => useCase = _UseCase());
 
-    test('a free reading offers only the kinds with a target', () async {
-      useCase.targets = const Success(<MeasurementTarget>[
-        MeasurementTarget(
-          kind: MeasurementKind.glucose,
-          glucoseLow: 80,
-          glucoseHigh: 140,
-        ),
-      ]);
+    test('a free reading offers both kinds, needing no target', () async {
       final cubit = cubitAt(_noon);
       addTearDown(cubit.close);
       await cubit.load();
       expect(cubit.state.status, SimplifiedMeasurementStatus.ready);
-      expect(cubit.state.kinds, [MeasurementKind.glucose]);
+      expect(cubit.state.kinds, [MeasurementKind.bp, MeasurementKind.glucose]);
     });
 
     test('opened for a task, the reading records that task', () async {
@@ -342,13 +327,6 @@ void main() {
     });
 
     test('opened freely, a reading stays free while a task is due', () async {
-      useCase.targets = const Success(<MeasurementTarget>[
-        MeasurementTarget(
-          kind: MeasurementKind.bp,
-          systolicLimit: 140,
-          diastolicLimit: 90,
-        ),
-      ]);
       final cubit = cubitAt(_noon);
       addTearDown(cubit.close);
       await cubit.load();

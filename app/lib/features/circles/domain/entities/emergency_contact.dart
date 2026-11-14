@@ -9,6 +9,9 @@ class EmergencyContact extends Equatable {
     required this.name,
     required this.relation,
     required this.phoneNumber,
+    this.verified = false,
+    this.accountId,
+    this.avatarCode,
   });
 
   final String id;
@@ -21,6 +24,14 @@ class EmergencyContact extends Equatable {
   /// With the country code, `+9665XXXXXXXX`.
   final String phoneNumber;
 
+  /// «متحقق»: the number is a TFAQUD account's, so the person uses the app.
+  final bool verified;
+
+  /// The account of a contact who is in the circle, and their avatar, for
+  /// their picture; null for anyone else.
+  final String? accountId;
+  final String? avatarCode;
+
   /// The first letter of the name, for the round picture of the row.
   String get initial {
     final String trimmed = name.trim();
@@ -32,7 +43,15 @@ class EmergencyContact extends Equatable {
   String get nationalNumber => SaudiMobile.national(phoneNumber);
 
   @override
-  List<Object?> get props => [id, name, relation, phoneNumber];
+  List<Object?> get props => [
+    id,
+    name,
+    relation,
+    phoneNumber,
+    verified,
+    accountId,
+    avatarCode,
+  ];
 }
 
 /// What the user typed for a contact: the same three fields for a new contact

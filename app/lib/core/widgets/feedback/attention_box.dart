@@ -1,9 +1,9 @@
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
+import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/layout/expand_reveal.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -60,9 +60,9 @@ class AttentionBox extends StatelessWidget {
                   ),
                   if (count != null) ...[
                     const SizedBox(width: AppSpacing.sm),
-                    // A contrasting fill, not surfaceAttention: the badge
-                    // would vanish against the box's own background.
-                    CompactStatusBadge(
+                    // A count, not a status: the pill shape with a fill that
+                    // stands out against the box's own background.
+                    StatusPill(
                       text: '$count',
                       background: AppSemanticColors.accentWarm,
                       foreground: AppSemanticColors.textPrimary,
@@ -91,15 +91,9 @@ class AttentionBox extends StatelessWidget {
               ),
             ),
           ),
+          // Slides down from the title as it opens, like a plan's details.
           if (collapsible)
-            AnimatedCrossFade(
-              duration: AppMotion.disclosure,
-              crossFadeState: expanded
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              firstChild: child,
-              secondChild: const SizedBox(width: double.infinity),
-            )
+            ExpandReveal(open: expanded, child: child)
           else
             child,
         ],

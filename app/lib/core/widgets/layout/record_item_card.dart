@@ -5,9 +5,11 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/plan_item_header.dart';
 import 'package:flutter/material.dart';
 
-/// The card of one item in «السجل» (a medicine, a visit): the same shell as
-/// a plan card (radius, border, padding), with the header, optional [body]
-/// parts under it, and the whole card one tap target when [onTap] is set.
+/// The card of one item in «السجل» (a medicine, a reading): the same shell
+/// as a plan card (radius, border, padding), with the header, optional
+/// [body] parts under it, and the whole card one tap target when [onTap] is
+/// set. A card that wants a look ([attention], a reading outside its
+/// target) is tinted yellow.
 class RecordItemCard extends StatelessWidget {
   const RecordItemCard({
     super.key,
@@ -17,6 +19,7 @@ class RecordItemCard extends StatelessWidget {
     this.subtitle,
     this.body = const <Widget>[],
     this.onTap,
+    this.attention = false,
   });
 
   final Widget leading;
@@ -25,6 +28,7 @@ class RecordItemCard extends StatelessWidget {
   final Widget status;
   final List<Widget> body;
   final VoidCallback? onTap;
+  final bool attention;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,9 @@ class RecordItemCard extends StatelessWidget {
       side: const BorderSide(color: AppSemanticColors.borderSubtle),
     );
     return Material(
-      color: AppSemanticColors.surfaceContent,
+      color: attention
+          ? AppSemanticColors.surfaceAttention
+          : AppSemanticColors.surfaceContent,
       shape: shape,
       child: InkWell(
         customBorder: shape,

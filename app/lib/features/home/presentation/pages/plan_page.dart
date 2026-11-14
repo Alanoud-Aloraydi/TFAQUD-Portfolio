@@ -86,12 +86,12 @@ class _PlanPageState extends State<PlanPage>
                   ),
                   MeasurementPlanSection(
                     circleId: circle.id,
-                    canManage: circle.canManageMedications,
+                    canManage: circle.canManageMeasurements,
                     header: header,
                   ),
                   AppointmentPlanSection(
                     circleId: circle.id,
-                    canManage: circle.canManageMedications,
+                    canManage: circle.canManageAppointments,
                     header: header,
                   ),
                 ],

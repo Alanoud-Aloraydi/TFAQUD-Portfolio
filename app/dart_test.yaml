@@ -1,0 +1,4 @@
+# Every `flutter test` run also writes its result to tool/test_report.json,
+# so a failure can be read back after the run, whatever the console shows.
+file_reporters:
+  json: tool/test_report.json

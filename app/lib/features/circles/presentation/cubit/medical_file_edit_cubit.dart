@@ -64,16 +64,20 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
   void birthDateChanged(DateTime value) =>
       emit(state.copyWith(birthDate: value, clearError: true));
 
-  /// A city of the Saudi list brings its zone; a city typed by hand keeps
-  /// the zone shown, which the person changes when it differs
-  /// ([timeZoneChanged]).
-  void cityChanged(String value) => emit(
-    state.copyWith(
-      city: value,
-      timeZone: SaudiCities.zoneOf(value),
-      clearError: true,
-    ),
-  );
+  /// A city of the Saudi list brings its zone; a city typed by hand leaves
+  /// the zone empty, to be picked ([timeZoneChanged]). Keeping the old
+  /// zone would read every plan and reminder on the wrong clock.
+  void cityChanged(String value) {
+    final String? zone = SaudiCities.zoneOf(value);
+    emit(
+      state.copyWith(
+        city: value,
+        timeZone: zone,
+        clearTimeZone: zone == null,
+        clearError: true,
+      ),
+    );
+  }
 
   /// The IANA zone where the patient lives, picked by hand.
   void timeZoneChanged(String value) =>
@@ -119,6 +123,7 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
     if ((state.namesEditable && !state.namesComplete) ||
         birthDate == null ||
         city == null ||
+        state.zoneMissing ||
         !state.form.conditionsValid ||
         !state.form.allergiesValid) {
       emit(state.copyWith(showErrors: true));
@@ -129,7 +134,8 @@ class MedicalFileEditCubit extends Cubit<MedicalFileEditState> {
     final String firstName = editNames ? state.firstName.trim() : '';
     final String lastName = editNames ? state.lastName.trim() : '';
     final bool cityChanged = city != patient.city;
-    final String timeZone = state.timeZone ?? patient.timeZone;
+    final String timeZone =
+        state.timeZone ?? SaudiCities.zoneOf(city) ?? patient.timeZone;
     final bool basicsChanged =
         birthDate != patient.birthDate ||
         cityChanged ||

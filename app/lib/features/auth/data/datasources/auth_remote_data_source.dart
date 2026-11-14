@@ -28,8 +28,8 @@ abstract class BaseAuthRemoteDataSource {
   Future<AccountStatusResponse> checkSession();
 }
 
-@LazySingleton(as: BaseAuthRemoteDataSource)
 /// Sends auth requests to the API.
+@LazySingleton(as: BaseAuthRemoteDataSource)
 class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
   AuthRemoteDataSource(this._client, FlutterSecureStorage storage)
     : _deviceId = DeviceId(storage);

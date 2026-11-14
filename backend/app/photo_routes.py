@@ -259,7 +259,7 @@ def medication_photo(circle_id, plan_id):
 
 
 @bp.put("/circles/<circle_id>/medication-plans/<plan_id>/photo")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="medications")
 def save_medication_photo(circle_id, plan_id):
     """Save a plan-level photo shared by its versions."""
     data = _png()
@@ -270,7 +270,7 @@ def save_medication_photo(circle_id, plan_id):
 
 
 @bp.delete("/circles/<circle_id>/medication-plans/<plan_id>/photo")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, area="medications")
 def remove_medication_photo(circle_id, plan_id):
     """Remove the photo without changing medication history."""
     with transaction() as session:

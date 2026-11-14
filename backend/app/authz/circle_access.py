@@ -20,6 +20,12 @@ class CircleAccess(ABC):
     def role_in(self, user_id: str, circle_id: str) -> CircleRole | None:
         """The user's role in the circle; None if the user is not in it."""
 
+    def can_edit(self, user_id: str, circle_id: str, area: str) -> bool:
+        """Whether a manager may edit `area` («medications»,
+        «measurements», «appointments») of the circle. Every manager may,
+        unless the membership tables say otherwise."""
+        return True
+
 
 class DenyAllCircleAccess(CircleAccess):
     """The default. Nobody is a member of anything.

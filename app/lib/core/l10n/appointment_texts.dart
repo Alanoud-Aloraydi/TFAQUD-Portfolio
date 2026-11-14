@@ -5,26 +5,17 @@ import 'package:flutter/widgets.dart';
 // The words of an appointment, shared by the appointments, home («اليوم»,
 // the exported record) and simplified-mode features.
 
-/// The card title: «عيادة» plus a preset specialty, or the typed name.
-String appointmentTitle(BuildContext context, CareAppointment value) {
-  const presets = {
-    'internal',
-    'diabetes',
-    'cardiology',
-    'eyes',
-    'dental',
-    'neurology',
-  };
-  if (!presets.contains(value.specialty)) return value.specialty;
-  return '${context.tr('appointments.clinic')} '
-      '${context.tr('appointments.specialties.${value.specialty}')}';
-}
-
-/// The kind of visit; a typed kind when the kind is «غيره».
-String appointmentKindTitle(BuildContext context, CareAppointment value) =>
+/// The card title: the kind, or the typed kind for «أخرى».
+String appointmentTitle(BuildContext context, CareAppointment value) =>
     value.kind == AppointmentKind.other
     ? value.otherKind ?? context.tr('appointments.kinds.other')
     : context.tr('appointments.kinds.${value.kind.name}');
+
+/// The clinic or doctor as typed, or null when none was given.
+String? appointmentClinic(CareAppointment value) {
+  final String? clinic = value.specialty?.trim();
+  return clinic == null || clinic.isEmpty ? null : clinic;
+}
 
 /// The companions' names, joined with «،»; «بدون مرافق» for a visit
 /// nobody goes to with the patient (going is optional).

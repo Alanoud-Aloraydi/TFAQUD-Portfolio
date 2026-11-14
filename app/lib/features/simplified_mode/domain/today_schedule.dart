@@ -50,8 +50,11 @@ class TodaySchedule {
       for (final DoseOccurrence dose in doses)
         if (_sameDay(dose.scheduledOn, today))
           TodayTask.medication(dose, _doseStatus(dose, wall)),
+      // A measurement nobody recorded leaves once the next one of its kind
+      // is due: a reading now would be the same value, for that one.
       for (final MeasurementOccurrence item in measurements)
-        if (_sameDay(item.scheduledOn, today))
+        if (_sameDay(item.scheduledOn, today) &&
+            (item.record != null || !item.supersededAt(wall)))
           TodayTask.measurement(item, _measurementStatus(item, now)),
       for (final CareAppointment item in appointments)
         if (_sameDay(item.scheduledOn, today) &&

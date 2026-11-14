@@ -20,6 +20,9 @@ class CareItemHeader extends StatelessWidget {
   final Widget status;
   final VoidCallback? onTap;
 
+  /// The most of the line the status takes beside the text.
+  static const double _statusShare = 0.4;
+
   @override
   Widget build(BuildContext context) {
     final TextScaler scaler = MediaQuery.textScalerOf(context);
@@ -36,6 +39,19 @@ class CareItemHeader extends StatelessWidget {
         ],
       ),
     );
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints box) =>
+          _line(context, text, scaler, stacked, box.maxWidth),
+    );
+  }
+
+  Widget _line(
+    BuildContext context,
+    Widget text,
+    TextScaler scaler,
+    bool stacked,
+    double width,
+  ) {
     return MergeSemantics(
       child: Semantics(
         button: onTap != null,
@@ -59,7 +75,12 @@ class CareItemHeader extends StatelessWidget {
                 text,
                 if (!stacked) ...<Widget>[
                   const SizedBox(width: AppItemCard.gap),
-                  status,
+                  // A long badge wraps inside its share of the line rather
+                  // than squeezing the name into a column of letters.
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: width * _statusShare),
+                    child: status,
+                  ),
                 ],
               ],
             ),

@@ -70,7 +70,7 @@ def test_blood_type_conditions_and_allergies_are_saved(setup):
             },
             "allergies": {
                 "status": "listed",
-                "medication": ["aspirin_nsaids", "penicillin", "other"],
+                "medication": ["nsaids", "penicillin", "other"],
                 "other_medication": "Codeine",
                 "food": ["sesame", "milk"],
             },
@@ -89,7 +89,7 @@ def test_blood_type_conditions_and_allergies_are_saved(setup):
     }
     assert saved["allergies"] == {
         "status": "listed",
-        "medication": ["penicillin", "aspirin_nsaids", "other"],
+        "medication": ["penicillin", "nsaids", "other"],
         "other_medication": "Codeine",
         "food": ["milk", "sesame"],
         "other_food": None,
@@ -335,11 +335,48 @@ def test_emergency_contacts_are_added_listed_changed_and_removed(setup):
         "name": "Khaled",
         "relation": "son",
         "phone_number": "+966522222222",
+        "verified": False,
+        "account": None,
     }
 
     gone = api.delete(url(circle, f"/emergency-contacts/{saved['id']}"))
     assert gone.status_code == 204
     assert api.get(profile_url(circle)).json["emergency_contacts"] == []
+
+
+def test_a_contact_who_uses_the_app_is_verified(
+    database_app, database, account
+):
+    """«متحقق»: the number is a TFAQUD account's. A member of the circle
+    also shows with their name and avatar; anyone else shows the mark
+    only."""
+    owner, member, stranger = account(), account(), account()
+    circle = offline_circle(database, owner)
+    add_manager(database, owner, circle, member)
+    api = Api(database_app, owner)
+
+    known = api.post(
+        url(circle, "/emergency-contacts"),
+        contact("Reem", phone=member.phone_number),
+    ).json["emergency_contact"]
+    other = api.post(
+        url(circle, "/emergency-contacts"),
+        contact("Sara", phone=stranger.phone_number),
+    ).json["emergency_contact"]
+    unknown = api.post(
+        url(circle, "/emergency-contacts"), contact("Huda")
+    ).json["emergency_contact"]
+
+    assert known["verified"] is True
+    assert known["account"] == {
+        "account_id": str(member.id),
+        "name": member.display_name,
+        "avatar_code": member.avatar_code,
+    }
+    assert (other["verified"], other["account"]) == (True, None)
+    assert (unknown["verified"], unknown["account"]) == (False, None)
+    listed = api.get(profile_url(circle)).json["emergency_contacts"]
+    assert [item["verified"] for item in listed] == [True, True, False]
 
 
 def test_the_same_number_cannot_be_a_contact_twice(setup):

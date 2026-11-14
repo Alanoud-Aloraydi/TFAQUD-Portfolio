@@ -1,5 +1,6 @@
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_section.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,7 +13,7 @@ import '../support/phone_fakes.dart';
 import '../support/widget_harness.dart';
 
 void main() {
-  group('CalendarSyncSection', () {
+  group('CalendarSyncCircleList', () {
     late FakeCalendarSync calendar;
 
     setUpAll(() async {
@@ -21,7 +22,11 @@ void main() {
     });
 
     setUp(() {
-      calendar = FakeCalendarSync(<String>{'c-1:doses'});
+      calendar = FakeCalendarSync(<String>{
+        'c-1:doses',
+        'c-1:measurements',
+        'c-1:appointments',
+      });
       GetIt.I.registerSingleton<CalendarSync>(calendar);
     });
 
@@ -59,65 +64,45 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('each circle is closed, and says how many switches are on', (
+    testWidgets('one switch a circle, showing the saved choice', (
       tester,
     ) async {
       await open(tester);
 
-      final String doses = 'circle_overview.calendar_sync_doses'.tr();
-      expect(find.text(doses), findsNothing);
-      expect(find.text('1 من 3'), findsOneWidget);
-      expect(
-        find.text('circle_overview.calendar_sync_off'.tr()),
-        findsOneWidget,
-      );
-      expect(
-        tester.getSemantics(find.bySemanticsLabel('دائرة حامد، 1 من 3')),
-        isSemantics(isButton: true, hasExpandedState: true, isExpanded: false),
-      );
+      expect(find.byType(CupertinoSwitch), findsNWidgets(2));
+      expect(find.text('دائرة حامد'), findsOneWidget);
+      expect(find.text('دائرة محمد'), findsOneWidget);
+      final List<CupertinoSwitch> switches = tester
+          .widgetList<CupertinoSwitch>(find.byType(CupertinoSwitch))
+          .toList();
+      expect(switches.first.value, isTrue);
+      expect(switches.last.value, isFalse);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a circle opens to its switches, and the count follows', (
-      tester,
-    ) async {
+    testWidgets('off takes every kind off that circle at once', (tester) async {
       await open(tester);
 
-      await tester.tap(find.text('دائرة حامد'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('circle_overview.calendar_sync_doses'.tr()),
-        findsOneWidget,
-      );
-      // Only the open circle's three switches.
-      expect(find.byType(CupertinoSwitch), findsNWidgets(3));
-
-      // Turn on the measurements, the second switch.
-      await tester.tap(find.byType(CupertinoSwitch).at(1));
-      await tester.pumpAndSettle();
-
-      expect(calendar.on, contains('c-1:measurements'));
-      expect(find.text('2 من 3'), findsOneWidget);
-
-      // Closed again: the switches go, the count stays.
-      await tester.tap(find.text('دائرة حامد'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('circle_overview.calendar_sync_doses'.tr()),
-        findsNothing,
-      );
-      expect(find.text('2 من 3'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('the first enabled choice asks for confirmation', (
-      tester,
-    ) async {
-      await open(tester);
-
-      await tester.tap(find.text('دائرة محمد'));
-      await tester.pumpAndSettle();
       await tester.tap(find.byType(CupertinoSwitch).first);
+      await tester.pumpAndSettle();
+
+      expect(calendar.on, isEmpty);
+      expect(
+        tester
+            .widgetList<CupertinoSwitch>(find.byType(CupertinoSwitch))
+            .first
+            .value,
+        isFalse,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('turning a circle on asks first, then takes every kind', (
+      tester,
+    ) async {
+      await open(tester);
+
+      await tester.tap(find.byType(CupertinoSwitch).last);
       await tester.pumpAndSettle();
 
       expect(
@@ -132,13 +117,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(calendar.on, isNot(contains('c-2:doses')));
 
-      await tester.tap(find.byType(CupertinoSwitch).first);
+      await tester.tap(find.byType(CupertinoSwitch).last);
       await tester.pumpAndSettle();
       await tester.tap(
         find.text('circle_overview.calendar_sync_confirm_accept'.tr()),
       );
       await tester.pumpAndSettle();
-      expect(calendar.on, contains('c-2:doses'));
+
+      expect(
+        calendar.on,
+        containsAll(<String>[
+          'c-2:doses',
+          'c-2:measurements',
+          'c-2:appointments',
+        ]),
+      );
       expect(tester.takeException(), isNull);
     });
   });

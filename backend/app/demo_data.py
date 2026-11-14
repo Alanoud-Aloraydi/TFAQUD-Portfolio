@@ -411,8 +411,6 @@ class DemoBuilder:
             "times": [{"time_of_day": self.clock_in(20)}],
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
-            "systolic_limit": 140,
-            "diastolic_limit": 90,
         })
         self.measure(lina, circle, {
             "kind": "glucose",
@@ -425,8 +423,6 @@ class DemoBuilder:
             ],
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
-            "glucose_low": 70,
-            "glucose_high": 180,
         })
         # A reading Khaled took himself an hour ago, outside the plan.
         MeasurementService(self.session, self.now).record(
@@ -443,11 +439,11 @@ class DemoBuilder:
 
         visits = (
             (
-                0, self.clock_in(180), "القلب", "follow_up",
+                0, self.clock_in(180), "عيادة القلب", "follow_up",
                 "مستشفى الملك فيصل التخصصي", [lina.id],
             ),
-            (1, "10:00", "تحاليل السكر", "test", "مختبر البرج", [sara.id]),
-            (5, "11:30", "العيون", "remote", None, [lina.id, sara.id]),
+            (1, "10:00", "مختبر المستشفى", "test", "مختبر البرج", [sara.id]),
+            (5, "11:30", "عيادة العيون", "remote", None, [lina.id, sara.id]),
         )
         for day, clock, specialty, kind, place, going in visits:
             self.appointment(lina, circle, {
@@ -529,8 +525,6 @@ class DemoBuilder:
             ],
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
-            "systolic_limit": 140,
-            "diastolic_limit": 90,
         })
         self.appointment(lina, mother, {
             "specialty": "الغدد الصماء",

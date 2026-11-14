@@ -1,7 +1,6 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/core/widgets/feedback/compact_status_badge.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +27,7 @@ class AppointmentCardStatus extends StatelessWidget {
     final bool unconfirmed =
         value.status == AppointmentStatus.scheduled &&
         value.scheduledAt.isBefore(clock.now());
-    return CompactStatusBadge(
+    return StatusBadge(
       text: relative
           ? context.tr(_relativeKey(days), args: <String>['$days'])
           : context.tr(
@@ -36,10 +35,19 @@ class AppointmentCardStatus extends StatelessWidget {
                   ? 'appointments.status.unconfirmed'
                   : 'appointments.status.${value.status.name}',
             ),
-      background: AppSemanticColors.surfaceContent,
-      foreground: AppSemanticColors.textPrimary,
+      tone: relative
+          ? (days == 0 ? StatusTone.attention : StatusTone.info)
+          : unconfirmed
+          ? StatusTone.attention
+          : _tone(value.status),
     );
   }
+
+  static StatusTone _tone(AppointmentStatus status) => switch (status) {
+    AppointmentStatus.scheduled => StatusTone.info,
+    AppointmentStatus.completed => StatusTone.success,
+    AppointmentStatus.cancelled => StatusTone.muted,
+  };
 
   /// «اليوم», «بكرة», … for an appointment [days] away.
   static String _relativeKey(int days) => switch (days) {

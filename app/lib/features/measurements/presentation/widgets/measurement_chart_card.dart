@@ -19,14 +19,12 @@ class MeasurementChartCard extends StatefulWidget {
     super.key,
     required this.kind,
     required this.readings,
-    required this.plans,
     required this.month,
     required this.circleId,
   });
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
-  final List<MeasurementPlan> plans;
   final DateTime month;
   final String circleId;
 
@@ -101,8 +99,6 @@ class _MeasurementChartCardState extends State<MeasurementChartCard> {
     final ChartTarget target = ChartTarget.of(
       kind: widget.kind,
       readings: widget.readings,
-      plans: widget.plans,
-      month: widget.month,
     );
     return AnimatedSwitcher(
       duration: AppMotion.branchEnterDuration,

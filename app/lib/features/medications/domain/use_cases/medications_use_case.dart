@@ -8,7 +8,6 @@ import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @lazySingleton
-/// Exposes medications domain operations.
 class MedicationsUseCase {
   MedicationsUseCase(this._repository);
 
