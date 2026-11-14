@@ -39,6 +39,89 @@ void main() {
     });
   });
 
+  group('The subscription of this phone, for the sign-in', () {
+    late FakePhoneNotifications phone;
+    late FakeRemotePush remote;
+    late List<String> sent;
+    late PushRegistration push;
+
+    setUp(() {
+      phone = FakePhoneNotifications();
+      remote = FakeRemotePush();
+      sent = <String>[];
+      push = PushRegistration(
+        phone,
+        remote: remote,
+        send: (String id) async => sent.add(id),
+      );
+    });
+
+    test('the subscription OneSignal already gave is sent at once', () async {
+      remote.id = 'sub-1';
+
+      await push.start(accountId: 'acc-1');
+
+      expect(sent, <String>['sub-1']);
+    });
+
+    test('one that comes later is sent when it comes, once', () async {
+      await push.start(accountId: 'acc-1');
+      expect(sent, isEmpty);
+
+      remote
+        ..register('local-7')
+        ..register('sub-2')
+        ..register('sub-2');
+      await Future<void>.delayed(Duration.zero);
+
+      // OneSignal's own `local-` id is not one its servers know.
+      expect(sent, <String>['sub-2']);
+    });
+
+    test('each sign-in sends it again, for its own session', () async {
+      remote.id = 'sub-1';
+      await push.start(accountId: 'acc-1');
+
+      push.stop();
+      await push.start(accountId: 'acc-2');
+
+      expect(sent, <String>['sub-1', 'sub-1']);
+      expect(remote.observers, hasLength(1));
+    });
+
+    test('after the sign-in ends nothing is sent', () async {
+      await push.start(accountId: 'acc-1');
+
+      push.stop();
+      remote.register('sub-3');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sent, isEmpty);
+      expect(remote.observers, isEmpty);
+    });
+
+    test('a failed send is tried again at the next change', () async {
+      int tries = 0;
+      final PushRegistration offline = PushRegistration(
+        phone,
+        remote: remote,
+        send: (String id) async {
+          tries++;
+          if (tries == 1) throw Exception('offline');
+          sent.add(id);
+        },
+      );
+      remote.id = 'sub-1';
+
+      await offline.start(accountId: 'acc-1');
+      remote.register('sub-1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(tries, 2);
+      expect(sent, <String>['sub-1']);
+    });
+  });
+
   group('Push taps', () {
     late StreamController<String> pushes;
     late PluginPhoneNotifications phone;
