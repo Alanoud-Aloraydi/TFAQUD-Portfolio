@@ -170,14 +170,22 @@ There is no endpoint that ends all the sessions at once, because no story asks
 for it. Deleting an account (F05) ends every session of that user.
 
 **A session ends only by a sign-out (Rule, 10 November 2026).** A refresh token
-has no end date. A session ends in one of two ways, and each is a sign-out:
+has no end date. A session ends in one of three ways, and each is a sign-out:
 
 - the person signs out (`POST /api/v1/auth/sign-out`);
-- the account is deleted (F05).
+- the account is deleted (F05);
+- the app is deleted from the phone (Built, 15 November 2026). Each session keeps
+  its phone's OneSignal subscription (`PUT /api/v1/accounts/me/push-subscription`,
+  section 5). After sending a push to an account, the server asks OneSignal about
+  that account's phones; a phone whose app was deleted (`notification_types` -10,
+  which OneSignal sets when Apple or Google refuse the phone's token) signs its
+  session out. A phone that only turned notifications off is 0 and stays signed in.
+  OneSignal learns of a deletion only from sends, two or three after it, and Apple
+  can take days, so the session ends some days later, not at once. A session whose
+  app never sent its subscription is not ended this way.
 
-(Until 14 November 2026 a deleted app also signed its session out, through
-Apple's 410 for the phone's push token. Pushes now go through OneSignal, which
-keeps no token on the server, so that third way is gone.)
+(From 14 to 15 November 2026 the third way was missing: pushes had moved to
+OneSignal, and the server no longer kept Apple's tokens.)
 
 The app also signs out by itself when it is installed again: iOS keeps the
 tokens in the Keychain after the app is deleted, so the app checks on its
@@ -468,6 +476,22 @@ OneSignal's external id) after the person signs in, and unties it at sign-out. T
 server keeps no phone token: it sends to accounts, and only to an account with a
 live sign-in. (`PUT /api/v1/accounts/me/push-device`, which kept Apple tokens, was
 removed on 14 November 2026.)
+
+### PUT /api/v1/accounts/me/push-subscription (Built)
+
+The app sends the id of its phone's OneSignal push subscription after signing in,
+every time it opens, and when OneSignal gives the phone a new one. Needs a valid
+access token. Body:
+
+```json
+{ "subscription_id": "1dd608f2-c6a1-11e3-851d-000c2940e62c" }
+```
+
+The id is kept with the session that sent it, in place of the one it sent before.
+One phone is one session: an id another session had (the phone signed in again)
+moves to this one. When OneSignal reports that phone's app deleted, the session is
+signed out (section 4). 204, empty body. Errors: 400 `invalid_json`, 401, 422
+`validation_error` (not an id), 503 without a database.
 
 The server sends a push (title and one line, in Arabic) for: a new or resent
 invitation (to the invited number's account), a circle request (to the patient's

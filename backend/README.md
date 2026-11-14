@@ -236,6 +236,15 @@ To set it up:
    the notification service extension's profile among them) and install it
    from TestFlight. On Android, any build of the app gets pushes.
 
+A deleted app signs its phone out. The app sends its phone's OneSignal
+subscription id after signing in (`PUT /api/v1/accounts/me/push-subscription`),
+kept with that sign-in. After sending a push to an account, the server asks
+OneSignal about the account's phones (the same App API key); a phone whose
+app was deleted (`notification_types` -10) ends its sign-in, as a sign-out
+would. A phone that only turned notifications off stays signed in. OneSignal
+learns of a deletion from the next two or three sends, and Apple can take
+days, so it is not at once.
+
 The code is in `app/push/`. A push that cannot be sent never fails the
 request.
 
@@ -293,6 +302,8 @@ How the server stays up when something it depends on does not.
   `sign_in.code_sent`, `sign_in.code_not_sent`, `sign_in.code_not_checked`,
   `sign_in.invalid_code`, `sign_in.completed`, `push.sent`, `push.failed`,
   `push.no_device` (no phone of the account shows pushes),
+  `session.signed_out_app_deleted` (sign-ins ended because the app was
+  deleted),
   `snooze.dose_due` and
   `snooze.measurement_due` (a task put off came again),
   `prayer_times.unavailable`,

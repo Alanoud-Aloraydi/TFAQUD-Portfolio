@@ -38,6 +38,7 @@ class ApiEndpoints {
 
   static const String accountPhoto = '/accounts/me/photo';
   static const String accountAvatar = '/accounts/me/avatar';
+  static const String pushSubscription = '/accounts/me/push-subscription';
   static const String selfCircle = '/circles/self';
   static const String patientCircle = '/circles/patient-without-account';
   static const String circleRequests = '/circle-requests';

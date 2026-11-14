@@ -5,6 +5,9 @@ OneSignal's `login` with the account's id (its "external id") and `logout`
 at sign-out. So the server sends to an account, never to a phone token.
 Without PUSH_BACKEND=onesignal and its two settings (README.md), the server
 uses `NoPushSender`, which sends nothing.
+
+A sender also says which of an account's phones deleted the app
+(`deleted_apps`), so their sign-ins can end (notify.py).
 """
 
 import logging
@@ -24,6 +27,16 @@ NO_DEVICE = "no_device"
 FAILED = "failed"  # Anything else.
 
 ONESIGNAL_URL = "https://api.onesignal.com/notifications?c=push"
+# One account, by its external id, with its phones ("subscriptions").
+ONESIGNAL_USER_URL = (
+    "https://api.onesignal.com/apps/{app_id}/users/by/external_id/{account}"
+)
+
+# OneSignal's `notification_types` for a phone whose app was deleted: set by
+# OneSignal itself when Apple or Google refuses the phone's token. A phone
+# that only turned notifications off is 0 (its app still says so when it
+# opens), so it never matches.
+APP_DELETED = -10
 
 # The app's notification sound (app/assets/sounds/), the same name the app
 # gives its own reminders, so both sound the same.
@@ -41,12 +54,17 @@ class PushMessage:
 
 
 class PushSender(Protocol):
-    """What every push sender has: `enabled`, and `send` to one account."""
+    """What every push sender has: `enabled`, `send` to one account, and
+    `deleted_apps` of one account."""
     enabled: bool
 
     def send(self, account_id: str, message: PushMessage) -> str:
         """Send to the account's phones; answer SENT, NO_DEVICE or FAILED.
         """
+
+    def deleted_apps(self, account_id: str) -> set[str]:
+        """The OneSignal subscription ids of the account's phones whose app
+        was deleted; empty when unsure."""
 
 
 class NoPushSender:
@@ -58,16 +76,24 @@ class NoPushSender:
         """Send nothing."""
         return FAILED
 
+    def deleted_apps(self, account_id: str) -> set[str]:
+        """Knows of no phone."""
+        return set()
+
 
 @dataclass
 class RecordingPushSender:
     """For tests: keeps what would be sent, by account id. Accounts in
-    `no_device` answer NO_DEVICE (no phone of theirs shows pushes).
+    `no_device` answer NO_DEVICE (no phone of theirs shows pushes), and
+    `deleted` holds, by account id, the subscription ids OneSignal would
+    report as deleted apps.
     """
 
     enabled: bool = True
     sent: list = field(default_factory=list)
     no_device: set = field(default_factory=set)
+    deleted: dict = field(default_factory=dict)
+    asked: list = field(default_factory=list)
 
     def send(self, account_id: str, message: PushMessage) -> str:
         """Keep the message, or answer NO_DEVICE for an account in
@@ -83,6 +109,12 @@ class RecordingPushSender:
         return [
             message for sent, message in self.sent if sent == str(account_id)
         ]
+
+    def deleted_apps(self, account_id: str) -> set[str]:
+        """The subscription ids in `deleted` for the account; each question
+        is kept in `asked`."""
+        self.asked.append(account_id)
+        return {str(one) for one in self.deleted.get(account_id, ())}
 
 
 class OneSignalPushSender:
@@ -178,3 +210,39 @@ class OneSignalPushSender:
             "OneSignal refused a push: %s %s", response.status_code, errors
         )
         return FAILED
+
+    def deleted_apps(self, account_id: str) -> set[str]:
+        """Ask OneSignal for the account's phones and answer the ids of those
+        whose app was deleted (`APP_DELETED`). Any doubt (no answer, an
+        error, an account OneSignal does not know) answers none, so no
+        sign-in ends by mistake."""
+        if not self._breaker.allow():
+            return set()
+        try:
+            response = self._http().get(
+                ONESIGNAL_USER_URL.format(
+                    app_id=self._app_id, account=account_id
+                ),
+                headers={"Authorization": f"Key {self._api_key}"},
+            )
+        except Exception:  # noqa: BLE001 - a push must never break a request
+            log.warning("OneSignal could not be reached.", exc_info=True)
+            self._breaker.record_failure()
+            return set()
+        if response.status_code >= 500:
+            self._breaker.record_failure()
+            return set()
+        self._breaker.record_success()
+        if response.status_code != 200:
+            return set()
+        try:
+            phones = response.json().get("subscriptions") or []
+        except (ValueError, AttributeError):
+            return set()
+        return {
+            str(phone["id"])
+            for phone in phones
+            if isinstance(phone, dict)
+            and phone.get("id")
+            and phone.get("notification_types") == APP_DELETED
+        }

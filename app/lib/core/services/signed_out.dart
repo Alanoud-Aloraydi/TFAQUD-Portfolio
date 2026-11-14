@@ -1,5 +1,6 @@
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/push_registration.dart';
 import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:get_it/get_it.dart';
@@ -21,8 +22,12 @@ Future<void> forgetSignedOutPerson() async {
 }
 
 /// OneSignal stops sending the account's pushes here; a failure (no
-/// network) leaves it for the next sign-in to replace.
+/// network) leaves it for the next sign-in to replace. The phone's
+/// subscription is no longer sent for the sign-in that ended.
 Future<void> _untieRemotePush() async {
+  if (GetIt.I.isRegistered<PushRegistration>()) {
+    GetIt.I<PushRegistration>().stop();
+  }
   try {
     await GetIt.I<RemotePush>().signOut();
   } on Exception {

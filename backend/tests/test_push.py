@@ -170,6 +170,65 @@ def test_an_answer_about_one_account_opens_nothing():
     assert len(calls) == 4
 
 
+# ---- phones whose app was deleted -------------------------------------------
+
+
+def test_onesignal_reports_the_phones_whose_app_was_deleted():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={
+            "identity": {"external_id": ACCOUNT},
+            "subscriptions": [
+                {"id": "gone", "type": "iOSPush", "notification_types": -10},
+                # Notifications turned off: the app is still there.
+                {"id": "off", "type": "AndroidPush", "notification_types": 0},
+                {"id": "out", "type": "iOSPush", "notification_types": -2},
+                {"id": "on", "type": "AndroidPush", "notification_types": 1},
+                {"type": "iOSPush", "notification_types": -10},
+            ],
+        })
+
+    deleted = onesignal(handler).deleted_apps(ACCOUNT)
+
+    assert deleted == {"gone"}
+    [request] = seen
+    assert request.method == "GET"
+    assert str(request.url) == (
+        "https://api.onesignal.com/apps/"
+        f"{SETTINGS['ONESIGNAL_APP_ID']}/users/by/external_id/{ACCOUNT}"
+    )
+    assert request.headers["Authorization"] == "Key os_v2_app_test"
+
+
+@pytest.mark.parametrize(
+    "status, body",
+    [
+        (404, {"errors": ["User not found"]}),
+        (401, {"errors": ["Access denied"]}),
+        (503, {}),
+        (200, {"subscriptions": "nothing"}),
+        (200, ["not", "an", "object"]),
+    ],
+)
+def test_any_doubt_reports_no_deleted_app(status, body):
+    sender = onesignal(lambda request: httpx.Response(status, json=body))
+
+    assert sender.deleted_apps(ACCOUNT) == set()
+
+
+def test_out_of_reach_reports_no_deleted_app():
+    def handler(request):
+        raise httpx.ConnectError("no route")
+
+    assert onesignal(handler).deleted_apps(ACCOUNT) == set()
+
+
+def test_without_a_push_service_no_app_is_deleted():
+    assert NoPushSender().deleted_apps(ACCOUNT) == set()
+
+
 # ---- the scan command -------------------------------------------------------
 
 

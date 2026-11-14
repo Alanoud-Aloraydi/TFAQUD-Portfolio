@@ -1,11 +1,21 @@
 """Push notifications on PostgreSQL: who is told about invitations and
 circle requests. OneSignal knows each phone by its signed-in account, so a
-push goes to an account that is signed in somewhere."""
+push goes to an account that is signed in somewhere. Each sign-in keeps its
+phone's OneSignal subscription, and a phone whose app was deleted is signed
+out."""
+
+import uuid
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app import metrics
+from app.models import AccountSession
 from app.push import NoPushSender, RecordingPushSender
 from integration_tests.helpers import offline_circle
+
+SUBSCRIPTION = "/api/v1/accounts/me/push-subscription"
 
 REQUESTS = "/api/v1/circle-requests"
 REQUEST = {"proposed_app_mode": "simplified"}
@@ -37,6 +47,19 @@ class Phone:
         self.app.extensions["session_service"].sign_out(
             self.issued.session_id
         )
+
+    def subscribe(self, subscription=None):
+        """What the app does after signing in: send its phone's OneSignal
+        subscription (a new one unless given)."""
+        self.subscription = subscription or str(uuid.uuid4())
+        answer = self.call(
+            "put", SUBSCRIPTION, {"subscription_id": self.subscription}
+        )
+        assert answer.status_code == 204, answer.json
+        return self
+
+    def signed_in(self):
+        return self.call("get", "/api/v1/auth/session").status_code == 200
 
 
 @pytest.fixture
@@ -239,3 +262,119 @@ def test_a_broken_push_never_breaks_the_request(
     )
 
     assert sent.status_code == 201
+
+
+# ---- each sign-in's phone, and a deleted app --------------------------------
+
+
+def _subscriptions(engine):
+    with Session(engine) as session:
+        return {
+            row.id.hex: row.push_subscription_id
+            for row in session.scalars(select(AccountSession))
+        }
+
+
+def test_a_sign_in_keeps_its_phones_subscription(
+    database_app, database, account
+):
+    phone = Phone(database_app, account(), "b").subscribe()
+
+    kept = _subscriptions(database)[phone.issued.session_id]
+
+    assert str(kept) == phone.subscription
+    # A new one (OneSignal gave the phone another) takes its place.
+    phone.subscribe()
+    assert str(
+        _subscriptions(database)[phone.issued.session_id]
+    ) == phone.subscription
+
+
+def test_a_phone_signed_in_again_moves_its_subscription(
+    database_app, database, account
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    before = Phone(database_app, reem, "b").subscribe()
+    before.sign_out()
+
+    after = Phone(database_app, khaled, "c").subscribe(before.subscription)
+
+    kept = _subscriptions(database)
+    assert kept[before.issued.session_id] is None
+    assert str(kept[after.issued.session_id]) == before.subscription
+
+
+@pytest.mark.parametrize(
+    "body", [{}, {"subscription_id": "not-an-id"}, {"other": 1}]
+)
+def test_the_subscription_must_be_an_id(database_app, database, account, body):
+    phone = Phone(database_app, account(), "b")
+
+    answer = phone.call("put", SUBSCRIPTION, body)
+
+    assert answer.status_code == 422
+
+
+def test_the_subscription_needs_a_sign_in(database_app, database):
+    answer = database_app.test_client().put(
+        SUBSCRIPTION, json={"subscription_id": str(uuid.uuid4())}
+    )
+
+    assert answer.status_code == 401
+
+
+def test_a_deleted_app_signs_its_phone_out(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    deleted = Phone(database_app, khaled, "b").subscribe()
+    kept = Phone(database_app, khaled, "d").subscribe()
+    pushes.deleted[str(khaled.id)] = {deleted.subscription}
+
+    assert invite(database_app, database, reem, khaled).status_code == 201
+
+    assert not deleted.signed_in()
+    assert kept.signed_in()
+    assert metrics.count("session.signed_out_app_deleted") == 1
+    # Told once, before the sign-out.
+    assert len(pushes.to(khaled.id)) == 1
+
+
+def test_a_phone_with_notifications_off_stays_signed_in(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b").subscribe()
+    # OneSignal can show it nothing, but its app is there.
+    pushes.no_device.add(str(khaled.id))
+
+    invite(database_app, database, reem, khaled)
+
+    assert pushes.asked == [str(khaled.id)]
+    assert phone.signed_in()
+
+
+def test_a_deleted_app_on_a_phone_unknown_here_ends_nothing(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b").subscribe()
+    # Another phone of Khaled's, whose sign-in never sent its subscription.
+    pushes.deleted[str(khaled.id)] = {str(uuid.uuid4())}
+
+    invite(database_app, database, reem, khaled)
+
+    assert phone.signed_in()
+    assert metrics.count("session.signed_out_app_deleted") == 0
+
+
+def test_an_account_without_a_known_phone_is_not_asked(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    Phone(database_app, khaled, "b")
+
+    invite(database_app, database, reem, khaled)
+
+    assert len(pushes.to(khaled.id)) == 1
+    assert pushes.asked == []
