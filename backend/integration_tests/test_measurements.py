@@ -126,7 +126,7 @@ def test_plan_validation_and_authorization(database_app, database, account):
     body = {
         "kind": "blood_pressure",
         "times": [
-            {"time_of_day": "08:00", "measurement_state": "morning"}
+            {"time_of_day": "08:00", "measurement_state": "fasting"}
         ],
         "weekdays": [day.isoweekday()],
         "starts_on": day.isoformat(),

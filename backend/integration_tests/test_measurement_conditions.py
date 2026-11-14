@@ -88,21 +88,29 @@ def test_blood_pressure_times_name_a_state_of_their_own(circle_api):
     version = created.json["measurement_plan"]["version"]
     assert version["times"][0]["measurement_state"] == "before_medicine"
 
-    without = circle_api(
-        "post", "/measurement-plans",
-        json=plan([{"time_of_day": "08:00"}], **BP),
+
+def test_a_time_may_name_no_state_at_all(circle_api):
+    """Plans made before the states existed, and the simplified mode, send
+    the time by itself."""
+    created = circle_api(
+        "post",
+        "/measurement-plans",
+        json=plan([{"time_of_day": "09:00"}], **BP),
     )
-    assert without.status_code == 422
+
+    assert created.status_code == 201, created.json
+    bare = created.json["measurement_plan"]["version"]["times"][0]
+    assert bare["measurement_state"] is None
 
 
 @pytest.mark.parametrize(
     "kind, measurement_state",
     [
         ("blood_pressure", "fasting"),
-        ("blood_pressure", None),
-        ("glucose", None),
+        ("blood_pressure", "before_meal"),
         ("glucose", "bedtime"),
         ("glucose", "morning"),
+        ("glucose", "before_medicine"),
     ],
 )
 def test_measurement_states_that_do_not_fit_are_refused(

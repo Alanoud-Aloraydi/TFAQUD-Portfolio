@@ -30,6 +30,7 @@ class CircleMembersList extends StatelessWidget {
           patientUsesApp: overview.patientUsesApp,
           patientIsYou: overview.patientIsYou,
           canManageMembers: overview.canManageMembers,
+          canHandOver: overview.canHandOver,
         ),
       for (final CirclePendingInvitation invitation
           in overview.pendingInvitations)

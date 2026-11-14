@@ -95,13 +95,15 @@ class PlanRequest(Dto):
             raise ValueError("Reading times have no time zone.")
         if len(set(moments)) != len(moments):
             raise ValueError("Reading times cannot repeat.")
-        # Every reading time names a state of its own kind: the stomach for
-        # glucose, the medicine or the morning for pressure.
+        # A reading time may name no state at all. When it names one, the
+        # state belongs to its own kind: the stomach for glucose, the
+        # medicine or the morning for pressure.
         allowed = (
             GLUCOSE_STATES if self.kind == "glucose" else PRESSURE_STATES
         )
         for item in self.times:
-            if item.measurement_state not in allowed:
+            state = item.measurement_state
+            if state is not None and state not in allowed:
                 raise ValueError(
                     "A reading time needs a state of its own kind."
                 )
