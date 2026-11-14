@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/services/remote_push.dart';
 import 'package:flutter/foundation.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -13,6 +15,8 @@ class OneSignalRemotePush implements RemotePush {
   /// wrapper lives as long as the caller's observer.
   final Map<RemotePushObserver, OnPushSubscriptionChangeObserver> _observers =
       <RemotePushObserver, OnPushSubscriptionChangeObserver>{};
+
+  final StreamController<String> _taps = StreamController<String>.broadcast();
 
   bool _started = false;
 
@@ -30,7 +34,15 @@ class OneSignalRemotePush implements RemotePush {
       kDebugMode ? OSLogLevel.verbose : OSLogLevel.error,
     );
     await OneSignal.initialize(oneSignalAppId);
+    // The server puts the push's `kind` in its data (app/push/sender.py).
+    OneSignal.Notifications.addClickListener((OSNotificationClickEvent tap) {
+      final Object? kind = tap.notification.additionalData?['kind'];
+      if (kind is String && kind.isNotEmpty) _taps.add(kind);
+    });
   }
+
+  @override
+  Stream<String> get taps => _taps.stream;
 
   @override
   Future<void> signIn(String accountId) async {

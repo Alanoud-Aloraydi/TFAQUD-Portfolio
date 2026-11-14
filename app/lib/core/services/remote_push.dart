@@ -37,6 +37,10 @@ abstract interface class RemotePush {
   /// Asks the person, once, whether the app may show notifications; true
   /// when it may. The same permission covers the phone's own reminders.
   Future<bool> requestPermission();
+
+  /// The `kind` of each server push the person taps (OneSignal keeps the
+  /// tap that opened the app until [initialize] listens).
+  Stream<String> get taps;
 }
 
 /// Whether [subscriptionId] is one OneSignal's servers gave: the SDK uses a
@@ -70,4 +74,7 @@ class NoRemotePush implements RemotePush {
 
   @override
   Future<bool> requestPermission() async => false;
+
+  @override
+  Stream<String> get taps => const Stream<String>.empty();
 }

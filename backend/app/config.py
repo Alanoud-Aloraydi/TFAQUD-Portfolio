@@ -208,14 +208,12 @@ def load_config(
             and os.environ.get("FAKE_SMS_LOG_CODES", "").strip().lower()
             in ("1", "true", "yes")
         ),
-        # Push notifications: "none" (nothing is sent) or "apns" (Apple,
-        # needs a paid Apple Developer account and its .p8 key).
+        # Push notifications: "none" (nothing is sent) or "onesignal"
+        # (iOS and Android, through OneSignal). The app id names the
+        # OneSignal app; the App API key is a secret, typed in Render only.
         "PUSH_BACKEND": os.environ.get("PUSH_BACKEND", "none"),
-        "APNS_KEY_ID": os.environ.get("APNS_KEY_ID"),
-        "APNS_TEAM_ID": os.environ.get("APNS_TEAM_ID"),
-        "APNS_BUNDLE_ID": os.environ.get("APNS_BUNDLE_ID"),
-        "APNS_PRIVATE_KEY_PATH": os.environ.get("APNS_PRIVATE_KEY_PATH"),
-        "APNS_ENVIRONMENT": os.environ.get("APNS_ENVIRONMENT", "sandbox"),
+        "ONESIGNAL_APP_ID": os.environ.get("ONESIGNAL_APP_ID"),
+        "ONESIGNAL_API_KEY": os.environ.get("ONESIGNAL_API_KEY"),
         # The one code the demo accounts (app/demo_accounts.py) sign in
         # with, six digits, so a shared test server with real SMS can show
         # the demo: those made-up numbers get no SMS. Unset: no demo
@@ -223,8 +221,9 @@ def load_config(
         "DEMO_SIGN_IN_CODE": (
             os.environ.get("DEMO_SIGN_IN_CODE", "").strip() or None
         ),
-        # Shared secret for the external scheduler's call to /internal/tick.
-        # None (unset) keeps the endpoint refusing every request.
+        # Shared secret for /internal/tick and /internal/metrics (the
+        # scheduled scan runs as `flask --app wsgi tick` on Render's cron).
+        # None (unset) keeps the endpoints refusing every request.
         "TICK_SECRET": os.environ.get("TICK_SECRET"),
         # Push notifications and other work no one waits for run after the
         # answer (app/background.py); tests run them at once.

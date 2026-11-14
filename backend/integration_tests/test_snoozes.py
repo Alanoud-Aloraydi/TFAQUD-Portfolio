@@ -45,8 +45,6 @@ def care(database_app, database, account, morning):
     add_manager(database, reem, circle, khaled)
     reem_phone = Phone(database_app, reem, "a")
     khaled_phone = Phone(database_app, khaled, "b")
-    reem_phone.register()
-    khaled_phone.register()
     plan = create_plan(
         database_app.test_client(),
         circle,

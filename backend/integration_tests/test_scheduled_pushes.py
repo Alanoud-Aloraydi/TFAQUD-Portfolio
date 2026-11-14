@@ -46,7 +46,6 @@ def test_only_a_missed_dose_is_told_and_only_once(
     clock, pushes = ticking
     owner = account(name="Reem")
     phone = Phone(database_app, owner, "a")
-    phone.register()
     circle = offline_circle(database, owner)
     created = create_plan(
         database_app.test_client(),
@@ -77,6 +76,29 @@ def test_only_a_missed_dose_is_told_and_only_once(
     assert len(pushes.to(phone.token)) == 1
 
 
+def test_the_cron_command_runs_the_same_scan(
+    database_app, database, account, ticking
+):
+    clock, pushes = ticking
+    owner = account(name="Reem")
+    phone = Phone(database_app, owner, "a")
+    circle = offline_circle(database, owner)
+    create_plan(
+        database_app.test_client(),
+        circle,
+        signed_in(database_app, owner),
+        plan_body(clock.now()),
+    )
+    clock.advance(hours=15)
+
+    # What Render's cron job runs every 10 minutes.
+    result = database_app.test_cli_runner().invoke(args=["tick"])
+
+    assert result.exit_code == 0, result.output
+    [message] = pushes.to(phone.token)
+    assert message.kind == "dose_missed"
+
+
 def _appointment(api, circle, **changes):
     """A follow-up today, 28 October, at 09:00 in Riyadh."""
     created = api.post(
@@ -103,7 +125,6 @@ def test_an_appointment_nobody_marked_is_told_two_hours_after_once(
     clock, pushes = ticking
     owner = account(name="Reem")
     phone = Phone(database_app, owner, "a")
-    phone.register()
     circle = offline_circle(database, owner)
     _appointment(Api(database_app, owner), circle)
 
@@ -130,7 +151,6 @@ def test_an_appointment_marked_visited_is_not_told(
     clock, pushes = ticking
     owner = account(name="Reem")
     phone = Phone(database_app, owner, "a")
-    phone.register()
     circle = offline_circle(database, owner)
     api = Api(database_app, owner)
     saved = _appointment(api, circle)

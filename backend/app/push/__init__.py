@@ -1,71 +1,53 @@
-"""Push notifications to the phones of signed-in accounts.
+"""Push notifications to the phones of signed-in accounts, through OneSignal.
 
-`create_push_sender` picks the sender named by PUSH_BACKEND, `notify` sends a
-message to every signed-in phone of some accounts, and `routes` lets the app
-register its phone's token.
+`create_push_sender` picks the sender named by PUSH_BACKEND, and `notify`
+sends a message to the phones of some accounts. The app ties each phone to
+its account in OneSignal (its external id), so the server keeps no phone
+tokens.
 """
-
-from pathlib import Path
 
 from app.config import ConfigError
 from app.push.sender import (
-    ApnsPushSender,
     NoPushSender,
+    OneSignalPushSender,
     PushMessage,
     PushSender,
     RecordingPushSender,
 )
 
-_APNS_SETTINGS = (
-    "APNS_KEY_ID",
-    "APNS_TEAM_ID",
-    "APNS_BUNDLE_ID",
-    "APNS_PRIVATE_KEY_PATH",
-)
+_ONESIGNAL_SETTINGS = ("ONESIGNAL_APP_ID", "ONESIGNAL_API_KEY")
 
 
 def create_push_sender(config: dict) -> PushSender:
-    """"none" sends nothing; "apns" needs every APNS_* setting and the key."""
-    # "none", or "apns" with every setting and a readable key file.
+    """"none" sends nothing; "onesignal" needs both ONESIGNAL_* settings."""
     backend = config.get("PUSH_BACKEND", "none")
     if backend == "none":
         return NoPushSender()
-    if backend != "apns":
+    if backend == "apns":
         raise ConfigError(
-            f"Unknown PUSH_BACKEND {backend!r}. Use 'none' or 'apns'."
+            "PUSH_BACKEND apns was replaced by OneSignal: set PUSH_BACKEND to "
+            "onesignal, with ONESIGNAL_APP_ID and ONESIGNAL_API_KEY."
         )
-    missing = [name for name in _APNS_SETTINGS if not config.get(name)]
+    if backend != "onesignal":
+        raise ConfigError(
+            f"Unknown PUSH_BACKEND {backend!r}. Use 'none' or 'onesignal'."
+        )
+    missing = [name for name in _ONESIGNAL_SETTINGS if not config.get(name)]
     if missing:
         raise ConfigError(
-            "PUSH_BACKEND is apns, so these are required: "
+            "PUSH_BACKEND is onesignal, so these are required: "
             + ", ".join(missing)
             + "."
         )
-    environment = config.get("APNS_ENVIRONMENT") or "sandbox"
-    if environment not in ("sandbox", "production"):
-        raise ConfigError(
-            "APNS_ENVIRONMENT must be sandbox or production, "
-            f"got {environment!r}."
-        )
-    key_path = Path(config["APNS_PRIVATE_KEY_PATH"])
-    try:
-        private_key = key_path.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise ConfigError(
-            f"The Apple push key cannot be read at {key_path}."
-        ) from exc
-    return ApnsPushSender(
-        key_id=config["APNS_KEY_ID"],
-        team_id=config["APNS_TEAM_ID"],
-        bundle_id=config["APNS_BUNDLE_ID"],
-        private_key=private_key,
-        environment=environment,
+    return OneSignalPushSender(
+        app_id=config["ONESIGNAL_APP_ID"],
+        api_key=config["ONESIGNAL_API_KEY"],
     )
 
 
 __all__ = [
-    "ApnsPushSender",
     "NoPushSender",
+    "OneSignalPushSender",
     "PushMessage",
     "PushSender",
     "RecordingPushSender",

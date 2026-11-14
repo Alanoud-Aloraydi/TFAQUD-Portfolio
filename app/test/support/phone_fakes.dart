@@ -158,6 +158,8 @@ class FakeCalendarSync extends Fake implements CalendarSync {
 /// The server's pushes (OneSignal), in memory: who signed in and out, the
 /// permission asks, and a subscription id the test sets with [register].
 class FakeRemotePush implements RemotePush {
+  final StreamController<String> tapController =
+      StreamController<String>.broadcast();
   final List<String> signIns = <String>[];
   final List<RemotePushObserver> observers = <RemotePushObserver>[];
   int signOuts = 0;
@@ -197,4 +199,7 @@ class FakeRemotePush implements RemotePush {
     permissionRequests++;
     return true;
   }
+
+  @override
+  Stream<String> get taps => tapController.stream;
 }

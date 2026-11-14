@@ -301,7 +301,6 @@ final auth = OfflineAuthRepository();
 final onboarding = OfflineProfileRepository();
 final photoRepository = OfflinePhotoRepository();
 final phone = FakePhoneNotifications();
-final pushTokens = <String>[];
 final remotePush = FakeRemotePush();
 
 /// Registers the services the shell's pages read from GetIt (as
@@ -344,11 +343,7 @@ void setUpShellApp() {
     GetIt.I.registerSingleton<CalendarSync>(FakeCalendarSync());
     GetIt.I.registerSingleton<RemotePush>(remotePush);
     GetIt.I.registerSingleton<PushRegistration>(
-      PushRegistration(
-        phone,
-        (String token) async => pushTokens.add(token),
-        remote: remotePush,
-      ),
+      PushRegistration(phone, remote: remotePush),
     );
     GetIt.I.registerSingleton<PrayerTimesUseCase>(
       PrayerTimesUseCase(PrayerTimesRepository(OfflinePrayerTimes())),
