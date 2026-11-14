@@ -35,7 +35,7 @@ abstract class AppSemanticColors {
   static const Color settingsTileDoses = AppColors.leaf;
   static const Color settingsTileMeasurements = AppColors.honey;
   static const Color settingsTileAppointments = AppColors.slateSoft;
-  static const Color onSettingsTile = AppColors.ink;
+  static const Color onSettingsTile = AppColors.inkViolet;
 
   /// The fixed mark over a ruler picker's chosen number: the brand's green
   /// deep enough to stand out on white (above 3:1), unlike the pale leaf.
@@ -49,6 +49,16 @@ abstract class AppSemanticColors {
   static const Color doseTrack = AppColors.slatePale;
   static const Color doseDueMarker = AppColors.honeyDeep;
   static const Color statusSuccess = AppColors.success;
+  static const Color statusInfo = AppColors.info;
+
+  /// The readings drawn on a month chart: the violet's own ink, so the
+  /// line and the dots belong to the palette and not to the text.
+  static const Color chartInk = AppColors.inkViolet;
+
+  /// The fill of a status badge. «سارية» had the selected row's violet and
+  /// «قادم» had the neutral grey, so neither read as a status of its own.
+  static const Color surfaceSuccess = AppColors.successLight;
+  static const Color surfaceInfo = AppColors.infoLight;
   static const Color statusWarning = AppColors.warning;
   static const Color statusError = AppColors.error;
 

@@ -401,7 +401,7 @@ void main() {
         );
       });
 
-      test('values stay between 1 and 999; glucose has one', () {
+      test('a number no body can have is refused; glucose has one', () {
         expect(
           const SimplifiedReading(
             kind: MeasurementKind.glucose,
@@ -421,6 +421,41 @@ void main() {
             kind: MeasurementKind.glucose,
             valueOne: 112,
             valueTwo: 80,
+          ).isValid,
+          isFalse,
+        );
+      });
+
+      test('a diastolic typed as 18 instead of 80 is refused', () {
+        expect(
+          const SimplifiedReading(
+            kind: MeasurementKind.bp,
+            valueOne: 150,
+            valueTwo: 18,
+          ).isValid,
+          isFalse,
+        );
+        expect(
+          const SimplifiedReading(
+            kind: MeasurementKind.bp,
+            valueOne: 150,
+            valueTwo: 80,
+          ).isValid,
+          isTrue,
+        );
+        // High enough to call an ambulance over, and still saved.
+        expect(
+          const SimplifiedReading(
+            kind: MeasurementKind.bp,
+            valueOne: 240,
+            valueTwo: 130,
+          ).isValid,
+          isTrue,
+        );
+        expect(
+          const SimplifiedReading(
+            kind: MeasurementKind.glucose,
+            valueOne: 700,
           ).isValid,
           isFalse,
         );

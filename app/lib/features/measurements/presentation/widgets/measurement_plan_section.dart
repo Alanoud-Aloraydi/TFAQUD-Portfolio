@@ -59,7 +59,7 @@ class MeasurementPlanSection extends StatelessWidget {
                   context.read<MeasurementPlansCubit>().load(circleId),
             )
           else if (active.isEmpty)
-            EmptyStateNote(
+            EmptyStateNote.section(
               context.tr('measurements.no_plans'),
               actionLabel: canManage ? context.tr('add.measurement') : null,
               onAction: canManage

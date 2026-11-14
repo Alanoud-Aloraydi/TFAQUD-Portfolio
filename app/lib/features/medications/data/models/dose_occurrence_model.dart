@@ -27,6 +27,7 @@ class DoseOccurrenceModel {
         doseUnit: unit,
         missedAfterMinutes: json['missed_after_minutes'] as int? ?? 60,
         instructions: json['instructions'] as String?,
+        reason: json['reason_for_use'] as String?,
         timingState: json['timing_state'] == null
             ? null
             : DoseTimingState.values.byName(json['timing_state'] as String),

@@ -15,6 +15,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.warningText,
     required this.error,
     required this.errorText,
+    required this.infoText,
     required this.glassBorder,
   });
 
@@ -36,6 +37,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color successText;
   final Color warningText;
   final Color errorText;
+  final Color infoText;
 
   /// Edge of glass surfaces: a thin white edge, or slate with Increased
   /// Contrast, as Apple does.
@@ -51,6 +53,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     warningText: AppSemanticColors.statusWarning,
     error: AppSemanticColors.statusError,
     errorText: AppSemanticColors.statusError,
+    infoText: AppSemanticColors.statusInfo,
     glassBorder: AppSemanticColors.surfaceContent,
   );
 
@@ -64,6 +67,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     warningText: AppSemanticColors.textPrimary,
     error: AppSemanticColors.statusError,
     errorText: AppSemanticColors.textPrimary,
+    infoText: AppSemanticColors.textPrimary,
     glassBorder: AppSemanticColors.textSupporting,
   );
 
@@ -78,6 +82,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? warningText,
     Color? error,
     Color? errorText,
+    Color? infoText,
     Color? glassBorder,
   }) {
     return AppTokens(
@@ -90,6 +95,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       warningText: warningText ?? this.warningText,
       error: error ?? this.error,
       errorText: errorText ?? this.errorText,
+      infoText: infoText ?? this.infoText,
       glassBorder: glassBorder ?? this.glassBorder,
     );
   }
@@ -107,6 +113,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       warningText: Color.lerp(warningText, other.warningText, t)!,
       error: Color.lerp(error, other.error, t)!,
       errorText: Color.lerp(errorText, other.errorText, t)!,
+      infoText: Color.lerp(infoText, other.infoText, t)!,
       glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
     );
   }

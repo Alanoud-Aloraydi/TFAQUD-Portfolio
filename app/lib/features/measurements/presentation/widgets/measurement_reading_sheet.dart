@@ -15,6 +15,7 @@ import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_limits.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
@@ -134,11 +135,7 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
     final two = _kind == MeasurementKind.bp
         ? int.tryParse(_diastolic.text)
         : null;
-    if (one == null ||
-        one < 1 ||
-        one > 999 ||
-        (_kind == MeasurementKind.bp &&
-            (two == null || two < 1 || two > 999 || one <= two))) {
+    if (one == null || !MeasurementLimits.reading(_kind, one, two)) {
       setState(() => _errorKey = 'measurements.invalid_reading');
       return;
     }

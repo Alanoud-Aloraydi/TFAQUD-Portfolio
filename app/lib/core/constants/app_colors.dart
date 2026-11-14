@@ -23,12 +23,23 @@ class AppColors {
   static const Color leafPressed = Color(0xFFAB98D0);
   static const Color leafTint = Color(0xFFEFEAF8);
 
-  /// Warm accent for prayer and attention states.
-  static const Color honey = Color(0xFFEEC86B);
-  static const Color honeyLight = Color(0xFFFDF3D6);
-  static const Color honeyBorder = Color(0xFFFAEBC6);
+  /// Ink of the violet's own family, for words and marks that sit on a
+  /// violet or honey surface: 6.4 on leaf, 8.3 on honey, 10.3 on leafTint.
+  static const Color inkViolet = Color(0xFF3F2A65);
+
+  /// Warm accent for prayer and attention states. The hue is 50, a little
+  /// cooler than the gold that went with the sage, because yellow is the
+  /// violet's complement and a warmer, more saturated one shouts over it.
+  /// The gold it replaced, to go back in one edit: honey 0xFFEEC86B,
+  /// light 0xFFFDF3D6, border 0xFFFAEBC6, deep 0xFFB9860F.
+  static const Color honey = Color(0xFFE8D67D);
+  static const Color honeyLight = Color(0xFFFDF7D9);
+  static const Color honeyBorder = Color(0xFFF9F1C7);
   static const Color slatePale = Color(0xFFDFE2EA);
-  static const Color honeyDeep = Color(0xFFB9860F);
+
+  /// Icons on white, never text: 3.3 against white, over the 3:1 that
+  /// non-text graphics need.
+  static const Color honeyDeep = Color(0xFFA58C0D);
 
   /// Shared canvas behind every app screen.
   static const Color canvas = Color(0xFFF8F7FB);
@@ -37,7 +48,14 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF);
   static const Color line = Color(0xFFE1DDE9);
   static const Color stone = Color(0xFF74817A);
-  static const Color success = Color(0xFF286344);
+
+  /// Status greens and blues, each on its own hue so no two badges wear
+  /// the same chip: success 152, info 200. The green that went with the
+  /// sage was 0xFF286344.
+  static const Color success = Color(0xFF1C6E48);
+  static const Color successLight = Color(0xFFE7F8F0);
+  static const Color info = Color(0xFF23688B);
+  static const Color infoLight = Color(0xFFE7F3F8);
   static const Color warning = Color(0xFF795713);
   static const Color error = Color(0xFFA53636);
   // The emergency card's allergy box and the segmented switch (handoff
