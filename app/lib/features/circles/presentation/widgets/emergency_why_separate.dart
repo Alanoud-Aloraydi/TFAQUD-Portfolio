@@ -20,22 +20,24 @@ class EmergencyWhySeparate extends StatelessWidget {
         color: AppSemanticColors.surfaceContent,
         shape: AppRadius.shape(AppRadius.m),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Icon(AppIcons.info, size: AppSizes.iconSmall),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                context.tr('emergency_card.why_title'),
-                style: text.labelMedium,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(context.tr('emergency_card.why_text'), style: text.bodySmall),
-        ],
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Icon(AppIcons.info, size: AppSizes.iconSmall),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  context.tr('emergency_card.why_title'),
+                  style: text.labelMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(context.tr('emergency_card.why_text'), style: text.bodySmall),
+          ],
+        ),
       ),
     );
   }

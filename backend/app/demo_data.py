@@ -295,6 +295,50 @@ class DemoBuilder:
             circle.id, actor.id, MeasurementPlanRequest.model_validate(body)
         )
 
+    def reading(self, actor, circle, body) -> None:
+        """Record one demo reading, at the moment the body names."""
+        MeasurementService(self.session, self.now).record(
+            circle.id, actor.id, ReadingRequest.model_validate(body)
+        )
+
+    def pressure_history(self, actor, circle, days: int = 24) -> None:
+        """A month of blood pressure, morning and evening, so the chart
+        has a shape to draw: mostly in range, with a few high mornings
+        that the chart marks and the summary counts."""
+        for offset in range(-days, 0):
+            swing = (offset * 7) % 11
+            high = offset % 8 == 0
+            for hour, lift in ((8, 6), (20, 0)):
+                systolic = 118 + swing + lift + (22 if high else 0)
+                diastolic = 74 + swing % 7 + (10 if high else 0)
+                self.reading(actor, circle, {
+                    "kind": "blood_pressure",
+                    "outcome": "read",
+                    "measured_at": self.at(offset, hour),
+                    "systolic_value": systolic,
+                    "diastolic_value": diastolic,
+                })
+
+    def glucose_history(self, actor, circle, days: int = 24) -> None:
+        """A month of sugar: fasting in the morning, after food at noon."""
+        for offset in range(-days, 0):
+            swing = (offset * 5) % 13
+            high = offset % 7 == 0
+            self.reading(actor, circle, {
+                "kind": "glucose",
+                "outcome": "read",
+                "measured_at": self.at(offset, 7),
+                "glucose_value": 96 + swing + (38 if high else 0),
+                "conditions": ["fasting"],
+            })
+            self.reading(actor, circle, {
+                "kind": "glucose",
+                "outcome": "read",
+                "measured_at": self.at(offset, 14),
+                "glucose_value": 138 + swing + (52 if high else 0),
+                "conditions": ["after_meal"],
+            })
+
     def appointment(self, actor, circle, body) -> None:
         """Add a demo appointment."""
         AppointmentService(self.session, self.now).create(
@@ -424,6 +468,9 @@ class DemoBuilder:
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
         })
+        # The month behind him, so the chart and the summary have
+        # something to show on the first screen he opens.
+        self.glucose_history(khaled, circle)
         # A reading Khaled took himself an hour ago, outside the plan.
         MeasurementService(self.session, self.now).record(
             circle.id,
@@ -526,6 +573,19 @@ class DemoBuilder:
             "weekdays": list(EVERY_DAY),
             "starts_on": self.today,
         })
+        self.pressure_history(lina, mother)
+        # Her sugar as well, so the detailed mode shows both charts and
+        # both tables of the health summary.
+        self.measure(lina, mother, {
+            "kind": "glucose",
+            "times": [
+                {"time_of_day": "07:00", "measurement_state": "fasting"},
+                {"time_of_day": "14:00", "measurement_state": "after_meal"},
+            ],
+            "weekdays": list(EVERY_DAY),
+            "starts_on": self.today,
+        })
+        self.glucose_history(lina, mother)
         self.appointment(lina, mother, {
             "specialty": "الغدد الصماء",
             "kind": "follow_up",

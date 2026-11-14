@@ -24,6 +24,8 @@ class SimplifiedDay extends Equatable {
     required Map<String, String> reasons,
     this.avatarCode,
     this.prayers,
+    this.latitude,
+    this.longitude,
   }) : doses = List<DoseOccurrence>.unmodifiable(doses),
        measurements = List<MeasurementOccurrence>.unmodifiable(measurements),
        appointments = List<CareAppointment>.unmodifiable(appointments),
@@ -67,6 +69,11 @@ class SimplifiedDay extends Equatable {
   /// Today's prayer times; null when they could not be read.
   final PrayerDay? prayers;
 
+  /// Where the patient's city is, for the weather there; null when the
+  /// city has no place yet, and then no weather is shown.
+  final double? latitude;
+  final double? longitude;
+
   @override
   List<Object?> get props => [
     circleId,
@@ -82,5 +89,7 @@ class SimplifiedDay extends Equatable {
     family,
     reasons,
     prayers,
+    latitude,
+    longitude,
   ];
 }

@@ -17,6 +17,7 @@ from app.models import (
     MedicationPlan,
     MedicationPlanVersion,
     MeasurementPlan,
+    MeasurementReading,
 )
 
 
@@ -61,7 +62,11 @@ def test_demo_data_makes_the_whole_story(database_app, database):
     assert _count(database, CareCircleInvitation) == 3
     # Lina's request to her father waits; the one to Khaled is done.
     assert _count(database, CareCircleRequest) == 2
-    assert _count(database, MeasurementPlan) == 3
+    # Khaled's sugar, Noura's pressure and her sugar, and Huda's.
+    assert _count(database, MeasurementPlan) == 4
+    # A month of readings behind both of them, so the charts and the
+    # health summary are not empty on the first screen.
+    assert _count(database, MeasurementReading) > 100
     assert _count(database, Appointment) == 4
 
 

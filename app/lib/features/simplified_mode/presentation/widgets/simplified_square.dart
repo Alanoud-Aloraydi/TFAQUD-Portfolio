@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,10 @@ class SimplifiedSquare extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '$title. $subtitle',
+      label: spoken('$title. $subtitle'),
+      // The tap lives on the card inside, which is excluded below, so the
+      // node that VoiceOver lands on needs the action of its own.
+      onTap: onTap,
       excludeSemantics: true,
       child: _card(context),
     );

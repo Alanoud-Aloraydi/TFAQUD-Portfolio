@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,7 @@ class _RulerPickerState extends State<RulerPicker> {
     return Semantics(
       container: true,
       slider: true,
-      label: widget.semanticLabel,
+      label: spoken(widget.semanticLabel),
       value: widget.valueLabel(value),
       increasedValue: value < widget.max
           ? widget.valueLabel(value + step)

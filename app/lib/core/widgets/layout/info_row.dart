@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -70,7 +71,7 @@ class InfoRow extends StatelessWidget {
     if (onEdit == null) return row;
     return Semantics(
       button: true,
-      label: editLabel ?? label,
+      label: spoken(editLabel ?? label),
       value: value,
       excludeSemantics: true,
       onTap: onEdit,

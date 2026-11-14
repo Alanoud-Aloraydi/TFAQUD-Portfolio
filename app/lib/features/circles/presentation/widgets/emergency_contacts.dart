@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -42,33 +43,41 @@ class EmergencyContacts extends StatelessWidget {
               color: AppSemanticColors.surfaceContent,
               shape: AppRadius.shape(AppRadius.s),
               clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => _call(MedicalTexts.phone(contact)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          '${contact.name} · ${words.relation(contact)}',
-                          style: text.titleSmall,
-                        ),
+              child: MergeSemantics(
+                child: Semantics(
+                  button: true,
+                  child: InkWell(
+                    onTap: () => _call(MedicalTexts.phone(contact)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
                       ),
-                      Text(
-                        MedicalTexts.phone(contact),
-                        textDirection: TextDirection.ltr,
-                        style: text.bodySmall,
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(
+                              '${contact.name} · ${words.relation(contact)}',
+                              style: text.titleSmall,
+                              semanticsLabel: spoken(
+                                '${contact.name}، ${words.relation(contact)}',
+                              ),
+                            ),
+                          ),
+                          Text(
+                            MedicalTexts.phone(contact),
+                            textDirection: TextDirection.ltr,
+                            style: text.bodySmall,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          const Icon(
+                            AppIcons.phoneCall,
+                            size: AppSizes.iconSmall,
+                            color: AppSemanticColors.statusSuccess,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      const Icon(
-                        AppIcons.phoneCall,
-                        size: AppSizes.iconSmall,
-                        color: AppSemanticColors.statusSuccess,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

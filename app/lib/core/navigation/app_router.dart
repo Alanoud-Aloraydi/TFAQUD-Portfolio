@@ -84,6 +84,7 @@ import 'package:app/features/simplified_mode/presentation/pages/simplified_medic
 import 'package:app/features/simplified_mode/presentation/pages/simplified_mode_feature_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_reminder_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_skip_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_snooze_screen.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';

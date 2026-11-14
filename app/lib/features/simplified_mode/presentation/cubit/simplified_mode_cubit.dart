@@ -119,6 +119,24 @@ class SimplifiedModeCubit extends Cubit<SimplifiedModeState> {
     return failure == null ? takenAt : null;
   }
 
+  /// «ما أخذتها» on [dose], with [reason] when the patient named one.
+  /// Returns whether it was written.
+  Future<bool> skipDose(DoseOccurrence dose, DoseSkipReason? reason) async {
+    final SimplifiedDay? day = state.day;
+    if (day == null || state.saving) return false;
+    emit(state.copyWith(saving: true, clearMessage: true));
+    final Result<DoseRecord, Failure> result = await _useCase.skipDose(
+      day.circleId,
+      dose,
+      reason,
+    );
+    if (isClosed) return false;
+    final Failure? failure = result.tryGetError();
+    emit(state.copyWith(saving: false, messageKey: failure?.messageKey));
+    unawaited(load());
+    return failure == null;
+  }
+
   /// «ذكّرني لاحقًا» on [task], the dose or measurement the patient chose:
   /// it is reminded of again [after] from now, the same as in the detailed
   /// mode. A second press while one is being saved does nothing.

@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/photo_edit_badge.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -167,7 +168,7 @@ class AccountScreen extends StatelessWidget {
             children: <Widget>[
               Semantics(
                 button: true,
-                label: context.tr('photos.edit_your_photo'),
+                label: spoken(context.tr('photos.edit_your_photo')),
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () => showPersonPhotoSheet(

@@ -104,6 +104,7 @@ class Routes {
   static const String simplifiedSchedule = '/simplifiedMode/schedule';
   static const String simplifiedReminder = '/simplifiedMode/reminder';
   static const String simplifiedSnooze = '/simplifiedMode/snooze';
+  static const String simplifiedSkip = '/simplifiedMode/skip';
   static const String simplifiedDone = '/simplifiedMode/done';
   static const String simplifiedAccount = '/simplifiedMode/account';
   static const String simplifiedMeasurePath =

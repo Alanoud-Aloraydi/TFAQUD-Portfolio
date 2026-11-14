@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/settings_icon_tile.dart';
@@ -27,7 +28,7 @@ class ToggleRow extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Semantics(
       toggled: value,
-      label: label,
+      label: spoken(label),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,

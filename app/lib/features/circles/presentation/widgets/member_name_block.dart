@@ -19,23 +19,31 @@ class MemberNameBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Wrap(
-          spacing: AppSpacing.sm,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: <Widget>[
-            Text(member.name, style: text.titleSmall),
-            if (member.isYou) const YouPill(),
-          ],
-        ),
-        if (member.isPatient && patientUsesApp)
-          Text(
-            context.tr('circle_overview.patient_line'),
-            style: text.bodySmall,
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: AppSpacing.sm,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(member.name, style: text.titleSmall),
+              if (member.isYou) const YouPill(),
+            ],
           ),
-      ],
+          // The patient is named as the patient whether or not they sign
+          // in; the line only changes its ending.
+          if (member.isPatient)
+            Text(
+              context.tr(
+                patientUsesApp
+                    ? 'circle_overview.patient_line'
+                    : 'circle_overview.patient_line_no_app',
+              ),
+              style: text.bodySmall,
+            ),
+        ],
+      ),
     );
   }
 }

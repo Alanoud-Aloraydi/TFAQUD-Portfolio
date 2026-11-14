@@ -1,6 +1,7 @@
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
@@ -31,6 +32,14 @@ class AttentionMedicationCard extends StatelessWidget {
       occurrence.doseValue,
       occurrence.doseUnit,
     );
+    final String title =
+        '${occurrence.name} ${doseStrengthText(context, occurrence)}';
+    final String when =
+        '${formatMedicationDate(context, occurrence.scheduledOn)}'
+        ' · ${clockText(occurrence.time)}';
+    final String how = occurrence.instructions == null
+        ? dose
+        : '$dose · ${occurrence.instructions}';
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -43,42 +52,53 @@ class AttentionMedicationCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 17,
-                backgroundColor: context.tokens.error.withValues(alpha: .08),
-                child: Icon(
-                  TafaqodPhosphorIcons.pill,
-                  color: context.tokens.error,
-                  size: 18,
+              // The pill is decoration; the name says what it is.
+              ExcludeSemantics(
+                child: CircleAvatar(
+                  radius: 17,
+                  backgroundColor: context.tokens.error.withValues(alpha: .08),
+                  child: Icon(
+                    TafaqodPhosphorIcons.pill,
+                    color: context.tokens.error,
+                    size: 18,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.tight),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
+                // One node for the three lines, read in one breath and
+                // opening with the medicine. «·» is a separator on the
+                // screen, not a word: the label joins with «، ».
+                child: MergeSemantics(
+                  child: Semantics(
+                    button: true,
+                    label: spoken('$title، $when، $how'),
+                    child: InkWell(
                       onTap: () => context.push(
                         Routes.medicationDetails(circleId, occurrence.planId),
                         extra: canManage,
                       ),
-                      child: Text(
-                        '${occurrence.name} ${doseStrengthText(context, occurrence)}',
-                        style: Theme.of(context).textTheme.titleSmall,
+                      child: ExcludeSemantics(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            Text(
+                              when,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            Text(
+                              how,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Text(
-                      '${formatMedicationDate(context, occurrence.scheduledOn)}'
-                      ' · ${clockText(occurrence.time)}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    Text(
-                      occurrence.instructions == null
-                          ? dose
-                          : '$dose · ${occurrence.instructions}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],

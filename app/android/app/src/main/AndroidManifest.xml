@@ -14,7 +14,7 @@
     <uses-permission android:name="android.permission.READ_CALENDAR"/>
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
     <application
-        android:label="tfaqud"
+        android:label="تفقُد"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

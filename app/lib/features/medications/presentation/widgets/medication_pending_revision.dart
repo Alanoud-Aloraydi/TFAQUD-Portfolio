@@ -35,49 +35,73 @@ class MedicationPendingRevision extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              context.tr(
-                'medications.pending_revision',
-                args: [formatMedicationDate(context, pending.effectiveFromOn)],
-              ),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(CareVoice.tr(context, circleId, 'medications.effective_hint')),
-            const SizedBox(height: AppSpacing.md),
-            Text(pending.name, style: Theme.of(context).textTheme.titleMedium),
-            Text(
-              context.tr(
-                'medications.pending_strength',
-                args: [
-                  formatMedicationNumber(pending.strengthValue),
-                  context.tr(
-                    'medications.strength_display.${pending.strengthUnit.name}',
+            // The whole revision reads as one sentence; «إلغاء التعديل»
+            // stays a button of its own.
+            MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr(
+                      'medications.pending_revision',
+                      args: [
+                        formatMedicationDate(context, pending.effectiveFromOn),
+                      ],
+                    ),
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  context.tr('medications.form.${pending.dosageForm.name}'),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    CareVoice.tr(
+                      context,
+                      circleId,
+                      'medications.effective_hint',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    pending.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(
+                    context.tr(
+                      'medications.pending_strength',
+                      args: [
+                        formatMedicationNumber(pending.strengthValue),
+                        context.tr(
+                          'medications.strength_display.${pending.strengthUnit.name}',
+                        ),
+                        context.tr(
+                          'medications.form.${pending.dosageForm.name}',
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (pending.instructions case final instructions?)
+                    Text(instructions),
+                  Text(
+                    arabicCount(
+                      context,
+                      ArabicCount.minutes,
+                      pending.missedAfterMinutes,
+                    ),
+                  ),
+                  for (final schedule in pending.schedules)
+                    Text(
+                      context.tr(
+                        'medications.pending_schedule',
+                        args: [
+                          clockText(schedule.time),
+                          formatMedicationNumber(schedule.doseValue),
+                          context.tr(
+                            'medications.unit.${schedule.doseUnit.name}',
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-            if (pending.instructions case final instructions?)
-              Text(instructions),
-            Text(
-              arabicCount(
-                context,
-                ArabicCount.minutes,
-                pending.missedAfterMinutes,
-              ),
-            ),
-            for (final schedule in pending.schedules)
-              Text(
-                context.tr(
-                  'medications.pending_schedule',
-                  args: [
-                    clockText(schedule.time),
-                    formatMedicationNumber(schedule.doseValue),
-                    context.tr('medications.unit.${schedule.doseUnit.name}'),
-                  ],
-                ),
-              ),
             if (canManage)
               TextButton(
                 onPressed: onCancel,

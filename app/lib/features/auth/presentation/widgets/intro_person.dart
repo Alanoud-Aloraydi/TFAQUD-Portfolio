@@ -29,21 +29,23 @@ class IntroPerson extends StatelessWidget {
     final Widget? end = trailing;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      child: Row(
-        children: <Widget>[
-          IntroInitial(letter: initial, color: color, size: size),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(name, style: text.titleSmall),
-                Text(note, style: text.bodySmall),
-              ],
+      child: MergeSemantics(
+        child: Row(
+          children: <Widget>[
+            IntroInitial(letter: initial, color: color, size: size),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(name, style: text.titleSmall),
+                  Text(note, style: text.bodySmall),
+                ],
+              ),
             ),
-          ),
-          ?end,
-        ],
+            ?end,
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,9 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/snooze_limit.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
@@ -24,6 +29,21 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
     ('simplified_mode.after_60', Duration(hours: 1)),
   ];
 
+  /// How long this task may be put off. A dose is never pushed past
+  /// halfway to the next dose of the same medicine, the same rule the
+  /// detailed mode's ruler follows; anything else has the plain limit.
+  static Duration _limit(
+    BuildContext context,
+    TodayTask task,
+    SimplifiedDay? day,
+    DateTime now,
+  ) {
+    final DoseOccurrence? dose = task.dose;
+    if (dose == null || day == null) return maxSnooze;
+    final PatientClock clock = PatientClockScope.of(context);
+    return doseSnoozeLimit(dose, day.doses, clock, now);
+  }
+
   Future<void> _choose(BuildContext context, Duration after) async {
     await context.read<SimplifiedModeCubit>().snooze(task: task, after: after);
     if (context.mounted) context.go(Routes.simplifiedMode);
@@ -37,6 +57,11 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
     final bool saving = context.select<SimplifiedModeCubit, bool>(
       (cubit) => cubit.state.saving,
     );
+    final SimplifiedDay? day = context
+        .select<SimplifiedModeCubit, SimplifiedDay?>(
+          (cubit) => cubit.state.day,
+        );
+    final Duration limit = _limit(context, task, day, now);
     String clock(Duration after) => simplifiedClockAt(context, now.add(after));
 
     return Scaffold(
@@ -49,7 +74,9 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
             builder: (context, box) => SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: box.maxHeight),
-                child: IntrinsicHeight(child: _content(context, clock, saving)),
+                child: IntrinsicHeight(
+                  child: _content(context, clock, saving, limit),
+                ),
               ),
             ),
           ),
@@ -62,6 +89,7 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
     BuildContext context,
     String Function(Duration) clock,
     bool saving,
+    Duration limit,
   ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
@@ -78,10 +106,22 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
             SimplifiedSnoozeChoice(
               label: context.tr(key),
               clock: clock(after),
-              onTap: saving ? null : () => _choose(context, after),
+              onTap: saving || after > limit
+                  ? null
+                  : () => _choose(context, after),
             ),
             const SizedBox(height: 12),
           ],
+          // Every choice turned off says nothing by itself: say why.
+          if (_choices.every(((String, Duration) choice) => choice.$2 > limit))
+            Text(
+              context.tr('simplified_mode.snooze_too_close'),
+              textAlign: TextAlign.center,
+              style: SimplifiedStyle.text(
+                SimplifiedStyle.body,
+                color: SimplifiedStyle.onDarkMuted,
+              ),
+            ),
           const Spacer(),
           SizedBox(
             width: double.infinity,

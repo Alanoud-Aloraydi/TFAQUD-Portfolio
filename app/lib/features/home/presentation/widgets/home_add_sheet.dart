@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -159,7 +160,7 @@ class _QuickAction extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: '$title، $hint',
+      label: spoken('$title، $hint'),
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
@@ -170,48 +171,50 @@ class _QuickAction extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: _tile,
-                  height: _tile,
-                  decoration: ShapeDecoration(
-                    color: AppSemanticColors.accentLeaf,
-                    shape: AppRadius.shape(AppRadius.s),
+            child: MergeSemantics(
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    width: _tile,
+                    height: _tile,
+                    decoration: ShapeDecoration(
+                      color: AppSemanticColors.accentLeaf,
+                      shape: AppRadius.shape(AppRadius.s),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: AppSizes.icon,
+                      color: AppSemanticColors.textPrimary,
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    size: AppSizes.icon,
-                    color: AppSemanticColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        title,
-                        style: text.titleLarge?.copyWith(
-                          color: AppSemanticColors.surfaceContent,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          title,
+                          style: text.titleLarge?.copyWith(
+                            color: AppSemanticColors.surfaceContent,
+                          ),
                         ),
-                      ),
-                      Text(
-                        hint,
-                        style: text.bodySmall?.copyWith(
-                          color: AppSemanticColors.borderSubtle,
+                        Text(
+                          hint,
+                          style: text.bodySmall?.copyWith(
+                            color: AppSemanticColors.borderSubtle,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                const Icon(
-                  AppIcons.forward,
-                  size: AppSizes.iconSmall,
-                  color: AppSemanticColors.borderSubtle,
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.sm),
+                  const Icon(
+                    AppIcons.forward,
+                    size: AppSizes.iconSmall,
+                    color: AppSemanticColors.borderSubtle,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -271,7 +274,7 @@ class _PlanOption extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: '$title، $hint',
+      label: spoken('$title، $hint'),
       excludeSemantics: true,
       onTap: onTap,
       child: InkWell(
@@ -281,43 +284,45 @@ class _PlanOption extends StatelessWidget {
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
           ),
-          child: Row(
-            children: <Widget>[
-              Container(
-                width: _tile,
-                height: _tile,
-                decoration: ShapeDecoration(
-                  color: AppSemanticColors.surfaceContent,
-                  shape: AppRadius.shape(AppRadius.s),
+          child: MergeSemantics(
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: _tile,
+                  height: _tile,
+                  decoration: ShapeDecoration(
+                    color: AppSemanticColors.surfaceContent,
+                    shape: AppRadius.shape(AppRadius.s),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: AppSizes.iconSmall,
+                    color: AppSemanticColors.textSupporting,
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  size: AppSizes.iconSmall,
-                  color: AppSemanticColors.textSupporting,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(title, style: text.titleSmall),
-                    Text(
-                      hint,
-                      style: text.bodySmall?.copyWith(
-                        color: AppSemanticColors.textSupporting,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(title, style: text.titleSmall),
+                      Text(
+                        hint,
+                        style: text.bodySmall?.copyWith(
+                          color: AppSemanticColors.textSupporting,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              const Icon(
-                AppIcons.forward,
-                size: AppSizes.iconSmall,
-                color: AppSemanticColors.borderControlBase,
-              ),
-            ],
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(
+                  AppIcons.forward,
+                  size: AppSizes.iconSmall,
+                  color: AppSemanticColors.borderControlBase,
+                ),
+              ],
+            ),
           ),
         ),
       ),

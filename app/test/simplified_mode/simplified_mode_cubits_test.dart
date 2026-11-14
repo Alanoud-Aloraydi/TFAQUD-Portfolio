@@ -92,6 +92,30 @@ class _UseCase implements SimplifiedModeUseCase {
     return doseResult;
   }
 
+  /// The doses the patient said they did not take, with the reason given.
+  final List<(DoseOccurrence, DoseSkipReason?)> skipped =
+      <(DoseOccurrence, DoseSkipReason?)>[];
+
+  @override
+  Future<Result<DoseRecord, Failure>> skipDose(
+    String circleId,
+    DoseOccurrence dose,
+    DoseSkipReason? reason,
+  ) async {
+    skipped.add((dose, reason));
+    return doseResult;
+  }
+
+  /// What «آخر القياسات» is given; empty unless a test fills it.
+  List<MeasurementReading> readings = <MeasurementReading>[];
+
+  @override
+  Future<List<MeasurementReading>> recentReadings(
+    String circleId,
+    DateTime now, {
+    int days = 7,
+  }) async => readings;
+
   /// The tasks put off, as [DoseReminders.snoozes] publishes them.
   final ValueNotifier<Map<String, TaskSnooze>> published =
       ValueNotifier<Map<String, TaskSnooze>>(const <String, TaskSnooze>{});

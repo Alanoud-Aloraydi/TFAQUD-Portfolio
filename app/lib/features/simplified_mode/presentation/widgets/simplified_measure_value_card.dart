@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -30,9 +31,11 @@ class SimplifiedMeasureValueCard extends StatelessWidget {
     );
     return Semantics(
       liveRegion: active,
-      label: context.tr(
-        'simplified_mode.a11y.typed_value',
-        args: <String>[value.isEmpty ? unit : '$value $unit'],
+      label: spoken(
+        context.tr(
+          'simplified_mode.a11y.typed_value',
+          args: <String>[value.isEmpty ? unit : '$value $unit'],
+        ),
       ),
       excludeSemantics: true,
       child: Container(

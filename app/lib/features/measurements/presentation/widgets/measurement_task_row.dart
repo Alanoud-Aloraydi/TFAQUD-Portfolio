@@ -50,7 +50,7 @@ class MeasurementTaskRow extends StatelessWidget {
     return CareItemRow(
       time: clockText(task.time),
       // The kind of reading first, then the clock.
-      spoken: <String>[
+      spokenLabel: <String>[
         measurementKindTitle(context, task.kind),
         clockText(task.time),
         if (status.lateBy case final String lateBy) lateBy,

@@ -66,7 +66,7 @@ class MedicationPlanVersion(db.Model):
         CheckConstraint(
             "dosage_form IN "
             "('tablet', 'capsule', 'liquid', 'drops', "
-            "'inhaler', 'injection')",
+            "'inhaler', 'nebulizer', 'injection')",
             name="dosage_form",
         ),
         CheckConstraint(

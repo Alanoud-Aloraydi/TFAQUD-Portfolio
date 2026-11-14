@@ -61,64 +61,84 @@ class _MemberProfile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Center(
-          child: PersonPhoto(
-            name: member.name,
-            photoPath: photoPath,
-            avatarCode: member.avatarCode,
-            size: _photo,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(member.name, textAlign: TextAlign.center, style: text.titleLarge),
-        if (member.isPatient && patientUsesApp) ...<Widget>[
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            context.tr('circle_overview.patient_line'),
-            textAlign: TextAlign.center,
-            style: text.bodySmall?.copyWith(
-              color: context.tokens.textSecondary,
-            ),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.xs,
-          children: memberBadges(context, member),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        DecoratedBox(
-          decoration: ShapeDecoration(
-            color: AppSemanticColors.surfaceContent,
-            shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
+        // Who this is reads as one stop: the name, the patient line and
+        // the badges together. The two buttons below stay their own.
+        MergeSemantics(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Center(
+                child: PersonPhoto(
+                  name: member.name,
+                  photoPath: photoPath,
+                  avatarCode: member.avatarCode,
+                  size: _photo,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                member.name,
+                textAlign: TextAlign.center,
+                style: text.titleLarge,
+              ),
+              if (member.isPatient) ...<Widget>[
+                const SizedBox(height: AppSpacing.xs),
                 Text(
-                  context.tr('circle_overview.member_phone'),
+                  context.tr(
+                    patientUsesApp
+                        ? 'circle_overview.patient_line'
+                        : 'circle_overview.patient_line_no_app',
+                  ),
+                  textAlign: TextAlign.center,
                   style: text.bodySmall?.copyWith(
                     color: context.tokens.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                if (phone != null)
-                  // A number reads left to right inside Arabic text.
-                  Text(
-                    SaudiMobile.display(phone),
-                    textDirection: TextDirection.ltr,
-                    style: text.titleMedium,
-                  )
-                else
-                  Text(
-                    context.tr('circle_overview.member_no_phone'),
-                    style: text.bodyMedium,
-                  ),
               ],
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                children: memberBadges(context, member),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        MergeSemantics(
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              color: AppSemanticColors.surfaceContent,
+              shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    context.tr('circle_overview.member_phone'),
+                    style: text.bodySmall?.copyWith(
+                      color: context.tokens.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  if (phone != null)
+                    // A number reads left to right inside Arabic text.
+                    Text(
+                      SaudiMobile.display(phone),
+                      textDirection: TextDirection.ltr,
+                      style: text.titleMedium,
+                    )
+                  else
+                    Text(
+                      context.tr('circle_overview.member_no_phone'),
+                      style: text.bodyMedium,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,7 @@ class SimplifiedReminderRoundAnswer extends StatelessWidget {
       child: Semantics(
         button: true,
         enabled: onTap != null,
-        label: label,
+        label: spoken(label),
         excludeSemantics: true,
         child: SizedBox(
           width: 130,

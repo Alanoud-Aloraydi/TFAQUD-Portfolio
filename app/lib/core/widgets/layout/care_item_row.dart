@@ -20,7 +20,7 @@ class CareItemRow extends StatelessWidget {
     this.actions,
     this.tone = TodayRowTone.normal,
     this.onTap,
-    this.spoken,
+    this.spokenLabel,
   });
 
   final String time;
@@ -40,7 +40,7 @@ class CareItemRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   /// What a screen reader says for the header line ([CareItemHeader]).
-  final String? spoken;
+  final String? spokenLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class CareItemRow extends StatelessWidget {
             leading: leading,
             status: status,
             onTap: onTap,
-            spoken: spoken,
+            spokenLabel: spokenLabel,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[

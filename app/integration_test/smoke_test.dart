@@ -218,7 +218,7 @@ void main() {
       ScheduledNotification(
         id: id,
         at: DateTime.now().add(const Duration(hours: 1)),
-        title: 'تفقّد',
+        title: 'تفقُد',
         body: 'smoke',
         payload: 'smoke',
       ),

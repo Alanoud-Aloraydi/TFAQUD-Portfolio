@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -27,7 +28,9 @@ class SimplifiedMeasureKeypad extends StatelessWidget {
           ),
         );
     Widget digit(String value) => Semantics(
-      label: context.tr('simplified_mode.a11y.digit', args: <String>[value]),
+      label: spoken(
+        context.tr('simplified_mode.a11y.digit', args: <String>[value]),
+      ),
       excludeSemantics: true,
       child: Text(value, style: SimplifiedStyle.head(28)),
     );
@@ -49,7 +52,7 @@ class SimplifiedMeasureKeypad extends StatelessWidget {
           key(digit('0'), () => onDigit('0')),
           key(
             Semantics(
-              label: context.tr('simplified_mode.erase_digit'),
+              label: spoken(context.tr('simplified_mode.erase_digit')),
               excludeSemantics: true,
               child: const Icon(AppIcons.back, size: 28),
             ),

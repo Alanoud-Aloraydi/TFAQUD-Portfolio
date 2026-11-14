@@ -39,12 +39,17 @@ class CircleMemberRow extends StatelessWidget {
       circleId: circleId,
       patientIsYou: patientIsYou,
     );
-    final Widget row = InkWell(
-      onTap: () => _open(context, photoPath),
-      child: MemberRowContent(
-        member: member,
-        photoPath: photoPath,
-        patientUsesApp: patientUsesApp,
+    final Widget row = MergeSemantics(
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: () => _open(context, photoPath),
+          child: MemberRowContent(
+            member: member,
+            photoPath: photoPath,
+            patientUsesApp: patientUsesApp,
+          ),
+        ),
       ),
     );
     // The leader decides about the others who hold a membership, not about

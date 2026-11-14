@@ -13,5 +13,5 @@ abstract final class ServiceTexts {
 
   /// The name of the app's own calendar on the phone. Also used to find an
   /// old calendar left by an earlier install, so renaming it orphans those.
-  static const String calendarName = 'تفقّد';
+  static const String calendarName = 'تفقُد';
 }

@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,7 +14,7 @@ class TaskCountBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: context.tr('today_dashboard.task_count', args: ['$count']),
+    label: spoken(context.tr('today_dashboard.task_count', args: ['$count'])),
     excludeSemantics: true,
     child: Container(
       width: AppSizes.iconAction,

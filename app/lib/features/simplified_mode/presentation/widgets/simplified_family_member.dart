@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
@@ -29,10 +30,10 @@ class SimplifiedFamilyMember extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: context.tr(
-        'simplified_mode.call_member',
-        args: <String>[member.name],
+      label: spoken(
+        context.tr('simplified_mode.call_member', args: <String>[member.name]),
       ),
+      onTap: _call,
       excludeSemantics: true,
       child: InkWell(
         borderRadius: BorderRadius.circular(SimplifiedStyle.radius),

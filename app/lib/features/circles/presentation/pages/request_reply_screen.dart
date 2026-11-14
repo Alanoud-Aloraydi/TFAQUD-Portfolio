@@ -139,70 +139,74 @@ class _RequestDetails extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: AppSurfaces.card(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: AppSizes.avatarLarge,
-                height: AppSizes.avatarLarge,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: AppSemanticColors.selectedSurface,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  name.isEmpty ? '؟' : name.characters.first,
-                  style: text.titleLarge?.copyWith(
-                    color: AppSemanticColors.textPrimary,
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Container(
+                  width: AppSizes.avatarLarge,
+                  height: AppSizes.avatarLarge,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: AppSemanticColors.selectedSurface,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    name.isEmpty ? '؟' : name.characters.first,
+                    style: text.titleLarge?.copyWith(
+                      color: AppSemanticColors.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Semantics(
-                      header: true,
-                      child: Text(name, style: text.titleMedium),
-                    ),
-                    Text(
-                      context.tr('circles.reply_subtitle'),
-                      style: text.bodyMedium?.copyWith(
-                        color: context.tokens.textSecondary,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Semantics(
+                        header: true,
+                        child: Text(name, style: text.titleMedium),
                       ),
-                    ),
-                  ],
+                      Text(
+                        context.tr('circles.reply_subtitle'),
+                        style: text.bodyMedium?.copyWith(
+                          color: context.tokens.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+            // No circle name here: the patient names the circle when they
+            // complete the request.
+            const Divider(height: 32),
+            _Row(
+              label: context.tr('circles.reply_mode'),
+              child: StatusBadge(
+                text: context.tr(
+                  detailed
+                      ? 'circles.mode_detailed'
+                      : 'circles.mode_simplified',
+                ),
+                tone: StatusTone.success,
               ),
-            ],
-          ),
-          // No circle name here: the patient names the circle when they
-          // complete the request.
-          const Divider(height: 32),
-          _Row(
-            label: context.tr('circles.reply_mode'),
-            child: StatusBadge(
-              text: context.tr(
-                detailed ? 'circles.mode_detailed' : 'circles.mode_simplified',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              context.tr(
+                detailed
+                    ? 'circles.reply_body_detailed'
+                    : 'circles.reply_body_simplified',
               ),
-              tone: StatusTone.success,
+              style: text.bodyMedium?.copyWith(
+                color: context.tokens.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            context.tr(
-              detailed
-                  ? 'circles.reply_body_detailed'
-                  : 'circles.reply_body_simplified',
-            ),
-            style: text.bodyMedium?.copyWith(
-              color: context.tokens.textSecondary,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

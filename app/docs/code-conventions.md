@@ -24,7 +24,7 @@ one widget each.
 | Scope | Limit |
 |---|---|
 | `presentation/` (pages, widgets, cubits) | 70 lines |
-| any other file | 120 lines |
+| any other file | 90 lines |
 
 The limit is on responsibilities, not on lines: a file at 65 lines doing two
 jobs still gets split. Exempt, because splitting them makes them worse:

@@ -21,28 +21,35 @@ class ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: busy ? null : onPressed,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.lg,
-        ),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                label,
-                style: text.titleMedium?.copyWith(color: color),
-              ),
+    // One stop, announced as a button: the label inside names it.
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        enabled: !busy && onPressed != null,
+        child: InkWell(
+          onTap: busy ? null : onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.lg,
             ),
-            if (busy)
-              const SizedBox(
-                width: AppSizes.iconSmall,
-                height: AppSizes.iconSmall,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-          ],
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    label,
+                    style: text.titleMedium?.copyWith(color: color),
+                  ),
+                ),
+                if (busy)
+                  const SizedBox(
+                    width: AppSizes.iconSmall,
+                    height: AppSizes.iconSmall,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

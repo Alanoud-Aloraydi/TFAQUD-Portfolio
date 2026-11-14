@@ -249,17 +249,24 @@ class MedicationScheduleEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text(
-          context.tr('medications.interval_title'),
-          textAlign: TextAlign.center,
-          style: text.bodyMedium?.copyWith(
-            color: AppSemanticColors.textSupporting,
+        MergeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                context.tr('medications.interval_title'),
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(
+                  color: AppSemanticColors.textSupporting,
+                ),
+              ),
+              Text(
+                days(data.intervalDays),
+                textAlign: TextAlign.center,
+                style: text.headlineMedium,
+              ),
+            ],
           ),
-        ),
-        Text(
-          days(data.intervalDays),
-          textAlign: TextAlign.center,
-          style: text.headlineMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         RulerPicker(

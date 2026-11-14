@@ -23,99 +23,101 @@ class IntroNextDoseCard extends StatelessWidget {
         shape: AppRadius.shape(AppRadius.l),
         shadows: AppSurfaces.floatShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  context.tr('intro.demo.next_dose'),
-                  style: text.labelSmall?.copyWith(
-                    color: AppSemanticColors.onInkSupporting,
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    context.tr('intro.demo.next_dose'),
+                    style: text.labelSmall?.copyWith(
+                      color: AppSemanticColors.onInkSupporting,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                StatusPill(
+                  text: context.tr('intro.demo.next_in'),
+                  background: AppSemanticColors.surfaceContent.withValues(
+                    alpha: 0.14,
+                  ),
+                  foreground: AppSemanticColors.surfaceContent,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: <Widget>[
+                const IntroTile(
+                  icon: AppIcons.pill,
+                  background: AppSemanticColors.selectedSurface,
+                  foreground: AppSemanticColors.statusSuccess,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        context.tr('intro.demo.medicine'),
+                        style: text.titleSmall?.copyWith(
+                          color: AppSemanticColors.surfaceContent,
+                        ),
+                      ),
+                      Text(
+                        context.tr('intro.demo.medicine_note'),
+                        style: text.bodySmall?.copyWith(
+                          color: AppSemanticColors.onInkSupporting,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text.rich(
+                  TextSpan(
+                    children: <InlineSpan>[
+                      TextSpan(
+                        text: context.tr('intro.demo.medicine_time'),
+                        style: text.headlineLarge?.copyWith(
+                          color: AppSemanticColors.surfaceContent,
+                        ),
+                      ),
+                      const TextSpan(text: ' '),
+                      TextSpan(
+                        text: context.tr('intro.demo.evening'),
+                        style: text.labelSmall?.copyWith(
+                          color: AppSemanticColors.onInkSupporting,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // The time left until the dose: the bar fills from the start side.
+            Container(
+              height: _bar,
+              decoration: ShapeDecoration(
+                color: AppSemanticColors.surfaceContent.withValues(alpha: 0.14),
+                shape: const StadiumBorder(),
+              ),
+              alignment: AlignmentDirectional.centerStart,
+              child: const FractionallySizedBox(
+                widthFactor: 0.72,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    color: AppSemanticColors.actionPrimary,
+                    shape: StadiumBorder(),
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              StatusPill(
-                text: context.tr('intro.demo.next_in'),
-                background: AppSemanticColors.surfaceContent.withValues(
-                  alpha: 0.14,
-                ),
-                foreground: AppSemanticColors.surfaceContent,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: <Widget>[
-              const IntroTile(
-                icon: AppIcons.pill,
-                background: AppSemanticColors.selectedSurface,
-                foreground: AppSemanticColors.statusSuccess,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      context.tr('intro.demo.medicine'),
-                      style: text.titleSmall?.copyWith(
-                        color: AppSemanticColors.surfaceContent,
-                      ),
-                    ),
-                    Text(
-                      context.tr('intro.demo.medicine_note'),
-                      style: text.bodySmall?.copyWith(
-                        color: AppSemanticColors.onInkSupporting,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text.rich(
-                TextSpan(
-                  children: <InlineSpan>[
-                    TextSpan(
-                      text: context.tr('intro.demo.medicine_time'),
-                      style: text.headlineLarge?.copyWith(
-                        color: AppSemanticColors.surfaceContent,
-                      ),
-                    ),
-                    const TextSpan(text: ' '),
-                    TextSpan(
-                      text: context.tr('intro.demo.evening'),
-                      style: text.labelSmall?.copyWith(
-                        color: AppSemanticColors.onInkSupporting,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          // The time left until the dose: the bar fills from the start side.
-          Container(
-            height: _bar,
-            decoration: ShapeDecoration(
-              color: AppSemanticColors.surfaceContent.withValues(alpha: 0.14),
-              shape: const StadiumBorder(),
             ),
-            alignment: AlignmentDirectional.centerStart,
-            child: const FractionallySizedBox(
-              widthFactor: 0.72,
-              heightFactor: 1,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: AppSemanticColors.actionPrimary,
-                  shape: StadiumBorder(),
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

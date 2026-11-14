@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -30,7 +31,7 @@ class CalendarDayCell extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '$day · $count',
+      label: spoken('$day، $count'),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.s),

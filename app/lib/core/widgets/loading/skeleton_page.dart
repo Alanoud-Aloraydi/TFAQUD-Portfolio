@@ -1,4 +1,5 @@
 import 'package:app/core/extensions/scroll_insets.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -23,7 +24,7 @@ class SkeletonPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: context.tr('common.loading'),
+      label: spoken(context.tr('common.loading')),
       liveRegion: true,
       child: ExcludeSemantics(
         child: Shimmer(

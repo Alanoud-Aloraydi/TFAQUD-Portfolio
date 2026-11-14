@@ -1,5 +1,6 @@
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -29,47 +30,55 @@ class MedicationRevisionEntry extends StatelessWidget {
         border: Border.all(color: AppSemanticColors.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.tr(
-              previous == null
-                  ? 'medications.initial_version'
-                  : 'medications.revised_on',
-              args: [date],
-            ),
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '${version.name} · '
-            '${formatMedicationNumber(version.strengthValue)} '
-            '${context.tr('medications.strength_display.${version.strengthUnit.name}')} · '
-            '${context.tr('medications.form.${version.dosageForm.name}')}',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            context.tr('medications.schedule_revision'),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (before != null && before != after)
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              before,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(decoration: TextDecoration.lineThrough),
+              context.tr(
+                previous == null
+                    ? 'medications.initial_version'
+                    : 'medications.revised_on',
+                args: [date],
+              ),
+              style: Theme.of(context).textTheme.titleSmall,
             ),
-          Text(after, style: Theme.of(context).textTheme.bodyMedium),
-          if (version.reason case final reason?) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(reason, style: Theme.of(context).textTheme.bodySmall),
-          ],
-          if (version.instructions case final instructions?) ...[
+            Text(
+              '${version.name} · '
+              '${formatMedicationNumber(version.strengthValue)} '
+              '${context.tr('medications.strength_display.${version.strengthUnit.name}')} · '
+              '${context.tr('medications.form.${version.dosageForm.name}')}',
+              style: Theme.of(context).textTheme.bodyMedium,
+              semanticsLabel: spoken(
+                '${version.name}، '
+                '${formatMedicationNumber(version.strengthValue)} '
+                '${context.tr('medications.strength_display.${version.strengthUnit.name}')}، '
+                '${context.tr('medications.form.${version.dosageForm.name}')}',
+              ),
+            ),
             const SizedBox(height: AppSpacing.xs),
-            Text(instructions, style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              context.tr('medications.schedule_revision'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (before != null && before != after)
+              Text(
+                before,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(decoration: TextDecoration.lineThrough),
+              ),
+            Text(after, style: Theme.of(context).textTheme.bodyMedium),
+            if (version.reason case final reason?) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(reason, style: Theme.of(context).textTheme.bodySmall),
+            ],
+            if (version.instructions case final instructions?) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(instructions, style: Theme.of(context).textTheme.bodySmall),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

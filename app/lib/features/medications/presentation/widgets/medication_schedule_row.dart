@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/l10n/weekdays_text.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -55,7 +56,11 @@ class MedicationScheduleRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$time · $dose', style: text.bodyLarge),
+                  Text(
+                    '$time · $dose',
+                    style: text.bodyLarge,
+                    semanticsLabel: spoken('$time، $dose'),
+                  ),
                   if (details.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xs),
                     Text(

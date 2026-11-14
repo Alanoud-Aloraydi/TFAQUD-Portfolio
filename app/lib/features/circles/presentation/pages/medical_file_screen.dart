@@ -15,7 +15,7 @@ import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
-import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_skeleton.dart';
 import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_tile.dart';

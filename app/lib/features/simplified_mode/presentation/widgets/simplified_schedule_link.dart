@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
@@ -27,10 +28,13 @@ class SimplifiedScheduleLink extends StatelessWidget {
     final List<String> texts = lines(context, schedule);
     return Semantics(
       button: true,
-      label: context.tr(
-        'simplified_mode.a11y.schedule_link',
-        args: <String>[texts[1]],
+      label: spoken(
+        context.tr(
+          'simplified_mode.a11y.schedule_link',
+          args: <String>[texts[1]],
+        ),
       ),
+      onTap: () => context.push(Routes.simplifiedSchedule),
       excludeSemantics: true,
       child: _card(context, texts),
     );

@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart'
@@ -131,7 +132,7 @@ void main() {
       final Finder word = find.descendant(
         of: find.byWidgetPredicate(
           (Widget widget) =>
-              widget is Semantics && widget.properties.label == label,
+              widget is Semantics && widget.properties.label == spoken(label),
         ),
         matching: find.text(label),
       );

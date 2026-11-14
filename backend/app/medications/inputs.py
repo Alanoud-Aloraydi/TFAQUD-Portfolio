@@ -22,7 +22,8 @@ StrengthValue = Annotated[
 ]
 
 DosageForm = Literal[
-    "tablet", "capsule", "liquid", "drops", "inhaler", "injection"
+    "tablet", "capsule", "liquid", "drops", "inhaler", "nebulizer",
+    "injection",
 ]
 DoseUnit = Literal["tablet", "capsule", "mL", "drop", "puff", "unit"]
 StrengthUnit = Literal[
@@ -42,6 +43,7 @@ _UNIT_BY_FORM = {
     "liquid": "mL",
     "drops": "drop",
     "inhaler": "puff",
+    "nebulizer": "mL",
     "injection": {"mL", "unit"},
 }
 

@@ -27,22 +27,24 @@ class EmergencyBloodType extends StatelessWidget {
         color: AppSemanticColors.textPrimary,
         shape: AppRadius.shape(AppRadius.s),
       ),
-      child: Column(
-        children: <Widget>[
-          Text(
-            label,
-            style: text.bodySmall?.copyWith(
-              color: AppSemanticColors.onInkSupporting,
+      child: MergeSemantics(
+        child: Column(
+          children: <Widget>[
+            Text(
+              label,
+              style: text.bodySmall?.copyWith(
+                color: AppSemanticColors.onInkSupporting,
+              ),
             ),
-          ),
-          Text(
-            value ?? '—',
-            textDirection: TextDirection.ltr,
-            style: text.headlineMedium?.copyWith(
-              color: AppSemanticColors.surfaceContent,
+            Text(
+              value ?? '—',
+              textDirection: TextDirection.ltr,
+              style: text.headlineMedium?.copyWith(
+                color: AppSemanticColors.surfaceContent,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
