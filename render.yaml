@@ -142,4 +142,4 @@ services:
       # Asked at the start of each run, so the free API never sleeps
       # (Render stops it after 15 minutes without a request).
       - key: KEEP_AWAKE_URL
-        value: https://tfaqud-api.onrender.com/health
+        value: https://tfaqud-api.onrender.com/api/v1/health
