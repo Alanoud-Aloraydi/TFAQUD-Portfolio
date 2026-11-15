@@ -9,6 +9,7 @@ from app.models import CareCircle, CareCircleRequest
 from app.push.messages.names import account_with_phone, display_name
 from app.push.notify import Push
 from app.push.sender import PushMessage
+from app.push.targets import circle_target, request_target
 
 
 def circle_request_push(
@@ -25,16 +26,19 @@ def circle_request_push(
         if requester
         else "وصلك طلب جديد لمتابعة رعايتك في تفقّد."
     )
-    return Push(
-        (patient,), PushMessage("طلب رعاية جديد", body, "circle_request")
+    message = PushMessage(
+        "طلب رعاية جديد", body, "circle_request", request_target(request.id)
     )
+    return Push((patient,), message)
 
 
 def request_answer_push(
     session: Session, request: CareCircleRequest
 ) -> Push | None:
     """To the person who asked: the patient accepted or declined. The
-    patient answered, so their name can be told."""
+    patient answered, so their name can be told. A declined request is
+    on the bell («السابقة»), so its push names it; an accepted one has no
+    card there while it waits for the patient."""
     # The patient's name when the number has an account (the sender knows it).
     patient = display_name(
         session, account_with_phone(session, request.patient_phone_number)
@@ -52,6 +56,7 @@ def request_answer_push(
             "تم الاعتذار عن طلبك",
             f"تم الاعتذار عن طلبك {whom}.",
             "request_answer",
+            request_target(request.id),
         )
     else:
         return None
@@ -74,5 +79,6 @@ def circle_ready_push(
             "الدائرة جاهزة",
             f"«{name}» جاهزة، وتقدر تتابع الرعاية الحين.",
             "circle_ready",
+            circle_target(circle.id),
         ),
     )

@@ -87,6 +87,8 @@ def test_an_invitation_reaches_the_invited_phone(
     assert sent.status_code == 201
     [message] = pushes.to(khaled_phone.token)
     assert message.kind == "invitation"
+    invitation_id = sent.json["invitation"]["id"]
+    assert message.target == (("invitation_id", invitation_id),)
     assert message.title == "دعوة لدائرة رعاية"
     # As Khaled sees the circle: «دائرة» and the patient's first name.
     assert message.body == "وصلتك دعوة من Reem للانضمام إلى «دائرة Nora»."
@@ -175,11 +177,14 @@ def test_a_circle_request_from_sending_to_the_circle(
     assert asked.body == "وصلك طلب من Reem لمتابعة رعايتك في تفقّد."
 
     request_id = sent.json["request"]["id"]
+    assert asked.target == (("request_id", request_id),)
     noura_phone.call(
         "post", f"{REQUESTS}/{request_id}/respond", {"accept": True}
     )
     [answered] = pushes.to(reem_phone.token)
     assert answered.kind == "request_answer"
+    # Accepted, it waits for Noura: no card of the bell to open yet.
+    assert answered.target == ()
     assert answered.title == "تم قبول طلبك"
     assert answered.body == (
         "تم قبول طلبك لرعاية Noura. الدائرة تجهز أول ما تكتمل البيانات."
@@ -191,6 +196,8 @@ def test_a_circle_request_from_sending_to_the_circle(
     assert done.status_code == 201
     ready = pushes.to(reem_phone.token)[-1]
     assert ready.kind == "circle_ready"
+    circle_id = done.json["circle"]["id"]
+    assert ready.target == (("circle_id", circle_id),)
     # Reem is told the name she sees, not Noura's own «صحتي».
     assert ready.body == "«دائرة Noura» جاهزة، وتقدر تتابع الرعاية الحين."
 
@@ -213,6 +220,8 @@ def test_a_declined_request_is_told(database_app, database, account, pushes):
     [answer] = pushes.to(reem_phone.token)
     assert answer.title == "تم الاعتذار عن طلبك"
     assert answer.body == "تم الاعتذار عن طلبك لرعاية Noura."
+    # Declined, it is on Reem's bell: a tap opens it there.
+    assert answer.target == (("request_id", sent.json["request"]["id"]),)
 
 
 def invite(database_app, database, inviter, invited):

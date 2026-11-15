@@ -14,6 +14,7 @@ from app.push.scheduled.audience import (
     tell_audience,
 )
 from app.push.scheduled.claims import claim_once, occurrence_key
+from app.push.targets import dose_target
 from app.snoozes.queries import put_off_until
 
 
@@ -66,5 +67,10 @@ def scan_doses(circle_id: UUID, now: datetime) -> None:
             "dose_missed",
             lambda name, own, medicine=medicine: dose_missed_text(
                 medicine, name=name, own=own, patient=audience.patient_name
+            ),
+            dose_target(
+                circle_id,
+                occurrence["schedule_id"],
+                occurrence["scheduled_on"],
             ),
         )

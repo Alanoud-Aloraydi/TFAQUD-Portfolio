@@ -105,6 +105,33 @@ def test_the_request_onesignal_expects():
     }
 
 
+def test_the_item_a_push_is_about_goes_beside_its_kind():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"id": "n-1"})
+
+    message = PushMessage(
+        "جرعة فائتة",
+        "فات موعد جرعة.",
+        "dose_missed",
+        (
+            ("circle_id", "c-1"),
+            ("schedule_id", "s-1"),
+            ("scheduled_on", "2026-11-15"),
+        ),
+    )
+    onesignal(handler).send(ACCOUNT, message)
+
+    assert json.loads(seen[0].content)["data"] == {
+        "kind": "dose_missed",
+        "circle_id": "c-1",
+        "schedule_id": "s-1",
+        "scheduled_on": "2026-11-15",
+    }
+
+
 @pytest.mark.parametrize(
     ("status", "answer", "result"),
     [

@@ -1,10 +1,9 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/period_task_rows.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_task_row.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/today_dose_row.dart';
 import 'package:flutter/material.dart';
 
 /// Today's schedule when the prayer times are not available: the same rows
@@ -29,39 +28,24 @@ class TodayFallbackRows extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<(String, Widget)> rows = <(String, Widget)>[
-      for (final DoseOccurrence dose in doses)
-        (
-          dose.time,
-          TodayDoseRow(
-            occurrence: dose,
-            circleId: circleId,
-            canManage: canManage,
-            now: now,
-          ),
-        ),
+    final List<PeriodEntry> entries = <PeriodEntry>[
+      for (final DoseOccurrence dose in doses) PeriodEntry.dose(dose),
       for (final MeasurementOccurrence task in measurements)
-        (
-          task.time,
-          MeasurementTaskRow(task: task, now: now, circleId: circleId),
-        ),
+        PeriodEntry.measurement(task),
       for (final CareAppointment visit in appointments)
-        (
-          visit.time,
-          AppointmentTodayRow(
-            value: visit,
-            circleId: circleId,
-            canManage: canManage,
-          ),
-        ),
-    ]..sort((a, b) => a.$1.compareTo(b.$1));
+        PeriodEntry.visit(visit),
+    ]..sort((PeriodEntry a, PeriodEntry b) => a.time.compareTo(b.time));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        for (final (String, Widget) row in rows) ...<Widget>[
-          row.$2,
-          const SizedBox(height: AppSpacing.sm),
-        ],
+        ...periodTaskRows(
+          entries,
+          circleId: circleId,
+          canManage: canManage,
+          hasPhoto: false,
+          now: now,
+        ),
+        if (entries.isNotEmpty) const SizedBox(height: AppSpacing.sm),
       ],
     );
   }

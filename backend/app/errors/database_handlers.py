@@ -14,6 +14,16 @@ def handle_database_conflict(error: IntegrityError):
     from app.database import db
 
     db.session.rollback()
+    # The rule's name and our own fixed messages say which rule refused
+    # the write; the failing row (the diagnostic's detail) is left out.
+    diag = getattr(error.orig, "diag", None)
+    metrics.increment("database.conflict")
+    current_app.logger.warning(
+        "Database refused a write: SQLSTATE=%s, rule=%s, %s",
+        getattr(error.orig, "sqlstate", None),
+        getattr(diag, "constraint_name", None),
+        getattr(diag, "message_primary", None),
+    )
     return error_response(
         409, "data_conflict", "The change conflicts with current data."
     )

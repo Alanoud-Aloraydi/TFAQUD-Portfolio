@@ -6,6 +6,7 @@ library;
 
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminder_circle.dart';
+import 'package:app/core/services/reminders/planned_reminder.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -141,12 +142,12 @@ List<ScheduledNotification> planDoseReminders({
   final DateTime earliest = now.toUtc().add(reminderMargin);
   bool inWindow(DateTime at) =>
       at.isAfter(earliest) && (until == null || at.isBefore(until));
-  final List<_Reminder> upcoming = <_Reminder>[
+  final List<PlannedReminder> upcoming = <PlannedReminder>[
     for (final (ReminderCircle circle, DoseOccurrence dose) in doses)
       if (dose.record == null &&
           inWindow(doseMoment(circle.clock, dose)) &&
           !snoozed.contains(doseSnoozeKey(circle.id, dose)))
-        _Reminder(
+        PlannedReminder(
           at: doseMoment(circle.clock, dose),
           circle: circle,
           title: texts.title(circle, dose),
@@ -162,7 +163,7 @@ List<ScheduledNotification> planDoseReminders({
               task.status == MeasurementStatus.due) &&
           inWindow(circle.clock.momentOf(task.scheduledOn, task.time)) &&
           !snoozed.contains(measurementSnoozeKey(circle.id, task)))
-        _Reminder(
+        PlannedReminder(
           at: circle.clock.momentOf(task.scheduledOn, task.time),
           circle: circle,
           title: texts.measurementTitle(circle),
@@ -183,7 +184,7 @@ List<ScheduledNotification> planDoseReminders({
                 .momentOf(visit.scheduledOn, visit.time)
                 .subtract(before),
           ))
-            _Reminder(
+            PlannedReminder(
               at: circle.clock
                   .momentOf(visit.scheduledOn, visit.time)
                   .subtract(before),
@@ -191,6 +192,7 @@ List<ScheduledNotification> planDoseReminders({
               title: texts.appointmentTitle(circle, lead, visit),
               body: texts.appointmentBody(visit),
               prefix: appointmentReminderPayload,
+              appointmentId: visit.id,
             ),
     // Saved for today or tomorrow after its day-before moment: said once,
     // right away, so a change made today is not silent until two hours
@@ -199,15 +201,16 @@ List<ScheduledNotification> planDoseReminders({
       if (visit.status == AppointmentStatus.scheduled)
         if (appointmentAnnouncedAt(circle.clock, visit) case final DateTime at
             when inWindow(at))
-          _Reminder(
+          PlannedReminder(
             at: at,
             circle: circle,
             title: texts.appointmentTitle(circle, AppointmentLead.today, visit),
             body: texts.appointmentBody(visit),
             prefix: appointmentReminderPayload,
+            appointmentId: visit.id,
           ),
-  ]..sort((_Reminder a, _Reminder b) => a.at.compareTo(b.at));
-  final List<_Reminder> kept = upcoming.take(limit).toList();
+  ]..sort((PlannedReminder a, PlannedReminder b) => a.at.compareTo(b.at));
+  final List<PlannedReminder> kept = upcoming.take(limit).toList();
   return <ScheduledNotification>[
     for (int i = 0; i < kept.length; i++)
       ScheduledNotification(
@@ -219,13 +222,13 @@ List<ScheduledNotification> planDoseReminders({
         // for «ذكّرني لاحقًا».
         payload: kept[i].snoozable
             ? payloadWithText(
-                '${kept[i].prefix}${kept[i].circle.id}',
+                kept[i].payloadHead,
                 kept[i].title,
                 kept[i].body,
                 snoozeKey: kept[i].snoozeKey,
                 subject: kept[i].subject,
               )
-            : '${kept[i].prefix}${kept[i].circle.id}',
+            : kept[i].payloadHead,
         thread: kept[i].circle.id,
         snoozable: kept[i].snoozable,
       ),
@@ -238,29 +241,4 @@ List<ScheduledNotification> planDoseReminders({
         payload: keepRemindersPayload,
       ),
   ];
-}
-
-/// One reminder before it gets its id.
-class _Reminder {
-  const _Reminder({
-    required this.at,
-    required this.circle,
-    required this.title,
-    required this.body,
-    required this.prefix,
-    this.snoozeKey,
-    this.subject,
-  });
-
-  final DateTime at;
-  final ReminderCircle circle;
-  final String title;
-  final String body;
-  final String prefix;
-
-  /// A dose's or measurement's, which can be put off.
-  final String? snoozeKey;
-  final String? subject;
-
-  bool get snoozable => snoozeKey != null;
 }

@@ -66,6 +66,13 @@ def test_only_a_missed_dose_is_told_and_only_once(
     [message] = pushes.to(phone.token)
     assert message.kind == "dose_missed"
     assert message.title == "جرعة فائتة"
+    # A tap opens that very dose on «اليوم» of Nora's circle.
+    [schedule] = created.json["medication_plan"]["version"]["schedules"]
+    assert dict(message.target) == {
+        "circle_id": str(circle.id),
+        "schedule_id": schedule["id"],
+        "scheduled_on": "2026-10-28",
+    }
     # Reem cares for Nora: she hears whose dose it is.
     assert message.body == (
         "يا Reem، جرعة Metformin لـNora فاتت، ليسارع بأخذها"
@@ -140,6 +147,8 @@ def test_an_appointment_nobody_marked_is_told_two_hours_after_once(
     assert message.kind == "appointment_missed"
     assert message.title == "موعد فائت"
     assert message.body == "يا Reem، موعد Nora فات"
+    assert dict(message.target)["circle_id"] == str(circle.id)
+    assert set(dict(message.target)) == {"circle_id", "appointment_id"}
 
     tick(database_app)
     assert len(pushes.to(phone.token)) == 1

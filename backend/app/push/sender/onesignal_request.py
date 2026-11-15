@@ -19,9 +19,9 @@ class OneSignalRequest:
 
     def payload(self, account_id: str, message: PushMessage) -> dict:
         """What OneSignal is asked to deliver: the title and the line (in
-        Arabic, also under "en", which OneSignal requires), the kind (the
-        app opens the right page with it, and the phone stacks one kind
-        together), and the app's own chime on iOS.
+        Arabic, also under "en", which OneSignal requires), the kind and
+        the item it is about (the app opens that item with them, and the
+        phone stacks one kind together), and the app's own chime on iOS.
         """
         return {
             "app_id": self._app_id,
@@ -29,7 +29,7 @@ class OneSignalRequest:
             "include_aliases": {"external_id": [account_id]},
             "headings": {"en": message.title, "ar": message.title},
             "contents": {"en": message.body, "ar": message.body},
-            "data": {"kind": message.kind},
+            "data": {"kind": message.kind, **dict(message.target)},
             # The app copies its chime to the phone's Library/Sounds, where
             # iOS finds it; before the app has run once, iOS plays its own.
             "ios_sound": NOTIFICATION_SOUND,

@@ -1,9 +1,8 @@
-import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_task_status.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
@@ -41,7 +40,7 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
     simplifiedTaskTitle(context, task),
     _when(context, task),
     ?_how(context, task, day),
-    snoozed ?? _status(context, task, now),
+    snoozed ?? simplifiedTaskStatus(context, task, day, now),
   ];
 
   /// How it is taken: «حبة واحدة · مع الأكل», the same words the cards
@@ -59,22 +58,6 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
   static String _when(BuildContext context, TodayTask task) =>
       '${simplifiedTime(context, task.time)} · '
       '${context.tr('simplified_mode.kind.${task.kind.name}')}';
-
-  /// Where it stands. A late task says how long it has been late, because
-  /// «فات موعده» alone does not say whether that was five minutes or five
-  /// hours, which is what decides whether to take it now.
-  static String _status(BuildContext context, TodayTask task, DateTime now) {
-    if (task.status != TodayTaskStatus.late) {
-      return context.tr('simplified_mode.status.${task.status.name}');
-    }
-    final DateTime wall = PatientClockScope.of(context).wallTime(now);
-    final int minutes = wall.difference(task.scheduledAt).inMinutes;
-    if (minutes < 1) return context.tr('simplified_mode.status.late');
-    return context.tr(
-      'simplified_mode.status.late_by',
-      args: <String>[durationWords(context, minutes)],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +89,8 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
         '○',
       ),
     };
-    final String status = snoozed ?? _status(context, task, now);
+    final String status =
+        snoozed ?? simplifiedTaskStatus(context, task, day, now);
     final String? how = _how(context, task, day);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),

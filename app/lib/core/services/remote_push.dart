@@ -38,8 +38,9 @@ abstract interface class RemotePush {
   /// when it may. The same permission covers the phone's own reminders.
   Future<bool> requestPermission();
 
-  /// The `kind` of each server push the person taps (OneSignal keeps the
-  /// tap that opened the app until [initialize] listens).
+  /// Each server push the person taps, as push_target.dart writes it: its
+  /// `kind` and the item it is about (OneSignal keeps the tap that opened
+  /// the app until [initialize] listens).
   Stream<String> get taps;
 }
 
