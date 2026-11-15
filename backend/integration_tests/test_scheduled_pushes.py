@@ -84,7 +84,7 @@ def test_only_a_missed_dose_is_told_and_only_once(
     }
     # Reem cares for Nora: she hears whose dose it is.
     assert message.body == (
-        "يا Reem، جرعة Metformin لـNora فاتت، ليسارع بأخذها"
+        "يا Reem، جرعة Metformin لـNora فاتت، الأفضل أخذها الحين"
     )
 
     # A later tick does not send it again.
@@ -158,7 +158,9 @@ def test_a_missed_reading_is_told_once(
     [message] = pushes.to(phone.token)
     assert message.kind == "measurement_missed"
     assert message.title == "قياس فائت"
-    assert message.body == "يا Reem، قياس السكر لـNora فات، ليسارع بالقياس"
+    assert message.body == (
+        "يا Reem، قياس السكر لـNora فات، الأفضل القياس الحين"
+    )
 
     tick(database_app)
     assert len(pushes.to(phone.token)) == 1

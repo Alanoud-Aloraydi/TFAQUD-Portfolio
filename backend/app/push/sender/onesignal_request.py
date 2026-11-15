@@ -5,6 +5,16 @@ from collections.abc import Collection
 from app.push.sender.message import PushMessage
 from app.push.sender.onesignal_api import NOTIFICATION_SOUND
 
+# A task due now: shown through a Focus and the Scheduled Summary on iOS,
+# once the app has the Time Sensitive capability (as usual without it).
+TIME_SENSITIVE = {
+    "dose_missed",
+    "measurement_missed",
+    "appointment_missed",
+    "dose_snoozed",
+    "measurement_snoozed",
+}
+
 
 class OneSignalRequest:
     """The client every call shares and what a push asks OneSignal to show."""
@@ -51,4 +61,9 @@ class OneSignalRequest:
             "ios_sound": NOTIFICATION_SOUND,
             "thread_id": message.kind,
             "android_group": message.kind,
+            "ios_interruption_level": (
+                "time-sensitive"
+                if message.kind in TIME_SENSITIVE
+                else "active"
+            ),
         }

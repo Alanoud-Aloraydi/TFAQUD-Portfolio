@@ -38,23 +38,23 @@ def unanswered_subject(session, row, now: datetime) -> str | None:
 
 
 def snooze_message(row, subject: str, by_name: str | None) -> PushMessage:
-    """«حان موعد الجرعة المؤجّلة» and who put it off, for how long."""
+    """«حان موعد الجرعة المؤجّلة», then which, for how long and by whom:
+    «جرعة فيتامين د تأجّلت 15 دقيقة بواسطة لينا». «بواسطة» fits a woman
+    and a man alike."""
     after = minutes_text(row.minutes)
-    by = f" من {by_name}" if by_name else ""
+    by = f" بواسطة {by_name}" if by_name else ""
     circle, day = row.care_circle_id, row.scheduled_on
     if row.task == "dose":
         return PushMessage(
             "حان موعد الجرعة المؤجّلة",
-            f"جرعة {subject} تأجّلت {after}{by}، وحان وقتها. "
-            "تقدر تسجّلها من تفقّد.",
+            f"جرعة {subject} تأجّلت {after}{by}",
             "dose_snoozed",
             dose_target(circle, row.task_id, day),
         )
     wall_time = row.time_of_day.strftime("%H:%M")
     return PushMessage(
         "حان موعد القياس المؤجّل",
-        f"قياس {subject} تأجّل {after}{by}، وحان وقته. "
-        "تقدر تسجّله من تفقّد.",
+        f"قياس {subject} تأجّل {after}{by}",
         "measurement_snoozed",
         measurement_target(circle, row.task_id, day, wall_time),
     )

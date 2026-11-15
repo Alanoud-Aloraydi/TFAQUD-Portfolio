@@ -114,8 +114,7 @@ def test_at_the_new_time_every_other_member_is_reminded_once(
     assert message.kind == "dose_snoozed"
     assert message.title == "حان موعد الجرعة المؤجّلة"
     assert message.body == (
-        "جرعة Metformin تأجّلت 15 دقيقة من Reem، وحان وقتها. "
-        "تقدر تسجّلها من تفقّد."
+        "جرعة Metformin تأجّلت 15 دقيقة بواسطة Reem"
     )
     # And the card is back to normal.
     assert todays_dose(khaled, circle)["snooze"] is None
@@ -250,8 +249,7 @@ def test_a_reading_time_is_put_off_by_its_time(
         "time_of_day": "08:00",
     }
     assert message.body == (
-        "قياس سكر الدم تأجّل 30 دقيقة من Reem، وحان وقته. "
-        "تقدر تسجّله من تفقّد."
+        "قياس سكر الدم تأجّل 30 دقيقة بواسطة Reem"
     )
 
 
