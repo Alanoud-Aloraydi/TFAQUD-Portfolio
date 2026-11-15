@@ -39,7 +39,7 @@ def scan_measurements(circle_id: UUID, now: datetime) -> None:
             continue
         # The same for a reading time put off: its grace again after its new
         # time (the grace is the time from the task to its deadline).
-        key = occurrence_key(occurrence["version_id"], occurrence)
+        key = occurrence_key(occurrence["plan_version_id"], occurrence)
         until = moved.get(key)
         if until is not None:
             grace = datetime.fromisoformat(

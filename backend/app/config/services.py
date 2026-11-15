@@ -24,6 +24,9 @@ def service_settings(env_name: str) -> dict:
         # scheduled scan runs as `flask --app wsgi tick` on Render's cron).
         # None (unset) keeps the endpoints refusing every request.
         "TICK_SECRET": os.environ.get("TICK_SECRET"),
+        # The API's health check, asked by each scheduled scan so the free
+        # API never sleeps (app/keep_awake.py). Unset: nothing is asked.
+        "KEEP_AWAKE_URL": os.environ.get("KEEP_AWAKE_URL") or None,
         # Push notifications and other work no one waits for run after the
         # answer (app/background.py); tests run them at once.
         "BACKGROUND_INLINE": env_name == "testing",

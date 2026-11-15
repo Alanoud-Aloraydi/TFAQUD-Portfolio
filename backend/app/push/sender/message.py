@@ -1,5 +1,6 @@
 """A push message, and what every push sender can do."""
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -21,9 +22,15 @@ class PushSender(Protocol):
     `deleted_apps` of one account."""
     enabled: bool
 
-    def send(self, account_id: str, message: PushMessage) -> str:
-        """Send to the account's phones; answer SENT, NO_DEVICE or FAILED.
-        """
+    def send(
+        self,
+        account_id: str,
+        message: PushMessage,
+        phones: Collection[str] = (),
+    ) -> str:
+        """Send to the account's phones: `phones` (their OneSignal
+        subscriptions) when known, else every phone OneSignal ties to the
+        account. Answer SENT, NO_DEVICE or FAILED."""
 
     def deleted_apps(self, account_id: str) -> set[str]:
         """The OneSignal subscription ids of the account's phones whose app
