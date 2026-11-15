@@ -16,6 +16,7 @@ from app.push.scheduled.audience import (
     tell_audience,
 )
 from app.push.scheduled.claims import claim_once
+from app.push.targets import appointment_target
 
 # An appointment nobody marked visited or cancelled is called missed this
 # long after its time; past `APPOINTMENT_TOO_LATE` after that it is no
@@ -67,4 +68,5 @@ def scan_appointments(circle_id: UUID, now: datetime) -> None:
             lambda name, own: appointment_missed_text(
                 name=name, own=own, patient=audience.patient_name
             ),
+            appointment_target(circle_id, appointment_id),
         )

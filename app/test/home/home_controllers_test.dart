@@ -1,5 +1,7 @@
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/reminders/item_keys.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
+import 'package:app/core/services/tap_focus.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/controllers/clinical_data_loader.dart';
 import 'package:app/features/home/presentation/controllers/notification_tap_handler.dart';
@@ -137,6 +139,44 @@ void main() {
 
       expect(opened, [null]);
       expect(inboxOpened, 0);
+    });
+
+    test('a push about a dose opens «اليوم» of its circle at it', () async {
+      handler = create();
+
+      phone.tapController.add(
+        '${pushTapPrefix}dose_missed${pushItemSeparator}c-1|s-1|2026-11-5',
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(opened, ['c-1']);
+      expect(TapFocus.instance.key, 'c-1|s-1|2026-11-5');
+    });
+
+    test('a visit reminder opens «اليوم» at that visit', () async {
+      handler = create();
+
+      phone.tapController.add(
+        '${appointmentReminderPayload}c-1${appointmentIdMark}v-9',
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(opened, ['c-1']);
+      expect(TapFocus.instance.key, appointmentItemKey('c-1', 'v-9'));
+    });
+
+    test('an answer opens the bell only when it is a decline', () async {
+      handler = create();
+
+      phone.tapController.add(
+        '${pushTapPrefix}request_answer$pushItemSeparator'
+        '${answeredItemKey('r-1')}',
+      );
+      phone.tapController.add('${pushTapPrefix}request_answer');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(inboxOpened, 1);
+      expect(opened, [null]);
     });
 
     test('a push that launched the app is opened once ready', () {

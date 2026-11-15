@@ -1,3 +1,5 @@
+import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/push_target.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:equatable/equatable.dart';
@@ -26,8 +28,12 @@ class ReminderRequest extends Equatable {
 
 /// What a tapped reminder (or snooze) asks about, so the simplified mode
 /// opens its full-screen reminder; null for the note to open the app and
-/// for anything that is not a reminder.
+/// for anything that is not a reminder. A server push about a dose or a
+/// reading put off or missed opens that task the same way.
 ReminderRequest? reminderRequest(String payload) {
+  if (pushKind(payload) case final String kind) {
+    return _pushRequest(kind, pushTapItem(payload));
+  }
   if (reminderCircleId(payload) == null) return null;
   final TodayTaskKind? kind =
       payload.startsWith(doseReminderPayload) ||
@@ -42,3 +48,14 @@ ReminderRequest? reminderRequest(String payload) {
   if (kind == null) return null;
   return ReminderRequest(kind, taskKey: snoozeTarget(payload)?.$1);
 }
+
+/// A missed visit has no reminder to open: its time has passed.
+ReminderRequest? _pushRequest(String kind, String? item) => switch (kind) {
+  'dose_missed' ||
+  'dose_snoozed' => ReminderRequest(TodayTaskKind.medication, taskKey: item),
+  'measurement_missed' || 'measurement_snoozed' => ReminderRequest(
+    TodayTaskKind.measurement,
+    taskKey: item,
+  ),
+  _ => null,
+};

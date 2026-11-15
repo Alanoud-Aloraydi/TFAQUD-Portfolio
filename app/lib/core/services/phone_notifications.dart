@@ -75,17 +75,15 @@ const String snoozeTapPrefix = 'snooze-action:';
 /// Whether [tap] is the snooze action of a reminder, not a plain tap.
 bool isSnoozeTap(String tap) => tap.startsWith(snoozeTapPrefix);
 
-/// What [PhoneNotifications.taps] gives for a tapped server push (iOS):
-/// this, then the push's `kind` (backend `app/push`).
+/// What [PhoneNotifications.taps] gives for a tapped server push: this,
+/// its `kind`, then [pushItemSeparator] and the item (push_target.dart).
 const String pushTapPrefix = 'push:';
+const String pushItemSeparator = '#';
 
 /// The server's `kind` of a tapped push, or null for a reminder's tap.
-String? pushKind(String tap) =>
-    tap.startsWith(pushTapPrefix) ? tap.substring(pushTapPrefix.length) : null;
-
-/// The push kinds whose news waits in the notifications page (an invitation
-/// or a request to answer); every other kind opens «اليوم».
-const Set<String> inboxPushKinds = <String>{'invitation', 'circle_request'};
+String? pushKind(String tap) => tap.startsWith(pushTapPrefix)
+    ? tap.substring(pushTapPrefix.length).split(pushItemSeparator).first
+    : null;
 
 /// The notifications the app sets on the phone itself (no server and no
 /// push needed), on iOS and Android. Behind an interface, so the tests run

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.models import Account, CareCircle, CareCircleManager
 from app.push.notify import Push, notify
 from app.push.sender import PushMessage
+from app.push.targets import Target
 
 
 @dataclass(frozen=True)
@@ -54,12 +55,14 @@ def tell_audience(
     title: str,
     kind: str,
     text: Callable[[str | None, bool], str],
+    target: Target = (),
 ) -> None:
     """Send each person of `audience` their own message: `text(name, own)`,
-    where `own` is true for the patient."""
+    where `own` is true for the patient, about the item `target`."""
     for account_id, name in audience.names.items():
         own = account_id == audience.patient_account_id
-        notify(Push((account_id,), PushMessage(title, text(name, own), kind)))
+        message = PushMessage(title, text(name, own), kind, target)
+        notify(Push((account_id,), message))
 
 
 def circle_patient(session: Session, circle_id: UUID) -> CareCircle | None:

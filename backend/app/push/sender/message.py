@@ -7,11 +7,13 @@ from typing import Protocol
 @dataclass(frozen=True)
 class PushMessage:
     """What the phone shows: a title and a line. `kind` tells the app what
-    it is about (an invitation, a request, an answer)."""
+    it is about (an invitation, a request, an answer), and `target` which
+    item, as pairs of text (app/push/targets.py), so a tap opens it."""
 
     title: str
     body: str
     kind: str
+    target: tuple[tuple[str, str], ...] = ()
 
 
 class PushSender(Protocol):

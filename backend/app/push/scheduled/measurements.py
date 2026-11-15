@@ -14,6 +14,7 @@ from app.push.scheduled.audience import (
     tell_audience,
 )
 from app.push.scheduled.claims import claim_once, occurrence_key
+from app.push.targets import measurement_target
 from app.snoozes.queries import put_off_until
 
 
@@ -66,5 +67,11 @@ def scan_measurements(circle_id: UUID, now: datetime) -> None:
             "measurement_missed",
             lambda name, own, reading=reading: measurement_missed_text(
                 reading, name=name, own=own, patient=audience.patient_name
+            ),
+            measurement_target(
+                circle_id,
+                occurrence["plan_version_id"],
+                occurrence["scheduled_on"],
+                occurrence["time_of_day"],
             ),
         )

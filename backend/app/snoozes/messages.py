@@ -5,6 +5,7 @@ from datetime import datetime
 from app.measurements.queries import MeasurementQueries
 from app.medications.queries import MedicationQueries
 from app.push.sender import PushMessage
+from app.push.targets import dose_target, measurement_target
 from app.snoozes.arabic_texts import minutes_text
 
 # What a reading recorded or skipped says in its status.
@@ -40,16 +41,20 @@ def snooze_message(row, subject: str, by_name: str | None) -> PushMessage:
     """«حان موعد الجرعة المؤجّلة» and who put it off, for how long."""
     after = minutes_text(row.minutes)
     by = f" من {by_name}" if by_name else ""
+    circle, day = row.care_circle_id, row.scheduled_on
     if row.task == "dose":
         return PushMessage(
             "حان موعد الجرعة المؤجّلة",
             f"جرعة {subject} تأجّلت {after}{by}، وحان وقتها. "
             "تقدر تسجّلها من تفقّد.",
             "dose_snoozed",
+            dose_target(circle, row.task_id, day),
         )
+    wall_time = row.time_of_day.strftime("%H:%M")
     return PushMessage(
         "حان موعد القياس المؤجّل",
         f"قياس {subject} تأجّل {after}{by}، وحان وقته. "
         "تقدر تسجّله من تفقّد.",
         "measurement_snoozed",
+        measurement_target(circle, row.task_id, day, wall_time),
     )

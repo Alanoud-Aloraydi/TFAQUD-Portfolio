@@ -9,7 +9,9 @@ from alembic import context
 
 config = context.config
 
-fileConfig(config.config_file_name)
+# Loggers that already exist (the app's, when migrations run inside a
+# test run) keep working.
+fileConfig(config.config_file_name, disable_existing_loggers=False)
 logger = logging.getLogger("alembic.env")
 
 

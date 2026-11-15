@@ -242,6 +242,13 @@ def test_a_reading_time_is_put_off_by_its_time(
     send_due_snoozes(clock.now())
     [message] = pushes.to(khaled.token)
     assert message.kind == "measurement_snoozed"
+    # A tap opens this very reading time on «اليوم».
+    assert dict(message.target) == {
+        "circle_id": str(circle.id),
+        "plan_version_id": version_id,
+        "scheduled_on": DAY,
+        "time_of_day": "08:00",
+    }
     assert message.body == (
         "قياس سكر الدم تأجّل 30 دقيقة من Reem، وحان وقته. "
         "تقدر تسجّله من تفقّد."
@@ -273,6 +280,9 @@ def test_a_dose_put_off_is_not_called_missed_while_it_waits(
     clock.advance(minutes=50)
     tick()
     assert [m.kind for m in pushes.to(reem.token)] == ["dose_snoozed"]
+    [reminded] = pushes.to(reem.token)
+    assert dict(reminded.target)["circle_id"] == str(circle.id)
+    assert dict(reminded.target)["schedule_id"] == str(schedule_id)
     # Its grace again after the new time, with nothing recorded: missed.
     clock.advance(minutes=61)
     tick()

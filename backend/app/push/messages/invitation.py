@@ -7,6 +7,7 @@ from app.models import CareCircleInvitation
 from app.push.messages.names import account_with_phone, display_name
 from app.push.notify import Push
 from app.push.sender import PushMessage
+from app.push.targets import invitation_target
 
 
 def invitation_push(
@@ -27,5 +28,10 @@ def invitation_push(
     )
     return Push(
         (invitee,),
-        PushMessage("دعوة لدائرة رعاية", body, "invitation"),
+        PushMessage(
+            "دعوة لدائرة رعاية",
+            body,
+            "invitation",
+            invitation_target(invitation.id),
+        ),
     )
