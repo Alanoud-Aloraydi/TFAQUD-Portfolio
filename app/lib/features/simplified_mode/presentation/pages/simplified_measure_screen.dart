@@ -39,9 +39,6 @@ class SimplifiedMeasureScreen extends StatefulWidget {
 
 class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
   MeasurementKind? _kind;
-
-  /// Whether the first load chose the kind and its starting conditions.
-  bool _started = false;
   final Map<SimplifiedMeasureField, String> _values =
       <SimplifiedMeasureField, String>{
         for (final SimplifiedMeasureField field
@@ -59,7 +56,14 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
   @override
   void initState() {
     super.initState();
-    _kind = context.read<SimplifiedMeasurementCubit>().state.task?.kind;
+    // The kinds are known before anything loads (the task's own, else
+    // both), so the form starts now. Waiting for «ready» missed it: the
+    // cubit is made, and ready, by this very read, before any listener,
+    // which left a free reading with no kind and «ما تقدر تسجّل».
+    final SimplifiedMeasurementState state = context
+        .read<SimplifiedMeasurementCubit>()
+        .state;
+    _show(state, state.kinds.firstOrNull);
   }
 
   @override
@@ -153,29 +157,17 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SimplifiedMeasurementCubit, SimplifiedMeasurementState>(
-      listenWhen: (before, after) =>
-          (after.status == SimplifiedMeasurementStatus.ready &&
-              before.status != SimplifiedMeasurementStatus.ready) ||
-          (after.messageKey != null &&
-              after.messageKey != before.messageKey &&
-              after.status == SimplifiedMeasurementStatus.ready),
-      listener: (context, state) => setState(() {
-        if (!_started) {
-          // Loaded: the task's kind, else the first kind that can be read.
-          _started = true;
-          _show(state, _kind ?? state.kinds.firstOrNull);
-        } else {
-          _errorKey = state.messageKey;
-        }
-      }),
+      listenWhen: (before, after) => after.messageKey != before.messageKey,
+      listener: (context, state) =>
+          setState(() => _errorKey = state.messageKey),
       builder: (context, state) {
-        final MeasurementKind? kind = _kind;
-        final bool ready =
-            state.status == SimplifiedMeasurementStatus.ready && kind != null;
+        // Never null: initState picks the first kind there is.
+        final MeasurementKind kind = _kind ?? state.kinds.first;
+        final bool ready = state.status == SimplifiedMeasurementStatus.ready;
         return SimplifiedPage(
           title: context.tr('simplified_mode.measure_title'),
           backKey: 'simplified_mode.close',
-          // A failure or a missing target is read too, not only the form.
+          // A failure is read too, not only the form.
           footer: ready
               ? SimplifiedButton(
                   label: context.tr('simplified_mode.save_reading'),
@@ -201,17 +193,8 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
                 onPressed: context.read<SimplifiedMeasurementCubit>().load,
               ),
             ],
-            SimplifiedMeasurementStatus.ready when kind == null => <Widget>[
-              Text(
-                context.tr('simplified_mode.no_target'),
-                style: SimplifiedStyle.text(
-                  SimplifiedStyle.body,
-                  color: SimplifiedStyle.ink,
-                ),
-              ),
-            ],
             SimplifiedMeasurementStatus.ready => <Widget>[
-              ..._form(context, state, kind!),
+              ..._form(context, state, kind),
               const SizedBox(height: SimplifiedStyle.gap),
               SimplifiedRecentReadings(
                 readings: state.recent,

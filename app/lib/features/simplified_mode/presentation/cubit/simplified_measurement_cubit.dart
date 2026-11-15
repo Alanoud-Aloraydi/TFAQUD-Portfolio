@@ -56,7 +56,7 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
             valueOne: reading.valueOne,
             valueTwo: reading.valueTwo,
             conditions: reading.conditions,
-            note: reading.note,
+            otherCondition: reading.note,
           ),
           occurrence: state.task,
         );

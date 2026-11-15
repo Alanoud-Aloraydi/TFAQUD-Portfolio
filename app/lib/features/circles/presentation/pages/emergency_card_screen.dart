@@ -13,7 +13,6 @@ import 'package:app/features/circles/presentation/widgets/emergency_card_body.da
 import 'package:app/features/circles/presentation/widgets/emergency_card_export.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_text.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_language_switch.dart';
-import 'package:app/features/circles/presentation/widgets/emergency_why_separate.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -188,8 +187,6 @@ class _EmergencyCardScreenState extends State<EmergencyCardScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             const AmbulanceButton(),
-            const SizedBox(height: AppSpacing.md),
-            const EmergencyWhySeparate(),
           ],
         );
     }

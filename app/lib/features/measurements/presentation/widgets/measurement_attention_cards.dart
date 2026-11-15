@@ -1,21 +1,19 @@
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_card.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_actions.dart';
+import 'package:app/features/measurements/presentation/widgets/reading_follow_up_button.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_status_pill.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_titles.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_value.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The cards of the attention box, drawn as readings are in «السجل»:
 /// «سجّل» and «تخطي» for a missed task (only «تخطي» once the next task of
@@ -48,15 +46,10 @@ List<Widget> measurementAttentionCards(
         ),
       ],
       actions: <Widget>[
-        if (!task.supersededAt(now))
-          FilledButton(
-            onPressed: () =>
-                showMeasurementReadingSheet(context, occurrence: task),
-            child: Text(context.tr('measurements.record_reading')),
-          ),
-        TextButton(
-          onPressed: () => skipMeasurement(context, task),
-          child: Text(context.tr('measurements.skip')),
+        MeasurementTaskActions(
+          task: task,
+          superseded: task.supersededAt(now),
+          sayWhy: false,
         ),
       ],
     ),
@@ -76,22 +69,7 @@ List<Widget> measurementAttentionCards(
             style: Theme.of(context).textTheme.bodySmall,
           ),
       ],
-      actions: <Widget>[
-        TextButton(
-          onPressed: () async {
-            final String? messageKey = await context
-                .read<MeasurementReadingsCubit>()
-                .followUp(reading);
-            if (!context.mounted) return;
-            if (messageKey == null) {
-              AppToast.show(context, 'toast.follow_up_done');
-            } else {
-              showMeasurementMessage(context, messageKey);
-            }
-          },
-          child: Text(context.tr('measurements.follow_up')),
-        ),
-      ],
+      actions: <Widget>[ReadingFollowUpButton(reading: reading)],
     ),
 ];
 

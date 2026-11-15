@@ -7,13 +7,15 @@ import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_attend_button.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_row_label.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// An appointment of «اليوم»: a [CareItemRow] that waits for confirmation
-/// once its time has passed. A completed one opens its visit page; otherwise
-/// the row is not tappable.
+/// once its time has passed, with «حضرت» from an hour before for those who
+/// manage the circle. A completed one opens its visit page.
 class AppointmentTodayRow extends StatelessWidget {
   const AppointmentTodayRow({
     super.key,
@@ -32,21 +34,12 @@ class AppointmentTodayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool waiting = !value.scheduledAt.isAfter(
-      PatientClockScope.of(context).now(),
-    );
+    final DateTime now = PatientClockScope.of(context).now();
+    final bool waiting = !value.scheduledAt.isAfter(now);
     final String? circleId = this.circleId;
     return CareItemRow(
       time: clockText(value.time),
-      // The visit first, then the clock.
-      spokenLabel: <String>[
-        appointmentTitle(context, value),
-        if (appointmentClinic(value) case final String clinic) clinic,
-        clockText(value.time),
-        if (appointmentCompanionLine(context, value) case final String who
-            when who.isNotEmpty)
-          who,
-      ].join('، '),
+      spokenLabel: appointmentRowLabel(context, value),
       tone: waiting ? TodayRowTone.attention : TodayRowTone.normal,
       leading: const TodayTaskKindIcon(
         icon: CareVisuals.appointmentIcon,
@@ -62,6 +55,7 @@ class AppointmentTodayRow extends StatelessWidget {
         ),
         tone: waiting ? StatusTone.attention : StatusTone.info,
       ),
+      actions: AppointmentAttendButton.forRow(value, now, circleId, canManage),
       onTap: circleId == null || value.status != AppointmentStatus.completed
           ? null
           : () => context.push(

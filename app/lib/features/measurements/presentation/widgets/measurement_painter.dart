@@ -6,6 +6,7 @@ import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_colors.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
+import 'package:app/features/measurements/presentation/widgets/chart_zoom.dart';
 import 'package:flutter/material.dart';
 
 /// Draws a month of readings: glucose as a line of dots, blood pressure as
@@ -17,8 +18,9 @@ class MeasurementPainter extends CustomPainter {
     this.readings,
     this.month,
     this.target,
-    this.clock,
-  );
+    this.clock, {
+    this.view = ChartZoom.none,
+  });
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
@@ -27,6 +29,9 @@ class MeasurementPainter extends CustomPainter {
 
   /// The patient's clock: a reading falls on its day where they live.
   final PatientClock clock;
+
+  /// How far the days are spread by a pinch or «+», and scrolled.
+  final ChartZoom view;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -37,29 +42,34 @@ class MeasurementPainter extends CustomPainter {
       target.high,
       targetLow: target.low,
       kind: kind,
+      view: view,
     );
     _target(canvas, scale);
     _grid(canvas, scale);
+    // Zoomed in, the days out of view stay out, off the axis labels.
+    canvas.save();
+    canvas.clipRect(
+      Rect.fromLTRB(ChartScale.chartLeft, 0, scale.right, size.height),
+    );
     if (kind == MeasurementKind.glucose) {
       _line(canvas, scale);
     } else {
       _bars(canvas, scale);
     }
-    for (final int day in <int>[1, 8, 15, 22, 29]) {
-      if (day > scale.days) continue;
+    for (final int day in scale.labelDays) {
       _label(canvas, '$day', Offset(scale.x(day) - 3, size.height - 9));
     }
+    canvas.restore();
   }
 
   /// The normal bands, the outer first so an inner one shows over it.
   void _target(Canvas canvas, ChartScale scale) {
-    final double right = scale.size.width - ChartScale.labelWidth;
     for (final ChartBand band in target.bands) {
       canvas.drawRect(
         Rect.fromLTRB(
           ChartScale.chartLeft,
           scale.y(band.high),
-          right,
+          scale.right,
           scale.y(band.low),
         ),
         Paint()..color = ChartColors.band(band),
@@ -68,14 +78,13 @@ class MeasurementPainter extends CustomPainter {
   }
 
   void _grid(Canvas canvas, ChartScale scale) {
-    final double right = scale.size.width - ChartScale.labelWidth;
     for (final int tick in scale.ticks) {
       canvas.drawLine(
         Offset(ChartScale.chartLeft, scale.y(tick)),
-        Offset(right, scale.y(tick)),
+        Offset(scale.right, scale.y(tick)),
         Paint()..color = AppSemanticColors.borderSubtle,
       );
-      _label(canvas, '$tick', Offset(right + 3, scale.y(tick)));
+      _label(canvas, '$tick', Offset(scale.right + 3, scale.y(tick)));
     }
   }
 
@@ -180,5 +189,6 @@ class MeasurementPainter extends CustomPainter {
       oldDelegate.readings != readings ||
       oldDelegate.month != month ||
       oldDelegate.target != target ||
-      oldDelegate.clock != clock;
+      oldDelegate.clock != clock ||
+      oldDelegate.view != view;
 }

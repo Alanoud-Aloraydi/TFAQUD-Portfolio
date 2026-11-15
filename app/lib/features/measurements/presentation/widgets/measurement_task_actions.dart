@@ -1,5 +1,7 @@
-import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/task_button.dart';
+import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
@@ -8,45 +10,52 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// «تسجيل قراءة» and «تخطي» under a measurement row that can still be
-/// answered, as tall as every other button (48). Once the next task of its
-/// kind is due ([superseded]) a reading would answer that one, so only
-/// «تخطي» stays, with the reason.
+/// answered, in the buttons every task shares (TaskButtonRole). Once the
+/// next task of its kind is due ([superseded]) a reading would answer that
+/// one, so only «تخطي» stays, under the reason ([sayWhy]: false where the
+/// card says it already).
 class MeasurementTaskActions extends StatelessWidget {
   const MeasurementTaskActions({
     super.key,
     required this.task,
     this.superseded = false,
+    this.sayWhy = true,
   });
 
   final MeasurementOccurrence task;
   final bool superseded;
+  final bool sayWhy;
 
   @override
   Widget build(BuildContext context) {
-    const Size tall = Size(0, AppItemCard.touch);
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: superseded
-              ? Text(
-                  context.tr('measurements.superseded'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                )
-              : FilledButton.icon(
-                  style: FilledButton.styleFrom(minimumSize: tall),
-                  onPressed: () =>
-                      showMeasurementReadingSheet(context, occurrence: task),
-                  icon: const Icon(CupertinoIcons.checkmark),
-                  label: Text(context.tr('measurements.record_reading')),
-                ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        TextButton.icon(
-          style: TextButton.styleFrom(minimumSize: tall),
+    final Widget buttons = TaskButtonGrid(
+      buttons: <Widget>[
+        if (!superseded)
+          TaskButton(
+            role: TaskButtonRole.answer,
+            icon: CupertinoIcons.checkmark,
+            label: context.tr('measurements.record_reading'),
+            onPressed: () =>
+                showMeasurementReadingSheet(context, occurrence: task),
+          ),
+        TaskButton(
+          role: TaskButtonRole.skip,
+          icon: CupertinoIcons.minus_circle,
+          label: context.tr('measurements.skip'),
           onPressed: () => skipMeasurement(context, task),
-          icon: const Icon(CupertinoIcons.minus_circle),
-          label: Text(context.tr('measurements.skip')),
         ),
+      ],
+    );
+    if (!superseded || !sayWhy) return buttons;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          context.tr('measurements.superseded'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        buttons,
       ],
     );
   }

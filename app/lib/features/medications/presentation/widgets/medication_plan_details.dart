@@ -1,10 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/widgets/medication_plan_actions.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_line.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +15,6 @@ List<Widget> medicationPlanDetails(
   BuildContext context, {
   required String circleId,
   required MedicationPlan plan,
-  required bool canStop,
 }) {
   final MedicationVersion version = plan.version;
   return <Widget>[
@@ -77,18 +73,6 @@ List<Widget> medicationPlanDetails(
               avatarCode: plan.lastEditedByAvatarCode,
             ),
         ],
-      ),
-    if (canStop)
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: const Size(0, AppItemCard.touch),
-            foregroundColor: AppSemanticColors.statusError,
-          ),
-          onPressed: () => discontinueMedication(context, plan),
-          child: Text(context.tr('medications.discontinue')),
-        ),
       ),
   ];
 }

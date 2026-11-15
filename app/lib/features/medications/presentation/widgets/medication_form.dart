@@ -20,6 +20,7 @@ import 'package:app/features/medications/presentation/cubit/medications_state.da
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_basic_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_effective_date_group.dart';
+import 'package:app/features/medications/presentation/widgets/medication_form_footer.dart';
 import 'package:app/features/medications/presentation/widgets/medication_period_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';
@@ -187,15 +188,7 @@ class _MedicationFormState extends State<MedicationForm> {
                 issue: _issue,
                 onChanged: _changed,
               ),
-              if (_errorKey case final error?) ...[
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  context.tr(error),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.xl),
+              MedicationFormFooter(errorKey: _errorKey, plan: widget.plan),
             ],
           ),
         ),
