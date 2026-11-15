@@ -38,7 +38,11 @@ class FocusOutline extends StatelessWidget {
                 shape: AppRadius.shape(
                   radius,
                   side: BorderSide(
-                    color: shown ? context.tokens.focus : Colors.transparent,
+                    // Hidden, it is the same color with nothing of it,
+                    // so it fades in and out without a grey edge.
+                    color: context.tokens.focus.withValues(
+                      alpha: shown ? 1 : 0,
+                    ),
                     width: 3,
                     strokeAlign: BorderSide.strokeAlignOutside,
                   ),

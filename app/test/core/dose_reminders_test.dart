@@ -1076,7 +1076,11 @@ void main() {
 
       expect(
         phone.inOrder.map((ScheduledNotification n) => _plain(n.payload)),
-        <String>['appointment:c-me', 'appointment:c-me', keepRemindersPayload],
+        <String>[
+          'appointment:c-me@appointment-5',
+          'appointment:c-me@appointment-5',
+          keepRemindersPayload,
+        ],
       );
     });
 
