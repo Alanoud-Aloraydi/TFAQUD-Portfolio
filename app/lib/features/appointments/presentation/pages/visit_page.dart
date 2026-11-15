@@ -1,5 +1,4 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
@@ -7,18 +6,18 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
-import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
+import 'package:app/features/appointments/presentation/widgets/show_visit_edit_sheet.dart';
+import 'package:app/features/appointments/presentation/widgets/visit_fill_once.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +43,7 @@ class VisitPage extends StatelessWidget {
       if (item.id == appointmentId) appointment = item;
     }
     final visit = context.watch<VisitCubit>().state;
-    return Scaffold(
+    final Widget page = Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
@@ -93,6 +92,8 @@ class VisitPage extends StatelessWidget {
             )
           : _body(context, appointment, visit),
     );
+    // Reached from «حضرت», it opens its form once the visit is read.
+    return canManage ? VisitFillOnce(child: page) : page;
   }
 
   Widget _body(
@@ -310,14 +311,7 @@ class VisitPage extends StatelessWidget {
   }
 
   Future<void> _edit(BuildContext context, VisitPaper? paper) =>
-      showGlassSheet<void>(
-        context,
-        title: context.tr('appointments.edit_visit'),
-        builder: (_) => BlocProvider.value(
-          value: context.read<VisitCubit>(),
-          child: _VisitEditSheet(paper: paper),
-        ),
-      );
+      showVisitEditSheet(context, paper);
 
   Future<void> _removeAudio(BuildContext context) async {
     final remove = await showAppAlert<bool>(
@@ -336,100 +330,4 @@ class VisitPage extends StatelessWidget {
       context.read<VisitCubit>().removeAudio();
     }
   }
-}
-
-/// What the «تعديل ورقة الزيارة» sheet holds: the three texts and «حفظ».
-class _VisitEditSheet extends StatefulWidget {
-  const _VisitEditSheet({required this.paper});
-
-  final VisitPaper? paper;
-
-  @override
-  State<_VisitEditSheet> createState() => _VisitEditSheetState();
-}
-
-class _VisitEditSheetState extends State<_VisitEditSheet> {
-  late final _summary = TextEditingController(text: widget.paper?.summary);
-  late final _recommendations = TextEditingController(
-    text: widget.paper?.recommendations,
-  );
-  late final _followUp = TextEditingController(text: widget.paper?.followUp);
-
-  @override
-  void dispose() {
-    _summary.dispose();
-    _recommendations.dispose();
-    _followUp.dispose();
-    super.dispose();
-  }
-
-  @override
-  // The glass sheet draws the title, scrolls, and stays above the keyboard.
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      InsetGroup(
-        header: context.tr('appointments.visit_summary'),
-        children: [InsetBlock(child: _paperInput(context, _summary, 2000))],
-      ),
-      const SizedBox(height: AppSpacing.md),
-      InsetGroup(
-        header: context.tr('appointments.visit_recommendations'),
-        children: [
-          InsetBlock(child: _paperInput(context, _recommendations, 2000)),
-        ],
-      ),
-      const SizedBox(height: AppSpacing.md),
-      InsetGroup(
-        header: context.tr('appointments.visit_follow_up'),
-        children: [InsetBlock(child: _paperInput(context, _followUp, 500))],
-      ),
-      if (context.watch<VisitCubit>().state.errorKey case final error?)
-        Text(
-          context.tr(error),
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
-        ),
-      const SizedBox(height: AppSpacing.md),
-      FilledButton(
-        onPressed: context.watch<VisitCubit>().state.saving
-            ? null
-            : () async {
-                final saved = await context.read<VisitCubit>().save(
-                  VisitPaperDraft(
-                    summary: _summary.text,
-                    recommendations: _recommendations.text,
-                    followUp: _followUp.text,
-                  ),
-                );
-                if (saved && context.mounted) {
-                  AppToast.show(context, 'toast.visit_saved');
-                  Navigator.of(context).pop();
-                }
-              },
-        child: Text(context.tr('appointments.save')),
-      ),
-    ],
-  );
-
-  Widget _paperInput(
-    BuildContext context,
-    TextEditingController controller,
-    int limit,
-  ) => Padding(
-    padding: const EdgeInsets.all(AppSpacing.md),
-    child: TextField(
-      controller: controller,
-      maxLength: limit,
-      inputFormatters: [CodePointLengthFormatter(limit)],
-      minLines: 2,
-      maxLines: 4,
-      textAlign: TextAlign.start,
-      decoration: InputDecoration(
-        hintText: context.tr('appointments.visit_empty'),
-        border: InputBorder.none,
-        counterText: '',
-      ),
-    ),
-  );
 }

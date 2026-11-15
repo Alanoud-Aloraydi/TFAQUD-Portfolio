@@ -2,7 +2,6 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
-import 'package:app/core/widgets/layout/section_header.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
@@ -10,7 +9,7 @@ import 'package:app/features/measurements/domain/use_cases/measurements_use_case
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_chart_card.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_readings_list.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_readings_history.dart';
 import 'package:app/features/measurements/presentation/widgets/month_switcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -159,9 +158,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
           const SizedBox(height: AppSpacing.md),
         ],
       const SizedBox(height: AppSpacing.md),
-      SectionHeader(context.tr('measurements.readings')),
-      const SizedBox(height: AppSpacing.sm),
-      MeasurementReadingsList(
+      MeasurementReadingsHistory(
         circleId: widget.circleId,
         readings: <MeasurementReading>[
           for (final MeasurementReading r in state.readings)

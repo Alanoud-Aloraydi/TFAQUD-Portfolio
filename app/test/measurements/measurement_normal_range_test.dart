@@ -141,17 +141,18 @@ void main() {
       expect(find.text('measurements.level.high'.tr()), findsWidgets);
     });
 
-    testWidgets('says the condition under the range, to change it', (
+    testWidgets('sends a change of condition to the medical file', (
       tester,
     ) async {
       await open(tester);
 
-      expect(find.text('measurements.range_condition'.tr()), findsOneWidget);
       expect(
         find.text('measurements.range_profile.bp_general'.tr()),
         findsWidgets,
       );
       expect(find.text('measurements.range_from_file'.tr()), findsOneWidget);
+      // As on the plan's form: no picker here, a row to the medical file.
+      expect(find.text('measurements.change_condition'.tr()), findsOneWidget);
     });
 
     testWidgets('a fasting glucose shows the fasting range', (tester) async {

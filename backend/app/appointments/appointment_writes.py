@@ -10,6 +10,9 @@ from app.appointments.inputs import (
 from app.errors import Conflict, ValidationFailed
 from app.models.appointment import Appointment
 
+# How long before its time an appointment can be marked attended.
+ATTEND_EARLY = timedelta(hours=1)
+
 
 class AppointmentWrites:
     """Adds, changes and closes appointments."""
@@ -65,8 +68,9 @@ class AppointmentWrites:
         status: str, expected_updated_at: datetime,
     ) -> Appointment:
         """Record an explicit attended or cancelled outcome."""
-        # Only an open appointment the app read as it is now; one cannot be
-        # marked done before its time.
+        # Only an open appointment the app read as it is now; one can be
+        # marked attended from an hour before its time (ATTEND_EARLY), as
+        # «حضرت» shows on «اليوم», not earlier.
         appointment = self._appointment(circle_id, appointment_id)
         if appointment.status != "scheduled":
             raise Conflict(code="appointment_already_closed")
@@ -76,7 +80,7 @@ class AppointmentWrites:
             appointment.care_circle_id,
             appointment.scheduled_on,
             appointment.time_of_day,
-        ) > self.now:
+        ) > self.now + ATTEND_EARLY:
             raise ValidationFailed(code="appointment_not_started")
         # Close it, say who, and move its change time forward (so the next edit
         # sees it changed).

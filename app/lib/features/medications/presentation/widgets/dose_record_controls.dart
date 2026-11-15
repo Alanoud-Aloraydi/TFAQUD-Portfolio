@@ -8,10 +8,13 @@ import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/buttons/task_button.dart';
+import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -60,119 +63,35 @@ class DoseRecordControls extends StatelessWidget {
     if (scheduledOn.isAfter(today)) return const SizedBox.shrink();
     final isToday = scheduledOn == today;
     if (layout != DoseControlsLayout.regular) {
-      // 44 everywhere, the smallest target a finger finds reliably, and
-      // the one layout that asks the patient to act is no place to save
-      // ten pixels.
-      const double height = AppSizes.touch;
-      final ButtonStyle compact = FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        minimumSize: Size(0, height),
-      );
-      // The same size for the quieter pair, without the filled button's
-      // colours: styleFrom carries a background, so the two answers would
-      // stop looking like the answers.
-      final ButtonStyle compactText = TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        minimumSize: Size(0, height),
-      );
-      final bool canSnooze = isToday && circleId != null;
-      // The two answers first («انأخذت», «ذكّرني لاحقًا»), then the two
-      // less common ones as text buttons, so no label wraps.
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              if (isToday)
-                Expanded(
-                  // A day of four doses shows four «أُخذت» buttons. Read
-                  // aloud they are the same word, so the reader cannot
-                  // tell which medicine is being recorded: the label
-                  // names it.
-                  child: MergeSemantics(
-                    child: Semantics(
-                      label: spoken(
-                        '${CareVoice.tr(context, circleId, 'medications.taken_short')}'
-                        '، ${occurrence.name}',
-                      ),
-                      child: FilledButton.icon(
-                        style: compact,
-                        onPressed: () => _takeNow(context),
-                        icon: const Icon(CupertinoIcons.checkmark, size: 16),
-                        // The words are on the Semantics above; excluded
-                        // here they are not said twice.
-                        label: ExcludeSemantics(
-                          child: Text(
-                            CareVoice.tr(
-                              context,
-                              circleId,
-                              'medications.taken_short',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (isToday && canSnooze) const SizedBox(width: AppSpacing.sm),
-              if (canSnooze)
-                Expanded(
-                  child: _SnoozeButton(
-                    occurrence: occurrence,
-                    circleId: circleId!,
-                    style: compact,
-                  ),
-                ),
-              if (!isToday)
-                Expanded(
-                  child: FilledButton.tonalIcon(
-                    style: compact,
-                    onPressed: () => _takeAtDifferentTime(context),
-                    icon: const Icon(CupertinoIcons.clock, size: 16),
-                    label: Text(
-                      CareVoice.tr(
-                        context,
-                        circleId,
-                        'medications.different_time_short',
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+      // One button system for every task (TaskButtonRole): each answer its
+      // own color and icon, all 48 high, two to a line of equal widths.
+      String say(String key) => CareVoice.tr(context, circleId, key);
+      return TaskButtonGrid(
+        buttons: <Widget>[
+          if (isToday)
+            // A day of four doses shows four «انأخذت»: read aloud they are
+            // the same word, so the reader is told which medicine.
+            TaskButton(
+              role: TaskButtonRole.answer,
+              icon: CupertinoIcons.checkmark,
+              label: say('medications.taken_short'),
+              semanticLabel:
+                  '${say('medications.taken_short')}، ${occurrence.name}',
+              onPressed: () => _takeNow(context),
+            ),
+          if (isToday && circleId != null)
+            _SnoozeButton(occurrence: occurrence, circleId: circleId!),
+          TaskButton(
+            role: TaskButtonRole.earlier,
+            icon: CupertinoIcons.clock,
+            label: say('medications.different_time_short'),
+            onPressed: () => _takeAtDifferentTime(context),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          // The second line matches the first: two buttons of one height,
-          // each taking half the row. Sized to their words they came out
-          // three different widths under two equal ones.
-          Row(
-            children: [
-              if (isToday)
-                Expanded(
-                  child: TextButton.icon(
-                    style: compactText,
-                    onPressed: () => _takeAtDifferentTime(context),
-                    icon: const Icon(CupertinoIcons.clock, size: 16),
-                    label: Text(
-                      CareVoice.tr(
-                        context,
-                        circleId,
-                        'medications.different_time_short',
-                      ),
-                    ),
-                  ),
-                )
-              else
-                const Spacer(),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: TextButton.icon(
-                  style: compactText,
-                  onPressed: () => _skip(context),
-                  icon: const Icon(CupertinoIcons.minus_circle, size: 16),
-                  label: Text(context.tr('medications.skip_short')),
-                ),
-              ),
-            ],
+          TaskButton(
+            role: TaskButtonRole.skip,
+            icon: CupertinoIcons.minus_circle,
+            label: context.tr('medications.skip_short'),
+            onPressed: () => _skip(context),
           ),
         ],
       );
@@ -378,15 +297,10 @@ class _RecordedStatus extends StatelessWidget {
 /// («بنذكّرك 2:36 م»), and opens the ruler again. Put off by someone else
 /// in the circle, it says until when and who («مؤجّلة إلى 2:36 م · لين»).
 class _SnoozeButton extends StatefulWidget {
-  const _SnoozeButton({
-    required this.occurrence,
-    required this.circleId,
-    required this.style,
-  });
+  const _SnoozeButton({required this.occurrence, required this.circleId});
 
   final DoseOccurrence occurrence;
   final String circleId;
-  final ButtonStyle style;
 
   @override
   State<_SnoozeButton> createState() => _SnoozeButtonState();
@@ -468,18 +382,11 @@ class _SnoozeButtonState extends State<_SnoozeButton> {
   }
 
   Widget _button(BuildContext context, DateTime? at, SharedSnooze? shared) =>
-      FilledButton.tonalIcon(
-        style: widget.style.copyWith(
-          backgroundColor: const WidgetStatePropertyAll<Color>(
-            AppSemanticColors.surfaceContent,
-          ),
-          foregroundColor: const WidgetStatePropertyAll<Color>(
-            AppSemanticColors.textPrimary,
-          ),
-        ),
+      TaskButton(
+        role: TaskButtonRole.later,
+        icon: _icon(at, shared),
+        label: _label(context, at, shared),
         onPressed: _snooze,
-        icon: Icon(_icon(at, shared), size: 16),
-        label: Text(_label(context, at, shared)),
       );
 
   @override

@@ -1,14 +1,11 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/condition_file_row.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 /// «المعدل الطبيعي» of a plan, from the [MeasurementRangesCubit] above: one
 /// card per range its readings are judged by (glucose: fasting and after a
@@ -28,14 +25,6 @@ class MeasurementRangesBox extends StatelessWidget {
   /// The planned meal states of a glucose plan's reading times; none shows
   /// both glucose ranges.
   final List<String?> states;
-
-  /// Opens the medical file, and reads the ranges again on the way back: a
-  /// changed condition changes them.
-  Future<void> _openMedicalFile(BuildContext context) async {
-    final MeasurementRangesCubit cubit = context.read<MeasurementRangesCubit>();
-    await context.push(Routes.medicalFile(circleId));
-    if (!cubit.isClosed) await cubit.load(circleId);
-  }
 
   @override
   Widget build(BuildContext context) =>
@@ -71,12 +60,7 @@ class MeasurementRangesBox extends StatelessWidget {
                       ? context.tr('measurements.range_from_file')
                       : null,
                   action: range == shown.last
-                      ? InsetRow(
-                          label: context.tr('measurements.change_condition'),
-                          leading: const Icon(AppIcons.fileText),
-                          showChevron: true,
-                          onTap: () => _openMedicalFile(context),
-                        )
+                      ? ConditionFileRow(circleId: circleId)
                       : null,
                 ),
               ],

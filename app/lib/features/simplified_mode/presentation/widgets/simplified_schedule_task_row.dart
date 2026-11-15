@@ -4,6 +4,7 @@ import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_task_status.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_line.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
@@ -92,6 +93,10 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
     final String status =
         snoozed ?? simplifiedTaskStatus(context, task, day, now);
     final String? how = _how(context, task, day);
+    final TextStyle statusStyle = SimplifiedStyle.head(
+      SimplifiedStyle.caption,
+      color: text,
+    );
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: const BoxDecoration(
@@ -154,13 +159,10 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
                       color: SimplifiedStyle.muted,
                     ),
                   ),
-                Text(
-                  status,
-                  style: SimplifiedStyle.head(
-                    SimplifiedStyle.caption,
-                    color: text,
-                  ),
-                ),
+                if (snoozed == null && task.status == TodayTaskStatus.done)
+                  SimplifiedDoneLine(task: task, day: day, style: statusStyle)
+                else
+                  Text(status, style: statusStyle),
               ],
             ),
           ),
