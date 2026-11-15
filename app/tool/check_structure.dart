@@ -18,7 +18,7 @@ import 'dart:io';
 const int presentationLimit = 70;
 
 /// The size limit of every other file.
-const int generalLimit = 120;
+const int generalLimit = 90;
 
 const String baselinePath = 'tool/structure_baseline.txt';
 
@@ -50,6 +50,11 @@ final RegExp _classDeclaration = RegExp(
 /// count as a second widget in the file.
 final RegExp _stateDeclaration = RegExp(r'\bextends\s+State<');
 
+/// A comment that is only a rule of dashes or stars: a section banner,
+/// which §5 of the conventions does without. A file that needs one is a
+/// file with two jobs in it.
+final RegExp _banner = RegExp(r'^\s*//\s*[-=*_~#]{3,}\s*$');
+
 bool _isTopLevelClass(String line) =>
     !line.startsWith(' ') &&
     _classDeclaration.hasMatch(line) &&
@@ -77,6 +82,13 @@ List<Violation> inspect(File file, String path) {
     );
   }
 
+  final int banners = lines.where(_banner.hasMatch).length;
+  if (banners > 0) {
+    found.add(
+      Violation('banner', path, banners, '$banners section banner comments'),
+    );
+  }
+
   final int classes = lines.where(_isTopLevelClass).length;
   if (presentation && classes > 1) {
     found.add(
@@ -101,6 +113,11 @@ List<Violation> inspect(File file, String path) {
     if (path.contains('/domain/') &&
         (imported.contains('/data/') || imported.contains('/presentation/'))) {
       found.add(Violation('layer', path, 0, 'domain imports $imported'));
+    }
+    // Data answers the domain's questions; it never reaches up into the
+    // widgets that happen to ask them.
+    if (path.contains('/data/') && imported.contains('/presentation/')) {
+      found.add(Violation('layer', path, 0, 'data imports $imported'));
     }
   }
   return found;

@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ class CareItemHeader extends StatelessWidget {
     required this.body,
     required this.status,
     this.onTap,
-    this.spoken,
+    this.spokenLabel,
   });
 
   final String time;
@@ -25,7 +26,7 @@ class CareItemHeader extends StatelessWidget {
   /// is read in the order it is laid out, which starts with the time: on a
   /// day of four doses every row then opens with a number. Given here, the
   /// line names the thing first.
-  final String? spoken;
+  final String? spokenLabel;
 
   /// The most of the line the status takes beside the text.
   static const double _statusShare = 0.4;
@@ -62,8 +63,8 @@ class CareItemHeader extends StatelessWidget {
     return MergeSemantics(
       child: Semantics(
         button: onTap != null,
-        label: spoken,
-        excludeSemantics: spoken != null,
+        label: spoken(spokenLabel),
+        excludeSemantics: spokenLabel != null,
         child: InkWell(
           onTap: onTap,
           child: ConstrainedBox(

@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/materials/glass_style.dart';
@@ -30,16 +31,21 @@ class GlassAddButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppGlass.addButtonSize / 2),
           child: Material(
             type: MaterialType.transparency,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: onPressed,
-              child: Center(
-                child: Icon(
-                  AppIcons.plus,
-                  size: AppSizes.iconAction,
-                  color: enabled
-                      ? AppSemanticColors.textPrimary
-                      : AppGlass.disabledIcon,
+            child: Semantics(
+              button: true,
+              enabled: enabled,
+              label: spoken(tooltip),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onPressed,
+                child: Center(
+                  child: Icon(
+                    AppIcons.plus,
+                    size: AppSizes.iconAction,
+                    color: enabled
+                        ? AppSemanticColors.textPrimary
+                        : AppGlass.disabledIcon,
+                  ),
                 ),
               ),
             ),

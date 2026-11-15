@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Step 2 of 2 of the first account set-up («كيف تحب تستخدم تفقّد؟»), and
+/// Step 2 of 2 of the first account set-up («كيف تحب تستخدم تفقُد؟»), and
 /// the page the "+" next to the circles opens to add another circle
 /// ([addingCircle]: no steps, no «تخطي الآن», no invitations).
 ///

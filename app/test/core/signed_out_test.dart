@@ -1,5 +1,7 @@
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/services/signed_out.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,19 +13,22 @@ void main() {
   group('SignedOut', () {
     late FakeDoseReminders reminders;
     late FakeCalendarSync calendar;
+    late FakeRemotePush remote;
 
     setUp(() {
       reminders = FakeDoseReminders();
       calendar = FakeCalendarSync();
+      remote = FakeRemotePush();
       GetIt.I
         ..registerSingleton<DoseReminders>(reminders)
-        ..registerSingleton<CalendarSync>(calendar);
+        ..registerSingleton<CalendarSync>(calendar)
+        ..registerSingleton<RemotePush>(remote);
     });
 
     tearDown(() => GetIt.I.reset());
 
     test('the next person on the phone finds nothing of the last one: no '
-        'reminders, no calendar events, no names', () async {
+        'reminders, no calendar events, no names, no pushes', () async {
       CareVoice.viewerName = 'مريم';
       CareVoice.update(<String, String?>{'c-1': 'نورة'});
 
@@ -31,8 +36,27 @@ void main() {
 
       expect(reminders.clears, 1);
       expect(calendar.clears, 1);
+      expect(remote.signOuts, 1);
       expect(CareVoice.viewerName, isNull);
       expect(CareVoice.patientOf('c-1'), isNull);
+    });
+
+    test('no subscription is sent for the sign-in that ended', () async {
+      final List<String> sent = <String>[];
+      final PushRegistration push = PushRegistration(
+        FakePhoneNotifications(),
+        remote: remote,
+        send: (String id) async => sent.add(id),
+      );
+      GetIt.I.registerSingleton<PushRegistration>(push);
+      await push.start(accountId: 'acc-1');
+
+      await forgetSignedOutPerson();
+      remote.register('sub-1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sent, isEmpty);
+      expect(remote.observers, isEmpty);
     });
   });
 }

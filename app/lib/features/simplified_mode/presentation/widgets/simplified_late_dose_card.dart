@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
@@ -34,7 +35,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
   /// «سأذكّرك 2:09 مساءً» when the dose is put off.
   final String? snoozed;
 
-  /// What the card says, in its order, its two answers last.
+  /// What the card says, in its order, its three answers last.
   static List<String> lines(
     BuildContext context,
     TodayTask task,
@@ -50,6 +51,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
     ?snoozed,
     context.tr('simplified_mode.took_now'),
     context.tr('simplified_mode.remind_later'),
+    context.tr('simplified_mode.not_taken'),
   ];
 
   static String _wasDue(BuildContext context, TodayTask task) => context.tr(
@@ -69,14 +71,20 @@ class SimplifiedLateDoseCard extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: lines(context, task, day, snoozed).join('، '),
-      excludeSemantics: true,
-      child: _body(context),
-    );
+  /// What the card says without its three answers: the buttons name
+  /// themselves, and stay their own stops for a screen reader.
+  static String _said(
+    BuildContext context,
+    TodayTask task,
+    SimplifiedDay day,
+    String? snoozed,
+  ) {
+    final List<String> said = lines(context, task, day, snoozed);
+    return said.sublist(0, said.length - 3).join('، ');
   }
+
+  @override
+  Widget build(BuildContext context) => _body(context);
 
   Widget _body(BuildContext context) {
     final bool saving = context.select<SimplifiedModeCubit, bool>(
@@ -92,66 +100,74 @@ class SimplifiedLateDoseCard extends StatelessWidget {
       ),
       child: Column(
         children: <Widget>[
-          Text(
-            context.tr('simplified_mode.late_question'),
-            textAlign: TextAlign.center,
-            style: SimplifiedStyle.head(SimplifiedStyle.headline),
-          ),
-          const SizedBox(height: 12),
-          MedicinePhoto(
-            circleId: day.circleId,
-            planId: task.dose!.planId,
-            height: 124,
-            width: 124,
-            radius: 30,
-            iconSize: 48,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            task.dose!.name,
-            textAlign: TextAlign.center,
-            style: SimplifiedStyle.head(SimplifiedStyle.name),
-          ),
-          Text(
-            simplifiedDoseAmount(context, task.dose!),
-            style: SimplifiedStyle.head(SimplifiedStyle.headline),
-          ),
-          Text(
-            task.dose!.reason ?? simplifiedStrength(context, task.dose!),
-            style: SimplifiedStyle.text(
-              SimplifiedStyle.body,
-              weight: AppTextTheme.medium,
-            ),
-          ),
-          if (chips.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
+          Semantics(
+            label: spoken(_said(context, task, day, snoozed)),
+            excludeSemantics: true,
+            child: Column(
               children: <Widget>[
-                for (final String chip in chips) SimplifiedChip(chip),
+                Text(
+                  context.tr('simplified_mode.late_question'),
+                  textAlign: TextAlign.center,
+                  style: SimplifiedStyle.head(SimplifiedStyle.headline),
+                ),
+                const SizedBox(height: 12),
+                MedicinePhoto(
+                  circleId: day.circleId,
+                  planId: task.dose!.planId,
+                  height: 124,
+                  width: 124,
+                  radius: 30,
+                  iconSize: 48,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  task.dose!.name,
+                  textAlign: TextAlign.center,
+                  style: SimplifiedStyle.head(SimplifiedStyle.name),
+                ),
+                Text(
+                  simplifiedDoseAmount(context, task.dose!),
+                  style: SimplifiedStyle.head(SimplifiedStyle.headline),
+                ),
+                Text(
+                  task.dose!.reason ?? simplifiedStrength(context, task.dose!),
+                  style: SimplifiedStyle.text(
+                    SimplifiedStyle.body,
+                    weight: AppTextTheme.medium,
+                  ),
+                ),
+                if (chips.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: <Widget>[
+                      for (final String chip in chips) SimplifiedChip(chip),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Text(
+                  _wasDue(context, task),
+                  style: SimplifiedStyle.text(
+                    SimplifiedStyle.body,
+                    color: SimplifiedStyle.attentionInk,
+                    weight: AppTextTheme.bold,
+                  ),
+                ),
+                if (snoozed case final String text)
+                  Text(
+                    text,
+                    style: SimplifiedStyle.text(
+                      SimplifiedStyle.body,
+                      color: SimplifiedStyle.ink,
+                      weight: AppTextTheme.medium,
+                    ),
+                  ),
               ],
             ),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            _wasDue(context, task),
-            style: SimplifiedStyle.text(
-              SimplifiedStyle.body,
-              color: SimplifiedStyle.attentionInk,
-              weight: AppTextTheme.bold,
-            ),
           ),
-          if (snoozed case final String text)
-            Text(
-              text,
-              style: SimplifiedStyle.text(
-                SimplifiedStyle.body,
-                color: SimplifiedStyle.ink,
-                weight: AppTextTheme.medium,
-              ),
-            ),
           const SizedBox(height: 16),
           SimplifiedButton(
             label: context.tr('simplified_mode.took_now'),
@@ -163,6 +179,16 @@ class SimplifiedLateDoseCard extends StatelessWidget {
             label: context.tr('simplified_mode.remind_later'),
             tone: SimplifiedButtonTone.secondary,
             onPressed: () => context.push(Routes.simplifiedSnooze, extra: task),
+          ),
+          const SizedBox(height: 12),
+          // A dose that will not be taken has somewhere to go: without
+          // this it stays late for ever, and the family never learns why.
+          SimplifiedButton(
+            label: context.tr('simplified_mode.not_taken'),
+            tone: SimplifiedButtonTone.secondary,
+            onPressed: saving
+                ? null
+                : () => context.push(Routes.simplifiedSkip, extra: task),
           ),
         ],
       ),

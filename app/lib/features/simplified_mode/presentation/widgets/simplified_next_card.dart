@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
@@ -74,8 +75,16 @@ class SimplifiedNextCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The whole card is the one tap, so it is one stop that says everything
+    // and carries the action itself: the card inside is excluded.
+    final bool recordable =
+        task.kind != TodayTaskKind.appointment && schedule.canRecord(task);
     return Semantics(
-      label: lines(context, task, day, now, snoozed).join('، '),
+      label: spoken(lines(context, task, day, now, snoozed).join('، ')),
+      button: recordable,
+      onTap: recordable
+          ? () => openSimplifiedTask(context, task, day.circleId)
+          : null,
       excludeSemantics: true,
       child: _body(context),
     );

@@ -24,21 +24,23 @@ class IntroRowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: AppSurfaces.floating(AppRadius.m),
-      child: Row(
-        children: <Widget>[
-          tile,
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(title, style: text.titleSmall),
-                Text(note, style: text.bodySmall),
-              ],
+      child: MergeSemantics(
+        child: Row(
+          children: <Widget>[
+            tile,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: text.titleSmall),
+                  Text(note, style: text.bodySmall),
+                ],
+              ),
             ),
-          ),
-          trailing,
-        ],
+            trailing,
+          ],
+        ),
       ),
     );
   }

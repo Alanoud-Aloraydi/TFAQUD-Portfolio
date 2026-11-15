@@ -5,7 +5,7 @@ import 'package:app/features/home/presentation/widgets/today_load_error.dart';
 import 'package:app/features/home/presentation/widgets/today_next_or_empty.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
-import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/medications/presentation/widgets/dose_row_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

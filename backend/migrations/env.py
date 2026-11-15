@@ -9,7 +9,9 @@ from alembic import context
 
 config = context.config
 
-fileConfig(config.config_file_name)
+# Loggers that already exist (the app's, when migrations run inside a
+# test run) keep working.
+fileConfig(config.config_file_name, disable_existing_loggers=False)
 logger = logging.getLogger("alembic.env")
 
 
@@ -66,8 +68,8 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         # A migration may take longer than a request, so the statement
-        # deadline of app/config.py is lifted here (the lock one stays: a
-        # migration that cannot get its lock fails instead of stopping
+        # deadline of app/config/database.py is lifted here (the lock one
+        # stays: a migration that cannot get its lock fails instead of stopping
         # every request behind it). RESET gives the connection back to the
         # pool with its usual deadline.
         connection.exec_driver_sql("SET statement_timeout = 0")

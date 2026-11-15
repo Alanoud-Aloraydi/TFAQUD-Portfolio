@@ -554,14 +554,14 @@ void main() {
       );
     });
 
-    test("the events go in the app's own «تفقّد» calendar", () async {
+    test("the events go in the app's own «تفقُد» calendar", () async {
       await turnOn();
 
-      expect(calendar.calendars.values, <String>['تفقّد']);
-      expect(calendar.inCalendar('تفقّد'), hasLength(1));
+      expect(calendar.calendars.values, <String>['تفقُد']);
+      expect(calendar.inCalendar('تفقُد'), hasLength(1));
     });
 
-    test('signing out deletes the whole «تفقّد» calendar', () async {
+    test('signing out deletes the whole «تفقُد» calendar', () async {
       await turnOn();
       // One more, made before this version, in the default calendar.
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -588,10 +588,10 @@ void main() {
       expect(calendar.calendars, isEmpty);
     });
 
-    test('a «تفقّد» calendar left by an earlier install goes first, with '
+    test('a «تفقُد» calendar left by an earlier install goes first, with '
         'its events', () async {
       // Deleting the app left its calendar; this install never made it.
-      calendar.calendars['left'] = 'تفقّد';
+      calendar.calendars['left'] = 'تفقُد';
       calendar.events['left-1'] = _older(
         'visit عيادة السكري',
         DateTime.now().add(const Duration(days: 3)),
@@ -600,9 +600,9 @@ void main() {
       await turnOn();
 
       expect(calendar.calendars.keys, isNot(contains('left')));
-      expect(calendar.calendars.values, <String>['تفقّد']);
+      expect(calendar.calendars.values, <String>['تفقُد']);
       expect(calendar.events.keys, isNot(contains('left-1')));
-      expect(calendar.inCalendar('تفقّد'), hasLength(1));
+      expect(calendar.inCalendar('تفقُد'), hasLength(1));
     });
 
     test('a calendar deleted in the Calendar app is made again, with its '
@@ -614,7 +614,7 @@ void main() {
       await sync.refresh();
 
       expect(calendar.calendars.keys.single, isNot(deleted));
-      expect(calendar.inCalendar('تفقّد'), hasLength(1));
+      expect(calendar.inCalendar('تفقُد'), hasLength(1));
     });
 
     test('without full access the events go in the default calendar', () async {
@@ -686,7 +686,7 @@ void main() {
         final _Event again = calendar.events.values.single;
         expect(calendar.events.keys.single, isNot(first));
         expect(again.until, now.add(const Duration(days: 14)));
-        expect(calendar.inCalendar('تفقّد'), hasLength(1));
+        expect(calendar.inCalendar('تفقُد'), hasLength(1));
       });
 
       test('of an older version, with no end, is replaced by one that has '
@@ -715,7 +715,7 @@ void main() {
         await repeating.sync(<ReminderCircle>[_circle]);
 
         expect(calendar.events.keys, isNot(contains('old-1')));
-        final _Event event = calendar.inCalendar('تفقّد').single;
+        final _Event event = calendar.inCalendar('تفقُد').single;
         expect(event.until, isNotNull);
       });
     });

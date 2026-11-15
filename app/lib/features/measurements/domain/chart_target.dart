@@ -1,37 +1,84 @@
+import 'dart:math' as math;
+
+import 'package:app/features/measurements/domain/chart_band.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:equatable/equatable.dart';
 
-/// The normal band a month chart draws: the one every reading of the month
-/// was judged by. Readings judged by different ranges (fasting and after a
-/// meal) share none, and the chart draws no band; each point still shows
-/// whether it is outside its own.
-class ChartTarget {
-  const ChartTarget(this.low, this.high);
+export 'package:app/features/measurements/domain/chart_band.dart';
 
-  /// Glucose: the lowest normal value. Blood pressure: the top of the
-  /// normal diastolic.
-  final int? low;
+/// The normal bands of a month chart, from the ranges its readings were
+/// judged by (the latest reading's, if the medical file changed).
+///
+/// Glucose: one band, or two when the month has fasting and after-meal
+/// readings, whose ranges differ; each dot is still judged by its own.
+/// Blood pressure: the normal zone of the upper number and that of the
+/// lower one, so a normal reading's bar starts in the lower zone and ends
+/// in the upper one.
+class ChartTarget extends Equatable {
+  const ChartTarget(this.bands);
 
-  /// Glucose: the highest normal value. Blood pressure: the top of the
-  /// normal systolic.
-  final int? high;
+  final List<ChartBand> bands;
 
-  bool get isSet => low != null && high != null;
+  @override
+  List<Object?> get props => [bands];
+
+  bool get isSet => bands.isNotEmpty;
+
+  /// The lowest and highest value the bands cover, for the axis.
+  int? get low => isSet ? bands.map((band) => band.low).reduce(math.min) : null;
+  int? get high =>
+      isSet ? bands.map((band) => band.high).reduce(math.max) : null;
 
   factory ChartTarget.of({
     required MeasurementKind kind,
     required List<MeasurementReading> readings,
   }) {
-    final List<NormalBand> bands = <NormalBand>[
+    final List<ReadingRange> ranges = <ReadingRange>[
       for (final MeasurementReading reading in readings)
-        if (reading.range case final ReadingRange range) range.normal,
+        if (reading.range case final ReadingRange range) range,
     ];
-    final NormalBand? first = bands.firstOrNull;
-    if (first == null || bands.any((band) => band != first)) {
-      return const ChartTarget(null, null);
+    if (ranges.isEmpty) return const ChartTarget(<ChartBand>[]);
+    if (kind == MeasurementKind.bp) {
+      final NormalBand normal = ranges.first.normal;
+      const String key = 'measurements.chart_legend_bp_target';
+      return ChartTarget(<ChartBand>[
+        ChartBand(normal.systolicLow!, normal.systolicHigh!, key),
+        ChartBand(normal.diastolicLow!, normal.diastolicHigh!, key),
+      ]);
     }
-    return kind == MeasurementKind.glucose
-        ? ChartTarget(first.glucoseLow, first.glucoseHigh)
-        : ChartTarget(first.diastolicHigh, first.systolicHigh);
+    final NormalBand? fasting = _first(ranges, fasting: true);
+    final NormalBand? afterMeal = _first(ranges, fasting: false);
+    if (fasting == null || afterMeal == null) {
+      final NormalBand only = (fasting ?? afterMeal)!;
+      return ChartTarget(<ChartBand>[
+        ChartBand(
+          only.glucoseLow!,
+          only.glucoseHigh!,
+          'measurements.chart_legend_glucose_target',
+        ),
+      ]);
+    }
+    return ChartTarget(<ChartBand>[
+      ChartBand(
+        afterMeal.glucoseLow!,
+        afterMeal.glucoseHigh!,
+        'measurements.chart_legend_after_meal',
+      ),
+      ChartBand(
+        fasting.glucoseLow!,
+        fasting.glucoseHigh!,
+        'measurements.chart_legend_fasting',
+        inner: true,
+      ),
+    ]);
   }
+
+  static NormalBand? _first(
+    List<ReadingRange> ranges, {
+    required bool fasting,
+  }) => ranges
+      .where((range) => (range.state == 'fasting') == fasting)
+      .firstOrNull
+      ?.normal;
 }

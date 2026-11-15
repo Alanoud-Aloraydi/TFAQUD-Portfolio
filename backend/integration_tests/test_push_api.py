@@ -1,24 +1,32 @@
-"""Push notifications on PostgreSQL: the phone's token, and who is told
-about invitations and circle requests."""
+"""Push notifications on PostgreSQL: who is told about invitations and
+circle requests. OneSignal knows each phone by its signed-in account, so a
+push goes to an account that is signed in somewhere. Each sign-in keeps its
+phone's OneSignal subscription, and a phone whose app was deleted is signed
+out."""
+
+import uuid
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import AccountSession, PushDevice
+from app import metrics
+from app.models import AccountSession
 from app.push import NoPushSender, RecordingPushSender
 from integration_tests.helpers import offline_circle
 
-DEVICE = "/api/v1/accounts/me/push-device"
+SUBSCRIPTION = "/api/v1/accounts/me/push-subscription"
+
 REQUESTS = "/api/v1/circle-requests"
 REQUEST = {"proposed_app_mode": "simplified"}
 BASICS = {"birth_date": "1950-01-02", "city": "Buraydah"}
 
 
 class Phone:
-    """One signed-in phone of an account: its own session and push token."""
+    """One signed-in phone of an account: its own session. `token` is what
+    the server sends to, the account's id (OneSignal's external id)."""
 
-    def __init__(self, app, account, token_digit):
+    def __init__(self, app, account, digit=None):
         self.issued = app.extensions["session_service"].create_session(
             account.id.hex
         )
@@ -28,73 +36,38 @@ class Phone:
             "Authorization": "Bearer " + self.issued.access_token
         }
         self.account = account
-        self.token = token_digit * 64
+        self.token = str(account.id)
 
     def call(self, method, url, body=None):
         return getattr(self.client, method)(
             url, json=body, headers=self.headers
         )
 
-    def register(self, token=None):
-        return self.call("put", DEVICE, {"token": token or self.token})
-
     def sign_out(self):
         self.app.extensions["session_service"].sign_out(
             self.issued.session_id
         )
 
+    def subscribe(self, subscription=None):
+        """What the app does after signing in: send its phone's OneSignal
+        subscription (a new one unless given)."""
+        self.subscription = subscription or str(uuid.uuid4())
+        answer = self.call(
+            "put", SUBSCRIPTION, {"subscription_id": self.subscription}
+        )
+        assert answer.status_code == 204, answer.json
+        return self
+
+    def signed_in(self):
+        return self.call("get", "/api/v1/auth/session").status_code == 200
+
 
 @pytest.fixture
 def pushes(database_app, monkeypatch):
-    """What would reach Apple, kept for the test."""
+    """What would reach OneSignal, kept for the test."""
     sender = RecordingPushSender()
     monkeypatch.setitem(database_app.extensions, "push_sender", sender)
     return sender
-
-
-def devices(database):
-    with Session(database) as session:
-        return {
-            row.token: row
-            for row in session.scalars(select(PushDevice)).all()
-        }
-
-
-def device_accounts(database):
-    """Each token's account, through its sign-in (a phone's token keeps no
-    account of its own)."""
-    with Session(database) as session:
-        rows = session.execute(
-            select(PushDevice.token, AccountSession.account_id)
-            .join(AccountSession, AccountSession.id == PushDevice.session_id)
-        )
-        # A Result has keys() (its column names), so dict(rows) would read
-        # it as a mapping; unpack the rows instead.
-        return {token: account_id for token, account_id in rows}
-
-
-def test_a_phone_registers_its_token(database_app, database, account):
-    reem = account(name="Reem")
-    phone = Phone(database_app, reem, "a")
-
-    response = phone.register()
-
-    assert response.status_code == 204
-    row = devices(database)[phone.token]
-    assert device_accounts(database)[phone.token] == reem.id
-    assert row.session_id.hex == phone.issued.session_id.replace("-", "")
-    # Upper case is the same token.
-    assert phone.register(phone.token.upper()).status_code == 204
-    assert list(devices(database)) == [phone.token]
-
-
-def test_a_token_moves_with_the_phone(database_app, database, account):
-    reem, khaled = account(name="Reem"), account(name="Khaled")
-    Phone(database_app, reem, "a").register()
-
-    Phone(database_app, khaled, "a").register()
-
-    assert device_accounts(database)["a" * 64] == khaled.id
 
 
 def test_an_invitation_reaches_the_invited_phone(
@@ -103,9 +76,7 @@ def test_an_invitation_reaches_the_invited_phone(
     reem, khaled = account(name="Reem"), account(name="Khaled")
     circle = offline_circle(database, reem)
     khaled_phone = Phone(database_app, khaled, "b")
-    khaled_phone.register()
     reem_phone = Phone(database_app, reem, "c")
-    reem_phone.register()
 
     sent = reem_phone.call(
         "post",
@@ -116,6 +87,8 @@ def test_an_invitation_reaches_the_invited_phone(
     assert sent.status_code == 201
     [message] = pushes.to(khaled_phone.token)
     assert message.kind == "invitation"
+    invitation_id = sent.json["invitation"]["id"]
+    assert message.target == (("invitation_id", invitation_id),)
     assert message.title == "دعوة لدائرة رعاية"
     # As Khaled sees the circle: «دائرة» and the patient's first name.
     assert message.body == "وصلتك دعوة من Reem للانضمام إلى «دائرة Nora»."
@@ -147,25 +120,42 @@ def test_a_number_without_the_app_gets_no_push(
     assert pushes.sent == []
 
 
-def test_a_signed_out_phone_is_not_told(
+def test_an_account_signed_out_everywhere_is_not_told(
     database_app, database, account, pushes
 ):
     reem, khaled = account(name="Reem"), account(name="Khaled")
-    circle = offline_circle(database, reem)
+    gone = Phone(database_app, khaled, "b")
+    gone.sign_out()
+
+    assert invite(database_app, database, reem, khaled).status_code == 201
+
+    assert pushes.to(gone.token) == []
+
+
+def test_an_account_signed_in_on_another_phone_is_told(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
     old = Phone(database_app, khaled, "b")
-    old.register()
     old.sign_out()
     new = Phone(database_app, khaled, "d")
-    new.register()
 
-    Phone(database_app, reem, "c").call(
-        "post",
-        f"/api/v1/circles/{circle.id}/invitations",
-        {"invitee_phone_number": khaled.phone_number},
-    )
+    invite(database_app, database, reem, khaled)
 
-    assert pushes.to(old.token) == []
+    # One push to the account; OneSignal shows it on the phones signed in.
     assert len(pushes.to(new.token)) == 1
+
+
+def test_an_account_whose_phones_show_no_push_is_counted_not_failed(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b")
+    pushes.no_device.add(phone.token)
+
+    assert invite(database_app, database, reem, khaled).status_code == 201
+
+    assert pushes.sent == []
 
 
 def test_a_circle_request_from_sending_to_the_circle(
@@ -176,8 +166,6 @@ def test_a_circle_request_from_sending_to_the_circle(
         Phone(database_app, reem, "c"),
         Phone(database_app, noura, "e"),
     )
-    reem_phone.register()
-    noura_phone.register()
 
     sent = reem_phone.call(
         "post",
@@ -189,11 +177,14 @@ def test_a_circle_request_from_sending_to_the_circle(
     assert asked.body == "وصلك طلب من Reem لمتابعة رعايتك في تفقّد."
 
     request_id = sent.json["request"]["id"]
+    assert asked.target == (("request_id", request_id),)
     noura_phone.call(
         "post", f"{REQUESTS}/{request_id}/respond", {"accept": True}
     )
     [answered] = pushes.to(reem_phone.token)
     assert answered.kind == "request_answer"
+    # Accepted, it waits for Noura: no card of the bell to open yet.
+    assert answered.target == ()
     assert answered.title == "تم قبول طلبك"
     assert answered.body == (
         "تم قبول طلبك لرعاية Noura. الدائرة تجهز أول ما تكتمل البيانات."
@@ -205,6 +196,8 @@ def test_a_circle_request_from_sending_to_the_circle(
     assert done.status_code == 201
     ready = pushes.to(reem_phone.token)[-1]
     assert ready.kind == "circle_ready"
+    circle_id = done.json["circle"]["id"]
+    assert ready.target == (("circle_id", circle_id),)
     # Reem is told the name she sees, not Noura's own «صحتي».
     assert ready.body == "«دائرة Noura» جاهزة، وتقدر تتابع الرعاية الحين."
 
@@ -212,7 +205,6 @@ def test_a_circle_request_from_sending_to_the_circle(
 def test_a_declined_request_is_told(database_app, database, account, pushes):
     reem, noura = account(name="Reem"), account(name="Noura")
     reem_phone = Phone(database_app, reem, "c")
-    reem_phone.register()
     sent = reem_phone.call(
         "post",
         REQUESTS,
@@ -228,24 +220,8 @@ def test_a_declined_request_is_told(database_app, database, account, pushes):
     [answer] = pushes.to(reem_phone.token)
     assert answer.title == "تم الاعتذار عن طلبك"
     assert answer.body == "تم الاعتذار عن طلبك لرعاية Noura."
-
-
-def test_a_token_apple_forgot_is_deleted(
-    database_app, database, account, pushes
-):
-    reem, khaled = account(name="Reem"), account(name="Khaled")
-    circle = offline_circle(database, reem)
-    phone = Phone(database_app, khaled, "b")
-    phone.register()
-    pushes.gone.add(phone.token)
-
-    Phone(database_app, reem, "c").call(
-        "post",
-        f"/api/v1/circles/{circle.id}/invitations",
-        {"invitee_phone_number": khaled.phone_number},
-    )
-
-    assert devices(database) == {}
+    # Declined, it is on Reem's bell: a tap opens it there.
+    assert answer.target == (("request_id", sent.json["request"]["id"]),)
 
 
 def invite(database_app, database, inviter, invited):
@@ -259,69 +235,6 @@ def invite(database_app, database, inviter, invited):
     )
 
 
-def refresh(database_app, phone):
-    return database_app.test_client().post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": phone.issued.refresh_token},
-    )
-
-
-def test_a_deleted_app_is_signed_out(
-    database_app, database, account, pushes
-):
-    reem, khaled = account(name="Reem"), account(name="Khaled")
-    deleted = Phone(database_app, khaled, "b")
-    deleted.register()
-    kept = Phone(database_app, khaled, "d")
-    kept.register()
-    # Apple: this token is no longer active (410), as after deleting the app.
-    pushes.deleted_apps.add(deleted.token)
-
-    assert invite(database_app, database, reem, khaled).status_code == 201
-
-    # That phone's sign-in has ended, as a sign-out would end it...
-    assert refresh(database_app, deleted).status_code == 401
-    me = deleted.call("get", "/api/v1/auth/session")
-    assert me.json["error"]["code"] == "session_revoked"
-    assert deleted.token not in devices(database)
-    # ...and Khaled's other phone is still signed in and told.
-    assert refresh(database_app, kept).status_code == 200
-    assert len(pushes.to(kept.token)) == 1
-
-
-def test_a_token_wrong_for_the_app_keeps_the_sign_in(
-    database_app, database, account, pushes
-):
-    reem, khaled = account(name="Reem"), account(name="Khaled")
-    phone = Phone(database_app, khaled, "b")
-    phone.register()
-    # A BadDeviceToken: often a sandbox token on the production server.
-    pushes.gone.add(phone.token)
-
-    invite(database_app, database, reem, khaled)
-
-    assert devices(database) == {}
-    assert refresh(database_app, phone).status_code == 200
-
-
-def test_a_sign_in_keeps_only_the_last_token_its_app_sent(
-    database_app, database, account, pushes
-):
-    reem, khaled = account(name="Reem"), account(name="Khaled")
-    phone = Phone(database_app, khaled, "b")
-    phone.register()
-    old_token = phone.token
-    # iOS gave the phone a new token; the app sends it when it opens.
-    phone.register("e" * 64)
-
-    assert list(devices(database)) == ["e" * 64]
-    # Apple's later "no longer active" for the old token reaches no one.
-    pushes.deleted_apps.add(old_token)
-    invite(database_app, database, reem, khaled)
-    assert refresh(database_app, phone).status_code == 200
-    assert len(pushes.to("e" * 64)) == 1
-
-
 def test_without_a_push_service_the_request_still_works(
     database_app, database, account, monkeypatch
 ):
@@ -330,7 +243,6 @@ def test_without_a_push_service_the_request_still_works(
     )
     reem, khaled = account(name="Reem"), account(name="Khaled")
     circle = offline_circle(database, reem)
-    Phone(database_app, khaled, "b").register()
 
     sent = Phone(database_app, reem, "c").call(
         "post",
@@ -345,13 +257,12 @@ def test_a_broken_push_never_breaks_the_request(
     database_app, database, account, monkeypatch
 ):
     class Broken(RecordingPushSender):
-        def send(self, token, message):
-            raise RuntimeError("Apple is down")
+        def send(self, account_id, message):
+            raise RuntimeError("OneSignal is down")
 
     monkeypatch.setitem(database_app.extensions, "push_sender", Broken())
     reem, khaled = account(name="Reem"), account(name="Khaled")
     circle = offline_circle(database, reem)
-    Phone(database_app, khaled, "b").register()
 
     sent = Phone(database_app, reem, "c").call(
         "post",
@@ -362,14 +273,117 @@ def test_a_broken_push_never_breaks_the_request(
     assert sent.status_code == 201
 
 
-def test_deleting_the_account_deletes_its_tokens(
+# ---- each sign-in's phone, and a deleted app --------------------------------
+
+
+def _subscriptions(engine):
+    with Session(engine) as session:
+        return {
+            row.id.hex: row.push_subscription_id
+            for row in session.scalars(select(AccountSession))
+        }
+
+
+def test_a_sign_in_keeps_its_phones_subscription(
     database_app, database, account
 ):
-    reem = account(name="Reem")
-    phone = Phone(database_app, reem, "a")
-    phone.register()
+    phone = Phone(database_app, account(), "b").subscribe()
 
-    response = phone.call("delete", "/api/v1/accounts/me", {})
+    kept = _subscriptions(database)[phone.issued.session_id]
 
-    assert response.status_code in (200, 204)
-    assert devices(database) == {}
+    assert str(kept) == phone.subscription
+    # A new one (OneSignal gave the phone another) takes its place.
+    phone.subscribe()
+    assert str(
+        _subscriptions(database)[phone.issued.session_id]
+    ) == phone.subscription
+
+
+def test_a_phone_signed_in_again_moves_its_subscription(
+    database_app, database, account
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    before = Phone(database_app, reem, "b").subscribe()
+    before.sign_out()
+
+    after = Phone(database_app, khaled, "c").subscribe(before.subscription)
+
+    kept = _subscriptions(database)
+    assert kept[before.issued.session_id] is None
+    assert str(kept[after.issued.session_id]) == before.subscription
+
+
+@pytest.mark.parametrize(
+    "body", [{}, {"subscription_id": "not-an-id"}, {"other": 1}]
+)
+def test_the_subscription_must_be_an_id(database_app, database, account, body):
+    phone = Phone(database_app, account(), "b")
+
+    answer = phone.call("put", SUBSCRIPTION, body)
+
+    assert answer.status_code == 422
+
+
+def test_the_subscription_needs_a_sign_in(database_app, database):
+    answer = database_app.test_client().put(
+        SUBSCRIPTION, json={"subscription_id": str(uuid.uuid4())}
+    )
+
+    assert answer.status_code == 401
+
+
+def test_a_deleted_app_signs_its_phone_out(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    deleted = Phone(database_app, khaled, "b").subscribe()
+    kept = Phone(database_app, khaled, "d").subscribe()
+    pushes.deleted[str(khaled.id)] = {deleted.subscription}
+
+    assert invite(database_app, database, reem, khaled).status_code == 201
+
+    assert not deleted.signed_in()
+    assert kept.signed_in()
+    assert metrics.count("session.signed_out_app_deleted") == 1
+    # Told once, before the sign-out.
+    assert len(pushes.to(khaled.id)) == 1
+
+
+def test_a_phone_with_notifications_off_stays_signed_in(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b").subscribe()
+    # OneSignal can show it nothing, but its app is there.
+    pushes.no_device.add(str(khaled.id))
+
+    invite(database_app, database, reem, khaled)
+
+    assert pushes.asked == [str(khaled.id)]
+    assert phone.signed_in()
+
+
+def test_a_deleted_app_on_a_phone_unknown_here_ends_nothing(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    phone = Phone(database_app, khaled, "b").subscribe()
+    # Another phone of Khaled's, whose sign-in never sent its subscription.
+    pushes.deleted[str(khaled.id)] = {str(uuid.uuid4())}
+
+    invite(database_app, database, reem, khaled)
+
+    assert phone.signed_in()
+    assert metrics.count("session.signed_out_app_deleted") == 0
+
+
+def test_an_account_without_a_known_phone_is_not_asked(
+    database_app, database, account, pushes
+):
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    Phone(database_app, khaled, "b")
+
+    invite(database_app, database, reem, khaled)
+
+    assert len(pushes.to(khaled.id)) == 1
+    assert pushes.asked == []

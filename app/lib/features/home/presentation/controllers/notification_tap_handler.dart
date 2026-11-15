@@ -1,18 +1,18 @@
 import 'dart:async';
 
 import 'package:app/core/services/phone_notifications.dart';
+import 'package:app/core/services/push_target.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/core/services/reminders/item_keys.dart';
+import 'package:app/core/services/reminders/tapped_item.dart';
+import 'package:app/core/services/tap_focus.dart';
 import 'package:flutter/foundation.dart' show VoidCallback;
 
-/// Turns a tap on a reminder of the phone into what the app does.
-///
-/// A reminder of a dose, a measurement or an appointment opens «اليوم» of
-/// its circle, where each of them is; the note to open the app opens
-/// «اليوم» as it is. A server push about an invitation or a request opens
-/// the notifications page; any other push opens «اليوم» as it is.
-/// «ذكّرني لاحقًا» sets the reminder again and stays. A tap
-/// that arrives before the home data is ready (also the tap that launched
-/// the app) waits for [onReady].
+/// Turns a tap on a notification into what the app does: it opens the
+/// item the notification is about ([TapFocus]). A dose, a measurement or a
+/// visit opens «اليوم» of its circle at its row; an invitation, a request
+/// or an answer opens the bell at it. «ذكّرني لاحقًا» sets the reminder
+/// again and stays. A tap before the home data is ready waits for [onReady].
 class NotificationTapHandler {
   /// [isReady] says whether the home data is ready, [openToday] shows
   /// «اليوم» after selecting [circleId] (when there is one), [openInbox]
@@ -61,11 +61,10 @@ class NotificationTapHandler {
       unawaited(_snooze(payload));
       return;
     }
-    if (inboxPushKinds.contains(pushKind(payload))) {
-      _openInbox();
-      return;
-    }
-    _openToday(reminderCircleId(payload));
+    final String? item = tappedItemKey(payload);
+    TapFocus.instance.show(item);
+    if (opensBell(pushKind(payload), item)) return _openInbox();
+    _openToday(reminderCircleId(payload) ?? itemCircleId(item));
   }
 
   /// Puts a reminder off from its notification.

@@ -1,5 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/photo_edit_badge.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -61,9 +62,11 @@ class CircleCard extends StatelessWidget {
               children: <Widget>[
                 Semantics(
                   button: overview.canEditPatientPhoto,
-                  label: context.tr(
-                    'photos.patient_photo',
-                    args: [overview.patientName],
+                  label: spoken(
+                    context.tr(
+                      'photos.patient_photo',
+                      args: [overview.patientName],
+                    ),
                   ),
                   child: InkWell(
                     customBorder: const CircleBorder(),
@@ -114,7 +117,13 @@ class CircleCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(circle.name, style: text.headlineMedium),
-                        Text(_who(context), style: text.bodySmall),
+                        Text(
+                          _who(context),
+                          style: text.bodySmall,
+                          semanticsLabel: spoken(
+                            _who(context).replaceAll(' · ', '، '),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -140,13 +149,10 @@ class CircleCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             const Divider(height: AppSizes.divider),
             const SizedBox(height: AppSpacing.md),
-            if (overview.patientUsesApp)
-              CircleAppModeRow(mode: overview.appMode)
-            else
-              Text(
-                context.tr('circle_overview.profile_summary'),
-                style: text.bodySmall,
-              ),
+            CircleAppModeRow(
+              mode: overview.appMode,
+              usesApp: overview.patientUsesApp,
+            ),
           ],
         ),
       ),

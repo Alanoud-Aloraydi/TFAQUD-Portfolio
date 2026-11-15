@@ -1,6 +1,16 @@
 import 'package:equatable/equatable.dart';
 
-enum DosageForm { tablet, capsule, liquid, drops, inhaler, injection }
+enum DosageForm {
+  tablet,
+  capsule,
+  liquid,
+  drops,
+  inhaler,
+  // «بخار»: the solution a nebulizer turns into mist, dosed in millilitres
+  // like any other liquid. It sits beside «بخاخ», the puffer.
+  nebulizer,
+  injection,
+}
 
 enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }
 
@@ -29,6 +39,7 @@ extension DosageFormUnit on DosageForm {
     DosageForm.liquid => const [DoseUnit.milliliter],
     DosageForm.drops => const [DoseUnit.drop],
     DosageForm.inhaler => const [DoseUnit.puff],
+    DosageForm.nebulizer => const [DoseUnit.milliliter],
     DosageForm.injection => const [DoseUnit.milliliter, DoseUnit.unit],
   };
 

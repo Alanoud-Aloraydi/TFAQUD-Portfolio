@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/photo_edit_badge.dart';
 import 'package:app/core/media/photo_source.dart';
 import 'package:app/core/media/private_photo.dart';
@@ -54,7 +55,7 @@ class MedicationPhotoField extends StatelessWidget {
               onTap: () => _choose(context, bytes != null),
               child: Semantics(
                 button: true,
-                label: context.tr('photos.medication'),
+                label: spoken(context.tr('photos.medication')),
                 child: SizedBox(
                   height: 196,
                   width: double.infinity,

@@ -7,10 +7,13 @@ import pytest
 from pydantic import ValidationError
 
 from app.measurements.inputs import ReadingQuery
-from app.medications.inputs import DoseRecordRequest, OccurrenceQuery
-from app.medications.inputs import PlanRequest
-from app.medications.occurrence_builder import _timing_state
+from app.medications.inputs import (
+    DoseRecordRequest,
+    OccurrenceQuery,
+    PlanRequest,
+)
 from app.medications.plans import normalize_medication_name
+from app.medications.timing import timing_state
 
 
 def schedule(**changes):
@@ -136,7 +139,7 @@ def test_dose_status_changes_at_due_and_missed_boundaries():
     scheduled = datetime(2026, 11, 2, 8, tzinfo=timezone.utc)
 
     def state(minutes):
-        return _timing_state(
+        return timing_state(
             scheduled,
             scheduled.replace(minute=minutes),
             None,

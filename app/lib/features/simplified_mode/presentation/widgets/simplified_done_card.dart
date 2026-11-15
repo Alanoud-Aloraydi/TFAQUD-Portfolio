@@ -1,4 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
@@ -39,7 +40,7 @@ class SimplifiedDoneCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: lines(context, schedule).join('، '),
+      label: spoken(lines(context, schedule).join('، ')),
       excludeSemantics: true,
       child: _body(context),
     );

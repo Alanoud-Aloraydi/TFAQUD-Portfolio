@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -103,19 +104,34 @@ class VisitPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        Text(
-          appointmentTitle(context, appointment),
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        Text(
-          '${appointmentDate(context, appointment.scheduledOn)} · '
-          '${clockText(appointment.time)}',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        Text(
-          '${appointment.kind == AppointmentKind.remote ? context.tr('appointments.${appointment.remoteMethod}') : appointment.place ?? ''} · '
-          '${appointmentCompanionLine(context, appointment)}',
-          style: Theme.of(context).textTheme.bodySmall,
+        MergeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                appointmentTitle(context, appointment),
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Text(
+                '${appointmentDate(context, appointment.scheduledOn)} · '
+                '${clockText(appointment.time)}',
+                style: Theme.of(context).textTheme.bodyMedium,
+                semanticsLabel: spoken(
+                  '${appointmentDate(context, appointment.scheduledOn)}، '
+                  '${clockText(appointment.time)}',
+                ),
+              ),
+              Text(
+                '${appointment.kind == AppointmentKind.remote ? context.tr('appointments.${appointment.remoteMethod}') : appointment.place ?? ''} · '
+                '${appointmentCompanionLine(context, appointment)}',
+                style: Theme.of(context).textTheme.bodySmall,
+                semanticsLabel: spoken(
+                  '${appointment.kind == AppointmentKind.remote ? context.tr('appointments.${appointment.remoteMethod}') : appointment.place ?? ''}، '
+                  '${appointmentCompanionLine(context, appointment)}',
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         InsetGroup(
@@ -268,18 +284,25 @@ class VisitPage extends StatelessWidget {
     );
   }
 
-  Widget _field(BuildContext context, String key, String? value) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(context.tr(key), style: Theme.of(context).textTheme.labelMedium),
-      const SizedBox(height: AppSpacing.xs),
-      Text(
-        value?.isNotEmpty == true
-            ? value!
-            : context.tr('appointments.visit_empty'),
-      ),
-    ],
-  );
+  // One stop for the reader: the heading and its answer together.
+  Widget _field(BuildContext context, String key, String? value) =>
+      MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr(key),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              value?.isNotEmpty == true
+                  ? value!
+                  : context.tr('appointments.visit_empty'),
+            ),
+          ],
+        ),
+      );
 
   String _duration(int? seconds) {
     if (seconds == null) return '--:--';

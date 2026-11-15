@@ -38,29 +38,38 @@ class DoseOccurrenceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Text(
-                  clockText(occurrence.time),
-                  style: text.titleMedium?.copyWith(
-                    fontWeight: AppTextTheme.bold,
-                    color: AppSemanticColors.textPrimary,
+            // The dose reads as one sentence. «أُخذت» and «تأخير» below are
+            // their own buttons, so they stay outside this.
+            MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        clockText(occurrence.time),
+                        style: text.titleMedium?.copyWith(
+                          fontWeight: AppTextTheme.bold,
+                          color: AppSemanticColors.textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      DoseTimingBadge(
+                        state: occurrence.timingState,
+                        scheduledOn: occurrence.scheduledOn,
+                      ),
+                    ],
                   ),
-                ),
-                const Spacer(),
-                DoseTimingBadge(
-                  state: occurrence.timingState,
-                  scheduledOn: occurrence.scheduledOn,
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(occurrence.name, style: text.titleMedium),
+                  Text(doseStrengthText(context, occurrence)),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(dose, style: text.bodySmall),
+                  if (occurrence.instructions case final String instructions)
+                    Text(instructions, style: text.bodySmall),
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(occurrence.name, style: text.titleMedium),
-            Text(doseStrengthText(context, occurrence)),
-            const SizedBox(height: AppSpacing.xs),
-            Text(dose, style: text.bodySmall),
-            if (occurrence.instructions case final String instructions)
-              Text(instructions, style: text.bodySmall),
             if (occurrence.record != null) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
               DoseRecordControls(occurrence: occurrence, circleId: circleId),

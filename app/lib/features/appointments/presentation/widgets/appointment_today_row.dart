@@ -39,7 +39,7 @@ class AppointmentTodayRow extends StatelessWidget {
     return CareItemRow(
       time: clockText(value.time),
       // The visit first, then the clock.
-      spoken: <String>[
+      spokenLabel: <String>[
         appointmentTitle(context, value),
         if (appointmentClinic(value) case final String clinic) clinic,
         clockText(value.time),

@@ -50,18 +50,20 @@ class EmergencyCardBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           // The red badge and «للقراءة فقط».
-          Row(
-            children: <Widget>[
-              EmergencyBadge(label: words.t('title')),
-              const Spacer(),
-              Icon(
-                AppIcons.lock,
-                size: AppSizes.iconSmall,
-                color: context.tokens.textSecondary,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(words.t('read_only'), style: text.bodySmall),
-            ],
+          MergeSemantics(
+            child: Row(
+              children: <Widget>[
+                EmergencyBadge(label: words.t('title')),
+                const Spacer(),
+                Icon(
+                  AppIcons.lock,
+                  size: AppSizes.iconSmall,
+                  color: context.tokens.textSecondary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(words.t('read_only'), style: text.bodySmall),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           // The name and age, and the blood type in the dark box.

@@ -32,66 +32,73 @@ class AccountSentRequestRow extends StatelessWidget {
       request.createdAt,
       PatientClockScope.of(context),
     );
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: AppSizes.avatar,
-              height: AppSizes.avatar,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AppSemanticColors.selectedSurface,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                AppIcons.phone,
-                size: AppSizes.iconSmall,
-                color: AppSemanticColors.textPrimary,
-              ),
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: MergeSemantics(
+              child: Row(
                 children: <Widget>[
-                  Text(
-                    SaudiMobile.display(request.patientPhoneNumber),
-                    textDirection: TextDirection.ltr,
-                    style: text.titleMedium,
-                  ),
-                  if (days != null)
-                    Text(
-                      _ageText(context, days),
-                      style: text.bodySmall?.copyWith(
-                        color: context.tokens.textSecondary,
-                      ),
+                  Container(
+                    width: AppSizes.avatar,
+                    height: AppSizes.avatar,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: AppSemanticColors.selectedSurface,
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(
+                      AppIcons.phone,
+                      size: AppSizes.iconSmall,
+                      color: AppSemanticColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          SaudiMobile.display(request.patientPhoneNumber),
+                          textDirection: TextDirection.ltr,
+                          style: text.titleMedium,
+                        ),
+                        if (days != null)
+                          Text(
+                            _ageText(context, days),
+                            style: text.bodySmall?.copyWith(
+                              color: context.tokens.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  StatusPill(
+                    icon: accepted ? AppIcons.check : AppIcons.clock,
+                    text: context.tr(
+                      accepted
+                          ? 'account.status_accepted_short'
+                          : 'circles.request_status_pending',
+                    ),
+                    background: AppSemanticColors.background,
+                    foreground: accepted
+                        ? AppSemanticColors.statusSuccess
+                        : context.tokens.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  // Mirrored on a right-to-left screen: it points to the end of the row.
+                  Icon(AppIcons.forward, color: context.tokens.textSecondary),
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            StatusPill(
-              icon: accepted ? AppIcons.check : AppIcons.clock,
-              text: context.tr(
-                accepted
-                    ? 'account.status_accepted_short'
-                    : 'circles.request_status_pending',
-              ),
-              background: AppSemanticColors.background,
-              foreground: accepted
-                  ? AppSemanticColors.statusSuccess
-                  : context.tokens.textSecondary,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            // Mirrored on a right-to-left screen: it points to the end of the row.
-            Icon(AppIcons.forward, color: context.tokens.textSecondary),
-          ],
+          ),
         ),
       ),
     );

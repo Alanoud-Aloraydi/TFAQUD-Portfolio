@@ -45,57 +45,59 @@ class NormalRangeCard extends StatelessWidget {
       children: [
         InsetBlock(
           semanticLabel: context.tr('measurements.normal_range'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Flexible(
-                    child: Text(
-                      normalBandText(context, kind, range.normal),
-                      style: text.headlineSmall?.copyWith(
-                        fontWeight: AppTextTheme.bold,
+          child: MergeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        normalBandText(context, kind, range.normal),
+                        style: text.headlineSmall?.copyWith(
+                          fontWeight: AppTextTheme.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    context.tr(
-                      kind == MeasurementKind.bp
-                          ? 'measurements.bp_unit'
-                          : 'measurements.glucose_unit',
-                    ),
-                    style: text.bodyMedium?.copyWith(
-                      color: context.tokens.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                normalRangeCaption(context, kind, range.profile, range.state),
-                style: text.bodyMedium?.copyWith(
-                  color: context.tokens.textSecondary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _Scale(range: range, level: level),
-              if (level case final MeasurementLevel current) ...[
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Text(
-                      context.tr('measurements.your_reading'),
-                      style: text.bodyMedium,
-                    ),
                     const SizedBox(width: AppSpacing.sm),
-                    MeasurementLevelBadge(level: current, kind: kind),
+                    Text(
+                      context.tr(
+                        kind == MeasurementKind.bp
+                            ? 'measurements.bp_unit'
+                            : 'measurements.glucose_unit',
+                      ),
+                      style: text.bodyMedium?.copyWith(
+                        color: context.tokens.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  normalRangeCaption(context, kind, range.profile, range.state),
+                  style: text.bodyMedium?.copyWith(
+                    color: context.tokens.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _Scale(range: range, level: level),
+                if (level case final MeasurementLevel current) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Text(
+                        context.tr('measurements.your_reading'),
+                        style: text.bodyMedium,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      MeasurementLevelBadge(level: current, kind: kind),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         ?action,
@@ -117,54 +119,57 @@ class _Scale extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final AppTokens tokens = context.tokens;
     return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final NormalBand band in range.bands) ...[
-            if (band != range.bands.first) const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xs,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: ShapeDecoration(
-                  color: band.level.scaleFill,
-                  shape: AppRadius.shape(
-                    AppRadius.s,
-                    side: band.level == level
-                        ? BorderSide(color: tokens.focus, width: 2)
-                        : BorderSide.none,
+      child: MergeSemantics(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final NormalBand band in range.bands) ...[
+              if (band != range.bands.first)
+                const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: ShapeDecoration(
+                    color: band.level.scaleFill,
+                    shape: AppRadius.shape(
+                      AppRadius.s,
+                      side: band.level == level
+                          ? BorderSide(color: tokens.focus, width: 2)
+                          : BorderSide.none,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(band.level.icon, size: 14),
+                      const SizedBox(height: 2),
+                      Text(
+                        band.level.label(context, range.kind),
+                        textAlign: TextAlign.center,
+                        style: text.labelSmall?.copyWith(
+                          fontWeight: band.level == level
+                              ? AppTextTheme.bold
+                              : AppTextTheme.medium,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        normalBandText(context, range.kind, band),
+                        textAlign: TextAlign.center,
+                        style: text.labelSmall?.copyWith(
+                          color: tokens.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(band.level.icon, size: 14),
-                    const SizedBox(height: 2),
-                    Text(
-                      band.level.label(context, range.kind),
-                      textAlign: TextAlign.center,
-                      style: text.labelSmall?.copyWith(
-                        fontWeight: band.level == level
-                            ? AppTextTheme.bold
-                            : AppTextTheme.medium,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      normalBandText(context, range.kind, band),
-                      textAlign: TextAlign.center,
-                      style: text.labelSmall?.copyWith(
-                        color: tokens.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

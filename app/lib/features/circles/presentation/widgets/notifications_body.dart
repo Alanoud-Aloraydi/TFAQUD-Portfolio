@@ -5,19 +5,16 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
-import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
+import 'package:app/features/circles/presentation/notifications_tab.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_failure.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_list.dart';
+import 'package:app/features/circles/presentation/widgets/notifications_skeleton.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// The two lists of the bell: what waits for an answer, and what was
-/// answered in the last 30 days.
-enum NotificationsTab { current, previous }
-
 /// The header, the two tabs, and the content that fits the load [state].
-/// The page opens on «الحالية».
+/// The page opens on the tab [NotificationsTab.startFor] picks.
 class NotificationsBody extends StatefulWidget {
   const NotificationsBody({
     super.key,
@@ -33,7 +30,7 @@ class NotificationsBody extends StatefulWidget {
 }
 
 class _NotificationsBodyState extends State<NotificationsBody> {
-  NotificationsTab _tab = NotificationsTab.current;
+  late NotificationsTab _tab = NotificationsTab.startFor(widget.state.inbox);
 
   @override
   Widget build(BuildContext context) {

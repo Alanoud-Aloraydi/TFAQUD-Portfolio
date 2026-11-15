@@ -2,6 +2,7 @@ import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
@@ -59,8 +60,18 @@ class DoseRecordControls extends StatelessWidget {
     if (scheduledOn.isAfter(today)) return const SizedBox.shrink();
     final isToday = scheduledOn == today;
     if (layout != DoseControlsLayout.regular) {
-      final height = layout == DoseControlsLayout.attention ? 34.0 : 44.0;
+      // 44 everywhere, the smallest target a finger finds reliably, and
+      // the one layout that asks the patient to act is no place to save
+      // ten pixels.
+      const double height = AppSizes.touch;
       final ButtonStyle compact = FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        minimumSize: Size(0, height),
+      );
+      // The same size for the quieter pair, without the filled button's
+      // colours: styleFrom carries a background, so the two answers would
+      // stop looking like the answers.
+      final ButtonStyle compactText = TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         minimumSize: Size(0, height),
       );
@@ -78,21 +89,26 @@ class DoseRecordControls extends StatelessWidget {
                   // aloud they are the same word, so the reader cannot
                   // tell which medicine is being recorded: the label
                   // names it.
-                  child: Semantics(
-                    button: true,
-                    label:
+                  child: MergeSemantics(
+                    child: Semantics(
+                      label: spoken(
                         '${CareVoice.tr(context, circleId, 'medications.taken_short')}'
                         '، ${occurrence.name}',
-                    excludeSemantics: true,
-                    child: FilledButton.icon(
-                      style: compact,
-                      onPressed: () => _takeNow(context),
-                      icon: const Icon(CupertinoIcons.checkmark, size: 16),
-                      label: Text(
-                        CareVoice.tr(
-                          context,
-                          circleId,
-                          'medications.taken_short',
+                      ),
+                      child: FilledButton.icon(
+                        style: compact,
+                        onPressed: () => _takeNow(context),
+                        icon: const Icon(CupertinoIcons.checkmark, size: 16),
+                        // The words are on the Semantics above; excluded
+                        // here they are not said twice.
+                        label: ExcludeSemantics(
+                          child: Text(
+                            CareVoice.tr(
+                              context,
+                              circleId,
+                              'medications.taken_short',
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -125,27 +141,36 @@ class DoseRecordControls extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
+          // The second line matches the first: two buttons of one height,
+          // each taking half the row. Sized to their words they came out
+          // three different widths under two equal ones.
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (isToday)
-                TextButton.icon(
-                  onPressed: () => _takeAtDifferentTime(context),
-                  icon: const Icon(CupertinoIcons.clock, size: 16),
-                  label: Text(
-                    CareVoice.tr(
-                      context,
-                      circleId,
-                      'medications.different_time_short',
+                Expanded(
+                  child: TextButton.icon(
+                    style: compactText,
+                    onPressed: () => _takeAtDifferentTime(context),
+                    icon: const Icon(CupertinoIcons.clock, size: 16),
+                    label: Text(
+                      CareVoice.tr(
+                        context,
+                        circleId,
+                        'medications.different_time_short',
+                      ),
                     ),
                   ),
                 )
               else
-                const SizedBox.shrink(),
-              TextButton.icon(
-                onPressed: () => _skip(context),
-                icon: const Icon(CupertinoIcons.minus_circle, size: 16),
-                label: Text(context.tr('medications.skip_short')),
+                const Spacer(),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TextButton.icon(
+                  style: compactText,
+                  onPressed: () => _skip(context),
+                  icon: const Icon(CupertinoIcons.minus_circle, size: 16),
+                  label: Text(context.tr('medications.skip_short')),
+                ),
               ),
             ],
           ),
@@ -222,7 +247,7 @@ class _RecordingStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = context.tr('medications.recording_dose');
     return Semantics(
-      label: label,
+      label: spoken(label),
       liveRegion: true,
       child: SizedBox(
         height: 44,

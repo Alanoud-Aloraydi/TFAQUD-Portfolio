@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
@@ -33,6 +34,10 @@ class AuthWords extends StatelessWidget {
             '${step.toString().padLeft(2, '0')} · ${context.tr(intro.stepKey)}',
             style: text.labelMedium?.copyWith(
               color: AppSemanticColors.textPrimary,
+            ),
+            semanticsLabel: spoken(
+              '${step.toString().padLeft(2, '0')}، '
+              '${context.tr(intro.stepKey)}',
             ),
           ),
         ),

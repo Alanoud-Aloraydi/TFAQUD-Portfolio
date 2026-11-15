@@ -14,7 +14,7 @@ from app.clock import (
     patient_today,
     patient_zone,
 )
-from app.medications.occurrence_builder import _timing_state
+from app.medications.timing import timing_state
 
 LONDON = SimpleNamespace(time_zone="Europe/London")
 RIYADH = SimpleNamespace(time_zone=DEFAULT_ZONE)
@@ -76,7 +76,7 @@ def test_minutes_after_a_dose_are_real_minutes_in_the_repeated_hour():
     )
 
     def state(minutes):
-        return _timing_state(
+        return timing_state(
             scheduled, scheduled + timedelta(minutes=minutes), None, 30
         )
 

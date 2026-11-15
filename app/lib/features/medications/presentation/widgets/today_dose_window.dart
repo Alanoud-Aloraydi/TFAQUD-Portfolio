@@ -37,48 +37,50 @@ class TodayDoseWindow extends StatelessWidget {
     final label = minutesUntilDue > 0
         ? afterDuration(context, minutesUntilDue)
         : context.tr('today_dashboard.status.${status!.name}');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            const Icon(TafaqodPhosphorIcons.clock, size: 18),
-            const SizedBox(width: AppSpacing.tight),
-            Text(label, style: Theme.of(context).textTheme.titleSmall),
-            const Spacer(),
-            Text(
-              context.tr(
-                'today_dashboard.missed_at',
-                args: [wallTimeText(missed)],
-              ),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.capsule),
-          child: SizedBox(
-            height: AppSpacing.tight,
-            child: Stack(
-              children: [
-                const Positioned.fill(
-                  child: ColoredBox(color: AppSemanticColors.doseTrack),
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(TafaqodPhosphorIcons.clock, size: 18),
+              const SizedBox(width: AppSpacing.tight),
+              Text(label, style: Theme.of(context).textTheme.titleSmall),
+              const Spacer(),
+              Text(
+                context.tr(
+                  'today_dashboard.missed_at',
+                  args: [wallTimeText(missed)],
                 ),
-                Positioned.fill(
-                  child: FractionallySizedBox(
-                    alignment: AlignmentDirectional.centerStart,
-                    widthFactor: remaining,
-                    child: const ColoredBox(
-                      color: AppSemanticColors.textSupporting,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.capsule),
+            child: SizedBox(
+              height: AppSpacing.tight,
+              child: Stack(
+                children: [
+                  const Positioned.fill(
+                    child: ColoredBox(color: AppSemanticColors.doseTrack),
+                  ),
+                  Positioned.fill(
+                    child: FractionallySizedBox(
+                      alignment: AlignmentDirectional.centerStart,
+                      widthFactor: remaining,
+                      child: const ColoredBox(
+                        color: AppSemanticColors.textSupporting,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -84,7 +84,8 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                       for (final TodayTask task in group.$2)
                         SimplifiedScheduleTaskRow(
                           task: task,
-                          circleId: day.circleId,
+                          day: day,
+                          now: state.now,
                           snoozed: simplifiedSnoozed(
                             context,
                             state.snoozes,

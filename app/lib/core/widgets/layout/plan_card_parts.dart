@@ -5,6 +5,7 @@
 library;
 
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -64,9 +65,22 @@ class PlanDetailsToggle extends StatelessWidget {
           child: Row(
             children: [
               if (start != null) ...[
-                const Icon(CupertinoIcons.calendar, size: AppSizes.iconSmall),
+                const ExcludeSemantics(
+                  child: Icon(
+                    CupertinoIcons.calendar,
+                    size: AppSizes.iconSmall,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.xs),
-                Expanded(child: Text(start, style: text.bodySmall)),
+                Expanded(
+                  child: Text(
+                    start,
+                    style: text.bodySmall,
+                    // «·» parts the day from the hour on the screen; a
+                    // reader says it as a word or not at all.
+                    semanticsLabel: spoken(start.replaceAll(' · ', '، ')),
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.sm),
               ],
               // Takes the free width and sits at its end, beside the
@@ -79,12 +93,14 @@ class PlanDetailsToggle extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              Icon(
-                expanded
-                    ? CupertinoIcons.chevron_up
-                    : CupertinoIcons.chevron_down,
-                size: AppSizes.iconSmall,
-                color: AppSemanticColors.textPrimary,
+              ExcludeSemantics(
+                child: Icon(
+                  expanded
+                      ? CupertinoIcons.chevron_up
+                      : CupertinoIcons.chevron_down,
+                  size: AppSizes.iconSmall,
+                  color: AppSemanticColors.textPrimary,
+                ),
               ),
             ],
           ),

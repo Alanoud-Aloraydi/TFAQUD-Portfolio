@@ -27,18 +27,22 @@ class ReadingTitles extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final bool glucose = reading.kind == MeasurementKind.glucose;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          context.tr(glucose ? 'measurements.glucose' : 'measurements.bp'),
-          style: text.titleMedium,
-        ),
-        Text(
-          _when(context),
-          style: text.bodySmall?.copyWith(color: context.tokens.textSecondary),
-        ),
-      ],
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr(glucose ? 'measurements.glucose' : 'measurements.bp'),
+            style: text.titleMedium,
+          ),
+          Text(
+            _when(context),
+            style: text.bodySmall?.copyWith(
+              color: context.tokens.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

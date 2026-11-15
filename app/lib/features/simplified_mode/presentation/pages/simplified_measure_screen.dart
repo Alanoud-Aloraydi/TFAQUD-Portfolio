@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/utils/text_limits.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
@@ -16,6 +19,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_mea
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_keypad.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_value_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_page.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_recent_readings.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_segmented.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -128,14 +132,20 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
       reading,
     );
     if (!saved || !mounted) return;
+    final MeasurementLevel? level = context
+        .read<SimplifiedMeasurementCubit>()
+        .state
+        .saved
+        ?.level;
     unawaited(context.read<SimplifiedModeCubit>().load());
     context.pushReplacement(
       Routes.simplifiedDone,
       extra: reading.kind == MeasurementKind.glucose
-          ? SimplifiedDoneMessage.glucose(reading.valueOne)
+          ? SimplifiedDoneMessage.glucose(reading.valueOne, level: level)
           : SimplifiedDoneMessage.bloodPressure(
               reading.valueOne,
               reading.valueTwo!,
+              level: level,
             ),
     );
   }
@@ -200,7 +210,15 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
                 ),
               ),
             ],
-            SimplifiedMeasurementStatus.ready => _form(context, state, kind!),
+            SimplifiedMeasurementStatus.ready => <Widget>[
+              ..._form(context, state, kind!),
+              const SizedBox(height: SimplifiedStyle.gap),
+              SimplifiedRecentReadings(
+                readings: state.recent,
+                kind: kind,
+                now: PatientClockScope.of(context).now(),
+              ),
+            ],
           },
         );
       },
@@ -248,7 +266,8 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
           active: true,
         )
       else
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             for (final (SimplifiedMeasureField field, String label)
                 in <(SimplifiedMeasureField, String)>[
@@ -262,20 +281,18 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
                   ),
                 ]) ...<Widget>[
               if (field == SimplifiedMeasureField.lower)
-                const SizedBox(width: 12),
-              Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: _upperOrLower == field,
-                  label: label,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _upperOrLower = field),
-                    child: SimplifiedMeasureValueCard(
-                      value: _values[field]!,
-                      unit: label,
-                      active: _upperOrLower == field,
-                      small: true,
-                    ),
+                const SizedBox(height: 8),
+              Semantics(
+                button: true,
+                selected: _upperOrLower == field,
+                label: spoken(label),
+                child: GestureDetector(
+                  onTap: () => setState(() => _upperOrLower = field),
+                  child: SimplifiedMeasureValueCard(
+                    value: _values[field]!,
+                    unit: label,
+                    active: _upperOrLower == field,
+                    small: true,
                   ),
                 ),
               ),

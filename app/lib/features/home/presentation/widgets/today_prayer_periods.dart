@@ -1,3 +1,4 @@
+import 'package:app/core/services/tap_focus.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/features/home/presentation/today_snapshot.dart';
@@ -21,9 +22,11 @@ class TodayPrayerPeriods extends StatelessWidget {
   final String circleId;
   final bool canManage;
 
+  // A tapped notification opens the period its item is in.
   @override
-  Widget build(BuildContext context) {
-    return Column(
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: TapFocus.instance,
+    builder: (BuildContext context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         InsetText(
@@ -36,8 +39,8 @@ class TodayPrayerPeriods extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
         ],
       ],
-    );
-  }
+    ),
+  );
 
   Widget _period(int index, PrayerDay day) => TodayPrayerPeriod(
     prayer: Prayer.values[index],

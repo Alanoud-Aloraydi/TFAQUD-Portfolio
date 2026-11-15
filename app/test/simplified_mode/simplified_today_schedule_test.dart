@@ -314,6 +314,29 @@ void main() {
       expect(request('dose:'), isNull);
     });
 
+    test('a tapped push about a dose or a reading opens that task', () {
+      expect(
+        reminderRequest('push:dose_missed#c|s-1|2026-11-5'),
+        const ReminderRequest(
+          TodayTaskKind.medication,
+          taskKey: 'c|s-1|2026-11-5',
+        ),
+      );
+      expect(
+        reminderRequest('push:measurement_snoozed#c|measurement|v|08:00|d'),
+        const ReminderRequest(
+          TodayTaskKind.measurement,
+          taskKey: 'c|measurement|v|08:00|d',
+        ),
+      );
+      // A missed visit's time has passed: nothing to remind of.
+      expect(
+        reminderRequest('push:appointment_missed#c|appointment|a'),
+        isNull,
+      );
+      expect(reminderRequest('push:invitation#inbox|i'), isNull);
+    });
+
     test('a reminder carries which dose it is about', () {
       final DoseOccurrence dose = _dose('09:00');
       final String payload = payloadWithText(

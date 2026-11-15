@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -26,7 +27,7 @@ class WeekdayBox extends StatelessWidget {
     button: true,
     selected: selected,
     onTap: onTap,
-    label: semanticLabel ?? label,
+    label: spoken(semanticLabel ?? label),
     excludeSemantics: true,
     child: InkWell(
       onTap: onTap,

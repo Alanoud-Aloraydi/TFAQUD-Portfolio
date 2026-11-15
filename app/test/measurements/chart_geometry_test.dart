@@ -7,26 +7,51 @@ import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-MeasurementReading _glucose(DateTime at, {int? low, int? high}) =>
-    MeasurementReading(
-      id: '$at',
-      kind: MeasurementKind.glucose,
-      outcome: 'read',
-      recordedAt: at,
-      measuredAt: at,
-      valueOne: 100,
-      range: low == null
-          ? null
-          : ReadingRange(
-              profile: 'general',
-              state: 'after_meal',
-              normal: NormalBand(
-                level: MeasurementLevel.normal,
-                glucoseLow: low,
-                glucoseHigh: high,
-              ),
-            ),
-    );
+MeasurementReading _glucose(
+  DateTime at, {
+  int? low,
+  int? high,
+  String state = 'after_meal',
+  DateTime? recordedAt,
+}) => MeasurementReading(
+  id: '$at',
+  kind: MeasurementKind.glucose,
+  outcome: 'read',
+  recordedAt: recordedAt ?? at,
+  measuredAt: at,
+  valueOne: 100,
+  range: low == null
+      ? null
+      : ReadingRange(
+          profile: 'general',
+          state: state,
+          normal: NormalBand(
+            level: MeasurementLevel.normal,
+            glucoseLow: low,
+            glucoseHigh: high,
+          ),
+        ),
+);
+
+MeasurementReading _pressure(DateTime at) => MeasurementReading(
+  id: '$at',
+  kind: MeasurementKind.bp,
+  outcome: 'read',
+  recordedAt: at,
+  measuredAt: at,
+  valueOne: 118,
+  valueTwo: 76,
+  range: const ReadingRange(
+    profile: 'general',
+    normal: NormalBand(
+      level: MeasurementLevel.normal,
+      systolicLow: 90,
+      systolicHigh: 120,
+      diastolicLow: 60,
+      diastolicHigh: 80,
+    ),
+  ),
+);
 
 void main() {
   group('readingsByDay', () {
@@ -44,6 +69,28 @@ void main() {
 
       expect(december.keys, <int>[1]);
     });
+
+    test('keeps a day in the order it was measured, not recorded', () {
+      final DateTime morning = DateTime.utc(2026, 11, 5, 5);
+      final DateTime evening = DateTime.utc(2026, 11, 5, 15);
+      // The server sends the last recorded first: the morning reading was
+      // recorded after the evening one.
+      final List<MeasurementReading> sent = <MeasurementReading>[
+        _glucose(morning, recordedAt: DateTime.utc(2026, 11, 5, 18)),
+        _glucose(evening),
+      ];
+
+      final List<MeasurementReading> day = readingsByDay(
+        sent,
+        DateTime(2026, 11),
+        PatientClock('Asia/Riyadh'),
+      )[5]!;
+
+      expect(day.map((reading) => reading.measuredAt), <DateTime>[
+        morning,
+        evening,
+      ]);
+    });
   });
 
   group('ChartScale', () {
@@ -58,6 +105,25 @@ void main() {
       expect(scale.x(1), greaterThan(scale.x(30)));
       expect(scale.y(scale.topValue), ChartScale.chartTop);
       expect(scale.days, 30);
+    });
+
+    test('inside a day the earlier reading is to the right as well', () {
+      final ChartScale scale = ChartScale.of(
+        const Size(400, 176),
+        DateTime(2026, 11),
+        const <MeasurementReading>[],
+        null,
+      );
+
+      // Morning, noon, evening of day 5, then day 6: always further left.
+      final List<double> xs = <double>[
+        for (int index = 0; index < 3; index++) scale.center(5, index, 3),
+        scale.center(6, 0, 1),
+      ];
+
+      for (int i = 1; i < xs.length; i++) {
+        expect(xs[i], lessThan(xs[i - 1]));
+      }
     });
 
     test('the axis holds the readings, not everything down to zero', () {
@@ -95,8 +161,9 @@ void main() {
   });
 
   group('ChartTarget', () {
-    test('is the normal band every reading shares', () {
-      final DateTime at = DateTime.utc(2026, 11, 5, 9);
+    final DateTime at = DateTime.utc(2026, 11, 5, 9);
+
+    test('is the normal band the readings share', () {
       final ChartTarget target = ChartTarget.of(
         kind: MeasurementKind.glucose,
         readings: <MeasurementReading>[
@@ -105,20 +172,61 @@ void main() {
         ],
       );
 
+      expect(target.bands, const <ChartBand>[
+        ChartBand(70, 140, 'measurements.chart_legend_glucose_target'),
+      ]);
       expect((target.low, target.high), (70, 140));
     });
 
-    test('is empty when readings were judged by different ranges', () {
-      final DateTime at = DateTime.utc(2026, 11, 5, 9);
+    test('fasting and after a meal: both bands, fasting inside', () {
       final ChartTarget target = ChartTarget.of(
         kind: MeasurementKind.glucose,
         readings: <MeasurementReading>[
-          _glucose(at, low: 70, high: 140),
-          _glucose(at, low: 80, high: 150),
+          _glucose(at, low: 80, high: 130, state: 'fasting'),
+          _glucose(at, low: 70, high: 180),
         ],
       );
 
+      expect(target.bands, const <ChartBand>[
+        ChartBand(70, 180, 'measurements.chart_legend_after_meal'),
+        ChartBand(80, 130, 'measurements.chart_legend_fasting', inner: true),
+      ]);
+      expect((target.low, target.high), (70, 180));
+    });
+
+    test('uses the latest range when the medical file changed', () {
+      final ChartTarget target = ChartTarget.of(
+        kind: MeasurementKind.glucose,
+        readings: <MeasurementReading>[
+          _glucose(at.add(const Duration(days: 1)), low: 70, high: 180),
+          _glucose(at, low: 70, high: 140),
+        ],
+      );
+
+      expect(target.high, 180);
+      expect(target.bands, hasLength(1));
+    });
+
+    test('blood pressure: the zone of each number, under one name', () {
+      final ChartTarget target = ChartTarget.of(
+        kind: MeasurementKind.bp,
+        readings: <MeasurementReading>[_pressure(at)],
+      );
+
+      expect(target.bands, const <ChartBand>[
+        ChartBand(90, 120, 'measurements.chart_legend_bp_target'),
+        ChartBand(60, 80, 'measurements.chart_legend_bp_target'),
+      ]);
+    });
+
+    test('nothing to draw without a judged reading', () {
+      final ChartTarget target = ChartTarget.of(
+        kind: MeasurementKind.glucose,
+        readings: <MeasurementReading>[_glucose(at)],
+      );
+
       expect(target.isSet, isFalse);
+      expect(target.low, isNull);
     });
   });
 }

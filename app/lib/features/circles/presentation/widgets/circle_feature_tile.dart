@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -34,7 +35,7 @@ class CircleFeatureTile extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: '$title، $subtitle',
+      label: spoken('$title، $subtitle'),
       excludeSemantics: true,
       onTap: onTap,
       child: Material(

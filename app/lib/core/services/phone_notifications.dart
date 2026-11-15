@@ -75,17 +75,15 @@ const String snoozeTapPrefix = 'snooze-action:';
 /// Whether [tap] is the snooze action of a reminder, not a plain tap.
 bool isSnoozeTap(String tap) => tap.startsWith(snoozeTapPrefix);
 
-/// What [PhoneNotifications.taps] gives for a tapped server push (iOS):
-/// this, then the push's `kind` (backend `app/push`).
+/// What [PhoneNotifications.taps] gives for a tapped server push: this,
+/// its `kind`, then [pushItemSeparator] and the item (push_target.dart).
 const String pushTapPrefix = 'push:';
+const String pushItemSeparator = '#';
 
 /// The server's `kind` of a tapped push, or null for a reminder's tap.
-String? pushKind(String tap) =>
-    tap.startsWith(pushTapPrefix) ? tap.substring(pushTapPrefix.length) : null;
-
-/// The push kinds whose news waits in the notifications page (an invitation
-/// or a request to answer); every other kind opens «اليوم».
-const Set<String> inboxPushKinds = <String>{'invitation', 'circle_request'};
+String? pushKind(String tap) => tap.startsWith(pushTapPrefix)
+    ? tap.substring(pushTapPrefix.length).split(pushItemSeparator).first
+    : null;
 
 /// The notifications the app sets on the phone itself (no server and no
 /// push needed), on iOS and Android. Behind an interface, so the tests run
@@ -121,14 +119,16 @@ abstract interface class PhoneNotifications {
 /// [PhoneNotifications] with the flutter_local_notifications plugin, on
 /// iOS and Android; on the web and desktop nothing is shown.
 class PluginPhoneNotifications implements PhoneNotifications {
+  /// [pushTaps]: the `kind` of each tapped server push (OneSignal's,
+  /// `RemotePush.taps`), joined to [taps] and [takeLaunchTap].
+  PluginPhoneNotifications({this._pushTaps = const Stream<String>.empty()});
+
+  final Stream<String> _pushTaps;
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   final StreamController<String> _taps = StreamController<String>.broadcast();
   String? _launchTap;
 
-  /// Taps on the server's pushes, which the plugin ignores: the iOS app
-  /// delegate (AppDelegate.swift) sends their `kind` here.
-  static const MethodChannel _pushTaps = MethodChannel('tafaqod/push_taps');
   bool _ready = false;
 
   static bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
@@ -186,39 +186,25 @@ class PluginPhoneNotifications implements PhoneNotifications {
       _launchTap = tap;
     }
     await _android?.createNotificationChannel(reminderChannel);
-    if (_isIOS) await listenToPushTaps();
+    listenToPushTaps();
     _ready = true;
     // Android plays the channel's sound; the chime is iOS's.
     if (_isIOS) unawaited(_installSound());
   }
 
-  /// Joins the taps on server pushes to [taps] and [takeLaunchTap]. iOS
-  /// keeps a tap that came before Dart listened (the push that launched the
-  /// app) and gives it to `launchTap`; later taps arrive as `tap`. Android
-  /// pushes need FCM, which the app does not have yet.
+  /// Joins the taps on server pushes to [taps] and [takeLaunchTap], on iOS
+  /// and Android. A tap that comes while no page listens yet (the push that
+  /// launched the app, while it is still starting) waits as the launch tap.
   @visibleForTesting
-  Future<void> listenToPushTaps() async {
-    _pushTaps.setMethodCallHandler((MethodCall call) async {
-      final Object? kind = call.arguments;
-      if (call.method != 'tap' || kind is! String || kind.isEmpty) return;
-      // A tap that comes while no page listens yet (the app is still
-      // starting) waits as the launch tap.
+  void listenToPushTaps() {
+    _pushTaps.listen((String kind) {
+      if (kind.isEmpty) return;
       if (_taps.hasListener) {
         _taps.add('$pushTapPrefix$kind');
       } else {
         _launchTap ??= '$pushTapPrefix$kind';
       }
     });
-    try {
-      final String? kind = await _pushTaps.invokeMethod<String>('launchTap');
-      if (kind != null && kind.isNotEmpty) {
-        _launchTap ??= '$pushTapPrefix$kind';
-      }
-    } on PlatformException {
-      // No launch tap to give.
-    } on MissingPluginException {
-      // An app build without the channel.
-    }
   }
 
   /// The payload of a tap, or [snoozeTapPrefix] and the payload for the

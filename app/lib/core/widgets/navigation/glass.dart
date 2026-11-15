@@ -1,5 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_effects.dart';
@@ -201,7 +202,7 @@ class GlassCapsuleButton extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: onPressed != null,
-      label: semanticLabel,
+      label: spoken(semanticLabel),
       onTap: onPressed,
       excludeSemantics: true,
       child: ConstrainedBox(

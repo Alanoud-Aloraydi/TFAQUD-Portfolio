@@ -112,6 +112,8 @@ class SimplifiedModeUseCase {
               plan.id: reason.trim(),
         },
         prayers: prayers.tryGetSuccess(),
+        latitude: circle.latitude,
+        longitude: circle.longitude,
       ),
     );
   }
@@ -145,6 +147,46 @@ class SimplifiedModeUseCase {
     circleId,
     dose,
     DoseRecordDraft(outcome: DoseOutcome.taken, takenAt: takenAt),
+  );
+
+  /// The patient's last readings, newest first, over the past [days]: what
+  /// they measured recently, so a reading can be seen beside the ones
+  /// before it. Both kinds come back; the screen shows the kind it is on.
+  Future<List<MeasurementReading>> recentReadings(
+    String circleId,
+    DateTime now, {
+    int days = 7,
+  }) async {
+    final List<MeasurementReading> all = await _measurements.readings(
+      circleId,
+      addDays(now, -days),
+      now,
+    );
+    return <MeasurementReading>[
+      for (final MeasurementReading reading in all)
+        if (reading.valueOne != null) reading,
+    ]..sort(
+      (MeasurementReading a, MeasurementReading b) =>
+          (b.measuredAt ?? b.recordedAt).compareTo(
+            a.measuredAt ?? a.recordedAt,
+          ),
+    );
+  }
+
+  /// «ما أخذتها»: the dose is written as skipped, with [reason] when the
+  /// patient named one. The same record the detailed mode writes, so the
+  /// family sees why in the log.
+  Future<Result<DoseRecord, Failure>> skipDose(
+    String circleId,
+    DoseOccurrence dose,
+    DoseSkipReason? reason,
+  ) => _medications.recordDose(
+    circleId,
+    dose,
+    DoseRecordDraft(
+      outcome: DoseOutcome.skipped,
+      skipReasonCode: reason?.apiValue,
+    ),
   );
 
   /// «ذكّرني لاحقًا» on [task] of [circleId]: the same as the detailed

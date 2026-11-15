@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -16,6 +17,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_nex
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_link.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_squares.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_weather.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -55,7 +57,7 @@ class SimplifiedHomeBody extends StatelessWidget {
           alignment: AlignmentDirectional.centerStart,
           child: Semantics(
             button: true,
-            label: context.tr('simplified_mode.account_title'),
+            label: spoken(context.tr('simplified_mode.account_title')),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () => context.push(Routes.simplifiedAccount),
@@ -96,6 +98,10 @@ class SimplifiedHomeBody extends StatelessWidget {
                 ),
               ],
             ),
+            // The weather where the patient lives, beside the greeting as
+            // it is beside the date in «اليوم». It wraps under the
+            // greeting when the text is large.
+            SimplifiedWeather(latitude: day.latitude, longitude: day.longitude),
           ],
         ),
         const SizedBox(height: SimplifiedStyle.pad),

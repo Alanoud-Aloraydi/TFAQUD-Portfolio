@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
@@ -5,6 +7,7 @@ import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
@@ -125,7 +128,18 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
               ),
               for (final EmergencyContact contact
                   in file?.contacts ?? const <EmergencyContact>[])
-                SimplifiedMedicalFileContactCard(contact: contact),
+                if (state.form?.contactId == contact.id)
+                  _contactForm(context, state.form!, contact.name)
+                else
+                  SimplifiedMedicalFileContactCard(
+                    contact: contact,
+                    // One form at a time, as in the detailed mode.
+                    onEdit: state.form == null
+                        ? () => context.read<MedicalFileCubit>().startEdit(
+                            contact.id,
+                          )
+                        : null,
+                  ),
               ..._addContact(context, state, file),
             ],
           },
@@ -142,19 +156,7 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
     final MedicalFileCubit cubit = context.read<MedicalFileCubit>();
     final ContactForm? form = state.form;
     if (form != null && form.isNew) {
-      return <Widget>[
-        SimplifiedDetailScale(
-          child: ContactFormCard(
-            key: const ValueKey<String>('new-contact'),
-            form: form,
-            onRelation: cubit.relationChosen,
-            onName: cubit.nameChanged,
-            onPhone: cubit.phoneChanged,
-            onSave: cubit.saveContact,
-            onCancel: cubit.cancelForm,
-          ),
-        ),
-      ];
+      return <Widget>[_contactForm(context, form, null)];
     }
     if (form != null || file == null || !file.canAddContact) {
       return const <Widget>[];
@@ -174,5 +176,41 @@ class SimplifiedMedicalFileScreen extends StatelessWidget {
         ),
       ),
     ];
+  }
+
+  /// The detailed mode's contact form at this mode's size. [savedName] is
+  /// the name the contact has now, for the question asked before it is
+  /// deleted; it is null for a contact being added.
+  Widget _contactForm(
+    BuildContext context,
+    ContactForm form,
+    String? savedName,
+  ) {
+    final MedicalFileCubit cubit = context.read<MedicalFileCubit>();
+    final String? contactId = form.contactId;
+    return SimplifiedDetailScale(
+      child: ContactFormCard(
+        // A new key for each contact, so the fields start from its values.
+        key: ValueKey<String>(contactId ?? 'new-contact'),
+        form: form,
+        onRelation: cubit.relationChosen,
+        onName: cubit.nameChanged,
+        onPhone: cubit.phoneChanged,
+        onSave: cubit.saveContact,
+        onCancel: cubit.cancelForm,
+        onDelete: contactId == null || savedName == null
+            ? null
+            : () => unawaited(_delete(context, cubit, savedName)),
+      ),
+    );
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    MedicalFileCubit cubit,
+    String name,
+  ) async {
+    final bool? agreed = await showDeleteContactDialog(context, name);
+    if (agreed == true) await cubit.deleteContact();
   }
 }

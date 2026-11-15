@@ -22,62 +22,64 @@ class MedicationDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final version = plan.version;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(version.name, style: Theme.of(context).textTheme.headlineSmall),
-        Text(
-          '${formatMedicationNumber(version.strengthValue)} '
-          '${context.tr('medications.strength_display.${version.strengthUnit.name}')}',
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        SettingsCard(
-          children: [
-            _value(
-              context,
-              'medications.dosage_form',
-              context.tr('medications.form.${version.dosageForm.name}'),
-            ),
-            if (version.reason case final value?)
-              _value(context, 'medications.reason', value),
-            if (version.instructions case final value?)
-              _value(context, 'medications.instructions', value),
-            _value(
-              context,
-              'medications.missed_after',
-              arabicCount(
-                context,
-                ArabicCount.minutes,
-                version.missedAfterMinutes,
-              ),
-            ),
-            _value(
-              context,
-              'medications.treatment_period',
-              formatMedicationPeriod(
-                context,
-                version.startsOn,
-                version.endsOn,
-                today: PatientClockScope.of(context).today(),
-              ),
-            ),
-            if (plan.isScheduledOn(PatientClockScope.of(context).today()))
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(version.name, style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            '${formatMedicationNumber(version.strengthValue)} '
+            '${context.tr('medications.strength_display.${version.strengthUnit.name}')}',
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SettingsCard(
+            children: [
               _value(
                 context,
-                'medications.effective_from',
-                formatMedicationDate(context, version.effectiveFromOn),
+                'medications.dosage_form',
+                context.tr('medications.form.${version.dosageForm.name}'),
               ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        InsetGroup(
-          header: context.tr('medications.dose_schedules'),
-          children: [
-            for (final schedule in version.schedules)
-              MedicationScheduleRow(schedule: schedule),
-          ],
-        ),
-      ],
+              if (version.reason case final value?)
+                _value(context, 'medications.reason', value),
+              if (version.instructions case final value?)
+                _value(context, 'medications.instructions', value),
+              _value(
+                context,
+                'medications.missed_after',
+                arabicCount(
+                  context,
+                  ArabicCount.minutes,
+                  version.missedAfterMinutes,
+                ),
+              ),
+              _value(
+                context,
+                'medications.treatment_period',
+                formatMedicationPeriod(
+                  context,
+                  version.startsOn,
+                  version.endsOn,
+                  today: PatientClockScope.of(context).today(),
+                ),
+              ),
+              if (plan.isScheduledOn(PatientClockScope.of(context).today()))
+                _value(
+                  context,
+                  'medications.effective_from',
+                  formatMedicationDate(context, version.effectiveFromOn),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          InsetGroup(
+            header: context.tr('medications.dose_schedules'),
+            children: [
+              for (final schedule in version.schedules)
+                MedicationScheduleRow(schedule: schedule),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

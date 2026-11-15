@@ -11,6 +11,8 @@ class SimplifiedMeasurementState extends Equatable {
     this.status = SimplifiedMeasurementStatus.loading,
     this.saving = false,
     this.messageKey,
+    this.saved,
+    this.recent = const <MeasurementReading>[],
   });
 
   /// The task the screen was opened for (a reminder or a «اليوم» row);
@@ -22,6 +24,13 @@ class SimplifiedMeasurementState extends Equatable {
 
   /// Why loading or saving failed: a key in assets/translations.
   final String? messageKey;
+
+  /// The patient's last readings, newest first, both kinds together.
+  final List<MeasurementReading> recent;
+
+  /// The reading the server wrote, once one was saved. It carries the
+  /// level the server judged it at, which is what «تم» then says.
+  final MeasurementReading? saved;
 
   /// The kinds that can be recorded: the task's own, else both, blood
   /// pressure first, as on the screen. Fixed normal ranges judge every
@@ -35,15 +44,19 @@ class SimplifiedMeasurementState extends Equatable {
     bool? saving,
     String? messageKey,
     bool clearMessage = false,
+    MeasurementReading? saved,
+    List<MeasurementReading>? recent,
   }) {
     return SimplifiedMeasurementState(
       task: task,
+      recent: recent ?? this.recent,
       status: status ?? this.status,
       saving: saving ?? this.saving,
       messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
+      saved: saved ?? this.saved,
     );
   }
 
   @override
-  List<Object?> get props => [task, status, saving, messageKey];
+  List<Object?> get props => [task, status, saving, messageKey, saved, recent];
 }

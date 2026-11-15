@@ -411,7 +411,7 @@ void main() {
       expect(planned[0].at, DateTime.utc(2026, 11, 4, 13, 30));
       expect(planned[0].title, 'موعد أمي نورة dayBefore');
       expect(planned[0].body, 'القلب');
-      expect(planned[0].payload, 'appointment:c-noura');
+      expect(planned[0].payload, 'appointment:c-noura@appointment-5');
       expect(planned[1].at, DateTime.utc(2026, 11, 5, 11, 30));
       expect(planned[1].title, 'موعد أمي نورة soon');
       expect(planned[2].payload, keepRemindersPayload);
@@ -493,8 +493,8 @@ void main() {
         planned.map((ScheduledNotification n) => _plain(n.payload)),
         <String>[
           'measurement:c-noura',
-          'appointment:c-noura',
-          'appointment:c-noura',
+          'appointment:c-noura@appointment-4',
+          'appointment:c-noura@appointment-4',
           'dose:c-me',
           keepRemindersPayload,
         ],
@@ -547,7 +547,7 @@ void main() {
         (ScheduledNotification n) => n.payload.startsWith('appointment:'),
       );
       expect(visit.snoozable, isFalse);
-      expect(visit.payload, 'appointment:c-noura');
+      expect(visit.payload, 'appointment:c-noura@appointment-5');
     });
 
     test('a task put off is not reminded at its own time', () {
@@ -572,6 +572,7 @@ void main() {
       expect(reminderCircleId('dose:c-1'), 'c-1');
       expect(reminderCircleId('measurement:c-2'), 'c-2');
       expect(reminderCircleId('appointment:c-3'), 'c-3');
+      expect(reminderCircleId('appointment:c-3@v-1'), 'c-3');
       expect(reminderCircleId('dose-snooze:c-4'), 'c-4');
       expect(reminderCircleId('measurement-snooze:c-5'), 'c-5');
       expect(reminderCircleId(keepRemindersPayload), isNull);
@@ -1005,8 +1006,8 @@ void main() {
         <String>[
           'measurement:c-noura',
           'dose:c-noura',
-          'appointment:c-noura',
-          'appointment:c-noura',
+          'appointment:c-noura@appointment-5',
+          'appointment:c-noura@appointment-5',
           keepRemindersPayload,
         ],
       );
@@ -1075,7 +1076,11 @@ void main() {
 
       expect(
         phone.inOrder.map((ScheduledNotification n) => _plain(n.payload)),
-        <String>['appointment:c-me', 'appointment:c-me', keepRemindersPayload],
+        <String>[
+          'appointment:c-me@appointment-5',
+          'appointment:c-me@appointment-5',
+          keepRemindersPayload,
+        ],
       );
     });
 
