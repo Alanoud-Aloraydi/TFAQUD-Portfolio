@@ -279,10 +279,15 @@ Render runs the scan every 10 minutes as a **Cron Job** (`tfaqud-tick` in
 `render.yaml`): its own short-lived process from the same image, with the
 same database and OneSignal settings as the API, which sends every push of
 the scan before it ends. It needs no secret, and runs even while the free
-API sleeps. Each run first asks `KEEP_AWAKE_URL` (the API's `/health`), so
+API sleeps. Each run first asks `KEEP_AWAKE_URL` (the API's `/api/v1/health`), so
 the free API never sleeps (`app/keep_awake.py`). A cron job costs at least $1
 a month (billed by the second it runs). Locally, run `flask --app wsgi tick`
 when you want a scan.
+
+Each API process also runs the scan every `SCAN_EVERY_SECONDS` (60 on
+Render, 0 in development and tests) from its first request on
+(`app/minute_scan.py`), so a missed task is told within about a minute; the
+cron job is the safety net. Claims keep every push to once.
 
 `POST /internal/tick` runs the same scan on request, only with the
 `X-Tick-Secret` header equal to `TICK_SECRET` (otherwise 404, the same as a

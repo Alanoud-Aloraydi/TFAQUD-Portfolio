@@ -1,7 +1,8 @@
 """Every dosage form the app offers saves on PostgreSQL with each of its
 dose units: the version's own list and the plan check both allow it."""
 
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -31,7 +32,9 @@ def test_each_form_saves_with_its_units(
 ):
     owner = account()
     circle = offline_circle(database, owner)
-    body = plan_body(datetime.now(timezone.utc), dosage_form=form)
+    # The patient's today (Riyadh): from 21:00 UTC, UTC's date is already
+    # yesterday there, and the start would be refused as past.
+    body = plan_body(datetime.now(ZoneInfo("Asia/Riyadh")), dosage_form=form)
     body["schedules"][0]["dose_unit"] = unit
 
     created = create_plan(
@@ -50,7 +53,8 @@ def test_a_form_with_another_forms_unit_is_still_refused(
 ):
     owner = account()
     circle = offline_circle(database, owner)
-    body = plan_body(datetime.now(timezone.utc), dosage_form="nebulizer")
+    riyadh_now = datetime.now(ZoneInfo("Asia/Riyadh"))
+    body = plan_body(riyadh_now, dosage_form="nebulizer")
     body["schedules"][0]["dose_unit"] = "puff"
 
     refused = create_plan(

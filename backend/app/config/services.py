@@ -27,6 +27,13 @@ def service_settings(env_name: str) -> dict:
         # The API's health check, asked by each scheduled scan so the free
         # API never sleeps (app/keep_awake.py). Unset: nothing is asked.
         "KEEP_AWAKE_URL": os.environ.get("KEEP_AWAKE_URL") or None,
+        # The same scan inside each API process, every this many seconds
+        # (app/minute_scan.py), so a missed task is told within a minute;
+        # 0 turns it off. On by default on Render (staging, production).
+        "SCAN_EVERY_SECONDS": int(
+            os.environ.get("SCAN_EVERY_SECONDS")
+            or (60 if env_name in ("staging", "production") else 0)
+        ),
         # Push notifications and other work no one waits for run after the
         # answer (app/background.py); tests run them at once.
         "BACKGROUND_INLINE": env_name == "testing",

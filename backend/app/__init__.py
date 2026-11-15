@@ -17,6 +17,7 @@ from app.config import load_config
 from app.database import initialize_database
 from app.factory.endpoints import register_commands, register_endpoints
 from app.factory.services import register_services
+from app.minute_scan import install_minute_scan
 from app.factory.stores import Stores, choose_stores
 from app.push import PushSender, create_push_sender
 from app.sms import SmsSender, create_sms_sender
@@ -66,4 +67,5 @@ def create_app(
     )
     register_endpoints(app)
     register_commands(app, database)
+    install_minute_scan(app, database)
     return app
