@@ -102,7 +102,21 @@ def test_the_request_onesignal_expects():
         "ios_sound": "tafaqod_chime.wav",
         "thread_id": "invitation",
         "android_group": "invitation",
+        "ios_interruption_level": "active",
     }
+
+
+def test_a_task_due_now_is_time_sensitive_and_a_request_is_not():
+    """A missed or put-off task shows through a Focus on iOS; an
+    invitation waits like any other notification."""
+    sender = onesignal(lambda request: httpx.Response(200, json={"id": "n"}))
+    for kind in ("dose_missed", "measurement_snoozed", "appointment_missed"):
+        message = PushMessage("t", "b", kind)
+        level = sender.payload(ACCOUNT, message)["ios_interruption_level"]
+        assert level == "time-sensitive"
+    assert sender.payload(ACCOUNT, MESSAGE)["ios_interruption_level"] == (
+        "active"
+    )
 
 
 def test_known_phones_are_sent_to_by_their_subscriptions():

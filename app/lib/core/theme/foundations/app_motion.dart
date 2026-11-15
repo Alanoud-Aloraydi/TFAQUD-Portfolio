@@ -20,6 +20,12 @@ abstract class AppMotion {
   static const Duration menuExit = Duration(milliseconds: 260);
   static const Duration shimmer = Duration(milliseconds: 1400);
 
+  /// The card a tapped notification opens, as Telegram marks the message a
+  /// link opens: tinted for this long once in view, then fading out over
+  /// [tapHighlightFade].
+  static const Duration tapHighlight = Duration(milliseconds: 1000);
+  static const Duration tapHighlightFade = Duration(milliseconds: 600);
+
   /// The pictures arriving on a welcome page: the cards rise into place one
   /// after another. It plays once each time the page shows.
   static const Duration introEnter = Duration(milliseconds: 760);

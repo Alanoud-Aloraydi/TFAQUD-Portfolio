@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 
 /// The item the notification just tapped is about (its key, as
 /// reminders/item_keys.dart names it), so the page the tap opens can show
-/// it: «اليوم» opens the prayer period it is in and brings its row into
-/// view, the bell opens the tab it is in. One for the whole app.
+/// it: «اليوم» opens the prayer period or the box it is in and brings its
+/// card into view, tinted for a second; the bell opens the tab it is in.
+/// One for the whole app.
 class TapFocus extends ChangeNotifier {
   TapFocus({DateTime Function()? now}) : _now = now ?? DateTime.now;
 
@@ -13,9 +14,6 @@ class TapFocus extends ChangeNotifier {
   /// How long after the tap its item is still brought into view, while
   /// the page reads its data.
   static const Duration waitFor = Duration(minutes: 2);
-
-  /// How long the item stays outlined once it is in view.
-  static const Duration outlineFor = Duration(seconds: 3);
 
   final DateTime Function() _now;
   String? _key;
