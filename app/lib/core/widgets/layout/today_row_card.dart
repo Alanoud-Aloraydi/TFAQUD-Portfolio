@@ -9,7 +9,7 @@ enum TodayRowTone { normal, attention, danger }
 
 /// Shared card shell for one row of Today's schedule (a dose, a measurement
 /// task, an appointment): same background, radius and padding. Attention is
-/// warm yellow while the task can still be handled; red is reserved for an
+/// a warm edge while the task can still be handled; red is reserved for an
 /// older task that is truly missed.
 class TodayRowCard extends StatelessWidget {
   const TodayRowCard({
@@ -27,7 +27,10 @@ class TodayRowCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: switch (tone) {
           TodayRowTone.normal => AppSemanticColors.surfaceContent,
-          TodayRowTone.attention => AppSemanticColors.surfaceAttention,
+          // White like every other card: the warm edge and the status
+          // badge say it needs an answer. Filled, a day of four doses was
+          // one yellow block.
+          TodayRowTone.attention => AppSemanticColors.surfaceContent,
           TodayRowTone.danger => Theme.of(context).colorScheme.errorContainer,
         },
         borderRadius: BorderRadius.circular(AppRadius.field),

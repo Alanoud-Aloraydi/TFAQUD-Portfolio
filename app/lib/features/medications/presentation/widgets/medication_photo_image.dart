@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/photo_crop_page.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -26,7 +27,7 @@ class MedicationPhotoImage extends StatelessWidget {
     onTap: () => openPhotoViewer(context, bytes),
     child: Semantics(
       button: true,
-      label: context.tr('photos.enlarge'),
+      label: spoken(context.tr('photos.enlarge')),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Image.memory(

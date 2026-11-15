@@ -57,6 +57,14 @@ ShellRoute _simplifiedShell() {
         ),
       ),
       GoRoute(
+        path: Routes.simplifiedSkip,
+        redirect: requireExtra<TodayTask>(Routes.simplifiedMode),
+        pageBuilder: _iosPage(
+          (context, state) =>
+              SimplifiedSkipScreen(task: state.extra! as TodayTask),
+        ),
+      ),
+      GoRoute(
         path: Routes.simplifiedDone,
         redirect: requireExtra<SimplifiedDoneMessage>(Routes.simplifiedMode),
         pageBuilder: _iosPage(
@@ -94,14 +102,17 @@ ShellRoute _simplifiedShell() {
           ),
         ),
       ),
-      // The same card as the detailed mode's, but inside this shell: the
-      // text size holds, and «رجوع» never lands in the detailed mode.
+      // The same card as the detailed mode's, but inside this shell and at
+      // this mode's size, like the edit page below it: «رجوع» never lands
+      // in the detailed mode.
       GoRoute(
         path: Routes.simplifiedEmergencyCardPath,
         pageBuilder: _iosPage(
-          (context, state) => _emergencyCard(
-            state.pathParameters['circleId']!,
-            Routes.simplifiedMode,
+          (context, state) => SimplifiedDetailScale(
+            child: _emergencyCard(
+              state.pathParameters['circleId']!,
+              Routes.simplifiedMode,
+            ),
           ),
         ),
       ),

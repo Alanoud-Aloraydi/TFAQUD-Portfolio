@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
@@ -18,9 +19,10 @@ class ReadingValue extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final bool bp = reading.kind == MeasurementKind.bp;
     return Semantics(
-      label:
-          '${reading.spokenValue(context.tr('measurements.over'))} '
-          '${context.tr(bp ? 'measurements.bp_unit' : 'measurements.glucose_unit')}',
+      label: spoken(
+        '${reading.spokenValue(context.tr('measurements.over'))} '
+        '${context.tr(bp ? 'measurements.bp_unit' : 'measurements.glucose_unit')}',
+      ),
       excludeSemantics: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,

@@ -28,18 +28,24 @@ class PlanItemHeader extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: AppItemCard.touch),
       child: Row(
         children: <Widget>[
-          leading,
+          // The kind's icon repeats what the title says.
+          ExcludeSemantics(child: leading),
           const SizedBox(width: AppItemCard.gap),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                title,
-                ?subtitle,
-                // At large text the status drops under the title instead of
-                // squeezing it.
-                if (stacked) status,
-              ],
+            // The name and what is under it are one thing to hear, not
+            // two stops. The pencil and the status stay nodes of their
+            // own: one is a button, the other is the answer to «أين هي؟».
+            child: MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  title,
+                  ?subtitle,
+                  // At large text the status drops under the title instead
+                  // of squeezing it.
+                  if (stacked) status,
+                ],
+              ),
             ),
           ),
           ?edit,

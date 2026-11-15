@@ -90,7 +90,7 @@ services:
       - key: TICK_SECRET
         sync: false
 
-  # The scheduled notification scan (backend/app/push/scheduled.py): every
+  # The scheduled notification scan (backend/app/push/scheduled/): every
   # 10 minutes, a missed dose, measurement or appointment, and a task put
   # off that came again, each told once. Its own short-lived process from
   # the API's image, so it runs even while the free API sleeps. A cron job

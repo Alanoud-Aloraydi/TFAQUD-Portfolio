@@ -13,7 +13,7 @@ import urllib.error
 import pytest
 
 from app.config import ConfigError
-from app.sms import authentica
+from app.sms import http_post
 from app.sms.authentica import AuthenticaSmsSender, urllib_post
 from app.sms.base import SmsDeliveryError
 
@@ -278,7 +278,7 @@ def test_the_default_function_sends_json_with_the_key_in_the_header(
         seen["request"], seen["timeout"] = request, timeout
         return FakeResponse(200, b'{"success": true}')
 
-    monkeypatch.setattr(authentica._opener, "open", fake_open)
+    monkeypatch.setattr(http_post.opener, "open", fake_open)
 
     status, body = urllib_post(
         "https://api.authentica.sa/api/v2/send-otp",
@@ -311,7 +311,7 @@ def test_the_default_function_returns_a_422_answer_instead_of_raising(
             ),
         )
 
-    monkeypatch.setattr(authentica._opener, "open", fake_open)
+    monkeypatch.setattr(http_post.opener, "open", fake_open)
 
     status, body = urllib_post("https://x.test/verify-otp", {}, {}, 5)
 
@@ -324,13 +324,13 @@ def test_the_default_function_copes_with_an_answer_that_is_not_json(
     def fake_open(request, timeout=None):
         return FakeResponse(200, b"<html>gateway</html>")
 
-    monkeypatch.setattr(authentica._opener, "open", fake_open)
+    monkeypatch.setattr(http_post.opener, "open", fake_open)
 
     assert urllib_post("https://x.test/send-otp", {}, {}, 5) == (200, None)
 
 
 def test_a_redirect_is_never_followed_because_the_key_would_follow_it():
-    handler = authentica._NoRedirect()
+    handler = http_post._NoRedirect()
 
     redirected = handler.redirect_request(
         None, None, 302, "Found", {}, "https://evil.test/"

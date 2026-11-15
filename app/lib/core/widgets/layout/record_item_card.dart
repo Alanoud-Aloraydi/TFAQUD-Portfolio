@@ -41,25 +41,30 @@ class RecordItemCard extends StatelessWidget {
           ? AppSemanticColors.surfaceAttention
           : AppSemanticColors.surfaceContent,
       shape: shape,
-      child: InkWell(
-        customBorder: shape,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppItemCard.padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              PlanItemHeader(
-                leading: leading,
-                title: title,
-                subtitle: subtitle,
-                status: status,
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          child: InkWell(
+            customBorder: shape,
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(AppItemCard.padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  PlanItemHeader(
+                    leading: leading,
+                    title: title,
+                    subtitle: subtitle,
+                    status: status,
+                  ),
+                  for (final Widget part in body) ...<Widget>[
+                    const SizedBox(height: AppSpacing.sm),
+                    part,
+                  ],
+                ],
               ),
-              for (final Widget part in body) ...<Widget>[
-                const SizedBox(height: AppSpacing.sm),
-                part,
-              ],
-            ],
+            ),
           ),
         ),
       ),

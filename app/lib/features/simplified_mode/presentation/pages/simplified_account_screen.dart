@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/photo_edit_badge.dart';
 import 'package:app/core/navigation/routers.dart';
@@ -77,66 +78,72 @@ class SimplifiedAccountScreen extends StatelessWidget {
               if (account != null)
                 Row(
                   children: <Widget>[
-                    Semantics(
-                      button: true,
-                      label: context.tr('simplified_mode.change_photo'),
-                      excludeSemantics: true,
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: () => unawaited(
-                          showPersonPhotoSheet(
-                            context,
-                            title: context.tr('photos.your_photo'),
-                            name: account.displayName,
-                            photoPath: ApiEndpoints.accountPhoto,
-                            avatarPath: ApiEndpoints.accountAvatar,
-                            avatarCode: account.avatarCode,
-                            frontCamera: true,
-                            onSaved: () =>
-                                unawaited(context.read<AccountCubit>().load()),
-                          ),
+                    MergeSemantics(
+                      child: Semantics(
+                        button: true,
+                        label: spoken(
+                          context.tr('simplified_mode.change_photo'),
                         ),
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: <Widget>[
-                            PersonPhoto(
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => unawaited(
+                            showPersonPhotoSheet(
+                              context,
+                              title: context.tr('photos.your_photo'),
                               name: account.displayName,
                               photoPath: ApiEndpoints.accountPhoto,
+                              avatarPath: ApiEndpoints.accountAvatar,
                               avatarCode: account.avatarCode,
-                              size: 72,
+                              frontCamera: true,
+                              onSaved: () => unawaited(
+                                context.read<AccountCubit>().load(),
+                              ),
                             ),
-                            const PhotoEditBadge(),
-                          ],
+                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: <Widget>[
+                              PersonPhoto(
+                                name: account.displayName,
+                                photoPath: ApiEndpoints.accountPhoto,
+                                avatarCode: account.avatarCode,
+                                size: 72,
+                              ),
+                              const PhotoEditBadge(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: SimplifiedStyle.gap),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            account.displayName,
-                            style: SimplifiedStyle.head(
-                              SimplifiedStyle.headline,
+                      child: MergeSemantics(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              account.displayName,
+                              style: SimplifiedStyle.head(
+                                SimplifiedStyle.headline,
+                              ),
                             ),
-                          ),
-                          Directionality(
-                            textDirection: TextDirection.ltr,
-                            child: Text(
-                              SaudiMobile.display(account.phoneNumber),
+                            Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: Text(
+                                SaudiMobile.display(account.phoneNumber),
+                                style: SimplifiedStyle.text(
+                                  SimplifiedStyle.caption,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              context.tr('simplified_mode.photo_hint'),
                               style: SimplifiedStyle.text(
                                 SimplifiedStyle.caption,
                               ),
                             ),
-                          ),
-                          Text(
-                            context.tr('simplified_mode.photo_hint'),
-                            style: SimplifiedStyle.text(
-                              SimplifiedStyle.caption,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -158,31 +165,37 @@ class SimplifiedAccountScreen extends StatelessWidget {
                   ),
                   onTap: () =>
                       context.push(Routes.simplifiedMedicalFile(circleId)),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              context.tr('simplified_mode.my_medical_file'),
-                              style: SimplifiedStyle.head(SimplifiedStyle.body),
-                            ),
-                            Text(
-                              context.tr('simplified_mode.my_medical_file_sub'),
-                              style: SimplifiedStyle.text(
-                                SimplifiedStyle.caption,
+                  child: MergeSemantics(
+                    child: Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                context.tr('simplified_mode.my_medical_file'),
+                                style: SimplifiedStyle.head(
+                                  SimplifiedStyle.body,
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                context.tr(
+                                  'simplified_mode.my_medical_file_sub',
+                                ),
+                                style: SimplifiedStyle.text(
+                                  SimplifiedStyle.caption,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Icon(
-                        AppIcons.next,
-                        size: 28,
-                        color: SimplifiedStyle.ink,
-                      ),
-                    ],
+                        const Icon(
+                          AppIcons.next,
+                          size: 28,
+                          color: SimplifiedStyle.ink,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -217,16 +230,24 @@ class SimplifiedAccountScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                sheetContext.tr('simplified_mode.delete_title'),
-                style: SimplifiedStyle.head(26),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                sheetContext.tr('simplified_mode.delete_text'),
-                style: SimplifiedStyle.text(
-                  SimplifiedStyle.body,
-                  weight: AppTextTheme.medium,
+              MergeSemantics(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      sheetContext.tr('simplified_mode.delete_title'),
+                      style: SimplifiedStyle.head(26),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      sheetContext.tr('simplified_mode.delete_text'),
+                      style: SimplifiedStyle.text(
+                        SimplifiedStyle.body,
+                        weight: AppTextTheme.medium,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),

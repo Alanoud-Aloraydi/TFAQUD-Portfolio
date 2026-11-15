@@ -4,6 +4,7 @@ import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
@@ -89,53 +90,70 @@ class NextTaskCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ExcludeSemantics(
-                  child: Container(
-                    width: AppSizes.avatar,
-                    height: AppSizes.avatar,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: iconBackground,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      size: AppSizes.iconSmall,
-                      color: AppSemanticColors.onSettingsTile,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
+            // What the task is reads as one sentence; «سجّل القراءة» below
+            // stays a button of its own.
+            MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        context.tr(headerKey),
-                        style: Theme.of(context).textTheme.labelMedium,
+                      ExcludeSemantics(
+                        child: Container(
+                          width: AppSizes.avatar,
+                          height: AppSizes.avatar,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: iconBackground,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            icon,
+                            size: AppSizes.iconSmall,
+                            color: AppSemanticColors.onSettingsTile,
+                          ),
+                        ),
                       ),
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleLarge,
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr(headerKey),
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                            Text(
+                              title,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    '${context.tr('common.weekdays.${task.at.weekday}')} '
+                    '${formatMedicationDate(context, task.at)} · '
+                    '${clockText(time)}',
+                    semanticsLabel: spoken(
+                      '${context.tr('common.weekdays.${task.at.weekday}')} '
+                      '${formatMedicationDate(context, task.at)}، '
+                      '${clockText(time)}',
+                    ),
+                  ),
+                  if (minutes < 2880)
+                    Text(
+                      relative,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  if (appointment != null)
+                    Text(appointmentCompanionLine(context, appointment)),
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              '${context.tr('common.weekdays.${task.at.weekday}')} '
-              '${formatMedicationDate(context, task.at)} · '
-              '${clockText(time)}',
-            ),
-            if (minutes < 2880)
-              Text(relative, style: Theme.of(context).textTheme.titleMedium),
-            if (appointment != null)
-              Text(appointmentCompanionLine(context, appointment)),
             if (measurement != null &&
                 sameDay &&
                 canRecordOccurrence(

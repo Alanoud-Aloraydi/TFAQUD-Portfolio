@@ -1,4 +1,5 @@
 import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/photo_crop_page.dart';
 import 'package:app/core/media/photo_source.dart';
 import 'package:app/core/media/private_photo_repository.dart';
@@ -59,7 +60,7 @@ class PrivatePhoto extends StatelessWidget {
             onTap: () => openPhotoViewer(context, bytes),
             child: Semantics(
               button: true,
-              label: context.tr('photos.enlarge'),
+              label: spoken(context.tr('photos.enlarge')),
               child: image,
             ),
           );

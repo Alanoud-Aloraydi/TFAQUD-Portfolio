@@ -2,7 +2,9 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/constants/name_limits.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
@@ -135,9 +137,9 @@ class _EditFormState extends State<MedicalFileEditForm> {
     }
   }
 
-  /// [otherLabel] names the «أخرى» chip of this group. Under «الحساسية»
-  /// the medicines and the foods are one list with no label of their own,
-  /// so two bare «أخرى» chips would be impossible to tell apart.
+  /// [otherLabel] names the «أخرى» chip of this group. The two kinds sit
+  /// in one card, and a screen reader reads a chip on its own, so «دواء
+  /// آخر» and «طعام آخر» stay told apart even under their labels.
   List<ChipOption> _options(
     String group,
     List<String> codes, {
@@ -153,6 +155,23 @@ class _EditFormState extends State<MedicalFileEditForm> {
         ),
     ];
   }
+
+  /// Every answer on this page sits in the same white card, so no one
+  /// section looks heavier than the one above it.
+  Widget _card(Widget child) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(AppSpacing.md),
+    decoration: AppSurfaces.card(),
+    child: child,
+  );
+
+  /// A kind of allergy inside the card: smaller and lighter than
+  /// «الحساسية» above it, so it reads as a part of it and not a section.
+  Widget _groupLabel(BuildContext context, String key) => Text(
+    context.tr(key),
+    style: Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: context.tokens.textSecondary),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -244,110 +263,147 @@ class _EditFormState extends State<MedicalFileEditForm> {
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.blood_type')),
                 const SizedBox(height: AppSpacing.sm),
-                OptionChips(
-                  options: <ChipOption>[
-                    for (final String type in MedicalOptions.bloodTypes)
-                      ChipOption(type, MedicalTexts.bloodTypeLabel(type)),
-                  ],
-                  isSelected: (String code) => code == form.bloodType,
-                  onTap: cubit.chooseBloodType,
+                _card(
+                  OptionChips(
+                    options: <ChipOption>[
+                      for (final String type in MedicalOptions.bloodTypes)
+                        ChipOption(type, MedicalTexts.bloodTypeLabel(type)),
+                    ],
+                    isSelected: (String code) => code == form.bloodType,
+                    onTap: cubit.chooseBloodType,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.conditions')),
                 const SizedBox(height: AppSpacing.sm),
-                OptionChips(
-                  options: <ChipOption>[
-                    for (final String code in <String>[
-                      ...MedicalOptions.conditions,
-                      MedicalOptions.none,
-                      MedicalOptions.other,
-                    ])
-                      ChipOption(code, context.tr('medical.condition.$code')),
-                  ],
-                  isSelected: form.conditions.contains,
-                  onTap: cubit.toggleCondition,
-                ),
-                if (form.conditions.contains(MedicalOptions.other)) ...<Widget>[
-                  const SizedBox(height: AppSpacing.md),
-                  LabeledTextField(
-                    label: context.tr('circles.other_hint'),
-                    controller: _conditionOther,
-                    maxLength: MedicalOptions.otherMaxLength,
-                    textInputAction: TextInputAction.done,
-                    onChanged: cubit.conditionOtherChanged,
-                    errorText: showErrors && form.conditionOther.trim().isEmpty
-                        ? requiredText
-                        : null,
+                _card(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      OptionChips(
+                        options: <ChipOption>[
+                          for (final String code in <String>[
+                            ...MedicalOptions.conditions,
+                            MedicalOptions.none,
+                            MedicalOptions.other,
+                          ])
+                            ChipOption(
+                              code,
+                              context.tr('medical.condition.$code'),
+                            ),
+                        ],
+                        isSelected: form.conditions.contains,
+                        onTap: cubit.toggleCondition,
+                      ),
+                      if (form.conditions.contains(
+                        MedicalOptions.other,
+                      )) ...<Widget>[
+                        const SizedBox(height: AppSpacing.md),
+                        LabeledTextField(
+                          label: context.tr('circles.other_hint'),
+                          controller: _conditionOther,
+                          maxLength: MedicalOptions.otherMaxLength,
+                          textInputAction: TextInputAction.done,
+                          onChanged: cubit.conditionOtherChanged,
+                          errorText:
+                              showErrors && form.conditionOther.trim().isEmpty
+                              ? requiredText
+                              : null,
+                        ),
+                      ],
+                    ],
                   ),
-                ],
+                ),
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.allergies_title')),
                 const SizedBox(height: AppSpacing.sm),
-                OptionChips(
-                  options: <ChipOption>[
-                    ChipOption(
-                      MedicalOptions.none,
-                      context.tr('circles.no_allergies'),
-                    ),
-                  ],
-                  isSelected: (String code) => form.noAllergies,
-                  onTap: (String code) => cubit.toggleNoAllergies(),
+                // One card holds the whole question. «لا توجد حساسية»
+                // answers it for the patient and stays a chip, the way
+                // «لا يوجد» does under «الأمراض المزمنة». The card is
+                // what says the two kinds belong to it; their labels are
+                // smaller and lighter than «الحساسية» above, and sit
+                // close to their own chips, so nothing has to be drawn
+                // between them.
+                _card(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      OptionChips(
+                        options: <ChipOption>[
+                          ChipOption(
+                            MedicalOptions.none,
+                            context.tr('circles.no_allergies'),
+                          ),
+                        ],
+                        isSelected: (String code) => form.noAllergies,
+                        onTap: (String code) => cubit.toggleNoAllergies(),
+                      ),
+                      if (!form.noAllergies) ...<Widget>[
+                        const SizedBox(height: AppSpacing.md),
+                        _groupLabel(context, 'circles.allergy_group_medicine'),
+                        const SizedBox(height: AppSpacing.xs),
+                        OptionChips(
+                          options: _options(
+                            'medication',
+                            MedicalOptions.medications,
+                            otherLabel: context.tr(
+                              'circles.allergy_other_medicine',
+                            ),
+                          ),
+                          isSelected: form.medication.contains,
+                          onTap: cubit.toggleMedication,
+                        ),
+                        if (form.medication.contains(
+                          MedicalOptions.other,
+                        )) ...<Widget>[
+                          const SizedBox(height: AppSpacing.md),
+                          LabeledTextField(
+                            label: context.tr('circles.other_hint'),
+                            controller: _medicationOther,
+                            maxLength: MedicalOptions.otherMaxLength,
+                            textInputAction: TextInputAction.done,
+                            onChanged: cubit.medicationOtherChanged,
+                            errorText:
+                                showErrors &&
+                                    form.medicationOther.trim().isEmpty
+                                ? requiredText
+                                : null,
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        _groupLabel(context, 'circles.allergy_group_food'),
+                        const SizedBox(height: AppSpacing.xs),
+                        OptionChips(
+                          options: _options(
+                            'food',
+                            MedicalOptions.foods,
+                            otherLabel: context.tr(
+                              'circles.allergy_other_food',
+                            ),
+                          ),
+                          isSelected: form.food.contains,
+                          onTap: cubit.toggleFood,
+                        ),
+                        if (form.food.contains(
+                          MedicalOptions.other,
+                        )) ...<Widget>[
+                          const SizedBox(height: AppSpacing.md),
+                          LabeledTextField(
+                            label: context.tr('circles.other_hint'),
+                            controller: _foodOther,
+                            maxLength: MedicalOptions.otherMaxLength,
+                            textInputAction: TextInputAction.done,
+                            onChanged: cubit.foodOtherChanged,
+                            errorText:
+                                showErrors && form.foodOther.trim().isEmpty
+                                ? requiredText
+                                : null,
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
                 ),
-                // «لا توجد حساسية» answers the whole section, so the
-                // chips under it are only there when it is off. Medicines
-                // and foods are one flow: each chip names itself, so a
-                // label over each half only pushed them apart.
-                if (!form.noAllergies) ...<Widget>[
-                  const SizedBox(height: AppSpacing.sm),
-                  OptionChips(
-                    options: _options(
-                      'medication',
-                      MedicalOptions.medications,
-                      otherLabel: context.tr('circles.allergy_other_medicine'),
-                    ),
-                    isSelected: form.medication.contains,
-                    onTap: cubit.toggleMedication,
-                  ),
-                  if (form.medication.contains(
-                    MedicalOptions.other,
-                  )) ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    LabeledTextField(
-                      label: context.tr('circles.other_hint'),
-                      controller: _medicationOther,
-                      maxLength: MedicalOptions.otherMaxLength,
-                      textInputAction: TextInputAction.done,
-                      onChanged: cubit.medicationOtherChanged,
-                      errorText:
-                          showErrors && form.medicationOther.trim().isEmpty
-                          ? requiredText
-                          : null,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                  OptionChips(
-                    options: _options(
-                      'food',
-                      MedicalOptions.foods,
-                      otherLabel: context.tr('circles.allergy_other_food'),
-                    ),
-                    isSelected: form.food.contains,
-                    onTap: cubit.toggleFood,
-                  ),
-                  if (form.food.contains(MedicalOptions.other)) ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    LabeledTextField(
-                      label: context.tr('circles.other_hint'),
-                      controller: _foodOther,
-                      maxLength: MedicalOptions.otherMaxLength,
-                      textInputAction: TextInputAction.done,
-                      onChanged: cubit.foodOtherChanged,
-                      errorText: showErrors && form.foodOther.trim().isEmpty
-                          ? requiredText
-                          : null,
-                    ),
-                  ],
-                ],
                 if (state.errorKey != null) ...<Widget>[
                   const SizedBox(height: AppSpacing.lg),
                   InlineError(messageKey: state.errorKey!),

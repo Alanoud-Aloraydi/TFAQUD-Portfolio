@@ -21,26 +21,28 @@ class SimplifiedReminderNothingWaiting extends StatelessWidget {
       child: Column(
         children: <Widget>[
           const SizedBox(height: 24),
-          Column(
-            children: <Widget>[
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: SimplifiedStyle.head(
-                  SimplifiedStyle.display,
-                  color: SimplifiedStyle.surface,
+          MergeSemantics(
+            child: Column(
+              children: <Widget>[
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: SimplifiedStyle.head(
+                    SimplifiedStyle.display,
+                    color: SimplifiedStyle.surface,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                text,
-                textAlign: TextAlign.center,
-                style: SimplifiedStyle.text(
-                  SimplifiedStyle.body,
-                  color: SimplifiedStyle.onDarkMuted,
+                const SizedBox(height: 12),
+                Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: SimplifiedStyle.text(
+                    SimplifiedStyle.body,
+                    color: SimplifiedStyle.onDarkMuted,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           const SizedBox(height: 32),

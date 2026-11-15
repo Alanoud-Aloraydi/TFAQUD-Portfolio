@@ -19,66 +19,68 @@ class EmergencyMedicine extends StatelessWidget {
     );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: MergeSemantics(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(plan.version.name, style: text.titleSmall),
+                  // The strength is its own run, left to right, so «500 mg»
+                  // never turns into «mg 500».
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    children: <Widget>[
+                      Text(
+                        '${formatMedicationNumber(plan.version.strengthValue)} '
+                        '${plan.version.strengthUnit.apiValue}',
+                        textDirection: TextDirection.ltr,
+                        style: small,
+                      ),
+                      ExcludeSemantics(child: Text('·', style: small)),
+                      Text(
+                        words.form(plan.version.dosageForm.name),
+                        style: small,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
-                Text(plan.version.name, style: text.titleSmall),
-                // The strength is its own run, left to right, so «500 mg»
-                // never turns into «mg 500».
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  children: <Widget>[
-                    Text(
-                      '${formatMedicationNumber(plan.version.strengthValue)} '
-                      '${plan.version.strengthUnit.apiValue}',
-                      textDirection: TextDirection.ltr,
-                      style: small,
-                    ),
-                    Text('·', style: small),
-                    Text(
-                      words.form(plan.version.dosageForm.name),
-                      style: small,
-                    ),
-                  ],
-                ),
+                for (final schedule in plan.version.schedules)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        words.clock(schedule.time),
+                        textDirection: TextDirection.ltr,
+                        style: small,
+                      ),
+                      // «8:00 ص · 1 قرص»: a dot keeps the time and the dose
+                      // apart.
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                        ),
+                        child: ExcludeSemantics(child: Text('·', style: small)),
+                      ),
+                      Text(
+                        '${formatMedicationNumber(schedule.doseValue)} '
+                        '${words.unit(schedule.doseUnit.name)}',
+                        style: small,
+                      ),
+                    ],
+                  ),
               ],
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              for (final schedule in plan.version.schedules)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      words.clock(schedule.time),
-                      textDirection: TextDirection.ltr,
-                      style: small,
-                    ),
-                    // «8:00 ص · 1 قرص»: a dot keeps the time and the dose
-                    // apart.
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xs,
-                      ),
-                      child: Text('·', style: small),
-                    ),
-                    Text(
-                      '${formatMedicationNumber(schedule.doseValue)} '
-                      '${words.unit(schedule.doseUnit.name)}',
-                      style: small,
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -27,32 +27,34 @@ class MedicationPendingBox extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return PlanInfoBox(
       emphasis: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            context.tr(
-              'medications.pending_revision',
-              args: <String>[
-                formatMedicationDate(context, pending.effectiveFromOn),
-              ],
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              context.tr(
+                'medications.pending_revision',
+                args: <String>[
+                  formatMedicationDate(context, pending.effectiveFromOn),
+                ],
+              ),
+              style: text.titleSmall,
             ),
-            style: text.titleSmall,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            _summary(context, current.schedules),
-            style: text.bodySmall?.copyWith(
-              decoration: TextDecoration.lineThrough,
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _summary(context, current.schedules),
+              style: text.bodySmall?.copyWith(
+                decoration: TextDecoration.lineThrough,
+              ),
             ),
-          ),
-          Text(_summary(context, pending.schedules), style: text.bodyMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            CareVoice.tr(context, circleId, 'medications.effective_hint'),
-            style: text.bodySmall,
-          ),
-        ],
+            Text(_summary(context, pending.schedules), style: text.bodyMedium),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              CareVoice.tr(context, circleId, 'medications.effective_hint'),
+              style: text.bodySmall,
+            ),
+          ],
+        ),
       ),
     );
   }

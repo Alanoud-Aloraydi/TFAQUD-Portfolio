@@ -21,8 +21,10 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
   final String _circleId;
   final DateTime Function() _clock;
 
-  /// Readies the form: nothing to read first, since fixed normal ranges
-  /// judge every reading and a free one needs no target.
+  /// Readies the form, then the last readings behind it: fixed normal
+  /// ranges judge every reading and a free one needs no target, so the
+  /// form is ready at once and the history never holds it up. A history
+  /// that cannot be read is simply not shown.
   Future<void> load() async {
     emit(
       SimplifiedMeasurementState(
@@ -30,6 +32,14 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
         status: SimplifiedMeasurementStatus.ready,
       ),
     );
+    List<MeasurementReading> recent;
+    try {
+      recent = await _useCase.recentReadings(_circleId, _clock());
+    } on Exception {
+      return;
+    }
+    if (isClosed) return;
+    emit(state.copyWith(recent: recent));
   }
 
   /// Saves [reading]. Returns whether it was saved.
@@ -52,7 +62,13 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
         );
     if (isClosed) return result.isSuccess();
     final Failure? failure = result.tryGetError();
-    emit(state.copyWith(saving: false, messageKey: failure?.messageKey));
+    emit(
+      state.copyWith(
+        saving: false,
+        messageKey: failure?.messageKey,
+        saved: result.tryGetSuccess(),
+      ),
+    );
     return failure == null;
   }
 }

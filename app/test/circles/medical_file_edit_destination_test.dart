@@ -143,8 +143,8 @@ void main() {
       });
     });
 
-    testWidgets('a detailed page shown in the simplified mode has its body at '
-        'the simplified body size', (tester) async {
+    testWidgets('a detailed page shown in the simplified mode has its '
+        'smallest type at the simplified floor', (tester) async {
       late TextScaler scaler;
       await tester.pumpWidget(
         MaterialApp(
@@ -163,11 +163,11 @@ void main() {
         ),
       );
 
-      final double detailedBody =
-          AppTheme.lightTheme.textTheme.bodyLarge!.fontSize!;
+      final double smallest =
+          AppTheme.lightTheme.textTheme.bodySmall!.fontSize!;
       expect(
-        scaler.scale(detailedBody),
-        moreOrLessEquals(SimplifiedStyle.body * 1.15),
+        scaler.scale(smallest),
+        moreOrLessEquals(SimplifiedStyle.caption * 1.15),
       );
     });
   });

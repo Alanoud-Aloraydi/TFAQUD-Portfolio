@@ -1,7 +1,7 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
-import 'package:app/features/medications/presentation/widgets/medication_skeletons.dart';
+import 'package:app/features/medications/presentation/widgets/today_skeleton.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

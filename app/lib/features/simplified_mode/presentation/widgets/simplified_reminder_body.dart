@@ -52,45 +52,49 @@ class SimplifiedReminderBody extends StatelessWidget {
                     child: Center(child: content.hero),
                   ),
                   const SizedBox(height: 28),
-                  Column(
-                    children: <Widget>[
-                      Text(
-                        content.lead,
-                        style: SimplifiedStyle.text(
-                          28,
-                          color: SimplifiedStyle.surface,
+                  // What the reminder asks reads as one sentence; the two
+                  // round answers below stay buttons of their own.
+                  MergeSemantics(
+                    child: Column(
+                      children: <Widget>[
+                        Text(
+                          content.lead,
+                          style: SimplifiedStyle.text(
+                            28,
+                            color: SimplifiedStyle.surface,
+                          ),
                         ),
-                      ),
-                      Text(
-                        content.name,
-                        textAlign: TextAlign.center,
-                        style: SimplifiedStyle.head(
-                          SimplifiedStyle.hero,
-                          color: SimplifiedStyle.surface,
+                        Text(
+                          content.name,
+                          textAlign: TextAlign.center,
+                          style: SimplifiedStyle.head(
+                            SimplifiedStyle.hero,
+                            color: SimplifiedStyle.surface,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        content.line,
-                        textAlign: TextAlign.center,
-                        style: SimplifiedStyle.head(
-                          SimplifiedStyle.headline,
-                          color: SimplifiedStyle.surface,
+                        const SizedBox(height: 10),
+                        Text(
+                          content.line,
+                          textAlign: TextAlign.center,
+                          style: SimplifiedStyle.head(
+                            SimplifiedStyle.headline,
+                            color: SimplifiedStyle.surface,
+                          ),
                         ),
-                      ),
-                      if (content.chips.isNotEmpty) ...<Widget>[
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: <Widget>[
-                            for (final String chip in content.chips)
-                              SimplifiedChip(chip, onDark: true),
-                          ],
-                        ),
+                        if (content.chips.isNotEmpty) ...<Widget>[
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: <Widget>[
+                              for (final String chip in content.chips)
+                                SimplifiedChip(chip, onDark: true),
+                            ],
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 20),
                   const Spacer(),

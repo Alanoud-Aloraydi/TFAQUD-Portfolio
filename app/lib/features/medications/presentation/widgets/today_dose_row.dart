@@ -56,7 +56,7 @@ class TodayDoseRow extends StatelessWidget {
       time: clockText(occurrence.time),
       // The name first, then the clock: a day of four doses otherwise
       // opens every row with a number. «·» is not read aloud.
-      spoken: <String>[
+      spokenLabel: <String>[
         title,
         clockText(occurrence.time),
         dose,

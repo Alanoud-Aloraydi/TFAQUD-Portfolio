@@ -10,12 +10,14 @@ class EmergencyLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(label, style: text.bodySmall),
-        Text(value, style: text.titleMedium),
-      ],
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(label, style: text.bodySmall),
+          Text(value, style: text.titleMedium),
+        ],
+      ),
     );
   }
 }

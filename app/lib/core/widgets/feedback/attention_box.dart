@@ -31,63 +31,74 @@ class AttentionBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceAttention,
+        // The page's own colour, not a yellow wash: the cards inside are
+        // white and have to stand out from the group that holds them. The
+        // edge and the heading carry the warning.
+        color: AppSemanticColors.background,
         border: Border.all(color: AppSemanticColors.borderAttention),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(AppRadius.m),
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: collapsible ? AppSpacing.tight : 0,
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    TafaqodPhosphorIcons.warning,
-                    color: AppSemanticColors.statusWarning,
-                    size: 17,
+          // The heading, the count and «إظهار/إخفاء» are one stop, and a
+          // button when the box can be folded away.
+          MergeSemantics(
+            child: Semantics(
+              button: collapsible,
+              onTap: onToggle,
+              child: InkWell(
+                onTap: onToggle,
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: collapsible ? AppSpacing.tight : 0,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(color: AppSemanticColors.statusWarning),
-                  ),
-                  if (count != null) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    // A count, not a status: the pill shape with a fill that
-                    // stands out against the box's own background.
-                    StatusPill(
-                      text: '$count',
-                      background: AppSemanticColors.accentWarm,
-                      foreground: AppSemanticColors.textPrimary,
-                    ),
-                  ],
-                  if (collapsible) ...[
-                    const Spacer(),
-                    Text(
-                      context.tr(
-                        expanded
-                            ? 'today_dashboard.hide_attention'
-                            : 'today_dashboard.show_attention',
+                  child: Row(
+                    children: [
+                      const Icon(
+                        TafaqodPhosphorIcons.warning,
+                        color: AppSemanticColors.statusWarning,
+                        size: 17,
                       ),
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Icon(
-                      expanded
-                          ? TafaqodPhosphorIcons.caretUp
-                          : TafaqodPhosphorIcons.caretDown,
-                      size: 16,
-                      color: AppSemanticColors.statusWarning,
-                    ),
-                  ],
-                ],
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: AppSemanticColors.statusWarning),
+                      ),
+                      if (count != null) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        // A count, not a status: the pill shape with a fill that
+                        // stands out against the box's own background.
+                        StatusPill(
+                          text: '$count',
+                          background: AppSemanticColors.accentWarm,
+                          foreground: AppSemanticColors.textPrimary,
+                        ),
+                      ],
+                      if (collapsible) ...[
+                        const Spacer(),
+                        Text(
+                          context.tr(
+                            expanded
+                                ? 'today_dashboard.hide_attention'
+                                : 'today_dashboard.show_attention',
+                          ),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Icon(
+                          expanded
+                              ? TafaqodPhosphorIcons.caretUp
+                              : TafaqodPhosphorIcons.caretDown,
+                          size: 16,
+                          color: AppSemanticColors.statusWarning,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

@@ -54,6 +54,12 @@ if ($App) {
   if ($Fix) {
     Step 'app: format (rewriting)' 'app' { dart format lib test }
     Step 'app: dart fix' 'app' { dart fix --apply }
+    # After formatting, and only then: the sizes in the baseline are counted
+    # on formatted files, so this has to come after the two steps above.
+    # It accepts the sizes as they now are, so read what it prints.
+    Step 'app: structure baseline (rewriting)' 'app' {
+      dart run tool/check_structure.dart --update-baseline
+    }
   } else {
     Step 'app: format' 'app' {
       dart format --output=none --set-exit-if-changed lib test

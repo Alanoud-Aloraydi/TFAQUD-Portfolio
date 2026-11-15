@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 enum OnboardingStatus { idle, saving }
 
 /// Who the care circle is for, chosen on the start step
-/// («كيف تحب تستخدم تفقّد؟»).
+/// («كيف تحب تستخدم تفقُد؟»).
 enum CareTarget { self, other }
 
 /// Immutable state of `OnboardingCubit`: the answers of the name step and

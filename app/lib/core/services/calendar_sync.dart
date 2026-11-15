@@ -716,7 +716,7 @@ class CalendarSync {
   /// account that takes a new calendar): the events then go in the phone's
   /// default calendar.
   ///
-  /// A «تفقّد» calendar this install did not make was left by an earlier
+  /// A «تفقُد» calendar this install did not make was left by an earlier
   /// one (deleting the app leaves its calendar): it is deleted, with its
   /// events, before a new one is made.
   Future<String?> _ownCalendar(SharedPreferences prefs) async {

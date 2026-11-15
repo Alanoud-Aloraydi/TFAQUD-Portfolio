@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -43,6 +44,7 @@ class CircleMembersHeader extends StatelessWidget {
               summary,
               textAlign: TextAlign.end,
               style: text.bodySmall,
+              semanticsLabel: spoken(summary.replaceAll(' · ', '، ')),
             ),
           ),
         ],

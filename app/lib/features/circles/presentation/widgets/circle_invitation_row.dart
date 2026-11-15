@@ -1,4 +1,5 @@
 import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
@@ -54,6 +55,10 @@ class CircleInvitationRow extends StatelessWidget {
                   '${context.tr('circle_overview.pending')} · '
                   '${_sentText(context, days)}',
                   style: text.bodySmall,
+                  semanticsLabel: spoken(
+                    '${context.tr('circle_overview.pending')}، '
+                    '${_sentText(context, days)}',
+                  ),
                 ),
                 if (canManage)
                   Wrap(

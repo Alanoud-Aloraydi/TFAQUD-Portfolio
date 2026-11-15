@@ -8,7 +8,7 @@ import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_state.dart';
 import 'package:app/features/circles/presentation/widgets/ambulance_button.dart';
-import 'package:app/features/circles/presentation/widgets/circle_skeletons.dart';
+import 'package:app/features/circles/presentation/widgets/emergency_card_skeleton.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_body.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_export.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_text.dart';

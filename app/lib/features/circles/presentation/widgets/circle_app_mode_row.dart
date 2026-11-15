@@ -7,18 +7,29 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// «وضع تطبيق المريض: **تفصيلي**», and under it why it cannot be changed
-/// here.
+/// «وضع التطبيق: **تفصيلي**», and under it why it cannot be changed here.
+/// A patient who does not use the app says so in the same row and the same
+/// words, rather than the row disappearing: the family still needs to know
+/// why that person never signs in.
 class CircleAppModeRow extends StatelessWidget {
-  const CircleAppModeRow({super.key, required this.mode});
+  const CircleAppModeRow({
+    super.key,
+    required this.mode,
+    required this.usesApp,
+  });
 
   final CircleAppMode? mode;
+
+  /// Whether the patient has an account of their own.
+  final bool usesApp;
 
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final String value = context.tr(
-      mode == CircleAppMode.simplified
+      !usesApp
+          ? 'circle_overview.no_app'
+          : mode == CircleAppMode.simplified
           ? 'circle_overview.simplified'
           : 'circle_overview.detailed',
     );
@@ -59,7 +70,11 @@ class CircleAppModeRow extends StatelessWidget {
             start: AppSizes.iconSmall + AppSpacing.sm,
           ),
           child: Text(
-            context.tr('circle_overview.mode_note'),
+            context.tr(
+              usesApp
+                  ? 'circle_overview.mode_note'
+                  : 'circle_overview.profile_summary',
+            ),
             style: text.bodySmall,
           ),
         ),

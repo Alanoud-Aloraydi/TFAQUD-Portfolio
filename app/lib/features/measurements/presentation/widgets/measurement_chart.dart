@@ -1,5 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_legend.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
@@ -16,16 +17,16 @@ class MeasurementChart extends StatefulWidget {
     required this.readings,
     required this.month,
     required this.circleId,
-    this.targetLow,
-    this.targetHigh,
+    this.target = const ChartTarget(<ChartBand>[]),
   });
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
   final DateTime month;
   final String circleId;
-  final int? targetLow;
-  final int? targetHigh;
+
+  /// The normal bands drawn behind the readings.
+  final ChartTarget target;
 
   @override
   State<MeasurementChart> createState() => _MeasurementChartState();
@@ -52,8 +53,8 @@ class _MeasurementChartState extends State<MeasurementChart> {
       Size(width, _height),
       widget.month,
       widget.readings,
-      widget.targetHigh,
-      targetLow: widget.targetLow,
+      widget.target.high,
+      targetLow: widget.target.low,
       kind: widget.kind,
     );
     final byDay = readingsByDay(
@@ -111,8 +112,7 @@ class _MeasurementChartState extends State<MeasurementChart> {
                 widget.kind,
                 widget.readings,
                 widget.month,
-                widget.targetLow,
-                widget.targetHigh,
+                widget.target,
                 PatientClockScope.of(context),
               ),
             ),
@@ -124,10 +124,7 @@ class _MeasurementChartState extends State<MeasurementChart> {
         MeasurementReadingTile(reading: reading, circleId: widget.circleId),
       ],
       const SizedBox(height: AppSpacing.sm),
-      ChartLegend(
-        kind: widget.kind,
-        hasTarget: widget.targetLow != null && widget.targetHigh != null,
-      ),
+      ChartLegend(target: widget.target),
     ],
   );
 }

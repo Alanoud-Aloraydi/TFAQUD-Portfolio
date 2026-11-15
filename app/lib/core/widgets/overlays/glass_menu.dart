@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, lerpDouble;
 
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
@@ -192,7 +193,7 @@ class _GlassMenuState extends State<GlassMenu> {
                     scopesRoute: true,
                     namesRoute: true,
                     explicitChildNodes: true,
-                    label: widget.semanticLabel,
+                    label: spoken(widget.semanticLabel),
                     child: GlassSurface(
                       borderRadius: BorderRadius.all(Radius.circular(radius)),
                       child: ClipRect(

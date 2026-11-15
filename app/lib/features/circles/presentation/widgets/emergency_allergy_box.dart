@@ -31,35 +31,37 @@ class EmergencyAllergyBox extends StatelessWidget {
           side: const BorderSide(color: AppSemanticColors.borderDanger),
         ),
       ),
-      child: Row(
-        children: <Widget>[
-          const Icon(
-            AppIcons.warning,
-            size: AppSizes.icon,
-            color: AppSemanticColors.statusError,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  label,
-                  style: text.labelMedium?.copyWith(
-                    color: AppSemanticColors.statusError,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: text.headlineSmall?.copyWith(
-                    color: AppSemanticColors.statusError,
-                    fontWeight: AppTextTheme.bold,
-                  ),
-                ),
-              ],
+      child: MergeSemantics(
+        child: Row(
+          children: <Widget>[
+            const Icon(
+              AppIcons.warning,
+              size: AppSizes.icon,
+              color: AppSemanticColors.statusError,
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    label,
+                    style: text.labelMedium?.copyWith(
+                      color: AppSemanticColors.statusError,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: text.headlineSmall?.copyWith(
+                      color: AppSemanticColors.statusError,
+                      fontWeight: AppTextTheme.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

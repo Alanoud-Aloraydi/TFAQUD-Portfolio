@@ -67,26 +67,28 @@ String daysAgo(BuildContext context, int days) {
   );
 }
 
-/// «بعد 3 دقائق», «بعد ساعتين», «بعد ساعة و5 دقائق».
-String afterDuration(BuildContext context, int minutes) {
+/// «3 دقائق», «ساعتين», «ساعة و5 دقائق»: the length on its own, for a
+/// sentence that is not «بعد ...», such as «فات موعده منذ ...».
+String durationWords(BuildContext context, int minutes) {
   if (minutes < 60) {
-    return context.tr(
-      'today_dashboard.after',
-      args: <String>[arabicCount(context, ArabicCount.minutes, minutes)],
-    );
+    return arabicCount(context, ArabicCount.minutes, minutes);
   }
   final String hours = arabicCount(context, ArabicCount.hours, minutes ~/ 60);
-  if (minutes % 60 == 0) {
-    return context.tr('today_dashboard.after', args: <String>[hours]);
-  }
+  if (minutes % 60 == 0) return hours;
   return context.tr(
-    'today_dashboard.after_and',
+    'today_dashboard.and_minutes',
     args: <String>[
       hours,
       arabicCount(context, ArabicCount.minutes, minutes % 60),
     ],
   );
 }
+
+/// «بعد 3 دقائق», «بعد ساعتين», «بعد ساعة و5 دقائق».
+String afterDuration(BuildContext context, int minutes) => context.tr(
+  'today_dashboard.after',
+  args: <String>[durationWords(context, minutes)],
+);
 
 /// Whether [now] (the patient's wall time) is morning: from Fajr until
 /// Dhuhr. [fajr] and [dhuhr] are today's times («HH:mm»); before they are

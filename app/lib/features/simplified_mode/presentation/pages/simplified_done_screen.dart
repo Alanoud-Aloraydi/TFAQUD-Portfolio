@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -18,10 +19,14 @@ class SimplifiedDoneScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String saved = message.text(context);
-    return _screen(context, saved);
+    return _screen(context, saved, message.verdict(context));
   }
 
-  Widget _screen(BuildContext context, String saved) {
+  Widget _screen(
+    BuildContext context,
+    String saved,
+    MeasurementVerdict? verdict,
+  ) {
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: SimplifiedStyle.doneGround),
@@ -65,6 +70,27 @@ class SimplifiedDoneScreen extends StatelessWidget {
                               weight: AppTextTheme.medium,
                             ),
                           ),
+                          // The reading is worth little without what it
+                          // means, which is the whole reason to measure.
+                          if (verdict case final MeasurementVerdict said)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  ExcludeSemantics(
+                                    child: Icon(said.level.icon, size: 28),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    said.label,
+                                    style: SimplifiedStyle.head(
+                                      SimplifiedStyle.headline,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ],

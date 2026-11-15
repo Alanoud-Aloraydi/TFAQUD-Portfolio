@@ -77,6 +77,11 @@ jobs:
       - name: Check the style
         run: python -m pycodestyle app tests integration_tests migrations
 
+      # Every file of app/ has at most 100 lines and one job; the files
+      # listed in tool/size_baseline.txt may only get shorter.
+      - name: Check the file sizes
+        run: python tool/check_size.py
+
       - name: Run the tests
         env:
           TEST_DATABASE_URL: postgresql+psycopg://tfaqud:tfaqud@localhost:5432/tfaqud_test

@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -21,9 +22,11 @@ class AuthDots extends StatelessWidget {
         ? Duration.zero
         : AppMotion.contentEnter;
     return Semantics(
-      label: context.tr(
-        'common.step_of',
-        args: <String>['${current + 1}', '$count'],
+      label: spoken(
+        context.tr(
+          'common.step_of',
+          args: <String>['${current + 1}', '$count'],
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

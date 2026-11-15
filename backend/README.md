@@ -74,7 +74,15 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 flask --app wsgi run               # the API on http://127.0.0.1:5000
 pytest                             # the tests
+python -m pycodestyle app tests integration_tests migrations
+python tool/check_size.py          # every file of app/ at most 100 lines
 ```
+
+Each file of `app/` does one job and has at most 100 lines. A big service
+class keeps its name and is put together from small parts, one file each
+(`class CareService(CareInvitations, CareMembers, ...)`), so its callers
+do not change. `tool/size_baseline.txt` lists the files still to split;
+they may only get shorter.
 
 Without a `.env` file the app starts in the `development` environment with a
 built-in secret key. This works on your computer only.
@@ -391,4 +399,4 @@ The code is in `app/cors.py`.
 ## Settings
 
 All settings come from environment variables. `.env.example` lists every one of
-them with a comment. The rules are in `app/config.py`.
+them with a comment. The rules are in `app/config/`.

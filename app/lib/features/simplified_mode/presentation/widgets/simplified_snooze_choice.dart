@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +22,8 @@ class SimplifiedSnoozeChoice extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: onTap != null,
-      label: '$label، $clock',
+      label: spoken('$label، $clock'),
+      onTap: onTap,
       excludeSemantics: true,
       child: Material(
         color: SimplifiedStyle.surface.withValues(alpha: .1),

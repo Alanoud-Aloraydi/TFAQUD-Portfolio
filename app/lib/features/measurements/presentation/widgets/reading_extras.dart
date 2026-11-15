@@ -29,42 +29,44 @@ class ReadingExtras extends StatelessWidget {
         ?.copyWith(color: context.tokens.textSecondary);
     final bool skipped = reading.outcome == 'skipped';
     final String? name = reading.recordedByName;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        if (!skipped && reading.range != null)
-          Text(readingRangeText(context, reading), style: style),
-        if (!skipped && reading.conditions.isNotEmpty)
-          Text(readingConditionsText(context, reading), style: style),
-        if (skipped && reading.skipReasonCode != null)
-          Text(
-            context.tr(
-              'measurements.skip_reason_line',
-              args: <String>[measurementSkipReasonText(context, reading)],
-            ),
-            style: style,
-          ),
-        if (reading.note != null) Text(reading.note!, style: style),
-        if (name != null) ...<Widget>[
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              PersonPhoto(
-                name: name,
-                photoPath: personPhotoPath(
-                  circleId,
-                  reading.recordedByAccountId,
-                ),
-                avatarCode: reading.recordedByAvatarCode,
-                size: AppSizes.iconSmall,
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          if (!skipped && reading.range != null)
+            Text(readingRangeText(context, reading), style: style),
+          if (!skipped && reading.conditions.isNotEmpty)
+            Text(readingConditionsText(context, reading), style: style),
+          if (skipped && reading.skipReasonCode != null)
+            Text(
+              context.tr(
+                'measurements.skip_reason_line',
+                args: <String>[measurementSkipReasonText(context, reading)],
               ),
-              const SizedBox(width: AppSpacing.tight),
-              Flexible(child: Text(name, style: style)),
-            ],
-          ),
+              style: style,
+            ),
+          if (reading.note != null) Text(reading.note!, style: style),
+          if (name != null) ...<Widget>[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                PersonPhoto(
+                  name: name,
+                  photoPath: personPhotoPath(
+                    circleId,
+                    reading.recordedByAccountId,
+                  ),
+                  avatarCode: reading.recordedByAvatarCode,
+                  size: AppSizes.iconSmall,
+                ),
+                const SizedBox(width: AppSpacing.tight),
+                Flexible(child: Text(name, style: style)),
+              ],
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

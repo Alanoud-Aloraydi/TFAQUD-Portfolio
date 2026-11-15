@@ -118,8 +118,7 @@ class _MeasurementChartCardState extends State<MeasurementChartCard> {
                 readings: widget.readings,
                 month: widget.month,
                 circleId: widget.circleId,
-                targetLow: target.low,
-                targetHigh: target.high,
+                target: target,
               ),
       ),
     );

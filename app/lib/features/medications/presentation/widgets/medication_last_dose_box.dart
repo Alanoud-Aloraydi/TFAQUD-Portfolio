@@ -28,32 +28,34 @@ class MedicationLastDoseBox extends StatelessWidget {
     final TextStyle? small = Theme.of(context).textTheme.bodySmall;
     final MedicationLastRecord? last = this.last;
     return PlanInfoBox(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(_text(context, last), style: small),
-          if (last?.recordedByName case final String name)
-            RecorderLine(
-              name: name,
-              photoPath: personPhotoPath(circleId, last!.recordedByAccountId),
-              avatarCode: last.recordedByAvatarCode,
-            ),
-          if (last?.outcome == DoseOutcome.skipped &&
-              last?.skipReasonCode != null)
-            Text(
-              context.tr(
-                'medications.skip_reason_line',
-                args: <String>[
-                  doseSkipReasonLabel(
-                    context,
-                    last!.skipReasonCode,
-                    last.skipReasonNote,
-                  ),
-                ],
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(_text(context, last), style: small),
+            if (last?.recordedByName case final String name)
+              RecorderLine(
+                name: name,
+                photoPath: personPhotoPath(circleId, last!.recordedByAccountId),
+                avatarCode: last.recordedByAvatarCode,
               ),
-              style: small,
-            ),
-        ],
+            if (last?.outcome == DoseOutcome.skipped &&
+                last?.skipReasonCode != null)
+              Text(
+                context.tr(
+                  'medications.skip_reason_line',
+                  args: <String>[
+                    doseSkipReasonLabel(
+                      context,
+                      last!.skipReasonCode,
+                      last.skipReasonNote,
+                    ),
+                  ],
+                ),
+                style: small,
+              ),
+          ],
+        ),
       ),
     );
   }

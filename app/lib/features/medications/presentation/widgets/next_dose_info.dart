@@ -1,6 +1,7 @@
 import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -52,28 +53,38 @@ class NextDoseInfo extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InkWell(
-                onTap: () => context.push(
-                  Routes.medicationDetails(circleId, occurrence.planId),
-                  extra: canManage,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(TafaqodPhosphorIcons.pill, size: 17),
-                    const SizedBox(width: AppSpacing.tight),
-                    Flexible(
-                      child: Text(
-                        '${occurrence.name} $strength',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+              MergeSemantics(
+                child: Semantics(
+                  button: true,
+                  child: InkWell(
+                    onTap: () => context.push(
+                      Routes.medicationDetails(circleId, occurrence.planId),
+                      extra: canManage,
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(TafaqodPhosphorIcons.pill, size: 17),
+                        const SizedBox(width: AppSpacing.tight),
+                        Flexible(
+                          child: Text(
+                            '${occurrence.name} $strength',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               Text(
                 occurrence.instructions == null
                     ? dose
                     : '$dose · ${occurrence.instructions}',
+                semanticsLabel: spoken(
+                  occurrence.instructions == null
+                      ? dose
+                      : '$dose، ${occurrence.instructions}',
+                ),
                 textAlign: TextAlign.end,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
