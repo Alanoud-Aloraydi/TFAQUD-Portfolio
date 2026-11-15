@@ -7,65 +7,26 @@
     POST /api/v1/auth/request-code   send a sign-in code by SMS (F01)
     POST /api/v1/auth/verify-code    check the code and sign in (F01)
 
-The rules of the two sign-in endpoints are in `app/auth/sign_in.py`.
-"""
+The rules of the two sign-in endpoints are in `app/auth/sign_in/`."""
 
-import re
+from flask import Blueprint, jsonify
 
-from flask import Blueprint, current_app, jsonify, request
-
+from app.auth.bodies import (
+    RefreshRequest,
+    RequestCodeRequest,
+    VerifyCodeRequest,
+)
 from app.auth.decorators import current_auth, require_auth
-from app.auth.inputs import Code, Phone, VerificationId
+from app.auth.requester import client_ip, device_id
+from app.errors import Unauthorized
 from app.extensions import (
     get_session_service,
     get_sign_in_service,
     get_user_store,
 )
-from app.errors import Unauthorized
-from app.validation import Dto, parse_json_body
+from app.validation import parse_json_body
 
 bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
-
-
-class RefreshRequest(Dto):
-    """The body of POST /auth/refresh."""
-
-    refresh_token: str
-
-
-class RequestCodeRequest(Dto):
-    """The body of POST /auth/request-code."""
-
-    phone_number: Phone
-    # Send it back to ask for another SMS inside the same request (a resend).
-    verification_id: VerificationId | None = None
-
-
-class VerifyCodeRequest(Dto):
-    """The body of POST /auth/verify-code."""
-
-    verification_id: VerificationId
-    code: Code
-
-
-_DEVICE_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
-
-
-def _device_id() -> str | None:
-    """The app's install id (X-Device-Id), when it looks like one."""
-    value = request.headers.get("X-Device-Id", "").strip()
-    return value if _DEVICE_ID.match(value) else None
-
-
-def _client_ip() -> str | None:
-    """The caller's address: from CLIENT_IP_HEADER behind a proxy (Render
-    puts it in CF-Connecting-IP), else the connection's own."""
-    header = current_app.config.get("CLIENT_IP_HEADER")
-    if header:
-        value = request.headers.get(header, "").split(",")[0].strip()
-        if value:
-            return value[:64]
-    return request.remote_addr
 
 
 @bp.post("/request-code")
@@ -77,8 +38,8 @@ def request_code():
     sent = get_sign_in_service().send_code(
         body.phone_number,
         body.verification_id,
-        device_id=_device_id(),
-        client_ip=_client_ip(),
+        device_id=device_id(),
+        client_ip=client_ip(),
     )
     return jsonify(
         verification_id=sent.request_id,

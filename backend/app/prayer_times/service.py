@@ -10,8 +10,7 @@ Aladhan is called at most once per place, zone and day (the cache keeps
 only answers that passed the checks). After 3 failed calls in a row it is
 not called for a minute (app/resilience.py), so the home page does not
 wait 8 seconds on every opening while Aladhan is down; the app shows its
-greeting without prayer times meanwhile.
-"""
+greeting without prayer times meanwhile."""
 
 import json
 import re
@@ -23,35 +22,9 @@ from urllib.request import urlopen
 
 from app import metrics
 from app.errors import ServiceUnavailable
+from app.prayer_times.cities import SAUDI_CITIES
 from app.resilience import CircuitBreaker
 
-# The app's Saudi city list (`SaudiCities.all`), with the English name the
-# provider knows each by. Keep the two in step.
-_SAUDI_CITIES = {
-    "الرياض": "Riyadh",
-    "جدة": "Jeddah",
-    "مكة المكرمة": "Makkah",
-    "المدينة المنورة": "Madinah",
-    "الدمام": "Dammam",
-    "بريدة": "Buraidah",
-    "أبها": "Abha",
-    "الطائف": "Taif",
-    "تبوك": "Tabuk",
-    "الخبر": "Khobar",
-    "الظهران": "Dhahran",
-    "الهفوف": "Al Hofuf",
-    "الجبيل": "Jubail",
-    "حائل": "Hail",
-    "نجران": "Najran",
-    "جازان": "Jazan",
-    "ينبع": "Yanbu",
-    "القطيف": "Qatif",
-    "خميس مشيط": "Khamis Mushait",
-    "الباحة": "Al Bahah",
-    "عرعر": "Arar",
-    "سكاكا": "Sakaka",
-    "الخرج": "Al Kharj",
-}
 _UMM_AL_QURA = 4
 _PRAYERS = ("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha")
 _breaker = CircuitBreaker("aladhan")
@@ -61,7 +34,7 @@ _TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 def prayer_times_for(city: str, zone: str, day: date) -> dict[str, str]:
     """Return the five times of `day` at `city`, as wall clock in `zone`;
     cache only successful city-days."""
-    saudi = _SAUDI_CITIES.get(city)
+    saudi = SAUDI_CITIES.get(city)
     if saudi:
         path = "timingsByCity"
         query = (("city", saudi), ("country", "SA"),

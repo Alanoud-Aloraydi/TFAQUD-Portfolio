@@ -3,15 +3,13 @@
 from uuid import UUID
 
 from flask import Blueprint, current_app, jsonify
-from sqlalchemy import select
 
 from app.auth.decorators import current_auth, require_auth
-from app.circles.leader import AREAS, edit_access, leader_id
-from app.circles.naming import name_for
 from app.database import transaction
 from app.errors import ServiceUnavailable, Unauthorized
 from app.extensions import get_user_store
-from app.models import Account, CareCircle, CareCircleManager
+from app.home_circles import circle_item, circle_rows, edit_access_by_circle
+from app.models import Account
 
 bp = Blueprint("home", __name__, url_prefix="/api/v1")
 
@@ -45,98 +43,14 @@ def home():
 
 
 def _circles(account_id: UUID) -> list[dict]:
-    """Select authorized IDs without duplicating patient-manager circles."""
+    """Select authorized IDs without duplicating patient-manager circles,
+    in the order of the names this account reads."""
     if "sqlalchemy" not in current_app.extensions:
         raise ServiceUnavailable()
-    memberships = select(CareCircleManager.care_circle_id).where(
-        CareCircleManager.account_id == account_id
-    )
-    receives_care = select(CareCircle.id).where(
-        CareCircle.account_id == account_id
-    )
     with transaction() as session:
-        # What this account may edit in each circle it is a member of: the
-        # leader everything, the others what the leader allows.
-        access = {}
-        for membership in session.scalars(
-            select(CareCircleManager).where(
-                CareCircleManager.account_id == account_id
-            )
-        ):
-            circle = session.get(CareCircle, membership.care_circle_id)
-            access[membership.care_circle_id] = edit_access(
-                membership, leader_id(session, circle) == account_id
-            )
-        none = {area: False for area in AREAS}
-        statement = (
-            select(
-                CareCircle.id,
-                CareCircle.name,
-                CareCircle.avatar_code,
-                CareCircle.account_id,
-                CareCircle.first_name,
-                CareCircle.time_zone,
-                CareCircle.latitude,
-                CareCircle.longitude,
-                Account.display_name,
-                Account.first_name.label("account_first_name"),
-                Account.avatar_code.label("account_avatar_code"),
-            )
-            .outerjoin(Account, Account.id == CareCircle.account_id)
-            .where(CareCircle.id.in_(memberships.union(receives_care)))
-        )
+        access = edit_access_by_circle(session, account_id)
         circles = [
-            {
-                "id": str(row.id),
-                # A patient with their own account picks this circle's name
-                # for themself; everyone else sees «دائرة» and the patient's
-                # name, never the patient's personal choice (e.g. "صحتي").
-                "name": name_for(
-                    account_id,
-                    own_name=row.name,
-                    patient_account_id=row.account_id,
-                    patient_account_name=(
-                        row.display_name or row.account_first_name
-                    ),
-                    patient_first_name=row.first_name,
-                ),
-                # Whether this account may add and change medicines,
-                # measurements, appointments here (`app.circles.leader`).
-                "can_manage_medications": access.get(row.id, none)[
-                    "medications"
-                ],
-                "can_manage_measurements": access.get(row.id, none)[
-                    "measurements"
-                ],
-                "can_manage_appointments": access.get(row.id, none)[
-                    "appointments"
-                ],
-                # Who the app speaks to about this circle: the patient
-                # («أخذت الجرعة»), or someone caring for them, who reads
-                # the patient's name instead («… أخذ نورة للجرعة»).
-                "is_patient": row.account_id == account_id,
-                "patient_name": (
-                    row.display_name
-                    or row.account_first_name
-                    or row.first_name
-                ),
-                # A linked patient shares the account's own avatar, like
-                # their photo.
-                "patient_avatar_code": (
-                    row.account_avatar_code
-                    if row.account_id is not None
-                    else row.avatar_code
-                ),
-                # The patient's IANA zone: the app shows and schedules
-                # every time of this circle in it, wherever the phone is.
-                "time_zone": row.time_zone,
-                # Where the patient's city is, for its weather on «اليوم»
-                # (the phone's own location is never asked for); null when
-                # the city was typed and not picked from the list.
-                "latitude": row.latitude,
-                "longitude": row.longitude,
-            }
-            for row in session.execute(statement)
+            circle_item(row, account_id, access)
+            for row in circle_rows(session, account_id)
         ]
-        # In the order of the names this account reads.
-        return sorted(circles, key=lambda c: (c["name"], c["id"]))
+    return sorted(circles, key=lambda c: (c["name"], c["id"]))

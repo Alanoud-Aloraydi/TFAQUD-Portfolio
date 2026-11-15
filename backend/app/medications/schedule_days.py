@@ -8,20 +8,12 @@ interval one applies every `interval_days` days from the day its treatment
 starts: every 3 days from 1 November is 1, 4, 7 ... (migration 0026).
 
 Should an older row still hold a later day, it lands on the month's last
-day when the month lacks it, as the database's own dose rule counts it.
-"""
+day when the month lacks it, as the database's own dose rule counts it."""
 
 import calendar
-from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
-from uuid import UUID
-
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from app.models import MedicationScheduleDay, MedicationScheduleMonthDay
 
 WEEKLY = "weekly"
 MONTHLY = "monthly"
@@ -71,37 +63,3 @@ def applies_on(
         return day.isoweekday() in set(weekdays)
     # The database allows only the three above; anything else is a bug.
     raise ValueError(f"Unknown schedule repeat {repeat!r}.")
-
-
-def load_days(session: Session, schedules) -> dict[UUID, ScheduleDays]:
-    """The days of each of `schedules`, read in two queries."""
-    # Two reads for all the dose times at once: their weekdays, and their days
-    # of the month.
-    ids = [schedule.id for schedule in schedules]
-    weekdays: dict[UUID, set[int]] = defaultdict(set)
-    month_days: dict[UUID, set[int]] = defaultdict(set)
-    if ids:
-        for schedule_id, weekday in session.execute(
-            select(
-                MedicationScheduleDay.schedule_id,
-                MedicationScheduleDay.weekday,
-            ).where(MedicationScheduleDay.schedule_id.in_(ids))
-        ):
-            weekdays[schedule_id].add(weekday)
-        for schedule_id, month_day in session.execute(
-            select(
-                MedicationScheduleMonthDay.schedule_id,
-                MedicationScheduleMonthDay.month_day,
-            ).where(MedicationScheduleMonthDay.schedule_id.in_(ids))
-        ):
-            month_days[schedule_id].add(month_day)
-    # Each dose time's days, with its kind of repeat and its interval.
-    return {
-        schedule.id: ScheduleDays(
-            schedule.repeat,
-            frozenset(weekdays[schedule.id]),
-            frozenset(month_days[schedule.id]),
-            schedule.interval_days,
-        )
-        for schedule in schedules
-    }

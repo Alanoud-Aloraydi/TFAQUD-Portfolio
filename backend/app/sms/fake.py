@@ -19,33 +19,23 @@ would have been texted to the user.
 
 The codes live in the memory of this one process. A server that runs several
 processes would not find a code sent by another one, so the Dockerfile starts
-one gunicorn worker when the fake sender is used.
-"""
+one gunicorn worker when the fake sender is used."""
 
 import hmac
 import logging
 import secrets
 import threading
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from app.sms.base import CODE_LENGTH, SmsSender
+from app.sms.fake_outbox import FakeOutbox, SentSms
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_VALID_SECONDS = 300
 
 
-@dataclass(frozen=True)
-class SentSms:
-    """One message the fake sender would have sent."""
-    to: str
-    message: str
-    sent_at: datetime
-    code: str
-
-
-class FakeSmsSender(SmsSender):
+class FakeSmsSender(FakeOutbox, SmsSender):
     """Makes codes and keeps them in memory, so tests and local work sign in
     without sending any SMS.
     """
@@ -100,13 +90,3 @@ class FakeSmsSender(SmsSender):
                 return False
             del self._open_codes[phone]  # a code works once
             return True
-
-    def last_message_to(self, to: str) -> SentSms | None:
-        """The last message sent to `to`, or None (tests read the code from
-        it).
-        """
-        with self._lock:
-            for sms in reversed(self.outbox):
-                if sms.to == to:
-                    return sms
-        return None

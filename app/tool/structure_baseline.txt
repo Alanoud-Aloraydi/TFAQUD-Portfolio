@@ -305,7 +305,6 @@ size lib/features/simplified_mode/presentation/widgets/simplified_done_message.d
 size lib/features/simplified_mode/presentation/widgets/simplified_family_member.dart 92
 size lib/features/simplified_mode/presentation/widgets/simplified_home_body.dart 145
 size lib/features/simplified_mode/presentation/widgets/simplified_late_dose_card.dart 197
-size lib/features/simplified_mode/presentation/widgets/simplified_measure_value_card.dart 73
 size lib/features/simplified_mode/presentation/widgets/simplified_medical_file_contact_card.dart 91
 size lib/features/simplified_mode/presentation/widgets/simplified_next_card.dart 231
 size lib/features/simplified_mode/presentation/widgets/simplified_page.dart 126

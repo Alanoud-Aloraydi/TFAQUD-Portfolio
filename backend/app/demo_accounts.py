@@ -1,5 +1,5 @@
 """The demo accounts' numbers and names, shared by the demo story
-(app/demo_data.py) and the sign-in of those numbers (app/sms/demo.py).
+(app/demo_data/) and the sign-in of those numbers (app/sms/demo.py).
 
 The numbers are made up (+96650000000x), so no real SMS may ever reach
 them: they sign in with the demo code instead (DEMO_SIGN_IN_CODE).
