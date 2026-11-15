@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/services/remote_push.dart';
+import 'package:app/core/widgets/feedback/push_setup_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
@@ -74,23 +75,7 @@ class _PushSetupCheckState extends State<PushSetupCheck> {
     _shown = true;
     final Future<void> shown = showCupertinoDialog<void>(
       context: context,
-      builder: (BuildContext dialog) => CupertinoAlertDialog(
-        title: const Text('Your OneSignal SDK integration is complete!'),
-        content: const Text(
-          'You can now send Push Notifications & In-App Messages through '
-          'OneSignal. Tap below to enable push notifications.',
-        ),
-        actions: <Widget>[
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () {
-              Navigator.of(dialog).pop();
-              unawaited(widget.push.requestPermission());
-            },
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
+      builder: (_) => PushSetupDialog(push: widget.push),
     );
     unawaited(shown);
   }

@@ -317,4 +317,3 @@ size lib/features/simplified_mode/presentation/widgets/simplified_style.dart 101
 size lib/features/simplified_mode/presentation/widgets/simplified_text_scale.dart 80
 size lib/features/simplified_mode/presentation/widgets/simplified_text_size_card.dart 101
 size lib/features/simplified_mode/presentation/widgets/task_visuals.dart 135
-size lib/main.dart 95
