@@ -278,9 +278,11 @@ the app has run once, iOS plays its default sound).
 Render runs the scan every 10 minutes as a **Cron Job** (`tfaqud-tick` in
 `render.yaml`): its own short-lived process from the same image, with the
 same database and OneSignal settings as the API, which sends every push of
-the scan before it ends. It needs no URL and no secret, and runs even while
-the free API sleeps. A cron job costs at least $1 a month (billed by the
-second it runs). Locally, run `flask --app wsgi tick` when you want a scan.
+the scan before it ends. It needs no secret, and runs even while the free
+API sleeps. Each run first asks `KEEP_AWAKE_URL` (the API's `/health`), so
+the free API never sleeps (`app/keep_awake.py`). A cron job costs at least $1
+a month (billed by the second it runs). Locally, run `flask --app wsgi tick`
+when you want a scan.
 
 `POST /internal/tick` runs the same scan on request, only with the
 `X-Tick-Secret` header equal to `TICK_SECRET` (otherwise 404, the same as a
@@ -385,8 +387,10 @@ Blueprint's page.
 **Environment**, without a new commit.
 
 On the free plan the API sleeps after 15 minutes without requests and takes
-about a minute to wake, so the first request after a pause can fail once; the
-free database is deleted 30 days after it is made unless it is upgraded.
+about a minute to wake, so the first request after a pause can fail once.
+`tfaqud-tick` asks its `/health` every 10 minutes (`KEEP_AWAKE_URL`), which
+keeps it awake: about 730 of the 750 free hours a month. The free database
+is deleted 30 days after it is made unless it is upgraded.
 
 ## Flutter in Chrome
 

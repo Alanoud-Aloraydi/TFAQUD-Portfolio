@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import pytest
 
 from app.clock import ManualClock
+from app.database import db
 from app.push import RecordingPushSender
 from integration_tests.helpers import Api, offline_circle
 from integration_tests.test_medications import (
@@ -20,6 +21,14 @@ from integration_tests.test_medications import (
 from integration_tests.test_push_api import Phone
 
 SECRET = "tick-secret-for-tests"
+
+
+@pytest.fixture(autouse=True)
+def close_app_session(database_app):
+    """Release the scan's transaction before the next test truncates
+    tables."""
+    yield
+    db.session.remove()
 
 
 @pytest.fixture
@@ -104,6 +113,55 @@ def test_the_cron_command_runs_the_same_scan(
     assert result.exit_code == 0, result.output
     [message] = pushes.to(phone.token)
     assert message.kind == "dose_missed"
+
+
+def test_the_cron_command_keeps_the_api_awake(
+    database_app, monkeypatch, ticking
+):
+    asked = []
+    monkeypatch.setitem(
+        database_app.config, "KEEP_AWAKE_URL", "https://api.test/health"
+    )
+    monkeypatch.setattr("app.push.tick_command.keep_awake", asked.append)
+
+    result = database_app.test_cli_runner().invoke(args=["tick"])
+
+    assert result.exit_code == 0, result.output
+    assert asked == ["https://api.test/health"]
+
+
+def test_a_missed_reading_is_told_once(
+    database_app, database, account, ticking
+):
+    clock, pushes = ticking
+    owner = account(name="Reem")
+    phone = Phone(database_app, owner, "a")
+    circle = offline_circle(database, owner)
+    created = database_app.test_client().post(
+        f"/api/v1/circles/{circle.id}/measurement-plans",
+        headers=signed_in(database_app, owner),
+        json={
+            "kind": "glucose",
+            "times": [
+                {"time_of_day": "09:00", "measurement_state": "fasting"},
+            ],
+            "weekdays": [3],
+            "starts_on": "2026-10-28",
+            "missed_after_minutes": 60,
+        },
+    )
+    assert created.status_code == 201, created.get_json()
+
+    # 10:30 in Riyadh: the 09:00 reading passed its hour, nothing recorded.
+    clock.advance(hours=2, minutes=30)
+    tick(database_app)
+    [message] = pushes.to(phone.token)
+    assert message.kind == "measurement_missed"
+    assert message.title == "قياس فائت"
+    assert message.body == "يا Reem، قياس السكر لـNora فات، ليسارع بالقياس"
+
+    tick(database_app)
+    assert len(pushes.to(phone.token)) == 1
 
 
 def _appointment(api, circle, **changes):

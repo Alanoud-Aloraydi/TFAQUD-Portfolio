@@ -349,6 +349,24 @@ def test_a_deleted_app_signs_its_phone_out(
     assert len(pushes.to(khaled.id)) == 1
 
 
+def test_a_push_goes_to_each_signed_in_phone(
+    database_app, database, account, pushes
+):
+    """To the subscriptions the sign-ins sent: OneSignal's external id is
+    only the fallback, as it reaches nothing when the app's login did not
+    take."""
+    reem, khaled = account(name="Reem"), account(name="Khaled")
+    one = Phone(database_app, khaled, "b").subscribe()
+    two = Phone(database_app, khaled, "d").subscribe()
+
+    invite(database_app, database, reem, khaled)
+
+    assert pushes.phones[str(khaled.id)] == {
+        one.subscription,
+        two.subscription,
+    }
+
+
 def test_a_phone_with_notifications_off_stays_signed_in(
     database_app, database, account, pushes
 ):

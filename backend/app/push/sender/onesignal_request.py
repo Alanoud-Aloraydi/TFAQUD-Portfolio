@@ -1,5 +1,7 @@
 """The HTTP client to OneSignal and the body of one push."""
 
+from collections.abc import Collection
+
 from app.push.sender.message import PushMessage
 from app.push.sender.onesignal_api import NOTIFICATION_SOUND
 
@@ -17,16 +19,30 @@ class OneSignalRequest:
                 self._client = httpx.Client(timeout=10)
             return self._client
 
-    def payload(self, account_id: str, message: PushMessage) -> dict:
-        """What OneSignal is asked to deliver: the title and the line (in
-        Arabic, also under "en", which OneSignal requires), the kind and
-        the item it is about (the app opens that item with them, and the
-        phone stacks one kind together), and the app's own chime on iOS.
+    def payload(
+        self,
+        account_id: str,
+        message: PushMessage,
+        phones: Collection[str] = (),
+    ) -> dict:
+        """What OneSignal is asked to deliver, and to which phones: the
+        subscriptions the account's sign-ins sent (`phones`), the way
+        OneSignal's own test message reaches them; else every phone
+        OneSignal ties to the account (its external id, set by the app's
+        OneSignal.login). Then the title and the line (in Arabic, also under
+        "en", which OneSignal requires), the kind and the item it is about
+        (the app opens that item with them, and the phone stacks one kind
+        together), and the app's own chime on iOS.
         """
+        to = (
+            {"include_subscription_ids": sorted(phones)}
+            if phones
+            else {"include_aliases": {"external_id": [account_id]}}
+        )
         return {
             "app_id": self._app_id,
             "target_channel": "push",
-            "include_aliases": {"external_id": [account_id]},
+            **to,
             "headings": {"en": message.title, "ar": message.title},
             "contents": {"en": message.body, "ar": message.body},
             "data": {"kind": message.kind, **dict(message.target)},
