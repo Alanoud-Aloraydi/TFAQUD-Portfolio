@@ -195,3 +195,31 @@ def test_going_back_before_0032_is_refused_while_one_has_no_companion(
     with pytest.raises(SystemExit):
         downgrade(directory=directory, revision="0031")
     upgrade(directory=directory)
+
+
+def test_attended_from_an_hour_before_its_time_not_earlier(
+    database_app, circle, evening
+):
+    # 01:09 in Riyadh: «حضرت» shows on «اليوم» an hour before a visit.
+    owner, care = circle
+    api = Api(database_app, owner)
+    base = f"/api/v1/circles/{care.id}/appointments"
+    soon = api.post(
+        base, visit(owner, scheduled_on="2026-11-09", time_of_day="02:00")
+    ).get_json()["appointment"]
+    later = api.post(
+        base, visit(owner, scheduled_on="2026-11-09", time_of_day="03:30")
+    ).get_json()["appointment"]
+
+    attended = api.post(
+        f"{base}/{soon['id']}/status",
+        {"status": "completed", "expected_updated_at": soon["updated_at"]},
+    )
+    too_early = api.post(
+        f"{base}/{later['id']}/status",
+        {"status": "completed", "expected_updated_at": later["updated_at"]},
+    )
+
+    assert attended.status_code == 200, attended.get_json()
+    assert attended.get_json()["appointment"]["status"] == "completed"
+    assert error_code(too_early, 422) == "appointment_not_started"

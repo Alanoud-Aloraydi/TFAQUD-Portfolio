@@ -6,9 +6,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Asks to confirm, then stops [plan] and says how it went. [context] must
-/// stay mounted while the answer is awaited.
-Future<void> discontinueMedication(
+/// Asks to confirm, then stops [plan] and says how it went; true once it
+/// is stopped. [context] must stay mounted while the answer is awaited.
+Future<bool> discontinueMedication(
   BuildContext context,
   MedicationPlan plan,
 ) async {
@@ -25,14 +25,15 @@ Future<void> discontinueMedication(
       ),
     ],
   );
-  if (confirmed != true || !context.mounted) return;
+  if (confirmed != true || !context.mounted) return false;
   final MedicationsCubit cubit = context.read<MedicationsCubit>();
   final bool changed = await cubit.discontinue(plan);
-  if (!context.mounted) return;
+  if (!context.mounted) return changed;
   if (changed) {
     AppToast.show(context, 'toast.medication_stopped');
-    return;
+    return true;
   }
   final String? message = cubit.state.messageKey;
   if (message != null) AppToast.show(context, message, kind: ToastKind.error);
+  return false;
 }

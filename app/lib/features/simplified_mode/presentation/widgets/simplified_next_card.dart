@@ -55,7 +55,6 @@ class SimplifiedNextCard extends StatelessWidget {
       // is a whole clause between them and the next thing they need.
       if (task.dose case final dose?) ...<String>[
         simplifiedDoseAmount(context, dose),
-        if (dose.reason case final String why) why,
       ],
       ...simplifiedTaskChips(context, task, day),
     ];
@@ -203,16 +202,17 @@ class SimplifiedNextCard extends StatelessWidget {
               simplifiedDoseAmount(context, dose),
               style: SimplifiedStyle.head(SimplifiedStyle.headline),
             ),
-            // What it is for, when the plan says: «حبة الضغط» tells the
-            // patient more than «81 ملغ» does. The strength stays for
-            // whoever manages the plan, on the medicine's own page.
-            Text(
-              dose.reason ?? simplifiedStrength(context, dose),
-              style: SimplifiedStyle.text(
-                SimplifiedStyle.body,
-                weight: AppTextTheme.medium,
+            // What it is for, when the plan says, is a chip under this
+            // line («الكوليسترول»), not repeated here; without one, the
+            // strength tells the medicines apart.
+            if (simplifiedDoseReason(task, day) == null)
+              Text(
+                simplifiedStrength(context, dose),
+                style: SimplifiedStyle.text(
+                  SimplifiedStyle.body,
+                  weight: AppTextTheme.medium,
+                ),
               ),
-            ),
           ],
         ),
       ],

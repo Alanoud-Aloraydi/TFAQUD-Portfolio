@@ -3,7 +3,6 @@ import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -90,17 +89,6 @@ class MedicationDetailsContent extends StatelessWidget {
               earliest: plan.version.startsOn,
               circleId: circleId,
             ),
-            if (canManage && !plan.isPreviousOn(today)) ...[
-              const SizedBox(height: AppSpacing.xl),
-              // Ending the treatment cannot be undone: the error red.
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppSemanticColors.statusError,
-                ),
-                onPressed: () => _discontinue(context),
-                child: Text(context.tr('medications.discontinue')),
-              ),
-            ],
           ],
         ),
       ),
@@ -114,31 +102,6 @@ class MedicationDetailsContent extends StatelessWidget {
     if (changed == true && context.mounted) {
       context.pop(true);
     }
-  }
-
-  Future<void> _discontinue(BuildContext context) async {
-    final confirmed = await showAppAlert<bool>(
-      context,
-      title: context.tr('medications.discontinue_title'),
-      message: context.tr('medications.discontinue_message'),
-      actions: [
-        AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
-        AppAlertAction<bool>(
-          label: context.tr('medications.discontinue_confirm'),
-          value: true,
-          destructive: true,
-        ),
-      ],
-    );
-    if (confirmed != true || !context.mounted) return;
-    final changed = await context.read<MedicationsCubit>().discontinue(plan);
-    if (!context.mounted) return;
-    if (changed) {
-      AppToast.show(context, 'toast.medication_stopped');
-      context.pop(true);
-      return;
-    }
-    _showFailure(context);
   }
 
   Future<void> _cancelPending(BuildContext context) async {
