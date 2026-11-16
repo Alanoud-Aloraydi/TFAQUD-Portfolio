@@ -14,6 +14,10 @@ String formatMedicationNumber(double value) =>
 String formatMedicationDate(BuildContext context, DateTime date) =>
     '${date.day} ${context.tr('circles.months.${date.month}')} ${date.year}';
 
+/// «نوفمبر 2026»: a month without its days, for the history filter.
+String formatMonth(BuildContext context, DateTime month) =>
+    '${context.tr('circles.months.${month.month}')} ${month.year}';
+
 /// «بدأ في 3 مارس 2026» for a plan without an end that has started by
 /// [today] (the patient's day), «يبدأ في 3 مارس 2026» for one yet to start
 /// (or with no [today]), «من 3 مارس 2026 إلى 3 أبريل 2026» for one with an

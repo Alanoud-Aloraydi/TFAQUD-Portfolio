@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app/core/services/permissions/app_permission.dart';
 import 'package:app/core/services/service_texts.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -75,17 +76,15 @@ const String snoozeTapPrefix = 'snooze-action:';
 /// Whether [tap] is the snooze action of a reminder, not a plain tap.
 bool isSnoozeTap(String tap) => tap.startsWith(snoozeTapPrefix);
 
-/// What [PhoneNotifications.taps] gives for a tapped server push (iOS):
-/// this, then the push's `kind` (backend `app/push`).
+/// What [PhoneNotifications.taps] gives for a tapped server push: this,
+/// its `kind`, then [pushItemSeparator] and the item (push_target.dart).
 const String pushTapPrefix = 'push:';
+const String pushItemSeparator = '#';
 
 /// The server's `kind` of a tapped push, or null for a reminder's tap.
-String? pushKind(String tap) =>
-    tap.startsWith(pushTapPrefix) ? tap.substring(pushTapPrefix.length) : null;
-
-/// The push kinds whose news waits in the notifications page (an invitation
-/// or a request to answer); every other kind opens «اليوم».
-const Set<String> inboxPushKinds = <String>{'invitation', 'circle_request'};
+String? pushKind(String tap) => tap.startsWith(pushTapPrefix)
+    ? tap.substring(pushTapPrefix.length).split(pushItemSeparator).first
+    : null;
 
 /// The notifications the app sets on the phone itself (no server and no
 /// push needed), on iOS and Android. Behind an interface, so the tests run
@@ -99,6 +98,10 @@ abstract interface class PhoneNotifications {
   /// show their question only the first time; later calls answer at once
   /// (older Android allows without asking). True when allowed.
   Future<bool> requestPermission();
+
+  /// What the phone allows now, without asking anything. Read it again on
+  /// every resume: the person may have changed it in the phone's Settings.
+  Future<AppPermission> permission();
 
   /// The scheduled notifications that have not shown yet: id to payload.
   Future<Map<int, String>> pending();
@@ -134,6 +137,12 @@ class PluginPhoneNotifications implements PhoneNotifications {
   bool _ready = false;
 
   static bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// The plugin's iOS side; null on Android.
+  IOSFlutterLocalNotificationsPlugin? get _ios => _plugin
+      .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin
+      >();
 
   /// The plugin's Android side; null on iOS.
   AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
@@ -241,17 +250,29 @@ class PluginPhoneNotifications implements PhoneNotifications {
   }
 
   @override
+  Future<AppPermission> permission() async {
+    if (!_ready) return AppPermission.notAsked;
+    final AndroidFlutterLocalNotificationsPlugin? android = _android;
+    if (android != null) {
+      final bool? enabled = await android.areNotificationsEnabled();
+      return enabled == true ? AppPermission.granted : AppPermission.denied;
+    }
+    final NotificationsEnabledOptions? options = await _ios?.checkPermissions();
+    if (options == null) return AppPermission.notAsked;
+    if (options.isEnabled) return AppPermission.granted;
+    // iOS «Deliver Quietly»: allowed, but with no alert and no sound.
+    if (options.isProvisionalEnabled) return AppPermission.partial;
+    return AppPermission.denied;
+  }
+
+  @override
   Future<bool> requestPermission() async {
     if (!_ready) return false;
     final AndroidFlutterLocalNotificationsPlugin? android = _android;
     if (android != null) {
       return await android.requestNotificationsPermission() ?? false;
     }
-    final IOSFlutterLocalNotificationsPlugin? ios = _plugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >();
-    return await ios?.requestPermissions(alert: true, sound: true) ?? false;
+    return await _ios?.requestPermissions(alert: true, sound: true) ?? false;
   }
 
   @override
@@ -282,6 +303,12 @@ class PluginPhoneNotifications implements PhoneNotifications {
           presentSound: true,
           sound: notificationSound,
           categoryIdentifier: notification.snoozable ? reminderCategory : null,
+          // A dose or a reading is due now: shown through a Focus and the
+          // Scheduled Summary, once the app has the Time Sensitive
+          // capability (Runner.entitlements); without it, as usual.
+          interruptionLevel: notification.snoozable
+              ? InterruptionLevel.timeSensitive
+              : InterruptionLevel.active,
         ),
         android: AndroidNotificationDetails(
           reminderChannel.id,

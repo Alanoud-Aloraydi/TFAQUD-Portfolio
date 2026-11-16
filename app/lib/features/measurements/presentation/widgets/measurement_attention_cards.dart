@@ -1,21 +1,24 @@
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/focus_mark.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_card.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_actions.dart';
+import 'package:app/features/measurements/presentation/widgets/reading_follow_up_button.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_status_pill.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_titles.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_value.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The cards of the attention box, drawn as readings are in «السجل»:
 /// «سجّل» and «تخطي» for a missed task (only «تخطي» once the next task of
@@ -26,39 +29,39 @@ List<Widget> measurementAttentionCards(
   List<MeasurementOccurrence> missed,
   List<MeasurementReading> outside, {
   required DateTime now,
+  String? circleId,
 }) => <Widget>[
   for (final MeasurementOccurrence task in missed)
-    MeasurementAttentionCard(
-      kind: task.kind,
-      title: _TaskTitle(task: task),
-      status: StatusBadge(
-        text: context.tr('measurements.unrecorded'),
-        tone: StatusTone.attention,
+    _focused(
+      circleId,
+      task,
+      MeasurementAttentionCard(
+        kind: task.kind,
+        title: _TaskTitle(task: task),
+        status: StatusBadge(
+          text: context.tr('measurements.unrecorded'),
+          tone: StatusTone.attention,
+        ),
+        // Once the next task of its kind is due a reading would answer that
+        // one: only «تخطي» stays, and this line says why.
+        lines: <Widget>[
+          Text(
+            context.tr(
+              task.supersededAt(now)
+                  ? 'measurements.superseded'
+                  : 'measurements.not_recorded',
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+        actions: <Widget>[
+          MeasurementTaskActions(
+            task: task,
+            superseded: task.supersededAt(now),
+            sayWhy: false,
+          ),
+        ],
       ),
-      // Once the next task of its kind is due a reading would answer that
-      // one: only «تخطي» stays, and this line says why.
-      lines: <Widget>[
-        Text(
-          context.tr(
-            task.supersededAt(now)
-                ? 'measurements.superseded'
-                : 'measurements.not_recorded',
-          ),
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-      actions: <Widget>[
-        if (!task.supersededAt(now))
-          FilledButton(
-            onPressed: () =>
-                showMeasurementReadingSheet(context, occurrence: task),
-            child: Text(context.tr('measurements.record_reading')),
-          ),
-        TextButton(
-          onPressed: () => skipMeasurement(context, task),
-          child: Text(context.tr('measurements.skip')),
-        ),
-      ],
     ),
   for (final MeasurementReading reading in outside)
     MeasurementAttentionCard(
@@ -76,24 +79,20 @@ List<Widget> measurementAttentionCards(
             style: Theme.of(context).textTheme.bodySmall,
           ),
       ],
-      actions: <Widget>[
-        TextButton(
-          onPressed: () async {
-            final String? messageKey = await context
-                .read<MeasurementReadingsCubit>()
-                .followUp(reading);
-            if (!context.mounted) return;
-            if (messageKey == null) {
-              AppToast.show(context, 'toast.follow_up_done');
-            } else {
-              showMeasurementMessage(context, messageKey);
-            }
-          },
-          child: Text(context.tr('measurements.follow_up')),
-        ),
-      ],
+      actions: <Widget>[ReadingFollowUpButton(reading: reading)],
     ),
 ];
+
+/// [card], tinted when a tapped notification is about [task].
+Widget _focused(String? circleId, MeasurementOccurrence task, Widget card) =>
+    circleId == null
+    ? card
+    : FocusMark(
+        itemKey: measurementSnoozeKey(circleId, task),
+        radius: AppRadius.m,
+        inset: const EdgeInsets.only(bottom: AppSpacing.xs),
+        child: card,
+      );
 
 /// A missed task's kind and time, and its day under them, as a reading's
 /// titles are.

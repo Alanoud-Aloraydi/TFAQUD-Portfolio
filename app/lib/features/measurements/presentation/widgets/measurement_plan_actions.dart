@@ -1,6 +1,6 @@
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

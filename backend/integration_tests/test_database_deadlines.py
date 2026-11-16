@@ -1,6 +1,6 @@
-"""The deadlines of app/config.py on a real PostgreSQL: a query past its
-time is stopped, the request answers 503, and migrations lift the limit
-only for themselves."""
+"""The deadlines of app/config/database.py on a real PostgreSQL: a query
+past its time is stopped, the request answers 503, and migrations lift the
+limit only for themselves."""
 
 import os
 from pathlib import Path

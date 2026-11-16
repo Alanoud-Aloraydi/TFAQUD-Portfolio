@@ -1,23 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/chart_band.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:equatable/equatable.dart';
 
-/// One normal band a month chart shades, and the legend's name for it.
-/// [inner] lies inside another band (fasting inside after a meal) and is
-/// shaded darker so both show.
-class ChartBand extends Equatable {
-  const ChartBand(this.low, this.high, this.labelKey, {this.inner = false});
-
-  final int low;
-  final int high;
-  final String labelKey;
-  final bool inner;
-
-  @override
-  List<Object?> get props => [low, high, labelKey, inner];
-}
+export 'package:app/features/measurements/domain/chart_band.dart';
 
 /// The normal bands of a month chart, from the ranges its readings were
 /// judged by (the latest reading's, if the medical file changed).

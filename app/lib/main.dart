@@ -1,28 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sizer/sizer.dart';
 
 import 'core/di/configure_dependencies.dart';
-import 'core/media/private_photo_repository.dart';
 import 'core/navigation/app_router.dart';
 import 'core/network/api_options.dart';
-import 'core/services/app_accessibility.dart';
 import 'core/services/fresh_install.dart';
 import 'core/services/phone_notifications.dart';
 import 'core/services/remote_push.dart';
-import 'core/services/shown_circle_clock.dart';
 import 'core/services/token_storage.dart';
 import 'core/setup.dart';
 import 'core/theme/app_theme.dart';
-import 'core/theme/components/navigation_themes.dart';
-import 'core/theme/materials/glass_preferences.dart';
-import 'core/widgets/feedback/push_setup_check.dart';
-import 'core/widgets/forms/keyboard_dismiss.dart';
-import 'core/widgets/patient_clock_scope.dart';
+import 'core/widgets/app_scopes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,35 +53,7 @@ class MainApp extends StatelessWidget {
       builder: (context, orientation, screenType) {
         return MaterialApp.router(
           routerConfig: AppRouter.router,
-          // Dark status bar icons on every page, also the ones without an
-          // app bar (the tabs draw their own glass top bar).
-          builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
-            value: AppNavigationThemes.systemBars,
-            child: RepositoryProvider<PrivatePhotoRepository>.value(
-              value: GetIt.I<PrivatePhotoRepository>(),
-              child: ValueListenableBuilder<bool>(
-                valueListenable: AppAccessibility.reduceTransparency,
-                builder: (context, reduceTransparency, _) => GlassPreferences(
-                  reduceTransparency: reduceTransparency,
-                  // Above the router, so a page opened on the root
-                  // navigator reads the same patient's clock.
-                  child: ValueListenableBuilder(
-                    valueListenable: GetIt.I<ShownCircleClock>(),
-                    builder: (context, clock, _) => PatientClockScope(
-                      clock: clock,
-                      // OneSignal's setup check, in a debug build only.
-                      child: PushSetupCheck(
-                        push: GetIt.I<RemotePush>(),
-                        navigatorKey:
-                            AppRouter.router.routerDelegate.navigatorKey,
-                        child: KeyboardDismissOnTap(child: child!),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          builder: (context, child) => AppScopes(child: child!),
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,

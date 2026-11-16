@@ -1,7 +1,9 @@
 import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
@@ -312,6 +314,29 @@ void main() {
       expect(request('appointment:c')?.kind, TodayTaskKind.appointment);
       expect(request('reminders:keep'), isNull);
       expect(request('dose:'), isNull);
+    });
+
+    test('a tapped push about a dose or a reading opens that task', () {
+      expect(
+        reminderRequest('push:dose_missed#c|s-1|2026-11-5'),
+        const ReminderRequest(
+          TodayTaskKind.medication,
+          taskKey: 'c|s-1|2026-11-5',
+        ),
+      );
+      expect(
+        reminderRequest('push:measurement_snoozed#c|measurement|v|08:00|d'),
+        const ReminderRequest(
+          TodayTaskKind.measurement,
+          taskKey: 'c|measurement|v|08:00|d',
+        ),
+      );
+      // A missed visit's time has passed: nothing to remind of.
+      expect(
+        reminderRequest('push:appointment_missed#c|appointment|a'),
+        isNull,
+      );
+      expect(reminderRequest('push:invitation#inbox|i'), isNull);
     });
 
     test('a reminder carries which dose it is about', () {

@@ -1,4 +1,4 @@
-"""Every error has the same shape (see app/errors.py)."""
+"""Every error has the same shape (see app/errors/)."""
 
 import pytest
 

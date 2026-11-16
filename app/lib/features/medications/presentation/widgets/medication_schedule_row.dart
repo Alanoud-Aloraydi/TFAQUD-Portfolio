@@ -9,7 +9,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:flutter/material.dart';
 
-/// One dose time in the card: the clock, «8:00 ص · 1 قرص», and under it
+/// One dose time in the card: the clock, «8:00 ص، 1 قرص», and under it
 /// the days and the note, with the rows' 16 side padding.
 class MedicationScheduleRow extends StatelessWidget {
   const MedicationScheduleRow({super.key, required this.schedule});
@@ -57,7 +57,7 @@ class MedicationScheduleRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$time · $dose',
+                    '$time، $dose',
                     style: text.bodyLarge,
                     semanticsLabel: spoken('$time، $dose'),
                   ),

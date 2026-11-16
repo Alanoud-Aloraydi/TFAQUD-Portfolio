@@ -3,11 +3,14 @@ import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/weekday_selector.dart';
+import 'package:app/core/widgets/layout/info_row.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
@@ -17,11 +20,16 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
+import 'package:app/features/measurements/domain/measurement_plan_draft.dart';
+import 'package:app/features/measurements/domain/measurement_version.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_plan_actions.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_ranges_box.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -280,27 +288,40 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: AppSpacing.inset),
-            child: Text(
-              context.tr('measurements.measurement'),
-              style: Theme.of(context).textTheme.titleSmall,
+          // The kind is chosen once, when the plan is made: an existing
+          // plan's readings belong to it. Editing shows it as a fact, not
+          // as a control that looks tappable and is not.
+          if (plan == null) ...<Widget>[
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.inset,
+              ),
+              child: Text(
+                context.tr('measurements.measurement'),
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          GlassSegmentedControl<MeasurementKind>(
-            segments: {
-              MeasurementKind.glucose: context.tr('measurements.glucose'),
-              MeasurementKind.bp: context.tr('measurements.bp'),
-            },
-            selected: _kind,
-            onChanged: plan == null
-                ? (value) => setState(() {
-                    _kind = value;
-                    _errorKey = null;
-                  })
-                : null,
-          ),
+            const SizedBox(height: AppSpacing.sm),
+            GlassSegmentedControl<MeasurementKind>(
+              segments: <MeasurementKind, String>{
+                MeasurementKind.glucose: context.tr('measurements.glucose'),
+                MeasurementKind.bp: context.tr('measurements.bp'),
+              },
+              selected: _kind,
+              onChanged: (value) => setState(() {
+                _kind = value;
+                _errorKey = null;
+              }),
+            ),
+          ] else
+            InsetGroup(
+              children: <Widget>[
+                InfoRow(
+                  label: context.tr('measurements.measurement'),
+                  value: measurementKindTitle(context, _kind),
+                ),
+              ],
+            ),
           if (existing != null) ...[
             const SizedBox(height: AppSpacing.md),
             // An action row: a pencil, the words, and a chevron.
@@ -420,6 +441,25 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
+          // Ending a plan belongs where it is edited, not only in its
+          // details: the readings already taken stay in «السجل», only the
+          // tasks still to come stop.
+          if (plan case final MeasurementPlan stoppable) ...<Widget>[
+            const SizedBox(height: AppSpacing.xl),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, AppSizes.touch),
+                  foregroundColor: AppSemanticColors.statusError,
+                ),
+                onPressed: _saving
+                    ? null
+                    : () => _stop(stoppable),
+                child: Text(context.tr('measurements.stop_plan')),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -491,6 +531,18 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         ),
       ),
     ];
+  }
+
+  /// Ends [plan] after the question, and leaves the form once it is done:
+  /// the plan it was editing no longer exists.
+  Future<void> _stop(MeasurementPlan plan) async {
+    await stopMeasurementPlan(context, plan);
+    if (!mounted) return;
+    final MeasurementPlansCubit cubit = context.read<MeasurementPlansCubit>();
+    final bool gone = cubit.state.plans.every(
+      (MeasurementPlan item) => item.id != plan.id || item.stoppedAt != null,
+    );
+    if (gone) Navigator.of(context).pop();
   }
 
   /// A new reading three hours after the last one (the same day), with the

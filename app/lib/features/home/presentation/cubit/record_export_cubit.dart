@@ -12,7 +12,7 @@ import 'package:app/features/home/domain/record_export_data.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
 import 'package:app/features/home/domain/services/record_exporter.dart';
 import 'package:app/features/home/presentation/cubit/record_export_state.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -84,7 +84,9 @@ class RecordExportCubit extends Cubit<RecordExportState> {
             ? await _chunked(period, _measurements.occurrences)
             : const [],
         appointments: appointments,
-        visits: options.detailed ? await _visitPapers(appointments) : const {},
+        visits: options.appointments
+            ? await _visitPapers(appointments)
+            : const <String, VisitPaper>{},
       );
       if (!isClosed) emit(state.copyWith(busy: false));
       return data;

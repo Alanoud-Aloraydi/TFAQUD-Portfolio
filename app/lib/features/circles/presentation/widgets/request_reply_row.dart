@@ -1,6 +1,7 @@
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
+/// A label that fills the row, with a widget (such as a badge) at its end.
 class RequestReplyRow extends StatelessWidget {
   const RequestReplyRow({super.key, required this.label, required this.child});
 

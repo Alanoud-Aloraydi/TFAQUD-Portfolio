@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/presentation/widgets/chart_zoom.dart';
+
+export 'package:app/features/measurements/presentation/widgets/readings_by_day.dart';
 
 /// The geometry of a month chart, shared by what draws it and what answers
 /// a tap, so the two can never disagree about where a bar is. Days run from
@@ -14,6 +17,7 @@ class ChartScale {
     required this.topValue,
     this.bottomValue = 0,
     this.step = 0,
+    this.view = ChartZoom.none,
   });
 
   factory ChartScale.of(
@@ -23,6 +27,7 @@ class ChartScale {
     int? targetHigh, {
     int? targetLow,
     MeasurementKind kind = MeasurementKind.glucose,
+    ChartZoom view = ChartZoom.none,
   }) {
     final List<int> values = <int>[
       for (final MeasurementReading reading in readings) ...<int>[
@@ -53,6 +58,7 @@ class ChartScale {
       topValue: top,
       bottomValue: values.isEmpty && targetHigh == null ? 0 : bottom,
       step: step,
+      view: view,
     );
   }
 
@@ -86,8 +92,22 @@ class ChartScale {
   /// Where the axis starts: readings live well above zero.
   final double bottomValue;
 
+  /// How far the days are spread, and scrolled.
+  final ChartZoom view;
+
   double get chartBottom => size.height - bottomPad;
-  double get slot => (size.width - labelWidth - chartLeft) / days;
+  double get right => size.width - labelWidth;
+  double get slot => plotWidth(size.width) * view.zoom / days;
+
+  /// The width the days share at zoom 1, in a chart [width] wide.
+  static double plotWidth(double width) => width - labelWidth - chartLeft;
+
+  /// The days labelled: all once there is room, else every other day,
+  /// else the start of each week.
+  List<int> get labelDays {
+    final int every = slot >= 24 ? 1 : (slot >= 13 ? 2 : 7);
+    return <int>[for (int day = 1; day <= days; day += every) day];
+  }
 
   double y(num value) =>
       chartBottom -
@@ -103,41 +123,21 @@ class ChartScale {
     ];
   }
 
-  double x(int day) => size.width - labelWidth - (day - .5) * slot;
+  double x(int day) => right - (day - .5) * slot + view.shift;
 
   /// The width of one bar when [count] readings share a day: thin enough
   /// that four on a nine-point day do not overlap into one blob.
   double barWidth(int count) => math.min(9, math.max(2, slot / count - 1));
 
-  /// The distance between the centres of bars that share a day.
-  double barStep(int count) =>
-      math.min(barWidth(count) + 1, math.max(3, slot / count));
+  /// The distance between the centres of bars that share a day: side by
+  /// side at zoom 1, apart once a zoom gives the day room to tap each.
+  double barStep(int count) => math.max(
+    math.min(barWidth(count) + 1, math.max(3, slot / count)),
+    slot * .6 / count,
+  );
 
   /// The centre of the [index]th of [count] bars on [day], the earliest at
   /// the right: time runs right to left inside a day too.
   double center(int day, int index, int count) =>
       x(day) - (index - (count - 1) / 2) * barStep(count);
-}
-
-/// The readings of [month] grouped by the day they fall on where the patient
-/// lives, never the phone's zone, each day in the order they were measured
-/// (the server sends the last recorded first).
-Map<int, List<MeasurementReading>> readingsByDay(
-  List<MeasurementReading> readings,
-  DateTime month,
-  PatientClock clock,
-) {
-  final Map<int, List<MeasurementReading>> byDay =
-      <int, List<MeasurementReading>>{};
-  for (final MeasurementReading reading in readings) {
-    final DateTime? moment = reading.measuredAt;
-    if (moment == null) continue;
-    final DateTime at = clock.wallTime(moment);
-    if (at.year != month.year || at.month != month.month) continue;
-    byDay.putIfAbsent(at.day, () => <MeasurementReading>[]).add(reading);
-  }
-  for (final List<MeasurementReading> day in byDay.values) {
-    day.sort((a, b) => a.measuredAt!.compareTo(b.measuredAt!));
-  }
-  return byDay;
 }

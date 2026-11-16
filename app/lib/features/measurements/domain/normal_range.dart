@@ -1,4 +1,4 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:equatable/equatable.dart';
 
 /// Where a reading falls in its normal range. The server judges every

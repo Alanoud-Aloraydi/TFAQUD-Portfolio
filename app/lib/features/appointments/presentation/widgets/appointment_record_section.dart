@@ -6,6 +6,8 @@ import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_series.dart';
+import 'package:app/features/appointments/presentation/appointment_record_filter.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
@@ -20,10 +22,15 @@ class AppointmentRecordSection extends StatefulWidget {
     super.key,
     required this.circleId,
     required this.header,
+    required this.canManage,
   });
 
   final String circleId;
   final Widget header;
+
+  /// Whether this viewer may edit the circle's appointments, which is also
+  /// what opens «ورقة الزيارة» for editing from here.
+  final bool canManage;
 
   @override
   State<AppointmentRecordSection> createState() =>
@@ -31,8 +38,7 @@ class AppointmentRecordSection extends StatefulWidget {
 }
 
 class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
-  static const List<String> _filters = <String>['all', 'upcoming', 'previous'];
-  String _filter = 'all';
+  AppointmentRecordFilter _filter = AppointmentRecordFilter.all;
 
   @override
   Widget build(BuildContext context) {
@@ -42,17 +48,18 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
       final bool upcoming =
           item.status == AppointmentStatus.scheduled &&
           !item.scheduledAt.isBefore(now);
-      return _filter == 'all' || (_filter == 'upcoming') == upcoming;
+      return _filter.keeps(isUpcoming: upcoming);
     }).toList()..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
     return ListView(
       padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
       children: <Widget>[
         widget.header,
         const SizedBox(height: AppSpacing.md),
-        WhiteFilterMenu<String>(
-          options: <String, String>{
-            for (final String key in _filters)
-              key: context.tr('appointments.filters.$key'),
+        WhiteFilterMenu<AppointmentRecordFilter>(
+          options: <AppointmentRecordFilter, String>{
+            for (final AppointmentRecordFilter value
+                in AppointmentRecordFilter.values)
+              value: context.tr(value.labelKey),
           },
           selected: _filter,
           onChanged: (value) => setState(() => _filter = value),
@@ -73,7 +80,8 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
             AppointmentCard(
               value: value,
               circleId: widget.circleId,
-              canManage: false,
+              canManage: widget.canManage,
+              series: AppointmentSeries.of(value, state.appointments),
             ),
             const SizedBox(height: AppItemCard.listGap),
           ],

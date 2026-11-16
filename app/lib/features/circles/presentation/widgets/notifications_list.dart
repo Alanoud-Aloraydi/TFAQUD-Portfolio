@@ -3,7 +3,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
-import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
+import 'package:app/features/circles/presentation/widgets/inbox_focus_mark.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_empty.dart';
 import 'package:app/features/circles/presentation/widgets/pending_invites_section.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -61,8 +61,7 @@ class PreviousNotificationsList extends StatelessWidget {
         children: <Widget>[
           if (previous.isEmpty)
             const NotificationsEmpty(messageKey: 'circles.previous_empty'),
-          for (final PreviousNotification item in previous)
-            PreviousNotificationCard(key: ValueKey(item.id), item: item),
+          ...previous.map(answeredFocusCard),
           if (previous.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),

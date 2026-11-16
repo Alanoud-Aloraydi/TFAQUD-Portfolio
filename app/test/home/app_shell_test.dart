@@ -1,6 +1,6 @@
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/fading_branches.dart';
-import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';

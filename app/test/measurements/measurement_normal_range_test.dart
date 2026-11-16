@@ -3,7 +3,8 @@ import '../support/widget_harness.dart';
 
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
@@ -141,17 +142,18 @@ void main() {
       expect(find.text('measurements.level.high'.tr()), findsWidgets);
     });
 
-    testWidgets('says the condition under the range, to change it', (
+    testWidgets('sends a change of condition to the medical file', (
       tester,
     ) async {
       await open(tester);
 
-      expect(find.text('measurements.range_condition'.tr()), findsOneWidget);
       expect(
         find.text('measurements.range_profile.bp_general'.tr()),
         findsWidgets,
       );
       expect(find.text('measurements.range_from_file'.tr()), findsOneWidget);
+      // As on the plan's form: no picker here, a row to the medical file.
+      expect(find.text('measurements.change_condition'.tr()), findsOneWidget);
     });
 
     testWidgets('a fasting glucose shows the fasting range', (tester) async {

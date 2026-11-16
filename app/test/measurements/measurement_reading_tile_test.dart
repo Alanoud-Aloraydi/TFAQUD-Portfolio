@@ -1,4 +1,5 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_tile.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;

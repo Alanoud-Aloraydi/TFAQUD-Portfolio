@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
 import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:flutter/cupertino.dart';
 

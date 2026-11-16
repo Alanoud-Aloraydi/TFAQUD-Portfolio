@@ -2,7 +2,8 @@ import 'dart:ui';
 
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/chart_target.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter_test/flutter_test.dart';

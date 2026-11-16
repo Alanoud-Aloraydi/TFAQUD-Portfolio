@@ -4,14 +4,13 @@ import 'package:app/features/home/presentation/widgets/prayer_period/period_open
 import 'package:app/features/home/presentation/widgets/prayer_period/photo_probe.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/prayer_clock.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/prayer_period_view.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:flutter/material.dart';
 
 /// One prayer period of «اليوم»: its name and time, and the doses, readings
-/// and visits that fall nearest to it. The period the patient is in is marked
-/// and open, like one that needs attention.
+/// and visits nearest to it. When it opens by itself: period_open_rule.dart.
 class TodayPrayerPeriod extends StatelessWidget {
   const TodayPrayerPeriod({
     super.key,
@@ -54,7 +53,12 @@ class TodayPrayerPeriod extends StatelessWidget {
         prayer: prayer,
         time: time,
         current: current,
-        open: periodStartsOpen(entries, now, current: current),
+        open: periodStartsOpen(
+          entries,
+          now,
+          current: current,
+          circleId: circleId,
+        ),
         rows: entries.sorted,
         circleId: circleId,
         canManage: canManage,

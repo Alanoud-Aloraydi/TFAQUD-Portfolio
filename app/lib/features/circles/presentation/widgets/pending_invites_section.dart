@@ -7,17 +7,18 @@ import 'package:app/features/circles/domain/entities/received_circle_request.dar
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
-import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
+import 'package:app/features/circles/presentation/widgets/accepted_request_card.dart';
+import 'package:app/features/circles/presentation/widgets/invitation_card.dart';
+import 'package:app/features/circles/presentation/widgets/request_card.dart';
+import 'package:app/features/circles/presentation/widgets/inbox_focus_mark.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// The invitations and requests that need a reply, shared by the
-/// notifications page and the start-of-onboarding page: a brand-new person
-/// may already have one waiting (someone invited them before they ever
-/// opened the app). On the start page an accepted invitation calls
-/// [onAccepted], which leaves for the circle, so the self/other choice
-/// below is skipped.
+/// The invitations and requests that need a reply, on the notifications
+/// page and the start-of-onboarding page (a brand-new person may have one
+/// waiting). There an accepted invitation calls [onAccepted], which leaves
+/// for the circle. The card a tapped push is about is outlined.
 class PendingInvitesSection extends StatelessWidget {
   const PendingInvitesSection({
     super.key,
@@ -101,6 +102,7 @@ class PendingInvitesSection extends StatelessWidget {
     final List<Widget> cards = <Widget>[
       for (final ReceivedInvitation invitation in state.inbox.invitations)
         InvitationCard(
+          key: ValueKey(invitation.id),
           invitation: invitation,
           busy: state.busyIds.contains(invitation.id),
           onAccept: () => _accept(context, invitation.id),
@@ -141,7 +143,7 @@ class PendingInvitesSection extends StatelessWidget {
                 ?.copyWith(color: context.tokens.textSecondary),
           ),
         ),
-        ...(truncated ? cards.take(cap) : cards),
+        ...(truncated ? cards.take(cap) : cards).map(inboxFocusMark),
         if (truncated)
           Align(
             alignment: AlignmentDirectional.centerStart,

@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:app/core/services/permissions/app_permission.dart';
 import 'package:app/core/widgets/forms/calendar_sync_choices.dart';
+import 'package:app/core/widgets/forms/permission_denied_row.dart';
 import 'package:app/core/widgets/layout/toggle_row.dart';
 import 'package:flutter/material.dart';
 
@@ -31,11 +33,24 @@ class _CircleCalendarState extends State<CalendarSyncCircleRow>
 
   @override
   Widget build(BuildContext context) {
-    return ToggleRow(
-      label: widget.name,
-      leading: widget.leading,
-      value: enabled ?? false,
-      onChanged: (bool value) => unawaited(setChoice(value)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ToggleRow(
+          label: widget.name,
+          leading: widget.leading,
+          value: enabled ?? false,
+          onChanged: (bool value) => unawaited(setChoice(value)),
+        ),
+        if (blocked)
+          const PermissionDeniedRow(
+            messageKey: 'circle_overview.calendar_access_denied',
+          )
+        else if (enabled == true && access == AppPermission.partial)
+          const PermissionDeniedRow(
+            messageKey: 'circle_overview.calendar_access_partial',
+          ),
+      ],
     );
   }
 }

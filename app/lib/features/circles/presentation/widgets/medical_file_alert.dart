@@ -1,48 +1,13 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
+import 'package:app/features/circles/presentation/widgets/medical_alert_title.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_fill_button.dart';
+import 'package:app/features/circles/presentation/widgets/medical_gaps_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-
-/// The yellow «!»: a honey circle with an exclamation mark. It marks a
-/// medical file that still has unknown answers. The text next to it says
-/// what is missing, so the color is never the only sign.
-class AttentionMark extends StatelessWidget {
-  const AttentionMark({super.key});
-
-  static const double _size = AppSizes.icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: Container(
-        width: _size,
-        height: _size,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: AppSemanticColors.accentWarm,
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          '!',
-          style: Theme.of(context).textTheme.titleSmall
-              ?.copyWith(color: AppSemanticColors.textPrimary, height: 1),
-        ),
-      ),
-    );
-  }
-}
-
-/// The words of the missing answers, joined: «فصيلة الدم، الأمراض المزمنة».
-String medicalGapsText(BuildContext context, List<MedicalGap> gaps) {
-  return gaps
-      .map((MedicalGap gap) => context.tr('medical_alert.gap.${gap.name}'))
-      .join(context.tr('medical_alert.separator'));
-}
 
 /// The box at the top of the medical file while answers are missing: the
 /// yellow «!», «أكمل الملف الطبي», what is missing, and «أكمل الآن» that
@@ -73,18 +38,7 @@ class MedicalFileAlert extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                const AttentionMark(),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    context.tr('medical_alert.title'),
-                    style: text.titleMedium,
-                  ),
-                ),
-              ],
-            ),
+            const MedicalAlertTitle(),
             const SizedBox(height: AppSpacing.xs),
             Text(
               context.tr(
@@ -97,15 +51,7 @@ class MedicalFileAlert extends StatelessWidget {
             ),
             if (fill != null) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
-              FilledButton.icon(
-                onPressed: fill,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppSemanticColors.textPrimary,
-                  foregroundColor: AppSemanticColors.surfaceContent,
-                ),
-                icon: const Icon(AppIcons.pencil, size: AppSizes.iconSmall),
-                label: Text(context.tr('medical_alert.fill')),
-              ),
+              MedicalFileFillButton(onPressed: fill),
             ],
           ],
         ),

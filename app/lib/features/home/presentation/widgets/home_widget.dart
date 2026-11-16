@@ -4,7 +4,7 @@ import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/navigation/glass.dart';
+import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
 import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';

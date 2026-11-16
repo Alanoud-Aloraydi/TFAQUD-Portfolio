@@ -186,7 +186,7 @@ void main() {
         // managers.
         expect(
           find.text(
-            '${'circle_overview.members_count_two'.tr()} · '
+            '${'circle_overview.members_count_two'.tr()}، '
             '${'circle_overview.invitations_one'.tr()}',
           ),
           findsOneWidget,
@@ -584,7 +584,7 @@ void main() {
         expect(find.text('emergency_card.no_allergies'.tr()), findsOneWidget);
         expect(find.text('medical.condition.diabetes'.tr()), findsOneWidget);
         expect(
-          find.text('خالد · ${'medical.relation.son'.tr()}'),
+          find.text('خالد، ${'medical.relation.son'.tr()}'),
           findsOneWidget,
         );
         expect(
@@ -592,7 +592,7 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text('هدى · ${'medical.relation.daughter'.tr()}'),
+          find.text('هدى، ${'medical.relation.daughter'.tr()}'),
           findsOneWidget,
         );
         // The ambulance button sits under the card.

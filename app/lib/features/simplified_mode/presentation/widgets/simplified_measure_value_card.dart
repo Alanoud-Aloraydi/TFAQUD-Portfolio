@@ -1,13 +1,13 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_frame.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// One typed measurement: the number large, its unit with it, and a frame
-/// that marks the field being filled in. Read out as a single value. A
-/// [small] card is one of a blood pressure's two numbers: its name at the
-/// start and the number at the end, one card under the other.
+/// One typed measurement, read out as a single value: the number large and
+/// its unit, in a [SimplifiedMeasureFrame]. A [small] card is one of a blood
+/// pressure's two numbers, its name at the start and the number at the end.
 class SimplifiedMeasureValueCard extends StatelessWidget {
   const SimplifiedMeasureValueCard({
     super.key,
@@ -49,17 +49,9 @@ class SimplifiedMeasureValueCard extends StatelessWidget {
         ),
       ),
       excludeSemantics: true,
-      child: Container(
-        constraints: BoxConstraints(minHeight: small ? 76 : 116),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: SimplifiedStyle.surface,
-          borderRadius: BorderRadius.circular(SimplifiedStyle.radius),
-          border: Border.all(
-            color: active ? SimplifiedStyle.ink : SimplifiedStyle.disabled,
-            width: active ? 3 : 2,
-          ),
-        ),
+      child: SimplifiedMeasureFrame(
+        active: active,
+        small: small,
         child: small
             ? Row(
                 children: <Widget>[

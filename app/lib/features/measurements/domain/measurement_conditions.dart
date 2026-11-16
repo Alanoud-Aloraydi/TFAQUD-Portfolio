@@ -1,4 +1,4 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 
 /// «ظروف القياس»: what was going on at a reading, one or more of them —
 /// after a meal and after exercise at once, say.

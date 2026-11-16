@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/services/push_target.dart';
 import 'package:app/core/services/remote_push.dart';
 import 'package:flutter/foundation.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -34,10 +35,11 @@ class OneSignalRemotePush implements RemotePush {
       kDebugMode ? OSLogLevel.verbose : OSLogLevel.error,
     );
     await OneSignal.initialize(oneSignalAppId);
-    // The server puts the push's `kind` in its data (app/push/sender.py).
+    // The server puts the push's `kind` and its item in its data
+    // (app/push/targets.py); a tap passes on both (push_target.dart).
     OneSignal.Notifications.addClickListener((OSNotificationClickEvent tap) {
-      final Object? kind = tap.notification.additionalData?['kind'];
-      if (kind is String && kind.isNotEmpty) _taps.add(kind);
+      final String? text = pushTapText(tap.notification.additionalData);
+      if (text != null) _taps.add(text);
     });
   }
 

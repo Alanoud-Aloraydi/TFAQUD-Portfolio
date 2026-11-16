@@ -74,7 +74,15 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 flask --app wsgi run               # the API on http://127.0.0.1:5000
 pytest                             # the tests
+python -m pycodestyle app tests integration_tests migrations
+python tool/check_size.py          # every file of app/ at most 100 lines
 ```
+
+Each file of `app/` does one job and has at most 100 lines. A big service
+class keeps its name and is put together from small parts, one file each
+(`class CareService(CareInvitations, CareMembers, ...)`), so its callers
+do not change. `tool/size_baseline.txt` lists the files still to split;
+they may only get shorter.
 
 Without a `.env` file the app starts in the `development` environment with a
 built-in secret key. This works on your computer only.
@@ -270,9 +278,16 @@ the app has run once, iOS plays its default sound).
 Render runs the scan every 10 minutes as a **Cron Job** (`tfaqud-tick` in
 `render.yaml`): its own short-lived process from the same image, with the
 same database and OneSignal settings as the API, which sends every push of
-the scan before it ends. It needs no URL and no secret, and runs even while
-the free API sleeps. A cron job costs at least $1 a month (billed by the
-second it runs). Locally, run `flask --app wsgi tick` when you want a scan.
+the scan before it ends. It needs no secret, and runs even while the free
+API sleeps. Each run first asks `KEEP_AWAKE_URL` (the API's `/api/v1/health`), so
+the free API never sleeps (`app/keep_awake.py`). A cron job costs at least $1
+a month (billed by the second it runs). Locally, run `flask --app wsgi tick`
+when you want a scan.
+
+Each API process also runs the scan every `SCAN_EVERY_SECONDS` (60 on
+Render, 0 in development and tests) from its first request on
+(`app/minute_scan.py`), so a missed task is told within about a minute; the
+cron job is the safety net. Claims keep every push to once.
 
 `POST /internal/tick` runs the same scan on request, only with the
 `X-Tick-Secret` header equal to `TICK_SECRET` (otherwise 404, the same as a
@@ -377,8 +392,10 @@ Blueprint's page.
 **Environment**, without a new commit.
 
 On the free plan the API sleeps after 15 minutes without requests and takes
-about a minute to wake, so the first request after a pause can fail once; the
-free database is deleted 30 days after it is made unless it is upgraded.
+about a minute to wake, so the first request after a pause can fail once.
+`tfaqud-tick` asks its `/health` every 10 minutes (`KEEP_AWAKE_URL`), which
+keeps it awake: about 730 of the 750 free hours a month. The free database
+is deleted 30 days after it is made unless it is upgraded.
 
 ## Flutter in Chrome
 
@@ -391,4 +408,4 @@ The code is in `app/cors.py`.
 ## Settings
 
 All settings come from environment variables. `.env.example` lists every one of
-them with a comment. The rules are in `app/config.py`.
+them with a comment. The rules are in `app/config/`.

@@ -1,6 +1,7 @@
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/home/domain/overdue_tasks.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final DateTime _today = DateTime(2026, 11, 11);

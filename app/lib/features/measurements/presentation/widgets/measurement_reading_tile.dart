@@ -1,6 +1,7 @@
 import 'package:app/core/widgets/layout/record_item_card.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_extras.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_status_pill.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_titles.dart';

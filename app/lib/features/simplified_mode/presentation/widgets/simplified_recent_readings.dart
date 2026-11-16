@@ -1,4 +1,5 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_reading_row.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -46,8 +47,14 @@ class SimplifiedRecentReadings extends StatelessWidget {
           ),
           child: Column(
             children: <Widget>[
-              for (final MeasurementReading reading in shown)
-                SimplifiedReadingRow(reading: reading, kind: kind, now: now),
+              for (final (int index, MeasurementReading reading)
+                  in shown.indexed)
+                SimplifiedReadingRow(
+                  reading: reading,
+                  kind: kind,
+                  now: now,
+                  divided: index > 0,
+                ),
             ],
           ),
         ),

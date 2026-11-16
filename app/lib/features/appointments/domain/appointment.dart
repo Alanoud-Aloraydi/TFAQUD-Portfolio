@@ -87,6 +87,7 @@ class CareAppointment extends Equatable {
     required this.companions,
     required this.status,
     required this.updatedAt,
+    this.seriesId,
     this.createdByName,
     this.updatedByName,
     this.createdBy,
@@ -104,6 +105,11 @@ class CareAppointment extends Equatable {
   final String? place;
   final String? remoteMethod;
   final List<AppointmentCompanion> companions;
+
+  /// The booking this visit was saved with, when several dates were chosen
+  /// at once; null for a visit on its own. It ties them for «الزيارة 2 من
+  /// 6» and nothing else: an edit here never reaches the others.
+  final String? seriesId;
 
   /// The accounts going with the patient.
   Iterable<String> get companionIds =>
@@ -171,6 +177,7 @@ class AppointmentDraft extends Equatable {
     required this.place,
     required this.remoteMethod,
     required this.companionAccountIds,
+    this.alsoOn = const <DateTime>[],
   });
 
   /// The clinic or doctor as typed; null when not given.
@@ -183,6 +190,10 @@ class AppointmentDraft extends Equatable {
   final String? remoteMethod;
   final List<String> companionAccountIds;
 
+  /// The other dates booked at the same time, each saved as its own visit
+  /// with these same answers. Empty for a visit on its own.
+  final List<DateTime> alsoOn;
+
   @override
   List<Object?> get props => [
     specialty,
@@ -193,5 +204,6 @@ class AppointmentDraft extends Equatable {
     place,
     remoteMethod,
     companionAccountIds,
+    alsoOn,
   ];
 }

@@ -1,3 +1,4 @@
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -12,20 +13,23 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/measurement_limits.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/condition_file_row.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
-import 'package:app/features/measurements/presentation/widgets/range_condition_row.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_number_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
+import 'package:app/features/measurements/domain/measurement_moment.dart';
 
 /// Opens «تسجيل قراءة» over [context], whose [MeasurementReadingsCubit]
 /// saves it: the answer to [occurrence], the task the person chose, or a
@@ -167,7 +171,11 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
         .record(draft, clock: clock, occurrence: widget.occurrence);
     if (!mounted) return;
     if (errorKey == null) {
+      // Read before the sheet closes: its own messenger goes with it.
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+      final String saved = context.tr('toast.reading_saved');
       Navigator.of(context).pop(true);
+      AppToast.showText(messenger, saved);
     } else {
       setState(() {
         _saving = false;
@@ -248,10 +256,10 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                 range: range,
                 level: _levelIn(range),
                 footer: context.tr('measurements.range_from_file'),
-                // The condition can change here, as on the plan's form.
-                action: RangeConditionRow(
+                // The condition is the medical file's, as on the plan's
+                // form: changed there, and the range follows.
+                action: ConditionFileRow(
                   circleId: context.read<MeasurementReadingsCubit>().circleId!,
-                  range: range,
                 ),
               ),
             ],

@@ -5,14 +5,11 @@ import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 
-/// The patient's data as label-value lines. The blood type and the phone
-/// numbers are set left to right on their own, so the page never reverses
-/// them. Contacts are written only when [withContacts] is on.
-RecordPdfSection patientSection(
-  BuildContext context,
-  MedicalFile file, {
-  required bool withContacts,
-}) => RecordPdfSection(
+/// The patient's data as label-value lines. The blood type is set left to
+/// right on its own, so the page never reverses it. The emergency contacts
+/// are not written: their names and numbers stay inside the app.
+RecordPdfSection patientSection(BuildContext context, MedicalFile file) =>
+    RecordPdfSection(
   title: context.tr('record_export.medical_file'),
   rows: <RecordPdfRow>[
     RecordPdfRow(
@@ -37,12 +34,5 @@ RecordPdfSection patientSection(
       label: context.tr('circles.conditions'),
       value: MedicalTexts.conditions(context, file.profile.conditions),
     ),
-    if (withContacts)
-      for (final contact in file.contacts)
-        RecordPdfRow(
-          label: MedicalTexts.relation(context, contact),
-          value: contact.name,
-          extra: MedicalTexts.phone(contact),
-        ),
   ],
 );

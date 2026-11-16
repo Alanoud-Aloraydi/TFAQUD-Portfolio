@@ -12,7 +12,7 @@ from app.models import Account
 from app.models import CareCircle, CareCircleManager
 
 
-def test_conflict_is_safe_and_next_request_still_works(database):
+def test_conflict_is_safe_and_next_request_still_works(database, caplog):
     """Reject an invalid write with a stable response, then reuse the app."""
     app = create_app(
         "testing", overrides={"SQLALCHEMY_DATABASE_URI": database.url}
@@ -29,6 +29,9 @@ def test_conflict_is_safe_and_next_request_still_works(database):
     assert response.status_code == 409
     assert response.get_json()["error"]["code"] == "data_conflict"
     assert "private-invalid-value" not in response.get_data(as_text=True)
+    # The log names the rule that refused the write, never the value.
+    assert "ck_account_phone_format" in caplog.text
+    assert "private-invalid-value" not in caplog.text
     assert client.get("/api/v1/health").status_code == 200
     with app.app_context():
         db.engine.dispose()

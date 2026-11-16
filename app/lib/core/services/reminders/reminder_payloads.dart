@@ -6,7 +6,8 @@
 library;
 
 import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/core/services/reminders/item_keys.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 
 /// What a dose reminder's payload starts with; the circle's id follows.
@@ -107,8 +108,7 @@ String measurementSnoozeKey(String circleId, MeasurementOccurrence task) {
 /// The circle a tapped reminder is about, or null for the note and for
 /// notifications that are not reminders.
 String? reminderCircleId(String payload) {
-  // A snooze action's tap, and the words after the circle, are not part of
-  // the circle's id.
+  // Not the circle's id: a snooze action's prefix, the words, a visit's id.
   final String plain =
       (isSnoozeTap(payload)
               ? payload.substring(snoozeTapPrefix.length)
@@ -123,7 +123,7 @@ String? reminderCircleId(String payload) {
     measurementSnoozePayload,
   ]) {
     if (plain.startsWith(prefix) && plain.length > prefix.length) {
-      return plain.substring(prefix.length);
+      return plain.substring(prefix.length).split(appointmentIdMark).first;
     }
   }
   return null;

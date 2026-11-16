@@ -90,7 +90,7 @@ services:
       - key: TICK_SECRET
         sync: false
 
-  # The scheduled notification scan (backend/app/push/scheduled.py): every
+  # The scheduled notification scan (backend/app/push/scheduled/): every
   # 10 minutes, a missed dose, measurement or appointment, and a task put
   # off that came again, each told once. Its own short-lived process from
   # the API's image, so it runs even while the free API sleeps. A cron job
@@ -139,3 +139,7 @@ services:
           type: web
           name: tfaqud-api
           envVarKey: ONESIGNAL_API_KEY
+      # Asked at the start of each run, so the free API never sleeps
+      # (Render stops it after 15 minutes without a request).
+      - key: KEEP_AWAKE_URL
+        value: https://tfaqud-api.onrender.com/api/v1/health

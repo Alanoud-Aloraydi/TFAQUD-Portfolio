@@ -65,7 +65,7 @@ class MedicationPendingBox extends StatelessWidget {
   ) => schedules
       .map(
         (schedule) =>
-            '${clockText(schedule.time)} · '
+            '${clockText(schedule.time)}، '
             '${formatMedicationDose(context, schedule.doseValue, schedule.doseUnit)}',
       )
       .join('، ');

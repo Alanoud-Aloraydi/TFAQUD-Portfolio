@@ -13,18 +13,6 @@ import 'package:multiple_result/multiple_result.dart';
 
 void main() {
   group('MedicationsCubit', () {
-    test('record filter changes without reloading plans', () {
-      final repository = _PlansRepository();
-      final cubit = MedicationsCubit(MedicationsUseCase(repository));
-      addTearDown(cubit.close);
-
-      expect(cubit.state.recordFilter, MedicationRecordFilter.all);
-      cubit.setRecordFilter(MedicationRecordFilter.previous);
-
-      expect(cubit.state.recordFilter, MedicationRecordFilter.previous);
-      expect(repository.calls, isEmpty);
-    });
-
     test('an older circle response cannot replace the latest circle', () async {
       final repository = _PlansRepository();
       final cubit = MedicationsCubit(MedicationsUseCase(repository));

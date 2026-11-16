@@ -234,7 +234,6 @@ size lib/features/measurements/presentation/widgets/measurement_task_details.dar
 size lib/features/measurements/presentation/widgets/measurement_task_row.dart 79
 size lib/features/measurements/presentation/widgets/measurement_task_status.dart 97
 size lib/features/measurements/presentation/widgets/normal_range_card.dart 176
-size lib/features/measurements/presentation/widgets/range_condition_row.dart 95
 size lib/features/measurements/presentation/widgets/reading_extras.dart 72
 size lib/features/medications/data/datasources/medications_remote_data_source.dart 174
 size lib/features/medications/data/models/medication_plan_model.dart 116
@@ -305,7 +304,6 @@ size lib/features/simplified_mode/presentation/widgets/simplified_done_message.d
 size lib/features/simplified_mode/presentation/widgets/simplified_family_member.dart 92
 size lib/features/simplified_mode/presentation/widgets/simplified_home_body.dart 145
 size lib/features/simplified_mode/presentation/widgets/simplified_late_dose_card.dart 197
-size lib/features/simplified_mode/presentation/widgets/simplified_measure_value_card.dart 73
 size lib/features/simplified_mode/presentation/widgets/simplified_medical_file_contact_card.dart 91
 size lib/features/simplified_mode/presentation/widgets/simplified_next_card.dart 231
 size lib/features/simplified_mode/presentation/widgets/simplified_page.dart 126
@@ -318,4 +316,3 @@ size lib/features/simplified_mode/presentation/widgets/simplified_style.dart 101
 size lib/features/simplified_mode/presentation/widgets/simplified_text_scale.dart 80
 size lib/features/simplified_mode/presentation/widgets/simplified_text_size_card.dart 101
 size lib/features/simplified_mode/presentation/widgets/task_visuals.dart 135
-size lib/main.dart 95

@@ -46,12 +46,12 @@ RecordPdfDocument buildRecordDocument(
     ],
     sections: <RecordPdfSection>[
       if (file != null)
-        patientSection(context, file, withContacts: options.contacts),
+        patientSection(context, file),
       if (options.medications || options.measurements || options.appointments)
         summarySection(context, data),
       if (options.measurements) measurementSection(context, data),
       if (options.medications) medicationSection(context, data),
-      if (options.medications && options.detailed)
+      if (options.medications && options.doseLog)
         doseLogSection(context, data),
       if (options.appointments) appointmentSection(context, data),
     ],

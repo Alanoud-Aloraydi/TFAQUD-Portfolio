@@ -4,7 +4,7 @@ from datetime import time
 
 import pytest
 
-from app.snoozes.due import clock_text, minutes_text
+from app.snoozes.arabic_texts import clock_text, minutes_text
 
 
 @pytest.mark.parametrize(

@@ -37,12 +37,6 @@ class RecordExportOptionsList extends StatelessWidget {
                   ? (bool v) => onChanged(options.copyWith(patient: v))
                   : null,
             ),
-            if (hasMedicalFile && options.patient)
-              _CheckRow(
-                label: context.tr('record_export.include_contacts'),
-                checked: options.contacts,
-                onChanged: (bool v) => onChanged(options.copyWith(contacts: v)),
-              ),
             _CheckRow(
               label: context.tr('record_export.measurements'),
               checked: options.measurements,
@@ -55,6 +49,12 @@ class RecordExportOptionsList extends StatelessWidget {
               onChanged: (bool v) =>
                   onChanged(options.copyWith(medications: v)),
             ),
+            if (options.medications)
+              _CheckRow(
+                label: context.tr('record_export.dose_log_option'),
+                checked: options.doseLog,
+                onChanged: (bool v) => onChanged(options.copyWith(doseLog: v)),
+              ),
             _CheckRow(
               label: context.tr('record_export.appointments'),
               checked: options.appointments,

@@ -1,4 +1,6 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:equatable/equatable.dart';
 
 enum MeasurementLoadStatus { initial, loading, ready, failure }

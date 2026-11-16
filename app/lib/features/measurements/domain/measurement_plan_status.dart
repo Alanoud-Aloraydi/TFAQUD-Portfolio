@@ -1,5 +1,5 @@
 import 'package:app/core/widgets/status/plan_status.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
 
 /// Reads a measurement plan's [PlanStatus] for a given day. A measurement
 /// plan has no end date, so it never completes: it is stopped or it goes on.

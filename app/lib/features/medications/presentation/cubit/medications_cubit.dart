@@ -59,7 +59,6 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         MedicationsState(
           status: MedicationsStatus.ready,
           plans: plans,
-          recordFilter: state.recordFilter,
         ),
       ),
       (failure) {
@@ -111,8 +110,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
           MedicationsState(
             status: MedicationsStatus.ready,
             plans: plans,
-            recordFilter: state.recordFilter,
-          ),
+            ),
         );
       },
       (failure) {
@@ -165,8 +163,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
           MedicationsState(
             status: MedicationsStatus.ready,
             plans: [...state.plans, plan],
-            recordFilter: state.recordFilter,
-          ),
+            ),
         );
         return true;
       },
@@ -243,8 +240,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
           MedicationsState(
             status: MedicationsStatus.ready,
             plans: plans,
-            recordFilter: state.recordFilter,
-          ),
+            ),
         );
         return true;
       },
@@ -258,11 +254,6 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         return false;
       },
     );
-  }
-
-  void setRecordFilter(MedicationRecordFilter filter) {
-    if (filter == state.recordFilter) return;
-    emit(state.copyWith(recordFilter: filter));
   }
 
   @override
