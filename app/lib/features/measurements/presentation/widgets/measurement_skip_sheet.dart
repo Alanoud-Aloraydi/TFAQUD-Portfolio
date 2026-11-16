@@ -3,7 +3,6 @@ import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 import 'package:app/features/measurements/domain/measurement_skip_reason.dart';
-import 'package:app/features/measurements/presentation/models/measurement_reading_draft.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

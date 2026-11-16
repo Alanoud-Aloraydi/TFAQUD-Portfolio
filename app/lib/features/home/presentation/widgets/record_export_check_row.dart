@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 /// [onChanged] greys it.
 class RecordExportCheckRow extends StatelessWidget {
   const RecordExportCheckRow({
+    super.key,
     required this.label,
     required this.checked,
     required this.onChanged,

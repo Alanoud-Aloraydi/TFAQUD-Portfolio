@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class StepperHalfButton extends StatelessWidget {
   const StepperHalfButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.onPressed,

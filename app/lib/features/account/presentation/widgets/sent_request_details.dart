@@ -13,7 +13,11 @@ import 'package:flutter/material.dart';
 
 /// What the sheet holds: the number, the mode, the status, and «إلغاء الطلب».
 class SentRequestDetails extends StatelessWidget {
-  const SentRequestDetails({required this.cubit, required this.request});
+  const SentRequestDetails({
+    super.key,
+    required this.cubit,
+    required this.request,
+  });
 
   final AccountCubit cubit;
   final SentCircleRequest request;

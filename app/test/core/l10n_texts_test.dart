@@ -1,14 +1,15 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/greeting.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/features/home/data/models/home_model.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 void main() {
   group('ArabicCounts', () {

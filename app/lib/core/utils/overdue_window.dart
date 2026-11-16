@@ -1,4 +1,4 @@
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 
 /// How many patient days before today a task can still be answered from
 /// «اليوم» (taken, skipped, read or closed). Older ones leave the tab; the

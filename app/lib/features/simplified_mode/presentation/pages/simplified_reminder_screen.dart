@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement.dart';

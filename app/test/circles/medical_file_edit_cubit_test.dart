@@ -1,6 +1,6 @@
 import '../support/circles_fakes.dart';
+
 import 'package:app/core/errors/auth_failures.dart';
-import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';

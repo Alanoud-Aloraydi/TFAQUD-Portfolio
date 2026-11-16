@@ -1,7 +1,7 @@
 import '../support/circles_fakes.dart';
+
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/data_failures.dart';
-import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';

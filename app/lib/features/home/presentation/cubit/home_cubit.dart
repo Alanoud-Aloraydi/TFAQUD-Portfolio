@@ -1,6 +1,6 @@
 import 'dart:async';
+
 import 'package:app/core/errors/auth_failures.dart';
-import 'package:app/core/errors/failure.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';

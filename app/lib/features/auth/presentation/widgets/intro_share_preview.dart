@@ -17,7 +17,7 @@ import 'package:flutter/material.dart';
 
 /// Page 2: the members of the circle, and a dark note over them.
 class IntroSharePreview extends StatelessWidget {
-  const IntroSharePreview({required this.enter});
+  const IntroSharePreview({super.key, required this.enter});
 
   final Animation<double> enter;
 

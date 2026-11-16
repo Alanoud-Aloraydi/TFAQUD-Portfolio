@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:app/core/errors/failure.dart';
+
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/errors/storage_failures.dart';
 import 'package:app/core/network/auth_interceptor.dart';

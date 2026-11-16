@@ -1,4 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:equatable/equatable.dart';
 
 /// What the visit is for; the form groups these by [AppointmentKindGroup].

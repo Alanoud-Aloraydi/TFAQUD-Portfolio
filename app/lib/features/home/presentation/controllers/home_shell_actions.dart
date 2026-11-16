@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';

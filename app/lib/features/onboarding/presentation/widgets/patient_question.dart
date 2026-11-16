@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// cared-for person uses the app, as two [ChoiceCard]s the width of the
 /// cards above.
 class PatientQuestion extends StatelessWidget {
-  const PatientQuestion({required this.state});
+  const PatientQuestion({super.key, required this.state});
 
   final OnboardingState state;
 

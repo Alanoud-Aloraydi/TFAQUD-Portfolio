@@ -1,7 +1,6 @@
 import '../support/widget_harness.dart';
 
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
-import 'package:app/features/medications/presentation/widgets/medication_basic_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_instructions_group.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

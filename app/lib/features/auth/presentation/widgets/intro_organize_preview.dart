@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 /// Page 1: the dark «الجرعة القادمة» card, and under it a reading and a
 /// visit, each a little turned.
 class IntroOrganizePreview extends StatelessWidget {
-  const IntroOrganizePreview({required this.enter});
+  const IntroOrganizePreview({super.key, required this.enter});
 
   final Animation<double> enter;
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';

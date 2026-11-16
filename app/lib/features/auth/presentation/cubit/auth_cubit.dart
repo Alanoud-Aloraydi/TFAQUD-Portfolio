@@ -1,4 +1,3 @@
-import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/storage_failures.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';

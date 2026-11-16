@@ -1,4 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:flutter/widgets.dart';
 
 /// Gives the pages below it the [PatientClock] of the circle on screen, so

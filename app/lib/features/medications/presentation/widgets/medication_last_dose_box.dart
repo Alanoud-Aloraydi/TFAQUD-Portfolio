@@ -1,13 +1,10 @@
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/widgets/layout/plan_info_box.dart';
 import 'package:app/core/widgets/layout/recorder_line.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
+import 'package:app/features/medications/presentation/widgets/dose_skip_reason_text.dart';
+import 'package:app/features/medications/presentation/widgets/medication_last_dose_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -32,7 +29,10 @@ class MedicationLastDoseBox extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(_text(context, last), style: small),
+            Text(
+              medicationLastDoseText(context, circleId: circleId, last: last),
+              style: small,
+            ),
             if (last?.recordedByName case final String name)
               RecorderLine(
                 name: name,
@@ -57,24 +57,6 @@ class MedicationLastDoseBox extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  String _text(BuildContext context, MedicationLastRecord? last) {
-    if (last == null) return context.tr('medications.no_recorded_dose');
-    final DateTime? taken = last.takenAt == null
-        ? null
-        : PatientClockScope.of(context).wallTime(last.takenAt!);
-    return CareVoice.tr(
-      context,
-      circleId,
-      last.outcome == DoseOutcome.taken
-          ? 'medications.last_taken_record'
-          : 'medications.last_skipped_record',
-      args: <String>[
-        formatMedicationDate(context, taken ?? last.scheduledOn),
-        taken == null ? clockText(last.time) : wallTimeText(taken),
-      ],
     );
   }
 }

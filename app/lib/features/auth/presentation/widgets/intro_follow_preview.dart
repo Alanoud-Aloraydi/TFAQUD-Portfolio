@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 
 /// Page 3: the person switcher of the top bar, and the list it opens.
 class IntroFollowPreview extends StatelessWidget {
-  const IntroFollowPreview({required this.enter});
+  const IntroFollowPreview({super.key, required this.enter});
 
   final Animation<double> enter;
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 /// A centered message with one button under it.
 class HomeNotice extends StatelessWidget {
   const HomeNotice({
+    super.key,
     required this.message,
     required this.actionLabel,
     required this.onAction,

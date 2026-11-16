@@ -12,7 +12,7 @@ import 'package:app/core/services/reminders/reminder_plan.dart';
 export 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';

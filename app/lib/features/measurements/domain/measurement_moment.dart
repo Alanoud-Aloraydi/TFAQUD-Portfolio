@@ -1,5 +1,7 @@
 import 'package:app/core/utils/patient_clock.dart';
 
+import 'package:app/core/utils/schedule_day.dart';
+
 /// The latest moment, not after now on [clock], whose patient wall time is
 /// [time] («HH:mm»): today's, or yesterday's while today's is still to
 /// come. A reading can only be in the past, so «11:50 م» picked at 12:10

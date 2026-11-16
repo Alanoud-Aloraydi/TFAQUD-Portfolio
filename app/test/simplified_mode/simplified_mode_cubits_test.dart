@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
@@ -7,7 +8,6 @@ import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
-import 'package:app/features/measurements/presentation/models/measurement_reading_draft.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';

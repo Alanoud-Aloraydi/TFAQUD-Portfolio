@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 /// The four levels side by side, lowest at the start, each with its name
 /// and values; the one of [level] framed and bold.
 class NormalRangeScale extends StatelessWidget {
-  const NormalRangeScale({required this.range, this.level});
+  const NormalRangeScale({super.key, required this.range, this.level});
 
   final NormalRange range;
   final MeasurementLevel? level;

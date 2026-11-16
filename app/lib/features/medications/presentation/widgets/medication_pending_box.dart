@@ -1,10 +1,9 @@
-import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/plan_info_box.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/presentation/widgets/medication_schedule_summary.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -42,12 +41,15 @@ class MedicationPendingBox extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              _summary(context, current.schedules),
+              medicationScheduleSummary(context, current.schedules),
               style: text.bodySmall?.copyWith(
                 decoration: TextDecoration.lineThrough,
               ),
             ),
-            Text(_summary(context, pending.schedules), style: text.bodyMedium),
+            Text(
+              medicationScheduleSummary(context, pending.schedules),
+              style: text.bodyMedium,
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               CareVoice.tr(context, circleId, 'medications.effective_hint'),
@@ -58,15 +60,4 @@ class MedicationPendingBox extends StatelessWidget {
       ),
     );
   }
-
-  String _summary(
-    BuildContext context,
-    List<MedicationSchedule> schedules,
-  ) => schedules
-      .map(
-        (schedule) =>
-            '${clockText(schedule.time)}، '
-            '${formatMedicationDose(context, schedule.doseValue, schedule.doseUnit)}',
-      )
-      .join('، ');
 }

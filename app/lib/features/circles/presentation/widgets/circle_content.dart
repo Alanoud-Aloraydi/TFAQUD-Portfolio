@@ -25,7 +25,7 @@ import 'package:go_router/go_router.dart';
 
 /// Renders the circle content element of circle tab screen.
 class CircleContent extends StatelessWidget {
-  const CircleContent({required this.circle});
+  const CircleContent({super.key, required this.circle});
 
   final CareCircleSummary circle;
 

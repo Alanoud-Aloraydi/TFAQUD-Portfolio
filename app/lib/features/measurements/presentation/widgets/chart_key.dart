@@ -4,7 +4,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 class ChartKey extends StatelessWidget {
-  const ChartKey(this.color, this.label);
+  const ChartKey(this.color, this.label, {super.key});
 
   final Color color;
   final String label;

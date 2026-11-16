@@ -1,7 +1,7 @@
 import '../support/circles_fakes.dart';
 import '../support/home_fakes.dart';
 import '../support/widget_harness.dart';
-import 'package:app/core/errors/failure.dart';
+
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';

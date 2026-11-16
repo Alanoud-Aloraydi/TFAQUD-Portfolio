@@ -1,7 +1,7 @@
 import '../support/app_shell_harness.dart';
 import '../support/circles_fakes.dart';
 import '../support/home_fakes.dart';
-import 'package:app/core/errors/failure.dart';
+
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/core/widgets/pickers/city_sheet.dart';

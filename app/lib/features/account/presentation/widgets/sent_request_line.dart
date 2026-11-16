@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 /// Renders the line element of sent request sheet.
 class SentRequestLine extends StatelessWidget {
-  const SentRequestLine({required this.label, required this.child});
+  const SentRequestLine({super.key, required this.label, required this.child});
 
   final String label;
   final Widget child;

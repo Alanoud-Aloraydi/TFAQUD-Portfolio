@@ -14,7 +14,6 @@ import 'package:app/features/measurements/presentation/cubit/measurement_load_st
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
-import 'package:app/features/measurements/presentation/models/measurement_reading_draft.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

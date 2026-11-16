@@ -11,7 +11,11 @@ import 'package:flutter/material.dart';
 /// («بنذكّرك 2:36 م»), and opens the ruler again. Put off by someone else
 /// in the circle, it says until when and who («مؤجّلة إلى 2:36 م، لين»).
 class SnoozeButton extends StatefulWidget {
-  const SnoozeButton({required this.occurrence, required this.circleId});
+  const SnoozeButton({
+    super.key,
+    required this.occurrence,
+    required this.circleId,
+  });
 
   final DoseOccurrence occurrence;
   final String circleId;

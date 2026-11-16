@@ -1,5 +1,6 @@
 import 'package:app/core/l10n/appointment_texts.dart';
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/duration_text.dart';
+import 'package:app/core/l10n/greeting.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart'
     show SharedSnooze, TaskSnooze;

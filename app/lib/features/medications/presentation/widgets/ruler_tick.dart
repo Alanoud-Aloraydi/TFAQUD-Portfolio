@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 /// One mark: a long one with its words under it, or a short one between.
 class RulerTick extends StatelessWidget {
-  const RulerTick({required this.major, this.label});
+  const RulerTick({super.key, required this.major, this.label});
 
   final bool major;
   final String? label;

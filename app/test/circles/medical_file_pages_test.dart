@@ -1,8 +1,8 @@
 import '../support/app_shell_harness.dart';
 import '../support/circles_fakes.dart';
 import '../support/home_fakes.dart';
+
 import 'package:app/core/errors/auth_failures.dart';
-import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
@@ -17,6 +17,7 @@ import 'package:app/features/circles/presentation/pages/emergency_card_screen.da
 import 'package:app/features/circles/presentation/pages/medical_file_edit_screen.dart';
 import 'package:app/features/circles/presentation/pages/medical_file_screen.dart';
 import 'package:app/features/circles/presentation/widgets/circle_card.dart';
+
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/shell/widgets/app_bottom_bar.dart';
 import 'package:easy_localization/easy_localization.dart';

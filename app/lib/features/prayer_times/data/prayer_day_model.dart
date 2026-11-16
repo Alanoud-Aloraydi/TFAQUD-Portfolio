@@ -1,4 +1,4 @@
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 
 /// Maps prayer day data between the API and app.

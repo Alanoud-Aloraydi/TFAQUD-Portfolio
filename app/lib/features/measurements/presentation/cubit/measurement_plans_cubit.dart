@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';

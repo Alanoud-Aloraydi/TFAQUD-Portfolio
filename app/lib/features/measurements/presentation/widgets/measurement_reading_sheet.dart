@@ -17,12 +17,12 @@ import 'package:app/features/measurements/domain/measurement_conditions.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_limits.dart';
 import 'package:app/features/measurements/domain/measurement_moment.dart';
+
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
-import 'package:app/features/measurements/presentation/models/measurement_reading_draft.dart';
 import 'package:app/features/measurements/presentation/widgets/condition_file_row.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
