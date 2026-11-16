@@ -22,12 +22,11 @@ enum SimplifiedButtonTone {
   /// own buttons.
   final TaskButtonRole? role;
 
-  /// Its fill, the colour of its words, and its edge. A task's edge is
-  /// 2px, as this mode draws every edge, and it is what tells a pale fill
-  /// from the card behind it.
+  /// Its fill, the colour of its words, and its edge. A task's button has
+  /// no edge, as in the detailed mode: its fill, words and icon say it.
   (Color, Color, BorderSide) get paint {
     if (role case final TaskButtonRole role) {
-      return (role.fill, role.ink, BorderSide(color: role.edge, width: 2));
+      return (role.fill, role.ink, BorderSide.none);
     }
     return switch (this) {
       primary => (

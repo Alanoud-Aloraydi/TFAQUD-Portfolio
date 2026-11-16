@@ -30,12 +30,10 @@ class AttentionBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        // Not a yellow wash, and not the page's own colour either: that
-        // left the group invisible at 1.00 against the canvas. This violet
-        // is the plan's tint one step down, so the group is seen and the
-        // white cards on it stand out more than before, not less.
-        color: AppSemanticColors.surfaceAttention,
-        border: Border.all(color: AppSemanticColors.borderAttention),
+        // The simplified mode's cream: lighter than the honey of the
+        // badges, so the white cards on it stand out and it does not shout.
+        color: AppSemanticColors.surfaceAttentionGroup,
+        border: Border.all(color: AppSemanticColors.borderAttentionGroup),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

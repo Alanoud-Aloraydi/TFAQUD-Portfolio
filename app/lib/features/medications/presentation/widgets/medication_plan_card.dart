@@ -59,7 +59,13 @@ class MedicationPlanCard extends StatelessWidget {
         today: today,
       ),
       detailsLabel: context.tr('medications.details'),
-      details: medicationPlanDetails(context, circleId: circleId, plan: plan),
+      details: medicationPlanDetails(
+        context,
+        circleId: circleId,
+        plan: plan,
+        canManage: canManage,
+        today: today,
+      ),
     );
   }
 }

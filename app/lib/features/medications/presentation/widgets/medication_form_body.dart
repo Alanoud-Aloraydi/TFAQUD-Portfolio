@@ -47,10 +47,7 @@ class MedicationFormBody extends StatelessWidget {
             issue: state.issue,
             onChanged: state.changed,
           ),
-          MedicationFormFooter(
-            errorKey: state.errorKey,
-            plan: state.widget.plan,
-          ),
+          MedicationFormFooter(errorKey: state.errorKey),
         ],
       ),
     );

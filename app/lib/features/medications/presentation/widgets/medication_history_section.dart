@@ -1,15 +1,16 @@
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
+import 'package:app/features/medications/presentation/medication_record_filter.dart';
 import 'package:app/features/medications/presentation/widgets/medication_history_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// «السجل»'s medicines: the plans of [circleId] that are already behind.
-/// The tab is the record, so it holds what has been; the running
-/// medicines are «الخطة»'s, and a filter between the two offered a
-/// choice that was empty on one side or the other.
-class MedicationHistorySection extends StatelessWidget {
+/// «السجل»'s medicines: the plans of [circleId] under a filter, as the
+/// readings and the visits have — «الكل», «الحالية», «السابقة». It opens
+/// on «الكل». The filter picks among plans already loaded, so it is this
+/// page's state, not the cubit's.
+class MedicationHistorySection extends StatefulWidget {
   const MedicationHistorySection({
     super.key,
     required this.circleId,
@@ -18,6 +19,14 @@ class MedicationHistorySection extends StatelessWidget {
 
   final String circleId;
   final Widget header;
+
+  @override
+  State<MedicationHistorySection> createState() =>
+      _MedicationHistorySectionState();
+}
+
+class _MedicationHistorySectionState extends State<MedicationHistorySection> {
+  MedicationRecordFilter _filter = MedicationRecordFilter.all;
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +39,11 @@ class MedicationHistorySection extends StatelessWidget {
           _ => 'content',
         },
         child: MedicationHistoryContent(
-          circleId: circleId,
-          header: header,
+          circleId: widget.circleId,
+          header: widget.header,
           state: state,
+          filter: _filter,
+          onFilterChanged: (value) => setState(() => _filter = value),
         ),
       ),
     );

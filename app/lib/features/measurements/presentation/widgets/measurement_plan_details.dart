@@ -1,8 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/core/widgets/buttons/stop_button.dart';
 import 'package:app/core/widgets/display/weekday_strip.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
@@ -90,16 +89,9 @@ List<Widget> measurementPlanDetails(
         ],
       ),
     if (canManage)
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: const Size(0, AppItemCard.touch),
-            foregroundColor: AppSemanticColors.statusError,
-          ),
-          onPressed: () => stopMeasurementPlan(context, plan),
-          child: Text(context.tr('measurements.stop_plan')),
-        ),
+      StopButton(
+        label: context.tr('measurements.stop_plan'),
+        onPressed: () => stopMeasurementPlan(context, plan),
       ),
   ];
 }

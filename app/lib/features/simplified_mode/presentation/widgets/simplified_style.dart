@@ -49,7 +49,8 @@ abstract final class SimplifiedStyle {
   static const Color accentStrong = AppSemanticColors.actionStrong;
   static const Color accentTint = AppSemanticColors.selectedSurface;
   static const Color success = AppSemanticColors.statusSuccess;
-  static const Color attention = AppSemanticColors.surfaceAttentionCard;
+  static const Color attention = AppSemanticColors.surfaceAttentionGroup;
+  static const Color attentionBorder = AppSemanticColors.borderAttentionGroup;
   static const Color attentionEdge = AppSemanticColors.accentWarm;
   static const Color attentionInk = AppSemanticColors.statusWarning;
   static const Color danger = AppSemanticColors.statusError;
@@ -58,15 +59,15 @@ abstract final class SimplifiedStyle {
   static const Color onDarkMuted = AppSemanticColors.onInkSupporting;
   static const Color clear = AppSemanticColors.transparent;
 
-  /// The thin, soft edge of the attention card: the honey at half.
-  static Color get attentionLine => attentionEdge.withValues(alpha: .5);
-
   /// The calm dark ground of a full-screen reminder, like a call: one
   /// colour, never a gradient.
   static const Color reminderGround = AppSemanticColors.textPrimary;
 
-  /// The ground of «تم، يعطيك العافية»: one colour, the brand lavender.
-  static const Color doneGround = AppSemanticColors.actionPrimary;
+  /// The ground of «تم، يعطيك العافية»: one colour, the light lavender.
+  static const Color doneGround = AppSemanticColors.selectedSurface;
+
+  /// Something done, in the detailed mode's «تم أخذها»: the pale green.
+  static const Color successTint = AppSemanticColors.surfaceSuccess;
 
   static TextStyle head(
     double size, {

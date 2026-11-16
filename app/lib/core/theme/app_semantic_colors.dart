@@ -55,15 +55,15 @@ abstract class AppSemanticColors {
   static const Color borderPlan = AppColors.slatePale;
 
   static const Color surfaceAttention = AppColors.honeyLight;
-  static const Color surfaceAttentionCard = AppColors.honeyCard;
+  static const Color surfaceAttentionGroup = AppColors.cream;
+  static const Color borderAttentionGroup = AppColors.creamEdge;
   static const Color borderAttention = AppColors.honeyBorder;
   static const Color doseTrack = AppColors.slatePale;
   static const Color doseDueMarker = AppColors.honeyDeep;
   static const Color statusSuccess = AppColors.success;
   static const Color statusInfo = AppColors.info;
 
-  /// The readings drawn on a month chart: the violet's own ink, so the
-  /// line and the dots belong to the palette and not to the text.
+  /// The readings on a month chart: the violet's own ink, not the text's.
   static const Color chartInk = AppColors.inkViolet;
 
   /// The fill of a status badge. «سارية» had the selected row's violet and

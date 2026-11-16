@@ -1,11 +1,11 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_lines.dart';
-import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:flutter/material.dart';
 
-/// One dose in a medicine's history: its time and timing, the medicine and
-/// dose, and who recorded it.
+/// One dose in a medicine's history: its time and what became of it with
+/// who recorded it, the medicine and dose. What became of it is a pill in
+/// the corner, as on «جدول اليوم», not a box of its own under the dose.
 class DoseOccurrenceCard extends StatelessWidget {
   const DoseOccurrenceCard({
     super.key,
@@ -24,16 +24,7 @@ class DoseOccurrenceCard extends StatelessWidget {
       container: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            DoseOccurrenceLines(occurrence: occurrence),
-            if (occurrence.record != null) ...<Widget>[
-              const SizedBox(height: AppSpacing.md),
-              DoseRecordControls(occurrence: occurrence, circleId: circleId),
-            ],
-          ],
-        ),
+        child: DoseOccurrenceLines(occurrence: occurrence, circleId: circleId),
       ),
     );
   }

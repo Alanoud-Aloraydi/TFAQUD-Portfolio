@@ -1,15 +1,15 @@
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/utils/history_filter.dart';
-import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
+import 'package:app/core/widgets/navigation/glass_filter_button.dart';
 import 'package:app/core/widgets/navigation/history_filter_sections.dart';
 import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 
-/// The one filter of a history: a capsule that opens a menu of two
-/// groups, the months that have records and who recorded. Two capsules
-/// stood side by side before, each hiding half the answer; one says it
-/// whole — «الكل», «أكتوبر 2026», «لينا», or both.
+/// The one filter of a history: a round button, without words, that opens
+/// a menu of two groups, the months that have records and who recorded.
+/// Filled once something is chosen; what is chosen is read out whole —
+/// «الكل», «أكتوبر 2026», «لينا», or both.
 class HistoryFilters extends StatefulWidget {
   const HistoryFilters({
     super.key,
@@ -51,10 +51,9 @@ class _HistoryFiltersState extends State<HistoryFilters> {
       child: Builder(
         builder: (BuildContext anchor) => Opacity(
           opacity: _menuOpen ? 0 : 1,
-          child: GlassCapsuleButton(
+          child: GlassFilterButton(
             label: label,
-            semanticLabel: label,
-            icon: CupertinoIcons.slider_horizontal_3,
+            active: widget.filter != HistoryFilter.all,
             onPressed: () => _open(anchor, label),
           ),
         ),
@@ -67,7 +66,7 @@ class _HistoryFiltersState extends State<HistoryFilters> {
     final String? chosen = await showGlassMenu<String>(
       anchorContext: anchor,
       semanticLabel: label,
-      anchorContent: Text(label),
+      anchorContent: GlassFilterButton.mark,
       sections: historyFilterSections(
         context,
         months: widget.months,
