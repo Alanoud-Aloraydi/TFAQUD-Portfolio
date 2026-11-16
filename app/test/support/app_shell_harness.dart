@@ -30,7 +30,6 @@ import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
@@ -50,6 +49,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 
 import 'circles_fakes.dart';
 import 'home_fakes.dart';

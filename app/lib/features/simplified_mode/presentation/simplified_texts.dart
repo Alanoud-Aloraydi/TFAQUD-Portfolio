@@ -4,7 +4,7 @@ import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart'
     show SharedSnooze, TaskSnooze;
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
@@ -33,7 +33,7 @@ String simplifiedClockAt(BuildContext context, DateTime at) {
 }
 
 /// «سأذكّرك 2:09 مساءً» on [task] of [circleId] while this phone put it
-/// off ([snoozes]); «التذكير مؤجّل إلى 2:09 مساءً · لين» while someone else
+/// off ([snoozes]); «التذكير مؤجّل إلى 2:09 مساءً، لين» while someone else
 /// in the circle did; null for any other task, or once its reminder came.
 String? simplifiedSnoozed(
   BuildContext context,
@@ -74,7 +74,7 @@ String simplifiedGreeting(
   dhuhr: prayers?.times[Prayer.dhuhr],
 );
 
-/// «اليوم · الجمعة 6 نوفمبر».
+/// «اليوم، الجمعة 6 نوفمبر».
 String simplifiedToday(BuildContext context, DateTime now) {
   final DateTime day = PatientClockScope.of(context).today(now);
   return context.tr(

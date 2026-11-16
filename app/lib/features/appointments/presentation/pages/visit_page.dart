@@ -8,7 +8,6 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
@@ -18,6 +17,7 @@ import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
 import 'package:app/features/appointments/presentation/widgets/show_visit_edit_sheet.dart';
 import 'package:app/features/appointments/presentation/widgets/visit_fill_once.dart';
+import 'package:app/features/appointments/presentation/widgets/visit_title_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -48,29 +48,7 @@ class VisitPage extends StatelessWidget {
         automaticallyImplyLeading: false,
         centerTitle: true,
         titleSpacing: AppSpacing.lg,
-        title: GlassSurface(
-          borderRadius: BorderRadius.circular(AppRadius.capsule),
-          child: SizedBox(
-            height: 52,
-            child: Row(
-              children: [
-                TextButton.icon(
-                  onPressed: context.pop,
-                  icon: const Icon(CupertinoIcons.arrow_right),
-                  label: Text(context.tr('common.back')),
-                ),
-                Expanded(
-                  child: Text(
-                    context.tr('appointments.visit_title'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                const SizedBox(width: 88),
-              ],
-            ),
-          ),
-        ),
+        title: const VisitTitleBar(),
       ),
       body: state.status == AppointmentsLoadStatus.loading || visit.loading
           ? const Center(child: CircularProgressIndicator())
@@ -114,7 +92,7 @@ class VisitPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               Text(
-                '${appointmentDate(context, appointment.scheduledOn)} · '
+                '${appointmentDate(context, appointment.scheduledOn)}، '
                 '${clockText(appointment.time)}',
                 style: Theme.of(context).textTheme.bodyMedium,
                 semanticsLabel: spoken(
@@ -123,7 +101,7 @@ class VisitPage extends StatelessWidget {
                 ),
               ),
               Text(
-                '${appointment.kind == AppointmentKind.remote ? context.tr('appointments.${appointment.remoteMethod}') : appointment.place ?? ''} · '
+                '${appointment.kind == AppointmentKind.remote ? context.tr('appointments.${appointment.remoteMethod}') : appointment.place ?? ''}، '
                 '${appointmentCompanionLine(context, appointment)}',
                 style: Theme.of(context).textTheme.bodySmall,
                 semanticsLabel: spoken(

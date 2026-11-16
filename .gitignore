@@ -45,3 +45,6 @@ backend/secrets/
 
 # Flutter golden test output (made again by every failing run)
 app/test/failures/
+
+# Asks tool/watch_checks.ps1 for a test run; the run deletes it.
+app/tool/run_tests.flag

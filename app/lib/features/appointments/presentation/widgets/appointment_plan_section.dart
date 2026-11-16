@@ -6,6 +6,7 @@ import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_series.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
@@ -67,6 +68,7 @@ class AppointmentPlanSection extends StatelessWidget {
               circleId: circleId,
               canManage: canManage,
               showRelativeDate: true,
+              series: AppointmentSeries.of(value, values),
             ),
             const SizedBox(height: AppItemCard.listGap),
           ],

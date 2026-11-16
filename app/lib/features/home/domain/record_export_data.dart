@@ -4,7 +4,8 @@ import 'package:app/features/appointments/domain/visit_paper.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/home/domain/export_period.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 

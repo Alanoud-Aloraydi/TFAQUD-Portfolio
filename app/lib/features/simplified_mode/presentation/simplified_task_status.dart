@@ -11,8 +11,8 @@ import 'package:flutter/widgets.dart';
 /// A late task says how long it has been late, because «فات موعده» alone
 /// does not say whether that was five minutes or five hours, which is what
 /// decides whether to take it now. A done task says when it was pressed
-/// and who pressed «أخذته»: «تم 4:30 مساءً · بواسطتك» when the patient
-/// did, «تم 4:30 مساءً · بواسطة سارة» when someone of the family did.
+/// and who pressed «أخذته»: «تم 4:30 مساءً، بواسطتك» when the patient
+/// did, «تم 4:30 مساءً، بواسطة سارة» when someone of the family did.
 String simplifiedTaskStatus(
   BuildContext context,
   TodayTask task,
@@ -36,5 +36,5 @@ String _doneBy(BuildContext context, TodayTask task, SimplifiedDay day) {
   final SimplifiedDone? done = simplifiedDone(task);
   final String at = simplifiedDoneAt(context, done);
   final String? by = simplifiedDoneBy(context, done, day);
-  return by == null ? at : '$at · $by';
+  return by == null ? at : '$at، $by';
 }

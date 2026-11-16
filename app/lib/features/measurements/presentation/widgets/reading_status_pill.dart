@@ -1,5 +1,5 @@
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,7 +28,7 @@ class ReadingStatusPill extends StatelessWidget {
     }
     return StatusBadge(
       icon: outside == false
-          ? CupertinoIcons.checkmark_circle
+          ? CupertinoIcons.checkmark_circle_fill
           : CupertinoIcons.minus_circle,
       text: context.tr(
         outside == false

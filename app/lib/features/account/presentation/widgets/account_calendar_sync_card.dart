@@ -1,5 +1,7 @@
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/core/widgets/forms/notifications_denied_watcher.dart';
+import 'package:app/core/widgets/forms/permission_denied_row.dart';
 import 'package:app/core/widgets/layout/section_title.dart';
 import 'package:app/core/widgets/layout/settings_icon_tile.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
@@ -23,6 +25,11 @@ class AccountCalendarSyncCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const NotificationsDeniedWatcher(
+          row: PermissionDeniedRow(
+            messageKey: 'circle_overview.notifications_denied',
+          ),
+        ),
         SectionTitle(context.tr('circle_overview.calendar_sync_title')),
         CalendarSyncCircleList(
           circles: <CalendarSyncCircle>[

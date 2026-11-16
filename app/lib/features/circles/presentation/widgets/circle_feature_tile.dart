@@ -5,7 +5,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/features/circles/presentation/widgets/medical_file_alert.dart';
+import 'package:app/features/circles/presentation/widgets/attention_mark.dart';
 import 'package:flutter/material.dart';
 
 /// A tile under the patient card: an outline icon, its name and one line

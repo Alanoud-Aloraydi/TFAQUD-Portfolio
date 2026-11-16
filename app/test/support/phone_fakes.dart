@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/permissions/app_permission.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
@@ -28,11 +29,17 @@ class FakePhoneNotifications implements PhoneNotifications {
   @override
   Future<void> initialize() async {}
 
+  /// What [permission] answers; granted unless a test sets another.
+  AppPermission allowed = AppPermission.granted;
+
   @override
   Future<bool> requestPermission() async {
     permissionRequests++;
     return true;
   }
+
+  @override
+  Future<AppPermission> permission() async => allowed;
 
   @override
   Future<Map<int, String>> pending() async => <int, String>{
@@ -100,12 +107,34 @@ class FakeDoseReminders extends Fake implements DoseReminders {
 /// The calendar sync, kept in memory. [on] holds the switched-on
 /// `circleId:category` pairs; everything else is counted.
 class FakeCalendarSync extends Fake implements CalendarSync {
-  FakeCalendarSync([Set<String>? on]) : on = on ?? <String>{};
+  FakeCalendarSync([Set<String>? on, this.access = AppPermission.granted])
+    : on = on ?? <String>{};
 
   final Set<String> on;
   final List<List<ReminderCircle>> synced = <List<ReminderCircle>>[];
   int refreshes = 0;
   int clears = 0;
+
+  /// What the phone's calendar answers. A test of a refused calendar sets
+  /// it to [AppPermission.denied] before the ask, or to
+  /// [AppPermission.notAsked] to have [requestPermission] decide.
+  AppPermission access;
+
+  /// What [requestPermission] gives once asked; null keeps [access].
+  AppPermission? grantOnRequest;
+
+  /// How many times the phone was asked, so a test can tell «asked and
+  /// allowed» from «allowed all along».
+  int requests = 0;
+
+  @override
+  Future<AppPermission> permission() async => access;
+
+  @override
+  Future<AppPermission> requestPermission() async {
+    requests++;
+    return access = grantOnRequest ?? access;
+  }
 
   @override
   Future<bool> isEnabled(

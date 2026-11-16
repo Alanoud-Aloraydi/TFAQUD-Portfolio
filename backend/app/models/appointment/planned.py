@@ -22,6 +22,10 @@ class Appointment(db.Model):
     care_circle_id: Mapped[UUID] = mapped_column(
         ForeignKey("care_circle.id", ondelete="CASCADE"), index=True
     )
+    # Visits booked together (migration 0058) share this; null for a visit
+    # on its own. It ties them for the words «الزيارة 2 من 6» and nothing
+    # else: an edit to one never reaches the others.
+    series_id: Mapped[UUID | None] = mapped_column(index=True)
     # The clinic or doctor, as typed; null when not given.
     specialty: Mapped[str | None] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(Text)

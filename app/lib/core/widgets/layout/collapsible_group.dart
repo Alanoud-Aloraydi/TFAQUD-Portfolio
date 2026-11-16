@@ -31,9 +31,14 @@ class CollapsibleGroup extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
+      // The group held the page's own background, so it read as nothing:
+      // a frame around white cards with no surface of its own. A cool grey
+      // sets it apart from both the page and the cards inside it, without
+      // the alarm of a warm tint — the group gathers what waits, it is not
+      // a warning in itself.
       decoration: BoxDecoration(
-        color: AppSemanticColors.background,
-        border: Border.all(color: AppSemanticColors.borderSubtle),
+        color: AppSemanticColors.borderPlan,
+        border: Border.all(color: AppSemanticColors.borderControlBase),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

@@ -37,6 +37,12 @@ abstract class AppSemanticColors {
   static const Color settingsTileAppointments = AppColors.slateSoft;
   static const Color onSettingsTile = AppColors.inkViolet;
 
+  /// The action that must stand out on a tinted surface: the pale
+  /// [actionPrimary] reaches only 1.8:1 on the honey card of the simplified
+  /// mode, under the 3:1 a control needs. This deep violet reaches 11.3:1
+  /// there and 12.1:1 on white, in the same hue, and carries white words.
+  static const Color actionStrong = AppColors.inkViolet;
+
   /// The fixed mark over a ruler picker's chosen number: the brand's green
   /// deep enough to stand out on white (above 3:1), unlike the pale leaf.
   static const Color pickerMark = AppColors.success;

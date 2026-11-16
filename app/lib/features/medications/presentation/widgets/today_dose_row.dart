@@ -55,7 +55,7 @@ class TodayDoseRow extends StatelessWidget {
     return CareItemRow(
       time: clockText(occurrence.time),
       // The name first, then the clock: a day of four doses otherwise
-      // opens every row with a number. «·» is not read aloud.
+      // opens every row with a number.
       spokenLabel: <String>[
         title,
         clockText(occurrence.time),
@@ -73,7 +73,7 @@ class TodayDoseRow extends StatelessWidget {
       title: title,
       subtitle: occurrence.instructions == null
           ? dose
-          : '$dose · ${occurrence.instructions}',
+          : '$dose، ${occurrence.instructions}',
       details: <Widget>[
         if (status.lateBy case final String lateBy)
           Text(lateBy, style: Theme.of(context).textTheme.bodySmall),

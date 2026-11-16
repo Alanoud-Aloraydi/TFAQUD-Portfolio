@@ -1,5 +1,6 @@
 import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,8 +14,8 @@ void showMeasurementMessage(BuildContext context, String? messageKey) {
   AppToast.show(context, messageKey, kind: ToastKind.error);
 }
 
-/// «تخطي» on [task]; a refused answer shows its message. The tasks read
-/// again by themselves once it is saved.
+/// «تخطي» on [task]: a saved skip confirms, a refused one shows why. The
+/// tasks read again by themselves once it is saved.
 Future<void> skipMeasurement(
   BuildContext context,
   MeasurementOccurrence task,
@@ -25,7 +26,9 @@ Future<void> skipMeasurement(
     task,
     draft,
   );
-  if (context.mounted) showMeasurementMessage(context, messageKey);
+  if (!context.mounted) return;
+  if (messageKey != null) return showMeasurementMessage(context, messageKey);
+  AppToast.show(context, 'toast.measurement_skipped');
 }
 
 /// «قياس السكر» or «قياس الضغط» for [kind].

@@ -23,6 +23,13 @@ class AppointmentRequest(Dto):
     remote_method: Literal["video", "phone"] | None = None
     # Who goes with the patient: none, one or more managers of the circle.
     companion_account_ids: list[UUID] = Field(default_factory=list)
+    # The dates of the other visits booked at the same time, each saved as
+    # its own appointment with the same kind, time, place and companions.
+    # Empty for a visit on its own; the clinic's sheet is rarely longer
+    # than a year of monthly visits.
+    also_on: Annotated[list[date], Field(max_length=23)] = Field(
+        default_factory=list
+    )
 
     @model_validator(mode="after")
     def valid_location(self):
@@ -42,6 +49,10 @@ class AppointmentRequest(Dto):
             set(self.companion_account_ids)
         ):
             raise ValueError("Appointment companions must be unique.")
+        # Every date of a series once, and none of them the first.
+        series = [self.scheduled_on, *self.also_on]
+        if len(series) != len(set(series)):
+            raise ValueError("Appointment dates must be unique.")
         # A remote visit has its method and no place; any other has a place.
         if self.kind == "remote":
             if self.remote_method is None or self.place is not None:

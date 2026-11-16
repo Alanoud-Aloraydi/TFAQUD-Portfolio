@@ -1,6 +1,7 @@
 import 'dart:ui';
 
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_hit.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_zoom.dart';

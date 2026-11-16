@@ -5,46 +5,46 @@ import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The two filters of a history side by side: the day, among [days] that
-/// have records, and who recorded, among [people] (key to name). «كل
-/// الأيام» and «كل الأشخاص» show everything.
+/// The two filters of a history side by side: the month, among [months]
+/// that have records, and who recorded, among [people] (key to name). «كل
+/// الشهور» and «كل الأشخاص» show everything.
 class HistoryFilters extends StatelessWidget {
   const HistoryFilters({
     super.key,
-    required this.days,
+    required this.months,
     required this.people,
     required this.filter,
     required this.onChanged,
   });
 
-  final List<DateTime> days;
+  final List<DateTime> months;
   final Map<String, String> people;
   final HistoryFilter filter;
   final ValueChanged<HistoryFilter> onChanged;
 
-  static String _key(DateTime day) => day.toIso8601String();
+  static String _key(DateTime month) => month.toIso8601String();
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, String> dayOptions = <String, String>{
-      '': context.tr('history.all_days'),
-      for (final DateTime day in days)
-        _key(day): formatMedicationDate(context, day),
+    final Map<String, String> monthOptions = <String, String>{
+      '': context.tr('history.all_months'),
+      for (final DateTime month in months)
+        _key(month): formatMonth(context, month),
     };
     final Map<String, String> personOptions = <String, String>{
       '': context.tr('history.all_people'),
       ...people,
     };
-    final String day = filter.day == null ? '' : _key(filter.day!);
+    final String month = filter.month == null ? '' : _key(filter.month!);
     final String person = filter.person ?? '';
     return Row(
       children: <Widget>[
         Flexible(
           child: WhiteFilterMenu<String>(
-            options: dayOptions,
-            selected: dayOptions.containsKey(day) ? day : '',
+            options: monthOptions,
+            selected: monthOptions.containsKey(month) ? month : '',
             onChanged: (String value) => onChanged(
-              filter.withDay(value.isEmpty ? null : DateTime.parse(value)),
+              filter.withMonth(value.isEmpty ? null : DateTime.parse(value)),
             ),
           ),
         ),

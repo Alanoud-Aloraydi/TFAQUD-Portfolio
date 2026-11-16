@@ -3,7 +3,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/focus_mark.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
-import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
+import 'package:app/features/circles/presentation/widgets/previous_notification_card.dart';
 import 'package:flutter/widgets.dart';
 
 /// A card of the bell's «الحالية», keyed by its invitation's or request's

@@ -36,10 +36,10 @@ class AttentionMedicationCard extends StatelessWidget {
         '${occurrence.name} ${doseStrengthText(context, occurrence)}';
     final String when =
         '${formatMedicationDate(context, occurrence.scheduledOn)}'
-        ' · ${clockText(occurrence.time)}';
+        '، ${clockText(occurrence.time)}';
     final String how = occurrence.instructions == null
         ? dose
-        : '$dose · ${occurrence.instructions}';
+        : '$dose، ${occurrence.instructions}';
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -67,8 +67,7 @@ class AttentionMedicationCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.tight),
               Expanded(
                 // One node for the three lines, read in one breath and
-                // opening with the medicine. «·» is a separator on the
-                // screen, not a word: the label joins with «، ».
+                // opening with the medicine.
                 child: MergeSemantics(
                   child: Semantics(
                     button: true,

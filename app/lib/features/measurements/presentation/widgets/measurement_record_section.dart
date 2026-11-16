@@ -4,10 +4,12 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/measurement_record_filter.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_chart_card.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_readings_history.dart';
 import 'package:app/features/measurements/presentation/widgets/month_switcher.dart';
@@ -45,7 +47,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
 
   /// The month shown; the patient's current one at first.
   late DateTime _month = _thisMonth;
-  String _filter = 'all';
+  MeasurementRecordFilter _filter = MeasurementRecordFilter.all;
   bool _started = false;
 
   DateTime get _thisMonth {
@@ -87,8 +89,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
     _loadMonth();
   }
 
-  bool _matches(MeasurementKind kind) =>
-      _filter == 'all' || kind.name == _filter;
+  bool _matches(MeasurementKind kind) => _filter.keeps(kind);
 
   @override
   Widget build(BuildContext context) =>
@@ -100,11 +101,11 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
             children: <Widget>[
               widget.header,
               const SizedBox(height: AppSpacing.md),
-              WhiteFilterMenu<String>(
-                options: <String, String>{
-                  'all': context.tr('measurements.all'),
-                  'glucose': context.tr('measurements.glucose'),
-                  'bp': context.tr('measurements.bp'),
+              WhiteFilterMenu<MeasurementRecordFilter>(
+                options: <MeasurementRecordFilter, String>{
+                  for (final MeasurementRecordFilter value
+                      in MeasurementRecordFilter.values)
+                    value: context.tr(value.labelKey),
                 },
                 selected: _filter,
                 onChanged: (value) => setState(() => _filter = value),

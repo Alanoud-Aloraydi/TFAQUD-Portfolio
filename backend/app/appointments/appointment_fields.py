@@ -35,9 +35,18 @@ class AppointmentFields:
         patient = self.session.get(CareCircle, care_circle_id)
         return local_moment(day, time_of_day, patient_zone(patient))
 
-    def _future(self, care_circle_id: UUID, body: AppointmentRequest) -> None:
-        """Reject newly scheduled visits that have already passed."""
+    def _future(
+        self,
+        care_circle_id: UUID,
+        body: AppointmentRequest,
+        day: date | None = None,
+    ) -> None:
+        """Reject newly scheduled visits that have already passed.
+
+        [day] checks one date of a booking of several; without it the
+        request's own date.
+        """
         if self._moment(
-            care_circle_id, body.scheduled_on, body.time_of_day
+            care_circle_id, day or body.scheduled_on, body.time_of_day
         ) < self.now:
             raise ValidationFailed(code="appointment_time_in_past")

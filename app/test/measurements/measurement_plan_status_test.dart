@@ -1,6 +1,8 @@
 import 'package:app/core/widgets/status/plan_status.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/domain/measurement_plan_status.dart';
+import 'package:app/features/measurements/domain/measurement_version.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final DateTime _today = DateTime(2026, 11, 10);

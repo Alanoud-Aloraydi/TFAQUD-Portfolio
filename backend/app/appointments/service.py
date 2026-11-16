@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from app.appointments.appointment_booking import AppointmentBooking
 from app.appointments.appointment_companions import AppointmentCompanions
 from app.appointments.appointment_fields import AppointmentFields
 from app.appointments.appointment_reads import AppointmentReads
@@ -11,6 +12,7 @@ from app.appointments.appointment_writes import AppointmentWrites
 
 
 class AppointmentService(
+    AppointmentBooking,
     AppointmentWrites,
     AppointmentReads,
     AppointmentCompanions,

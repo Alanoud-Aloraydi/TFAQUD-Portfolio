@@ -1,33 +1,39 @@
 import 'package:equatable/equatable.dart';
 
-/// What a history shows: one [day] or every day (null), and what one
+/// What a history shows: one [month] or every month (null), and what one
 /// [person] recorded (their account, else their name: [personKey]) or
 /// what everyone did (null).
+///
+/// The month, not the day: a medicine taken for a year has 365 days of
+/// doses, and a menu of 365 lines is no way to find one. The list already
+/// carries a heading for each day, so a month narrows it enough.
 class HistoryFilter extends Equatable {
-  const HistoryFilter({this.day, this.person});
+  const HistoryFilter({this.month, this.person});
 
   static const HistoryFilter all = HistoryFilter();
 
-  final DateTime? day;
+  /// The first day of the month shown; null for every month.
+  final DateTime? month;
   final String? person;
 
-  HistoryFilter withDay(DateTime? day) =>
-      HistoryFilter(day: day, person: person);
+  HistoryFilter withMonth(DateTime? month) =>
+      HistoryFilter(month: month, person: person);
 
   HistoryFilter withPerson(String? person) =>
-      HistoryFilter(day: day, person: person);
+      HistoryFilter(month: month, person: person);
 
   /// Whether a record of the day [on], by [by] (account, name), shows.
   bool shows(DateTime on, (String?, String?) by) =>
-      (day == null || _sameDay(day!, on)) &&
+      (month == null || _sameMonth(month!, on)) &&
       (person == null || person == personKey(by.$1, by.$2));
 
-  /// This filter less a day or a person not in [days] or [people], as
+  /// This filter less a month or a person the items no longer have, as
   /// after another month is read.
-  HistoryFilter within(List<DateTime> days, Map<String, String> people) =>
+  HistoryFilter within(List<DateTime> months, Map<String, String> people) =>
       HistoryFilter(
-        day: days.any((DateTime d) => day != null && _sameDay(d, day!))
-            ? day
+        month:
+            months.any((DateTime m) => month != null && _sameMonth(m, month!))
+            ? month
             : null,
         person: people.containsKey(person) ? person : null,
       );
@@ -37,10 +43,11 @@ class HistoryFilter extends Equatable {
   static String? personKey(String? accountId, String? name) =>
       accountId ?? ((name == null || name.trim().isEmpty) ? null : name);
 
-  /// The days of [moments], each once, newest first.
-  static List<DateTime> daysOf(Iterable<DateTime> moments) => <DateTime>{
-    for (final DateTime at in moments) DateTime(at.year, at.month, at.day),
-  }.toList()..sort((DateTime a, DateTime b) => b.compareTo(a));
+  /// The months of [moments], each once, newest first.
+  static List<DateTime> monthsOf(Iterable<DateTime> moments) =>
+      <DateTime>{for (final DateTime at in moments) DateTime(at.year, at.month)}
+          .toList()
+        ..sort((DateTime a, DateTime b) => b.compareTo(a));
 
   /// Who recorded [records] (account, name), each once: key to name.
   static Map<String, String> peopleOf(Iterable<(String?, String?)> records) =>
@@ -49,9 +56,9 @@ class HistoryFilter extends Equatable {
           if (personKey(account, name) case final String key) key: name ?? '',
       };
 
-  static bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
+  static bool _sameMonth(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month;
 
   @override
-  List<Object?> get props => <Object?>[day, person];
+  List<Object?> get props => <Object?>[month, person];
 }

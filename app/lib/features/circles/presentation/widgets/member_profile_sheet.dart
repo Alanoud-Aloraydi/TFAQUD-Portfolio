@@ -1,23 +1,11 @@
-import 'dart:async';
-
-import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/circles/presentation/widgets/member_badges.dart';
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
+import 'package:app/features/circles/presentation/widgets/member_phone_card.dart';
+import 'package:app/features/circles/presentation/widgets/member_profile_actions.dart';
+import 'package:app/features/circles/presentation/widgets/member_profile_identity.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// A member's card, from the circle's members list: their photo and name,
 /// their place in the circle, and their number with «اتصال» and «نسخ
@@ -29,145 +17,23 @@ Future<void> showMemberProfileSheet(
   required String photoPath,
   required bool patientUsesApp,
 }) {
+  final String? phone = member.phoneNumber;
   return showGlassSheet<void>(
     context,
     title: context.tr('circle_overview.member_title'),
-    builder: (BuildContext sheetContext) => _MemberProfile(
-      member: member,
-      photoPath: photoPath,
-      patientUsesApp: patientUsesApp,
-    ),
-  );
-}
-
-class _MemberProfile extends StatelessWidget {
-  const _MemberProfile({
-    required this.member,
-    required this.photoPath,
-    required this.patientUsesApp,
-  });
-
-  final CircleMember member;
-  final String photoPath;
-  final bool patientUsesApp;
-
-  static const double _photo = 96;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final String? phone = member.phoneNumber;
-    return Column(
+    builder: (BuildContext sheetContext) => Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // Who this is reads as one stop: the name, the patient line and
-        // the badges together. The two buttons below stay their own.
-        MergeSemantics(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Center(
-                child: PersonPhoto(
-                  name: member.name,
-                  photoPath: photoPath,
-                  avatarCode: member.avatarCode,
-                  size: _photo,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                member.name,
-                textAlign: TextAlign.center,
-                style: text.titleLarge,
-              ),
-              if (member.isPatient) ...<Widget>[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  context.tr(
-                    patientUsesApp
-                        ? 'circle_overview.patient_line'
-                        : 'circle_overview.patient_line_no_app',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: text.bodySmall?.copyWith(
-                    color: context.tokens.textSecondary,
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                children: memberBadges(context, member),
-              ),
-            ],
-          ),
+        MemberProfileIdentity(
+          member: member,
+          photoPath: photoPath,
+          patientUsesApp: patientUsesApp,
         ),
         const SizedBox(height: AppSpacing.lg),
-        MergeSemantics(
-          child: DecoratedBox(
-            decoration: ShapeDecoration(
-              color: AppSemanticColors.surfaceContent,
-              shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    context.tr('circle_overview.member_phone'),
-                    style: text.bodySmall?.copyWith(
-                      color: context.tokens.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  if (phone != null)
-                    // A number reads left to right inside Arabic text.
-                    Text(
-                      SaudiMobile.display(phone),
-                      textDirection: TextDirection.ltr,
-                      style: text.titleMedium,
-                    )
-                  else
-                    Text(
-                      context.tr('circle_overview.member_no_phone'),
-                      style: text.bodyMedium,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (phone != null) ...<Widget>[
-          const SizedBox(height: AppSpacing.lg),
-          PillButton(
-            label: context.tr('circle_overview.member_call'),
-            onPressed: () => unawaited(_call(phone)),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          TextButton.icon(
-            onPressed: () => _copy(context, phone),
-            icon: const Icon(
-              CupertinoIcons.doc_on_doc,
-              size: AppSizes.iconSmall,
-            ),
-            label: Text(context.tr('circle_overview.member_copy')),
-          ),
-        ],
+        MemberPhoneCard(phone: phone),
+        if (phone != null) ...memberProfileActions(sheetContext, phone),
       ],
-    );
-  }
-
-  Future<void> _call(String phone) =>
-      launchUrl(Uri(scheme: 'tel', path: phone.replaceAll(' ', '')));
-
-  void _copy(BuildContext context, String phone) {
-    unawaited(Clipboard.setData(ClipboardData(text: phone)));
-    HapticFeedback.selectionClick();
-    AppToast.show(context, 'circle_overview.member_copied');
-  }
+    ),
+  );
 }

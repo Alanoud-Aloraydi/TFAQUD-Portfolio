@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_zoom.dart';
 
 export 'package:app/features/measurements/presentation/widgets/readings_by_day.dart';

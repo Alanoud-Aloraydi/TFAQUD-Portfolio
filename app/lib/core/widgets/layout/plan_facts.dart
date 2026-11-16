@@ -187,10 +187,7 @@ class _FactRow extends StatelessWidget {
                       style: text.titleSmall?.copyWith(
                         fontWeight: AppTextTheme.bold,
                       ),
-                      // Every fact that parts two values with «·» on the
-                      // screen («16 نوفمبر · 4:30 م») is read with a pause
-                      // instead of the dot's name.
-                      semanticsLabel: spoken(shown.replaceAll(' · ', '، ')),
+                      semanticsLabel: spoken(shown),
                     ),
                   if (below case final Widget under) ...<Widget>[
                     const SizedBox(height: AppSpacing.xs),

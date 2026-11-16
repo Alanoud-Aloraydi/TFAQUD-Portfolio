@@ -79,7 +79,7 @@ class NextDoseInfo extends StatelessWidget {
               Text(
                 occurrence.instructions == null
                     ? dose
-                    : '$dose · ${occurrence.instructions}',
+                    : '$dose، ${occurrence.instructions}',
                 semanticsLabel: spoken(
                   occurrence.instructions == null
                       ? dose

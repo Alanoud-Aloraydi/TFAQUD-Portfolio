@@ -41,7 +41,7 @@ class TodayMedicationActionDose extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.surface,
-        border: Border.all(color: AppSemanticColors.textSupporting, width: 2),
+        border: Border.all(color: AppSemanticColors.accentWarm, width: 1.5),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

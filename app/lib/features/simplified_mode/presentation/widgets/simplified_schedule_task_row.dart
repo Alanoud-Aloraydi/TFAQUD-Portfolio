@@ -2,9 +2,11 @@ import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_task_status.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_line.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
@@ -18,6 +20,7 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
     required this.day,
     required this.now,
     required this.snoozed,
+    required this.schedule,
   });
 
   final TodayTask task;
@@ -28,6 +31,16 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
 
   /// «سأذكّرك 2:09 مساءً» in place of the status while the task is put off.
   final String? snoozed;
+
+  /// Says whether the task can still be recorded, by the same rule «اليوم»
+  /// follows.
+  final TodaySchedule schedule;
+
+  /// A task the patient can answer from here: a late dose or reading is
+  /// opened and recorded, as in the detailed mode. An appointment is not
+  /// recorded in this mode.
+  bool get _recordable =>
+      task.kind != TodayTaskKind.appointment && schedule.canRecord(task);
 
   /// What the row says: the name, the time and kind, how to take it, and
   /// where it stands.
@@ -44,7 +57,7 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
     snoozed ?? simplifiedTaskStatus(context, task, day, now),
   ];
 
-  /// How it is taken: «حبة واحدة · مع الأكل», the same words the cards
+  /// How it is taken: «حبة واحدة، مع الأكل», the same words the cards
   /// show, so the schedule says enough to act on without opening a task.
   static String? _how(BuildContext context, TodayTask task, SimplifiedDay day) {
     final List<String> parts = <String>[
@@ -52,20 +65,23 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
         simplifiedDoseAmount(context, task.dose!),
       ...simplifiedTaskChips(context, task, day),
     ];
-    return parts.isEmpty ? null : parts.join(' · ');
+    return parts.isEmpty ? null : parts.join('، ');
   }
 
-  /// «6:00 مساءً · دواء».
+  /// «6:00 مساءً، دواء».
   static String _when(BuildContext context, TodayTask task) =>
-      '${simplifiedTime(context, task.time)} · '
+      '${simplifiedTime(context, task.time)}، '
       '${context.tr('simplified_mode.kind.${task.kind.name}')}';
 
   @override
   Widget build(BuildContext context) {
-    // One stop for the whole row. The «·» between the time and the kind
-    // is a pause when read aloud, not a word.
+    // One stop for the whole row.
     return Semantics(
       label: spoken(lines(context, task, day, now, snoozed).join('، ')),
+      button: _recordable,
+      onTap: _recordable
+          ? () => openSimplifiedTask(context, task, day.circleId)
+          : null,
       excludeSemantics: true,
       child: _body(context),
     );
@@ -97,7 +113,7 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
       SimplifiedStyle.caption,
       color: text,
     );
-    return Container(
+    final Widget row = Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: SimplifiedStyle.chip)),
@@ -168,6 +184,11 @@ class SimplifiedScheduleTaskRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (!_recordable) return row;
+    return InkWell(
+      onTap: () => openSimplifiedTask(context, task, day.circleId),
+      child: row,
     );
   }
 }

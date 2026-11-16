@@ -56,9 +56,7 @@ class PlanDetailsToggle extends StatelessWidget {
                   child: Text(
                     start,
                     style: text.bodySmall,
-                    // «·» parts the day from the hour on the screen; a
-                    // reader says it as a word or not at all.
-                    semanticsLabel: spoken(start.replaceAll(' · ', '، ')),
+                    semanticsLabel: spoken(start),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

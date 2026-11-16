@@ -2,7 +2,7 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/calendar_day_cell.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_tile.dart';

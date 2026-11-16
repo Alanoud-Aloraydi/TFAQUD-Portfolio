@@ -9,13 +9,15 @@ void main() {
       expect(HistoryFilter.all.shows(morning, (null, null)), isTrue);
     });
 
-    test('one day keeps that day only, whatever the hour', () {
-      final HistoryFilter filter = HistoryFilter.all.withDay(
-        DateTime(2026, 11, 9),
+    test('one month keeps that month only, whatever the day or hour', () {
+      final HistoryFilter filter = HistoryFilter.all.withMonth(
+        DateTime(2026, 11),
       );
 
       expect(filter.shows(morning, ('a-1', 'لينا')), isTrue);
-      expect(filter.shows(DateTime(2026, 11, 10, 8), ('a-1', 'لينا')), isFalse);
+      expect(filter.shows(DateTime(2026, 11, 30, 23), ('a-1', 'لينا')), isTrue);
+      expect(filter.shows(DateTime(2026, 10, 31, 8), ('a-1', 'لينا')), isFalse);
+      expect(filter.shows(DateTime(2025, 11, 9, 8), ('a-1', 'لينا')), isFalse);
     });
 
     test('one person keeps what they recorded, by account or name', () {
@@ -30,14 +32,15 @@ void main() {
       );
     });
 
-    test('lists each day once, newest first, and each person once', () {
+    test('lists each month once, newest first, and each person once', () {
       expect(
-        HistoryFilter.daysOf(<DateTime>[
+        HistoryFilter.monthsOf(<DateTime>[
           morning,
           DateTime(2026, 11, 10, 9),
+          DateTime(2026, 10, 2, 20),
           DateTime(2026, 11, 9, 20),
         ]),
-        <DateTime>[DateTime(2026, 11, 10), DateTime(2026, 11, 9)],
+        <DateTime>[DateTime(2026, 11), DateTime(2026, 10)],
       );
       expect(
         HistoryFilter.peopleOf(<(String?, String?)>[
@@ -50,22 +53,22 @@ void main() {
       );
     });
 
-    test('drops a day or a person another month does not have', () {
+    test('drops a month or a person the records no longer have', () {
       final HistoryFilter filter = HistoryFilter(
-        day: DateTime(2026, 10, 3),
+        month: DateTime(2026, 10),
         person: 'a-9',
       );
 
       expect(
         filter.within(
-          <DateTime>[DateTime(2026, 11, 9)],
+          <DateTime>[DateTime(2026, 11)],
           <String, String>{'a-1': 'لينا'},
         ),
         HistoryFilter.all,
       );
       expect(
         filter.within(
-          <DateTime>[DateTime(2026, 10, 3)],
+          <DateTime>[DateTime(2026, 10)],
           <String, String>{'a-9': 'سارة'},
         ),
         filter,

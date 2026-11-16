@@ -55,13 +55,8 @@ class MedicationsCubit extends Cubit<MedicationsState> {
       return;
     }
     result.when(
-      (plans) => emit(
-        MedicationsState(
-          status: MedicationsStatus.ready,
-          plans: plans,
-          recordFilter: state.recordFilter,
-        ),
-      ),
+      (plans) =>
+          emit(MedicationsState(status: MedicationsStatus.ready, plans: plans)),
       (failure) {
         if (state.status == MedicationsStatus.loading) {
           emit(
@@ -107,13 +102,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
     if (isClosed || revision != _revision) return;
     result.when(
       (plans) {
-        emit(
-          MedicationsState(
-            status: MedicationsStatus.ready,
-            plans: plans,
-            recordFilter: state.recordFilter,
-          ),
-        );
+        emit(MedicationsState(status: MedicationsStatus.ready, plans: plans));
       },
       (failure) {
         if (keep) return;
@@ -165,7 +154,6 @@ class MedicationsCubit extends Cubit<MedicationsState> {
           MedicationsState(
             status: MedicationsStatus.ready,
             plans: [...state.plans, plan],
-            recordFilter: state.recordFilter,
           ),
         );
         return true;
@@ -239,13 +227,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
           for (final plan in state.plans)
             if (plan.id == changed.id) changed else plan,
         ];
-        emit(
-          MedicationsState(
-            status: MedicationsStatus.ready,
-            plans: plans,
-            recordFilter: state.recordFilter,
-          ),
-        );
+        emit(MedicationsState(status: MedicationsStatus.ready, plans: plans));
         return true;
       },
       (failure) {
@@ -258,11 +240,6 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         return false;
       },
     );
-  }
-
-  void setRecordFilter(MedicationRecordFilter filter) {
-    if (filter == state.recordFilter) return;
-    emit(state.copyWith(recordFilter: filter));
   }
 
   @override

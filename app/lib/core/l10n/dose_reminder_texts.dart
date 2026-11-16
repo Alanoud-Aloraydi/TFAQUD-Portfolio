@@ -2,7 +2,8 @@ import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -45,7 +46,7 @@ final DoseReminderTexts doseReminderTexts = DoseReminderTexts(
             AppointmentLead.soon => 'reminders.appointment_soon',
             AppointmentLead.today => 'reminders.appointment_today',
           }, circle),
-  // «مراجعة · عيادة السكري · الساعة 4:30 م · مستشفى الملك فهد».
+  // «مراجعة، عيادة السكري، الساعة 4:30 م، مستشفى الملك فهد».
   appointmentBody: (CareAppointment visit) {
     final String place = visit.place?.trim() ?? '';
     return place.isEmpty

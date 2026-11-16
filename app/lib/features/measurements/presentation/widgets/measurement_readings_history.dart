@@ -1,7 +1,7 @@
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/layout/filtered_history.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_readings_list.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

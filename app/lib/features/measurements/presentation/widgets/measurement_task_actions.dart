@@ -2,7 +2,7 @@ import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/core/widgets/buttons/task_button_grid.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';

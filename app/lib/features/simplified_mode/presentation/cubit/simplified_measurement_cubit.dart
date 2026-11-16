@@ -1,5 +1,7 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';

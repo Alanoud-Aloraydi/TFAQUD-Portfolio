@@ -1,7 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/features/home/presentation/widgets/record_export_sheet.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';

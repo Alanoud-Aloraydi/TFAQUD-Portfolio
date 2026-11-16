@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:app/features/measurements/domain/chart_band.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:equatable/equatable.dart';
 

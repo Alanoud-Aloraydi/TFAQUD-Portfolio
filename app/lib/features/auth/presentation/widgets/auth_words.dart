@@ -6,7 +6,7 @@ import 'package:app/features/auth/presentation/widgets/auth_intro.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The words of a page: a small white pill with the step («01 · نظّم»),
+/// The words of a page: a small white pill with the step («01، نظّم»),
 /// the title and one line.
 class AuthWords extends StatelessWidget {
   const AuthWords({super.key, required this.intro, required this.step});
@@ -31,7 +31,7 @@ class AuthWords extends StatelessWidget {
             shadows: AppSurfaces.floatShadow,
           ),
           child: Text(
-            '${step.toString().padLeft(2, '0')} · ${context.tr(intro.stepKey)}',
+            '${step.toString().padLeft(2, '0')}، ${context.tr(intro.stepKey)}',
             style: text.labelMedium?.copyWith(
               color: AppSemanticColors.textPrimary,
             ),

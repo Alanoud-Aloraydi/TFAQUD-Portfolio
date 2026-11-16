@@ -4,7 +4,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:easy_localization/easy_localization.dart';

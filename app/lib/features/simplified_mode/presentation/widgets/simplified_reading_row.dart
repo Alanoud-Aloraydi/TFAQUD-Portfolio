@@ -1,5 +1,6 @@
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
@@ -13,11 +14,16 @@ class SimplifiedReadingRow extends StatelessWidget {
     required this.reading,
     required this.kind,
     required this.now,
+    this.divided = true,
   });
 
   final MeasurementReading reading;
   final MeasurementKind kind;
   final DateTime now;
+
+  /// A rule above this row, parting it from the one before. The first row
+  /// has none: the card's own edge is already a line there.
+  final bool divided;
 
   /// «8:00 ص» for today, «الأحد 8:00 ص» for a day before it.
   String _when(BuildContext context) {
@@ -33,9 +39,11 @@ class SimplifiedReadingRow extends StatelessWidget {
     return MergeSemantics(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: SimplifiedStyle.chip)),
-        ),
+        decoration: divided
+            ? const BoxDecoration(
+                border: Border(top: BorderSide(color: SimplifiedStyle.chip)),
+              )
+            : null,
         child: Row(
           children: <Widget>[
             Text(

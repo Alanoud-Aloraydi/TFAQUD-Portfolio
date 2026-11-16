@@ -1,17 +1,10 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/medical_texts.dart';
-import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_text.dart';
+import 'package:app/features/circles/presentation/widgets/emergency_contact_row.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-/// «اتصل بـ»: one row per person, the name and relation, the number left to
-/// right, and the call mark. A tap calls.
+/// «اتصل بـ»: one row per person, or the line that says there is nobody.
 class EmergencyContacts extends StatelessWidget {
   const EmergencyContacts({
     super.key,
@@ -21,11 +14,6 @@ class EmergencyContacts extends StatelessWidget {
 
   final List<EmergencyContact> contacts;
   final EmergencyCardText words;
-
-  Future<void> _call(String number) async {
-    final String digits = number.replaceAll(' ', '');
-    await launchUrl(Uri(scheme: 'tel', path: digits));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,49 +27,7 @@ class EmergencyContacts extends StatelessWidget {
         for (final EmergencyContact contact in contacts)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Material(
-              color: AppSemanticColors.surfaceContent,
-              shape: AppRadius.shape(AppRadius.s),
-              clipBehavior: Clip.antiAlias,
-              child: MergeSemantics(
-                child: Semantics(
-                  button: true,
-                  child: InkWell(
-                    onTap: () => _call(MedicalTexts.phone(contact)),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.md,
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              '${contact.name} · ${words.relation(contact)}',
-                              style: text.titleSmall,
-                              semanticsLabel: spoken(
-                                '${contact.name}، ${words.relation(contact)}',
-                              ),
-                            ),
-                          ),
-                          Text(
-                            MedicalTexts.phone(contact),
-                            textDirection: TextDirection.ltr,
-                            style: text.bodySmall,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          const Icon(
-                            AppIcons.phoneCall,
-                            size: AppSizes.iconSmall,
-                            color: AppSemanticColors.statusSuccess,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: EmergencyContactRow(contact: contact, words: words),
           ),
       ],
     );

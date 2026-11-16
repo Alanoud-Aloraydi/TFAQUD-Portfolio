@@ -45,9 +45,9 @@ class MedicationRevisionEntry extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '${version.name} · '
+              '${version.name}، '
               '${formatMedicationNumber(version.strengthValue)} '
-              '${context.tr('medications.strength_display.${version.strengthUnit.name}')} · '
+              '${context.tr('medications.strength_display.${version.strengthUnit.name}')}، '
               '${context.tr('medications.form.${version.dosageForm.name}')}',
               style: Theme.of(context).textTheme.bodyMedium,
               semanticsLabel: spoken(
@@ -91,7 +91,7 @@ class MedicationRevisionEntry extends StatelessWidget {
           schedule.doseValue,
           schedule.doseUnit,
         );
-        return '${clockText(schedule.time)} · $dose';
+        return '${clockText(schedule.time)}، $dose';
       })
       .join('، ');
 }

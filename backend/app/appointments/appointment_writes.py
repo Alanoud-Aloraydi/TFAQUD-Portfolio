@@ -1,12 +1,9 @@
-"""Adding an appointment, changing it, and recording how it went."""
+"""Changing an appointment and recording how it went."""
 
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from app.appointments.inputs import (
-    AppointmentRequest,
-    ReviseAppointmentRequest,
-)
+from app.appointments.inputs import ReviseAppointmentRequest
 from app.errors import Conflict, ValidationFailed
 from app.models.appointment import Appointment
 
@@ -15,28 +12,7 @@ ATTEND_EARLY = timedelta(hours=1)
 
 
 class AppointmentWrites:
-    """Adds, changes and closes appointments."""
-
-    def create(
-        self, circle_id: UUID, actor_id: UUID, body: AppointmentRequest
-    ) -> Appointment:
-        """Create a visit for the circle patient."""
-        # In the future, with valid companions; saved with who made it.
-        patient = self._patient(circle_id)
-        self._future(patient.id, body)
-        self._companions(circle_id, body.companion_account_ids)
-        appointment = Appointment(
-            care_circle_id=patient.id,
-            created_by_account_id=actor_id,
-            status="scheduled",
-            created_at=self.now,
-            updated_at=self.now,
-        )
-        self._fill(appointment, body)
-        self.session.add(appointment)
-        self.session.flush()
-        self._replace_companions(appointment.id, body.companion_account_ids)
-        return appointment
+    """Changes and closes appointments; booking is its own mixin."""
 
     def revise(
         self, circle_id: UUID, appointment_id: UUID, actor_id: UUID,

@@ -15,14 +15,14 @@ String withArticle(String name) {
   return arabic ? 'ال$value' : value;
 }
 
-/// «مراجعة · عيادة السكري»: the visit's kind, then the clinic or doctor
+/// «مراجعة، عيادة السكري»: the visit's kind, then the clinic or doctor
 /// when one was typed. For notifications and the calendar, with no context.
 String visitName(CareAppointment visit) {
   final String kind = visit.kind == AppointmentKind.other
       ? visit.otherKind ?? 'appointments.kinds.other'.tr()
       : 'appointments.kinds.${visit.kind.name}'.tr();
   final String? clinic = appointmentClinic(visit);
-  return clinic == null ? kind : '$kind · $clinic';
+  return clinic == null ? kind : '$kind، $clinic';
 }
 
 /// «4:30 م» for "16:30", the same as the app's pages show a time.

@@ -68,7 +68,7 @@ class SimplifiedDoneCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            tomorrow == null ? count : '$count · $tomorrow',
+            tomorrow == null ? count : '$count، $tomorrow',
             textAlign: TextAlign.center,
             style: SimplifiedStyle.text(
               SimplifiedStyle.body,

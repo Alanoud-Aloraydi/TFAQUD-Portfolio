@@ -5,7 +5,7 @@ import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_done.dart';
 import 'package:flutter/material.dart';
 
-/// A done task's last line: «تم 4:30 مساءً ·», then the photo of who
+/// A done task's last line: «تم 4:30 مساءً»، then the photo of who
 /// pressed it, then «بواسطة سارة» (or «بواسطتك»), so the patient sees at
 /// a glance when, and by whom, before reading the name.
 class SimplifiedDoneLine extends StatelessWidget {
@@ -31,7 +31,7 @@ class SimplifiedDoneLine extends StatelessWidget {
       spacing: 6,
       runSpacing: 4,
       children: <Widget>[
-        Text('$at ·', style: style),
+        Text('$at،', style: style),
         PersonPhoto(
           name: done.name ?? '',
           photoPath: personPhotoPath(day.circleId, done.accountId),
