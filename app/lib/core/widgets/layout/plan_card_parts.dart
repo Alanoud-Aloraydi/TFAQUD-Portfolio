@@ -1,7 +1,7 @@
 /// The parts the plan cards of «الخطة» share, so a medicine, a
-/// measurement and an appointment look and work the same: the pencil
-/// beside the status at the top (PlanEditButton), and the line at the
-/// bottom that opens the details ([PlanDetailsToggle]).
+/// measurement and an appointment look and work the same: the line at
+/// the bottom that opens the details ([PlanDetailsToggle]). The pencil
+/// beside the status is [EditAction], shared with the rest of the app.
 library;
 
 import 'package:app/core/l10n/spoken_arabic.dart';
@@ -11,7 +11,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-export 'package:app/core/widgets/layout/plan_edit_button.dart';
+export 'package:app/core/widgets/buttons/edit_action.dart';
 
 /// The card's last line: on the start side, when the plan starts or
 /// started ([start], «بدأ في 7 نوفمبر 2026»); at the far end (the left, in

@@ -24,6 +24,12 @@ class _WhiteFilterMenuState<T extends Object>
     extends State<WhiteFilterMenu<T>> {
   bool _menuOpen = false;
 
+  /// The chosen option's words. A choice that is no longer among the
+  /// options (its month read away, the person who recorded it gone) falls
+  /// back to the first, which is «الكل»: a filter is never worth a crash.
+  String get _label =>
+      widget.options[widget.selected] ?? widget.options.values.first;
+
   @override
   Widget build(BuildContext context) => Align(
     alignment: AlignmentDirectional.centerStart,
@@ -32,8 +38,8 @@ class _WhiteFilterMenuState<T extends Object>
       builder: (anchorContext) => Opacity(
         opacity: _menuOpen ? 0 : 1,
         child: GlassCapsuleButton(
-          label: widget.options[widget.selected]!,
-          semanticLabel: widget.options[widget.selected]!,
+          label: _label,
+          semanticLabel: _label,
           icon: CupertinoIcons.slider_horizontal_3,
           onPressed: () => _openGlass(anchorContext),
         ),
@@ -45,8 +51,8 @@ class _WhiteFilterMenuState<T extends Object>
     setState(() => _menuOpen = true);
     final value = await showGlassMenu<T>(
       anchorContext: anchorContext,
-      semanticLabel: widget.options[widget.selected]!,
-      anchorContent: Text(widget.options[widget.selected]!),
+      semanticLabel: _label,
+      anchorContent: Text(_label),
       sections: [
         [
           for (final option in widget.options.entries)

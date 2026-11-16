@@ -837,7 +837,16 @@
     "last_manager_title": "دوائر ليس لها مدير غيرك",
     "last_manager_body": "أنت المدير الوحيد في دائرة أو أكثر. لو حذفت حسابك بتنحذف الدوائر هذي معه.",
     "last_manager_confirm": "حذف الحساب والدوائر",
-    "edit": "تعديل"
+    "edit": "تعديل",
+    "notifications_title": "تنبيهات الجوال",
+    "notifications_row": "التنبيهات",
+    "notifications_on": "مفعّلة",
+    "notifications_partial": "محدودة",
+    "notifications_off": "مقفلة",
+    "notifications_hint": "من غيرها ما توصلك تذكيرات الأدوية والقياسات والمواعيد. تتغيّر من إعدادات الجوال.",
+    "notifications_not_asked": "يسألك الجوال عند أول تذكير",
+    "notifications_enable": "تفعيل التنبيهات",
+    "notifications_quiet": "التنبيهات تصل بصمت، بدون صوت ولا تنبيه على الشاشة."
   },
   "medical": {
     "condition": {

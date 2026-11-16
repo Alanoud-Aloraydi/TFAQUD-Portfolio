@@ -22,7 +22,7 @@ Widget? medicationEditButton(
       canManage &&
       (status == PlanStatus.active || status == PlanStatus.scheduled);
   if (!editable) return null;
-  return PlanEditButton(
+  return EditAction.pen(
     onPressed: () =>
         context.push<bool>(Routes.editMedication(circleId, plan.id)),
     tooltip: context.tr('medications.edit_title'),

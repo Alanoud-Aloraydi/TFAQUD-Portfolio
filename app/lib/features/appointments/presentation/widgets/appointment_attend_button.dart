@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/components/task_button_role.dart';
+import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -24,31 +25,32 @@ class AppointmentAttendButton extends StatelessWidget {
   final CareAppointment value;
   final String circleId;
 
-  /// «حضرت» for a row at [now] (the patient's wall clock), or nothing: for a
-  /// visit still open, from an hour before, to those who manage the circle,
-  /// as a dose's answers and as the server allows (ATTEND_EARLY).
+  /// «حضرت» for a row at [now] (the patient's wall clock), or nothing: for
+  /// a visit still open, from an hour before (as the server allows,
+  /// ATTEND_EARLY), and only to those who went — the patient and the
+  /// companions chosen for it. Managing appointments is not being at one.
   static Widget? forRow(
+    BuildContext context,
     CareAppointment value,
     DateTime now,
     String? circleId,
-    bool canManage,
   ) {
     final DateTime opens = value.scheduledAt.subtract(const Duration(hours: 1));
-    if (circleId == null || !canManage || opens.isAfter(now)) return null;
+    if (circleId == null || opens.isAfter(now)) return null;
     if (value.status != AppointmentStatus.scheduled) return null;
+    final TaskViewerScope? viewer = TaskViewerScope.of(context);
+    if (viewer == null || !viewer.goesWith(value.companionIds)) return null;
     return AppointmentAttendButton(value: value, circleId: circleId);
   }
 
   @override
   Widget build(BuildContext context) => TaskButtonGrid(
-    buttons: <Widget>[
-      TaskButton(
-        role: TaskButtonRole.answer,
-        icon: CupertinoIcons.checkmark,
-        label: context.tr('appointments.mark_completed'),
-        onPressed: () => _attend(context),
-      ),
-    ],
+    answer: TaskButton(
+      role: TaskButtonRole.answer,
+      icon: CupertinoIcons.checkmark,
+      label: context.tr('appointments.mark_completed'),
+      onPressed: () => _attend(context),
+    ),
   );
 
   Future<void> _attend(BuildContext context) async {

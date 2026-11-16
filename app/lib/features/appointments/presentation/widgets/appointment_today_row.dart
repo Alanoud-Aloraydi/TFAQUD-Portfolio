@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 
 /// An appointment of «اليوم»: a [CareItemRow] that waits for confirmation
 /// once its time has passed, with «حضرت» from an hour before for those who
-/// manage the circle. A completed one opens its visit page.
+/// go to it. A completed one opens its visit page.
 class AppointmentTodayRow extends StatelessWidget {
   const AppointmentTodayRow({
     super.key,
@@ -55,7 +55,7 @@ class AppointmentTodayRow extends StatelessWidget {
         ),
         tone: waiting ? StatusTone.attention : StatusTone.info,
       ),
-      actions: AppointmentAttendButton.forRow(value, now, circleId, canManage),
+      actions: AppointmentAttendButton.forRow(context, value, now, circleId),
       onTap: circleId == null || value.status != AppointmentStatus.completed
           ? null
           : () => context.push(

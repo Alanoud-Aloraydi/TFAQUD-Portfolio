@@ -9,6 +9,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// «السجل»'s medicines: the plans of [circleId], filtered by the choice
 /// this section keeps for itself — the filter picks among plans already
 /// loaded, so it is the page's state, not the cubit's.
+///
+/// It opens on «السابقة», what the tab's name promises: a record is what
+/// has been. «الحالية» is «الخطة»'s job, and opening on «الكل» showed the
+/// running medicines first, so the two tabs read the same.
 class MedicationHistorySection extends StatefulWidget {
   const MedicationHistorySection({
     super.key,
@@ -25,7 +29,7 @@ class MedicationHistorySection extends StatefulWidget {
 }
 
 class _MedicationHistorySectionState extends State<MedicationHistorySection> {
-  MedicationRecordFilter _filter = MedicationRecordFilter.all;
+  MedicationRecordFilter _filter = MedicationRecordFilter.previous;
 
   @override
   Widget build(BuildContext context) {

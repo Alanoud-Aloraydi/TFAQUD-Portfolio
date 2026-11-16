@@ -1,9 +1,7 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/back_link.dart';
+import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -42,16 +40,9 @@ class MedicalFileHeader extends StatelessWidget {
             ),
           ),
           if (canEdit)
-            ActionChip(
-              avatar: const Icon(
-                AppIcons.pencil,
-                size: AppSizes.iconSmall,
-                color: AppSemanticColors.textPrimary,
-              ),
-              label: Text(context.tr('circles.file_edit')),
-              backgroundColor: AppSemanticColors.selectedSurface,
-              side: BorderSide.none,
+            EditAction(
               onPressed: onEdit,
+              tooltip: context.tr('circles.file_edit_title'),
             ),
         ],
       ),

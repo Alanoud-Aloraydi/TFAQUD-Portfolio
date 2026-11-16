@@ -1,24 +1,18 @@
-import 'dart:async';
-
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_late_dose_answers.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 /// A dose whose time passed unrecorded: ask, and offer to record it now.
 class SimplifiedLateDoseCard extends StatelessWidget {
@@ -57,18 +51,6 @@ class SimplifiedLateDoseCard extends StatelessWidget {
     'simplified_mode.was_due',
     args: <String>[simplifiedTime(context, task.time)],
   );
-
-  Future<void> _take(BuildContext context) async {
-    final SimplifiedModeCubit cubit = context.read<SimplifiedModeCubit>();
-    final DateTime? takenAt = await cubit.takeDose(task.dose!);
-    if (takenAt == null || !context.mounted) return;
-    unawaited(
-      context.push(
-        Routes.simplifiedDone,
-        extra: SimplifiedDoneMessage.doseTaken(task.dose!.name, takenAt),
-      ),
-    );
-  }
 
   /// What the card says without its three answers: the buttons name
   /// themselves, and stay their own stops for a screen reader.
@@ -169,27 +151,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          SimplifiedButton(
-            label: context.tr('simplified_mode.took_now'),
-            icon: AppIcons.check,
-            onPressed: saving ? null : () => _take(context),
-          ),
-          const SizedBox(height: 12),
-          SimplifiedButton(
-            label: context.tr('simplified_mode.remind_later'),
-            tone: SimplifiedButtonTone.secondary,
-            onPressed: () => context.push(Routes.simplifiedSnooze, extra: task),
-          ),
-          const SizedBox(height: 12),
-          // A dose that will not be taken has somewhere to go: without
-          // this it stays late for ever, and the family never learns why.
-          SimplifiedButton(
-            label: context.tr('simplified_mode.not_taken'),
-            tone: SimplifiedButtonTone.secondary,
-            onPressed: saving
-                ? null
-                : () => context.push(Routes.simplifiedSkip, extra: task),
-          ),
+          SimplifiedLateDoseAnswers(task: task, saving: saving),
         ],
       ),
     );

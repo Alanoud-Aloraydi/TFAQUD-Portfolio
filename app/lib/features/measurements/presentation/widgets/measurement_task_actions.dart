@@ -29,15 +29,16 @@ class MeasurementTaskActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Widget buttons = TaskButtonGrid(
-      buttons: <Widget>[
-        if (!superseded)
-          TaskButton(
-            role: TaskButtonRole.answer,
-            icon: CupertinoIcons.checkmark,
-            label: context.tr('measurements.record_reading'),
-            onPressed: () =>
-                showMeasurementReadingSheet(context, occurrence: task),
-          ),
+      answer: superseded
+          ? null
+          : TaskButton(
+              role: TaskButtonRole.answer,
+              icon: CupertinoIcons.checkmark,
+              label: context.tr('measurements.record_reading'),
+              onPressed: () =>
+                  showMeasurementReadingSheet(context, occurrence: task),
+            ),
+      choices: <Widget>[
         TaskButton(
           role: TaskButtonRole.skip,
           icon: CupertinoIcons.minus_circle,

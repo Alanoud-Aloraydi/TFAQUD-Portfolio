@@ -61,7 +61,7 @@ class AppointmentCard extends StatelessWidget {
         null => null,
       },
       edit: canManage && open
-          ? PlanEditButton(
+          ? EditAction.pen(
               onPressed: () => context.push<bool>(
                 Routes.editAppointment(circleId, value.id),
               ),

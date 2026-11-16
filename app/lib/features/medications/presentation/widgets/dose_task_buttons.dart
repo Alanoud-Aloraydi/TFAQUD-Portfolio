@@ -7,11 +7,15 @@ import 'package:app/features/medications/presentation/widgets/dose_record_action
 import 'package:app/features/medications/presentation/widgets/snooze_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
-/// One button system for every task (TaskButtonRole): each answer its own
-/// colour and icon, all 48 high, two to a line of equal widths. «انأخذت»
-/// and «ذكّرني لاحقًا» are only for a dose of today.
+/// One button system for every task (TaskButtonRole): «انأخذت» across the
+/// card, then «ذكّرني لاحقًا» and «تخطي» under it.
+///
+/// «انأخذت» asks when the dose was taken and offers the moment it is
+/// pressed, so the one button records a dose taken now and one taken
+/// earlier; «انأخذت بوقت سابق» was a button of its own before, and a dose
+/// of an earlier day had no way to be marked taken now. «ذكّرني لاحقًا»
+/// is only for a dose of today: a day that has passed cannot be put off.
 class DoseTaskButtons extends StatelessWidget {
   const DoseTaskButtons({
     super.key,
@@ -28,28 +32,19 @@ class DoseTaskButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     String say(String key) => CareVoice.tr(context, circleId, key);
     return TaskButtonGrid(
-      buttons: <Widget>[
-        if (isToday)
-          // A day of four doses shows four «انأخذت»: read aloud they are
-          // the same word, so the reader is told which medicine.
-          TaskButton(
-            role: TaskButtonRole.answer,
-            icon: CupertinoIcons.checkmark,
-            label: say('medications.taken_short'),
-            semanticLabel:
-                '${say('medications.taken_short')}، ${occurrence.name}',
-            onPressed: () =>
-                takeDoseNow(context, occurrence, circleId: circleId),
-          ),
+      // A day of four doses shows four «انأخذت»: read aloud they are the
+      // same word, so the reader is told which medicine.
+      answer: TaskButton(
+        role: TaskButtonRole.answer,
+        icon: CupertinoIcons.checkmark,
+        label: say('medications.taken_short'),
+        semanticLabel: '${say('medications.taken_short')}، ${occurrence.name}',
+        onPressed: () =>
+            takeDoseAtDifferentTime(context, occurrence, circleId: circleId),
+      ),
+      choices: <Widget>[
         if (isToday && circleId != null)
           SnoozeButton(occurrence: occurrence, circleId: circleId!),
-        TaskButton(
-          role: TaskButtonRole.earlier,
-          icon: CupertinoIcons.clock,
-          label: say('medications.different_time_short'),
-          onPressed: () =>
-              takeDoseAtDifferentTime(context, occurrence, circleId: circleId),
-        ),
         TaskButton(
           role: TaskButtonRole.skip,
           icon: CupertinoIcons.minus_circle,

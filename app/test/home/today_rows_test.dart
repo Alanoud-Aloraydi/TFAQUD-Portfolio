@@ -288,6 +288,11 @@ void main() {
 
       await tester.tap(find.text('medications.taken_short'.tr()));
       await tester.pumpAndSettle();
+      // «أخذتها» asks when, offering the moment it was pressed: one button
+      // records a dose taken now and one taken earlier, so «أخذتها بوقت
+      // سابق» is gone. Confirming the offered time records it now.
+      await tester.tap(find.text('common.confirm'.tr()));
+      await tester.pumpAndSettle();
 
       expect(repository.drafts.single.outcome, DoseOutcome.taken);
       expect(repository.drafts.single.takenAt, noonInRiyadh);

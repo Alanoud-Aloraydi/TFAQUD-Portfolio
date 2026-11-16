@@ -1,5 +1,5 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -42,10 +42,9 @@ class MedicationDetailsContent extends StatelessWidget {
           title: Text(context.tr('medications.details')),
           actions: [
             if (canManage && !plan.isPreviousOn(today))
-              IconButton(
+              EditAction.pen(
                 tooltip: context.tr('medications.edit_title'),
                 onPressed: () => editMedication(context, circleId, plan.id),
-                icon: const Icon(AppIcons.pencil),
               ),
           ],
         ),

@@ -49,7 +49,7 @@ class MeasurementPlanCard extends StatelessWidget {
           ? null
           : Text(context.tr('measurements.condition.$condition')),
       edit: canManage
-          ? PlanEditButton(
+          ? EditAction.pen(
               onPressed: () =>
                   context.push(Routes.editMeasurement(circleId, plan.id)),
               tooltip: context.tr('measurements.edit_plan'),
