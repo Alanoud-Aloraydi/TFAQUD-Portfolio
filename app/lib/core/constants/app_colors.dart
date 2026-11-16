@@ -40,6 +40,9 @@ class AppColors {
   static const Color honey = Color(0xFFE8D67D);
   static const Color honeyLight = Color(0xFFFDF7D9);
   static const Color honeyBorder = Color(0xFFF9F1C7);
+
+  /// The simplified mode's «هل أخذت هذا الدواء؟» card.
+  static const Color honeyCard = Color(0xFFFDF6D8);
   static const Color slatePale = Color(0xFFDFE2EA);
 
   /// Icons on white, never text: 3.3 against white, over the 3:1 that

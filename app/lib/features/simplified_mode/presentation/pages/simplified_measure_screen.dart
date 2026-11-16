@@ -28,10 +28,17 @@ class _SimplifiedMeasureScreenState extends State<SimplifiedMeasureScreen> {
   @override
   void initState() {
     super.initState();
-    // The task's own kind, where the patient came from a task: known
-    // before anything loads, so the form opens on the right one and never
-    // flickers from «الضغط» to «السكر».
-    _form.kind = context.read<SimplifiedMeasurementCubit>().state.task?.kind;
+    final SimplifiedMeasurementState state = context
+        .read<SimplifiedMeasurementCubit>()
+        .state;
+    // The task's own kind, where the patient came from a task, so the
+    // form opens on the right one and never flickers.
+    _form.kind = state.task?.kind;
+    // This read makes the cubit, ready at once, before the listener below
+    // exists: without this a free reading never chose a kind (no form).
+    if (state.status == SimplifiedMeasurementStatus.ready) {
+      simplifiedMeasureArrived(_form, state);
+    }
   }
 
   @override

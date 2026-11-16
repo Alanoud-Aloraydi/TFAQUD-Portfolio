@@ -1,19 +1,20 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_task_status.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_icon.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_snoozed_line.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_details.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -64,10 +65,10 @@ class SimplifiedNextCard extends StatelessWidget {
   static PrayerPeriod? _period(TodayTask task, SimplifiedDay day) =>
       day.prayers == null ? null : prayerPeriodOf(task.time, day.prayers!);
 
-  /// «التالي، بعد ساعتين», or «فات موعده».
+  /// «التالي، بعد ساعتين», or «فات موعده» («تأكيد الحضور» for a visit).
   static String _when(BuildContext context, TodayTask task, DateTime now) =>
       task.status == TodayTaskStatus.late
-      ? context.tr('simplified_mode.status.late')
+      ? simplifiedLate(context, task)
       : context.tr(
           'simplified_mode.next_in',
           args: <String>[simplifiedUntil(context, task.scheduledAt, now)],
@@ -77,8 +78,7 @@ class SimplifiedNextCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // The whole card is the one tap, so it is one stop that says everything
     // and carries the action itself: the card inside is excluded.
-    final bool recordable =
-        task.kind != TodayTaskKind.appointment && schedule.canRecord(task);
+    final bool recordable = schedule.canRecord(task);
     return Semantics(
       label: spoken(lines(context, task, day, now, snoozed).join('، ')),
       button: recordable,
@@ -91,8 +91,7 @@ class SimplifiedNextCard extends StatelessWidget {
   }
 
   Widget _body(BuildContext context) {
-    final bool recordable =
-        task.kind != TodayTaskKind.appointment && schedule.canRecord(task);
+    final bool recordable = schedule.canRecord(task);
     final PrayerPeriod? period = _period(task, day);
     final String when = snoozed ?? _when(context, task, now);
     return SimplifiedCard(
@@ -133,8 +132,10 @@ class SimplifiedNextCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  when,
+                SimplifiedSnoozedLine(
+                  text: when,
+                  task: task,
+                  day: day,
                   style: SimplifiedStyle.label(
                     SimplifiedStyle.caption,
                     color: task.status == TodayTaskStatus.late
@@ -154,7 +155,7 @@ class SimplifiedNextCard extends StatelessWidget {
                   simplifiedTaskTitle(context, task),
                   style: SimplifiedStyle.head(SimplifiedStyle.name),
                 ),
-                ..._details(context),
+                SimplifiedTaskDetails(task: task, day: day),
               ],
             ),
           ),
@@ -188,45 +189,5 @@ class SimplifiedNextCard extends StatelessWidget {
         color: AppSemanticColors.onSettingsTile,
       ),
     );
-  }
-
-  List<Widget> _details(BuildContext context) {
-    final List<String> chips = simplifiedTaskChips(context, task, day);
-    return <Widget>[
-      if (task.dose case final dose?) ...<Widget>[
-        const SizedBox(height: 6),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.end,
-          spacing: 10,
-          children: <Widget>[
-            Text(
-              simplifiedDoseAmount(context, dose),
-              style: SimplifiedStyle.head(SimplifiedStyle.headline),
-            ),
-            // What it is for, when the plan says, is a chip under this
-            // line («الكوليسترول»), not repeated here; without one, the
-            // strength tells the medicines apart.
-            if (simplifiedDoseReason(task, day) == null)
-              Text(
-                simplifiedStrength(context, dose),
-                style: SimplifiedStyle.text(
-                  SimplifiedStyle.body,
-                  weight: AppTextTheme.medium,
-                ),
-              ),
-          ],
-        ),
-      ],
-      if (chips.isNotEmpty) ...<Widget>[
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            for (final String chip in chips) SimplifiedChip(chip),
-          ],
-        ),
-      ],
-    ];
   }
 }

@@ -1,9 +1,9 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_mark.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -51,15 +51,7 @@ class SimplifiedDoneCard extends StatelessWidget {
     return SimplifiedCard(
       child: Column(
         children: <Widget>[
-          const CircleAvatar(
-            radius: 36,
-            backgroundColor: SimplifiedStyle.accentTint,
-            child: Icon(
-              AppIcons.check,
-              size: 40,
-              color: SimplifiedStyle.success,
-            ),
-          ),
+          const SimplifiedDoneMark(size: 72),
           const SizedBox(height: 12),
           Text(
             context.tr('simplified_mode.all_done'),

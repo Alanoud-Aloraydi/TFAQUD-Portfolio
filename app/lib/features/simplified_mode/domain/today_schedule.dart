@@ -157,7 +157,7 @@ class TodaySchedule {
   /// about, while it is still not recorded: that exact task by its key, or,
   /// without a key, the one of its kind waiting now ([taskToRecord]). Null
   /// when it was recorded (someone in the family may have), when it is of
-  /// another circle or day, and for an appointment.
+  /// another circle or day, and for a visit (reminder_appointment.dart).
   TodayTask? reminderTask(ReminderRequest request, String circleId) {
     if (request.kind == TodayTaskKind.appointment) return null;
     final String? key = request.taskKey;
@@ -198,17 +198,15 @@ class TodaySchedule {
     return TodayTaskStatus.later;
   }
 
-  /// An appointment needs no recording here: once its time comes it is
-  /// behind the patient.
+  /// A visit is done once «حضرت» is said; one whose time came waits for it.
   static TodayTaskStatus _appointmentStatus(
     CareAppointment item,
     DateTime wall,
   ) {
-    if (item.status == AppointmentStatus.completed ||
-        !item.scheduledAt.isAfter(wall)) {
-      return TodayTaskStatus.done;
-    }
-    return TodayTaskStatus.later;
+    if (item.status == AppointmentStatus.completed) return TodayTaskStatus.done;
+    return item.scheduledAt.isAfter(wall)
+        ? TodayTaskStatus.later
+        : TodayTaskStatus.late;
   }
 
   static int _byTime(TodayTask a, TodayTask b) {

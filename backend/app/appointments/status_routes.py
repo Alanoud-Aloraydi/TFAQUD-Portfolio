@@ -9,18 +9,26 @@ from app.appointments.inputs import AppointmentStatusRequest
 from app.appointments.queries import appointment_view
 from app.appointments.service import AppointmentService
 from app.auth.decorators import current_auth
-from app.authz.decorators import require_circle_role
+from app.authz.decorators import current_circle_role, require_circle_role
 from app.authz.roles import CircleRole
 from app.database import transaction
+from app.errors import Forbidden
 from app.extensions import get_clock
 from app.validation import parse_json_body
 
 
 @bp.post("/appointments/<appointment_id>/status")
-@require_circle_role(CircleRole.MANAGER)
+@require_circle_role(CircleRole.MANAGER, CircleRole.SIMPLIFIED_PATIENT)
 def set_appointment_status(circle_id, appointment_id):
     """Record attendance or cancellation explicitly."""
     body = parse_json_body(AppointmentStatusRequest)
+    # A patient in the simplified mode says «حضرت» for their own visit, as
+    # the family does; cancelling stays with those who manage appointments.
+    if (
+        current_circle_role() == CircleRole.SIMPLIFIED_PATIENT
+        and body.status != "completed"
+    ):
+        raise Forbidden()
     # Change the status, then answer the appointment with its companions and
     # who made and last changed it.
     with transaction() as session:

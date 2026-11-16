@@ -17,6 +17,9 @@ from app.push import (
 from app.push.sender import FAILED, NO_DEVICE, SENT
 
 ACCOUNT = "6f1c2b9e-3a4d-4c5e-8f70-1a2b3c4d5e6f"
+# The same account as the app gives it to OneSignal.login: the id the API
+# answers has no dashes, and OneSignal matches it letter for letter.
+APP_ACCOUNT = "6f1c2b9e3a4d4c5e8f701a2b3c4d5e6f"
 MESSAGE = PushMessage("دعوة إلى دائرة رعاية", "دعوة من ريم.", "invitation")
 SETTINGS = {
     "PUSH_BACKEND": "onesignal",
@@ -95,7 +98,7 @@ def test_the_request_onesignal_expects():
     assert json.loads(request.content) == {
         "app_id": SETTINGS["ONESIGNAL_APP_ID"],
         "target_channel": "push",
-        "include_aliases": {"external_id": [ACCOUNT]},
+        "include_aliases": {"external_id": [APP_ACCOUNT]},
         "headings": {"en": MESSAGE.title, "ar": MESSAGE.title},
         "contents": {"en": MESSAGE.body, "ar": MESSAGE.body},
         "data": {"kind": "invitation"},
@@ -263,7 +266,7 @@ def test_onesignal_reports_the_phones_whose_app_was_deleted():
     def handler(request):
         seen.append(request)
         return httpx.Response(200, json={
-            "identity": {"external_id": ACCOUNT},
+            "identity": {"external_id": APP_ACCOUNT},
             "subscriptions": [
                 {"id": "gone", "type": "iOSPush", "notification_types": -10},
                 # Notifications turned off: the app is still there.
@@ -281,7 +284,7 @@ def test_onesignal_reports_the_phones_whose_app_was_deleted():
     assert request.method == "GET"
     assert str(request.url) == (
         "https://api.onesignal.com/apps/"
-        f"{SETTINGS['ONESIGNAL_APP_ID']}/users/by/external_id/{ACCOUNT}"
+        f"{SETTINGS['ONESIGNAL_APP_ID']}/users/by/external_id/{APP_ACCOUNT}"
     )
     assert request.headers["Authorization"] == "Key os_v2_app_test"
 

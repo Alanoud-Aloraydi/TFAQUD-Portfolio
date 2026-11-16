@@ -1,9 +1,11 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/presentation/widgets/ruler_picker.dart';
 import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
@@ -14,6 +16,7 @@ import 'package:app/features/simplified_mode/presentation/pages/simplified_snooz
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -75,13 +78,8 @@ class _UseCase implements SimplifiedModeUseCase {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// «بعد 15 دقيقة» as the app says it: counted, not written out, the same
-/// words the detailed mode's snooze ruler shows for 15 minutes.
-String _after15() => 'today_dashboard.after'.tr(
-  args: <String>[
-    'counts.minutes.many'.tr(args: <String>['15']),
-  ],
-);
+/// «ذكّرني», the detailed sheet's own button.
+String _remind() => 'reminders.snooze_confirm'.tr();
 
 /// «رجوع» as the app says it.
 String _back() => 'simplified_mode.back'.tr();
@@ -159,13 +157,13 @@ void main() {
       return (useCase, chosen, cubit);
     }
 
-    testWidgets('puts off the dose the patient chose, then goes home', (
-      tester,
-    ) async {
+    testWidgets('«ذكّرني» puts off the dose the patient chose by the '
+        "ruler's first 15 minutes, then goes home", (tester) async {
       final (_UseCase useCase, TodayTask chosen, SimplifiedModeCubit cubit) =
           await open(tester, 1);
 
-      await tester.tap(find.text(_after15()));
+      await tester.ensureVisible(find.text(_remind()));
+      await tester.tap(find.text(_remind()));
       await tester.pumpAndSettle();
 
       expect(useCase.snoozed.single, (chosen, const Duration(minutes: 15)));
@@ -173,27 +171,77 @@ void main() {
       await cubit.close();
     });
 
+    testWidgets('«+» and «−» move the ruler five minutes with a tap', (
+      tester,
+    ) async {
+      final (_UseCase useCase, _, SimplifiedModeCubit cubit) = await open(
+        tester,
+        1,
+      );
+
+      await tester.ensureVisible(find.byKey(const Key('snooze-more')));
+      await tester.pumpAndSettle();
+      // A screen redraws between two taps of a hand; each tap starts from
+      // the value the last one left.
+      for (final String key in <String>[
+        'snooze-more',
+        'snooze-more',
+        'snooze-less',
+      ]) {
+        await tester.tap(find.byKey(Key(key)));
+        await tester.pumpAndSettle();
+      }
+      await tester.ensureVisible(find.text(_remind()));
+      await tester.tap(find.text(_remind()));
+      await tester.pumpAndSettle();
+
+      expect(useCase.snoozed.single.$2, const Duration(minutes: 20));
+      await cubit.close();
+    });
+
+    testWidgets('«رجوع» puts nothing off', (tester) async {
+      final (_UseCase useCase, _, SimplifiedModeCubit cubit) = await open(
+        tester,
+        1,
+      );
+
+      await tester.ensureVisible(find.text(_back()));
+      await tester.tap(find.text(_back()));
+      await tester.pumpAndSettle();
+
+      expect(useCase.snoozed, isEmpty);
+      expect(find.text('home'), findsOneWidget);
+      await cubit.close();
+    });
+
     for (final double scale in <double>[1.3, 2]) {
-      testWidgets('every choice and «رجوع» show at text size $scale', (
+      testWidgets('the ruler, «ذكّرني» and «رجوع» show at text size $scale', (
         tester,
       ) async {
         final (_, _, SimplifiedModeCubit cubit) = await open(tester, scale);
 
         expect(tester.takeException(), isNull);
+        expect(find.byType(RulerPicker), findsOneWidget);
         await tester.scrollUntilVisible(find.text(_back()), 100);
+        expect(find.text(_remind()), findsOneWidget);
         expect(find.text(_back()), findsOneWidget);
         await cubit.close();
       });
     }
 
-    testWidgets('each choice is one labelled button', (tester) async {
+    testWidgets('the ruler is one slider that says what it sets', (
+      tester,
+    ) async {
       final SemanticsHandle semantics = tester.ensureSemantics();
       final (_, _, SimplifiedModeCubit cubit) = await open(tester, 1);
 
-      expect(
-        find.bySemanticsLabel(RegExp(RegExp.escape(_after15()))),
-        findsOneWidget,
-      );
+      final SemanticsData ruler = tester
+          .getSemantics(find.byType(RulerPicker))
+          .getSemanticsData();
+      expect(ruler.label, spoken('simplified_mode.when_remind'.tr()));
+      // A slider is moved by swiping up or down: it can go more and less.
+      expect(ruler.hasAction(SemanticsAction.increase), isTrue);
+      expect(ruler.hasAction(SemanticsAction.decrease), isTrue);
       semantics.dispose();
       await cubit.close();
     });

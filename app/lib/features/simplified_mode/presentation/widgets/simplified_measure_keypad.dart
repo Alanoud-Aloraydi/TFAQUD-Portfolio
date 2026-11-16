@@ -1,10 +1,11 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 
-/// A phone-style keypad: 1 to 9, then 0 and «حذف».
+/// A phone-style keypad: 1 to 9, then 0 and «حذف», drawn as the delete
+/// key every phone keyboard has (⌫), not as an arrow that reads «رجوع».
 class SimplifiedMeasureKeypad extends StatelessWidget {
   const SimplifiedMeasureKeypad({
     super.key,
@@ -54,7 +55,7 @@ class SimplifiedMeasureKeypad extends StatelessWidget {
             Semantics(
               label: spoken(context.tr('simplified_mode.erase_digit')),
               excludeSemantics: true,
-              child: const Icon(AppIcons.back, size: 28),
+              child: const Icon(CupertinoIcons.delete_left, size: 32),
             ),
             onErase,
             quiet: true,

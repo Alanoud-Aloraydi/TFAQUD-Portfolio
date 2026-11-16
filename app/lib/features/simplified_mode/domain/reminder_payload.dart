@@ -1,25 +1,33 @@
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_target.dart';
+import 'package:app/core/services/reminders/item_keys.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
+import 'package:app/core/services/reminders/tapped_item.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:equatable/equatable.dart';
 
-/// What a full-screen reminder asks about: the [kind] of task and, for a
-/// dose or a measurement, that exact task by its [TodayTask.snoozeKey].
+/// What a full-screen reminder asks about: the [kind] of task and that
+/// exact task by its key (item_keys.dart): a dose's or a measurement's
+/// [TodayTask.snoozeKey], a visit's [appointmentItemKey].
 ///
-/// A null [taskKey] means the task of [kind] waiting now: for an
-/// appointment, the nearest one still to come; for a dose or a measurement
-/// (a reminder that carries no key), the one of that kind due now.
+/// A null [taskKey] (an older reminder that names no task) means the task
+/// of [kind] waiting now: for an appointment, the nearest one still to
+/// come; for a dose or a measurement, the one of that kind due now.
 class ReminderRequest extends Equatable {
   const ReminderRequest(this.kind, {this.taskKey});
 
   /// The reminder of [task], a task the patient opened in [circleId].
   ReminderRequest.of(TodayTask task, String circleId)
-    : this(task.kind, taskKey: task.snoozeKey(circleId));
+    : this(
+        task.kind,
+        taskKey:
+            task.snoozeKey(circleId) ??
+            appointmentItemKey(circleId, task.appointment!.id),
+      );
 
   final TodayTaskKind kind;
 
-  /// The task's [TodayTask.snoozeKey]; null for an appointment.
+  /// The task's key; null when the reminder names none.
   final String? taskKey;
 
   @override
@@ -29,7 +37,8 @@ class ReminderRequest extends Equatable {
 /// What a tapped reminder (or snooze) asks about, so the simplified mode
 /// opens its full-screen reminder; null for the note to open the app and
 /// for anything that is not a reminder. A server push about a dose or a
-/// reading put off or missed opens that task the same way.
+/// reading put off or missed, or a visit missed, opens that task the same
+/// way.
 ReminderRequest? reminderRequest(String payload) {
   if (pushKind(payload) case final String kind) {
     return _pushRequest(kind, pushTapItem(payload));
@@ -46,15 +55,19 @@ ReminderRequest? reminderRequest(String payload) {
       ? TodayTaskKind.appointment
       : null;
   if (kind == null) return null;
-  return ReminderRequest(kind, taskKey: snoozeTarget(payload)?.$1);
+  return ReminderRequest(kind, taskKey: tappedItemKey(payload));
 }
 
-/// A missed visit has no reminder to open: its time has passed.
+/// A missed visit opens its reminder too: «حضرت» can still be said.
 ReminderRequest? _pushRequest(String kind, String? item) => switch (kind) {
   'dose_missed' ||
   'dose_snoozed' => ReminderRequest(TodayTaskKind.medication, taskKey: item),
   'measurement_missed' || 'measurement_snoozed' => ReminderRequest(
     TodayTaskKind.measurement,
+    taskKey: item,
+  ),
+  'appointment_missed' => ReminderRequest(
+    TodayTaskKind.appointment,
     taskKey: item,
   ),
   _ => null,

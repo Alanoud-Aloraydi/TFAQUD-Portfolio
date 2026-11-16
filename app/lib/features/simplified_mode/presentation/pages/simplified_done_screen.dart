@@ -1,9 +1,9 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_verdict.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_mark.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -29,8 +29,8 @@ class SimplifiedDoneScreen extends StatelessWidget {
     MeasurementVerdict? verdict,
   ) {
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: SimplifiedStyle.doneGround),
+      backgroundColor: SimplifiedStyle.doneGround,
+      body: SizedBox.expand(
         child: SafeArea(
           child: Column(
             children: <Widget>[
@@ -42,21 +42,7 @@ class SimplifiedDoneScreen extends StatelessWidget {
                     children: <Widget>[
                       Column(
                         children: <Widget>[
-                          Container(
-                            width: 144,
-                            height: 144,
-                            decoration: const BoxDecoration(
-                              color: SimplifiedStyle.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const ExcludeSemantics(
-                              child: Icon(
-                                AppIcons.check,
-                                size: 72,
-                                color: SimplifiedStyle.ink,
-                              ),
-                            ),
-                          ),
+                          const SimplifiedDoneMark(size: 144),
                           const SizedBox(height: 32),
                           Text(
                             context.tr('simplified_mode.done_title'),

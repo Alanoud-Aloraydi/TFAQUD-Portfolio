@@ -5,9 +5,10 @@ import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_late_dose_answers.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_late_dose_answers.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_snoozed_line.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -74,7 +75,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
     final List<String> chips = simplifiedTaskChips(context, task, day);
     return SimplifiedCard(
       color: SimplifiedStyle.attention,
-      side: const BorderSide(color: SimplifiedStyle.attentionEdge, width: 2),
+      side: BorderSide(color: SimplifiedStyle.attentionLine),
       padding: const EdgeInsets.symmetric(
         horizontal: SimplifiedStyle.pad,
         vertical: 24,
@@ -139,8 +140,10 @@ class SimplifiedLateDoseCard extends StatelessWidget {
                   ),
                 ),
                 if (snoozed case final String text)
-                  Text(
-                    text,
+                  SimplifiedSnoozedLine(
+                    text: text,
+                    task: task,
+                    day: day,
                     style: SimplifiedStyle.text(
                       SimplifiedStyle.body,
                       color: SimplifiedStyle.ink,

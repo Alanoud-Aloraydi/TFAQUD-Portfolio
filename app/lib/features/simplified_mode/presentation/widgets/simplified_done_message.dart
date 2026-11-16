@@ -10,6 +10,7 @@ part 'simplified_done_dose_taken.dart';
 part 'simplified_done_dose_skipped.dart';
 part 'simplified_done_glucose.dart';
 part 'simplified_done_blood_pressure.dart';
+part 'simplified_done_visit_attended.dart';
 
 /// What «تم، شكرًا» says was saved, exactly.
 sealed class SimplifiedDoneMessage {
@@ -35,6 +36,10 @@ sealed class SimplifiedDoneMessage {
     int lower, {
     MeasurementLevel? level,
   }) = SimplifiedDoneBloodPressure;
+
+  /// «سجّلنا أنك حضرت الموعد: متابعة».
+  const factory SimplifiedDoneMessage.visitAttended(String title) =
+      SimplifiedDoneVisitAttended;
 
   String text(BuildContext context);
 

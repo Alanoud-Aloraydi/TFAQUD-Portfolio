@@ -4,6 +4,7 @@ import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
@@ -109,6 +110,18 @@ class _UseCase implements SimplifiedModeUseCase {
   ) async {
     skipped.add((dose, reason));
     return doseResult;
+  }
+
+  /// The visits the patient said «حضرت» for.
+  final List<CareAppointment> attended = <CareAppointment>[];
+
+  @override
+  Future<Result<CareAppointment, Failure>> attendAppointment(
+    String circleId,
+    CareAppointment visit,
+  ) async {
+    attended.add(visit);
+    return Success(visit);
   }
 
   /// What «آخر القياسات» is given; empty unless a test fills it.
@@ -291,6 +304,31 @@ void main() {
       expect(cubit.state.status, SimplifiedModeStatus.ready);
       expect(cubit.state.day, isNotNull);
       expect(cubit.state.messageKey, 'error.network');
+    });
+
+    test('«حضرت» writes the visit and reads the day again', () async {
+      useCase.days.add(Success(_day()));
+      await cubit.load();
+      final CareAppointment visit = CareAppointment(
+        id: 'v-1',
+        specialty: null,
+        kind: AppointmentKind.followUp,
+        otherKind: null,
+        scheduledOn: DateTime(2026, 11, 9),
+        time: '11:30',
+        place: null,
+        remoteMethod: null,
+        companions: const <AppointmentCompanion>[],
+        status: AppointmentStatus.scheduled,
+        updatedAt: _noon,
+      );
+
+      expect(await cubit.attendAppointment(visit), isTrue);
+
+      expect(useCase.attended, [visit]);
+      expect(cubit.state.saving, isFalse);
+      await Future<void>.delayed(Duration.zero);
+      expect(useCase.loads, 2);
     });
 
     test('taking a dose saves it at now and reads the day again', () async {

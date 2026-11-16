@@ -11,6 +11,7 @@ from app.clock import ManualClock
 from app.database import db
 from integration_tests.helpers import Api, add_manager, error_code
 from integration_tests.helpers import offline_circle
+from integration_tests.test_circle_api import simplified_circle
 
 
 @pytest.fixture(autouse=True)
@@ -223,6 +224,35 @@ def test_attended_from_an_hour_before_its_time_not_earlier(
     assert attended.status_code == 200, attended.get_json()
     assert attended.get_json()["appointment"]["status"] == "completed"
     assert error_code(too_early, 422) == "appointment_not_started"
+
+
+def test_a_simplified_patient_says_attended_but_cannot_cancel(
+    database_app, database, account, evening
+):
+    # «حضرت» is the patient's own answer in the simplified mode too;
+    # cancelling a visit stays with those who manage the appointments.
+    owner, patient = account(name="لينا"), account("simplified")
+    care = simplified_circle(database, owner, patient)
+    base = f"/api/v1/circles/{care.id}/appointments"
+    soon = Api(database_app, owner).post(
+        base, visit(owner, scheduled_on="2026-11-09", time_of_day="02:00")
+    ).get_json()["appointment"]
+    as_patient = Api(database_app, patient)
+    stamp = {"expected_updated_at": soon["updated_at"]}
+
+    cancelled = as_patient.post(
+        f"{base}/{soon['id']}/status", {"status": "cancelled", **stamp}
+    )
+    attended = as_patient.post(
+        f"{base}/{soon['id']}/status", {"status": "completed", **stamp}
+    )
+
+    assert error_code(cancelled, 403) == "forbidden"
+    assert attended.status_code == 200, attended.get_json()
+    assert attended.get_json()["appointment"]["status"] == "completed"
+    assert attended.get_json()["appointment"]["updated_by"][
+        "account_id"
+    ] == str(patient.id)
 
 
 def test_a_booking_of_several_dates_saves_one_visit_each(

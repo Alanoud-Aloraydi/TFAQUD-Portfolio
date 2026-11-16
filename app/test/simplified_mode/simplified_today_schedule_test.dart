@@ -165,10 +165,28 @@ void main() {
         ]);
       });
 
-      test('an appointment whose time came is done; no recording needed', () {
+      test('a visit whose time came waits for «حضرت», as in the detailed '
+          'mode; once attended it is done', () {
         final schedule = _build(appointments: [_appointment('11:00')]);
-        expect(schedule.tasks.single.status, TodayTaskStatus.done);
-        expect(schedule.focus, HomeFocus.allDone);
+        expect(schedule.tasks.single.status, TodayTaskStatus.late);
+        expect(schedule.focus, HomeFocus.task);
+        expect(schedule.canRecord(schedule.tasks.single), isTrue);
+
+        final attended = _build(
+          appointments: [
+            _appointment('11:00', status: AppointmentStatus.completed),
+          ],
+        );
+        expect(attended.tasks.single.status, TodayTaskStatus.done);
+        expect(attended.focus, HomeFocus.allDone);
+      });
+
+      test('«حضرت» opens an hour before a visit, not earlier', () {
+        final schedule = _build(
+          appointments: [_appointment('12:45'), _appointment('13:30')],
+        );
+        expect(schedule.canRecord(schedule.tasks.first), isTrue);
+        expect(schedule.canRecord(schedule.tasks.last), isFalse);
       });
 
       test('a measurement past its deadline is late', () {
@@ -331,10 +349,13 @@ void main() {
           taskKey: 'c|measurement|v|08:00|d',
         ),
       );
-      // A missed visit's time has passed: nothing to remind of.
+      // A missed visit opens its reminder: «حضرت» can still be said.
       expect(
         reminderRequest('push:appointment_missed#c|appointment|a'),
-        isNull,
+        const ReminderRequest(
+          TodayTaskKind.appointment,
+          taskKey: 'c|appointment|a',
+        ),
       );
       expect(reminderRequest('push:invitation#inbox|i'), isNull);
     });

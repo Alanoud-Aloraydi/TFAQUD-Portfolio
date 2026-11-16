@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
@@ -58,16 +59,15 @@ class SimplifiedMedicalFileContactCard extends StatelessWidget {
               ),
               onTap: edit,
               excludeSemantics: true,
-              child: TextButton(
+              // The pencil alone, as on the detailed mode's contact.
+              child: IconButton(
                 onPressed: edit,
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(0, SimplifiedStyle.touch),
-                  foregroundColor: SimplifiedStyle.ink,
+                constraints: const BoxConstraints(
+                  minWidth: SimplifiedStyle.touch,
+                  minHeight: SimplifiedStyle.touch,
                 ),
-                child: Text(
-                  context.tr('simplified_mode.file.edit'),
-                  style: SimplifiedStyle.label(SimplifiedStyle.caption),
-                ),
+                color: SimplifiedStyle.ink,
+                icon: const Icon(AppIcons.pencil, size: 26),
               ),
             ),
         ],
