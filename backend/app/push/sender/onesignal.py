@@ -7,9 +7,8 @@ import logging
 import threading
 
 from app.push.sender.message import PushMessage
-from app.push.sender.onesignal_api import ONESIGNAL_URL
 from app.push.sender.onesignal_phones import OneSignalPhones
-from app.push.sender.onesignal_request import OneSignalRequest
+from app.push.sender.onesignal_request import LEVEL, OneSignalRequest
 from app.push.sender.outcomes import FAILED, NO_DEVICE, SENT
 from app.resilience import CircuitBreaker
 
@@ -55,33 +54,36 @@ class OneSignalPushSender(OneSignalRequest, OneSignalPhones):
         OneSignal knows none that shows pushes; or FAILED."""
         if not self._breaker.allow():
             return FAILED
+        body = self.payload(account_id, message, phones)
         try:
-            response = self._http().post(
-                ONESIGNAL_URL,
-                json=self.payload(account_id, message, phones),
-                headers={"Authorization": f"Key {self._api_key}"},
-            )
+            status, answer = self.ask(body)
+            if status == 400 and _refuses_level(answer):
+                # The level is an extra: no push is lost for it.
+                log.warning(
+                    "OneSignal refused the interruption level %r; the "
+                    "push goes without it.", body.pop(LEVEL, None)
+                )
+                status, answer = self.ask(body)
         except Exception:  # noqa: BLE001 - a push must never break a request
             log.warning("OneSignal could not be reached.", exc_info=True)
             self._breaker.record_failure()
             return FAILED
         # A 4xx is about this message or the settings; OneSignal is up.
-        if response.status_code >= 500:
+        if status >= 500:
             self._breaker.record_failure()
         else:
             self._breaker.record_success()
-        try:
-            answer = response.json()
-        except ValueError:
-            answer = {}
-        if response.status_code == 200 and answer.get("id"):
+        if status == 200 and answer.get("id"):
             return SENT
-        errors = answer.get("errors") if isinstance(answer, dict) else None
+        errors = answer.get("errors")
         # OneSignal answers 200 without an id when no phone of the account
         # can show a push: not a failure of the server.
-        if response.status_code == 200 and errors:
+        if status == 200 and errors:
             return NO_DEVICE
-        log.warning(
-            "OneSignal refused a push: %s %s", response.status_code, errors
-        )
+        log.warning("OneSignal refused a push: %s %s", status, errors)
         return FAILED
+
+
+def _refuses_level(answer: dict) -> bool:
+    """Whether OneSignal's errors are about the interruption level."""
+    return "interruption level" in str(answer.get("errors")).lower()
