@@ -41,8 +41,11 @@ class AppColors {
   static const Color honeyLight = Color(0xFFFDF7D9);
   static const Color honeyBorder = Color(0xFFF9F1C7);
 
-  /// The simplified mode's «هل أخذت هذا الدواء؟» card.
-  static const Color honeyCard = Color(0xFFFDF6D8);
+  /// «يحتاج انتباهك», the folding groups of «السجل», and the simplified
+  /// mode's «هل أخذت هذا الدواء؟»: a cream paler than [honeyLight], and its
+  /// soft beige edge.
+  static const Color cream = Color(0xFFFCF5ED);
+  static const Color creamEdge = Color(0xFFEDE4D6);
   static const Color slatePale = Color(0xFFDFE2EA);
 
   /// Icons on white, never text: 3.3 against white, over the 3:1 that

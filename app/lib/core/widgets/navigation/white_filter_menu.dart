@@ -1,9 +1,10 @@
-import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
+import 'package:app/core/widgets/navigation/glass_filter_button.dart';
 import 'package:app/core/widgets/overlays/glass_menu_item.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 
-/// A record filter: a glass capsule that opens an anchored glass menu, the
-/// same on «الأدوية», «المواعيد» and «القياسات».
+/// A record filter: a round glass button without words that opens an
+/// anchored glass menu, the same on «الأدوية», «المواعيد» and «القياسات».
+/// The first option is «الكل»; any other fills the button.
 class WhiteFilterMenu<T extends Object> extends StatefulWidget {
   const WhiteFilterMenu({
     super.key,
@@ -37,10 +38,9 @@ class _WhiteFilterMenuState<T extends Object>
       // Hidden while its menu is open: one piece of glass.
       builder: (anchorContext) => Opacity(
         opacity: _menuOpen ? 0 : 1,
-        child: GlassCapsuleButton(
+        child: GlassFilterButton(
           label: _label,
-          semanticLabel: _label,
-          icon: CupertinoIcons.slider_horizontal_3,
+          active: widget.selected != widget.options.keys.first,
           onPressed: () => _openGlass(anchorContext),
         ),
       ),
@@ -52,7 +52,7 @@ class _WhiteFilterMenuState<T extends Object>
     final value = await showGlassMenu<T>(
       anchorContext: anchorContext,
       semanticLabel: _label,
-      anchorContent: Text(_label),
+      anchorContent: GlassFilterButton.mark,
       sections: [
         [
           for (final option in widget.options.entries)

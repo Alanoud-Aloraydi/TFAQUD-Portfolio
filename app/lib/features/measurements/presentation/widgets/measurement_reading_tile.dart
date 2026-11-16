@@ -1,4 +1,6 @@
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/widgets/layout/record_item_card.dart';
+import 'package:app/core/widgets/layout/recorder_line.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
@@ -9,10 +11,10 @@ import 'package:app/features/measurements/presentation/widgets/reading_value.dar
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 
-/// One glucose or blood pressure reading, the same everywhere it is listed,
-/// in the one card of «السجل» ([RecordItemCard]): the kind and when, the
-/// value with its unit at the end, its level in the normal range (words,
-/// an icon and a colour: the card itself stays white), then the details.
+/// One reading in the card of «السجل» ([RecordItemCard]): the kind and
+/// when, the value at the end with who recorded it under it (as «جدول
+/// اليوم» puts the person under its pill), its level in the normal range,
+/// then the details.
 /// At large text sizes the value drops under the title instead of
 /// squeezing it.
 class MeasurementReadingTile extends StatelessWidget {
@@ -36,12 +38,25 @@ class MeasurementReadingTile extends StatelessWidget {
             : CupertinoIcons.heart,
       ),
       title: ReadingTitles(reading: reading),
-      status: _skipped
-          ? StatusBadge(
+      status: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          if (_skipped)
+            StatusBadge(
               text: context.tr('measurements.skipped'),
               tone: StatusTone.muted,
             )
-          : ReadingValue(reading: reading),
+          else
+            ReadingValue(reading: reading),
+          if (reading.recordedByName case final String name)
+            RecorderLine(
+              name: name,
+              photoPath: personPhotoPath(circleId, reading.recordedByAccountId),
+              avatarCode: reading.recordedByAvatarCode,
+            ),
+        ],
+      ),
       body: <Widget>[
         if (!_skipped)
           Align(

@@ -1,9 +1,8 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/stop_button.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -14,8 +13,8 @@ import 'package:flutter/material.dart';
 /// What an appointment card opens, in the groups of a plan's details:
 /// «الموعد» (when, where or how, and that it shows in «اليوم» when
 /// [appearsToday]), «المرافقون» with their pictures, «الأشخاص» (who added
-/// and last changed it), then the close actions for a manager (the cancel
-/// in red, like a stopped medicine).
+/// and last changed it), then for a manager «حضرت» once its time came and
+/// «إلغاء الموعد» last, the red button a medicine's stop has.
 List<Widget> appointmentCardDetails(
   BuildContext context, {
   required CareAppointment value,
@@ -100,35 +99,30 @@ List<Widget> appointmentCardDetails(
             ),
         ],
       ),
-    if (canManage && open)
-      Wrap(
-        spacing: AppSpacing.sm,
-        children: <Widget>[
-          if (passed)
-            TextButton(
-              style: TextButton.styleFrom(minimumSize: tall),
-              onPressed: () => changeAppointmentStatus(
-                context,
-                circleId,
-                value,
-                AppointmentStatus.completed,
-              ),
-              child: Text(context.tr('appointments.mark_completed')),
-            ),
-          TextButton(
-            style: TextButton.styleFrom(
-              minimumSize: tall,
-              foregroundColor: AppSemanticColors.statusError,
-            ),
-            onPressed: () => changeAppointmentStatus(
-              context,
-              circleId,
-              value,
-              AppointmentStatus.cancelled,
-            ),
-            child: Text(context.tr('appointments.cancel_appointment')),
+    if (canManage && open && passed)
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton(
+          style: TextButton.styleFrom(minimumSize: tall),
+          onPressed: () => changeAppointmentStatus(
+            context,
+            circleId,
+            value,
+            AppointmentStatus.completed,
           ),
-        ],
+          child: Text(context.tr('appointments.mark_completed')),
+        ),
+      ),
+    if (canManage && open)
+      StopButton(
+        label: context.tr('appointments.cancel_appointment'),
+        icon: AppIcons.prohibit,
+        onPressed: () => changeAppointmentStatus(
+          context,
+          circleId,
+          value,
+          AppointmentStatus.cancelled,
+        ),
       ),
   ];
 }

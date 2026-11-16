@@ -1,8 +1,4 @@
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
@@ -11,8 +7,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The lines under a reading: the normal range it was judged by, its
-/// conditions, the reason it was skipped, the note and who recorded it.
-/// Each one shows only when it has something.
+/// conditions, the reason it was skipped and the note. Each one shows only
+/// when it has something. Who recorded it is in the card's top corner,
+/// under the value, as «جدول اليوم» shows it.
 class ReadingExtras extends StatelessWidget {
   const ReadingExtras({
     super.key,
@@ -28,7 +25,6 @@ class ReadingExtras extends StatelessWidget {
     final TextStyle? style = Theme.of(context).textTheme.bodySmall
         ?.copyWith(color: context.tokens.textSecondary);
     final bool skipped = reading.outcome == 'skipped';
-    final String? name = reading.recordedByName;
     return MergeSemantics(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,25 +42,6 @@ class ReadingExtras extends StatelessWidget {
               style: style,
             ),
           if (reading.note != null) Text(reading.note!, style: style),
-          if (name != null) ...<Widget>[
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                PersonPhoto(
-                  name: name,
-                  photoPath: personPhotoPath(
-                    circleId,
-                    reading.recordedByAccountId,
-                  ),
-                  avatarCode: reading.recordedByAvatarCode,
-                  size: AppSizes.iconSmall,
-                ),
-                const SizedBox(width: AppSpacing.tight),
-                Flexible(child: Text(name, style: style)),
-              ],
-            ),
-          ],
         ],
       ),
     );

@@ -11,30 +11,28 @@ import 'package:flutter/material.dart';
 /// mark on a white card; the pale fill below is the tint «يحتاج انتباهك»
 /// uses, so a card asks rather than shouts.
 ///
-/// Each edge is one step deeper than the fill it surrounds, of the same
-/// colour, so it reads as the shape of the fill rather than a line ruled
-/// around it. That is under the 3:1 a boundary would need (1.9, 1.5 and
-/// 1.7 on white), so what identifies these buttons is their words, which
-/// read at 8.4, 6.1 and 8.9 on their own fill, and their icons.
+/// They have no edge, as the status pills beside them («حان وقتها») have
+/// none: a fill alone, so a card holds soft shapes rather than ruled lines.
+/// A fill is under the 3:1 a boundary would need, so what identifies these
+/// buttons is their words, which read at 8.4, 6.1 and 8.9 on their own
+/// fill, and their icons.
 enum TaskButtonRole {
-  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the baby violet
-  /// of «يحتاج انتباهك» with the violet every main action uses for its
-  /// edge and its words.
-  answer(AppColors.leafTintDeep, AppColors.leaf, AppColors.inkViolet),
+  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the baby violet,
+  /// its words in the violet every main action uses.
+  answer(AppColors.leafTintDeep, AppColors.inkViolet),
 
   /// «ذكّرني لاحقًا»: putting the task off, in the honey the app warns
   /// with, told also by its bell.
-  later(AppColors.honeyLight, AppColors.honey, AppColors.warning),
+  later(AppColors.honeyLight, AppColors.warning),
 
   /// «تخطي» and «إلغاء»: letting the task go, in grey, told also by its
   /// minus.
-  skip(AppColors.slateMist, AppColors.slateSoft, AppColors.slate);
+  skip(AppColors.slateMist, AppColors.slate);
 
-  const TaskButtonRole(this.fill, this.edge, this.ink);
+  const TaskButtonRole(this.fill, this.ink);
 
-  /// Its fill, its 1px edge, and the color of its words and icon.
+  /// Its fill, and the color of its words and icon.
   final Color fill;
-  final Color edge;
   final Color ink;
 
   /// The answer stands a step taller than the choices under it.
@@ -66,7 +64,7 @@ enum TaskButtonRole {
     shape: const StadiumBorder(),
     backgroundColor: fill,
     foregroundColor: ink,
-    side: BorderSide(color: edge),
+    side: BorderSide.none,
     textStyle: this == answer ? _answerWords : _words,
   );
 }

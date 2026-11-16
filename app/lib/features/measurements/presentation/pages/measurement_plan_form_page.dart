@@ -3,9 +3,7 @@ import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
@@ -31,7 +29,6 @@ import 'package:app/features/measurements/presentation/cubit/measurement_ranges_
 import 'package:app/features/measurements/presentation/models/plan_reading_draft.dart';
 import 'package:app/features/measurements/presentation/models/plan_schedule_draft.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_actions.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_ranges_box.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -419,23 +416,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
-          // Ending a plan belongs where it is edited, not only in its
-          // details: the readings already taken stay in «السجل», only the
-          // tasks still to come stop.
-          if (plan case final MeasurementPlan stoppable) ...<Widget>[
-            const SizedBox(height: AppSpacing.xl),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(0, AppSizes.touch),
-                  foregroundColor: AppSemanticColors.statusError,
-                ),
-                onPressed: _saving ? null : () => _stop(stoppable),
-                child: Text(context.tr('measurements.stop_plan')),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -507,18 +487,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         ),
       ),
     ];
-  }
-
-  /// Ends [plan] after the question, and leaves the form once it is done:
-  /// the plan it was editing no longer exists.
-  Future<void> _stop(MeasurementPlan plan) async {
-    await stopMeasurementPlan(context, plan);
-    if (!mounted) return;
-    final MeasurementPlansCubit cubit = context.read<MeasurementPlansCubit>();
-    final bool gone = cubit.state.plans.every(
-      (MeasurementPlan item) => item.id != plan.id || item.stoppedAt != null,
-    );
-    if (gone) Navigator.of(context).pop();
   }
 
   /// A new reading three hours after the last one (the same day), with the

@@ -75,7 +75,7 @@ class SimplifiedLateDoseCard extends StatelessWidget {
     final List<String> chips = simplifiedTaskChips(context, task, day);
     return SimplifiedCard(
       color: SimplifiedStyle.attention,
-      side: BorderSide(color: SimplifiedStyle.attentionLine),
+      side: const BorderSide(color: SimplifiedStyle.attentionBorder),
       padding: const EdgeInsets.symmetric(
         horizontal: SimplifiedStyle.pad,
         vertical: 24,
