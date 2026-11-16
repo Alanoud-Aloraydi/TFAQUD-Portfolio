@@ -21,13 +21,14 @@ class AppointmentSeries {
   ) {
     final String? series = value.seriesId;
     if (series == null) return null;
-    final List<CareAppointment> booked = <CareAppointment>[
-      for (final CareAppointment item in all)
-        if (item.seriesId == series) item,
-    ]..sort(
-      (CareAppointment a, CareAppointment b) =>
-          a.scheduledOn.compareTo(b.scheduledOn),
-    );
+    final List<CareAppointment> booked =
+        <CareAppointment>[
+          for (final CareAppointment item in all)
+            if (item.seriesId == series) item,
+        ]..sort(
+          (CareAppointment a, CareAppointment b) =>
+              a.scheduledOn.compareTo(b.scheduledOn),
+        );
     if (booked.length < 2) return null;
     final int at = booked.indexWhere(
       (CareAppointment item) => item.id == value.id,

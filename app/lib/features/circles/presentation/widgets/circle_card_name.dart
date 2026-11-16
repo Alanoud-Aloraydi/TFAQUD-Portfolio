@@ -35,11 +35,7 @@ class CircleCardName extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(name, style: text.headlineMedium),
-          Text(
-            who,
-            style: text.bodySmall,
-            semanticsLabel: spoken(who),
-          ),
+          Text(who, style: text.bodySmall, semanticsLabel: spoken(who)),
         ],
       ),
     );

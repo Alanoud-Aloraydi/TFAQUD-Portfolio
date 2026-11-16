@@ -80,8 +80,11 @@ class DoseRecordControls extends StatelessWidget {
             role: TaskButtonRole.earlier,
             icon: CupertinoIcons.clock,
             label: say('medications.different_time_short'),
-            onPressed: () =>
-                takeDoseAtDifferentTime(context, occurrence, circleId: circleId),
+            onPressed: () => takeDoseAtDifferentTime(
+              context,
+              occurrence,
+              circleId: circleId,
+            ),
           ),
           TaskButton(
             role: TaskButtonRole.skip,

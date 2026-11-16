@@ -24,8 +24,7 @@ Widget doseTakenButton(
       ),
       child: FilledButton.icon(
         style: style,
-        onPressed: () =>
-            takeDoseNow(context, occurrence, circleId: circleId),
+        onPressed: () => takeDoseNow(context, occurrence, circleId: circleId),
         icon: const Icon(CupertinoIcons.checkmark, size: 16),
         // The words are on the Semantics above; excluded
         // here they are not said twice.

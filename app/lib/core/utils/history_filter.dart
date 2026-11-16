@@ -31,7 +31,8 @@ class HistoryFilter extends Equatable {
   /// after another month is read.
   HistoryFilter within(List<DateTime> months, Map<String, String> people) =>
       HistoryFilter(
-        month: months.any((DateTime m) => month != null && _sameMonth(m, month!))
+        month:
+            months.any((DateTime m) => month != null && _sameMonth(m, month!))
             ? month
             : null,
         person: people.containsKey(person) ? person : null,
@@ -43,9 +44,10 @@ class HistoryFilter extends Equatable {
       accountId ?? ((name == null || name.trim().isEmpty) ? null : name);
 
   /// The months of [moments], each once, newest first.
-  static List<DateTime> monthsOf(Iterable<DateTime> moments) => <DateTime>{
-    for (final DateTime at in moments) DateTime(at.year, at.month),
-  }.toList()..sort((DateTime a, DateTime b) => b.compareTo(a));
+  static List<DateTime> monthsOf(Iterable<DateTime> moments) =>
+      <DateTime>{for (final DateTime at in moments) DateTime(at.year, at.month)}
+          .toList()
+        ..sort((DateTime a, DateTime b) => b.compareTo(a));
 
   /// Who recorded [records] (account, name), each once: key to name.
   static Map<String, String> peopleOf(Iterable<(String?, String?)> records) =>

@@ -19,8 +19,7 @@ Widget doseRegularControls(
     children: [
       if (isToday) ...[
         FilledButton.icon(
-          onPressed: () =>
-              takeDoseNow(context, occurrence, circleId: circleId),
+          onPressed: () => takeDoseNow(context, occurrence, circleId: circleId),
           icon: const Icon(CupertinoIcons.checkmark),
           label: Text(
             CareVoice.tr(context, circleId, 'medications.taken_now_action'),

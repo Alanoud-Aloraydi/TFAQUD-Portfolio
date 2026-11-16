@@ -2,21 +2,20 @@ import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/appointment_series.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-CareAppointment _visit(String id, int day, {String? series}) =>
-    CareAppointment(
-      id: id,
-      specialty: null,
-      kind: AppointmentKind.followUp,
-      otherKind: null,
-      scheduledOn: DateTime(2026, 12, day),
-      time: '10:30',
-      place: 'مستشفى',
-      remoteMethod: null,
-      companions: const <AppointmentCompanion>[],
-      status: AppointmentStatus.scheduled,
-      updatedAt: DateTime.utc(2026, 11, 15),
-      seriesId: series,
-    );
+CareAppointment _visit(String id, int day, {String? series}) => CareAppointment(
+  id: id,
+  specialty: null,
+  kind: AppointmentKind.followUp,
+  otherKind: null,
+  scheduledOn: DateTime(2026, 12, day),
+  time: '10:30',
+  place: 'مستشفى',
+  remoteMethod: null,
+  companions: const <AppointmentCompanion>[],
+  status: AppointmentStatus.scheduled,
+  updatedAt: DateTime.utc(2026, 11, 15),
+  seriesId: series,
+);
 
 void main() {
   group('AppointmentSeries', () {

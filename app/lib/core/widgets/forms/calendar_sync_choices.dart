@@ -24,9 +24,8 @@ mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
   AppPermission? access;
 
   /// Whether the circle is copied to the calendar; null while it loads.
-  bool? get enabled => _chosen == null || access == null
-      ? null
-      : _chosen! && access!.usable;
+  bool? get enabled =>
+      _chosen == null || access == null ? null : _chosen! && access!.usable;
 
   /// Whether the person asked for the copy but the phone refuses it, so the
   /// screen should offer the phone's Settings.

@@ -124,8 +124,9 @@ class DoseReminders {
   final ValueNotifier<Map<String, TaskSnooze>> _published =
       ValueNotifier<Map<String, TaskSnooze>>(const <String, TaskSnooze>{});
   Timer? _snoozeEnds;
-  final ValueNotifier<AppPermission?> _allowed =
-      ValueNotifier<AppPermission?>(null);
+  final ValueNotifier<AppPermission?> _allowed = ValueNotifier<AppPermission?>(
+    null,
+  );
 
   /// What the phone allows the reminders to do, as the last ask or read
   /// answered; null until the first one. Both modes watch it, so a person

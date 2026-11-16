@@ -55,9 +55,10 @@ class AppointmentDatesRow extends StatelessWidget {
               for (final DateTime day in dates)
                 InputChip(
                   label: Text(appointmentDate(context, day)),
-                  onDeleted: () => onChanged(
-                    <DateTime>[for (final DateTime d in dates) if (d != day) d],
-                  ),
+                  onDeleted: () => onChanged(<DateTime>[
+                    for (final DateTime d in dates)
+                      if (d != day) d,
+                  ]),
                   deleteButtonTooltipMessage: context.tr(
                     'appointments.remove_date',
                   ),

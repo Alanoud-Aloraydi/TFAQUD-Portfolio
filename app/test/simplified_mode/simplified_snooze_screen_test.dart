@@ -78,7 +78,9 @@ class _UseCase implements SimplifiedModeUseCase {
 /// «بعد 15 دقيقة» as the app says it: counted, not written out, the same
 /// words the detailed mode's snooze ruler shows for 15 minutes.
 String _after15() => 'today_dashboard.after'.tr(
-  args: <String>['counts.minutes.many'.tr(args: <String>['15'])],
+  args: <String>[
+    'counts.minutes.many'.tr(args: <String>['15']),
+  ],
 );
 
 /// «رجوع» as the app says it.

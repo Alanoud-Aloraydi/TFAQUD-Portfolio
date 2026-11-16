@@ -453,9 +453,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                   minimumSize: const Size(0, AppSizes.touch),
                   foregroundColor: AppSemanticColors.statusError,
                 ),
-                onPressed: _saving
-                    ? null
-                    : () => _stop(stoppable),
+                onPressed: _saving ? null : () => _stop(stoppable),
                 child: Text(context.tr('measurements.stop_plan')),
               ),
             ),

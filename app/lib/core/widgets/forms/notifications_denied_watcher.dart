@@ -12,12 +12,9 @@ class NotificationsDeniedWatcher extends StatelessWidget {
   final Widget row;
 
   @override
-  Widget build(BuildContext context) =>
-      ValueListenableBuilder<AppPermission?>(
-        valueListenable: GetIt.I<DoseReminders>().allowed,
-        builder: (BuildContext context, AppPermission? allowed, Widget? _) =>
-            allowed == null || allowed.usable
-            ? const SizedBox.shrink()
-            : row,
-      );
+  Widget build(BuildContext context) => ValueListenableBuilder<AppPermission?>(
+    valueListenable: GetIt.I<DoseReminders>().allowed,
+    builder: (BuildContext context, AppPermission? allowed, Widget? _) =>
+        allowed == null || allowed.usable ? const SizedBox.shrink() : row,
+  );
 }

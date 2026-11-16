@@ -60,8 +60,7 @@ class _MedicationHistorySectionState extends State<MedicationHistorySection> {
     if (state.status == MedicationsStatus.failure) {
       return RetryView(
         messageKey: state.messageKey!,
-        onRetry: () =>
-            context.read<MedicationsCubit>().load(widget.circleId),
+        onRetry: () => context.read<MedicationsCubit>().load(widget.circleId),
       );
     }
     final DateTime today = PatientClockScope.of(context).today();

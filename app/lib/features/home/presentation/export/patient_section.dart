@@ -10,29 +10,32 @@ import 'package:flutter/widgets.dart';
 /// are not written: their names and numbers stay inside the app.
 RecordPdfSection patientSection(BuildContext context, MedicalFile file) =>
     RecordPdfSection(
-  title: context.tr('record_export.medical_file'),
-  rows: <RecordPdfRow>[
-    RecordPdfRow(
-      label: context.tr('circles.name'),
-      value: file.patient.fullName,
-    ),
-    RecordPdfRow(
-      label: context.tr('circles.birth_date'),
-      value: formatBirthDate(context, file.patient.birthDate),
-    ),
-    RecordPdfRow(label: context.tr('circles.city'), value: file.patient.city),
-    RecordPdfRow(
-      label: context.tr('circles.blood_type'),
-      value: MedicalTexts.bloodType(context, file.profile.bloodType),
-      ltr: file.profile.bloodType != null,
-    ),
-    RecordPdfRow(
-      label: context.tr('circles.allergies_title'),
-      value: MedicalTexts.allergies(context, file.profile.allergies),
-    ),
-    RecordPdfRow(
-      label: context.tr('circles.conditions'),
-      value: MedicalTexts.conditions(context, file.profile.conditions),
-    ),
-  ],
-);
+      title: context.tr('record_export.medical_file'),
+      rows: <RecordPdfRow>[
+        RecordPdfRow(
+          label: context.tr('circles.name'),
+          value: file.patient.fullName,
+        ),
+        RecordPdfRow(
+          label: context.tr('circles.birth_date'),
+          value: formatBirthDate(context, file.patient.birthDate),
+        ),
+        RecordPdfRow(
+          label: context.tr('circles.city'),
+          value: file.patient.city,
+        ),
+        RecordPdfRow(
+          label: context.tr('circles.blood_type'),
+          value: MedicalTexts.bloodType(context, file.profile.bloodType),
+          ltr: file.profile.bloodType != null,
+        ),
+        RecordPdfRow(
+          label: context.tr('circles.allergies_title'),
+          value: MedicalTexts.allergies(context, file.profile.allergies),
+        ),
+        RecordPdfRow(
+          label: context.tr('circles.conditions'),
+          value: MedicalTexts.conditions(context, file.profile.conditions),
+        ),
+      ],
+    );
