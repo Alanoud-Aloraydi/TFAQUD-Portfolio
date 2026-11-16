@@ -10,9 +10,9 @@ import 'package:app/features/measurements/domain/measurement_reading_draft.dart'
 import 'package:app/features/measurements/domain/measurement_version.dart';
 import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';

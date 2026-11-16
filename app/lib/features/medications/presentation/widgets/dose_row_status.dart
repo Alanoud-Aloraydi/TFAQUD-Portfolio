@@ -1,9 +1,7 @@
-import 'package:app/core/l10n/arabic_counts.dart';
-import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/presentation/widgets/dose_late_line.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 
@@ -26,39 +24,17 @@ class DoseRowStatus {
   ) {
     final DoseTimingState? timing = medicationTimingState(occurrence, now);
     final DoseRecord? record = occurrence.record;
-    final PatientClock clock = PatientClockScope.of(context);
-    final DateTime? takenAt = record?.takenAt;
     final String label = record == null
         ? context.tr('today_dashboard.status.${timing!.name}')
         : record.outcome == DoseOutcome.skipped
         ? context.tr('today_dashboard.status.skipped')
         : context.tr('today_dashboard.status.taken');
-    // «بعد 5 ساعات من الموعد», a line under the name: the badge stays the
-    // short «تم أخذها» of every taken dose.
-    final String? lateBy =
-        record?.outcome == DoseOutcome.taken &&
-            occurrence.isTakenLate(clock) &&
-            takenAt != null
-        ? context.tr(
-            'today_dashboard.status.late_line',
-            args: <String>[
-              lateByText(
-                context,
-                takenAt.toUtc().difference(
-                  clock
-                      .momentOf(occurrence.scheduledOn, occurrence.time)
-                      .toUtc(),
-                ),
-              ),
-            ],
-          )
-        : null;
     final bool waiting =
         timing == DoseTimingState.due || timing == DoseTimingState.late;
     final bool unrecorded = timing == DoseTimingState.missed;
     return DoseRowStatus(
       label: label,
-      lateBy: lateBy,
+      lateBy: doseLateLine(context, occurrence),
       tone: switch (record?.outcome) {
         DoseOutcome.taken => StatusTone.success,
         DoseOutcome.skipped => StatusTone.muted,

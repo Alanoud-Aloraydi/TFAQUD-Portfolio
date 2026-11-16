@@ -1,4 +1,5 @@
 import 'package:app/features/circles/domain/entities/medical_file.dart';
+import 'package:app/features/circles/domain/entities/medical_gap.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

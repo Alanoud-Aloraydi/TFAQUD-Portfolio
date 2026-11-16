@@ -1,4 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:equatable/equatable.dart';
 
 enum Prayer { fajr, dhuhr, asr, maghrib, isha }

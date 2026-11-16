@@ -25,9 +25,11 @@ import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/domain/measurement_plan_draft.dart';
 import 'package:app/features/measurements/domain/measurement_version.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/models/plan_reading_draft.dart';
+import 'package:app/features/measurements/presentation/models/plan_schedule_draft.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_actions.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_ranges_box.dart';
@@ -57,47 +59,22 @@ class MeasurementPlanFormPage extends StatefulWidget {
       _MeasurementPlanFormPageState();
 }
 
-/// One reading time and its glucose «حالة القياس».
-class _Reading {
-  _Reading(this.time, this.measurementState);
-
-  TimeOfDay time;
-  String? measurementState;
-}
-
-/// The schedule of one kind: glucose and blood pressure each keep their own
-/// times, days, start and missed-after wait while the form switches between them, and
-/// only the kind shown is saved.
-class _Schedule {
-  _Schedule(this.readings, this.start);
-
-  /// The reading times of a day, like a medicine's dose times: one or more,
-  /// up to [_MeasurementPlanFormPageState._maxReadings], each with its own
-  /// glucose measurement state.
-  final List<_Reading> readings;
-  final Set<int> days = {1, 2, 3, 4, 5, 6, 7};
-
-  /// The first day, on the patient's calendar.
-  DateTime start;
-  int? missedAfter = PlanLimits.defaultMissedAfterMinutes;
-}
-
 class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   MeasurementKind _kind = MeasurementKind.glucose;
 
   /// Made on first use, where the patient's today can be read: a new plan
   /// starts on it.
-  late final Map<MeasurementKind, _Schedule> _schedules = {
-    MeasurementKind.glucose: _Schedule(<_Reading>[
-      _Reading(const TimeOfDay(hour: 7, minute: 30), 'fasting'),
+  late final Map<MeasurementKind, PlanScheduleDraft> _schedules = {
+    MeasurementKind.glucose: PlanScheduleDraft(<PlanReadingDraft>[
+      PlanReadingDraft(const TimeOfDay(hour: 7, minute: 30), 'fasting'),
     ], PatientClockScope.of(context).today()),
-    MeasurementKind.bp: _Schedule(<_Reading>[
-      _Reading(const TimeOfDay(hour: 8, minute: 0), 'morning'),
+    MeasurementKind.bp: PlanScheduleDraft(<PlanReadingDraft>[
+      PlanReadingDraft(const TimeOfDay(hour: 8, minute: 0), 'morning'),
     ], PatientClockScope.of(context).today()),
   };
 
-  _Schedule get _schedule => _schedules[_kind]!;
-  List<_Reading> get _readings => _schedule.readings;
+  PlanScheduleDraft get _schedule => _schedules[_kind]!;
+  List<PlanReadingDraft> get _readings => _schedule.readings;
   Set<int> get _days => _schedule.days;
   DateTime get _start => _schedule.start;
   set _start(DateTime value) => _schedule.start = value;
@@ -136,9 +113,9 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     _kind = plan.kind;
     _readings
       ..clear()
-      ..addAll(<_Reading>[
+      ..addAll(<PlanReadingDraft>[
         for (final MeasurementTime item in version.readingTimes)
-          _Reading(_parseTime(item.time), item.measurementState),
+          PlanReadingDraft(_parseTime(item.time), item.measurementState),
       ]);
     final earliest = PatientClockScope.of(context).today();
     _start = version.effectiveFromOn.isAfter(earliest)
@@ -419,7 +396,8 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
               circleId: widget.circleId,
               kind: _kind,
               states: <String?>[
-                for (final _Reading item in _readings) item.measurementState,
+                for (final PlanReadingDraft item in _readings)
+                  item.measurementState,
               ],
             ),
           ),
@@ -466,7 +444,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   /// One reading: its time («القراءة 2» when there are several), its
   /// glucose context, and «حذف» for all but a single reading.
   List<Widget> _readingRows(BuildContext context, int index) {
-    final _Reading reading = _readings[index];
+    final PlanReadingDraft reading = _readings[index];
     final String label = _readings.length == 1
         ? context.tr('measurements.time')
         : context.tr('measurements.reading_number', args: ['${index + 1}']);
@@ -557,7 +535,10 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         .firstOrNull;
     setState(() {
       _readings.add(
-        _Reading(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60), meal),
+        PlanReadingDraft(
+          TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
+          meal,
+        ),
       );
       _errorKey = null;
     });

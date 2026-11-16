@@ -1,7 +1,8 @@
 import 'package:app/core/services/tap_focus.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/period_entry.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_entry_key.dart';
-import 'package:app/features/medications/presentation/today_medication_view.dart';
+import 'package:app/features/medications/presentation/medication_period_summary.dart';
 
 /// Whether a prayer period opens by itself: the patient is in it, or
 /// something in it needs attention, or it has a visit, or the notification

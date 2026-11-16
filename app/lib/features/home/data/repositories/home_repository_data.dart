@@ -1,3 +1,4 @@
+import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/l10n/care_voice.dart';

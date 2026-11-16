@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';

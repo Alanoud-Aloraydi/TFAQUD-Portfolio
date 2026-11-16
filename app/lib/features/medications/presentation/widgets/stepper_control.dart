@@ -1,7 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/medications/presentation/widgets/stepper_half_button.dart';
 import 'package:flutter/material.dart';
 
 /// The iOS stepper: a white outlined capsule with − and + divided by a thin
@@ -36,7 +36,7 @@ class StepperControl extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          _Half(
+          StepperHalfButton(
             icon: AppIcons.minus,
             label: decrementLabel,
             onPressed: onDecrement,
@@ -49,39 +49,13 @@ class StepperControl extends StatelessWidget {
               color: AppSemanticColors.borderControlBase,
             ),
           ),
-          _Half(
+          StepperHalfButton(
             icon: AppIcons.plus,
             label: incrementLabel,
             onPressed: onIncrement,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Half extends StatelessWidget {
-  const _Half({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: label,
-      onPressed: onPressed,
-      icon: Icon(icon, size: AppSizes.iconSmall),
-      color: AppSemanticColors.textPrimary,
-      disabledColor: AppSemanticColors.borderControlBase,
-      padding: EdgeInsets.zero,
-      constraints: BoxConstraints.tight(const Size.square(AppSizes.touch)),
-      style: IconButton.styleFrom(shape: const StadiumBorder()),
     );
   }
 }

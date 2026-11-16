@@ -5,27 +5,9 @@ import 'package:app/features/circles/domain/entities/medical_profile_draft.dart'
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
-import 'package:equatable/equatable.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-/// Holds the normal ranges of one patient while they load.
-class MeasurementRangesState extends Equatable {
-  const MeasurementRangesState({
-    this.loading = true,
-    this.ranges,
-    this.errorKey,
-  });
-
-  final bool loading;
-
-  /// Null until read, or when reading failed.
-  final NormalRanges? ranges;
-  final String? errorKey;
-
-  @override
-  List<Object?> get props => [loading, ranges, errorKey];
-}
 
 /// The normal ranges of one circle's patient, for «المعدل الطبيعي». Saving a
 /// reading never waits for them: the server judges it either way.

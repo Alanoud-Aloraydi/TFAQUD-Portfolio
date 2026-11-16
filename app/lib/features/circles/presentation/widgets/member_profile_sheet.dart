@@ -1,5 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/member_phone_card.dart';
 import 'package:app/features/circles/presentation/widgets/member_profile_actions.dart';

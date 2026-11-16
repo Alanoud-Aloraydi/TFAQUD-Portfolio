@@ -2,6 +2,7 @@ import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/circle_small_action.dart';
 import 'package:easy_localization/easy_localization.dart';

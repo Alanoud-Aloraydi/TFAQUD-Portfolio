@@ -1,7 +1,6 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/widgets/contact_tile_lines.dart';
 import 'package:app/features/circles/presentation/widgets/contact_tile_photo.dart';
@@ -43,13 +42,9 @@ class ContactTile extends StatelessWidget {
         ContactTilePhoto(contact: contact, circleId: circleId),
         const SizedBox(width: AppSpacing.md),
         Expanded(child: ContactTileLines(contact: contact)),
-        if (onEdit != null)
-          IconButton(
-            onPressed: onEdit,
-            icon: const Icon(
-              AppIcons.pencil,
-              color: AppSemanticColors.textPrimary,
-            ),
+        if (onEdit case final VoidCallback edit)
+          EditAction.pen(
+            onPressed: edit,
             tooltip: context.tr(
               'circles.contact_edit_action',
               args: <String>[contact.name],

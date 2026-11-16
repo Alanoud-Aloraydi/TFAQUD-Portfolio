@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:app/core/l10n/appointment_texts.dart';
-import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -10,11 +10,12 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/recordable_now.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
-import 'package:app/features/medications/presentation/widgets/today_medication_components.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_action_dose.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

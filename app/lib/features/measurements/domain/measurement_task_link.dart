@@ -1,4 +1,4 @@
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 
 /// [tasks] in the same order, each knowing when the next task of its kind

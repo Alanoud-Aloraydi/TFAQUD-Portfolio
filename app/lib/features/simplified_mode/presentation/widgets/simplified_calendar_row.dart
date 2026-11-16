@@ -1,7 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/care_icon_tile.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
 import 'package:flutter/material.dart';
 
 /// The calendar row: a calendar square, what goes on the calendar, a switch.

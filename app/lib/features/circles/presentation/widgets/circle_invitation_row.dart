@@ -3,6 +3,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
 import 'package:app/features/circles/domain/request_age.dart';
 import 'package:app/features/circles/presentation/widgets/circle_request_avatar.dart';
 import 'package:app/features/circles/presentation/widgets/invitation_actions.dart';

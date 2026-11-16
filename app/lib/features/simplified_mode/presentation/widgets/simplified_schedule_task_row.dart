@@ -9,7 +9,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_don
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/task_thumb.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

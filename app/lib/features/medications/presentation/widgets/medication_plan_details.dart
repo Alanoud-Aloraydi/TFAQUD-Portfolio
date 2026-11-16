@@ -1,7 +1,7 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/features/medications/presentation/widgets/medication_about_group.dart';
+import 'package:app/features/medications/presentation/widgets/medication_people_group.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_line.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -16,63 +16,16 @@ List<Widget> medicationPlanDetails(
   required String circleId,
   required MedicationPlan plan,
 }) {
-  final MedicationVersion version = plan.version;
   return <Widget>[
     PlanFactGroup(
       title: context.tr('plan_details.schedule'),
       children: <Widget>[
-        for (final schedule in version.schedules)
+        for (final schedule in plan.version.schedules)
           MedicationScheduleLine(schedule: schedule),
       ],
     ),
-    PlanFactGroup(
-      title: context.tr('plan_details.about_medicine'),
-      children: <Widget>[
-        if (version.reason case final String reason)
-          PlanFact(
-            icon: AppIcons.firstAid,
-            label: context.tr('medications.reason'),
-            value: reason,
-          ),
-        if (version.instructions case final String instructions)
-          PlanFact(
-            icon: AppIcons.info,
-            label: context.tr('medications.instructions'),
-            value: instructions,
-          ),
-        PlanFact(
-          icon: AppIcons.hourglass,
-          label: context.tr('medications.missed_after'),
-          value: arabicCount(
-            context,
-            ArabicCount.minutes,
-            version.missedAfterMinutes,
-          ),
-        ),
-      ],
-    ),
+    medicationAboutGroup(context, plan.version),
     if (plan.createdByName != null || plan.lastEditedByName != null)
-      PlanFactGroup(
-        title: context.tr('plan_details.people'),
-        children: <Widget>[
-          if (plan.createdByName case final String name)
-            PlanPersonFact(
-              label: context.tr('medications.added_by'),
-              name: name,
-              circleId: circleId,
-              accountId: plan.createdByAccountId,
-              avatarCode: plan.createdByAvatarCode,
-            ),
-          if (plan.lastEditedByName case final String name
-              when name != plan.createdByName)
-            PlanPersonFact(
-              label: context.tr('medications.last_edited_by'),
-              name: name,
-              circleId: circleId,
-              accountId: plan.lastEditedByAccountId,
-              avatarCode: plan.lastEditedByAvatarCode,
-            ),
-        ],
-      ),
+      medicationPeopleGroup(context, circleId: circleId, plan: plan),
   ];
 }

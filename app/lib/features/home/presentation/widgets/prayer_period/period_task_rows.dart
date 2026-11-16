@@ -2,7 +2,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/focus_mark.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/period_entry.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_entry_key.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_row.dart';
 import 'package:app/features/medications/presentation/widgets/today_dose_row.dart';

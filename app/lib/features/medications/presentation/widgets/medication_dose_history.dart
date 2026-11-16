@@ -1,15 +1,9 @@
 import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
-import 'package:app/core/widgets/layout/filtered_history.dart';
-import 'package:app/core/widgets/layout/inset_text.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
-import 'package:app/features/medications/presentation/widgets/dose_history_days.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_skeleton.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/features/medications/presentation/widgets/dose_history_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,41 +37,11 @@ class MedicationDoseHistory extends StatelessWidget {
             messageKey: state.messageKey!,
             onRetry: context.read<MedicationOccurrencesCubit>().reload,
           ),
-          _ => _history(context, state),
+          _ => DoseHistoryView(
+            state: state,
+            earliest: earliest,
+            circleId: circleId,
+          ),
         },
       );
-
-  Widget _history(BuildContext context, MedicationOccurrencesState state) {
-    final cubit = context.read<MedicationOccurrencesCubit>();
-    return FilteredHistory<DoseOccurrence>(
-      title: context.tr('medications.dose_history'),
-      items: state.occurrences.reversed.toList(),
-      dayOf: (item) => item.scheduledOn,
-      byOf: (item) =>
-          (item.record?.recordedByAccountId, item.record?.recordedByName),
-      empty: InsetText(_emptyText(context)),
-      builder: (shown) =>
-          DoseHistoryDays(occurrences: shown, circleId: circleId),
-      footer: cubit.canLoadEarlier(earliest)
-          ? Center(
-              child: TextButton(
-                onPressed:
-                    state.status == MedicationOccurrencesStatus.loadingMore
-                    ? null
-                    : () => cubit.loadEarlier(earliest),
-                child: Text(context.tr('medications.load_earlier')),
-              ),
-            )
-          : null,
-    );
-  }
-
-  /// Not started yet, or no dose was due in the days read.
-  String _emptyText(BuildContext context) =>
-      earliest.isAfter(PatientClockScope.of(context).today())
-      ? context.tr(
-          'medications.dose_history_not_started',
-          args: <String>[formatMedicationDate(context, earliest)],
-        )
-      : context.tr('medications.no_dose_history');
 }

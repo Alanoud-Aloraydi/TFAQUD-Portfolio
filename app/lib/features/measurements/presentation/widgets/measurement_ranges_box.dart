@@ -1,6 +1,7 @@
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_state.dart';
 import 'package:app/features/measurements/presentation/widgets/condition_file_row.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
 import 'package:easy_localization/easy_localization.dart';

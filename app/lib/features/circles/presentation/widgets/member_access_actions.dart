@@ -1,5 +1,6 @@
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';

@@ -7,9 +7,7 @@ import 'package:app/features/circles/domain/entities/received_circle_request.dar
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
-import 'package:app/features/circles/presentation/widgets/accepted_request_card.dart';
-import 'package:app/features/circles/presentation/widgets/invitation_card.dart';
-import 'package:app/features/circles/presentation/widgets/request_card.dart';
+import 'package:app/features/circles/presentation/widgets/inbox_cards.dart';
 import 'package:app/features/circles/presentation/widgets/inbox_focus_mark.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

@@ -1,9 +1,8 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
-import 'package:app/core/widgets/navigation/glass_icon_button.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_body.dart';
@@ -27,12 +26,11 @@ Widget accountContent(
         onClose: context.canPop()
             ? () => context.pop()
             : () => context.go(Routes.today),
-        // One edit button, in the corner: a pencil without a word,
-        // like the close button. VoiceOver reads «تعديل».
+        // The app's one edit affordance, as «الملف الصحي» shows it: the
+        // header has room, so the pencil keeps its word.
         trailing: state.status == AccountStatus.ready
-            ? GlassIconButton(
+            ? EditAction(
                 tooltip: context.tr('account.edit'),
-                icon: const Icon(AppIcons.pencil),
                 onPressed: () => _edit(context, cubit),
               )
             : null,

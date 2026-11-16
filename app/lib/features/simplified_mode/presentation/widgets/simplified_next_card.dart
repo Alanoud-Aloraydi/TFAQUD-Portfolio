@@ -7,12 +7,13 @@ import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/measurement_icon.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

@@ -1,5 +1,6 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/member_access_controls.dart';
 import 'package:app/features/circles/presentation/widgets/member_photo_path.dart';

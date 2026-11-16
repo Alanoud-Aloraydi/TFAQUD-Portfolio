@@ -2,8 +2,8 @@ import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/dose_actions.dart';
 import 'package:app/features/medications/presentation/widgets/dose_recorder_line.dart';
+import 'package:app/features/medications/presentation/widgets/dose_skip_reason_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

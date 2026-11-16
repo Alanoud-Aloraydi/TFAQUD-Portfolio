@@ -1,4 +1,5 @@
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
 import 'package:app/features/prayer_times/domain/repositories/prayer_times_repository_domain.dart';
 import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
