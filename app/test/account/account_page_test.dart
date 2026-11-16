@@ -331,7 +331,7 @@ void main() {
         // with the step and its title; «التالي» at the bottom moves on to
         // the second, and «تخطي» is next to it.
         expect(find.text('intro.p1_title'.tr()), findsOneWidget);
-        expect(find.text('01 · ${'intro.p1_step'.tr()}'), findsOneWidget);
+        expect(find.text('01، ${'intro.p1_step'.tr()}'), findsOneWidget);
         expect(find.text('intro.demo.next_dose'.tr()), findsOneWidget);
         expect(find.text('intro.skip'.tr()), findsOneWidget);
         await tester.tap(find.text('intro.next'.tr()));

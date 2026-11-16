@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 /// circle's own setting — someone in several circles may want only one
 /// circle's appointments on their phone's calendar, say.
 /// «الأعضاء», and at the end how many members and pending invitations
-/// there are: «3 أعضاء · دعوة معلّقة».
+/// there are: «3 أعضاء، دعوة معلّقة».
 class CircleMembersHeader extends StatelessWidget {
   const CircleMembersHeader({super.key, required this.overview});
 
@@ -21,7 +21,7 @@ class CircleMembersHeader extends StatelessWidget {
     final String summary = <String>[
       _count(context, 'members_count', overview.members.length),
       if (invitations > 0) _count(context, 'invitations', invitations),
-    ].join(' · ');
+    ].join('، ');
     return Padding(
       padding: const EdgeInsets.only(
         top: AppSpacing.xl,
@@ -44,7 +44,7 @@ class CircleMembersHeader extends StatelessWidget {
               summary,
               textAlign: TextAlign.end,
               style: text.bodySmall,
-              semanticsLabel: spoken(summary.replaceAll(' · ', '، ')),
+              semanticsLabel: spoken(summary),
             ),
           ),
         ],

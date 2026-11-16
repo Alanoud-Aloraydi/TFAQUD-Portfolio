@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:app/core/services/permissions/app_permission.dart';
 import 'package:app/core/services/phone_notifications.dart';
 export 'package:app/core/services/reminder_circle.dart';
 import 'package:app/core/services/reminder_circle.dart';
@@ -14,7 +15,8 @@ import 'package:app/core/utils/coalescing_runner.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -122,6 +124,23 @@ class DoseReminders {
   final ValueNotifier<Map<String, TaskSnooze>> _published =
       ValueNotifier<Map<String, TaskSnooze>>(const <String, TaskSnooze>{});
   Timer? _snoozeEnds;
+  final ValueNotifier<AppPermission?> _allowed = ValueNotifier<AppPermission?>(
+    null,
+  );
+
+  /// What the phone allows the reminders to do, as the last ask or read
+  /// answered; null until the first one. Both modes watch it, so a person
+  /// whose notifications are off is told instead of waiting for reminders
+  /// that cannot arrive.
+  ValueListenable<AppPermission?> get allowed => _allowed;
+
+  /// Asks the phone, or reads what it already answered, and publishes it.
+  Future<AppPermission> _ask({required bool request}) async {
+    if (request) await _phone.requestPermission();
+    final AppPermission permission = await _phone.permission();
+    _allowed.value = permission;
+    return permission;
+  }
 
   /// The tasks put off and not yet reminded of again, by their keys: the
   /// cards of both modes show «بنذكّرك 2:36 م», and the calendar copy has
@@ -248,7 +267,7 @@ class DoseReminders {
     // A snooze can be the first reminder this phone sets (a day whose tasks
     // have all passed asks nothing), and without the permission iOS drops
     // it in silence. iOS asks the person only the first time.
-    await _phone.requestPermission();
+    await _ask(request: true);
     final Map<int, String> pending = await _phone.pending();
     for (final MapEntry<int, String> entry in pending.entries) {
       if (isReminderPayload(entry.value) &&
@@ -541,9 +560,10 @@ class DoseReminders {
     );
     // The question comes when there is something to remind of, once per run
     // of the app; iOS shows it only the first time.
-    if (planned.isNotEmpty && !_asked) {
+    if (planned.isNotEmpty) {
+      final bool first = !_asked;
       _asked = true;
-      await _phone.requestPermission();
+      await _ask(request: first);
       if (session != _session) return;
     }
     await _replace(planned, session);

@@ -25,8 +25,8 @@ class SimplifiedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final (Color fill, Color text, BorderSide side) = switch (tone) {
       SimplifiedButtonTone.primary => (
-        SimplifiedStyle.accent,
-        SimplifiedStyle.ink,
+        SimplifiedStyle.accentStrong,
+        SimplifiedStyle.surface,
         BorderSide.none,
       ),
       SimplifiedButtonTone.secondary => (

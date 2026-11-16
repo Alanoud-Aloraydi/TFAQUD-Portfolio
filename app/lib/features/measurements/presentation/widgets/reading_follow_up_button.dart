@@ -2,7 +2,7 @@ import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/core/widgets/buttons/task_button_grid.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:easy_localization/easy_localization.dart';

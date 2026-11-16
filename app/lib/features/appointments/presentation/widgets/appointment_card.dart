@@ -1,11 +1,13 @@
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:app/core/widgets/layout/plan_item_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_series.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_details.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_status.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -26,12 +28,17 @@ class AppointmentCard extends StatelessWidget {
     required this.circleId,
     required this.canManage,
     this.showRelativeDate = false,
+    this.series,
   });
 
   final CareAppointment value;
   final String circleId;
   final bool canManage;
   final bool showRelativeDate;
+
+  /// Where this visit sits in the booking it was saved with; null for a
+  /// visit on its own.
+  final AppointmentSeries? series;
 
   @override
   Widget build(BuildContext context) {
@@ -65,9 +72,19 @@ class AppointmentCard extends StatelessWidget {
       // The day and time sit on the line that opens the details, as a
       // plan's start does; where, who goes and the rest are in the details.
       start:
-          '${appointmentDate(context, value.scheduledOn)} · '
+          '${appointmentDate(context, value.scheduledOn)}، '
           '${clockText(value.time)}',
       body: <Widget>[
+        // «الزيارة 2 من 6»: one of several dates booked together.
+        if (series case final AppointmentSeries place)
+          Text(
+            context.tr(
+              'appointments.visit_of_series',
+              args: <String>['${place.index}', '${place.count}'],
+            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.tokens.textSecondary),
+          ),
         if (value.status == AppointmentStatus.completed)
           Align(
             alignment: AlignmentDirectional.centerStart,

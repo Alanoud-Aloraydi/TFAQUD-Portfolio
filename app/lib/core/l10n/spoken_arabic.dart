@@ -77,11 +77,10 @@ final RegExp _bareWord = RegExp(
   r'(?<![\u064B-\u0652\u0670])[\u0621-\u064A]+(?![\u064B-\u0652\u0670])',
 );
 
-/// [text] the way the reader should say it: « · » becomes a pause, and each
+/// [text] the way the reader should say it: «، » becomes a pause, and each
 /// word of [_spokenWords] gets its vowels. Null in, null out, so a label
 /// that was never given stays unsaid. For a label, never for a [Text].
 String? spoken(String? text) => text
-    ?.replaceAll(' · ', '، ')
-    .replaceAllMapped(_beforeNoon, (Match m) => '${m[1]} صباحًا')
+    ?.replaceAllMapped(_beforeNoon, (Match m) => '${m[1]} صباحًا')
     .replaceAllMapped(_afterNoon, (Match m) => '${m[1]} مساءً')
     .replaceAllMapped(_bareWord, (Match m) => _spokenWords[m[0]] ?? m[0]!);

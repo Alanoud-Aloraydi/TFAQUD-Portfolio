@@ -41,14 +41,14 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final List<DateTime> days = HistoryFilter.daysOf(
+    final List<DateTime> months = HistoryFilter.monthsOf(
       widget.items.map(widget.dayOf),
     );
     final Map<String, String> people = HistoryFilter.peopleOf(
       widget.items.map(widget.byOf),
     );
-    // A day or a person the items no longer have (another month) is off.
-    final HistoryFilter filter = _filter.within(days, people);
+    // A month or a person the items no longer have is off.
+    final HistoryFilter filter = _filter.within(months, people);
     final List<T> shown = <T>[
       for (final T item in widget.items)
         if (filter.shows(widget.dayOf(item), widget.byOf(item))) item,
@@ -65,7 +65,7 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
             widget.empty
           else ...<Widget>[
             HistoryFilters(
-              days: days,
+              months: months,
               people: people,
               filter: filter,
               onChanged: (next) => setState(() => _filter = next),

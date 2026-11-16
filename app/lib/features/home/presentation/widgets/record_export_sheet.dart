@@ -18,7 +18,7 @@ import 'package:app/features/home/presentation/export/record_document.dart';
 import 'package:app/features/home/presentation/widgets/record_export_confirm.dart';
 import 'package:app/features/home/presentation/widgets/record_export_options_list.dart';
 import 'package:app/features/home/presentation/widgets/record_export_range_field.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
@@ -78,7 +78,7 @@ class _RecordExportSheetState extends State<_RecordExportSheet> {
     final dates = <DateTime>[
       for (final plan in widget.plans) plan.version.startsOn,
       for (final plan in widget.measurementPlans)
-        plan.history.first.effectiveFromOn,
+        if (plan.history.isNotEmpty) plan.history.first.effectiveFromOn,
     ]..sort();
     return dates.firstOrNull ?? _clock.today();
   }

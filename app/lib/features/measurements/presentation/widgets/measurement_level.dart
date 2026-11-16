@@ -1,7 +1,8 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -113,7 +114,7 @@ String _glucose(BuildContext context, NormalBand band) {
 /// [value] isolated left to right (U+2066 … U+2069).
 String _ltr(String value) => '\u2066$value\u2069';
 
-/// Which range it is, in words: «صائم أو قبل الوجبة · مصاب بالسكري».
+/// Which range it is, in words: «صائم أو قبل الوجبة، مصاب بالسكري».
 String normalRangeCaption(
   BuildContext context,
   MeasurementKind kind,
@@ -124,10 +125,10 @@ String normalRangeCaption(
     'measurements.range_profile.${profile == 'general' ? '${kind.name}_general' : profile}',
   );
   if (kind == MeasurementKind.bp) return who;
-  return '${context.tr('measurements.range_state.$state')} · $who';
+  return '${context.tr('measurements.range_state.$state')}، $who';
 }
 
-/// «المعدل الطبيعي: 70–100 ملغ/دل · صائم أو قبل الوجبة · غير مصاب بالسكري»:
+/// «المعدل الطبيعي: 70–100 ملغ/دل، صائم أو قبل الوجبة، غير مصاب بالسكري»:
 /// the range [reading] was judged by, in one line.
 String readingRangeText(BuildContext context, MeasurementReading reading) {
   final ReadingRange range = reading.range!;
@@ -137,6 +138,6 @@ String readingRangeText(BuildContext context, MeasurementReading reading) {
         : 'measurements.glucose_unit',
   );
   return '${context.tr('measurements.normal_range')}: '
-      '${normalBandText(context, reading.kind, range.normal)} $unit · '
+      '${normalBandText(context, reading.kind, range.normal)} $unit، '
       '${normalRangeCaption(context, reading.kind, range.profile, range.state)}';
 }

@@ -1,6 +1,7 @@
 import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -8,18 +9,22 @@ import 'package:flutter/material.dart';
 
 /// The measurements that need attention. On «اليوم» they sit inside the one
 /// «يحتاج انتباهك» box with the doses ([boxed] false: the cards only); on
-/// its own ([boxed] true) it has its own yellow box and title.
+/// its own ([boxed] true) it has its own yellow box and title. With the
+/// [circleId], a missed task a tapped notification is about is brought
+/// into view and tinted.
 class MeasurementAttentionSection extends StatelessWidget {
   const MeasurementAttentionSection({
     super.key,
     required this.tasks,
     required this.readings,
     this.boxed = true,
+    this.circleId,
   });
 
   final List<MeasurementOccurrence> tasks;
   final List<MeasurementReading> readings;
   final bool boxed;
+  final String? circleId;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +39,7 @@ class MeasurementAttentionSection extends StatelessWidget {
         missed,
         outside,
         now: clock.now(),
+        circleId: circleId,
       ),
     );
     if (!boxed) return cards;

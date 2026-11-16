@@ -53,6 +53,11 @@ def appointment_view(
         "kind": appointment.kind,
         "other_text": appointment.other_text,
         "scheduled_on": appointment.scheduled_on.isoformat(),
+        # The booking it belongs to; null for a visit on its own. The app
+        # says «الزيارة 2 من 6» from it and nothing more.
+        "series_id": (
+            str(appointment.series_id) if appointment.series_id else None
+        ),
         "time_of_day": appointment.time_of_day.isoformat(timespec="minutes"),
         "place": appointment.place,
         "remote_method": appointment.remote_method,

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
 import 'package:flutter/foundation.dart' show Listenable;

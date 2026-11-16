@@ -68,7 +68,7 @@ List<RecordPdfCell> _row(BuildContext context, CareAppointment item) {
     RecordPdfCell(
       clinic == null
           ? appointmentTitle(context, item)
-          : '${appointmentTitle(context, item)} · $clinic',
+          : '${appointmentTitle(context, item)}، $clinic',
     ),
     RecordPdfCell(place),
     RecordPdfCell(appointmentCompanionNames(context, item)),

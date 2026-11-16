@@ -63,7 +63,7 @@ class SimplifiedNextCard extends StatelessWidget {
   static PrayerPeriod? _period(TodayTask task, SimplifiedDay day) =>
       day.prayers == null ? null : prayerPeriodOf(task.time, day.prayers!);
 
-  /// «التالي · بعد ساعتين», or «فات موعده».
+  /// «التالي، بعد ساعتين», or «فات موعده».
   static String _when(BuildContext context, TodayTask task, DateTime now) =>
       task.status == TodayTaskStatus.late
       ? context.tr('simplified_mode.status.late')

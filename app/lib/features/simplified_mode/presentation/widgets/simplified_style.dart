@@ -43,6 +43,10 @@ abstract final class SimplifiedStyle {
   static const Color line = AppSemanticColors.borderSubtle;
   static const Color control = AppSemanticColors.borderControlBase;
   static const Color accent = AppSemanticColors.actionPrimary;
+
+  /// The fill of the one action a screen asks for, deep enough to carry
+  /// over the mode's tinted cards.
+  static const Color accentStrong = AppSemanticColors.actionStrong;
   static const Color accentTint = AppSemanticColors.selectedSurface;
   static const Color success = AppSemanticColors.statusSuccess;
   static const Color attention = AppSemanticColors.surfaceAttention;

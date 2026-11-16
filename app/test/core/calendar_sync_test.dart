@@ -8,7 +8,9 @@ import 'package:app/core/services/reminders/dose_reminders.dart'
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
+import 'package:app/features/measurements/domain/measurement_version.dart';
 import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
@@ -514,7 +516,7 @@ void main() {
         }),
       });
       calendar.events['old-1'] = _older(
-        'دائرة نورة · السكري',
+        'دائرة نورة، السكري',
         DateTime.now().add(const Duration(days: 3)),
       );
 
@@ -754,15 +756,15 @@ void main() {
       );
       expect(
         calendarEventTexts.appointment('c-me', _visit()),
-        'لا ننسى موعدك: مراجعة · عيادة السكري',
+        'لا ننسى موعدك: مراجعة، عيادة السكري',
       );
       expect(
         calendarEventTexts.appointment('c-noura', _visit()),
-        'لا ننسى موعد نورة: مراجعة · عيادة السكري',
+        'لا ننسى موعد نورة: مراجعة، عيادة السكري',
       );
       expect(
         calendarEventTexts.appointmentNote(_visit()),
-        'مراجعة · عيادة السكري · الساعة 4:30 م · الحبيب',
+        'مراجعة، عيادة السكري، الساعة 4:30 م، الحبيب',
       );
     });
 

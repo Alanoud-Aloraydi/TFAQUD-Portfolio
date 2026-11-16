@@ -1,4 +1,4 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 
 /// What a reading may be. The old rule was 1 to 999 for every number, so a
 /// diastolic typed as 18 instead of 80 was saved, drawn as a bar across the

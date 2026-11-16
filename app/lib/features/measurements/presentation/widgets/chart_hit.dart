@@ -1,6 +1,7 @@
 import 'dart:ui';
 
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 
 /// The reading a tap at [at] means on a month chart drawn with [scale]: the

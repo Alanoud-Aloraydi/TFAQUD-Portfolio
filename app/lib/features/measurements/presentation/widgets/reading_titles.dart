@@ -3,7 +3,8 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +21,7 @@ class ReadingTitles extends StatelessWidget {
     }
     final PatientClock clock = PatientClockScope.of(context);
     final DateTime at = clock.wallTime(reading.measuredAt!);
-    return '${formatBirthDate(context, at)} · ${wallTimeText(at)}';
+    return '${formatBirthDate(context, at)}، ${wallTimeText(at)}';
   }
 
   @override

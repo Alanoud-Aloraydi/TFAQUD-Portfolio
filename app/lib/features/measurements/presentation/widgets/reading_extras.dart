@@ -3,7 +3,7 @@ import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';

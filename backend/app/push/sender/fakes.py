@@ -1,5 +1,6 @@
 """The senders without OneSignal: none set up, and the one tests read."""
 
+from collections.abc import Collection
 from dataclasses import dataclass, field
 
 from app.push.sender.message import PushMessage
@@ -11,7 +12,12 @@ class NoPushSender:
 
     enabled = False
 
-    def send(self, account_id: str, message: PushMessage) -> str:
+    def send(
+        self,
+        account_id: str,
+        message: PushMessage,
+        phones: Collection[str] = (),
+    ) -> str:
         """Send nothing."""
         return FAILED
 
@@ -25,7 +31,8 @@ class RecordingPushSender:
     """For tests: keeps what would be sent, by account id. Accounts in
     `no_device` answer NO_DEVICE (no phone of theirs shows pushes), and
     `deleted` holds, by account id, the subscription ids OneSignal would
-    report as deleted apps.
+    report as deleted apps. `phones` keeps the subscriptions each send was
+    addressed to, by account id.
     """
 
     enabled: bool = True
@@ -33,11 +40,18 @@ class RecordingPushSender:
     no_device: set = field(default_factory=set)
     deleted: dict = field(default_factory=dict)
     asked: list = field(default_factory=list)
+    phones: dict = field(default_factory=dict)
 
-    def send(self, account_id: str, message: PushMessage) -> str:
+    def send(
+        self,
+        account_id: str,
+        message: PushMessage,
+        phones: Collection[str] = (),
+    ) -> str:
         """Keep the message, or answer NO_DEVICE for an account in
         `no_device`.
         """
+        self.phones[account_id] = set(phones)
         if account_id in self.no_device:
             return NO_DEVICE
         self.sent.append((account_id, message))

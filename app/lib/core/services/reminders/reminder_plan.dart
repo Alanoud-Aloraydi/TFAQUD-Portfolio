@@ -10,7 +10,8 @@ import 'package:app/core/services/reminders/planned_reminder.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 
 /// Which of an appointment's reminders: the day before, shortly before it,
@@ -35,7 +36,7 @@ class DoseReminderTexts {
   /// «حان موعد الدواء».
   final String Function(ReminderCircle circle, DoseOccurrence dose) title;
 
-  /// «يا ياسر، لا ننسى ميتفورمين» over the dose, «1 حبة · الساعة 9:00 م».
+  /// «يا ياسر، لا ننسى ميتفورمين» over the dose, «1 حبة، الساعة 9:00 م».
   final String Function(ReminderCircle circle, DoseOccurrence dose) body;
 
   /// «ياسر، وقت القياس الحين».
@@ -56,7 +57,7 @@ class DoseReminderTexts {
   )
   appointmentTitle;
 
-  /// «الساعة 4:30 م · مستشفى الملك فهد».
+  /// «الساعة 4:30 م، مستشفى الملك فهد».
   final String Function(CareAppointment appointment) appointmentBody;
 
   /// The last note: open the app so the reminders go on.

@@ -102,7 +102,42 @@ def test_the_request_onesignal_expects():
         "ios_sound": "tafaqod_chime.wav",
         "thread_id": "invitation",
         "android_group": "invitation",
+        "ios_interruption_level": "active",
     }
+
+
+def test_a_task_due_now_is_time_sensitive_and_a_request_is_not():
+    """A missed or put-off task shows through a Focus on iOS; an
+    invitation waits like any other notification."""
+    sender = onesignal(lambda request: httpx.Response(200, json={"id": "n"}))
+    for kind in ("dose_missed", "measurement_snoozed", "appointment_missed"):
+        message = PushMessage("t", "b", kind)
+        level = sender.payload(ACCOUNT, message)["ios_interruption_level"]
+        assert level == "time-sensitive"
+    assert sender.payload(ACCOUNT, MESSAGE)["ios_interruption_level"] == (
+        "active"
+    )
+
+
+def test_known_phones_are_sent_to_by_their_subscriptions():
+    """The phones the account's sign-ins sent, the way OneSignal's own test
+    message reaches them: an external id the app never tied reaches
+    nothing."""
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"id": "n-1"})
+
+    phones = {
+        "b2c3d4e5-0000-4000-8000-000000000002",
+        "a1b2c3d4-0000-4000-8000-000000000001",
+    }
+    assert onesignal(handler).send(ACCOUNT, MESSAGE, phones) == SENT
+
+    body = json.loads(seen[0].content)
+    assert body["include_subscription_ids"] == sorted(phones)
+    assert "include_aliases" not in body
 
 
 def test_the_item_a_push_is_about_goes_beside_its_kind():

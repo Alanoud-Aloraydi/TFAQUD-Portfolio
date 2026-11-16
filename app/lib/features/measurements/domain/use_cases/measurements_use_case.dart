@@ -1,4 +1,8 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
+import 'package:app/features/measurements/domain/measurement_plan_draft.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 
 /// The measurement reads and writes the application is allowed to make.

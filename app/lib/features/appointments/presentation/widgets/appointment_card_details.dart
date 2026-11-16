@@ -37,7 +37,7 @@ List<Widget> appointmentCardDetails(
           icon: AppIcons.calendar,
           label: context.tr('appointments.date'),
           value:
-              '${appointmentDate(context, value.scheduledOn)} · '
+              '${appointmentDate(context, value.scheduledOn)}، '
               '${clockText(value.time)}',
         ),
         if (remote && value.remoteMethod != null)

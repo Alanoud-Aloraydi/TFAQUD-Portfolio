@@ -7,7 +7,7 @@ library;
 
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminders/item_keys.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 
 /// What a dose reminder's payload starts with; the circle's id follows.

@@ -6,7 +6,8 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
@@ -109,7 +110,7 @@ class SimplifiedReminderScreen extends StatelessWidget {
       lead: context.tr('simplified_mode.time_for'),
       name: dose.name,
       line:
-          '${simplifiedDoseAmount(context, dose)} · '
+          '${simplifiedDoseAmount(context, dose)}، '
           '${simplifiedStrength(context, dose)}',
       chips: <String>[
         if (dose.instructions case final String text

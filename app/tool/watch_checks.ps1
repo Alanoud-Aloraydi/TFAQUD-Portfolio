@@ -10,8 +10,12 @@
 #                      parse, dart fix deletes imports it cannot prove are
 #                      used, which turns one mistake into ten.
 #   3. flutter analyze
-#   4. flutter test  - only when analyze found nothing, so the ten minutes
-#                      are never spent on code that is already broken.
+#   4. flutter test  - only when analyze found nothing, AND only when
+#                      tool\run_tests.flag is there, so a long cleanup is
+#                      not six minutes of tests per edit. Ask for a test
+#                      run by creating the flag:
+#                        echo. > tool\run_tests.flag
+#                      The run deletes it again.
 
 Set-Location (Split-Path $PSScriptRoot -Parent)
 $out = "tool\checks.txt"
@@ -57,7 +61,9 @@ function Invoke-Checks {
     dart run tool\check_structure.dart 2>&1 | Out-File -Encoding utf8 -Append $out
 
     $clean = $analyze | Select-String -Pattern "No issues found" -Quiet
-    if ($clean -and -not $broken) {
+    $wanted = Test-Path "tool\run_tests.flag"
+    if ($clean -and -not $broken -and $wanted) {
+        Remove-Item "tool\run_tests.flag" -ErrorAction SilentlyContinue
         Write-Section "flutter test"
         Write-Host "  analyze clean - running the tests (a few minutes)"
         # The compact reporter prints one line per failure; the whole
@@ -67,9 +73,13 @@ function Invoke-Checks {
         Get-Content "tool\tests.txt" |
             Select-String -Pattern "\[E\]|Some tests failed|All tests passed|Expected:|Actual:|Which:|^  package:app|_test\.dart [0-9]+" |
             Select-Object -Last 150 | Out-File -Encoding utf8 -Append $out
-    } else {
+    } elseif (-not $clean -or $broken) {
         Write-Section "flutter test"
         "Skipped: analyze is not clean yet." | Out-File -Encoding utf8 -Append $out
+    } else {
+        Write-Section "flutter test"
+        "Skipped: no tool\run_tests.flag. Create it to ask for a run." |
+            Out-File -Encoding utf8 -Append $out
     }
 
     "=== done $(Get-Date -Format "HH:mm:ss") ===" | Out-File -Encoding utf8 -Append $out

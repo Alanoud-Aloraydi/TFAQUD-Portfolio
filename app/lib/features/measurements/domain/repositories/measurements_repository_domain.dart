@@ -1,4 +1,8 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_plan.dart';
+import 'package:app/features/measurements/domain/measurement_plan_draft.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 
 /// The measurement plans, readings, and tasks of a circle, wherever they
 /// are kept.

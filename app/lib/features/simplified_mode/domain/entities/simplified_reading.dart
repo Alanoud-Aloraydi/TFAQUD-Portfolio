@@ -1,4 +1,4 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_limits.dart';
 import 'package:equatable/equatable.dart';
 

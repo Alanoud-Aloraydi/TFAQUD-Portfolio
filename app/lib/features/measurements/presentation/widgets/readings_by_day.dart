@@ -1,5 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_reading.dart';
 
 /// The readings of [month] grouped by the day they fall on where the patient
 /// lives, never the phone's zone, each day in the order they were measured

@@ -1,7 +1,7 @@
-import 'package:app/core/l10n/medical_texts.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_contact_lines.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -18,10 +18,6 @@ class SimplifiedMedicalFileContactCard extends StatelessWidget {
   /// Opens this contact in the form. Null while another form is open, so
   /// only one contact is being changed at a time.
   final VoidCallback? onEdit;
-
-  /// What the card says: the name, then who they are to the patient.
-  static List<String> lines(BuildContext context, EmergencyContact contact) =>
-      <String>[contact.name, MedicalTexts.relation(context, contact)];
 
   @override
   Widget build(BuildContext context) => _body(context);
@@ -46,21 +42,11 @@ class SimplifiedMedicalFileContactCard extends StatelessWidget {
             // The card names the contact; it does not call them, so it
             // does not say «اتصل بـ». «تعديل» stays a stop of its own.
             child: Semantics(
-              label: spoken(lines(context, contact).join('، ')),
-              excludeSemantics: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    contact.name,
-                    style: SimplifiedStyle.head(SimplifiedStyle.body),
-                  ),
-                  Text(
-                    MedicalTexts.relation(context, contact),
-                    style: SimplifiedStyle.text(SimplifiedStyle.caption),
-                  ),
-                ],
+              label: spoken(
+                SimplifiedContactLines.of(context, contact).join('، '),
               ),
+              excludeSemantics: true,
+              child: SimplifiedContactLines(contact: contact),
             ),
           ),
           if (onEdit case final VoidCallback edit)

@@ -73,7 +73,7 @@ List<RecordPdfCell> _row(BuildContext context, MedicationPlan plan) {
             '${formatMedicationNumber(schedule.doseValue)} '
             '${context.tr('medications.unit.${schedule.doseUnit.name}')}',
       )
-      .join(' · ');
+      .join('، ');
   return <RecordPdfCell>[
     RecordPdfCell(version.name),
     RecordPdfCell(

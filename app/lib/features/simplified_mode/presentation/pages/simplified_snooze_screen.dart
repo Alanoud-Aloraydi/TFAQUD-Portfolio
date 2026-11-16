@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -23,10 +24,14 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
   /// are not put off.
   final TodayTask task;
 
-  static const List<(String, Duration)> _choices = <(String, Duration)>[
-    ('simplified_mode.after_15', Duration(minutes: 15)),
-    ('simplified_mode.after_30', Duration(minutes: 30)),
-    ('simplified_mode.after_60', Duration(hours: 1)),
+  /// The three lengths offered here. Their words are not written out:
+  /// they are counted the way the detailed mode's ruler counts them, so
+  /// one dose reads «بعد 30 دقيقة» in both modes and never «بعد نصف ساعة»
+  /// in one and a number in the other.
+  static const List<Duration> _choices = <Duration>[
+    Duration(minutes: 15),
+    Duration(minutes: 30),
+    Duration(hours: 1),
   ];
 
   /// How long this task may be put off. A dose is never pushed past
@@ -62,7 +67,11 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
           (cubit) => cubit.state.day,
         );
     final Duration limit = _limit(context, task, day, now);
-    String clock(Duration after) => simplifiedClockAt(context, now.add(after));
+    // «الساعة 11:26 م», the detailed sheet's own line under the length.
+    String clock(Duration after) => context.tr(
+      'reminders.snooze_at',
+      args: <String>[simplifiedClockAt(context, now.add(after))],
+    );
 
     return Scaffold(
       body: DecoratedBox(
@@ -100,11 +109,10 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: SimplifiedStyle.head(28, color: SimplifiedStyle.surface),
           ),
-          const SizedBox(height: 16),
-          const SizedBox(height: 28),
-          for (final (String key, Duration after) in _choices) ...<Widget>[
+          const SizedBox(height: 44),
+          for (final Duration after in _choices) ...<Widget>[
             SimplifiedSnoozeChoice(
-              label: context.tr(key),
+              label: afterDuration(context, after.inMinutes),
               clock: clock(after),
               onTap: saving || after > limit
                   ? null
@@ -112,10 +120,17 @@ class SimplifiedSnoozeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          // Every choice turned off says nothing by itself: say why.
-          if (_choices.every(((String, Duration) choice) => choice.$2 > limit))
+          // A choice turned off says nothing by itself: say why, and say
+          // it as soon as one is out of reach, not only when all three
+          // are — the detailed sheet names its limit every time.
+          if (_choices.any((Duration after) => after > limit))
             Text(
-              context.tr('simplified_mode.snooze_too_close'),
+              limit < _choices.first
+                  ? context.tr('simplified_mode.snooze_too_close')
+                  : context.tr(
+                      'simplified_mode.snooze_limit',
+                      args: <String>[durationText(context, limit.inMinutes)],
+                    ),
               textAlign: TextAlign.center,
               style: SimplifiedStyle.text(
                 SimplifiedStyle.body,

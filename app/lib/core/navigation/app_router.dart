@@ -54,7 +54,7 @@ import 'package:app/features/home/presentation/pages/home_feature_screen.dart';
 import 'package:app/features/home/presentation/pages/plan_page.dart';
 import 'package:app/features/home/presentation/pages/record_page.dart';
 import 'package:app/features/home/presentation/pages/today_page.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';

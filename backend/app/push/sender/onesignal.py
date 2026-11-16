@@ -1,6 +1,8 @@
 """The OneSignal sender: one POST per account, to the phones signed in
 to it."""
 
+from collections.abc import Collection
+
 import logging
 import threading
 
@@ -16,7 +18,8 @@ log = logging.getLogger(__name__)
 
 class OneSignalPushSender(OneSignalRequest, OneSignalPhones):
     """OneSignal's REST API: one POST per account, to the phones signed in
-    to it (its external id), on iOS and Android.
+    to it (the subscriptions its sign-ins sent, else its external id), on
+    iOS and Android.
 
     After 3 sends in a row with no answer or a 5xx, OneSignal is not called
     for a minute (app/resilience.py): each send answers FAILED at once, so a
@@ -42,7 +45,12 @@ class OneSignalPushSender(OneSignalRequest, OneSignalPhones):
         # Pushes go out from two background threads (app/background.py).
         self._lock = threading.Lock()
 
-    def send(self, account_id: str, message: PushMessage) -> str:
+    def send(
+        self,
+        account_id: str,
+        message: PushMessage,
+        phones: Collection[str] = (),
+    ) -> str:
         """Send `message` to the account's phones: SENT; NO_DEVICE when
         OneSignal knows none that shows pushes; or FAILED."""
         if not self._breaker.allow():
@@ -50,7 +58,7 @@ class OneSignalPushSender(OneSignalRequest, OneSignalPhones):
         try:
             response = self._http().post(
                 ONESIGNAL_URL,
-                json=self.payload(account_id, message),
+                json=self.payload(account_id, message, phones),
                 headers={"Authorization": f"Key {self._api_key}"},
             )
         except Exception:  # noqa: BLE001 - a push must never break a request

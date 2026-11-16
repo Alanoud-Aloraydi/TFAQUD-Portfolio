@@ -39,6 +39,7 @@ class AppointmentModel {
         .toList(),
     status: status,
     updatedAt: DateTime.parse(json['updated_at'] as String),
+    seriesId: json['series_id'] as String?,
     createdByName:
         (json['created_by'] as Map<String, dynamic>?)?['name'] as String?,
     updatedByName:
@@ -69,6 +70,10 @@ class AppointmentModel {
     'place': draft.place,
     'remote_method': draft.remoteMethod,
     'companion_account_ids': draft.companionAccountIds,
+    if (draft.alsoOn.isNotEmpty)
+      'also_on': <String>[
+        for (final DateTime day in draft.alsoOn) apiDate(day),
+      ],
     if (expectedUpdatedAt != null)
       'expected_updated_at': expectedUpdatedAt.toUtc().toIso8601String(),
   };

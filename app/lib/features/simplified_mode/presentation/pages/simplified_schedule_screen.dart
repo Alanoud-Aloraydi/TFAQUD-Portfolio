@@ -85,6 +85,7 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
                         SimplifiedScheduleTaskRow(
                           task: task,
                           day: day,
+                          schedule: schedule!,
                           now: state.now,
                           snoozed: simplifiedSnoozed(
                             context,

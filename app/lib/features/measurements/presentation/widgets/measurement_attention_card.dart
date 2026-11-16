@@ -1,6 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/record_item_card.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:flutter/cupertino.dart';
 
 /// One card of the measurement attention box, drawn as a reading is in

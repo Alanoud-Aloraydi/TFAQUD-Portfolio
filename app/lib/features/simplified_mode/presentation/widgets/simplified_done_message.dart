@@ -1,4 +1,4 @@
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 sealed class SimplifiedDoneMessage {
   const SimplifiedDoneMessage();
 
-  /// «سجّلنا أنك أخذت ميتفورمين · 6:04 مساءً».
+  /// «سجّلنا أنك أخذت ميتفورمين، 6:04 مساءً».
   const factory SimplifiedDoneMessage.doseTaken(String name, DateTime at) =
       SimplifiedDoneDoseTaken;
 

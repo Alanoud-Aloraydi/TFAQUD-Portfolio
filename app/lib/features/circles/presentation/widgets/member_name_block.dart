@@ -5,7 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The member's name with «أنت» for the viewer, and under the patient
-/// «المريض · يستخدم التطبيق».
+/// «المريض، يستخدم التطبيق».
 class MemberNameBlock extends StatelessWidget {
   const MemberNameBlock({
     super.key,

@@ -38,8 +38,10 @@ def send_to_accounts(
         known = phones.setdefault(account_id, set())
         if subscription_id is not None:
             known.add(str(subscription_id))
+    # To the phones themselves: an account's external id reaches nothing
+    # when the app's OneSignal.login did not take.
     for account_id in sorted(phones, key=str):
-        result = sender.send(str(account_id), message)
+        result = sender.send(str(account_id), message, phones[account_id])
         metrics.increment(_COUNTERS.get(result, "push.failed"))
     deleted: set[str] = set()
     for account_id in sorted(phones, key=str):

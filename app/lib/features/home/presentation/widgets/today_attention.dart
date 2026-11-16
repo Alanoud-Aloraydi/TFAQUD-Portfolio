@@ -1,13 +1,19 @@
+import 'package:app/core/services/reminders/item_keys.dart';
+import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/focus_mark.dart';
 import 'package:app/features/appointments/presentation/widgets/overdue_appointment_card.dart';
+import 'package:app/features/home/presentation/attention_focus_keys.dart';
 import 'package:app/features/home/presentation/today_snapshot.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
-import 'package:app/features/medications/presentation/widgets/today_medication_components.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_attention_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The one «يحتاج انتباهك» box: the doses, then the measurements, then the
-/// appointments of earlier days, all of the overdue days still open.
+/// appointments of earlier days, all of the overdue days still open. The
+/// card a tapped notification is about is brought into view and tinted.
 class TodayAttention extends StatelessWidget {
   const TodayAttention({
     super.key,
@@ -28,6 +34,7 @@ class TodayAttention extends StatelessWidget {
       circleId: circleId,
       canManage: canManage,
       extraCount: snapshot.extraCount,
+      focusKeys: attentionFocusKeys(snapshot, circleId),
       extra: snapshot.extraCount == 0
           ? null
           : Column(
@@ -37,12 +44,18 @@ class TodayAttention extends StatelessWidget {
                   tasks: snapshot.overdueMeasurements,
                   readings: readings,
                   boxed: false,
+                  circleId: circleId,
                 ),
                 for (final item in snapshot.overdueAppointments)
-                  OverdueAppointmentCard(
-                    value: item,
-                    circleId: circleId,
-                    canManage: canManage,
+                  FocusMark(
+                    itemKey: appointmentItemKey(circleId, item.id),
+                    radius: AppRadius.field,
+                    inset: const EdgeInsets.only(bottom: AppSpacing.xs),
+                    child: OverdueAppointmentCard(
+                      value: item,
+                      circleId: circleId,
+                      canManage: canManage,
+                    ),
                   ),
               ],
             ),

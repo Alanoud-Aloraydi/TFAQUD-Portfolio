@@ -1,7 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
@@ -75,8 +75,13 @@ class _UseCase implements SimplifiedModeUseCase {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// «بعد ١٥ دقيقة» as the app says it.
-String _after15() => 'simplified_mode.after_15'.tr();
+/// «بعد 15 دقيقة» as the app says it: counted, not written out, the same
+/// words the detailed mode's snooze ruler shows for 15 minutes.
+String _after15() => 'today_dashboard.after'.tr(
+  args: <String>[
+    'counts.minutes.many'.tr(args: <String>['15']),
+  ],
+);
 
 /// «رجوع» as the app says it.
 String _back() => 'simplified_mode.back'.tr();

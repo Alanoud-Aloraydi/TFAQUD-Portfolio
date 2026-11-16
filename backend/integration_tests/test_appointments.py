@@ -223,3 +223,94 @@ def test_attended_from_an_hour_before_its_time_not_earlier(
     assert attended.status_code == 200, attended.get_json()
     assert attended.get_json()["appointment"]["status"] == "completed"
     assert error_code(too_early, 422) == "appointment_not_started"
+
+
+def test_a_booking_of_several_dates_saves_one_visit_each(
+    database_app, circle, evening
+):
+    """The clinic's sheet: dates that follow no rule, each its own visit,
+    tied by one series and listed oldest first."""
+    owner, care = circle
+    api = Api(database_app, owner)
+    base = f"/api/v1/circles/{care.id}/appointments"
+
+    created = api.post(
+        base,
+        visit(
+            owner,
+            scheduled_on="2026-12-05",
+            also_on=["2027-03-14", "2027-01-09"],
+        ),
+    )
+
+    assert created.status_code == 201, created.get_json()
+    saved = created.get_json()["appointments"]
+    assert [item["scheduled_on"] for item in saved] == [
+        "2026-12-05",
+        "2027-01-09",
+        "2027-03-14",
+    ]
+    series = {item["series_id"] for item in saved}
+    assert len(series) == 1 and series != {None}
+    # The first is answered as before, for a client that knows one visit.
+    assert created.get_json()["appointment"] == saved[0]
+
+
+def test_a_visit_on_its_own_has_no_series(database_app, circle, evening):
+    """Nothing changes for a single appointment."""
+    owner, care = circle
+    api = Api(database_app, owner)
+
+    created = api.post(f"/api/v1/circles/{care.id}/appointments", visit(owner))
+
+    assert created.status_code == 201, created.get_json()
+    assert created.get_json()["appointment"]["series_id"] is None
+
+
+def test_one_date_already_passed_refuses_the_whole_booking(
+    database_app, circle, evening
+):
+    """All the visits or none: a sheet half saved is worse than none."""
+    owner, care = circle
+    api = Api(database_app, owner)
+    base = f"/api/v1/circles/{care.id}/appointments"
+
+    refused = api.post(
+        base, visit(owner, also_on=["2020-01-01", "2027-01-09"])
+    )
+
+    assert refused.status_code == 422, refused.get_json()
+    listed = api.get(base).get_json()["appointments"]
+    assert listed == []
+
+
+def test_editing_one_visit_leaves_the_rest_of_its_series(
+    database_app, circle, evening
+):
+    """The rule of a series: an edit or a cancellation is that visit only."""
+    owner, care = circle
+    api = Api(database_app, owner)
+    base = f"/api/v1/circles/{care.id}/appointments"
+    saved = api.post(
+        base, visit(owner, scheduled_on="2026-12-05", also_on=["2027-01-09"])
+    ).get_json()["appointments"]
+    first, second = saved
+
+    changed = api.put(
+        f"{base}/{first['id']}",
+        visit(
+            owner,
+            scheduled_on="2026-12-06",
+            place="مستشفى آخر",
+            expected_updated_at=first["updated_at"],
+        ),
+    )
+
+    assert changed.status_code == 200, changed.get_json()
+    listed = {
+        item["id"]: item for item in api.get(base).get_json()["appointments"]
+    }
+    assert listed[first["id"]]["place"] == "مستشفى آخر"
+    assert listed[second["id"]]["place"] == second["place"]
+    assert listed[second["id"]]["scheduled_on"] == "2027-01-09"
+    assert listed[first["id"]]["series_id"] == second["series_id"]

@@ -15,18 +15,24 @@ def claim_once(
 ) -> bool:
     """True the first time this notification is claimed; False on a
     repeat."""
-    try:
-        with transaction() as session:
-            session.add(NotificationLog(
-                kind=kind,
-                target_id=UUID(target_id),
-                scheduled_on=date.fromisoformat(scheduled_on),
-                time_of_day=(
-                    time.fromisoformat(time_of_day) if time_of_day else None
-                ),
-            ))
-    except IntegrityError:
-        return False
+    with transaction() as session:
+        try:
+            # A savepoint, so a repeat fails here even inside a caller's
+            # transaction (the HTTP tick), where the row would otherwise
+            # wait unflushed and the push go out again.
+            with session.begin_nested():
+                session.add(NotificationLog(
+                    kind=kind,
+                    target_id=UUID(target_id),
+                    scheduled_on=date.fromisoformat(scheduled_on),
+                    time_of_day=(
+                        time.fromisoformat(time_of_day)
+                        if time_of_day
+                        else None
+                    ),
+                ))
+        except IntegrityError:
+            return False
     return True
 
 

@@ -18,6 +18,7 @@ import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_dates_row.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
@@ -46,6 +47,10 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
 
   /// A new visit starts on the patient's today.
   late DateTime _date = PatientClockScope.of(context).today();
+
+  /// The other dates of this booking; always empty while an existing visit
+  /// is edited, where the form changes that visit alone.
+  List<DateTime> _alsoOn = const <DateTime>[];
   TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
   String _remoteMethod = 'video';
   final Set<String> _companionIds = <String>{};
@@ -103,6 +108,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       place: _kind == AppointmentKind.remote ? null : _place.text.trim(),
       remoteMethod: _kind == AppointmentKind.remote ? _remoteMethod : null,
       companionAccountIds: _companionIds.toList(),
+      alsoOn: _alsoOn,
     );
     if (wallClockAt(
       draft.scheduledOn,
@@ -270,6 +276,12 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                   }
                 },
               ),
+              if (widget.appointmentId == null)
+                AppointmentDatesRow(
+                  first: _date,
+                  dates: _alsoOn,
+                  onChanged: (value) => setState(() => _alsoOn = value),
+                ),
               InsetRow(
                 label: context.tr('appointments.time'),
                 value: timeOfDayText(_time),
