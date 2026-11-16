@@ -3,7 +3,10 @@
 from collections.abc import Collection
 
 from app.push.sender.message import PushMessage
-from app.push.sender.onesignal_api import NOTIFICATION_SOUND
+from app.push.sender.onesignal_api import NOTIFICATION_SOUND, ONESIGNAL_URL
+
+# The field of a push that says how far it may interrupt on iOS.
+LEVEL = "ios_interruption_level"
 
 # A task due now: shown through a Focus and the Scheduled Summary on iOS,
 # once the app has the Time Sensitive capability (as usual without it).
@@ -61,9 +64,24 @@ class OneSignalRequest:
             "ios_sound": NOTIFICATION_SOUND,
             "thread_id": message.kind,
             "android_group": message.kind,
-            "ios_interruption_level": (
-                "time-sensitive"
+            # With an underscore: OneSignal answers 400 to "time-sensitive".
+            LEVEL: (
+                "time_sensitive"
                 if message.kind in TIME_SENSITIVE
                 else "active"
             ),
         }
+
+    def ask(self, body: dict) -> tuple[int, dict]:
+        """POST one push: the status and the answer ({} when it is not a
+        JSON object)."""
+        response = self._http().post(
+            ONESIGNAL_URL,
+            json=body,
+            headers={"Authorization": f"Key {self._api_key}"},
+        )
+        try:
+            answer = response.json()
+        except ValueError:
+            answer = {}
+        return response.status_code, answer if isinstance(answer, dict) else {}

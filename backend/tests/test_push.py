@@ -113,10 +113,32 @@ def test_a_task_due_now_is_time_sensitive_and_a_request_is_not():
     for kind in ("dose_missed", "measurement_snoozed", "appointment_missed"):
         message = PushMessage("t", "b", kind)
         level = sender.payload(ACCOUNT, message)["ios_interruption_level"]
-        assert level == "time-sensitive"
+        assert level == "time_sensitive"
     assert sender.payload(ACCOUNT, MESSAGE)["ios_interruption_level"] == (
         "active"
     )
+
+
+def test_a_refused_interruption_level_never_loses_the_push():
+    """OneSignal answered 400 to a level it did not know, and every missed
+    push of a day was lost: the push now goes again without the level."""
+    bodies = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        bodies.append(body)
+        if "ios_interruption_level" in body:
+            return httpx.Response(400, json={"errors": [
+                "Ios interruption level iOS interruption level is invalid"
+            ]})
+        return httpx.Response(200, json={"id": "n-1"})
+
+    message = PushMessage("جرعة فائتة", "…", "dose_missed")
+    assert onesignal(handler).send(ACCOUNT, message) == SENT
+
+    assert len(bodies) == 2
+    assert "ios_interruption_level" not in bodies[1]
+    assert bodies[1]["contents"] == bodies[0]["contents"]
 
 
 def test_known_phones_are_sent_to_by_their_subscriptions():
