@@ -1,5 +1,5 @@
 import 'package:app/core/utils/birth_date_rules.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';

@@ -1,4 +1,4 @@
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:injectable/injectable.dart';

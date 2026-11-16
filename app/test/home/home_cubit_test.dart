@@ -1,6 +1,10 @@
+import '../support/home_fakes.dart';
+
 import 'dart:async';
 
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
@@ -8,8 +12,6 @@ import 'package:app/features/home/presentation/cubit/home_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/home_fakes.dart';
 
 void main() {
   group('HomeCubit', () {

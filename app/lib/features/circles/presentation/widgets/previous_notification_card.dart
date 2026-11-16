@@ -1,5 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/patient_clock.dart';

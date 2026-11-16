@@ -1,3 +1,4 @@
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_family_member.dart';

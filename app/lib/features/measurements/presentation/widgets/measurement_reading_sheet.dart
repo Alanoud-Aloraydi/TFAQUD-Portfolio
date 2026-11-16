@@ -13,8 +13,13 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
-import 'package:app/features/measurements/domain/measurement_limits.dart';
 import 'package:app/features/measurements/domain/measurement_conditions.dart';
+import 'package:app/features/measurements/domain/measurement_kind.dart';
+import 'package:app/features/measurements/domain/measurement_limits.dart';
+import 'package:app/features/measurements/domain/measurement_moment.dart';
+
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
@@ -26,10 +31,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
-import 'package:app/features/measurements/domain/measurement_moment.dart';
 
 /// Opens «تسجيل قراءة» over [context], whose [MeasurementReadingsCubit]
 /// saves it: the answer to [occurrence], the task the person chose, or a

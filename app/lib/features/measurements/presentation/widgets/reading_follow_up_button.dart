@@ -18,14 +18,12 @@ class ReadingFollowUpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TaskButtonGrid(
-    buttons: <Widget>[
-      TaskButton(
-        role: TaskButtonRole.answer,
-        icon: CupertinoIcons.checkmark,
-        label: context.tr('measurements.follow_up'),
-        onPressed: () => _followUp(context),
-      ),
-    ],
+    answer: TaskButton(
+      role: TaskButtonRole.answer,
+      icon: CupertinoIcons.checkmark,
+      label: context.tr('measurements.follow_up'),
+      onPressed: () => _followUp(context),
+    ),
   );
 
   Future<void> _followUp(BuildContext context) async {

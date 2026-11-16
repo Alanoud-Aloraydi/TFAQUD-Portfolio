@@ -1,6 +1,9 @@
+import '../support/phone_fakes.dart';
+
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -18,8 +21,6 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../support/phone_fakes.dart';
 
 /// 08:00 in Riyadh on 3 November 2026.
 final DateTime _now = DateTime.utc(2026, 11, 3, 5);

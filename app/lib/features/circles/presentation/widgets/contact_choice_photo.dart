@@ -1,7 +1,7 @@
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
 import 'package:flutter/material.dart';
 
 /// The picture of a circle member inside the pill that picks them.

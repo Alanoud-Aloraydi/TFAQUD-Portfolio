@@ -1,5 +1,9 @@
-import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/storage_failures.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';
+import 'package:app/features/auth/presentation/cubit/auth_initial_state.dart';
+import 'package:app/features/auth/presentation/cubit/auth_loading_state.dart';
+import 'package:app/features/auth/presentation/cubit/auth_signed_out_state.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

@@ -11,6 +11,10 @@ abstract class AppSizes {
   /// Large capsule buttons such as «حفظ» (on the 4-point grid).
   static const double button = 48;
 
+  /// The one answer a task asks for, a step taller than the choices
+  /// beside it so the eye lands on it first.
+  static const double buttonAnswer = 56;
+
   /// Single-line text fields: a 28 line and 12 above and below.
   static const double field = 52;
 

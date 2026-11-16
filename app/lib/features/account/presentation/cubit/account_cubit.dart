@@ -1,3 +1,4 @@
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';

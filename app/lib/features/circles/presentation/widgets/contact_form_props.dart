@@ -1,4 +1,5 @@
-import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
+import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:flutter/material.dart';
 
 /// What the emergency-contact card needs from the page that opens it: the

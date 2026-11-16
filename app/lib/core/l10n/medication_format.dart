@@ -1,5 +1,5 @@
 import 'package:app/core/l10n/arabic_counts.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

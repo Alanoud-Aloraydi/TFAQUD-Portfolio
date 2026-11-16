@@ -1,7 +1,7 @@
 import 'package:app/core/services/app_accessibility.dart';
 import 'package:app/core/services/fresh_install.dart';
 import 'package:app/core/services/native_glass.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_storage/get_storage.dart';
 

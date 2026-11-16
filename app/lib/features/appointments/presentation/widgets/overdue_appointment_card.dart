@@ -6,13 +6,15 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
+import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/overdue_appointment_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// An appointment of an earlier day nobody closed yet. Managers answer it
-/// here with the same confirmation as on the appointment's card.
+/// An appointment of an earlier day nobody closed yet, answered here with
+/// the same confirmation as on the appointment's card: «حضرت» for those
+/// who went to it, «إلغاء» for those who manage the appointments.
 class OverdueAppointmentCard extends StatelessWidget {
   const OverdueAppointmentCard({
     super.key,
@@ -27,6 +29,9 @@ class OverdueAppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool canAttend =
+        TaskViewerScope.of(context)?.goesWith(value.companionIds) ?? false;
+    if (!canAttend && !canManage) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: CareItemRow(
@@ -42,9 +47,12 @@ class OverdueAppointmentCard extends StatelessWidget {
           text: context.tr('today_dashboard.status.appointment_waiting'),
           tone: StatusTone.attention,
         ),
-        actions: canManage
-            ? OverdueAppointmentActions(value: value, circleId: circleId)
-            : null,
+        actions: OverdueAppointmentActions(
+          value: value,
+          circleId: circleId,
+          canAttend: canAttend,
+          canCancel: canManage,
+        ),
       ),
     );
   }

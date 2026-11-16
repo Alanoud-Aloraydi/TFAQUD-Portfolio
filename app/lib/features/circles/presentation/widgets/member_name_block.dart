@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/you_pill.dart';
 import 'package:easy_localization/easy_localization.dart';

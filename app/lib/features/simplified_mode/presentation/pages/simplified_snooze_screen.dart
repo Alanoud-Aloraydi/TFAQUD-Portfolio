@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';

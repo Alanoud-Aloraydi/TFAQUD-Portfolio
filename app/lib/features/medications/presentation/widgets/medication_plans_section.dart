@@ -1,18 +1,12 @@
-import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
-import 'package:app/features/medications/presentation/widgets/plans_skeleton.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plans_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-/// Displays the medication plans section UI.
+/// «الأدوية» on the plan tab: the list, with a fade between loading, a
+/// failure and the medicines themselves.
 class MedicationPlansSection extends StatelessWidget {
   const MedicationPlansSection({
     super.key,
@@ -35,45 +29,13 @@ class MedicationPlansSection extends StatelessWidget {
           MedicationsStatus.failure => 'failure',
           _ => 'content',
         },
-        child: _content(context, state),
+        child: MedicationPlansContent(
+          circleId: circleId,
+          canManage: canManage,
+          header: header,
+          state: state,
+        ),
       ),
     );
-  }
-
-  Widget _content(BuildContext context, MedicationsState state) {
-    if (state.status == MedicationsStatus.initial ||
-        state.status == MedicationsStatus.loading) {
-      return const PlansSkeleton();
-    }
-    if (state.status == MedicationsStatus.failure) {
-      return RetryView(
-        messageKey: state.messageKey!,
-        onRetry: () => context.read<MedicationsCubit>().load(circleId),
-      );
-    }
-    final today = PatientClockScope.of(context).today();
-    final current = state.plans
-        .where((plan) => !plan.isPreviousOn(today))
-        .toList();
-    // No count line: the tab shows how many, and each card its status.
-    return MedicationPlanList(
-      header: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          header,
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
-      emptyText: CareVoice.tr(context, circleId, 'medications.no_current'),
-      plans: current,
-      circleId: circleId,
-      canManage: canManage,
-      onAdd: () => _addMedication(context),
-    );
-  }
-
-  /// The cubit reads the list again by itself when the form saves.
-  Future<void> _addMedication(BuildContext context) async {
-    await context.push<bool>(Routes.newMedication(circleId));
   }
 }

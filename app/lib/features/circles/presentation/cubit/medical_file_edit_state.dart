@@ -1,9 +1,9 @@
+export 'package:app/features/circles/presentation/cubit/medical_file_edit_status.dart';
 import 'package:app/core/constants/saudi_cities.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_edit_status.dart';
 import 'package:equatable/equatable.dart';
-
-enum MedicalFileEditStatus { loading, ready, failure }
 
 /// What the edit page of the medical file shows: the answers as the user is
 /// changing them. [file] is the file as the server last saved it, so the cubit

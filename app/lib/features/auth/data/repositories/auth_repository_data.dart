@@ -1,5 +1,6 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/errors/storage_failures.dart';
 import 'package:app/core/network/api_error_body.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/features/auth/data/datasources/auth_remote_data_source.dart';

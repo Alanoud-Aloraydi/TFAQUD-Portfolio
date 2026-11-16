@@ -7,20 +7,21 @@ export 'package:app/core/services/reminder_circle.dart';
 import 'package:app/core/services/reminder_circle.dart';
 export 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
+import 'package:app/core/services/reminders/reminder_permission.dart';
+export 'package:app/core/services/reminders/task_snooze.dart';
+import 'package:app/core/services/reminders/task_snooze.dart';
 export 'package:app/core/services/reminders/reminder_plan.dart';
 import 'package:app/core/services/reminders/reminder_plan.dart';
 export 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,32 +33,6 @@ const int cardSnoozeIdBase = reminderIdBase + maxDoseReminders + 1;
 /// At most this many tasks put off at once. The reminders to come give up
 /// as many places, so the phone's 64 are never passed.
 const int maxCardSnoozes = 5;
-
-/// A dose or measurement put off with «ذكّرني لاحقًا»: its circle, which
-/// kind of task, its [subject] (the medicine's name, or the
-/// [MeasurementKind]'s name) and the moment [at] it is reminded of again.
-/// The cards of both modes show the time; the calendar copy moves to it.
-class TaskSnooze extends Equatable {
-  const TaskSnooze({
-    required this.circleId,
-    required this.task,
-    required this.subject,
-    required this.at,
-  });
-
-  final String circleId;
-  final SnoozedTask task;
-  final String subject;
-
-  /// In UTC.
-  final DateTime at;
-
-  @override
-  List<Object?> get props => [circleId, task, subject, at];
-}
-
-/// A task put off, and the slot of its reminder.
-typedef _Snoozed = ({TaskSnooze snooze, int slot});
 
 /// Keeps the coming week's reminders on the phone: every dose time, every
 /// measurement time, and every appointment. The name stays from when it
@@ -119,28 +94,21 @@ class DoseReminders {
   /// The tasks put off, by [doseSnoozeKey] or [measurementSnoozeKey], the
   /// first put off first. Kept on the phone, so a card still shows its time
   /// after the app is opened again.
-  final Map<String, _Snoozed> _snoozed = <String, _Snoozed>{};
+  final Map<String, SnoozeSlot> _snoozed = <String, SnoozeSlot>{};
   Future<void>? _snoozesRead;
   final ValueNotifier<Map<String, TaskSnooze>> _published =
       ValueNotifier<Map<String, TaskSnooze>>(const <String, TaskSnooze>{});
   Timer? _snoozeEnds;
-  final ValueNotifier<AppPermission?> _allowed = ValueNotifier<AppPermission?>(
-    null,
-  );
+  late final ReminderPermission _permission = ReminderPermission(_phone);
 
-  /// What the phone allows the reminders to do, as the last ask or read
-  /// answered; null until the first one. Both modes watch it, so a person
-  /// whose notifications are off is told instead of waiting for reminders
-  /// that cannot arrive.
-  ValueListenable<AppPermission?> get allowed => _allowed;
+  /// What the phone allows the reminders to do; see [ReminderPermission].
+  ValueListenable<AppPermission?> get allowed => _permission.value;
 
-  /// Asks the phone, or reads what it already answered, and publishes it.
-  Future<AppPermission> _ask({required bool request}) async {
-    if (request) await _phone.requestPermission();
-    final AppPermission permission = await _phone.permission();
-    _allowed.value = permission;
-    return permission;
-  }
+  /// The phone's answer as it stands, without asking for it.
+  Future<AppPermission> refreshPermission() => _permission.read();
+
+  /// Puts the phone's own question, which iOS shows only the first time.
+  Future<AppPermission> requestPermission() => _permission.ask(request: true);
 
   /// The tasks put off and not yet reminded of again, by their keys: the
   /// cards of both modes show «بنذكّرك 2:36 م», and the calendar copy has
@@ -259,15 +227,15 @@ class DoseReminders {
     await _readSnoozes();
     final DateTime now = _now().toUtc();
     _snoozed.removeWhere(
-      (String _, _Snoozed entry) => !entry.snooze.at.isAfter(now),
+      (String _, SnoozeSlot entry) => !entry.snooze.at.isAfter(now),
     );
-    final _Snoozed? earlier = _snoozed.remove(key);
+    final SnoozeSlot? earlier = _snoozed.remove(key);
     final int slot = earlier?.slot ?? _freeSlot();
     _snoozed[key] = (snooze: snooze, slot: slot);
     // A snooze can be the first reminder this phone sets (a day whose tasks
     // have all passed asks nothing), and without the permission iOS drops
     // it in silence. iOS asks the person only the first time.
-    await _ask(request: true);
+    await _permission.ask(request: true);
     final Map<int, String> pending = await _phone.pending();
     for (final MapEntry<int, String> entry in pending.entries) {
       if (isReminderPayload(entry.value) &&
@@ -330,7 +298,7 @@ class DoseReminders {
   /// first gives up its slot (its reminder is replaced).
   int _freeSlot() {
     final Set<int> used = <int>{
-      for (final _Snoozed entry in _snoozed.values) entry.slot,
+      for (final SnoozeSlot entry in _snoozed.values) entry.slot,
     };
     for (int slot = 0; slot < maxCardSnoozes; slot++) {
       if (!used.contains(slot)) return slot;
@@ -360,7 +328,7 @@ class DoseReminders {
     };
     bool changed = false;
     for (final String key in _snoozed.keys.toList()) {
-      final _Snoozed entry = _snoozed[key]!;
+      final SnoozeSlot entry = _snoozed[key]!;
       if (recorded.contains(key)) {
         await _phone.cancel(cardSnoozeIdBase + entry.slot);
       } else if (entry.snooze.at.isAfter(now)) {
@@ -430,7 +398,7 @@ class DoseReminders {
     await prefs.setString(
       _snoozesKey,
       jsonEncode(<String, Object>{
-        for (final MapEntry<String, _Snoozed> entry in _snoozed.entries)
+        for (final MapEntry<String, SnoozeSlot> entry in _snoozed.entries)
           entry.key: <String, Object>{
             'at': entry.value.snooze.at.toUtc().toIso8601String(),
             'slot': entry.value.slot,
@@ -448,7 +416,7 @@ class DoseReminders {
     final DateTime now = _now().toUtc();
     _published.value = Map<String, TaskSnooze>.unmodifiable(
       <String, TaskSnooze>{
-        for (final MapEntry<String, _Snoozed> entry in _snoozed.entries)
+        for (final MapEntry<String, SnoozeSlot> entry in _snoozed.entries)
           if (entry.value.snooze.at.isAfter(now)) entry.key: entry.value.snooze,
       },
     );
@@ -563,7 +531,7 @@ class DoseReminders {
     if (planned.isNotEmpty) {
       final bool first = !_asked;
       _asked = true;
-      await _ask(request: first);
+      await _permission.ask(request: first);
       if (session != _session) return;
     }
     await _replace(planned, session);

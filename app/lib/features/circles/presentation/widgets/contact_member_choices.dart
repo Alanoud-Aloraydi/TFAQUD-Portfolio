@@ -1,6 +1,7 @@
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
+import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_props.dart';
 import 'package:app/features/circles/presentation/widgets/contact_member_chip.dart';
 import 'package:easy_localization/easy_localization.dart';

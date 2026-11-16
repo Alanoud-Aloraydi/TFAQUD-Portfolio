@@ -1,4 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';

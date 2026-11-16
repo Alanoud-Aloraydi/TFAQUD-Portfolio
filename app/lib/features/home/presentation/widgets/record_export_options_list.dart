@@ -1,9 +1,6 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/features/home/domain/record_export_options.dart';
+import 'package:app/features/home/presentation/widgets/record_export_check_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -30,32 +27,32 @@ class RecordExportOptionsList extends StatelessWidget {
       children: <Widget>[
         InsetGroup(
           children: <Widget>[
-            _CheckRow(
+            RecordExportCheckRow(
               label: context.tr('record_export.medical_file'),
               checked: hasMedicalFile && options.patient,
               onChanged: hasMedicalFile
                   ? (bool v) => onChanged(options.copyWith(patient: v))
                   : null,
             ),
-            _CheckRow(
+            RecordExportCheckRow(
               label: context.tr('record_export.measurements'),
               checked: options.measurements,
               onChanged: (bool v) =>
                   onChanged(options.copyWith(measurements: v)),
             ),
-            _CheckRow(
+            RecordExportCheckRow(
               label: context.tr('record_export.medications'),
               checked: options.medications,
               onChanged: (bool v) =>
                   onChanged(options.copyWith(medications: v)),
             ),
             if (options.medications)
-              _CheckRow(
+              RecordExportCheckRow(
                 label: context.tr('record_export.dose_log_option'),
                 checked: options.doseLog,
                 onChanged: (bool v) => onChanged(options.copyWith(doseLog: v)),
               ),
-            _CheckRow(
+            RecordExportCheckRow(
               label: context.tr('record_export.appointments'),
               checked: options.appointments,
               onChanged: (bool v) =>
@@ -64,47 +61,6 @@ class RecordExportOptionsList extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-/// A section as a row: a tap includes it or leaves it out, and a check at
-/// its end marks it included, as in the app's other lists of choices. Null
-/// [onChanged] greys it.
-class _CheckRow extends StatelessWidget {
-  const _CheckRow({
-    required this.label,
-    required this.checked,
-    required this.onChanged,
-  });
-
-  final String label;
-  final bool checked;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool enabled = onChanged != null;
-    return Semantics(
-      checked: checked,
-      enabled: enabled,
-      child: InsetRow(
-        label: label,
-        labelColor: enabled ? null : AppSemanticColors.borderControlBase,
-        // The words take the row; the check (or its room) sits at the end.
-        leading: const SizedBox.shrink(),
-        onTap: enabled ? () => onChanged!(!checked) : null,
-        trailing: SizedBox.square(
-          dimension: AppSizes.iconSmall,
-          child: checked
-              ? const Icon(
-                  AppIcons.check,
-                  size: AppSizes.iconSmall,
-                  color: AppSemanticColors.textPrimary,
-                )
-              : null,
-        ),
-      ),
     );
   }
 }

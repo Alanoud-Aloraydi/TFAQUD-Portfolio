@@ -1,4 +1,4 @@
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 
 /// The cities the city sheet offers. The first seven are the cities of the
 /// design (CREAT-01B), in its order. Add a city by adding its name here. The

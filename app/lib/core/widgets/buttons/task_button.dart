@@ -31,7 +31,13 @@ class TaskButton extends StatelessWidget {
     final Widget button = OutlinedButton.icon(
       style: role.style,
       onPressed: onPressed,
-      icon: Icon(icon, size: AppSizes.iconSmall),
+      // The answer is a size up, its icon with it.
+      icon: Icon(
+        icon,
+        size: role == TaskButtonRole.answer
+            ? AppSizes.icon
+            : AppSizes.iconSmall,
+      ),
       // With its own label the words are not said twice; the button keeps
       // its role and its tap for the screen reader.
       label: said == null ? words : ExcludeSemantics(child: words),

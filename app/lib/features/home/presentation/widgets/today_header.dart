@@ -1,5 +1,5 @@
-import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/l10n/greeting.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/features/home/presentation/today_prayer_day.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';

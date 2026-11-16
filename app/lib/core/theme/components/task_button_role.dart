@@ -5,27 +5,30 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// The buttons under a task that is due, in two levels: the one answer the
-/// task asks for is filled, every other choice is plain. Four pale fills
-/// told them apart before, but they sat within 1.1 of each other in
-/// lightness, so the card read as busy while nothing stood out — and the
-/// filled answer among them was the palest thing on it. The icon and the
-/// words name each choice now; the color only says which one is the
-/// action. All are [AppSizes.button] high, one text and one shape, and
-/// every edge is at least 3:1 on the white card (WCAG 1.4.11).
+/// task asks for is the tallest thing on the card and the only one in the
+/// circle's violet, and the choices beside it are a quieter yellow and
+/// grey. Deep violet filled the answer before, which read as the heaviest
+/// mark on a white card; the pale fill below is the tint «يحتاج انتباهك»
+/// uses, so a card asks rather than shouts.
+///
+/// A pale fill cannot be told from the card by its fill alone (1.45:1 for
+/// the answer, 1.08 and 1.14 for the others), so each one carries a 1px
+/// edge dark enough to be its boundary — 12.1, 6.6 and 4.1 on white, all
+/// past the 3:1 a control needs (WCAG 1.4.11) — and words past 4.5:1 on
+/// their own fill (8.4, 6.1, 8.9).
 enum TaskButtonRole {
-  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one filled button of a task, in
-  /// the deep violet every main action uses. Its pale fill read 1.9:1 on a
-  /// white card, under the 3:1 a control needs; filled it reads 12.1:1.
-  answer(AppColors.inkViolet, AppColors.inkViolet, AppColors.surface),
+  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the baby violet
+  /// of «يحتاج انتباهك» with the violet every main action uses for its
+  /// edge and its words.
+  answer(AppColors.leafTintDeep, AppColors.inkViolet, AppColors.inkViolet),
 
-  /// «ذكّرني لاحقًا»: a choice beside the answer, told by its bell.
-  later(AppColors.surface, AppColors.stone, AppColors.slate),
+  /// «ذكّرني لاحقًا»: putting the task off, in the honey the app warns
+  /// with, told also by its bell.
+  later(AppColors.honeyLight, AppColors.warning, AppColors.warning),
 
-  /// «انأخذت بوقت سابق»: a choice beside the answer, told by its clock.
-  earlier(AppColors.surface, AppColors.stone, AppColors.slate),
-
-  /// «تخطي» and «إلغاء»: a choice beside the answer, told by its minus.
-  skip(AppColors.surface, AppColors.stone, AppColors.slate);
+  /// «تخطي» and «إلغاء»: letting the task go, in grey, told also by its
+  /// minus.
+  skip(AppColors.slateMist, AppColors.stone, AppColors.slate);
 
   const TaskButtonRole(this.fill, this.edge, this.ink);
 
@@ -34,6 +37,9 @@ enum TaskButtonRole {
   final Color edge;
   final Color ink;
 
+  /// The answer stands a step taller than the choices under it.
+  double get height => this == answer ? AppSizes.buttonAnswer : AppSizes.button;
+
   static const TextStyle _words = TextStyle(
     fontFamily: AppTextTheme.fontFamily,
     fontSize: 15,
@@ -41,10 +47,18 @@ enum TaskButtonRole {
     fontWeight: FontWeight.w600,
   );
 
-  /// Its look: [AppSizes.button] high (taller only when the words wrap at a
-  /// large text size), as wide as it is given.
+  /// The answer carries the card, so its words are a size up.
+  static const TextStyle _answerWords = TextStyle(
+    fontFamily: AppTextTheme.fontFamily,
+    fontSize: 17,
+    height: 24 / 17,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Its look: [height] high (taller only when the words wrap at a large
+  /// text size), as wide as it is given.
   ButtonStyle get style => OutlinedButton.styleFrom(
-    minimumSize: const Size(0, AppSizes.button),
+    minimumSize: Size(0, height),
     padding: const EdgeInsets.symmetric(
       horizontal: AppSpacing.sm,
       vertical: AppSpacing.xs,
@@ -53,6 +67,6 @@ enum TaskButtonRole {
     backgroundColor: fill,
     foregroundColor: ink,
     side: BorderSide(color: edge),
-    textStyle: _words,
+    textStyle: this == answer ? _answerWords : _words,
   );
 }

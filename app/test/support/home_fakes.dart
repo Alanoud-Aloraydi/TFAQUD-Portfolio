@@ -1,3 +1,4 @@
+import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/repositories/home_repository_domain.dart';

@@ -23,6 +23,11 @@ class AppColors {
   static const Color leafPressed = Color(0xFFAB98D0);
   static const Color leafTint = Color(0xFFEFEAF8);
 
+  /// One step down from [leafTint], for a group that gathers cards: the
+  /// tint itself reads 1.11 on the canvas, near enough to vanish, while
+  /// this reads 1.36 and still leaves white cards on it at 1.45.
+  static const Color leafTintDeep = Color(0xFFDCD2F0);
+
   /// Ink of the violet's own family, for words and marks that sit on a
   /// violet or honey surface: 6.4 on leaf, 8.3 on honey, 10.3 on leafTint.
   static const Color inkViolet = Color(0xFF3F2A65);

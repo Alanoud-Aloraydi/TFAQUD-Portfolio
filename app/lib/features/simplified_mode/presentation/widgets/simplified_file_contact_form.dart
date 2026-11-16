@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_props.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_detail_scale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

@@ -1,6 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/period_entry.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_task_rows.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';

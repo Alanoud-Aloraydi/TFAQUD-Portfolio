@@ -4,6 +4,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';

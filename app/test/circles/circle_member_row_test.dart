@@ -1,3 +1,4 @@
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';

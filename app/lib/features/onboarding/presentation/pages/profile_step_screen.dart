@@ -13,6 +13,8 @@ import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';
+import 'package:app/features/auth/presentation/cubit/auth_signed_out_state.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';

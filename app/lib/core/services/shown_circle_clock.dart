@@ -1,4 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/time_zones.dart';
 import 'package:flutter/foundation.dart';
 
 /// The [PatientClock] of the circle on screen, which [PatientClockScope]

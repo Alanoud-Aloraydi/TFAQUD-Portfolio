@@ -1,61 +1,14 @@
+import 'package:app/features/medications/domain/entities/dose_unit.dart';
+import 'package:app/features/medications/domain/entities/schedule_repeat.dart';
 import 'package:equatable/equatable.dart';
 
-enum DosageForm {
-  tablet,
-  capsule,
-  liquid,
-  drops,
-  inhaler,
-  // «بخار»: the solution a nebulizer turns into mist, dosed in millilitres
-  // like any other liquid. It sits beside «بخاخ», the puffer.
-  nebulizer,
-  injection,
-}
-
-enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }
-
-enum StrengthUnit {
-  milligram('mg'),
-  microgram('mcg'),
-  milligramPerMilliliter('mg/mL'),
-  milligramPerFiveMilliliters('mg/5mL'),
-  microgramPerDose('mcg/dose'),
-  unitPerMilliliter('unit/mL'),
-  percent('%');
-
-  const StrengthUnit(this.apiValue);
-
-  final String apiValue;
-
-  static StrengthUnit fromApi(String value) =>
-      values.firstWhere((unit) => unit.apiValue == value);
-}
-
-/// Adds dosage form unit helpers to its target type.
-extension DosageFormUnit on DosageForm {
-  List<DoseUnit> get doseUnits => switch (this) {
-    DosageForm.tablet => const [DoseUnit.tablet],
-    DosageForm.capsule => const [DoseUnit.capsule],
-    DosageForm.liquid => const [DoseUnit.milliliter],
-    DosageForm.drops => const [DoseUnit.drop],
-    DosageForm.inhaler => const [DoseUnit.puff],
-    DosageForm.nebulizer => const [DoseUnit.milliliter],
-    DosageForm.injection => const [DoseUnit.milliliter, DoseUnit.unit],
-  };
-
-  DoseUnit get defaultDoseUnit => doseUnits.first;
-}
-
-/// Adds dose unit value helpers to its target type.
-extension DoseUnitValue on DoseUnit {
-  String get apiValue => this == DoseUnit.milliliter ? 'mL' : name;
-}
-
-/// How a dose time repeats: on chosen weekdays, every few days from the
-/// treatment's start («نذكرك كل 3 أيام»), or on chosen days of the month.
-/// The app offers the first two; a monthly schedule saved before stays
-/// monthly until it is edited. The API's words are the names.
-enum ScheduleRepeat { weekly, monthly, interval }
+export 'package:app/features/medications/domain/entities/dosage_form.dart';
+export 'package:app/features/medications/domain/entities/dosage_form_unit.dart';
+export 'package:app/features/medications/domain/entities/dose_unit.dart';
+export 'package:app/features/medications/domain/entities/dose_unit_value.dart';
+export 'package:app/features/medications/domain/entities/medication_schedule_draft.dart';
+export 'package:app/features/medications/domain/entities/schedule_repeat.dart';
+export 'package:app/features/medications/domain/entities/strength_unit.dart';
 
 /// «نذكرك كل … يوم»: from every day to every 90 days, as the server allows.
 const int maxIntervalDays = 90;
@@ -97,64 +50,6 @@ class MedicationSchedule extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    time,
-    doseValue,
-    doseUnit,
-    weekdays,
-    instructions,
-    repeat,
-    monthDays,
-    intervalDays,
-  ];
-}
-
-/// Holds editable medication schedule values before saving.
-class MedicationScheduleDraft extends Equatable {
-  MedicationScheduleDraft({
-    required this.time,
-    required this.doseValue,
-    required this.doseUnit,
-    required List<int> weekdays,
-    this.instructions,
-    this.repeat = ScheduleRepeat.weekly,
-    List<int> monthDays = const <int>[],
-    this.intervalDays,
-  }) : weekdays = List.unmodifiable(weekdays),
-       monthDays = List.unmodifiable(monthDays);
-
-  final String time;
-  final double doseValue;
-  final DoseUnit doseUnit;
-  final List<int> weekdays;
-  final String? instructions;
-  final ScheduleRepeat repeat;
-  final List<int> monthDays;
-  final int? intervalDays;
-
-  /// A weekly schedule is sent as before (weekdays only), so it saves on a
-  /// server without other repeats too; the others name their repeat.
-  Map<String, Object?> toJson() => {
-    'time_of_day': time,
-    'dose_value': doseValue,
-    'dose_unit': doseUnit.apiValue,
-    ...switch (repeat) {
-      ScheduleRepeat.weekly => <String, Object?>{'weekdays': weekdays},
-      ScheduleRepeat.monthly => <String, Object?>{
-        'repeat': repeat.name,
-        'weekdays': const <int>[],
-        'month_days': monthDays,
-      },
-      ScheduleRepeat.interval => <String, Object?>{
-        'repeat': repeat.name,
-        'weekdays': const <int>[],
-        'interval_days': intervalDays,
-      },
-    },
-    'instructions': instructions,
-  };
-
-  @override
-  List<Object?> get props => [
     time,
     doseValue,
     doseUnit,

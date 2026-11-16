@@ -1,65 +1,10 @@
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+export 'package:app/features/circles/data/models/new_circle_request_model.dart';
+export 'package:app/features/circles/data/models/previous_notifications_model.dart';
+export 'package:app/features/circles/data/models/received_invitations_model.dart';
+export 'package:app/features/circles/data/models/sent_circle_request_model.dart';
+import 'package:app/features/circles/data/models/sent_circle_request_model.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
-import 'package:app/features/circles/domain/entities/received_invitation.dart';
-
-/// The body of POST /api/v1/circle-requests (docs/api-contracts.md).
-class NewCircleRequestModel {
-  const NewCircleRequestModel(this._request);
-
-  final NewCircleRequest _request;
-
-  Map<String, dynamic> toJson() => <String, dynamic>{
-    'patient_phone_number': _request.patientPhoneNumber,
-    'proposed_app_mode': _request.proposedAppMode.name,
-  };
-}
-
-/// Reads one request as the sender sees it. It is the answer of
-/// POST /api/v1/circle-requests and of the respond call, `{"request": {...}}`,
-/// and an item of `sent` in GET /api/v1/circle-requests.
-class SentCircleRequestModel {
-  const SentCircleRequestModel(this._entity);
-
-  final SentCircleRequest _entity;
-
-  factory SentCircleRequestModel.fromJson(Map<String, dynamic> json) {
-    return SentCircleRequestModel.fromItem(
-      json['request'] as Map<String, dynamic>,
-    );
-  }
-
-  /// An item of the request, without the `request` wrapper.
-  factory SentCircleRequestModel.fromItem(Map<String, dynamic> request) {
-    return SentCircleRequestModel(
-      SentCircleRequest(
-        id: request['id'] as String,
-        patientPhoneNumber: request['patient_phone_number'] as String,
-        proposedAppMode: parseMode(request['proposed_app_mode'] as String?),
-        status: parseStatus(request['status'] as String?),
-        createdAt: parseTime(request['created_at']),
-        respondedAt: parseTime(request['responded_at']),
-      ),
-    );
-  }
-
-  SentCircleRequest toEntity() => _entity;
-
-  static CircleAppMode parseMode(String? value) =>
-      value == 'detailed' ? CircleAppMode.detailed : CircleAppMode.simplified;
-
-  static CircleRequestStatus parseStatus(String? value) => switch (value) {
-    'pending' => CircleRequestStatus.pending,
-    'accepted' => CircleRequestStatus.accepted,
-    'declined' => CircleRequestStatus.declined,
-    _ => CircleRequestStatus.other,
-  };
-
-  /// The server writes times in UTC, ISO 8601. Anything else is "unknown".
-  static DateTime? parseTime(Object? value) =>
-      value is String ? DateTime.tryParse(value) : null;
-}
 
 /// Reads the answer of GET /api/v1/circle-requests:
 /// `{"sent": [...], "received": [...]}`.
@@ -103,71 +48,6 @@ class CircleRequestsModel {
       requesterName: display.isNotEmpty ? display : '$first $last'.trim(),
       requesterAvatarCode: by['avatar_code'] as String?,
       createdAt: SentCircleRequestModel.parseTime(item['created_at']),
-    );
-  }
-}
-
-/// Reads the answer of GET /api/v1/invitations: `{"invitations": [...]}`.
-abstract class ReceivedInvitationsModel {
-  ReceivedInvitationsModel._();
-
-  static List<ReceivedInvitation> fromJson(Map<String, dynamic> json) {
-    final List<dynamic> items =
-        (json['invitations'] as List<dynamic>?) ?? <dynamic>[];
-    return <ReceivedInvitation>[
-      for (final dynamic raw in items) _invitation(raw as Map<String, dynamic>),
-    ];
-  }
-
-  static ReceivedInvitation _invitation(Map<String, dynamic> item) {
-    final Map<String, dynamic>? by =
-        item['invited_by'] as Map<String, dynamic>?;
-    return ReceivedInvitation(
-      id: item['id'] as String,
-      circleName: item['circle_name'] as String,
-      invitedByName: by?['display_name'] as String?,
-      invitedByAvatarCode: by?['avatar_code'] as String?,
-      createdAt: SentCircleRequestModel.parseTime(item['created_at']),
-    );
-  }
-}
-
-/// Reads the answer of GET /api/v1/notifications/previous:
-/// `{"previous": [...]}`, newest first. An item of a kind this app does not
-/// know, or without its time, is left out.
-abstract class PreviousNotificationsModel {
-  PreviousNotificationsModel._();
-
-  static const Map<String, PreviousKind> _kinds = <String, PreviousKind>{
-    'invitation_received': PreviousKind.invitationReceived,
-    'invitation_sent': PreviousKind.invitationSent,
-    'request_received': PreviousKind.requestReceived,
-    'request_sent': PreviousKind.requestSent,
-  };
-
-  static List<PreviousNotification> fromJson(Map<String, dynamic> json) {
-    final List<dynamic> items =
-        (json['previous'] as List<dynamic>?) ?? <dynamic>[];
-    return <PreviousNotification>[
-      for (final dynamic raw in items) ?_item(raw as Map<String, dynamic>),
-    ];
-  }
-
-  static PreviousNotification? _item(Map<String, dynamic> item) {
-    final PreviousKind? kind = _kinds[item['kind']];
-    final DateTime? answeredAt = SentCircleRequestModel.parseTime(
-      item['answered_at'],
-    );
-    if (kind == null || answeredAt == null) return null;
-    return PreviousNotification(
-      id: item['id'] as String,
-      kind: kind,
-      accepted: item['status'] != 'declined',
-      answeredAt: answeredAt,
-      circleName: item['circle_name'] as String?,
-      otherName: item['other_name'] as String?,
-      otherAvatarCode: item['other_avatar_code'] as String?,
-      otherPhoneNumber: item['other_phone_number'] as String?,
     );
   }
 }

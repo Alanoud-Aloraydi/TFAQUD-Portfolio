@@ -43,12 +43,20 @@ Future<T?> showGlassMenu<T>({
   Widget? anchorContent,
 }) async {
   final NavigatorState navigator = Navigator.of(anchorContext);
-  final RenderBox anchorBox = anchorContext.findRenderObject()! as RenderBox;
-  final RenderBox overlayBox =
-      navigator.overlay!.context.findRenderObject()! as RenderBox;
+  // The anchor may have left the tree between the tap and this line (a
+  // list that reloaded under the finger), and a menu that cannot find
+  // where it opens from is not worth a crash.
+  final RenderObject? anchorObject = anchorContext.findRenderObject();
+  final RenderObject? overlayObject = navigator.overlay?.context
+      .findRenderObject();
+  if (anchorObject is! RenderBox ||
+      overlayObject is! RenderBox ||
+      !anchorObject.attached) {
+    return null;
+  }
   final Rect anchor =
-      anchorBox.localToGlobal(Offset.zero, ancestor: overlayBox) &
-      anchorBox.size;
+      anchorObject.localToGlobal(Offset.zero, ancestor: overlayObject) &
+      anchorObject.size;
   HapticFeedback.selectionClick();
   final Object? picked = await navigator.push<Object?>(
     GlassMenuRoute(

@@ -1,3 +1,5 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
@@ -15,14 +17,13 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
+import 'package:app/features/medications/presentation/widgets/dose_controls_layout.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/widget_harness.dart';
 
 /// Records what the measurement row sends to the server.
 class _Measurements extends Fake implements MeasurementsRepositoryDomain {
@@ -286,6 +287,11 @@ void main() {
       );
 
       await tester.tap(find.text('medications.taken_short'.tr()));
+      await tester.pumpAndSettle();
+      // «أخذتها» asks when, offering the moment it was pressed: one button
+      // records a dose taken now and one taken earlier, so «أخذتها بوقت
+      // سابق» is gone. Confirming the offered time records it now.
+      await tester.tap(find.text('common.confirm'.tr()));
       await tester.pumpAndSettle();
 
       expect(repository.drafts.single.outcome, DoseOutcome.taken);

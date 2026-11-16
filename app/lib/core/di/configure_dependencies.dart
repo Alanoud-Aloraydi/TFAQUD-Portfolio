@@ -95,8 +95,11 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<VisitsUseCase>(
     () => VisitsUseCase(getIt<VisitsRepositoryDomain>()),
   );
-  // The microphone and the speaker behind the voice note of a visit.
-  getIt.registerLazySingleton<VisitAudio>(VisitAudioService.new);
+  // The microphone and the speaker behind the voice note of a visit. One
+  // per visit page, not one for the app: `VisitCubit.close` disposes it,
+  // and a shared recorder disposed with the first page left every later
+  // page unable to record at all.
+  getIt.registerFactory<VisitAudio>(VisitAudioService.new);
   // The notifications set on the phone, and the reminders that use them:
   // doses, measurements and appointments.
   getIt.registerLazySingleton<PhoneNotifications>(

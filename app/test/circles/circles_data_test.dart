@@ -1,5 +1,9 @@
 import 'package:app/core/di/configure_dependencies.dart';
+import 'package:app/core/errors/auth_failures.dart';
+import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';

@@ -1,5 +1,5 @@
 import 'package:app/core/utils/overdue_window.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
