@@ -1,6 +1,7 @@
+import '../support/circles_fakes.dart';
 import 'dart:async';
-
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/data/models/circle_overview_model.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
@@ -10,8 +11,6 @@ import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.da
 import 'package:app/features/circles/presentation/cubit/circle_overview_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/circles_fakes.dart';
 
 Map<String, dynamic> _circle(List<Map<String, dynamic>> members) =>
     <String, dynamic>{

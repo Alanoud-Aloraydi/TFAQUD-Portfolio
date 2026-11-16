@@ -1,5 +1,6 @@
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
+import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:flutter/material.dart';
 
 /// The typed name and number of the contact card. They start from the form,

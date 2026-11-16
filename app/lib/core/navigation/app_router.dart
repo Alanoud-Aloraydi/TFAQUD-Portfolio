@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/services/shown_circle_clock.dart';
@@ -86,17 +85,16 @@ import 'package:app/features/simplified_mode/presentation/pages/simplified_remin
 import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_skip_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_snooze_screen.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_detail_scale.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_scale.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-
 import 'routers.dart';
 
 part 'routes/auth_routes.dart';

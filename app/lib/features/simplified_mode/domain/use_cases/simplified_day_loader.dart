@@ -1,3 +1,4 @@
+import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';

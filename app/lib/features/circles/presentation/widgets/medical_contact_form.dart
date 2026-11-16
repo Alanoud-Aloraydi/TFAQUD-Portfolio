@@ -1,6 +1,7 @@
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
+import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
+import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_props.dart';

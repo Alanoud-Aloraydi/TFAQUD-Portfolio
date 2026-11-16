@@ -18,9 +18,11 @@ import 'package:app/features/medications/domain/entities/medication_schedule.dar
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
 import 'package:app/features/medications/presentation/widgets/medication_basic_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_effective_date_group.dart';
 import 'package:app/features/medications/presentation/widgets/medication_form_footer.dart';
+import 'package:app/features/medications/presentation/widgets/medication_instructions_group.dart';
 import 'package:app/features/medications/presentation/widgets/medication_period_fields.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_field.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';

@@ -1,4 +1,7 @@
+import '../support/circles_fakes.dart';
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
@@ -7,8 +10,6 @@ import 'package:app/features/circles/presentation/cubit/send_circle_request_cubi
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/circles_fakes.dart';
 
 void main() {
   late CirclesFakeRepository circles;

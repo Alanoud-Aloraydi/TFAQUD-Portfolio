@@ -1,3 +1,5 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
@@ -9,6 +11,7 @@ import 'package:app/features/measurements/domain/measurement_reading_draft.dart'
 import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/models/measurement_reading_draft.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_row.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -21,8 +24,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/widget_harness.dart';
 
 /// Records what the measurement row sends to the server.
 class _Measurements extends Fake implements MeasurementsRepositoryDomain {

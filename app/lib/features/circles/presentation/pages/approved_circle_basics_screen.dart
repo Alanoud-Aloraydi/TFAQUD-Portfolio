@@ -28,12 +28,10 @@ class ApprovedCircleBasicsScreen extends StatefulWidget {
   const ApprovedCircleBasicsScreen({super.key});
 
   @override
-  State<ApprovedCircleBasicsScreen> createState() =>
-      _ApprovedCircleBasicsScreenState();
+  State<ApprovedCircleBasicsScreen> createState() => _ApprovedBasicsState();
 }
 
-class _ApprovedCircleBasicsScreenState
-    extends State<ApprovedCircleBasicsScreen> {
+class _ApprovedBasicsState extends State<ApprovedCircleBasicsScreen> {
   late final TextEditingController _customName;
 
   @override

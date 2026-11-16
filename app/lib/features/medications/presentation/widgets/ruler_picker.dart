@@ -1,6 +1,7 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/features/medications/presentation/widgets/ruler_tick.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -132,7 +133,7 @@ class _RulerPickerState extends State<RulerPicker> {
                           (number == 1 || number % 5 == 0);
                       return RotatedBox(
                         quarterTurns: rtl ? 3 : 1,
-                        child: _Tick(
+                        child: RulerTick(
                           major: major,
                           label: major
                               ? (widget.tickLabel?.call(number) ?? '$number')
@@ -161,46 +162,6 @@ class _RulerPickerState extends State<RulerPicker> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// One mark: a long one with its words under it, or a short one between.
-class _Tick extends StatelessWidget {
-  const _Tick({required this.major, this.label});
-
-  final bool major;
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Container(
-          width: major ? 2 : 1,
-          height: major ? 26 : 14,
-          color: major
-              ? AppSemanticColors.textPrimary
-              : AppSemanticColors.borderControlBase,
-        ),
-        const Spacer(),
-        // A number is wider than its mark: it overflows to both sides.
-        SizedBox(
-          height: 18,
-          child: label != null
-              ? OverflowBox(
-                  maxWidth: 40,
-                  child: Text(
-                    label!,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: AppSemanticColors.textSupporting),
-                  ),
-                )
-              : null,
-        ),
-      ],
     );
   }
 }

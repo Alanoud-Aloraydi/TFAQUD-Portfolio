@@ -1,3 +1,4 @@
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';

@@ -1,8 +1,13 @@
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
+import '../support/phone_fakes.dart';
+import '../support/widget_harness.dart';
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
@@ -25,11 +30,6 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
-import '../support/phone_fakes.dart';
-import '../support/widget_harness.dart';
 
 class _Auth extends Fake implements AuthRepositoryDomain {
   int signOuts = 0;

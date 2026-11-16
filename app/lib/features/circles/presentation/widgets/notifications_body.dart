@@ -9,6 +9,7 @@ import 'package:app/features/circles/presentation/notifications_tab.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_failure.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_list.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_skeleton.dart';
+import 'package:app/features/circles/presentation/widgets/previous_notifications_list.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

@@ -8,7 +8,7 @@ import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_states.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

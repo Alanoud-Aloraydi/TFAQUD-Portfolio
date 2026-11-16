@@ -1,4 +1,7 @@
+import '../support/app_shell_harness.dart';
+import '../support/circles_fakes.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/navigation/app_router.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -17,9 +20,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../support/app_shell_harness.dart';
-import '../support/circles_fakes.dart';
 
 void main() {
   setUpShellApp();

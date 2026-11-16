@@ -1,6 +1,7 @@
 import 'dart:async';
-
+import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';

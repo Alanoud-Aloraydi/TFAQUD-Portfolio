@@ -1,4 +1,6 @@
 import 'package:app/core/di/configure_dependencies.dart';
+import 'package:app/core/errors/auth_failures.dart';
+import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/home/data/datasources/home_local_data_source.dart';
 import 'package:app/features/home/data/datasources/home_remote_data_source.dart';

@@ -1,4 +1,8 @@
+import '../support/circles_fakes.dart';
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/entities/patient_update.dart';
@@ -8,8 +12,6 @@ import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/circles_fakes.dart';
 
 void main() {
   late CirclesFakeRepository circles;

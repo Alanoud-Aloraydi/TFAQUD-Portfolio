@@ -1,15 +1,16 @@
+import '../support/circles_fakes.dart';
+import '../support/normal_ranges.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/circles_fakes.dart';
-import '../support/normal_ranges.dart';
 
 class _Measurements extends Fake implements MeasurementRepository {
   int reads = 0;

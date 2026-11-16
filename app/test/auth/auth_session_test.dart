@@ -6,6 +6,8 @@ import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/repositories/auth_repository_data.dart';
 import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';
+import 'package:app/features/auth/presentation/cubit/auth_signed_out_state.dart';
 import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';

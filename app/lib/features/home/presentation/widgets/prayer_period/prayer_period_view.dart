@@ -1,5 +1,5 @@
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period/period_entry.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_task_rows.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/prayer_icons.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/prayer_period_card.dart';

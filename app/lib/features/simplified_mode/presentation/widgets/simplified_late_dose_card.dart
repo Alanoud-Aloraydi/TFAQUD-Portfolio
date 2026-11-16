@@ -8,13 +8,13 @@ import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/task_visuals.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

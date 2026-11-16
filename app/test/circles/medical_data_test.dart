@@ -1,4 +1,7 @@
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
+import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
 import 'package:app/features/circles/data/datasources/device_zone.dart';
 import 'package:app/features/circles/data/repositories/circles_repository_data.dart';

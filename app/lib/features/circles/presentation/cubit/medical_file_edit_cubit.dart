@@ -1,4 +1,5 @@
 import 'package:app/core/constants/saudi_cities.dart';
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';

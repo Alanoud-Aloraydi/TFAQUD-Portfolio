@@ -1,3 +1,4 @@
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';

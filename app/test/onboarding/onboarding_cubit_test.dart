@@ -1,4 +1,6 @@
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';

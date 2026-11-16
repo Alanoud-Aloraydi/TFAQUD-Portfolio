@@ -25,12 +25,10 @@ class SimplifiedModeFeatureScreen extends StatefulWidget {
   const SimplifiedModeFeatureScreen({super.key});
 
   @override
-  State<SimplifiedModeFeatureScreen> createState() =>
-      _SimplifiedModeFeatureScreenState();
+  State<SimplifiedModeFeatureScreen> createState() => _SimplifiedModeState();
 }
 
-class _SimplifiedModeFeatureScreenState
-    extends State<SimplifiedModeFeatureScreen>
+class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
     with WidgetsBindingObserver {
   final PhoneNotifications _phone = GetIt.I<PhoneNotifications>();
   StreamSubscription<String>? _taps;
