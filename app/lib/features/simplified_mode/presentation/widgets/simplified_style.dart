@@ -49,7 +49,7 @@ abstract final class SimplifiedStyle {
   static const Color accentStrong = AppSemanticColors.actionStrong;
   static const Color accentTint = AppSemanticColors.selectedSurface;
   static const Color success = AppSemanticColors.statusSuccess;
-  static const Color attention = AppSemanticColors.surfaceAttention;
+  static const Color attention = AppSemanticColors.surfaceAttentionCard;
   static const Color attentionEdge = AppSemanticColors.accentWarm;
   static const Color attentionInk = AppSemanticColors.statusWarning;
   static const Color danger = AppSemanticColors.statusError;
@@ -58,25 +58,15 @@ abstract final class SimplifiedStyle {
   static const Color onDarkMuted = AppSemanticColors.onInkSupporting;
   static const Color clear = AppSemanticColors.transparent;
 
-  /// The calm dark ground of a full-screen reminder, like a call.
-  static const LinearGradient reminderGround = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: <Color>[
-      AppSemanticColors.textSupporting,
-      AppSemanticColors.textPrimary,
-    ],
-  );
+  /// The thin, soft edge of the attention card: the honey at half.
+  static Color get attentionLine => attentionEdge.withValues(alpha: .5);
 
-  /// The light green ground of «تم، شكرًا».
-  static const LinearGradient doneGround = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: <Color>[
-      AppSemanticColors.selectedSurface,
-      AppSemanticColors.actionPrimary,
-    ],
-  );
+  /// The calm dark ground of a full-screen reminder, like a call: one
+  /// colour, never a gradient.
+  static const Color reminderGround = AppSemanticColors.textPrimary;
+
+  /// The ground of «تم، يعطيك العافية»: one colour, the brand lavender.
+  static const Color doneGround = AppSemanticColors.actionPrimary;
 
   static TextStyle head(
     double size, {

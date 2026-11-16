@@ -11,6 +11,14 @@ ONESIGNAL_USER_URL = (
 )
 
 
+def external_id(account_id: str) -> str:
+    """The account as the app names it to OneSignal (OneSignal.login): the
+    id the API answers, without dashes (app/users/account_rows.py).
+    OneSignal matches an external id letter for letter, so the dashed form
+    of the same id reaches no phone and finds no user."""
+    return account_id.replace("-", "")
+
+
 # OneSignal's `notification_types` for a phone whose app was deleted: set by
 # OneSignal itself when Apple or Google refuses the phone's token. A phone
 # that only turned notifications off is 0 (its app still says so when it

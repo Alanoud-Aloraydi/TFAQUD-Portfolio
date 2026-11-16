@@ -11,8 +11,7 @@ import 'package:flutter/widgets.dart';
 /// A late task says how long it has been late, because «فات موعده» alone
 /// does not say whether that was five minutes or five hours, which is what
 /// decides whether to take it now. A done task says when it was pressed
-/// and who pressed «أخذته»: «تم 4:30 مساءً، بواسطتك» when the patient
-/// did, «تم 4:30 مساءً، بواسطة سارة» when someone of the family did.
+/// and who pressed «أخذته», by name: «تم 4:30 مساءً، سارة».
 String simplifiedTaskStatus(
   BuildContext context,
   TodayTask task,
@@ -23,14 +22,25 @@ String simplifiedTaskStatus(
   if (task.status != TodayTaskStatus.late) {
     return context.tr('simplified_mode.status.${task.status.name}');
   }
+  final String lateText = simplifiedLate(context, task);
+  if (task.kind == TodayTaskKind.appointment) return lateText;
   final DateTime wall = PatientClockScope.of(context).wallTime(now);
   final int minutes = wall.difference(task.scheduledAt).inMinutes;
-  if (minutes < 1) return context.tr('simplified_mode.status.late');
+  if (minutes < 1) return lateText;
   return context.tr(
     'simplified_mode.status.late_by',
     args: <String>[durationWords(context, minutes)],
   );
 }
+
+/// A task whose time came, in two words: «فات موعده» for a dose or a
+/// reading; a visit waits for «حضرت», in the detailed mode's own words,
+/// «تأكيد الحضور».
+String simplifiedLate(BuildContext context, TodayTask task) => context.tr(
+  task.kind == TodayTaskKind.appointment
+      ? 'today_dashboard.status.appointment_waiting'
+      : 'simplified_mode.status.late',
+);
 
 String _doneBy(BuildContext context, TodayTask task, SimplifiedDay day) {
   final SimplifiedDone? done = simplifiedDone(task);

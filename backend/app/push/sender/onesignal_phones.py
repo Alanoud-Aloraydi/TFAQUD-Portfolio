@@ -3,6 +3,7 @@
 import logging
 
 from app.push.sender.onesignal_api import APP_DELETED, ONESIGNAL_USER_URL
+from app.push.sender.onesignal_api import external_id
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class OneSignalPhones:
         try:
             response = self._http().get(
                 ONESIGNAL_USER_URL.format(
-                    app_id=self._app_id, account=account_id
+                    app_id=self._app_id, account=external_id(account_id)
                 ),
                 headers={"Authorization": f"Key {self._api_key}"},
             )

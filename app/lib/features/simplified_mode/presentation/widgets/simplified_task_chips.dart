@@ -8,8 +8,20 @@ import 'package:flutter/material.dart';
 String? simplifiedDoseReason(TodayTask task, SimplifiedDay day) =>
     day.reasons[task.dose!.planId] ?? task.dose!.reason;
 
-/// The short notes of a task: a dose's instructions and the medicine's
-/// reason, a glucose task's context, an appointment's companions.
+/// The notes drawn as plain labels: every one of [simplifiedTaskChips]
+/// but a visit's companions, who are drawn with their photos before their
+/// names (SimplifiedCompanions).
+List<String> simplifiedTaskNotes(
+  BuildContext context,
+  TodayTask task,
+  SimplifiedDay day,
+) => task.kind == TodayTaskKind.appointment
+    ? const <String>[]
+    : simplifiedTaskChips(context, task, day);
+
+/// The short notes of a task, as words: a dose's instructions and the
+/// medicine's reason, a glucose task's context, an appointment's
+/// companions («معك: لينا»).
 List<String> simplifiedTaskChips(
   BuildContext context,
   TodayTask task,

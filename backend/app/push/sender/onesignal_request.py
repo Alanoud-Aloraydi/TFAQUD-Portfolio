@@ -4,6 +4,7 @@ from collections.abc import Collection
 
 from app.push.sender.message import PushMessage
 from app.push.sender.onesignal_api import NOTIFICATION_SOUND, ONESIGNAL_URL
+from app.push.sender.onesignal_api import external_id
 
 # The field of a push that says how far it may interrupt on iOS.
 LEVEL = "ios_interruption_level"
@@ -47,10 +48,11 @@ class OneSignalRequest:
         (the app opens that item with them, and the phone stacks one kind
         together), and the app's own chime on iOS.
         """
+        alias = {"external_id": [external_id(account_id)]}
         to = (
             {"include_subscription_ids": sorted(phones)}
             if phones
-            else {"include_aliases": {"external_id": [account_id]}}
+            else {"include_aliases": alias}
         )
         return {
             "app_id": self._app_id,

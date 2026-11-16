@@ -47,7 +47,7 @@ class RulerPickerState extends State<RulerPicker> {
       picker: widget,
       onJump: _jump,
       child: SizedBox(
-        height: _height,
+        height: _height * widget.look.scale,
         child: Stack(
           alignment: Alignment.center,
           children: <Widget>[
@@ -57,7 +57,7 @@ class RulerPickerState extends State<RulerPicker> {
               lastIndex: indexOf(widget.max),
               onSelected: _select,
             ),
-            const RulerMark(),
+            RulerMark(look: widget.look),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
@@ -8,6 +9,7 @@ import 'package:app/features/measurements/domain/use_cases/measurements_use_case
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
 import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/use_cases/result_attempt.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_day_loader.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_dosing.dart';
 import 'package:injectable/injectable.dart';
@@ -34,7 +36,8 @@ class SimplifiedModeUseCase extends SimplifiedDosing {
     PrayerTimesUseCase prayers,
     DoseReminders reminders,
     CalendarSync calendar,
-  ) : _loader = SimplifiedDayLoader(
+  ) : _appointments = appointments,
+      _loader = SimplifiedDayLoader(
         home,
         medications,
         measurements,
@@ -44,7 +47,17 @@ class SimplifiedModeUseCase extends SimplifiedDosing {
       ),
       super(medications, measurements, reminders, calendar);
 
+  final AppointmentsUseCase _appointments;
   final SimplifiedDayLoader _loader;
+
+  /// «حضرت»: the patient's own visit is marked attended, the record the
+  /// family writes with the same button in the detailed mode.
+  Future<Result<CareAppointment, Failure>> attendAppointment(
+    String circleId,
+    CareAppointment visit,
+  ) => attemptResult(
+    () => _appointments.setStatus(circleId, visit, AppointmentStatus.completed),
+  );
 
   /// Reads the patient's day at the instant [now]; if any dose, measurement
   /// or appointment cannot be read the whole day fails.

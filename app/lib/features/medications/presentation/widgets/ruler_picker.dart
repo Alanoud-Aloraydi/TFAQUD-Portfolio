@@ -1,3 +1,4 @@
+import 'package:app/features/medications/presentation/widgets/ruler_look.dart';
 import 'package:app/features/medications/presentation/widgets/ruler_picker_state.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +22,7 @@ class RulerPicker extends StatefulWidget {
     this.step = 1,
     this.isMajor,
     this.tickLabel,
+    this.look = const RulerLook(),
   }) : assert(min < max && value >= min && value <= max && step > 0);
 
   final int min;
@@ -43,6 +45,9 @@ class RulerPicker extends StatefulWidget {
 
   /// The words under a long mark; by default the number.
   final String Function(int value)? tickLabel;
+
+  /// Its sizes and colours; the detailed mode's by default.
+  final RulerLook look;
 
   @override
   State<RulerPicker> createState() => RulerPickerState();

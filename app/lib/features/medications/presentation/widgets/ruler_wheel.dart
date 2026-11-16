@@ -28,7 +28,7 @@ class RulerWheel extends StatelessWidget {
       quarterTurns: rtl ? 1 : 3,
       child: ListWheelScrollView.useDelegate(
         controller: controller,
-        itemExtent: tickWidth,
+        itemExtent: tickWidth * picker.look.scale,
         diameterRatio: 1000,
         physics: const FixedExtentScrollPhysics(),
         onSelectedItemChanged: onSelected,
@@ -42,6 +42,7 @@ class RulerWheel extends StatelessWidget {
             return RotatedBox(
               quarterTurns: rtl ? 3 : 1,
               child: RulerTick(
+                look: picker.look,
                 major: major,
                 label: major
                     ? (picker.tickLabel?.call(number) ?? '$number')
