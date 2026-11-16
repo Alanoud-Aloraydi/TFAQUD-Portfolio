@@ -10,6 +10,7 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/circle_creation_finish.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
+import 'package:app/features/circles/presentation/cubit/name_preset.dart';
 import 'package:app/features/circles/presentation/widgets/account_name_field.dart';
 import 'package:app/features/circles/presentation/widgets/already_has_circle_view.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -113,7 +114,7 @@ class _ApprovedBasicsState extends State<ApprovedCircleBasicsScreen> {
                             LabeledTextField(
                               label: context.tr('circles.custom_name'),
                               controller: _customName,
-                              maxLength: CreateCircleCubit.maxCustomNameLength,
+                              maxLength: maxCustomNameLength,
                               textInputAction: TextInputAction.done,
                               onChanged: cubit.customNameChanged,
                               errorText:

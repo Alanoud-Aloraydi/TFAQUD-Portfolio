@@ -1,9 +1,9 @@
+export 'package:app/features/circles/presentation/cubit/send_status.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/features/circles/presentation/cubit/send_status.dart';
 import 'package:equatable/equatable.dart';
-
-enum SendStatus { idle, sending, sent }
 
 /// State of the page that asks a patient who uses the app for a circle (CREAT-04)
 /// and of the waiting state that replaces it once the request is sent (CREAT-05).

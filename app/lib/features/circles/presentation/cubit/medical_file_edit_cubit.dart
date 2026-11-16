@@ -3,10 +3,12 @@ import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/features/circles/domain/entities/patient_basics.dart';
 import 'package:app/features/circles/domain/entities/patient_update.dart';
 import 'package:app/features/circles/domain/medical_form.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_edit_status.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The edit page of the medical file (CIRCLE-05, "تعديل"): the birth date, the

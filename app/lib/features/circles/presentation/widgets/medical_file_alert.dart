@@ -3,6 +3,7 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
+import 'package:app/features/circles/domain/entities/medical_gap.dart';
 import 'package:app/features/circles/presentation/widgets/medical_alert_title.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_fill_button.dart';
 import 'package:app/features/circles/presentation/widgets/medical_gaps_text.dart';

@@ -1,5 +1,8 @@
 import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
+import 'package:app/features/circles/domain/entities/edit_access.dart';
 
 /// Maps the protected circle detail response to its display data.
 class CircleOverviewModel {

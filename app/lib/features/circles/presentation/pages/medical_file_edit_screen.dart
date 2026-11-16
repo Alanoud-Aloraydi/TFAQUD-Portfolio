@@ -4,6 +4,7 @@ import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_edit_status.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_edit_skeleton.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_edit_form.dart';
 import 'package:easy_localization/easy_localization.dart';

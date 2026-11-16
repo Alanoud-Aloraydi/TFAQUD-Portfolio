@@ -5,6 +5,7 @@ import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
+import 'package:app/features/circles/presentation/cubit/send_status.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Sends the request to a patient who uses the app. The circle does not exist

@@ -1,3 +1,6 @@
+import 'package:app/features/circles/domain/entities/allergies_draft.dart';
+import 'package:app/features/circles/domain/entities/conditions_draft.dart';
+import 'package:app/features/circles/domain/entities/list_answer.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_text.dart';
