@@ -19,12 +19,10 @@ class SimplifiedNotificationsCard extends StatefulWidget {
   const SimplifiedNotificationsCard({super.key});
 
   @override
-  State<SimplifiedNotificationsCard> createState() =>
-      _SimplifiedNotificationsCardState();
+  State<SimplifiedNotificationsCard> createState() => _NotificationsCardState();
 }
 
-class _SimplifiedNotificationsCardState
-    extends State<SimplifiedNotificationsCard> {
+class _NotificationsCardState extends State<SimplifiedNotificationsCard> {
   late final AppLifecycleListener _lifecycle;
 
   @override

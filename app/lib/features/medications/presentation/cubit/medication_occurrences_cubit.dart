@@ -35,10 +35,9 @@ class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState>
   /// moment now, for a dose taken now; tests give their own.
   MedicationOccurrencesCubit(
     this.medications, {
-    Listenable? photoChanges,
+    this._photoChanges,
     DateTime Function()? clock,
-  }) : _photoChanges = photoChanges,
-       clock = clock ?? DateTime.now,
+  }) : clock = clock ?? DateTime.now,
        super(MedicationOccurrencesState()) {
     _photoChanges?.addListener(_onPhotoChanged);
     _changes = medications.changes.listen((circleId) {

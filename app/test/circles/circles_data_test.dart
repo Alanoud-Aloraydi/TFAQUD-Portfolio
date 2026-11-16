@@ -14,7 +14,6 @@ import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/data/models/new_patient_circle_model.dart';
 import 'package:app/features/circles/data/models/new_self_circle_model.dart';
-import 'package:app/features/circles/data/models/sent_circle_request_model.dart';
 import 'package:app/features/circles/data/repositories/circles_repository_data.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';

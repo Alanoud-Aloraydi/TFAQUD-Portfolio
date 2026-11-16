@@ -1,7 +1,6 @@
 import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
-import 'package:app/features/medications/presentation/models/medication_form_field.dart';
 import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
 import 'package:app/features/medications/presentation/models/medication_form_values.dart';
 

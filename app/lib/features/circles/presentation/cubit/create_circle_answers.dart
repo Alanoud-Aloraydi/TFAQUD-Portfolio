@@ -1,6 +1,5 @@
 import 'package:app/features/circles/presentation/cubit/create_circle_scope.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
-import 'package:app/features/circles/presentation/cubit/name_preset.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// What the person answers on the page. Every answer clears the message of

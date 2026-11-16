@@ -1,6 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// One mark: a long one with its words under it, or a short one between.
 class RulerTick extends StatelessWidget {

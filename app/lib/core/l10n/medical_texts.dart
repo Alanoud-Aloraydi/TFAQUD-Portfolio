@@ -1,8 +1,5 @@
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/features/circles/domain/entities/allergies_draft.dart';
-import 'package:app/features/circles/domain/entities/conditions_draft.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
-import 'package:app/features/circles/domain/entities/list_answer.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:easy_localization/easy_localization.dart';

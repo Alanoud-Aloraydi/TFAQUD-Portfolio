@@ -7,7 +7,6 @@ import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/circles/data/models/medical_profile_json.dart';
 import 'package:app/features/circles/data/models/emergency_contacts_of.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/entities/patient_basics.dart';
 
 /// The answer of GET /api/v1/circles/{id}/medical-profile.
 class MedicalFileModel {

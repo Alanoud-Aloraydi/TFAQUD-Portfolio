@@ -1,7 +1,5 @@
 import 'package:app/features/circles/data/models/circle_overview_model.dart';
-import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _circle(String role) => <String, dynamic>{

@@ -1,7 +1,5 @@
 import 'package:app/core/constants/plan_limits.dart';
-import 'package:app/features/medications/domain/entities/dosage_form.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/domain/entities/strength_unit.dart';
 import 'package:equatable/equatable.dart';
 
 /// Holds editable medication plan values before saving.

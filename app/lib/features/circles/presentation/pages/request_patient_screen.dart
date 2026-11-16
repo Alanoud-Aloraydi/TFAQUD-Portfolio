@@ -11,7 +11,6 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
-import 'package:app/features/circles/presentation/cubit/send_status.dart';
 import 'package:app/features/circles/presentation/widgets/request_patient_notice.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';

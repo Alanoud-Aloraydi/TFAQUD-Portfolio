@@ -17,7 +17,6 @@ import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';

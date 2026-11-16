@@ -1,5 +1,4 @@
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
 

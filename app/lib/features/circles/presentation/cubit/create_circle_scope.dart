@@ -2,7 +2,6 @@ import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/circles/presentation/cubit/circle_flow.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

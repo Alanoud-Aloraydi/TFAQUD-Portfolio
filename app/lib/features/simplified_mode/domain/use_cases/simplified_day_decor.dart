@@ -1,4 +1,3 @@
-import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';

@@ -6,7 +6,6 @@ import 'package:app/core/widgets/layout/plan_item_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/plan_status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/domain/measurement_plan_status.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_details.dart';
 import 'package:easy_localization/easy_localization.dart';

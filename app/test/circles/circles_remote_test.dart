@@ -3,9 +3,7 @@ import 'package:app/features/circles/data/datasources/circles_remote_data_source
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/account_deletion.dart';
-import 'package:app/features/circles/domain/entities/allergies_draft.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
-import 'package:app/features/circles/domain/entities/conditions_draft.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/entities/patient_update.dart';

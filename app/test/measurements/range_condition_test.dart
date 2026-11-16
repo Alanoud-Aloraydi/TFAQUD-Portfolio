@@ -3,8 +3,6 @@ import '../support/normal_ranges.dart';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/circles/domain/entities/allergies_draft.dart';
-import 'package:app/features/circles/domain/entities/conditions_draft.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';

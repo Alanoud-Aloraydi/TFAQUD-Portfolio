@@ -7,7 +7,6 @@ import 'package:app/features/medications/presentation/widgets/choose_medication_
 import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 /// What the form shows for the medicine's photo and what a tap on it does:
 /// the picture with the pencil badge, or the dashed frame with a camera.
