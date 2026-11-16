@@ -38,8 +38,7 @@ enum TaskButtonRole {
   final Color ink;
 
   /// The answer stands a step taller than the choices under it.
-  double get height =>
-      this == answer ? AppSizes.buttonAnswer : AppSizes.button;
+  double get height => this == answer ? AppSizes.buttonAnswer : AppSizes.button;
 
   static const TextStyle _words = TextStyle(
     fontFamily: AppTextTheme.fontFamily,

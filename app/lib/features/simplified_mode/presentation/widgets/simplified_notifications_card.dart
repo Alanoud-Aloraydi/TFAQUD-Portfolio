@@ -45,12 +45,11 @@ class _SimplifiedNotificationsCardState
   }
 
   @override
-  Widget build(BuildContext context) =>
-      ValueListenableBuilder<AppPermission?>(
-        valueListenable: GetIt.I<DoseReminders>().allowed,
-        builder: (BuildContext context, AppPermission? allowed, Widget? _) =>
-            allowed == null ? const SizedBox.shrink() : _state(context, allowed),
-      );
+  Widget build(BuildContext context) => ValueListenableBuilder<AppPermission?>(
+    valueListenable: GetIt.I<DoseReminders>().allowed,
+    builder: (BuildContext context, AppPermission? allowed, Widget? _) =>
+        allowed == null ? const SizedBox.shrink() : _state(context, allowed),
+  );
 
   Widget _state(BuildContext context, AppPermission allowed) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,

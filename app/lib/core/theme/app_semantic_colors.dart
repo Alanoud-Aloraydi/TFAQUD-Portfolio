@@ -50,6 +50,7 @@ abstract class AppSemanticColors {
   /// Lines inside a slate group, the edge of white avatars and small
   /// buttons on it, and the neutral badge «مدير».
   static const Color borderPlan = AppColors.slatePale;
+
   /// A group that gathers cards: «يحتاج انتباهك», the folds of «السجل».
   static const Color surfaceGroup = AppColors.leafTintDeep;
   static const Color surfaceAttention = AppColors.honeyLight;

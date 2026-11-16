@@ -39,12 +39,11 @@ class ReminderCircle extends Equatable {
   /// Whether an appointment going with [companionIds] (accounts) reminds
   /// the person on this phone: the patient always, anyone else only when
   /// they go with them.
-  bool remindsOfAppointment(Iterable<String> companionIds) =>
-      goesToAppointment(
-        isPatient: viewerIsPatient,
-        viewerId: viewerId,
-        companionIds: companionIds,
-      );
+  bool remindsOfAppointment(Iterable<String> companionIds) => goesToAppointment(
+    isPatient: viewerIsPatient,
+    viewerId: viewerId,
+    companionIds: companionIds,
+  );
 
   @override
   List<Object?> get props => [id, name, viewerId, viewerIsPatient, timeZone];

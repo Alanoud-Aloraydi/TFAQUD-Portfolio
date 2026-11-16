@@ -108,8 +108,7 @@ class DoseReminders {
   Future<AppPermission> refreshPermission() => _permission.read();
 
   /// Puts the phone's own question, which iOS shows only the first time.
-  Future<AppPermission> requestPermission() =>
-      _permission.ask(request: true);
+  Future<AppPermission> requestPermission() => _permission.ask(request: true);
 
   /// The tasks put off and not yet reminded of again, by their keys: the
   /// cards of both modes show «بنذكّرك 2:36 م», and the calendar copy has

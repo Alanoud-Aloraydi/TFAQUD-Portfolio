@@ -67,8 +67,7 @@ class GroupHeader extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   StatusPill(
                     text: '$count',
-                    background:
-                        countFill ?? AppSemanticColors.selectedSurface,
+                    background: countFill ?? AppSemanticColors.selectedSurface,
                     foreground: AppSemanticColors.textPrimary,
                   ),
                 ],
