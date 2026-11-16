@@ -57,6 +57,7 @@ List<Widget> measurementAttentionCards(
         actions: <Widget>[
           MeasurementTaskActions(
             task: task,
+            circleId: circleId,
             superseded: task.supersededAt(now),
             sayWhy: false,
           ),

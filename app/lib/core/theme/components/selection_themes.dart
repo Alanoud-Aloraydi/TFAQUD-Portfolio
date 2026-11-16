@@ -13,7 +13,16 @@ abstract class AppSelectionThemes {
       selectedColor: AppSemanticColors.selectedSurface,
       checkmarkColor: AppSemanticColors.textPrimary,
       disabledColor: AppSemanticColors.borderSubtle,
-      side: BorderSide(color: tokens.borderControl),
+      // A chosen chip's line is a deeper shade of its own violet fill,
+      // not a grey ruled around it. An unchosen chip is white, so it
+      // keeps the control grey that makes it read as a thing to press.
+      side: WidgetStateBorderSide.resolveWith(
+        (Set<WidgetState> states) => BorderSide(
+          color: states.contains(WidgetState.selected)
+              ? AppSemanticColors.accentLeaf
+              : tokens.borderControl,
+        ),
+      ),
       shape: const StadiumBorder(),
       showCheckmark: true,
       // The chip theme's label style replaces Material's default, so it must

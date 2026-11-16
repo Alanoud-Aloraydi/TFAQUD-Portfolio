@@ -7,15 +7,15 @@ import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_attend_button.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_today_actions.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_row_label.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// An appointment of «اليوم»: a [CareItemRow] that waits for confirmation
-/// once its time has passed, with «حضرت» from an hour before for those who
-/// go to it. A completed one opens its visit page.
+/// once its time has passed, with «حضرت» and its two choices from an hour
+/// before. A completed one opens its visit page.
 class AppointmentTodayRow extends StatelessWidget {
   const AppointmentTodayRow({
     super.key,
@@ -55,7 +55,13 @@ class AppointmentTodayRow extends StatelessWidget {
         ),
         tone: waiting ? StatusTone.attention : StatusTone.info,
       ),
-      actions: AppointmentAttendButton.forRow(context, value, now, circleId),
+      actions: appointmentTodayActions(
+        context,
+        value: value,
+        now: now,
+        circleId: circleId,
+        canManage: canManage,
+      ),
       onTap: circleId == null || value.status != AppointmentStatus.completed
           ? null
           : () => context.push(

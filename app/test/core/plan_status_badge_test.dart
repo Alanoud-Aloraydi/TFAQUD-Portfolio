@@ -39,7 +39,7 @@ void main() {
       );
 
       final StatusBadge badge = tester.widget(find.byType(StatusBadge));
-      expect(badge.tone, StatusTone.muted);
+      expect(badge.tone, StatusTone.danger);
     });
   });
 

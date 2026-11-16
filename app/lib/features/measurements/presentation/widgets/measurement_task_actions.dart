@@ -4,6 +4,7 @@ import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_snooze_button.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,11 +19,15 @@ class MeasurementTaskActions extends StatelessWidget {
   const MeasurementTaskActions({
     super.key,
     required this.task,
+    this.circleId,
     this.superseded = false,
     this.sayWhy = true,
   });
 
   final MeasurementOccurrence task;
+
+  /// Null hides «ذكّرني لاحقًا»: a reminder belongs to a circle.
+  final String? circleId;
   final bool superseded;
   final bool sayWhy;
 
@@ -39,6 +44,8 @@ class MeasurementTaskActions extends StatelessWidget {
                   showMeasurementReadingSheet(context, occurrence: task),
             ),
       choices: <Widget>[
+        if (!superseded && circleId != null)
+          MeasurementSnoozeButton(task: task, circleId: circleId!),
         TaskButton(
           role: TaskButtonRole.skip,
           icon: CupertinoIcons.minus_circle,

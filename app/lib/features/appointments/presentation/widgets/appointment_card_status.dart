@@ -47,7 +47,7 @@ class AppointmentCardStatus extends StatelessWidget {
   static StatusTone _tone(AppointmentStatus status) => switch (status) {
     AppointmentStatus.scheduled => StatusTone.info,
     AppointmentStatus.completed => StatusTone.success,
-    AppointmentStatus.cancelled => StatusTone.muted,
+    AppointmentStatus.cancelled => StatusTone.danger,
   };
 
   /// «اليوم», «بكرة», … for an appointment [days] away.

@@ -37,12 +37,12 @@ class WeekdayBox extends StatelessWidget {
         child: DecoratedBox(
           decoration: ShapeDecoration(
             color: selected
-                ? AppSemanticColors.selectedSurface
+                ? AppSemanticColors.selectedSurfaceStrong
                 : AppSemanticColors.surfaceContent,
             shape: StadiumBorder(
               side: BorderSide(
                 color: selected
-                    ? AppSemanticColors.textPrimary
+                    ? AppSemanticColors.accentLeaf
                     : context.tokens.borderControl,
               ),
             ),

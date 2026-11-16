@@ -24,6 +24,10 @@ abstract class AppSemanticColors {
   static const Color onActionPrimary = AppColors.ink;
   static const Color disabledSurface = AppColors.line;
   static const Color selectedSurface = AppColors.leafTint;
+
+  /// What a chosen box is filled with where the fill alone must say so,
+  /// the tint being too near white to be seen on its own.
+  static const Color selectedSurfaceStrong = AppColors.leafTintDeep;
   static const Color focusOnAction = AppColors.ink;
   static const Color accentLeaf = AppColors.leaf;
 
@@ -51,8 +55,6 @@ abstract class AppSemanticColors {
   /// buttons on it, and the neutral badge «مدير».
   static const Color borderPlan = AppColors.slatePale;
 
-  /// A group that gathers cards: «يحتاج انتباهك», the folds of «السجل».
-  static const Color surfaceGroup = AppColors.leafTintDeep;
   static const Color surfaceAttention = AppColors.honeyLight;
   static const Color borderAttention = AppColors.honeyBorder;
   static const Color doseTrack = AppColors.slatePale;

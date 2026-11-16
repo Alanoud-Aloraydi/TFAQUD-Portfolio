@@ -32,7 +32,7 @@ class CircleCard extends StatelessWidget {
       shape: AppRadius.shape(
         AppRadius.l,
         side: const BorderSide(
-          color: AppSemanticColors.textSupporting,
+          color: AppSemanticColors.borderSubtle,
           width: AppSizes.borderEmphasis,
         ),
       ),

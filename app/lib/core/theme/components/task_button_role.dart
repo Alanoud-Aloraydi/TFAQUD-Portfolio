@@ -11,24 +11,24 @@ import 'package:flutter/material.dart';
 /// mark on a white card; the pale fill below is the tint «يحتاج انتباهك»
 /// uses, so a card asks rather than shouts.
 ///
-/// A pale fill cannot be told from the card by its fill alone (1.45:1 for
-/// the answer, 1.08 and 1.14 for the others), so each one carries a 1px
-/// edge dark enough to be its boundary — 12.1, 6.6 and 4.1 on white, all
-/// past the 3:1 a control needs (WCAG 1.4.11) — and words past 4.5:1 on
-/// their own fill (8.4, 6.1, 8.9).
+/// Each edge is one step deeper than the fill it surrounds, of the same
+/// colour, so it reads as the shape of the fill rather than a line ruled
+/// around it. That is under the 3:1 a boundary would need (1.9, 1.5 and
+/// 1.7 on white), so what identifies these buttons is their words, which
+/// read at 8.4, 6.1 and 8.9 on their own fill, and their icons.
 enum TaskButtonRole {
   /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the baby violet
   /// of «يحتاج انتباهك» with the violet every main action uses for its
   /// edge and its words.
-  answer(AppColors.leafTintDeep, AppColors.inkViolet, AppColors.inkViolet),
+  answer(AppColors.leafTintDeep, AppColors.leaf, AppColors.inkViolet),
 
   /// «ذكّرني لاحقًا»: putting the task off, in the honey the app warns
   /// with, told also by its bell.
-  later(AppColors.honeyLight, AppColors.warning, AppColors.warning),
+  later(AppColors.honeyLight, AppColors.honey, AppColors.warning),
 
   /// «تخطي» and «إلغاء»: letting the task go, in grey, told also by its
   /// minus.
-  skip(AppColors.slateMist, AppColors.stone, AppColors.slate);
+  skip(AppColors.slateMist, AppColors.slateSoft, AppColors.slate);
 
   const TaskButtonRole(this.fill, this.edge, this.ink);
 
