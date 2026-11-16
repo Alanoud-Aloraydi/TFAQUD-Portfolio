@@ -1,5 +1,6 @@
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/core/widgets/forms/calendar_sync_notice.dart';
 import 'package:app/core/widgets/layout/section_title.dart';
 import 'package:app/core/widgets/layout/settings_icon_tile.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
@@ -41,6 +42,11 @@ class AccountCalendarSyncCard extends StatelessWidget {
                   size: SettingsIconTile.size,
                 ),
               ),
+          ],
+        ),
+        CalendarSyncNotice(
+          circleIds: <String>[
+            for (final CareCircleSummary circle in circles) circle.id,
           ],
         ),
         const CalendarSyncHint(),

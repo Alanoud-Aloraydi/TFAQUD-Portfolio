@@ -1,19 +1,15 @@
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/medication_record_filter.dart';
 import 'package:app/features/medications/presentation/widgets/medication_history_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// «السجل»'s medicines: the plans of [circleId], filtered by the choice
-/// this section keeps for itself — the filter picks among plans already
-/// loaded, so it is the page's state, not the cubit's.
-///
-/// It opens on «السابقة», what the tab's name promises: a record is what
-/// has been. «الحالية» is «الخطة»'s job, and opening on «الكل» showed the
-/// running medicines first, so the two tabs read the same.
-class MedicationHistorySection extends StatefulWidget {
+/// «السجل»'s medicines: the plans of [circleId] that are already behind.
+/// The tab is the record, so it holds what has been; the running
+/// medicines are «الخطة»'s, and a filter between the two offered a
+/// choice that was empty on one side or the other.
+class MedicationHistorySection extends StatelessWidget {
   const MedicationHistorySection({
     super.key,
     required this.circleId,
@@ -22,14 +18,6 @@ class MedicationHistorySection extends StatefulWidget {
 
   final String circleId;
   final Widget header;
-
-  @override
-  State<MedicationHistorySection> createState() =>
-      _MedicationHistorySectionState();
-}
-
-class _MedicationHistorySectionState extends State<MedicationHistorySection> {
-  MedicationRecordFilter _filter = MedicationRecordFilter.previous;
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +30,9 @@ class _MedicationHistorySectionState extends State<MedicationHistorySection> {
           _ => 'content',
         },
         child: MedicationHistoryContent(
-          circleId: widget.circleId,
-          header: widget.header,
+          circleId: circleId,
+          header: header,
           state: state,
-          filter: _filter,
-          onFilterChanged: (value) => setState(() => _filter = value),
         ),
       ),
     );

@@ -53,12 +53,7 @@ class TodayPrayerPeriod extends StatelessWidget {
         prayer: prayer,
         time: time,
         current: current,
-        open: periodStartsOpen(
-          entries,
-          now,
-          current: current,
-          circleId: circleId,
-        ),
+        open: periodStartsOpen(entries, current: current, circleId: circleId),
         rows: entries.sorted,
         circleId: circleId,
         canManage: canManage,

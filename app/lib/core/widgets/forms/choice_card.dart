@@ -38,7 +38,7 @@ class ChoiceCard extends StatelessWidget {
           AppRadius.card,
           side: BorderSide(
             color: selected
-                ? AppSemanticColors.textPrimary
+                ? AppSemanticColors.accentLeaf
                 : AppSemanticColors.borderSubtle,
             width: selected ? 2 : 1,
           ),

@@ -34,8 +34,8 @@ class AttentionBox extends StatelessWidget {
         // left the group invisible at 1.00 against the canvas. This violet
         // is the plan's tint one step down, so the group is seen and the
         // white cards on it stand out more than before, not less.
-        color: AppSemanticColors.surfaceGroup,
-        border: Border.all(color: AppSemanticColors.accentLeaf),
+        color: AppSemanticColors.surfaceAttention,
+        border: Border.all(color: AppSemanticColors.borderAttention),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

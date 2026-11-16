@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app/core/services/permissions/app_permission.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/widgets/layout/section_title.dart';
+import 'package:app/core/widgets/layout/settings_card.dart';
 import 'package:app/features/account/presentation/widgets/notification_note.dart';
 import 'package:app/features/account/presentation/widgets/notification_state_row.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -55,7 +56,9 @@ class _AccountNotificationsCardState extends State<AccountNotificationsCard> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  NotificationStateRow(allowed: allowed),
+                  SettingsCard(
+                    children: <Widget>[NotificationStateRow(allowed: allowed)],
+                  ),
                   NotificationNote(allowed: allowed),
                 ],
               ),

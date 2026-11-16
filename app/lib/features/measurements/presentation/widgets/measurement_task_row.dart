@@ -72,6 +72,7 @@ class MeasurementTaskRow extends StatelessWidget {
       actions: canRecord
           ? MeasurementTaskActions(
               task: task,
+              circleId: circleId,
               superseded: task.supersededAt(now),
             )
           : null,
