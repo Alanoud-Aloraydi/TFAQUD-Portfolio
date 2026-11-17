@@ -16,7 +16,11 @@ class AppointmentCompanionsCubit extends Cubit<AppointmentCompanionsState> {
       final companions = await _repository.companions(circleId);
       if (!isClosed) {
         emit(
-          AppointmentCompanionsState(loading: false, companions: companions),
+          AppointmentCompanionsState(
+            loading: false,
+            companions: companions.people,
+            patientHasPhone: companions.patientHasPhone,
+          ),
         );
       }
     } catch (error) {

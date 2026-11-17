@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:app/features/appointments/data/appointment_companions_model.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/data/appointment_remote_data_source.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_companions.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 
 /// The server owns the appointments.
@@ -31,17 +33,10 @@ class AppointmentRepository implements AppointmentsRepositoryDomain {
         .toList();
   }
 
-  /// The circle's members who can go with the patient.
+  /// The circle's members who can go, and whether the patient has a phone.
   @override
-  Future<List<AppointmentCompanion>> companions(String circleId) async {
-    final values = await _remote.companions(circleId);
-    return values
-        .map(
-          (item) =>
-              AppointmentModel.companionFromJson(item as Map<String, dynamic>),
-        )
-        .toList();
-  }
+  Future<AppointmentCompanions> companions(String circleId) async =>
+      companionsFromJson(await _remote.companions(circleId));
 
   /// Adds an appointment; announces the change on [changes].
   @override

@@ -1,7 +1,8 @@
 import 'package:app/core/utils/account_ids.dart';
 
 /// Who goes to an appointment: the circle's patient, and the members
-/// chosen to go with them ([companionIds], accounts).
+/// chosen to go with them ([companionIds], accounts). For a patient without
+/// a phone, a visit nobody goes with is the circle's leader's ([standsIn]).
 ///
 /// They are the ones its reminder reaches, and the ones «حضرت» is for: a
 /// member may manage the circle's appointments — add them, change their
@@ -13,4 +14,8 @@ bool goesToAppointment({
   required bool isPatient,
   required String? viewerId,
   required Iterable<String> companionIds,
-}) => isPatient || companionIds.any((String id) => sameAccount(id, viewerId));
+  bool standsIn = false,
+}) =>
+    isPatient ||
+    (standsIn && companionIds.isEmpty) ||
+    companionIds.any((String id) => sameAccount(id, viewerId));

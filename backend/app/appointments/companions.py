@@ -65,3 +65,11 @@ def companions_for_circle(session: Session, circle_id: UUID) -> list[dict]:
          "avatar_code": code}
         for account_id, name, code in rows
     ]
+
+
+def patient_has_account(session: Session, circle_id: UUID) -> bool:
+    """Whether the circle's patient has an account, so a phone: without
+    one, a visit nobody goes with reminds the circle's leader."""
+    return session.scalar(
+        select(CareCircle.account_id).where(CareCircle.id == circle_id)
+    ) is not None

@@ -33,6 +33,7 @@ class SelectedCircleBuilder extends StatelessWidget {
           child: TaskViewerScope(
             accountId: shown.accountId,
             isPatient: shown.circle.isPatient,
+            standsIn: shown.circle.standsInForPatient,
             child: builder(context, shown.circle),
           ),
         );

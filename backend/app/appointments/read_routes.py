@@ -3,7 +3,10 @@
 from flask import jsonify
 
 from app.appointments.blueprint import MEMBERS, bp, parse_uuid
-from app.appointments.companions import companions_for_circle
+from app.appointments.companions import (
+    companions_for_circle,
+    patient_has_account,
+)
 from app.appointments.queries import appointments_for_circle
 from app.authz.decorators import require_circle_role
 from app.authz.roles import CircleRole
@@ -24,9 +27,12 @@ def list_appointments(circle_id):
 @bp.get("/appointments/companions")
 @require_circle_role(CircleRole.MANAGER, area="appointments")
 def list_companions(circle_id):
-    """List current members eligible to accompany the patient."""
+    """List current members eligible to accompany the patient, and say
+    whether the patient has a phone (the form tells who is reminded)."""
     with transaction() as session:
-        values = companions_for_circle(session, parse_uuid(circle_id))
-    response = jsonify(companions=values)
+        circle = parse_uuid(circle_id)
+        values = companions_for_circle(session, circle)
+        has_account = patient_has_account(session, circle)
+    response = jsonify(companions=values, patient_has_account=has_account)
     response.headers["Cache-Control"] = "no-store"
     return response

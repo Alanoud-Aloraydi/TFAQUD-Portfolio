@@ -5,25 +5,9 @@ from uuid import UUID
 
 from sqlalchemy import select
 
-from app.circles.leader import AREAS, edit_access, leader_id
+from app.circles.leader import AREAS
 from app.circles.naming import name_for
 from app.models import Account, CareCircle, CareCircleManager
-
-
-def edit_access_by_circle(session, account_id: UUID) -> dict:
-    """What this account may edit in each circle it is a member of: the
-    leader everything, the others what the leader allows."""
-    access = {}
-    for membership in session.scalars(
-        select(CareCircleManager).where(
-            CareCircleManager.account_id == account_id
-        )
-    ):
-        circle = session.get(CareCircle, membership.care_circle_id)
-        access[membership.care_circle_id] = edit_access(
-            membership, leader_id(session, circle) == account_id
-        )
-    return access
 
 
 def circle_rows(session, account_id: UUID):
@@ -74,6 +58,11 @@ def circle_item(row, account_id: UUID, access: dict) -> dict:
         "can_manage_medications": areas["medications"],
         "can_manage_measurements": areas["measurements"],
         "can_manage_appointments": areas["appointments"],
+        # Whether this account leads the circle, and whether its patient
+        # has an account: a visit nobody goes with reminds the patient, or,
+        # for a patient without a phone, the leader («حضرت» too).
+        "is_leader": areas.get("leads", False),
+        "patient_has_account": row.account_id is not None,
         # Who the app speaks to about this circle: the patient («أخذت
         # الجرعة»), or someone caring for them, who reads the patient's name
         # instead («… أخذ نورة للجرعة»).

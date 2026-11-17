@@ -5,10 +5,11 @@ from uuid import UUID
 from flask import Blueprint, current_app, jsonify
 
 from app.auth.decorators import current_auth, require_auth
+from app.circles.leader import access_by_circle
 from app.database import transaction
 from app.errors import ServiceUnavailable, Unauthorized
 from app.extensions import get_user_store
-from app.home_circles import circle_item, circle_rows, edit_access_by_circle
+from app.home_circles import circle_item, circle_rows
 from app.models import Account
 
 bp = Blueprint("home", __name__, url_prefix="/api/v1")
@@ -48,7 +49,7 @@ def _circles(account_id: UUID) -> list[dict]:
     if "sqlalchemy" not in current_app.extensions:
         raise ServiceUnavailable()
     with transaction() as session:
-        access = edit_access_by_circle(session, account_id)
+        access = access_by_circle(session, account_id)
         circles = [
             circle_item(row, account_id, access)
             for row in circle_rows(session, account_id)

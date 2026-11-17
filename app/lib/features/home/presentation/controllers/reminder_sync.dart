@@ -29,6 +29,7 @@ class ReminderSync {
           name: circle.name,
           viewerId: data.accountId,
           viewerIsPatient: circle.isPatient,
+          viewerStandsIn: circle.standsInForPatient,
           timeZone: circle.timeZone,
         ),
     ];

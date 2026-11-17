@@ -58,6 +58,8 @@ def test_home_excludes_other_circles_and_pending_invitations(
             "can_manage_medications": True,
             "can_manage_measurements": True,
             "can_manage_appointments": True,
+            "is_leader": True,
+            "patient_has_account": False,
             "is_patient": False,
             "patient_name": "Nora",
             "patient_avatar_code": None,
@@ -83,6 +85,8 @@ def test_home_lists_patient_manager_circle_once(
             "can_manage_medications": True,
             "can_manage_measurements": True,
             "can_manage_appointments": True,
+            "is_leader": True,
+            "patient_has_account": True,
             "is_patient": True,
             "patient_name": "Nora",
             "patient_avatar_code": None,
@@ -115,6 +119,22 @@ def test_home_includes_patient_without_management(
     assert response.json["care_circles"][0][
         "can_manage_medications"
     ] is False
+
+
+def test_home_names_the_leader_of_a_patient_without_a_phone(
+    database_app, database, account
+):
+    # A visit nobody goes with reminds the leader of a patient without an
+    # account; the app needs both facts.
+    owner, member = account(), account()
+    circle = offline_circle(database, owner)
+    add_manager(database, owner, circle, member)
+    client = database_app.test_client()
+    for who, leads in ((owner, True), (member, False)):
+        listed = client.get(PATH, headers=signed_in(database_app, who))
+        item = listed.json["care_circles"][0]
+        assert item["is_leader"] is leads
+        assert item["patient_has_account"] is False
 
 
 def test_home_rechecks_membership_on_each_request(

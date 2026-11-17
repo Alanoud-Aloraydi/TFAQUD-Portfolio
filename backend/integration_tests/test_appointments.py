@@ -167,6 +167,24 @@ def test_an_appointment_can_have_no_companion(database_app, circle, evening):
     assert edited.get_json()["appointment"]["companions"] == []
 
 
+def test_the_companions_say_whether_the_patient_has_a_phone(
+    database_app, database, account, circle
+):
+    # Without a phone, a visit nobody goes with reminds the leader; the
+    # form says so.
+    owner, care = circle
+    member = account(name="سارة")
+    add_manager(database, owner, care, member)
+    path = f"/api/v1/circles/{care.id}/appointments/companions"
+
+    listed = Api(database_app, owner).get(path).get_json()
+
+    assert listed["patient_has_account"] is False
+    assert [person["name"] for person in listed["companions"]] == [
+        "سارة", "لينا",
+    ]
+
+
 def test_a_companion_from_outside_the_circle_is_still_refused(
     database_app, account, circle, evening
 ):

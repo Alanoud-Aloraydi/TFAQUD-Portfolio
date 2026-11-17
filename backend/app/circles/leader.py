@@ -55,3 +55,20 @@ def edit_access(membership: CareCircleManager, leads: bool) -> dict:
     return {
         area: leads or membership.may_edit(area) for area in AREAS
     }
+
+
+def access_by_circle(session, account_id: UUID) -> dict:
+    """What this account may edit in each circle it is a member of: the
+    leader everything (and `leads`), the others what the leader allows."""
+    access = {}
+    for membership in session.scalars(
+        select(CareCircleManager).where(
+            CareCircleManager.account_id == account_id
+        )
+    ):
+        circle = session.get(CareCircle, membership.care_circle_id)
+        leads = leader_id(session, circle) == account_id
+        access[membership.care_circle_id] = {
+            **edit_access(membership, leads), "leads": leads,
+        }
+    return access

@@ -6,10 +6,12 @@ void main() {
     bool isPatient = false,
     String? viewerId = 'a-me',
     List<String> picked = const <String>[],
+    bool standsIn = false,
   }) => goesToAppointment(
     isPatient: isPatient,
     viewerId: viewerId,
     companionIds: picked,
+    standsIn: standsIn,
   );
 
   group('goesToAppointment', () {
@@ -40,6 +42,18 @@ void main() {
       );
       expect(
         goes(viewerId: dashed.toUpperCase(), picked: <String>[dashed]),
+        isTrue,
+      );
+    });
+
+    test('the leader of a patient without a phone goes when nobody else '
+        'does', () {
+      // «بدون مرافق» and no phone: the leader is reminded and answers.
+      expect(goes(standsIn: true), isTrue);
+      // With companions, they are the ones who go.
+      expect(goes(standsIn: true, picked: <String>['a-khaled']), isFalse);
+      expect(
+        goes(standsIn: true, picked: <String>['a-khaled', 'a-me']),
         isTrue,
       );
     });
