@@ -18,6 +18,8 @@ from app.medications.route_helpers import (
     occurrence_query,
     uuid_value,
 )
+from app.push.messages.attention import send_all
+from app.push.messages.attention_events import skipped_dose_pushes
 from app.validation import parse_json_body
 
 
@@ -55,15 +57,17 @@ def record_dose(circle_id, schedule_id, scheduled_on):
     except (TypeError, ValueError):
         raise NotFound() from None
     body = parse_json_body(DoseRecordRequest)
+    circle, actor = uuid_value(circle_id), uuid_value(current_auth().user_id)
     with transaction() as session:
-        record = MedicationDoseService(
-            session, get_clock().now()
-        ).record(
-            uuid_value(circle_id),
-            uuid_value(schedule_id),
-            dose_date,
-            uuid_value(current_auth().user_id),
-            body,
+        service = MedicationDoseService(session, get_clock().now())
+        record = service.record(
+            circle, uuid_value(schedule_id), dose_date, actor, body
         )
         result = dose_record_response(session, record)
+        # A new skip is told to the others; the same record again is not.
+        pushes = (
+            skipped_dose_pushes(session, circle, record, actor)
+            if service.created else []
+        )
+    send_all(pushes)
     return jsonify(medication_dose_record=result)
