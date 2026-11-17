@@ -20,6 +20,8 @@ class MedicationDoseService(DoseOccurrence):
         """Work inside the caller's session, at the time `now`."""
         self.session = session
         self.now = now
+        # Whether `record` wrote a new record (not the same one again).
+        self.created = False
 
     def record(
         self,
@@ -83,4 +85,5 @@ class MedicationDoseService(DoseOccurrence):
         )
         self.session.add(record)
         self.session.flush()
+        self.created = True
         return record

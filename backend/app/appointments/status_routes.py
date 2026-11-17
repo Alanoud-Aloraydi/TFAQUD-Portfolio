@@ -14,6 +14,8 @@ from app.authz.roles import CircleRole
 from app.database import transaction
 from app.errors import Forbidden
 from app.extensions import get_clock
+from app.push.messages.attention import send_all
+from app.push.messages.attention_events import cancelled_visit_pushes
 from app.validation import parse_json_body
 
 
@@ -30,15 +32,16 @@ def set_appointment_status(circle_id, appointment_id):
     ):
         raise Forbidden()
     # Change the status, then answer the appointment with its companions and
-    # who made and last changed it.
+    # who made and last changed it; a cancel is told to the others.
+    circle, actor = parse_uuid(circle_id), parse_uuid(current_auth().user_id)
     with transaction() as session:
         appointment = AppointmentService(
             session, get_clock().now()
         ).set_status(
-            parse_uuid(circle_id), parse_uuid(appointment_id),
-            parse_uuid(current_auth().user_id), body.status,
+            circle, parse_uuid(appointment_id), actor, body.status,
             body.expected_updated_at,
         )
+        pushes = cancelled_visit_pushes(session, circle, appointment, actor)
         accounts = accounts_by_id(
             session,
             {
@@ -57,4 +60,5 @@ def set_appointment_status(circle_id, appointment_id):
             ],
             accounts,
         )
+    send_all(pushes)
     return jsonify(appointment=value)
