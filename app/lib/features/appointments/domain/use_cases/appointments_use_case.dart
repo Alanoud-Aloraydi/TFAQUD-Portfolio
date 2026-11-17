@@ -1,4 +1,5 @@
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_companions.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 
 /// The appointment reads and writes the application is allowed to make.
@@ -14,7 +15,7 @@ class AppointmentsUseCase {
   Future<List<CareAppointment>> appointments(String circleId) =>
       _repository.appointments(circleId);
 
-  Future<List<AppointmentCompanion>> companions(String circleId) =>
+  Future<AppointmentCompanions> companions(String circleId) =>
       _repository.companions(circleId);
 
   Future<CareAppointment> create(String circleId, AppointmentDraft draft) =>

@@ -95,6 +95,8 @@ def test_self_care_circle_is_created_and_listed(
             "can_manage_medications": True,
             "can_manage_measurements": True,
             "can_manage_appointments": True,
+            "is_leader": True,
+            "patient_has_account": True,
             "is_patient": True,
             "patient_name": "Nora",
             "patient_avatar_code": None,

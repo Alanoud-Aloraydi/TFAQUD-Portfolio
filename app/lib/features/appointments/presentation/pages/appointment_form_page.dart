@@ -23,6 +23,7 @@ import 'package:app/features/appointments/presentation/cubit/appointments_state.
 import 'package:app/features/appointments/presentation/widgets/appointment_dates_row.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_lead_row.dart';
+import 'package:app/features/appointments/presentation/widgets/companion_hint.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -320,7 +321,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
           const SizedBox(height: AppSpacing.xl),
           InsetGroup(
             header: context.tr('appointments.companion'),
-            footer: context.tr('appointments.companion_hint'),
+            footer: companionHint(context, companions, _companionIds),
             children: [
               InsetBlock(
                 child: companions.loading
@@ -361,8 +362,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                               ),
                               showCheckmark: false,
                               selected: _companionIds.contains(item.id),
-                              // Going is optional: the last one can be
-                              // taken off too.
+                              // Optional: the last one can go too.
                               onSelected: (selected) => setState(() {
                                 if (selected) {
                                   _companionIds.add(item.id);

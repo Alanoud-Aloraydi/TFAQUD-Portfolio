@@ -10,6 +10,7 @@ class TaskViewerScope extends InheritedWidget {
     super.key,
     required this.accountId,
     required this.isPatient,
+    this.standsIn = false,
     required super.child,
   });
 
@@ -18,6 +19,10 @@ class TaskViewerScope extends InheritedWidget {
 
   /// Whether that account is this circle's patient.
   final bool isPatient;
+
+  /// Whether it leads the circle of a patient without a phone, and so
+  /// answers «حضرت» for a visit nobody goes with.
+  final bool standsIn;
 
   /// The viewer of the circle on screen; null with no scope above, as in a
   /// widget test of one section on its own.
@@ -30,9 +35,12 @@ class TaskViewerScope extends InheritedWidget {
     isPatient: isPatient,
     viewerId: accountId,
     companionIds: companionIds,
+    standsIn: standsIn,
   );
 
   @override
   bool updateShouldNotify(TaskViewerScope oldWidget) =>
-      accountId != oldWidget.accountId || isPatient != oldWidget.isPatient;
+      accountId != oldWidget.accountId ||
+      isPatient != oldWidget.isPatient ||
+      standsIn != oldWidget.standsIn;
 }

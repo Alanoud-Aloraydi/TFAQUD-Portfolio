@@ -4,6 +4,7 @@ import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_companions.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
@@ -34,9 +35,14 @@ class _Appointments extends Fake implements AppointmentsRepositoryDomain {
   Future<List<CareAppointment>> appointments(String circleId) async =>
       const <CareAppointment>[];
 
+  /// Whether the patient has a phone, as the server says.
+  bool patientHasPhone = true;
+
   @override
-  Future<List<AppointmentCompanion>> companions(String circleId) async =>
-      const <AppointmentCompanion>[_nora];
+  Future<AppointmentCompanions> companions(String circleId) async =>
+      AppointmentCompanions(const <AppointmentCompanion>[
+        _nora,
+      ], patientHasPhone: patientHasPhone);
 
   @override
   Future<CareAppointment> create(
@@ -70,9 +76,15 @@ void main() {
   group('AppointmentForm', () {
     setUpAll(initTestLocalization);
 
-    /// The form for a new visit, opened over a home page.
-    Future<_Appointments> open(WidgetTester tester, PatientClock clock) async {
-      final _Appointments repository = _Appointments();
+    /// The form for a new visit, opened over a home page; [patientHasPhone]
+    /// as the server says it.
+    Future<_Appointments> open(
+      WidgetTester tester,
+      PatientClock clock, {
+      bool patientHasPhone = true,
+    }) async {
+      final _Appointments repository = _Appointments()
+        ..patientHasPhone = patientHasPhone;
       final AppointmentsCubit appointments = AppointmentsCubit(
         AppointmentsUseCase(repository),
       );
@@ -204,6 +216,27 @@ void main() {
       await scrollTo(tester, find.text('appointments.companion_hint'.tr()));
 
       expect(find.text('appointments.companion_hint'.tr()), findsOneWidget);
+    });
+
+    testWidgets('for a patient without a phone, «بدون مرافق» reminds the '
+        "circle's leader, and a chosen companion is the one reminded", (
+      tester,
+    ) async {
+      await open(tester, _riyadhAt(8), patientHasPhone: false);
+      final Finder leader = find.text(
+        'appointments.companion_hint_leader'.tr(),
+      );
+
+      await scrollTo(tester, leader);
+      expect(leader, findsOneWidget);
+
+      await tapCompanion(tester);
+      expect(leader, findsNothing);
+      expect(
+        find.text('appointments.companion_hint_no_phone'.tr()),
+        findsOneWidget,
+      );
+      expect(find.text('appointments.companion_hint'.tr()), findsNothing);
     });
 
     testWidgets(

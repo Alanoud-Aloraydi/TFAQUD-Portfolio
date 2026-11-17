@@ -16,6 +16,7 @@ class ReminderCircle extends Equatable {
     required this.name,
     required this.viewerId,
     required this.viewerIsPatient,
+    this.viewerStandsIn = false,
     required this.timeZone,
   });
 
@@ -28,6 +29,10 @@ class ReminderCircle extends Equatable {
 
   /// Whether the person on this phone is the circle's patient.
   final bool viewerIsPatient;
+
+  /// Whether they lead the circle of a patient without a phone, and so are
+  /// reminded of a visit nobody goes with.
+  final bool viewerStandsIn;
 
   /// The IANA zone where the circle's patient lives: its doses, readings
   /// and visits happen at the patient's wall clock there ([clock]).
@@ -43,8 +48,16 @@ class ReminderCircle extends Equatable {
     isPatient: viewerIsPatient,
     viewerId: viewerId,
     companionIds: companionIds,
+    standsIn: viewerStandsIn,
   );
 
   @override
-  List<Object?> get props => [id, name, viewerId, viewerIsPatient, timeZone];
+  List<Object?> get props => [
+    id,
+    name,
+    viewerId,
+    viewerIsPatient,
+    viewerStandsIn,
+    timeZone,
+  ];
 }

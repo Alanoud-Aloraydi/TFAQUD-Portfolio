@@ -15,12 +15,11 @@ class AppointmentRemoteDataSource {
         as List<dynamic>;
   }
 
-  Future<List<dynamic>> companions(String circleId) async {
+  Future<Map<String, dynamic>> companions(String circleId) async {
     final response = await _client.get(
       ApiEndpoints.appointmentCompanions(circleId),
     );
-    return (response.data as Map<String, dynamic>)['companions']
-        as List<dynamic>;
+    return response.data as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> create(

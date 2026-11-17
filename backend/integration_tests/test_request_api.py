@@ -91,6 +91,9 @@ def test_request_from_sending_to_the_new_circle(
                 "can_manage_medications": can_manage,
                 "can_manage_measurements": can_manage,
                 "can_manage_appointments": can_manage,
+                # The patient uses the simplified mode: the sender leads.
+                "is_leader": not is_patient,
+                "patient_has_account": True,
                 "is_patient": is_patient,
                 "patient_name": "Noura",
                 "patient_avatar_code": None,

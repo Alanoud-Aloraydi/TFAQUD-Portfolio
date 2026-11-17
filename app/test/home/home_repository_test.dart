@@ -128,6 +128,36 @@ void main() {
       );
     });
 
+    test('the leader of a patient without a phone stands in for them', () {
+      final circles = HomeModel.fromJson({
+        ...remote.payload,
+        'care_circles': [
+          {
+            'id': 'a',
+            'name': 'A',
+            'is_leader': true,
+            'patient_has_account': false,
+          },
+          {'id': 'b', 'name': 'B', 'is_leader': true},
+          {
+            'id': 'c',
+            'name': 'C',
+            'is_leader': false,
+            'patient_has_account': false,
+          },
+          // An older server says neither: nobody stands in.
+          {'id': 'd', 'name': 'D'},
+        ],
+      }).toEntity().circles;
+
+      expect(circles.map((circle) => circle.standsInForPatient), [
+        true,
+        false,
+        false,
+        false,
+      ]);
+    });
+
     test(
       'maps UUID strings and account identity from the API contract',
       () async {

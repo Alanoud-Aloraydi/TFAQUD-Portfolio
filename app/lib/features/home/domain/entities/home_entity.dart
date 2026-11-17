@@ -12,6 +12,7 @@ class CareCircleSummary extends Equatable {
     bool? canManageAppointments,
     this.patientAvatarCode,
     this.isPatient = true,
+    this.standsInForPatient = false,
     this.patientName,
     this.timeZone = defaultPatientZone,
     this.latitude,
@@ -23,20 +24,17 @@ class CareCircleSummary extends Equatable {
   final String name;
 
   /// Whether the signed-in account may add and change this circle's
-  /// medicines. The circle's leader decides it for each member, area by
-  /// area: the medicines, the measurements, the appointments.
+  /// medicines; the leader decides it for each member and area.
   final bool canManageMedications;
 
-  /// The same for the measurement plans; as [canManageMedications] when an
-  /// older server does not say.
+  /// The same for the measurements; as [canManageMedications] if unsaid.
   final bool canManageMeasurements;
 
   /// The same for the appointments.
   final bool canManageAppointments;
 
-  /// Whether the account edits at least one area: it may then also record
-  /// a dose or a reading, put a task off, and write the visit sheet. A
-  /// member with every area off only reads.
+  /// Whether the account edits at least one area, and so may also record
+  /// a dose or a reading, put a task off and write the visit sheet.
   bool get canRecord =>
       canManageMedications || canManageMeasurements || canManageAppointments;
   final String? patientAvatarCode;
@@ -45,20 +43,21 @@ class CareCircleSummary extends Equatable {
   /// speaks to them as «أنت». True when an older server does not say.
   final bool isPatient;
 
-  /// The patient's name, for the words someone caring for them reads
-  /// («أدوية محمود الحالية»).
+  /// Whether the account leads the circle of a patient without a phone: a
+  /// visit nobody goes with reminds it, and «حضرت» is its to answer.
+  final bool standsInForPatient;
+
+  /// The patient's name, for those caring for them («أدوية محمود الحالية»).
   final String? patientName;
 
-  /// The IANA zone where the patient lives: every day and time of this
-  /// circle is wall clock there ([clock]). [defaultPatientZone] when an
-  /// older server does not say.
+  /// The IANA zone where the patient lives: every time of this circle is
+  /// its wall clock ([clock]); [defaultPatientZone] from an older server.
   final String timeZone;
 
   /// The patient's clock.
   PatientClock get clock => PatientClock(timeZone);
 
-  /// Where the patient's city is, for its weather on «اليوم»; null for a
-  /// city typed and not picked from the list.
+  /// Where the patient's city is, for «اليوم»'s weather; null if typed.
   final double? latitude;
   final double? longitude;
 
@@ -71,6 +70,7 @@ class CareCircleSummary extends Equatable {
     canManageAppointments,
     patientAvatarCode,
     isPatient,
+    standsInForPatient,
     latitude,
     longitude,
     patientName,

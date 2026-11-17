@@ -27,6 +27,10 @@ class HomeModel {
             canManageAppointments: circle['can_manage_appointments'] as bool?,
             patientAvatarCode: circle['patient_avatar_code'] as String?,
             isPatient: circle['is_patient'] as bool? ?? true,
+            // The leader of a patient without a phone (an account).
+            standsInForPatient:
+                (circle['is_leader'] as bool? ?? false) &&
+                !(circle['patient_has_account'] as bool? ?? true),
             patientName: circle['patient_name'] as String?,
             timeZone: circle['time_zone'] as String? ?? defaultPatientZone,
             latitude: (circle['latitude'] as num?)?.toDouble(),
