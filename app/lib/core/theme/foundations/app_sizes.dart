@@ -42,6 +42,9 @@ abstract class AppSizes {
   // Preserve the compact overrides used by existing pill and alert buttons.
   static const double compactButton = 48;
   static const double loadingIndicator = 48;
+
+  /// The turning logo of a whole page that loads, as Claude Design sizes it.
+  static const double loadingPage = 160;
   static const double spinnerStroke = 2.5;
   static const double phonePrefix = 84;
   static const double pickerViewport = 216;

@@ -1,14 +1,14 @@
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/plan_info_box.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/widgets/medication_schedule_summary.dart';
+import 'package:app/features/medications/presentation/widgets/medication_version_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// «تعديل ينتظر»: the schedule the medicine has now, crossed out, and the
-/// one that takes over on [pending]'s first day.
+/// «تعديل مجدول» on a medicine's plan card, the same card as on its own
+/// page: the day it takes over, what that means for the past doses, and
+/// the medicine as [pending] will have it (the schedule of [current]
+/// crossed out). Dropping it is on the medicine's page.
 class MedicationPendingBox extends StatelessWidget {
   const MedicationPendingBox({
     super.key,
@@ -22,42 +22,13 @@ class MedicationPendingBox extends StatelessWidget {
   final MedicationVersion pending;
 
   @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return PlanInfoBox(
-      emphasis: true,
-      child: MergeSemantics(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              context.tr(
-                'medications.pending_revision',
-                args: <String>[
-                  formatMedicationDate(context, pending.effectiveFromOn),
-                ],
-              ),
-              style: text.titleSmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              medicationScheduleSummary(context, current.schedules),
-              style: text.bodySmall?.copyWith(
-                decoration: TextDecoration.lineThrough,
-              ),
-            ),
-            Text(
-              medicationScheduleSummary(context, pending.schedules),
-              style: text.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              CareVoice.tr(context, circleId, 'medications.effective_hint'),
-              style: text.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => MedicationVersionCard(
+    title: context.tr(
+      'medications.pending_revision',
+      args: <String>[formatMedicationDate(context, pending.effectiveFromOn)],
+    ),
+    note: CareVoice.tr(context, circleId, 'medications.effective_hint'),
+    version: pending,
+    previous: current,
+  );
 }

@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// The three answers under a late dose, in the colours both modes give a
-/// task: «أخذته الآن» in the baby violet, «ذكّرني لاحقًا» in the honey,
+/// task: «أخذته الآن» in the violet, «ذكّرني لاحقًا» in the honey,
 /// «ما أخذتها» in the grey.
 class SimplifiedLateDoseAnswers extends StatelessWidget {
   const SimplifiedLateDoseAnswers({

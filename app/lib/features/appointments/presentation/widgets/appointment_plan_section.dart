@@ -4,6 +4,7 @@ import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment_group.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
@@ -43,7 +44,7 @@ class AppointmentPlanSection extends StatelessWidget {
         header,
         const SizedBox(height: AppSpacing.lg),
         if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
-          const Center(child: CircularProgressIndicator())
+          const LoadingNote()
         else if (state.status == AppointmentsLoadStatus.failure)
           RetryView(
             messageKey: state.errorKey ?? 'error.unknown',

@@ -30,7 +30,7 @@ void refreshOnResume(BuildContext context, HomeStateReactor reactor) {
 }
 
 /// A main page pulled down: the same as coming back to the front, done
-/// once everything is back so the page's spinner waits for it. Every read
+/// once everything is back so the page's loader waits for it. Every read
 /// is quiet: each part keeps what it shows until its own data is back. The
 /// parts with data of their own read it on the scope's pull signal.
 Future<void> refreshNow(BuildContext context, HomeStateReactor reactor) {

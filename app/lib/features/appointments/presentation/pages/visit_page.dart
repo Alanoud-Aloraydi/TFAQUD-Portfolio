@@ -8,6 +8,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/visit_paper.dart';
@@ -51,7 +52,7 @@ class VisitPage extends StatelessWidget {
         title: const VisitTitleBar(),
       ),
       body: state.status == AppointmentsLoadStatus.loading || visit.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingNote()
           : visit.loadFailed
           ? Center(
               child: TextButton(

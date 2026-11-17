@@ -5,6 +5,7 @@ import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
@@ -118,7 +119,7 @@ class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
               (SimplifiedModeStatus.failure, _, _) => SimplifiedLoadFailed(
                 messageKey: state.messageKey,
               ),
-              _ => const Center(child: CircularProgressIndicator()),
+              _ => const LoadingNote(),
             },
           ),
         );

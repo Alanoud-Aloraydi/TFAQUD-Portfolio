@@ -11,6 +11,7 @@ import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -159,8 +160,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
           body: Center(
             child: switch (state.status) {
               AppointmentsLoadStatus.initial ||
-              AppointmentsLoadStatus.loading =>
-                const CircularProgressIndicator(),
+              AppointmentsLoadStatus.loading => const LoadingNote(),
               AppointmentsLoadStatus.failure => TextButton(
                 onPressed: () =>
                     context.read<AppointmentsCubit>().load(widget.circleId),
@@ -343,7 +343,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
             children: [
               InsetBlock(
                 child: companions.loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const LoadingNote()
                     : companions.errorKey != null
                     ? TextButton(
                         onPressed: () => context

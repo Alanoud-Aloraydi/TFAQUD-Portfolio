@@ -6,9 +6,8 @@ import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:flutter/widgets.dart';
 
 /// The one filter of a history: a round button, without words, that opens
-/// a menu of its groups: the [kinds] of record when there are two or more,
-/// the months that have records and who recorded. Filled once something
-/// is chosen; what is chosen is read out whole — «الكل», «ضغط الدم»,
+/// a menu of the months that have records and who recorded. Filled once
+/// something is chosen; what is chosen is read out whole — «الكل»,
 /// «أكتوبر 2026، لينا».
 class HistoryFilters extends StatefulWidget {
   const HistoryFilters({
@@ -17,16 +16,12 @@ class HistoryFilters extends StatefulWidget {
     required this.people,
     required this.filter,
     required this.onChanged,
-    this.kinds = const <String, String>{},
   });
 
   final List<DateTime> months;
   final Map<String, String> people;
   final HistoryFilter filter;
   final ValueChanged<HistoryFilter> onChanged;
-
-  /// The kinds the records have, key to words; empty for one kind only.
-  final Map<String, String> kinds;
 
   @override
   State<HistoryFilters> createState() => _HistoryFiltersState();
@@ -41,7 +36,6 @@ class _HistoryFiltersState extends State<HistoryFilters> {
       context,
       widget.filter,
       people: widget.people,
-      kinds: widget.kinds,
     );
     return Align(
       alignment: AlignmentDirectional.centerStart,
@@ -70,7 +64,6 @@ class _HistoryFiltersState extends State<HistoryFilters> {
         months: widget.months,
         people: widget.people,
         filter: widget.filter,
-        kinds: widget.kinds,
       ),
     );
     if (!mounted) return;

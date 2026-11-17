@@ -8,9 +8,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// A history in a [CollapsibleGroup] titled [title], with [HistoryFilters]
-/// at its top: [items] narrowed to a month ([dayOf]), to who recorded
-/// ([byOf]) and to one of [kinds] ([kindOf]), drawn by [builder]. [empty]
-/// stands for no items at all; [footer] stays last («أقدم»).
+/// at its top: [items] narrowed to a month ([dayOf]) and to who recorded
+/// ([byOf]), drawn by [builder]. [empty] stands for no items at all;
+/// [footer] stays last («أقدم»).
 class FilteredHistory<T> extends StatefulWidget {
   const FilteredHistory({
     super.key,
@@ -21,8 +21,6 @@ class FilteredHistory<T> extends StatefulWidget {
     required this.builder,
     required this.empty,
     this.footer,
-    this.kinds = const <String, String>{},
-    this.kindOf,
   });
 
   final String title;
@@ -32,8 +30,6 @@ class FilteredHistory<T> extends StatefulWidget {
   final Widget Function(List<T> shown) builder;
   final Widget empty;
   final Widget? footer;
-  final Map<String, String> kinds;
-  final String Function(T item)? kindOf;
 
   @override
   State<FilteredHistory<T>> createState() => _FilteredHistoryState<T>();
@@ -50,8 +46,6 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
       _filter,
       dayOf: widget.dayOf,
       byOf: widget.byOf,
-      kinds: widget.kinds,
-      kindOf: widget.kindOf,
     );
     return CollapsibleGroup(
       title: widget.title,
@@ -67,7 +61,6 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
             HistoryFilters(
               months: view.months,
               people: view.people,
-              kinds: view.kinds,
               filter: view.filter,
               onChanged: (next) => setState(() => _filter = next),
             ),

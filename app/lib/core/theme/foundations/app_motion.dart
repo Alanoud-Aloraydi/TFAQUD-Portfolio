@@ -20,6 +20,12 @@ abstract class AppMotion {
   static const Duration menuExit = Duration(milliseconds: 260);
   static const Duration shimmer = Duration(milliseconds: 1400);
 
+  /// One round of the loader's logo, as Claude Design turns it.
+  static const Duration loaderTurn = Duration(milliseconds: 1600);
+
+  /// How long a pulled page says «تم التحديث» before it closes.
+  static const Duration refreshDone = Duration(milliseconds: 600);
+
   /// The card a tapped notification opens, as Telegram marks the message a
   /// link opens: tinted for this long once in view, then fading out over
   /// [tapHighlightFade].

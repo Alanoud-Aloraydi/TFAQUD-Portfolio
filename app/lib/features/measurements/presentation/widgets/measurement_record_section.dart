@@ -3,6 +3,7 @@ import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/layout/refresh_scope.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -20,9 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-/// The «السجل» tab's read-only measurements: a month's charts, calendar
-/// and readings of [circleId]. Scheduled times nobody recorded stay on
-/// «اليوم», not here.
+/// «السجل»'s read-only measurements: a month's charts, calendar and
+/// readings of [circleId]; unrecorded times stay on «اليوم».
 ///
 /// Holds its own [MeasurementReadingsCubit] for the month shown; it reads
 /// again by itself when a reading of the circle is saved anywhere.
@@ -128,7 +128,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
   List<Widget> _content(BuildContext context, MeasurementReadingsState state) {
     if (state.status == MeasurementLoadStatus.loading &&
         state.readings.isEmpty) {
-      return const <Widget>[Center(child: CircularProgressIndicator())];
+      return const <Widget>[LoadingNote()];
     }
     if (state.status == MeasurementLoadStatus.failure) {
       return <Widget>[

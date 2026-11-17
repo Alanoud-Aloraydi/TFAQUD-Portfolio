@@ -1,3 +1,4 @@
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
@@ -13,9 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// and the people to call.
 List<Widget> simplifiedFileBody(BuildContext context, MedicalFileState state) =>
     switch (state.status) {
-      MedicalFileStatus.loading => const <Widget>[
-        Center(child: CircularProgressIndicator()),
-      ],
+      MedicalFileStatus.loading => const <Widget>[LoadingNote()],
       MedicalFileStatus.failure => <Widget>[
         Text(
           context.tr(state.messageKey ?? 'error.unknown'),

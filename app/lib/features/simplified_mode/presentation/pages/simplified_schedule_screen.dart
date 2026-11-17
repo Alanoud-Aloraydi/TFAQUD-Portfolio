@@ -1,4 +1,5 @@
 import 'package:app/core/theme/app_text_theme.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
@@ -16,8 +17,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// «جدول اليوم»: today's medicines, measurements and appointments in time
-/// order, under the prayer they follow, each with where it stands.
+/// «جدول اليوم»: today's tasks in time order, under the prayer they follow.
 class SimplifiedScheduleScreen extends StatefulWidget {
   const SimplifiedScheduleScreen({super.key});
 
@@ -50,7 +50,7 @@ class _SimplifiedScheduleScreenState extends State<SimplifiedScheduleScreen> {
           title: context.tr('simplified_mode.schedule_title'),
           children: <Widget>[
             if (day == null)
-              const Center(child: CircularProgressIndicator())
+              const LoadingNote()
             else
               SimplifiedCard(
                 child: Column(
