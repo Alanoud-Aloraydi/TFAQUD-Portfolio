@@ -5,8 +5,7 @@ import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_series.dart';
+import 'package:app/features/appointments/domain/appointment_group.dart';
 import 'package:app/features/appointments/presentation/appointment_record_filter.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
@@ -16,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The record tab's appointments, newest first, filtered by all, upcoming
-/// or previous.
+/// or previous: one card for each booking, read-only but for the sheet.
 class AppointmentRecordSection extends StatefulWidget {
   const AppointmentRecordSection({
     super.key,
@@ -28,8 +27,7 @@ class AppointmentRecordSection extends StatefulWidget {
   final String circleId;
   final Widget header;
 
-  /// Whether this viewer may edit the circle's appointments, which is also
-  /// what opens «ورقة الزيارة» for editing from here.
+  /// Whether «ورقة الزيارة» opens for writing from here.
   final bool canManage;
 
   @override
@@ -44,12 +42,11 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
   Widget build(BuildContext context) {
     final AppointmentsState state = context.watch<AppointmentsCubit>().state;
     final DateTime now = PatientClockScope.of(context).now();
-    final List<CareAppointment> values = state.appointments.where((item) {
-      final bool upcoming =
-          item.status == AppointmentStatus.scheduled &&
-          !item.scheduledAt.isBefore(now);
-      return _filter.keeps(isUpcoming: upcoming);
-    }).toList()..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+    final List<AppointmentGroup> values = AppointmentGroup.of(
+      _filter.pick(state.appointments, now),
+      state.appointments,
+      now,
+    );
     return ListView(
       padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
       children: <Widget>[
@@ -76,12 +73,14 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
         else if (values.isEmpty)
           EmptyStateNote.section(context.tr('appointments.no_records'))
         else
-          for (final CareAppointment value in values) ...<Widget>[
+          for (final AppointmentGroup group in values) ...<Widget>[
             AppointmentCard(
-              value: value,
+              value: group.shown,
               circleId: widget.circleId,
               canManage: widget.canManage,
-              series: AppointmentSeries.of(value, state.appointments),
+              editable: false,
+              others: group.others,
+              all: state.appointments,
             ),
             const SizedBox(height: AppItemCard.listGap),
           ],

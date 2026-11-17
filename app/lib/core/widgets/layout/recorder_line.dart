@@ -4,18 +4,20 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// «who recorded it»: the person's photo and name, the same under a dose, a
-/// measurement and a reading.
+/// measurement and a reading. [large] is the size under a pill of «السجل».
 class RecorderLine extends StatelessWidget {
   const RecorderLine({
     super.key,
     required this.name,
     required this.photoPath,
     this.avatarCode,
+    this.large = false,
   });
 
   final String name;
   final String photoPath;
   final String? avatarCode;
+  final bool large;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -27,11 +29,16 @@ class RecorderLine extends StatelessWidget {
           name: name,
           photoPath: photoPath,
           avatarCode: avatarCode,
-          size: AppSizes.iconSmall,
+          size: large ? AppSizes.icon : AppSizes.iconSmall,
         ),
         const SizedBox(width: AppSpacing.tight),
         Flexible(
-          child: Text(name, style: Theme.of(context).textTheme.bodySmall),
+          child: Text(
+            name,
+            style: large
+                ? Theme.of(context).textTheme.bodyMedium
+                : Theme.of(context).textTheme.bodySmall,
+          ),
         ),
       ],
     ),

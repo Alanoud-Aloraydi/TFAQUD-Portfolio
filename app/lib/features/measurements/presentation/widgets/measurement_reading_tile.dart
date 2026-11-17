@@ -12,8 +12,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 
 /// One reading in the card of «السجل» ([RecordItemCard]): the kind and
-/// when, the value at the end with who recorded it under it (as «جدول
-/// اليوم» puts the person under its pill), its level in the normal range,
+/// when, the value at the end with who recorded it centred under it (as
+/// «جدول اليوم» puts the person under its pill), its level in the range,
 /// then the details.
 /// At large text sizes the value drops under the title instead of
 /// squeezing it.
@@ -40,7 +40,6 @@ class MeasurementReadingTile extends StatelessWidget {
       title: ReadingTitles(reading: reading),
       status: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
           if (_skipped)
             StatusBadge(
@@ -54,6 +53,7 @@ class MeasurementReadingTile extends StatelessWidget {
               name: name,
               photoPath: personPhotoPath(circleId, reading.recordedByAccountId),
               avatarCode: reading.recordedByAvatarCode,
+              large: true,
             ),
         ],
       ),

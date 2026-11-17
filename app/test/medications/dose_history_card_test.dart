@@ -1,4 +1,7 @@
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/widgets/layout/recorder_line.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
@@ -25,6 +28,16 @@ DoseOccurrence _dose(DoseRecord record) => DoseOccurrence(
   missedAfterMinutes: 120,
 );
 
+/// Taken at 9:40 in Riyadh, recorded by لينا.
+final DoseRecord _taken = DoseRecord(
+  id: 'r-1',
+  outcome: DoseOutcome.taken,
+  takenAt: DateTime.utc(2026, 11, 9, 6, 40),
+  recordedAt: DateTime.utc(2026, 11, 9, 6, 41),
+  recordedByAccountId: 'a-1',
+  recordedByName: 'لينا',
+);
+
 Future<void> _show(WidgetTester tester, DoseRecord record) => pumpArabic(
   tester,
   home: Scaffold(
@@ -40,18 +53,8 @@ void main() {
         'with who recorded it under it, and no box under the dose', (
       tester,
     ) async {
-      await _show(
-        tester,
-        DoseRecord(
-          id: 'r-1',
-          outcome: DoseOutcome.taken,
-          // 9:40 in Riyadh: forty minutes after its time.
-          takenAt: DateTime.utc(2026, 11, 9, 6, 40),
-          recordedAt: DateTime.utc(2026, 11, 9, 6, 41),
-          recordedByAccountId: 'a-1',
-          recordedByName: 'لينا',
-        ),
-      );
+      // 9:40: forty minutes after its time.
+      await _show(tester, _taken);
 
       expect(find.textContaining('9:40'), findsOneWidget);
       expect(find.textContaining('9:00'), findsNothing);
@@ -69,6 +72,40 @@ void main() {
         tester.getTopLeft(find.byType(PersonPhoto)).dx,
         lessThan(tester.getCenter(find.text('ميتفورمين')).dx),
       );
+    });
+
+    testWidgets('the strength and dose are pills on the name\'s line, the '
+        'time right above it, the person bigger and centred under the pill', (
+      tester,
+    ) async {
+      await _show(tester, _taken);
+      // The test font draws every letter a full square, so the name and
+      // its pills need a wider line than a phone's to fit on one; on a
+      // narrow one the pills move under the name instead.
+      tester.view.physicalSize = const Size(800, 900);
+      await tester.pumpAndSettle();
+
+      final Finder name = find.text('ميتفورمين');
+      final Finder strength = find.textContaining('500');
+      final Finder dose = find.textContaining('medications.unit.tablet'.tr());
+      for (final Finder fact in <Finder>[strength, dose]) {
+        expect(fact, findsOneWidget);
+        expect(
+          (tester.getCenter(fact).dy - tester.getCenter(name).dy).abs(),
+          lessThan(4),
+        );
+      }
+      // No room left between the time and the medicine.
+      expect(
+        tester.getTopLeft(name).dy -
+            tester.getBottomLeft(find.textContaining('9:40')).dy,
+        lessThan(8),
+      );
+      expect(
+        tester.getCenter(find.byType(RecorderLine)).dx,
+        moreOrLessEquals(tester.getCenter(find.byType(StatusBadge)).dx),
+      );
+      expect(tester.getSize(find.byType(PersonPhoto)).width, AppSizes.icon);
     });
 
     testWidgets('skipped: «تم تخطيها» and why, at its own time', (

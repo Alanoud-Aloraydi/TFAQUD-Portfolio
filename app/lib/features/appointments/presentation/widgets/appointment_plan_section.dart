@@ -5,8 +5,7 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_series.dart';
+import 'package:app/features/appointments/domain/appointment_group.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
@@ -15,7 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// The plan tab's appointments: the upcoming ones, soonest first.
+/// The plan tab's appointments: the upcoming ones, soonest first, one card
+/// for each booking.
 class AppointmentPlanSection extends StatelessWidget {
   const AppointmentPlanSection({
     super.key,
@@ -32,15 +32,11 @@ class AppointmentPlanSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppointmentsState state = context.watch<AppointmentsCubit>().state;
     final DateTime now = PatientClockScope.of(context).now();
-    final List<CareAppointment> values =
-        state.appointments
-            .where(
-              (item) =>
-                  item.status == AppointmentStatus.scheduled &&
-                  !item.scheduledAt.isBefore(now),
-            )
-            .toList()
-          ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+    final List<AppointmentGroup> values = AppointmentGroup.of(
+      upcomingAppointments(state.appointments, now),
+      state.appointments,
+      now,
+    );
     return ListView(
       padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
       children: <Widget>[
@@ -62,13 +58,14 @@ class AppointmentPlanSection extends StatelessWidget {
                 : null,
           )
         else
-          for (final CareAppointment value in values) ...<Widget>[
+          for (final AppointmentGroup group in values) ...<Widget>[
             AppointmentCard(
-              value: value,
+              value: group.shown,
               circleId: circleId,
               canManage: canManage,
               showRelativeDate: true,
-              series: AppointmentSeries.of(value, values),
+              others: group.others,
+              all: state.appointments,
             ),
             const SizedBox(height: AppItemCard.listGap),
           ],

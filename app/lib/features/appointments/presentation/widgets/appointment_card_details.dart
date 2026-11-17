@@ -12,15 +12,16 @@ import 'package:flutter/material.dart';
 
 /// What an appointment card opens, in the groups of a plan's details:
 /// «الموعد» (when, where or how, and that it shows in «اليوم» when
-/// [appearsToday]), «المرافقون» with their pictures, «الأشخاص» (who added
-/// and last changed it), then for a manager «حضرت» once its time came and
-/// «إلغاء الموعد» last, the red button a medicine's stop has.
+/// [appearsToday]), [otherVisits] of its booking, «المرافقون», «الأشخاص»
+/// (who added and last changed it), then for a manager «حضرت» once its
+/// time came and «إلغاء الموعد» last, the red button a medicine's stop has.
 List<Widget> appointmentCardDetails(
   BuildContext context, {
   required CareAppointment value,
   required String circleId,
   required bool canManage,
   bool appearsToday = false,
+  Widget? otherVisits,
 }) {
   final bool open = value.status == AppointmentStatus.scheduled;
   final bool remote = value.kind == AppointmentKind.remote;
@@ -58,6 +59,7 @@ List<Widget> appointmentCardDetails(
           ),
       ],
     ),
+    ?otherVisits,
     PlanFactGroup(
       title: context.tr('appointments.companion'),
       children: <Widget>[

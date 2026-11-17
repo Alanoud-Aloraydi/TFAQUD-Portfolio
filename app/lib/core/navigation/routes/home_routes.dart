@@ -86,17 +86,16 @@ StatefulShellBranch _branch(String path, {GoRouterWidgetBuilder? builder}) {
     routes: <RouteBase>[
       GoRoute(
         path: path,
-        // A tab page is the first page of its own navigator and has no
-        // background of its own: the shell's canvas shows through it. An
-        // iOS page (CupertinoPage) draws a light shadow (9% black) under
-        // itself, which over a see-through page darkened the whole tab and
-        // left a lighter band under the top bar. A tab page never slides
-        // in (tabs fade, FadingBranches), so it is a plain page.
+        // A tab page is the first page of its own navigator, see-through
+        // to the shell's canvas: an iOS page (CupertinoPage) draws a 9%
+        // shadow under itself that darkened the whole tab. A tab never
+        // slides in (tabs fade), so it is a plain page; pulled down from
+        // its top, it reads everything again.
         pageBuilder: (context, state) => NoTransitionPage<void>(
           key: state.pageKey,
           name: state.name ?? state.path,
           restorationId: state.pageKey.value,
-          child: page(context, state),
+          child: PullToRefresh(child: page(context, state)),
         ),
       ),
     ],

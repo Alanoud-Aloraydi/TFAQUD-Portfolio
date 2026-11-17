@@ -2,7 +2,7 @@ import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/navigation/fading_branches.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_group.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_plan_section.dart';
 import 'package:app/features/home/presentation/widgets/home_category_control.dart';
@@ -44,16 +44,10 @@ class _PlanPageState extends State<PlanPage>
                   .plans
                   .where((plan) => plan.stoppedAt == null)
                   .length;
-              final appointments = context
-                  .watch<AppointmentsCubit>()
-                  .state
-                  .appointments
-                  .where(
-                    (item) =>
-                        item.status == AppointmentStatus.scheduled &&
-                        !item.scheduledAt.isBefore(clock.now()),
-                  )
-                  .length;
+              final appointments = upcomingBookings(
+                context.watch<AppointmentsCubit>().state.appointments,
+                clock.now(),
+              );
               final header = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

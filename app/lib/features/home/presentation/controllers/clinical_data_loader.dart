@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app/core/utils/overdue_window.dart';
-import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
@@ -12,17 +11,14 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 
-/// The days «اليوم» reads doses for: from the first overdue day (a missed
-/// dose can still be answered) to a month ahead (the next-task card),
-/// counted in calendar days of the patient's [today].
+/// The days «اليوم» reads doses for, in calendar days of the patient's
+/// [today]: from the first overdue day to a month ahead.
 ({DateTime from, DateTime to}) occurrenceWindow(DateTime today) =>
     (from: overdueStart(today), to: addDays(today, 30));
 
-/// Reads the shown circle's data into the cubits of the home tabs, and
-/// again when the patient's day changes.
-///
-/// After that the cubits keep themselves fresh from their repositories'
-/// change streams; this only starts them, so no screen reloads by hand.
+/// Reads the shown circle's data into the home tabs' cubits, again at the
+/// patient's midnight and when a main page is pulled down; between those
+/// the cubits keep fresh from their repositories' change streams.
 class ClinicalDataLoader {
   ClinicalDataLoader({
     required this.medications,
@@ -51,38 +47,41 @@ class ClinicalDataLoader {
   Timer? _midnight;
   bool _disposed = false;
 
-  /// Whether the circle tab was open since the prayer times were read: the
-  /// patient's city is edited there.
+  /// Whether the circle tab, where the city is edited, was open since.
   bool _prayersStale = false;
 
-  /// Reads [circle]'s data for the patient's today, and again at the
-  /// patient's next midnight.
-  ///
-  /// With [quiet] (the app came back to the front) what is shown stays
-  /// while it is read again.
+  /// Reads [circle]'s data, and again at the patient's next midnight. With
+  /// [quiet] (back to the front) what is shown stays while it is read.
   void load(CareCircleSummary circle, {bool quiet = false}) {
-    final String circleId = circle.id;
-    final PatientClock clock = circle.clock;
-    final DateTime today = clock.today();
-    final window = occurrenceWindow(today);
-    unawaited(medications.load(circleId, silent: quiet));
-    unawaited(measurementPlans.load(circleId, silent: quiet));
-    unawaited(appointments.load(circleId, silent: quiet));
-    unawaited(measurementTasks.load(circleId, today, silent: quiet));
-    unawaited(measurementReadings.load(circleId, today, today, silent: quiet));
-    unawaited(
-      occurrences.load(circleId, window.from, window.to, silent: quiet),
-    );
-    unawaited(prayers.load(circleId, circle.timeZone));
+    unawaited(Future.wait(_loads(circle, quiet: quiet)));
+    final DateTime today = circle.clock.today();
     _midnight?.cancel();
-    final DateTime midnight = clock.momentOf(addDays(today, 1), '00:00');
+    final DateTime midnight = circle.clock.momentOf(addDays(today, 1), '00:00');
     _midnight = Timer(midnight.difference(_clock()), () {
       if (!_disposed) load(circle);
     });
   }
 
-  /// The person moved from tab [from] to tab [to]. Back on «اليوم» after the
-  /// circle tab, where the city can change, the prayer times are read again.
+  /// A main page pulled down: read again quietly, done once all is back.
+  Future<void> reload(CareCircleSummary circle) =>
+      Future.wait(_loads(circle, quiet: true));
+
+  List<Future<void>> _loads(CareCircleSummary circle, {required bool quiet}) {
+    final String id = circle.id;
+    final DateTime today = circle.clock.today();
+    final window = occurrenceWindow(today);
+    return <Future<void>>[
+      medications.load(id, silent: quiet),
+      measurementPlans.load(id, silent: quiet),
+      appointments.load(id, silent: quiet),
+      measurementTasks.load(id, today, silent: quiet),
+      measurementReadings.load(id, today, today, silent: quiet),
+      occurrences.load(id, window.from, window.to, silent: quiet),
+      prayers.load(id, circle.timeZone),
+    ];
+  }
+
+  /// Back on «اليوم» from the circle tab, the prayer times are read again.
   void tabChanged(int from, int to, CareCircleSummary? circle) {
     if (from == circleTab) _prayersStale = true;
     if (to == todayTab && _prayersStale && circle != null) {

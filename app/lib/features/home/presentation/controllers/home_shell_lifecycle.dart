@@ -29,6 +29,21 @@ void refreshOnResume(BuildContext context, HomeStateReactor reactor) {
   if (circle != null) reactor.clinical.load(circle, quiet: true);
 }
 
+/// A main page pulled down: the same as coming back to the front, done
+/// once everything is back so the page's spinner waits for it. The photos
+/// are told they changed, which also reads the circle tab's members again.
+Future<void> refreshNow(BuildContext context, HomeStateReactor reactor) {
+  GetIt.I<PrivatePhotoRepository>().clear();
+  reactor.reminders.refresh();
+  final HomeCubit home = context.read<HomeCubit>();
+  final CareCircleSummary? circle = home.state.selectedCircle;
+  return Future.wait(<Future<void>>[
+    home.refresh(),
+    context.read<InboxCubit>().load(),
+    if (circle != null) reactor.clinical.reload(circle),
+  ]);
+}
+
 /// Tells the circle data loader that the shown tab changed to [tab].
 void syncTab(BuildContext context, HomeStateReactor reactor, int tab) {
   if (tab == reactor.lastTab) return;
