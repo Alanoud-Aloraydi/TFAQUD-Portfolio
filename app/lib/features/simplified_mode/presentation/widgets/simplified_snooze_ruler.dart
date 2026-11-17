@@ -1,7 +1,7 @@
 import 'package:app/core/l10n/duration_text.dart';
+import 'package:app/core/widgets/pickers/ruler_look.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/medications/domain/snooze_limit.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_look.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_picker.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

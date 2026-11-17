@@ -203,8 +203,8 @@ class AppointmentDraft extends Equatable {
   final String? remoteMethod;
   final List<String> companionAccountIds;
 
-  /// How long before the visit to remind, in minutes; one of
-  /// [appointmentLeadChoices].
+  /// How long before the visit to remind, in minutes, from
+  /// [minAppointmentLead] to [maxAppointmentLead].
   final int reminderLeadMinutes;
 
   /// The other dates booked at the same time, each saved as its own visit

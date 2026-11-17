@@ -2,15 +2,14 @@ import 'dart:async';
 
 import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/widgets/forms/calendar_sync_confirm.dart';
+import 'package:app/core/widgets/forms/leave_for_settings.dart';
+import 'package:app/core/widgets/forms/permission_confirm.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 
-/// One circle's calendar switch for a widget's [State]. The switch follows
-/// the phone, not a saved wish: it is on only while the choice is saved
-/// *and* the phone still allows the calendar, and it is read again on every
-/// resume, because the person can refuse the calendar in Settings while the
-/// app is away. Both app modes share it, so both behave the same way.
+/// One circle's calendar switch for a widget's [State], in both app modes.
+/// It follows the phone, not a saved wish: on only while the choice is saved
+/// *and* the phone allows the calendar, read again on every resume.
 mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
   final CalendarSync _calendar = GetIt.I<CalendarSync>();
   AppLifecycleListener? _lifecycle;
@@ -27,8 +26,7 @@ mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
   bool? get enabled =>
       _chosen == null || access == null ? null : _chosen! && access!.usable;
 
-  /// Whether the person asked for the copy but the phone refuses it, so the
-  /// screen should offer the phone's Settings.
+  /// Asked for, but the phone refuses; the screen says so.
   bool get blocked => _chosen == true && access?.usable == false;
 
   @override
@@ -55,29 +53,38 @@ mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
     });
   }
 
-  /// Saves [value] for every kind at once. Turning the copy on explains it
-  /// first, then asks the phone: a refused calendar saves nothing, so the
-  /// switch stays off instead of promising a copy that cannot happen.
+  /// Saves [value] for every kind; turning on explains, then asks the phone.
+  /// A calendar refused before is not asked again (iOS asks once): the switch
+  /// says so and leaves for Settings, keeping the wish for the way back.
   Future<void> setChoice(bool value) async {
     final bool? current = _chosen;
-    if (current == null || current == value) return;
-    if (value && !await _agreedAndAllowed(current)) return;
+    if (current == null || _confirming) return;
+    final bool refused = value && access == AppPermission.denied;
+    if (!refused && current == value) return;
+    if (!refused && value && !await _agreedAndAllowed(current)) return;
     setState(() => _chosen = value);
     await _calendar.setCircleEnabled(calendarCircleId, value);
+    if (!refused || !mounted) return;
+    await leaveForSettings(
+      context,
+      'circle_overview.calendar_opening',
+      failedKey: 'circle_overview.open_settings_failed',
+    );
   }
 
-  /// The explanation, then the phone's own question; false when either is
-  /// refused, or when the choice changed while they were open.
+  /// The explanation, then the phone's question; false if either says no.
   Future<bool> _agreedAndAllowed(bool current) async {
-    if (_confirming) return false;
     _confirming = true;
-    final bool confirmed = await confirmCalendarSync(context);
-    final AppPermission permission = confirmed
+    final bool confirmed = await confirmPermission(
+      context,
+      'circle_overview.calendar_sync_confirm',
+    );
+    final AppPermission? permission = confirmed
         ? await _calendar.requestPermission()
-        : AppPermission.denied;
+        : access;
     _confirming = false;
     if (!mounted) return false;
     setState(() => access = permission);
-    return confirmed && permission.usable && _chosen == current;
+    return confirmed && (permission?.usable ?? false) && _chosen == current;
   }
 }

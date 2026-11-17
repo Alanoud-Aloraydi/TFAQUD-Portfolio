@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart' show DioException;
 
-/// Error codes returned by the Flask API (backend/app/errors.py,
-/// backend/app/auth, backend/app/care.py and the feature services).
+/// Error codes the Flask API returns (backend/app/errors.py and services).
 abstract class ApiErrorCodes {
   ApiErrorCodes._();
 
@@ -27,6 +26,7 @@ abstract class ApiErrorCodes {
   static const String futureTakenTime = 'future_taken_time';
   static const String appointmentTimeInPast = 'appointment_time_in_past';
   static const String appointmentNotStarted = 'appointment_not_started';
+  static const String appointmentMissed = 'appointment_missed';
   static const String appointmentChanged = 'appointment_changed';
   static const String appointmentAlreadyClosed = 'appointment_already_closed';
   static const String appointmentInvalidCompanion =

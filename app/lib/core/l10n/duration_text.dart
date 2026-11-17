@@ -60,3 +60,19 @@ String afterDuration(BuildContext context, int minutes) => context.tr(
   'today_dashboard.after',
   args: <String>[durationWords(context, minutes)],
 );
+
+/// «بعد ساعة», «بعد 45 دقيقة», «بعد ساعة و5 دقائق», with no widget to read
+/// the words from, as when the reminders are set.
+String afterMinutesText(int minutes) {
+  String count(ArabicCount unit, int n) =>
+      'counts.${unit.name}.${arabicPluralForm(n)}'.tr(args: <String>['$n']);
+  final String hours = count(ArabicCount.hours, minutes ~/ 60);
+  final String words = minutes < 60
+      ? count(ArabicCount.minutes, minutes)
+      : minutes % 60 == 0
+      ? hours
+      : 'today_dashboard.and_minutes'.tr(
+          args: <String>[hours, count(ArabicCount.minutes, minutes % 60)],
+        );
+  return 'today_dashboard.after'.tr(args: <String>[words]);
+}

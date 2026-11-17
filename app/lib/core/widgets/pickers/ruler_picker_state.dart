@@ -1,7 +1,7 @@
-import 'package:app/features/medications/presentation/widgets/ruler_mark.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_picker.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_slider_semantics.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_wheel.dart';
+import 'package:app/core/widgets/pickers/ruler_mark.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
+import 'package:app/core/widgets/pickers/ruler_slider_semantics.dart';
+import 'package:app/core/widgets/pickers/ruler_wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

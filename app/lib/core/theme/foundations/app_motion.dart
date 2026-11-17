@@ -26,6 +26,10 @@ abstract class AppMotion {
   /// How long a pulled page says «تم التحديث» before it closes.
   static const Duration refreshDone = Duration(milliseconds: 600);
 
+  /// How long a refused permission's switch shows where it is going before
+  /// the app leaves for the phone's Settings, so the word can be read.
+  static const Duration settingsLead = Duration(milliseconds: 1500);
+
   /// The card a tapped notification opens, as Telegram marks the message a
   /// link opens: tinted for this long once in view, then fading out over
   /// [tapHighlightFade].

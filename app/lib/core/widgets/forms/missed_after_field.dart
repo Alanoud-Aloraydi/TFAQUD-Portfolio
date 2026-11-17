@@ -1,17 +1,19 @@
+import 'dart:async';
+
 import 'package:app/core/constants/plan_limits.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/widgets/layout/inset_text_row.dart';
+import 'package:app/core/l10n/duration_text.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
+import 'package:app/core/widgets/pickers/minutes_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// The minutes after which a dose or reading counts as missed, typed freely
-/// between [PlanLimits.minMissedAfterMinutes] and
-/// [PlanLimits.maxMissedAfterMinutes]. The number is followed by «دقيقة»
-/// and nothing else: the number is typed in place, so the row needs no
-/// pencil of its own. The same row serves every kind of plan; [onChanged]
-/// gets null while the text is not a whole number.
-class MissedAfterField extends StatefulWidget {
+/// The minutes after which a dose or reading counts as missed, chosen on
+/// the ruler of «ذكّرني لاحقًا» between [PlanLimits.minMissedAfterMinutes]
+/// and [PlanLimits.maxMissedAfterMinutes]: the row says it («ساعة»,
+/// «45 دقيقة») and opens the ruler. The same row serves every kind of
+/// plan. [focusNode] lets a form bring the row into view; [showError] says
+/// the range while nothing valid is chosen.
+class MissedAfterField extends StatelessWidget {
   const MissedAfterField({
     super.key,
     required this.label,
@@ -25,51 +27,18 @@ class MissedAfterField extends StatefulWidget {
   final int? minutes;
   final ValueChanged<int?> onChanged;
   final FocusNode? focusNode;
-
-  /// Shows the range under the row even before the user has typed.
   final bool showError;
 
   @override
-  State<MissedAfterField> createState() => _MissedAfterFieldState();
-}
-
-class _MissedAfterFieldState extends State<MissedAfterField> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.minutes?.toString() ?? '',
-  );
-
-  /// Whether the user has typed, so an emptied field is told apart from one
-  /// not yet used.
-  bool _touched = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final bool invalid =
-        !PlanLimits.isValidMissedAfter(widget.minutes) &&
-        (widget.showError || _touched);
-    return InsetTextRow(
-      label: widget.label,
-      controller: _controller,
-      focusNode: widget.focusNode,
-      keyboardType: TextInputType.number,
-      inputFormatters: <TextInputFormatter>[
-        FilteringTextInputFormatter.digitsOnly,
-      ],
-      maxLength: 3,
-      textInputAction: TextInputAction.done,
-      hint: context.tr('plan_limits.minutes_hint'),
-      trailing: Text(
-        context.tr('plan_limits.minutes_unit'),
-        style: Theme.of(context).textTheme.bodyMedium
-            ?.copyWith(color: context.tokens.textSecondary),
-      ),
-      errorText: invalid
+    final int? value = minutes;
+    final bool valid = PlanLimits.isValidMissedAfter(value);
+    return InsetRow(
+      label: label,
+      value: valid ? durationWords(context, value!) : null,
+      showChevron: true,
+      focusNode: focusNode,
+      errorText: showError && !valid
           ? context.tr(
               'plan_limits.missed_after_range',
               args: <String>[
@@ -78,10 +47,20 @@ class _MissedAfterFieldState extends State<MissedAfterField> {
               ],
             )
           : null,
-      onChanged: (String text) {
-        _touched = true;
-        widget.onChanged(int.tryParse(text));
-      },
+      onTap: () => unawaited(_pick(context)),
     );
+  }
+
+  Future<void> _pick(BuildContext context) async {
+    final int? chosen = await showMinutesSheet(
+      context,
+      title: label,
+      minutes: minutes ?? PlanLimits.defaultMissedAfterMinutes,
+      min: PlanLimits.minMissedAfterMinutes,
+      max: PlanLimits.maxMissedAfterMinutes,
+      headline: (int minutes) => afterDuration(context, minutes),
+      subline: (_) => context.tr('plan_limits.missed_after_note'),
+    );
+    if (chosen != null) onChanged(chosen);
   }
 }

@@ -1,5 +1,5 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_picker.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:flutter/material.dart';
 
 /// The ruler as VoiceOver meets it: one slider that says what it sets and

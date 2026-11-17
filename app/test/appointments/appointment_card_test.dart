@@ -130,6 +130,19 @@ void main() {
       expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
 
+    testWidgets('a visit that left «يحتاج انتباهك» unanswered is missed', (
+      tester,
+    ) async {
+      // The 6th is three days before the 9th: past the two days «اليوم»
+      // keeps, so it asks nothing more.
+      final CareAppointment missed = _visit('m', 6, series: null);
+      await _open(tester, missed, all: <CareAppointment>[missed]);
+
+      expect(find.text('appointments.status.missed'.tr()), findsOneWidget);
+      expect(_button('appointments.mark_completed'), findsNothing);
+      expect(find.text('appointments.cancel_appointment'.tr()), findsNothing);
+    });
+
     testWidgets('its details name the one person who added it, and its '
         'cancel has the stop of a medicine', (tester) async {
       final CareAppointment added = CareAppointment(

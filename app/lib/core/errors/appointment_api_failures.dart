@@ -12,6 +12,9 @@ Failure? appointmentApiFailure(String? code) {
     ApiErrorCodes.appointmentNotStarted => const ValidationFailure(
       'appointments.not_started',
     ),
+    ApiErrorCodes.appointmentMissed => const ValidationFailure(
+      'appointments.attend_closed',
+    ),
     ApiErrorCodes.appointmentChanged => const ConflictFailure(
       'appointments.changed',
     ),

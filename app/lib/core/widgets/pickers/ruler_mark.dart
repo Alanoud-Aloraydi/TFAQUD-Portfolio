@@ -1,5 +1,5 @@
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_look.dart';
+import 'package:app/core/widgets/pickers/ruler_look.dart';
 import 'package:flutter/material.dart';
 
 /// The fixed mark, over the number chosen.

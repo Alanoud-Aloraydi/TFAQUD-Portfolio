@@ -4,10 +4,10 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:flutter/material.dart';
 
-/// One day of the weekday selector: a round chip with the day's letter,
-/// drawn as the app's other chips are (an outline, the green fill when it
-/// is on), 44 points high. Seven of them share the row's width, so on a
-/// narrow phone a day is a little narrower than high.
+/// One day of the weekday selector: a round chip with the day's name,
+/// drawn as the app's other chips are (an outline, the soft violet of
+/// «كل الأيام» when it is on), 44 points high. Seven of them share the
+/// row's width, so on a narrow phone a day is a little narrower than high.
 class WeekdayBox extends StatelessWidget {
   const WeekdayBox({
     super.key,
@@ -37,12 +37,12 @@ class WeekdayBox extends StatelessWidget {
         child: DecoratedBox(
           decoration: ShapeDecoration(
             color: selected
-                ? AppSemanticColors.selectedSurfaceStrong
+                ? AppSemanticColors.selectedSurface
                 : AppSemanticColors.surfaceContent,
             shape: StadiumBorder(
               side: BorderSide(
                 color: selected
-                    ? AppSemanticColors.selectedSurfaceStrong
+                    ? AppSemanticColors.selectedSurface
                     : context.tokens.borderControl,
               ),
             ),

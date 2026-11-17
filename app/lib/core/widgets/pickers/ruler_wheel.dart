@@ -1,5 +1,5 @@
-import 'package:app/features/medications/presentation/widgets/ruler_picker.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_tick.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
+import 'package:app/core/widgets/pickers/ruler_tick.dart';
 import 'package:flutter/material.dart';
 
 /// A wheel turned on its side: its first number on the start side, the next

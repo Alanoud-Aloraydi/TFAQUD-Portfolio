@@ -32,9 +32,8 @@
     "follow_up_done": "سجلت المتابعة"
   },
   "plan_limits": {
-    "minutes_hint": "بالدقائق",
-    "minutes_unit": "دقيقة",
-    "missed_after_range": "اكتب رقم من {} إلى {} دقيقة"
+    "missed_after_range": "اختر من {} إلى {} دقيقة",
+    "missed_after_note": "من موعدها، إذا ما انسجّلت"
   },
   "plan_status": {
     "active": "سارية",
@@ -121,6 +120,7 @@
     "calendar_access_denied": "لم يتم السماح بالوصول للتقويم.",
     "calendar_access_partial": "الجوال يسمح بالإضافة فقط، فالمواعيد الملغاة أو المعدّلة تبقى في التقويم.",
     "open_settings": "افتح الإعدادات",
+    "calendar_opening": "نفتح إعدادات الجوال… فعّلي «التقويم» من هناك",
     "open_settings_failed": "ما قدرنا نفتح الإعدادات. افتحيها بنفسك من إعدادات الجوال ثم تفقّد",
     "notifications_denied": "لم يتم السماح بإرسال التنبيهات.",
     "profile_summary": "تُحدّث بيانات الدائرة من الملف الطبي.",
@@ -847,6 +847,10 @@
     "notifications_not_asked": "يسألك الجوال عند أول تذكير",
     "notifications_quiet": "التنبيهات تصل بصمت، بدون صوت ولا تنبيه على الشاشة.",
     "notifications_opening": "نفتح إعدادات الجوال… فعّلي «التنبيهات» من هناك",
+    "notifications_confirm_title": "تفعيل التنبيهات؟",
+    "notifications_confirm_text": "راح نذكّرك بالأدوية والقياسات والمواعيد في وقتها. بعدها بيسألك الجوال إذا تسمح بالتنبيهات.",
+    "notifications_confirm_accept": "تفعيل",
+    "notifications_confirm_cancel": "ليس الآن",
     "notifications_settings_failed": "ما قدرنا نفتح الإعدادات. افتحيها بنفسك: الإعدادات ثم تفقّد ثم التنبيهات"
   },
   "medical": {
@@ -1215,6 +1219,7 @@
     "audio_failed": "ما قدرنا نسجّل الصوت أو نشغّله. جرّب مرة ثانية.",
     "time_in_past": "وقت الموعد لازم يكون قادم. غيّر التاريخ أو الوقت.",
     "not_started": "ما جا وقت هذا الموعد بعد.",
+    "attend_closed": "فات وقت تأكيد حضور هذا الموعد، وصار فائت.",
     "changed": "تغيّر الموعد من مكان ثاني. حدّث الصفحة وحاول مرة ثانية.",
     "already_closed": "هذا الموعد انتهى أو انلغى من قبل.",
     "invalid_companion": "اختر مرافقين من أعضاء الدائرة.",
@@ -1235,18 +1240,14 @@
     "more_dates": "أيام المواعيد",
     "other_visits": "المواعيد الأخرى",
     "added_by": "أضاف الموعد",
-    "one_visit": "موعد واحد",
     "visits_count": "{} مواعيد",
     "remove_date": "حذف التاريخ",
     "visit_of_series": "الزيارة {} من {}",
     "time": "الوقت",
     "remind_before": "تذكيري قبل الموعد",
-    "lead": {
-      "30": "قبل نصف ساعة",
-      "60": "قبل ساعة",
-      "120": "قبل ساعتين",
-      "180": "قبل ثلاث ساعات"
-    },
+    "lead_before": "قبل {}",
+    "pick_days": "اختر يوم أو أكثر",
+    "days_required": "اختر يوم الموعد",
     "place": "المكان",
     "place_hint": "المستشفى، العيادة",
     "remote_method": "طريقة التواصل",
@@ -1276,7 +1277,8 @@
       "scheduled": "قادم",
       "completed": "حضرت",
       "cancelled": "ملغى",
-      "unconfirmed": "ما أُكّد الحضور"
+      "unconfirmed": "ما أُكّد الحضور",
+      "missed": "فائت"
     },
     "filters": {
       "all": "الكل",
@@ -1326,10 +1328,10 @@
     "appointment_tomorrow_named": "يا {}، لا ننسى موعدك بكرة",
     "appointment_tomorrow_for": "لا ننسى موعد {} بكرة",
     "appointment_tomorrow_named_for": "يا {}، لا ننسى موعد {} بكرة",
-    "appointment_soon": "لا ننسى موعدك بعد ساعتين",
-    "appointment_soon_named": "يا {}، لا ننسى موعدك بعد ساعتين",
-    "appointment_soon_for": "لا ننسى موعد {} بعد ساعتين",
-    "appointment_soon_named_for": "يا {}، لا ننسى موعد {} بعد ساعتين",
+    "appointment_soon": "لا ننسى موعدك {}",
+    "appointment_soon_named": "يا {}، لا ننسى موعدك {}",
+    "appointment_soon_for": "لا ننسى موعد {} {}",
+    "appointment_soon_named_for": "يا {}، لا ننسى موعد {} {}",
     "appointment_today": "لا ننسى موعدك اليوم",
     "appointment_today_named": "يا {}، لا ننسى موعدك اليوم",
     "appointment_today_for": "لا ننسى موعد {} اليوم",
