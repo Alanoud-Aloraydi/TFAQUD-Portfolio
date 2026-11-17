@@ -8,6 +8,12 @@ import WeatherKit
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var accessibilityChannel: FlutterMethodChannel?
   private var weatherChannel: FlutterMethodChannel?
+  // The app's own reminders that were tapped (see `keepReminderTap`): kept
+  // here until Dart asks for them, then sent as they come.
+  private var reminderTapsChannel: FlutterMethodChannel?
+  private var dartTakesReminderTaps = false
+  private var waitingReminderTaps: [[String: String]] = []
+  private var seenReminderTaps = Set<String>()
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -17,16 +23,33 @@ import WeatherKit
     // left to right without an Arabic .lproj. This puts the first tab on the
     // right and the add button on the left, as iOS does in Arabic.
     UIView.appearance().semanticContentAttribute = .forceRightToLeft
-    // The dose reminders (flutter_local_notifications): the app delegate
-    // passes the notifications to the plugins, so a reminder shows while the
-    // app is open, and a tap on one reaches the app. The server's pushes
-    // (OneSignal) register and answer their taps in its own plugin.
+    // Set before launch ends, as Apple asks: the tap that opens the closed
+    // app comes right after. The app's reminders (flutter_local_notifications)
+    // are shown by the plugins, and their taps kept here
+    // (`keepReminderTap`); the server's pushes (OneSignal) answer their taps
+    // in its own SDK.
     UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    // Dart asks once for the reminder taps that came before it was ready;
+    // the ones after come to it as they happen.
+    let reminderTaps = FlutterMethodChannel(
+      name: "tafaqod/reminder_taps",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    reminderTapsChannel = reminderTaps
+    reminderTaps.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "listen", let self = self else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      self.dartTakesReminderTaps = true
+      result(self.waitingReminderTaps)
+      self.waitingReminderTaps.removeAll()
+    }
     let channel = FlutterMethodChannel(
       name: "tafaqod/accessibility",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
@@ -102,6 +125,55 @@ import WeatherKit
     } catch {
       return nil
     }
+  }
+
+  /// A tap on a notification. The app's reminders are answered here, in
+  /// every state of the app: under scenes, Flutter registers its plugins
+  /// only after launch, so the tap that opens the closed app would reach no
+  /// plugin and be lost. Anything else goes on to the plugins.
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    if keepReminderTap(response) {
+      completionHandler()
+      return
+    }
+    super.userNotificationCenter(
+      center, didReceive: response, withCompletionHandler: completionHandler)
+  }
+
+  /// Keeps a tap on one of the app's reminders for Dart: its payload, and
+  /// the action pressed ("" for the reminder itself). False for any other
+  /// notification. The scene's launch options and this delegate can both
+  /// bring the tap that opened the app; it is kept once.
+  @discardableResult
+  func keepReminderTap(_ response: UNNotificationResponse) -> Bool {
+    let info = response.notification.request.content.userInfo
+    guard let payload = info["payload"] as? String, info["presentAlert"] != nil
+    else { return false }
+    if response.actionIdentifier == UNNotificationDismissActionIdentifier {
+      return true
+    }
+    let action =
+      response.actionIdentifier == UNNotificationDefaultActionIdentifier
+      ? "" : response.actionIdentifier
+    let key = [
+      response.notification.request.identifier,
+      String(response.notification.date.timeIntervalSince1970),
+      action,
+    ].joined(separator: "|")
+    let tap = ["payload": payload, "action": action]
+    DispatchQueue.main.async {
+      guard self.seenReminderTaps.insert(key).inserted else { return }
+      if self.dartTakesReminderTaps, let channel = self.reminderTapsChannel {
+        channel.invokeMethod("tap", arguments: tap)
+      } else {
+        self.waitingReminderTaps.append(tap)
+      }
+    }
+    return true
   }
 
   @objc private func transparencyPreferenceChanged() {

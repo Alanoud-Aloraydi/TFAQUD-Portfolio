@@ -256,6 +256,10 @@ void main() {
   });
 
   group('«حضرت» on the large card', () {
+    // The server names a companion with the UUID's dashes, and the signed-in
+    // account («الرئيسية») without them.
+    const String leen = '6f1c2b3a-0d4e-4f5a-9b8c-7d6e5f4a3b2c';
+
     CareAppointment visit(String time) => CareAppointment(
       id: 'a-$time',
       specialty: 'عيادة السكري',
@@ -265,24 +269,27 @@ void main() {
       time: time,
       place: 'clinic',
       remoteMethod: null,
-      companions: const <AppointmentCompanion>[],
+      companions: const <AppointmentCompanion>[
+        AppointmentCompanion(id: leen, name: 'لينا'),
+      ],
       status: AppointmentStatus.scheduled,
       updatedAt: noonInRiyadh,
     );
 
     /// The large card at noon on the patient's clock, seen by the patient
-    /// ([patient]) or by a family member who does not go.
+    /// ([patient]), or by a family member ([viewer]): «لينا» goes with it.
     Future<void> show(
       WidgetTester tester,
       String time, {
       bool patient = true,
+      String viewer = 'f-1',
     }) async {
       final List<String> parts = time.split(':');
       await pumpArabic(
         tester,
         home: Scaffold(
           body: TaskViewerScope(
-            accountId: patient ? 'p-1' : 'f-1',
+            accountId: patient ? 'p-1' : viewer,
             isPatient: patient,
             child: NextTaskCard(
               task: (
@@ -335,6 +342,21 @@ void main() {
       // A manager who does not go has the other two.
       expect(attend(), findsNothing);
       expect(find.text('appointments.edit'.tr()), findsOneWidget);
+    });
+
+    testWidgets('to a companion, whose id the home names without dashes', (
+      tester,
+    ) async {
+      await show(
+        tester,
+        '12:30',
+        patient: false,
+        viewer: leen.replaceAll('-', ''),
+      );
+
+      expect(attend(), findsOneWidget);
+      expect(find.text('appointments.edit'.tr()), findsOneWidget);
+      expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
   });
 

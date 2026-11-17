@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app/core/services/permissions/app_permission.dart';
+import 'package:app/core/services/reminders/native_reminder_taps.dart';
 import 'package:app/core/services/service_texts.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -126,6 +127,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   final StreamController<String> _taps = StreamController<String>.broadcast();
+  final NativeReminderTaps _nativeTaps = const NativeReminderTaps();
   String? _launchTap;
 
   bool _ready = false;
@@ -178,17 +180,18 @@ class PluginPhoneNotifications implements PhoneNotifications {
           ],
         ),
       ),
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        final String? tap = _tapOf(response);
-        if (tap != null) deliverTap(tap);
-      },
+      onDidReceiveNotificationResponse: (NotificationResponse response) =>
+          _deliver(response.payload, response.actionId),
     );
-    final NotificationAppLaunchDetails? launch = await _plugin
-        .getNotificationAppLaunchDetails();
-    final NotificationResponse? response = launch?.notificationResponse;
-    final String? tap = response == null ? null : _tapOf(response);
-    if ((launch?.didNotificationLaunchApp ?? false) && tap != null) {
-      _launchTap = tap;
+    if (_isIOS) {
+      await _nativeTaps.listen(_deliver);
+    } else {
+      final NotificationAppLaunchDetails? launch = await _plugin
+          .getNotificationAppLaunchDetails();
+      final NotificationResponse? response = launch?.notificationResponse;
+      if ((launch?.didNotificationLaunchApp ?? false) && response != null) {
+        _deliver(response.payload, response.actionId);
+      }
     }
     await _android?.createNotificationChannel(reminderChannel);
     listenToPushTaps();
@@ -206,8 +209,8 @@ class PluginPhoneNotifications implements PhoneNotifications {
 
   /// Gives [tap] to the page that listens, or keeps it as the launch tap
   /// while none listens yet. A reminder or a push tapped while the app was
-  /// closed arrives as soon as its plugin is ready (on iOS's scenes, after
-  /// the plugin's own launch check), often before any page is built; the
+  /// closed arrives as soon as the app starts (on iOS, kept by the app's
+  /// delegate: NativeReminderTaps), often before any page is built; the
   /// broadcast [taps] would drop it, and the reminder would open nothing.
   @visibleForTesting
   void deliverTap(String tap) {
@@ -218,14 +221,11 @@ class PluginPhoneNotifications implements PhoneNotifications {
     }
   }
 
-  /// The payload of a tap, or [snoozeTapPrefix] and the payload for the
-  /// snooze action; null without a payload.
-  static String? _tapOf(NotificationResponse response) {
-    final String? payload = response.payload;
-    if (payload == null || payload.isEmpty) return null;
-    return response.actionId == snoozeAction
-        ? '$snoozeTapPrefix$payload'
-        : payload;
+  /// Gives [deliverTap] the [payload] ([snoozeTapPrefix] first for [action]
+  /// snooze); nothing without a payload.
+  void _deliver(String? payload, String? action) {
+    if (payload == null || payload.isEmpty) return;
+    deliverTap(action == snoozeAction ? '$snoozeTapPrefix$payload' : payload);
   }
 
   /// Copies [notificationSound] to `Library/Sounds`, where iOS finds it for

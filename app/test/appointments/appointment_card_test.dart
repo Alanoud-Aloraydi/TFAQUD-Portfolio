@@ -119,14 +119,13 @@ void main() {
       expect(find.text('appointments.visit_title'.tr()), findsOneWidget);
     });
 
-    testWidgets('the same card in «الخطة» can still be answered', (
-      tester,
-    ) async {
+    testWidgets('the same card in «الخطة» is edited or cancelled, and «حضرت» '
+        'is answered in «اليوم» alone', (tester) async {
       final CareAppointment passed = _visit('b2', 8, series: null);
       await _open(tester, passed, all: <CareAppointment>[passed]);
 
       expect(find.byType(EditAction), findsOneWidget);
-      expect(_button('appointments.mark_completed'), findsOneWidget);
+      expect(_button('appointments.mark_completed'), findsNothing);
       expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
 

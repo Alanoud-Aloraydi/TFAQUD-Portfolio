@@ -30,6 +30,20 @@ void main() {
       expect(goes(), isFalse);
     });
 
+    test('the signed-in id without dashes is the companion id with them', () {
+      // «الرئيسية» names the account without its UUID's dashes, a visit's
+      // companions with them: Leen going with Khaled is still asked.
+      const String dashed = '6f1c2b3a-0d4e-4f5a-9b8c-7d6e5f4a3b2c';
+      expect(
+        goes(viewerId: dashed.replaceAll('-', ''), picked: <String>[dashed]),
+        isTrue,
+      );
+      expect(
+        goes(viewerId: dashed.toUpperCase(), picked: <String>[dashed]),
+        isTrue,
+      );
+    });
+
     test('an unknown viewer is asked nothing', () {
       expect(goes(viewerId: null, picked: <String>['a-khaled']), isFalse);
     });
