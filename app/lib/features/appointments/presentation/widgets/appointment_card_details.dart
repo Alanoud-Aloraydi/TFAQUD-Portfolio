@@ -12,9 +12,9 @@ import 'package:flutter/material.dart';
 
 /// What an appointment card opens, in the groups of a plan's details:
 /// «الموعد» (when, where or how, and that it shows in «اليوم» when
-/// [appearsToday]), [otherVisits] of its booking, «المرافقون», «الأشخاص»
-/// (who added and last changed it), then for a manager «حضرت» once its
-/// time came and «إلغاء الموعد» last, the red button a medicine's stop has.
+/// [appearsToday]), [otherVisits] of its booking, «المرافقون», «أضاف
+/// الموعد» (the one person who added it), then for a manager «حضرت» once
+/// its time came and «إلغاء الموعد» last, the stop button of a medicine.
 List<Widget> appointmentCardDetails(
   BuildContext context, {
   required CareAppointment value,
@@ -78,27 +78,16 @@ List<Widget> appointmentCardDetails(
           ),
       ],
     ),
-    if (value.createdByName != null || value.updatedByName != null)
+    if (value.createdByName case final String name)
       PlanFactGroup(
-        title: context.tr('plan_details.people'),
+        title: context.tr('appointments.added_by'),
         children: <Widget>[
-          if (value.createdByName case final String name)
-            PlanPersonFact(
-              label: context.tr('medications.added_by'),
-              name: name,
-              circleId: circleId,
-              accountId: value.createdBy?.id,
-              avatarCode: value.createdBy?.avatarCode,
-            ),
-          if (value.updatedByName case final String name
-              when name != value.createdByName)
-            PlanPersonFact(
-              label: context.tr('medications.last_edited_by'),
-              name: name,
-              circleId: circleId,
-              accountId: value.updatedBy?.id,
-              avatarCode: value.updatedBy?.avatarCode,
-            ),
+          PlanPersonFact(
+            name: name,
+            circleId: circleId,
+            accountId: value.createdBy?.id,
+            avatarCode: value.createdBy?.avatarCode,
+          ),
         ],
       ),
     if (canManage && open && passed)
@@ -118,7 +107,6 @@ List<Widget> appointmentCardDetails(
     if (canManage && open)
       StopButton(
         label: context.tr('appointments.cancel_appointment'),
-        icon: AppIcons.prohibit,
         onPressed: () => changeAppointmentStatus(
           context,
           circleId,

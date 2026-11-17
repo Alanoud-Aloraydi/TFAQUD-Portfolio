@@ -31,7 +31,9 @@ class CircleSmallAction extends StatelessWidget {
         minimumSize: const Size(0, _height),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         tapTargetSize: MaterialTapTargetSize.padded,
-        side: const BorderSide(color: AppSemanticColors.borderPlan),
+        // A soft grey fill, no line, as the rest of the circle tab.
+        backgroundColor: AppSemanticColors.background,
+        side: BorderSide.none,
         textStyle: Theme.of(context).textTheme.labelMedium,
       ),
       child: Text(label),

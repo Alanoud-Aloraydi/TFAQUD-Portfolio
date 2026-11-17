@@ -2,6 +2,7 @@ import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
+import 'package:app/core/widgets/layout/refresh_scope.dart';
 import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -41,9 +42,10 @@ class MeasurementRecordSection extends StatefulWidget {
 }
 
 class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
+  // A saved photo anywhere, or «السجل» pulled down, reads it again quietly.
   late final MeasurementReadingsCubit _readings = MeasurementReadingsCubit(
     GetIt.I<MeasurementsUseCase>(),
-    GetIt.I<PrivatePhotoRepository>().changes,
+    RefreshScope.withPulls(context, GetIt.I<PrivatePhotoRepository>().changes),
   );
 
   /// The month shown; the patient's current one at first.
@@ -56,8 +58,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection> {
     return DateTime(today.year, today.month);
   }
 
-  /// The first month is read here, not in initState: it is the patient's
-  /// current month, read from [PatientClockScope].
+  /// The first month is read here, not in initState: the patient's month.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

@@ -56,7 +56,8 @@ class MedicationOccurrencesCubit extends Cubit<MedicationOccurrencesState>
   final Listenable? _photoChanges;
   late final StreamSubscription<String> _changes;
 
-  void _onPhotoChanged() => unawaited(reload());
+  // Quietly: the doses stay on screen while they are read again.
+  void _onPhotoChanged() => unawaited(refresh());
 
   @override
   Future<void> close() async {

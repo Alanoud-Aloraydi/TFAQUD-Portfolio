@@ -14,11 +14,3 @@ String scheduleDaysText(BuildContext context, MedicationSchedule schedule) =>
       ),
       ScheduleRepeat.weekly => formatWeekdays(context, schedule.weekdays),
     };
-
-/// What a schedule says under its time: the days, and the note written for
-/// it, each on a line. Empty when there is neither.
-String scheduleDetailsText(BuildContext context, MedicationSchedule schedule) =>
-    <String?>[
-      scheduleDaysText(context, schedule),
-      schedule.instructions,
-    ].whereType<String>().where((value) => value.isNotEmpty).join('\n');

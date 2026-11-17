@@ -1,16 +1,16 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/history_filter.dart';
+import 'package:app/core/utils/history_view.dart';
 import 'package:app/core/widgets/layout/collapsible_group.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/navigation/history_filters.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// A history gathered in a [CollapsibleGroup] titled [title], the way
-/// «يحتاج انتباهك» gathers its cards, with [HistoryFilters] at its top:
-/// [items] narrowed to one day ([dayOf]) and to who recorded ([byOf]: their
-/// account and name), then drawn by [builder]. [empty] stands in when
-/// there are no items at all; [footer] stays last («أقدم»).
+/// A history in a [CollapsibleGroup] titled [title], with [HistoryFilters]
+/// at its top: [items] narrowed to a month ([dayOf]), to who recorded
+/// ([byOf]) and to one of [kinds] ([kindOf]), drawn by [builder]. [empty]
+/// stands for no items at all; [footer] stays last («أقدم»).
 class FilteredHistory<T> extends StatefulWidget {
   const FilteredHistory({
     super.key,
@@ -21,6 +21,8 @@ class FilteredHistory<T> extends StatefulWidget {
     required this.builder,
     required this.empty,
     this.footer,
+    this.kinds = const <String, String>{},
+    this.kindOf,
   });
 
   final String title;
@@ -30,6 +32,8 @@ class FilteredHistory<T> extends StatefulWidget {
   final Widget Function(List<T> shown) builder;
   final Widget empty;
   final Widget? footer;
+  final Map<String, String> kinds;
+  final String Function(T item)? kindOf;
 
   @override
   State<FilteredHistory<T>> createState() => _FilteredHistoryState<T>();
@@ -41,21 +45,17 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final List<DateTime> months = HistoryFilter.monthsOf(
-      widget.items.map(widget.dayOf),
+    final HistoryView<T> view = HistoryView<T>(
+      widget.items,
+      _filter,
+      dayOf: widget.dayOf,
+      byOf: widget.byOf,
+      kinds: widget.kinds,
+      kindOf: widget.kindOf,
     );
-    final Map<String, String> people = HistoryFilter.peopleOf(
-      widget.items.map(widget.byOf),
-    );
-    // A month or a person the items no longer have is off.
-    final HistoryFilter filter = _filter.within(months, people);
-    final List<T> shown = <T>[
-      for (final T item in widget.items)
-        if (filter.shows(widget.dayOf(item), widget.byOf(item))) item,
-    ];
     return CollapsibleGroup(
       title: widget.title,
-      count: shown.length,
+      count: view.shown.length,
       expanded: _expanded,
       onToggle: () => setState(() => _expanded = !_expanded),
       child: Column(
@@ -65,16 +65,17 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
             widget.empty
           else ...<Widget>[
             HistoryFilters(
-              months: months,
-              people: people,
-              filter: filter,
+              months: view.months,
+              people: view.people,
+              kinds: view.kinds,
+              filter: view.filter,
               onChanged: (next) => setState(() => _filter = next),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (shown.isEmpty)
+            if (view.shown.isEmpty)
               InsetText(context.tr('history.none_match'))
             else
-              widget.builder(shown),
+              widget.builder(view.shown),
           ],
           ?widget.footer,
         ],

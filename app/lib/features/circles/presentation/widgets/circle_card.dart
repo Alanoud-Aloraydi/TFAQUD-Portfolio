@@ -1,6 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -29,13 +28,8 @@ class CircleCard extends StatelessWidget {
   Widget build(BuildContext context) => DecoratedBox(
     decoration: ShapeDecoration(
       color: AppSemanticColors.surfaceContent,
-      shape: AppRadius.shape(
-        AppRadius.l,
-        side: const BorderSide(
-          color: AppSemanticColors.borderSubtle,
-          width: AppSizes.borderEmphasis,
-        ),
-      ),
+      // No line around it: white on the page's grey is enough, and smooth.
+      shape: AppRadius.shape(AppRadius.l),
     ),
     child: Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),

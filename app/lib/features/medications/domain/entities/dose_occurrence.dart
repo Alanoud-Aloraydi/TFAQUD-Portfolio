@@ -1,5 +1,6 @@
 import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/medications/domain/entities/dose_record.dart';
 import 'package:app/features/medications/domain/entities/dose_timing_state.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -60,6 +61,11 @@ class DoseOccurrence extends Equatable {
   /// Who in the circle put it off, and until when; null when it is not
   /// put off (or once it is recorded).
   final SharedSnooze? snooze;
+
+  /// Whether it belongs in «سجل الجرعات» at [now] (the patient's wall
+  /// time): recorded, or its time came. One still ahead is not history.
+  bool isHistoryAt(DateTime now) =>
+      record != null || !wallClockAt(scheduledOn, time).isAfter(now);
 
   @override
   List<Object?> get props => [

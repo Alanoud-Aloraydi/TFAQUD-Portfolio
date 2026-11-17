@@ -47,6 +47,34 @@ void main() {
       expect(reads, 1);
     });
 
+    testWidgets('a part with its own data hears every pull, to read it '
+        'again in its place', (tester) async {
+      int heard = 0;
+      Listenable? pulls;
+      await pumpArabic(
+        tester,
+        home: RefreshScope(
+          onRefresh: () async {},
+          child: Scaffold(
+            body: PullToRefresh(
+              child: Builder(
+                builder: (BuildContext context) {
+                  pulls ??= RefreshScope.pullsOf(context)
+                    ?..addListener(() => heard++);
+                  return ListView(children: const <Widget>[Text('جدول اليوم')]);
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await _pullDown(tester);
+      await _pullDown(tester);
+
+      expect(heard, 2);
+    });
+
     testWidgets('outside the home shell it leaves the page alone', (
       tester,
     ) async {

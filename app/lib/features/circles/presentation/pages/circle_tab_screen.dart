@@ -1,4 +1,5 @@
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/widgets/layout/refresh_scope.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/circle_content.dart';
@@ -31,10 +32,15 @@ class CircleTabScreen extends StatelessWidget {
         if (circle == null) return const SizedBox.shrink();
         return BlocProvider(
           key: ValueKey(selectedId),
+          // A saved photo anywhere, or the tab pulled down, reads the
+          // circle again quietly, in place.
           create: (_) => CircleOverviewCubit(
             GetIt.I<CirclesUseCase>(),
             selectedId!,
-            GetIt.I<PrivatePhotoRepository>().changes,
+            RefreshScope.withPulls(
+              context,
+              GetIt.I<PrivatePhotoRepository>().changes,
+            ),
           )..load(),
           child: CircleContent(circle: circle),
         );
