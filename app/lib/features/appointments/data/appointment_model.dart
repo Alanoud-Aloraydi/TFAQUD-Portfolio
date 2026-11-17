@@ -1,5 +1,6 @@
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
 
 /// Maps appointment data between the API and app.
 class AppointmentModel {
@@ -34,6 +35,9 @@ class AppointmentModel {
     time: json['time_of_day'] as String,
     place: json['place'] as String?,
     remoteMethod: json['remote_method'] as String?,
+    reminderLeadMinutes:
+        (json['reminder_lead_minutes'] as num?)?.toInt() ??
+        defaultAppointmentLead,
     companions: (json['companions'] as List<dynamic>)
         .map((item) => companionFromJson(item as Map<String, dynamic>))
         .toList(),
@@ -69,6 +73,7 @@ class AppointmentModel {
     'time_of_day': draft.time,
     'place': draft.place,
     'remote_method': draft.remoteMethod,
+    'reminder_lead_minutes': draft.reminderLeadMinutes,
     'companion_account_ids': draft.companionAccountIds,
     if (draft.alsoOn.isNotEmpty)
       'also_on': <String>[

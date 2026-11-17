@@ -15,11 +15,14 @@ import 'package:go_router/go_router.dart';
 /// «حضرت» across the card, then «تعديل الموعد» and «إلغاء الموعد» under
 /// it, so a visit answers the way a dose and a reading do.
 ///
-/// Open from an hour before its time (as the server allows, ATTEND_EARLY)
-/// to those who went — the patient and the companions chosen for it — and
-/// to those who manage the circle's appointments, who must be able to put
-/// the record right. Changing or cancelling the visit is a manager's
-/// errand, so a companion who manages nothing only answers «حضرت».
+/// Open from an hour before its time (as the server allows, ATTEND_EARLY).
+///
+/// «حضرت» is asked only of those who went: the patient, and the
+/// companions picked for this visit — accompanying belongs to one
+/// appointment, not to the circle. Someone who manages the appointments
+/// is not thereby at one, so a manager who did not go sees «تعديل
+/// الموعد» and «إلغاء الموعد» and is asked nothing; they could not
+/// answer for a visit they never attended.
 Widget? appointmentTodayActions(
   BuildContext context, {
   required CareAppointment value,
@@ -34,7 +37,9 @@ Widget? appointmentTodayActions(
       TaskViewerScope.of(context)?.goesWith(value.companionIds) ?? false;
   if (!went && !canManage) return null;
   return TaskButtonGrid(
-    answer: AppointmentAttendButton(value: value, circleId: circleId),
+    answer: went
+        ? AppointmentAttendButton(value: value, circleId: circleId)
+        : null,
     choices: <Widget>[
       if (canManage) ...<Widget>[
         TaskButton(

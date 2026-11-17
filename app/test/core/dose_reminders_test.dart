@@ -8,6 +8,7 @@ import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -100,6 +101,7 @@ CareAppointment _appointment(
   List<AppointmentCompanion> companions = const <AppointmentCompanion>[
     AppointmentCompanion(id: _meId, name: 'ريم'),
   ],
+  int lead = defaultAppointmentLead,
 }) => CareAppointment(
   id: 'appointment-$day',
   specialty: 'القلب',
@@ -110,6 +112,7 @@ CareAppointment _appointment(
   place: 'مستشفى',
   remoteMethod: null,
   companions: companions,
+  reminderLeadMinutes: lead,
   status: status,
   updatedAt: savedAt ?? DateTime.utc(2026, 11),
 );
@@ -395,7 +398,7 @@ void main() {
       expect(planned[1].payload, keepRemindersPayload);
     });
 
-    test('an appointment is reminded a day before and two hours before', () {
+    test('an appointment is reminded a day before and at its own lead', () {
       final List<ScheduledNotification> planned = planDoseReminders(
         appointments: <(ReminderCircle, CareAppointment)>[
           (_noura, _appointment(5, '16:30')),
@@ -409,12 +412,12 @@ void main() {
       );
 
       expect(planned, hasLength(3));
-      // 16:30 in Riyadh on the 4th, then 14:30 in Riyadh on the 5th.
+      // 16:30 in Riyadh on the 4th, then an hour before it on the 5th.
       expect(planned[0].at, DateTime.utc(2026, 11, 4, 13, 30));
       expect(planned[0].title, 'موعد أمي نورة dayBefore');
       expect(planned[0].body, 'القلب');
       expect(planned[0].payload, 'appointment:c-noura@appointment-5');
-      expect(planned[1].at, DateTime.utc(2026, 11, 5, 11, 30));
+      expect(planned[1].at, DateTime.utc(2026, 11, 5, 12, 30));
       expect(planned[1].title, 'موعد أمي نورة soon');
       expect(planned[2].payload, keepRemindersPayload);
     });
@@ -428,9 +431,38 @@ void main() {
         texts: _texts,
       );
 
-      expect(planned.first.at, DateTime.utc(2026, 11, 3, 10));
+      expect(planned.first.at, DateTime.utc(2026, 11, 3, 11));
       expect(planned.first.title, 'موعد أمي نورة soon');
       expect(planned, hasLength(2));
+    });
+
+    test('the near reminder follows the lead chosen for that visit', () {
+      // Three hours before 15:00 in Riyadh is 12:00 there, 09:00 UTC; the
+      // day-before reminder is not chosen and does not move.
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(5, '15:00', lead: 180)),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned[0].at, DateTime.utc(2026, 11, 4, 12));
+      expect(planned[0].title, 'موعد أمي نورة dayBefore');
+      expect(planned[1].at, DateTime.utc(2026, 11, 5, 9));
+      expect(planned[1].title, 'موعد أمي نورة soon');
+    });
+
+    test('half an hour before is a lead like any other', () {
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[
+          (_noura, _appointment(5, '15:00', lead: 30)),
+        ],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned[1].at, DateTime.utc(2026, 11, 5, 11, 30));
     });
 
     test('an appointment saved today for today is said right away, once', () {
@@ -468,11 +500,12 @@ void main() {
         ),
         isNull,
       );
-      // Saved two hours and five minutes before: the two-hour one comes.
+      // Saved an hour and five minutes before its time: the visit's own
+      // near reminder is close enough, so nothing is said twice.
       expect(
         appointmentAnnouncedAt(
           _noura.clock,
-          _appointment(3, '10:05', savedAt: _now),
+          _appointment(3, '09:05', savedAt: _now),
         ),
         isNull,
       );

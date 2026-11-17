@@ -3,6 +3,7 @@ import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_account.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_answers.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_creating.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_result.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_scope.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/home/domain/use_cases/home_use_case.dart';
@@ -18,6 +19,7 @@ class CreateCircleCubit extends Cubit<CreateCircleState>
         CreateCircleScope,
         CreateCircleAccount,
         CreateCircleAnswers,
+        CreateCircleResult,
         CreateCircleCreating {
   /// [request] is the request the patient agreed to, and is needed for the
   /// [CircleFlow.approved] flow only; it travels with the route. The patient

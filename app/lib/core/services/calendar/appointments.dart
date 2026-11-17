@@ -41,8 +41,12 @@ extension _CalendarAppointments on _CalendarState {
         place: place.isEmpty ? null : place,
         start: at,
         end: at.add(const Duration(hours: 1)),
-        // The same as its notifications: a day before, and two hours before.
-        reminders: const <Duration>[Duration(days: 1), Duration(hours: 2)],
+        // The same as its notifications: a day before, and the lead
+        // chosen for this visit.
+        reminders: <Duration>[
+          const Duration(days: 1),
+          appointment.reminderLead,
+        ],
       );
     }
     return true;

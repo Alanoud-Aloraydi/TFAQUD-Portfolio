@@ -121,6 +121,7 @@
     "calendar_access_denied": "لم يتم السماح بالوصول للتقويم.",
     "calendar_access_partial": "الجوال يسمح بالإضافة فقط، فالمواعيد الملغاة أو المعدّلة تبقى في التقويم.",
     "open_settings": "افتح الإعدادات",
+    "open_settings_failed": "ما قدرنا نفتح الإعدادات. افتحيها بنفسك من إعدادات الجوال ثم تفقّد",
     "notifications_denied": "لم يتم السماح بإرسال التنبيهات.",
     "profile_summary": "تُحدّث بيانات الدائرة من الملف الطبي.",
     "blood_type": "فصيلة الدم",
@@ -279,7 +280,7 @@
       "recorded_late": "تسجّلت بعد الموعد",
       "late_line": "بعد {} من الموعد",
       "skipped": "تم تخطيها",
-      "appointment_waiting": "تأكيد الحضور"
+      "appointment_waiting": "بانتظار تأكيد الحضور"
     }
   },
   "prayer_times": {
@@ -841,10 +842,12 @@
     "notifications_on": "مفعّلة",
     "notifications_partial": "محدودة",
     "notifications_off": "مقفلة",
-    "notifications_hint": "من غيرها ما توصلك تذكيرات الأدوية والقياسات والمواعيد. تتغيّر من إعدادات الجوال.",
+    "notifications_paused": "موقوفة من هنا",
+    "notifications_hint": "من غيرها ما توصلك تذكيرات الأدوية والقياسات والمواعيد.",
     "notifications_not_asked": "يسألك الجوال عند أول تذكير",
-    "notifications_enable": "تفعيل التنبيهات",
-    "notifications_quiet": "التنبيهات تصل بصمت، بدون صوت ولا تنبيه على الشاشة."
+    "notifications_quiet": "التنبيهات تصل بصمت، بدون صوت ولا تنبيه على الشاشة.",
+    "notifications_opening": "نفتح إعدادات الجوال… فعّلي «التنبيهات» من هناك",
+    "notifications_settings_failed": "ما قدرنا نفتح الإعدادات. افتحيها بنفسك: الإعدادات ثم تفقّد ثم التنبيهات"
   },
   "medical": {
     "condition": {
@@ -1237,6 +1240,13 @@
     "remove_date": "حذف التاريخ",
     "visit_of_series": "الزيارة {} من {}",
     "time": "الوقت",
+    "remind_before": "تذكيري قبل الموعد",
+    "lead": {
+      "30": "قبل نصف ساعة",
+      "60": "قبل ساعة",
+      "120": "قبل ساعتين",
+      "180": "قبل ثلاث ساعات"
+    },
     "place": "المكان",
     "place_hint": "المستشفى، العيادة",
     "remote_method": "طريقة التواصل",

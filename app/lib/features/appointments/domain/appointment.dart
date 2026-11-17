@@ -1,5 +1,6 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
+import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
 import 'package:equatable/equatable.dart';
 
 /// What the visit is for; the form groups these by [AppointmentKindGroup].
@@ -86,6 +87,7 @@ class CareAppointment extends Equatable {
     required this.place,
     required this.remoteMethod,
     required this.companions,
+    this.reminderLeadMinutes = defaultAppointmentLead,
     required this.status,
     required this.updatedAt,
     this.seriesId,
@@ -115,6 +117,14 @@ class CareAppointment extends Equatable {
   /// The accounts going with the patient.
   Iterable<String> get companionIds =>
       companions.map((AppointmentCompanion companion) => companion.id);
+
+  /// How long before its time this visit's own reminder comes, in
+  /// minutes; the day-before reminder is set besides it and is not
+  /// chosen. [defaultAppointmentLead] from a server that does not say.
+  final int reminderLeadMinutes;
+
+  /// That lead as a duration, for the reminder plan.
+  Duration get reminderLead => Duration(minutes: reminderLeadMinutes);
   final AppointmentStatus status;
   final DateTime updatedAt;
 
@@ -141,6 +151,7 @@ class CareAppointment extends Equatable {
     place,
     remoteMethod,
     companions,
+    reminderLeadMinutes,
     status,
     updatedAt,
     createdByName,
@@ -178,6 +189,7 @@ class AppointmentDraft extends Equatable {
     required this.place,
     required this.remoteMethod,
     required this.companionAccountIds,
+    this.reminderLeadMinutes = defaultAppointmentLead,
     this.alsoOn = const <DateTime>[],
   });
 
@@ -190,6 +202,10 @@ class AppointmentDraft extends Equatable {
   final String? place;
   final String? remoteMethod;
   final List<String> companionAccountIds;
+
+  /// How long before the visit to remind, in minutes; one of
+  /// [appointmentLeadChoices].
+  final int reminderLeadMinutes;
 
   /// The other dates booked at the same time, each saved as its own visit
   /// with these same answers. Empty for a visit on its own.
@@ -205,6 +221,7 @@ class AppointmentDraft extends Equatable {
     place,
     remoteMethod,
     companionAccountIds,
+    reminderLeadMinutes,
     alsoOn,
   ];
 }

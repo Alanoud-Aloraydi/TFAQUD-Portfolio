@@ -26,6 +26,7 @@ class AppointmentFields:
         appointment.time_of_day = body.time_of_day
         appointment.place = body.place.strip() if body.place else None
         appointment.remote_method = body.remote_method
+        appointment.reminder_lead_minutes = body.reminder_lead_minutes
 
     def _moment(
         self, care_circle_id: UUID, day: date, time_of_day: time

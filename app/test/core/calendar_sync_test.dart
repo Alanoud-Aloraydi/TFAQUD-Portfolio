@@ -6,6 +6,7 @@ import 'package:app/core/services/calendar_sync.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart'
     show ReminderCircle, SnoozedTask, TaskSnooze;
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -375,10 +376,11 @@ void main() {
         expect(event.note, 'at 16:30');
         expect(event.place, 'الحبيب');
         expect(event.repeats, isFalse);
-        // The same as its notifications: a day before, and two hours before.
+        // The same as its notifications: a day before, and the lead
+        // chosen for this visit (an hour unless it says otherwise).
         expect(event.reminders, const <Duration>[
           Duration(days: 1),
-          Duration(hours: 2),
+          Duration(minutes: defaultAppointmentLead),
         ]);
       },
     );

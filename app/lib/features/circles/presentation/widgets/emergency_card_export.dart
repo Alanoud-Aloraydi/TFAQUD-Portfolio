@@ -43,3 +43,16 @@ Future<bool> shareEmergencyCardPdf({
   );
   return true;
 }
+
+/// [shareEmergencyCardPdf], with a failure to draw or to share reported as
+/// false, so the page has one answer to show.
+Future<bool> shareEmergencyCardSafely({
+  required GlobalKey boundary,
+  required String title,
+}) async {
+  try {
+    return await shareEmergencyCardPdf(boundary: boundary, title: title);
+  } on Exception {
+    return false;
+  }
+}

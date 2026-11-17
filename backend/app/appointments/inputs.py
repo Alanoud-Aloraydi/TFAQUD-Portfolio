@@ -21,6 +21,10 @@ class AppointmentRequest(Dto):
     time_of_day: time
     place: Annotated[str | None, Field(max_length=160)] = None
     remote_method: Literal["video", "phone"] | None = None
+    # How long before the visit its own reminder comes. The form offers
+    # half an hour up to three hours; the day-before reminder is always
+    # set besides it and is not chosen here.
+    reminder_lead_minutes: Annotated[int, Field(ge=15, le=180)] = 60
     # Who goes with the patient: none, one or more managers of the circle.
     companion_account_ids: list[UUID] = Field(default_factory=list)
     # The dates of the other visits booked at the same time, each saved as

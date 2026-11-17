@@ -19,7 +19,7 @@ abstract class AppSelectionThemes {
       side: WidgetStateBorderSide.resolveWith(
         (Set<WidgetState> states) => BorderSide(
           color: states.contains(WidgetState.selected)
-              ? AppSemanticColors.accentLeaf
+              ? AppSemanticColors.selectedSurface
               : tokens.borderControl,
         ),
       ),

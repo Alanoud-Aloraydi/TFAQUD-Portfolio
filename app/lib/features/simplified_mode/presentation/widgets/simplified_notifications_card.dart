@@ -1,13 +1,11 @@
 import 'dart:async';
 
 import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/permissions/notification_words.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_medical_file_row.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_note.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_switch.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -54,11 +52,7 @@ class _NotificationsCardState extends State<SimplifiedNotificationsCard> {
     children: <Widget>[
       SimplifiedCard(
         padding: const EdgeInsets.symmetric(horizontal: SimplifiedStyle.pad),
-        child: SimplifiedMedicalFileRow(
-          label: context.tr('account.notifications_row'),
-          value: context.tr(notificationValueKey(allowed)),
-          last: true,
-        ),
+        child: SimplifiedNotificationsSwitch(allowed: allowed),
       ),
       SimplifiedNotificationsNote(allowed: allowed),
     ],

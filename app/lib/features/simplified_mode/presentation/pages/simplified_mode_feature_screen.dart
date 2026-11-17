@@ -8,6 +8,7 @@ import 'package:app/core/services/push_registration.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
+import 'package:app/features/simplified_mode/presentation/controllers/reminder_taps.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_home_body.dart';
@@ -30,11 +31,7 @@ class SimplifiedModeFeatureScreen extends StatefulWidget {
 
 class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
     with WidgetsBindingObserver {
-  final PhoneNotifications _phone = GetIt.I<PhoneNotifications>();
-  StreamSubscription<String>? _taps;
-
-  /// A reminder tapped before the day was read; opened once it is.
-  ReminderRequest? _pendingReminder;
+  late final ReminderTaps _taps;
 
   /// Whether this phone's push token was asked for in this run.
   bool _pushStarted = false;
@@ -43,24 +40,24 @@ class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    final String? launchTap = _phone.takeLaunchTap();
-    if (launchTap != null) {
-      // Opened by «ذكّرني لاحقًا» in a notification: put it off again, and
-      // open nothing.
-      if (isSnoozeTap(launchTap)) {
-        unawaited(
-          context.read<SimplifiedModeCubit>().snoozeFromNotification(launchTap),
-        );
-      } else {
-        _pendingReminder = reminderRequest(launchTap);
-      }
-    }
-    _taps = _phone.taps.listen(_onTap);
+    _taps = ReminderTaps(
+      phone: GetIt.I<PhoneNotifications>(),
+      hasDay: () => context.read<SimplifiedModeCubit>().state.day != null,
+      snooze: (String tap) =>
+          context.read<SimplifiedModeCubit>().snoozeFromNotification(tap),
+      open: (ReminderRequest request) =>
+          unawaited(context.push(Routes.simplifiedReminder, extra: request)),
+    );
+    // The day may already be read by the time this screen is built, which
+    // fires no change for the listener below to act on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _taps.openPending();
+    });
   }
 
   @override
   void dispose() {
-    unawaited(_taps?.cancel());
+    _taps.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -75,22 +72,6 @@ class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
     }
   }
 
-  /// A reminder reads the day again (it may have changed since), then
-  /// opens its full-screen reminder over whatever is on screen.
-  Future<void> _onTap(String payload) async {
-    if (!mounted) return;
-    final SimplifiedModeCubit cubit = context.read<SimplifiedModeCubit>();
-    if (isSnoozeTap(payload)) {
-      await cubit.snoozeFromNotification(payload);
-      return;
-    }
-    final ReminderRequest? request = reminderRequest(payload);
-    if (request == null) return;
-    await cubit.load();
-    if (!mounted || cubit.state.day == null) return;
-    unawaited(context.push(Routes.simplifiedReminder, extra: request));
-  }
-
   /// Gives the server this phone's push token once the patient's day is
   /// read, as the detailed home does: a missed dose or measurement, and
   /// the circle's news, reach the patient in this mode too.
@@ -100,23 +81,18 @@ class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
     unawaited(GetIt.I<PushRegistration>().start(accountId: accountId));
   }
 
-  void _openPending(BuildContext context) {
-    final ReminderRequest? request = _pendingReminder;
-    if (request == null) return;
-    _pendingReminder = null;
-    unawaited(context.push(Routes.simplifiedReminder, extra: request));
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SimplifiedModeCubit, SimplifiedModeState>(
+      // Every state with a day, not only the first: a reminder tapped
+      // while the day was still being read waits for one of them.
       listenWhen: (before, after) =>
-          (after.day != null && before.day == null) ||
+          after.day != null ||
           (after.messageKey != null && after.messageKey != before.messageKey),
       listener: (context, state) {
         if (state.day case final SimplifiedDay day) {
           _startPush(day.accountId);
-          _openPending(context);
+          _taps.openPending();
         }
         final String? key = state.messageKey;
         if (key != null && state.status == SimplifiedModeStatus.ready) {
