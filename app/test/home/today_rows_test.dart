@@ -1,6 +1,7 @@
 import '../support/widget_harness.dart';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
 import 'package:app/features/home/presentation/widgets/next_task_card.dart';
@@ -251,6 +252,80 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('today_dashboard.next_dose'.tr()), findsNothing);
+    });
+  });
+
+  group('«حضرت» on the large card', () {
+    CareAppointment visit(String time) => CareAppointment(
+      id: 'a-$time',
+      specialty: 'عيادة السكري',
+      kind: AppointmentKind.followUp,
+      otherKind: null,
+      scheduledOn: DateTime(2026, 11, 9),
+      time: time,
+      place: 'clinic',
+      remoteMethod: null,
+      companions: const <AppointmentCompanion>[],
+      status: AppointmentStatus.scheduled,
+      updatedAt: noonInRiyadh,
+    );
+
+    /// The large card at noon on the patient's clock, seen by the patient
+    /// ([patient]) or by a family member who does not go.
+    Future<void> show(
+      WidgetTester tester,
+      String time, {
+      bool patient = true,
+    }) async {
+      final List<String> parts = time.split(':');
+      await pumpArabic(
+        tester,
+        home: Scaffold(
+          body: TaskViewerScope(
+            accountId: patient ? 'p-1' : 'f-1',
+            isPatient: patient,
+            child: NextTaskCard(
+              task: (
+                at: DateTime.utc(
+                  2026,
+                  11,
+                  9,
+                  int.parse(parts[0]),
+                  int.parse(parts[1]),
+                ),
+                medication: null,
+                measurement: null,
+                appointment: visit(time),
+              ),
+              circleId: 'c-1',
+              canManage: true,
+              now: DateTime.utc(2026, 11, 9, 12),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Finder attend() => find.text('appointments.mark_completed'.tr());
+
+    testWidgets('shows from an hour before the visit', (tester) async {
+      await show(tester, '12:30');
+
+      expect(attend(), findsOneWidget);
+    });
+
+    testWidgets('not earlier than an hour before', (tester) async {
+      await show(tester, '13:30');
+
+      expect(attend(), findsNothing);
+    });
+
+    testWidgets('not to someone who does not go with the visit', (
+      tester,
+    ) async {
+      await show(tester, '12:30', patient: false);
+
+      expect(attend(), findsNothing);
     });
   });
 

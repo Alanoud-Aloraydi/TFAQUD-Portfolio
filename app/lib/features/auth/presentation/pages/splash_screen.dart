@@ -2,15 +2,17 @@ import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/loading/loading_widget.dart';
+import 'package:app/core/widgets/loading/launch_curtain.dart';
+import 'package:app/core/widgets/loading/pulsing_logo.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// The first page. It shows the loading animation while the app finds out
-/// whether this phone is signed in, then moves on. It needs a [SplashCubit]
+/// The first page. It shows the breathing logo while the app finds out
+/// whether this phone is signed in, then moves on, under the
+/// [LaunchCurtain], which it tells when it knows. It needs a [SplashCubit]
 /// above it in the widget tree.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -19,6 +21,9 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<SplashCubit, StartDestination>(
       listener: (context, destination) {
+        if (destination != StartDestination.checking) {
+          LaunchCurtain.ready.value = true;
+        }
         switch (destination) {
           case StartDestination.home:
             context.go(Routes.today);
@@ -58,7 +63,7 @@ class SplashScreen extends StatelessWidget {
                   ),
                 ),
               )
-            : const LoadingWidget(size: AppSizes.loadingPage),
+            : const Center(child: PulsingLogo(size: AppSizes.loadingPage)),
       ),
     );
   }

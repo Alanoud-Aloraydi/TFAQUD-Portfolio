@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/logo_refresh.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_sections.dart';
@@ -12,7 +13,7 @@ Widget accountReadyView(
   AccountState state,
   AccountSummary account,
 ) {
-  return RefreshIndicator(
+  return LogoRefresh(
     onRefresh: cubit.load,
     child: ListView(
       physics: const AlwaysScrollableScrollPhysics(),

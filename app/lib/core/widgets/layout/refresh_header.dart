@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 
 /// What shows in the gap a pulled page opens at its top: the loader,
 /// growing and turning with the pull until [reach] lets go, and under it
-/// what the [stage] says. [height] is how far the page is open over it.
+/// what the [stage] says. [height] is how far the page is open over it;
+/// both sit at the gap's bottom, by the page, so the gap opens down to
+/// them and the whole logo shows, clear of the bar above.
 class RefreshHeader extends StatelessWidget {
   const RefreshHeader({
     super.key,
@@ -30,6 +32,7 @@ class RefreshHeader extends StatelessWidget {
       child: ClipRect(
         child: OverflowBox(
           maxHeight: double.infinity,
+          alignment: Alignment.bottomCenter,
           child: Opacity(
             opacity: grown,
             child: Semantics(
@@ -48,6 +51,7 @@ class RefreshHeader extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall
                         ?.copyWith(color: context.tokens.textSecondary),
                   ),
+                  const SizedBox(height: AppSpacing.sm),
                 ],
               ),
             ),

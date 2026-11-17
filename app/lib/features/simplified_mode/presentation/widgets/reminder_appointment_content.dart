@@ -6,6 +6,7 @@ import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/appointment_attend_window.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_appointment_lead.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_attend_visit.dart';
@@ -45,7 +46,7 @@ SimplifiedReminderContent? reminderAppointmentContent(
             onDark: true,
           ),
     hero: (double height) => SimplifiedReminderIconHero(
-      icon: CareVisuals.appointmentIcon,
+      icon: appointmentKindIcon(visit.kind),
       ground: CareVisuals.appointmentTile,
       height: height,
     ),

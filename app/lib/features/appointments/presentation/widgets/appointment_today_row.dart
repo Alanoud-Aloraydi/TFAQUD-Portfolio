@@ -7,15 +7,15 @@ import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_actions.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_row_label.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// An appointment of «اليوم»: a [CareItemRow] that waits for confirmation
-/// once its time has passed, with «حضرت» and its two choices from an hour
-/// before. A completed one opens its visit page.
+/// An appointment of «اليوم», by its kind's icon: a [CareItemRow] waiting
+/// for «حضرت» (from an hour before); a completed one opens its visit page.
 class AppointmentTodayRow extends StatelessWidget {
   const AppointmentTodayRow({
     super.key,
@@ -41,8 +41,8 @@ class AppointmentTodayRow extends StatelessWidget {
       time: clockText(value.time),
       spokenLabel: appointmentRowLabel(context, value),
       tone: waiting ? TodayRowTone.attention : TodayRowTone.normal,
-      leading: const TodayTaskKindIcon(
-        icon: CareVisuals.appointmentIcon,
+      leading: TodayTaskKindIcon(
+        icon: appointmentKindIcon(value.kind),
         background: CareVisuals.appointmentTile,
       ),
       title: appointmentTitle(context, value),

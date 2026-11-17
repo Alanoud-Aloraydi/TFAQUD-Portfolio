@@ -18,4 +18,22 @@ void main() {
     expect(TaskButtonRole.answer.fill, AppSemanticColors.actionPrimary);
     expect(TaskButtonRole.answer.ink, AppSemanticColors.onActionPrimary);
   });
+
+  test(
+    '«ذكّرني لاحقًا» shows on the cream of a late dose and reads clearly',
+    () {
+      double luminance(Color c) => c.computeLuminance();
+      double contrast(Color a, Color b) {
+        final double x = luminance(a);
+        final double y = luminance(b);
+        return (x > y ? x + 0.05 : y + 0.05) / (x > y ? y + 0.05 : x + 0.05);
+      }
+
+      final TaskButtonRole later = TaskButtonRole.later;
+      // Its fill stands apart from the cream card it sits on.
+      const Color card = AppSemanticColors.surfaceAttentionGroup;
+      expect(contrast(later.fill, card), greaterThan(1.3));
+      expect(contrast(later.ink, later.fill), greaterThanOrEqualTo(7));
+    },
+  );
 }

@@ -7,9 +7,9 @@ import 'package:app/core/widgets/forms/permission_confirm.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 
-/// One circle's calendar switch for a widget's [State], in both app modes.
-/// It follows the phone, not a saved wish: on only while the choice is saved
-/// *and* the phone allows the calendar, read again on every resume.
+/// One circle's calendar switch for a widget's [State], in both app modes,
+/// read again on every resume. It shows the saved choice even when the phone
+/// refuses the calendar later: what was copied stays on the calendar.
 mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
   final CalendarSync _calendar = GetIt.I<CalendarSync>();
   AppLifecycleListener? _lifecycle;
@@ -22,9 +22,8 @@ mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
   /// What the phone allows; null while it loads.
   AppPermission? access;
 
-  /// Whether the circle is copied to the calendar; null while it loads.
-  bool? get enabled =>
-      _chosen == null || access == null ? null : _chosen! && access!.usable;
+  /// Whether the circle is chosen for the calendar; null while it loads.
+  bool? get enabled => access == null ? null : _chosen;
 
   /// Asked for, but the phone refuses; the screen says so.
   bool get blocked => _chosen == true && access?.usable == false;

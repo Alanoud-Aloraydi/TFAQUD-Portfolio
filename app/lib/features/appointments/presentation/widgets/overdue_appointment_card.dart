@@ -8,6 +8,7 @@ import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/appointments/presentation/widgets/overdue_appointment_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +38,8 @@ class OverdueAppointmentCard extends StatelessWidget {
       child: CareItemRow(
         time: clockText(value.time),
         tone: TodayRowTone.attention,
-        leading: const TodayTaskKindIcon(
-          icon: CareVisuals.appointmentIcon,
+        leading: TodayTaskKindIcon(
+          icon: appointmentKindIcon(value.kind),
           background: CareVisuals.appointmentTile,
         ),
         title: appointmentTitle(context, value),

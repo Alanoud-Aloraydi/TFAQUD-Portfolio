@@ -5,6 +5,7 @@ import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/push_registration.dart';
+import 'package:app/core/widgets/layout/logo_refresh.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
@@ -107,7 +108,7 @@ class _SimplifiedModeState extends State<SimplifiedModeFeatureScreen>
           body: SafeArea(
             child: switch ((state.status, state.day, state.schedule)) {
               (_, final SimplifiedDay day, final TodaySchedule schedule) =>
-                RefreshIndicator(
+                LogoRefresh(
                   onRefresh: context.read<SimplifiedModeCubit>().load,
                   child: SimplifiedHomeBody(
                     day: day,
