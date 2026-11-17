@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # The version ci.yml checked the code with.
       - name: Install Flutter
@@ -220,19 +220,44 @@ jobs:
           </dict>
           </plist>
           EOF
-          xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/tfaqud.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
-            -exportPath "$RUNNER_TEMP/export" \
-            -authenticationKeyPath "$KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            -allowProvisioningUpdates
-          echo "Uploaded build ${{ github.run_number }}. App Store Connect needs a few minutes to process it before it shows in TestFlight."
+          # Apple's own answer when an upload fails: xcodebuild prints only a
+          # summary («Error Downloading App Information»), and the reason is in
+          # the distribution log it leaves in $TMPDIR. Lines that could carry
+          # a sign-in token are left out.
+          show_apple_reason() {
+            logs=$(ls -dt "${TMPDIR:-/tmp}"/*.xcdistributionlogs 2>/dev/null | head -1)
+            if [ -z "$logs" ]; then return 0; fi
+            echo "Apple's answer ($logs):"
+            find "$logs" -name 'IDEDistribution*.log' ! -name '*verbose*' \
+              -exec grep -h -i -E 'error|status|reason|fail|agreement' {} + \
+              | grep -v -i -E 'authorization|bearer|token|password' \
+              | tail -60 || true
+          }
+          # App Store Connect sometimes answers with a passing server error
+          # (500): up to 3 tries, a minute apart. Nothing is uploaded when
+          # it fails this early, so the same build number is safe to send.
+          for try in 1 2 3; do
+            if xcodebuild -exportArchive \
+              -archivePath "$RUNNER_TEMP/tfaqud.xcarchive" \
+              -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+              -exportPath "$RUNNER_TEMP/export" \
+              -authenticationKeyPath "$KEY_PATH" \
+              -authenticationKeyID "$ASC_KEY_ID" \
+              -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+              -allowProvisioningUpdates; then
+              echo "Uploaded build ${{ github.run_number }}. App Store Connect needs a few minutes to process it before it shows in TestFlight."
+              exit 0
+            fi
+            echo "::warning::The upload to App Store Connect failed (try $try of 3)."
+            show_apple_reason
+            if [ "$try" -lt 3 ]; then sleep 60; fi
+          done
+          echo "::error::App Store Connect refused the upload 3 times. Apple's answer is printed above each try."
+          exit 1
 
       - name: Keep the build log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: testflight-build-log
           path: app/build.log

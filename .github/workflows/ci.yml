@@ -59,7 +59,7 @@ jobs:
 
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # The same Python as the server's image (backend/Dockerfile).
       - name: Install Python
@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # The version the team works with, so the format and the golden images
       # are the same here as on a laptop.

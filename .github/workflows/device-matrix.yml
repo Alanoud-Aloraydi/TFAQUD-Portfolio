@@ -44,7 +44,7 @@ jobs:
         working-directory: app
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # The Android Gradle Plugin 9 needs Java 17.
       - name: Install Java
@@ -72,7 +72,7 @@ jobs:
         run: flutter build apk --release
 
       - name: Keep the APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tfaqud-release-apk
           path: app/build/app/outputs/flutter-apk/app-release.apk
@@ -89,7 +89,7 @@ jobs:
         working-directory: app
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
@@ -129,7 +129,7 @@ jobs:
             size: large phone
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Java
         uses: actions/setup-java@v4
@@ -190,7 +190,7 @@ jobs:
         working-directory: app
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
