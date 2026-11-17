@@ -1,3 +1,4 @@
+import 'package:app/core/utils/account_ids.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
@@ -58,9 +59,7 @@ String? simplifiedDoneBy(
   if (done == null) return null;
   final String name = done.name?.trim() ?? '';
   if (name.isNotEmpty) return name;
-  // The server writes an id with or without its dashes, by the endpoint.
-  final String? id = done.accountId?.replaceAll('-', '');
-  return id != null && id == day.accountId.replaceAll('-', '')
+  return sameAccount(done.accountId, day.accountId)
       ? context.tr('simplified_mode.status.you')
       : null;
 }

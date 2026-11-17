@@ -1,7 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/buttons/stop_button.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
@@ -15,9 +14,9 @@ import 'package:flutter/material.dart';
 /// What an appointment card opens, in the groups of a plan's details:
 /// «الموعد» (when, where or how, and that it shows in «اليوم» when
 /// [appearsToday]), [otherVisits] of its booking, «المرافقون», «أضاف
-/// الموعد» (the one person who added it), then for a manager «حضرت» while
-/// it can be answered ([AppointmentAttendWindow]) and «إلغاء الموعد» last,
-/// the stop button of a medicine. A missed visit asks nothing.
+/// الموعد» (the one person who added it), then for a manager «إلغاء الموعد»
+/// last, the stop button of a medicine. «حضرت» is answered in «اليوم»
+/// alone, by those who go; a missed visit asks nothing.
 List<Widget> appointmentCardDetails(
   BuildContext context, {
   required CareAppointment value,
@@ -31,7 +30,6 @@ List<Widget> appointmentCardDetails(
       value.status == AppointmentStatus.scheduled &&
       !value.isMissedOn(clock.today());
   final bool remote = value.kind == AppointmentKind.remote;
-  const Size tall = Size(0, AppItemCard.touch);
   return <Widget>[
     PlanFactGroup(
       title: context.tr('appointments.appointment_group'),
@@ -92,20 +90,6 @@ List<Widget> appointmentCardDetails(
             avatarCode: value.createdBy?.avatarCode,
           ),
         ],
-      ),
-    if (canManage && value.canAttendAt(clock.now(), clock.today()))
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: TextButton(
-          style: TextButton.styleFrom(minimumSize: tall),
-          onPressed: () => changeAppointmentStatus(
-            context,
-            circleId,
-            value,
-            AppointmentStatus.completed,
-          ),
-          child: Text(context.tr('appointments.mark_completed')),
-        ),
       ),
     if (canManage && open)
       StopButton(
