@@ -54,3 +54,15 @@ def test_a_booking_has_an_end():
         AppointmentRequest(
             **_visit(also_on=[*many, date(2027, 6, 1)])
         )
+
+
+def test_the_reminder_lead_is_five_minutes_to_six_hours():
+    # Chosen on the app's ruler, 5 minutes a mark; the day-before reminder
+    # is separate and not chosen.
+    assert AppointmentRequest(**_visit()).reminder_lead_minutes == 60
+    for minutes in (5, 45, 360):
+        body = AppointmentRequest(**_visit(reminder_lead_minutes=minutes))
+        assert body.reminder_lead_minutes == minutes
+    for minutes in (4, 361):
+        with pytest.raises(ValidationError):
+            AppointmentRequest(**_visit(reminder_lead_minutes=minutes))

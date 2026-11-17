@@ -1,5 +1,4 @@
 import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/permissions/app_settings_page.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:get_it/get_it.dart';
 
@@ -9,29 +8,22 @@ import 'package:get_it/get_it.dart';
 bool notificationsNeedSettings(AppPermission allowed) =>
     !allowed.usable && allowed != AppPermission.notAsked;
 
-/// What a tap on the notifications switch does, in both modes.
+/// What a tap on the notifications switch does once Settings is not the
+/// answer ([notificationsNeedSettings]), in both modes.
 ///
 /// Two answers stand behind the one switch: whether the phone lets the
 /// reminders through, and whether the person still wants them. While the
-/// phone does not let them through there is nothing to want, so the tap
-/// goes after the permission — the phone's own question the first time,
-/// its Settings every time after. Once the phone allows them, the switch
-/// is the person's own and turns the reminders off and on here.
-///
-/// False only when the Settings page did not open, so the page that owns
-/// the switch can say so instead of looking broken.
-Future<bool> askNotifications(
+/// phone has never been asked, the tap asks it. Once the phone allows
+/// them, the switch is the person's own and turns the reminders off and
+/// on here.
+Future<void> askNotifications(
   AppPermission allowed, {
   required bool wanted,
 }) async {
   final DoseReminders reminders = GetIt.I<DoseReminders>();
   if (allowed.usable) {
     await reminders.enabled.set(wanted);
-    return true;
-  }
-  if (allowed == AppPermission.notAsked) {
+  } else {
     await reminders.requestPermission();
-    return true;
   }
-  return openAppSettingsPage();
 }

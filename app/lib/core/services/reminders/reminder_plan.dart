@@ -173,7 +173,7 @@ List<ScheduledNotification> planDoseReminders({
     for (final (ReminderCircle circle, CareAppointment visit) in appointments)
       if (visit.status == AppointmentStatus.scheduled)
         // The day before, fixed; and the near one at the lead chosen
-        // when the visit was booked (an hour by default, up to three),
+        // when the visit was booked (an hour by default, up to six),
         // which used to be two hours for every visit alike.
         for (final (AppointmentLead lead, Duration before)
             in <(AppointmentLead, Duration)>[
@@ -196,8 +196,8 @@ List<ScheduledNotification> planDoseReminders({
               appointmentId: visit.id,
             ),
     // Saved for today or tomorrow after its day-before moment: said once,
-    // right away, so a change made today is not silent until two hours
-    // before.
+    // right away, so a change made today is not silent until the visit's
+    // own reminder.
     for (final (ReminderCircle circle, CareAppointment visit) in appointments)
       if (visit.status == AppointmentStatus.scheduled)
         if (appointmentAnnouncedAt(circle.clock, visit) case final DateTime at

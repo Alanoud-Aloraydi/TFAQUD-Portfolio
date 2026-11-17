@@ -1,5 +1,6 @@
 import 'package:app/core/constants/plan_limits.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,44 +60,52 @@ void main() {
   });
 
   group('MissedAfterField', () {
-    testWidgets('starts with the stored minutes and no error', (tester) async {
+    testWidgets('says the stored minutes in words, with no error', (
+      tester,
+    ) async {
       await pumpArabic(tester, home: _Host(<int?>[]));
-      expect(find.text('60'), findsOneWidget);
+      expect(
+        find.text('counts.hours.one'.tr(args: <String>['1'])),
+        findsOneWidget,
+      );
       expect(find.text(_range), findsNothing);
     });
 
-    testWidgets('any number inside the range is passed on', (tester) async {
+    testWidgets('opens the ruler of «ذكّرني لاحقًا», 5 to 360 minutes, and '
+        'passes on what is chosen', (tester) async {
       final List<int?> log = <int?>[];
       await pumpArabic(tester, home: _Host(log));
-      await tester.enterText(find.byType(TextField), '45');
+
+      await tester.tap(find.text('مهلة'));
+      await tester.pumpAndSettle();
+      final RulerPicker ruler = tester.widget(find.byType(RulerPicker));
+      expect((ruler.min, ruler.max, ruler.step), (5, 360, 5));
+      ruler.onChanged(45);
       await tester.pump();
+      expect(find.text(afterWords(45)), findsWidgets);
+      await tester.tap(find.text('common.confirm'.tr()));
+      await tester.pumpAndSettle();
+
       expect(log.last, 45);
-      expect(find.text(_range), findsNothing);
+      expect(
+        find.text('counts.minutes.many'.tr(args: <String>['45'])),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('a number above 360 is passed on and the range is shown', (
-      tester,
-    ) async {
+    testWidgets('closing the ruler changes nothing', (tester) async {
       final List<int?> log = <int?>[];
       await pumpArabic(tester, home: _Host(log));
-      await tester.enterText(find.byType(TextField), '400');
-      await tester.pump();
-      expect(log.last, 400);
-      expect(find.text(_range), findsOneWidget);
+
+      await tester.tap(find.text('مهلة'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(200, 20));
+      await tester.pumpAndSettle();
+
+      expect(log, isEmpty);
     });
 
-    testWidgets('an emptied field passes null and shows the range', (
-      tester,
-    ) async {
-      final List<int?> log = <int?>[];
-      await pumpArabic(tester, home: _Host(log));
-      await tester.enterText(find.byType(TextField), '');
-      await tester.pump();
-      expect(log.last, isNull);
-      expect(find.text(_range), findsOneWidget);
-    });
-
-    testWidgets('showError shows the range before anything is typed', (
+    testWidgets('showError shows the range while nothing is chosen', (
       tester,
     ) async {
       await pumpArabic(
@@ -112,13 +121,12 @@ void main() {
       );
       expect(find.text(_range), findsOneWidget);
     });
-
-    testWidgets('letters and signs cannot be typed', (tester) async {
-      final List<int?> log = <int?>[];
-      await pumpArabic(tester, home: _Host(log));
-      await tester.enterText(find.byType(TextField), '1a-5');
-      await tester.pump();
-      expect(log.last, 15);
-    });
   });
 }
+
+/// «بعد 45 دقيقة», as the sheet says it.
+String afterWords(int minutes) => 'today_dashboard.after'.tr(
+  args: <String>[
+    'counts.minutes.many'.tr(args: <String>['$minutes']),
+  ],
+);

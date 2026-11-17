@@ -5,6 +5,7 @@ import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_attend_window.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_attend_button.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_status_change.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -15,7 +16,7 @@ import 'package:go_router/go_router.dart';
 /// «حضرت» across the card, then «تعديل الموعد» and «إلغاء الموعد» under
 /// it, so a visit answers the way a dose and a reading do.
 ///
-/// Open from an hour before its time (as the server allows, ATTEND_EARLY).
+/// Open from an hour before its time ([attendEarly], as the server allows).
 ///
 /// «حضرت» is asked only of those who went: the patient, and the
 /// companions picked for this visit — accompanying belongs to one
@@ -30,8 +31,7 @@ Widget? appointmentTodayActions(
   required String? circleId,
   required bool canManage,
 }) {
-  final DateTime opens = value.scheduledAt.subtract(const Duration(hours: 1));
-  if (circleId == null || opens.isAfter(now)) return null;
+  if (circleId == null || value.attendOpensAt.isAfter(now)) return null;
   if (value.status != AppointmentStatus.scheduled) return null;
   final bool went =
       TaskViewerScope.of(context)?.goesWith(value.companionIds) ?? false;

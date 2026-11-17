@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
@@ -8,6 +9,7 @@ import 'package:app/features/appointments/domain/use_cases/appointments_use_case
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_page.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_dates_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -229,6 +231,47 @@ void main() {
       expect(draft.time, '10:00');
       expect(draft.companionAccountIds, <String>['a-1']);
       expect(find.text('home'), findsOneWidget);
+    });
+
+    testWidgets('the visit day is in «أيام المواعيد»: there is no row of '
+        'its own', (tester) async {
+      final _Appointments repository = await open(tester, _riyadhAt(8));
+
+      await scrollTo(tester, find.text('appointments.more_dates'.tr()));
+      expect(find.text('appointments.date'.tr()), findsNothing);
+      // A new visit starts on the patient's today, the one day it has.
+      expect(
+        find.descendant(
+          of: find.byType(AppointmentDatesRow),
+          matching: find.textContaining('9'),
+        ),
+        findsWidgets,
+      );
+
+      await fillAndSave(tester);
+      expect(repository.created.single.alsoOn, isEmpty);
+    });
+
+    testWidgets('«تذكير قبل الموعد» is chosen on the ruler, up to six hours, '
+        'and saved', (tester) async {
+      final _Appointments repository = await open(tester, _riyadhAt(8));
+
+      await scrollTo(tester, find.text('appointments.remind_before'.tr()));
+      // The scroll lands on the next frame; tap after it.
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('appointments.remind_before'.tr()));
+      await tester.pumpAndSettle();
+      final RulerPicker ruler = tester.widget(find.byType(RulerPicker));
+      expect((ruler.min, ruler.max), (5, 360));
+      ruler.onChanged(45);
+      await tester.pump();
+      // For a visit at 10:00, the reminder comes at 9:15.
+      expect(find.textContaining('9:15'), findsOneWidget);
+      await tester.tap(find.text('common.confirm'.tr()));
+      await tester.pumpAndSettle();
+
+      await fillAndSave(tester);
+      expect(repository.created.single.reminderLeadMinutes, 45);
     });
   });
 }

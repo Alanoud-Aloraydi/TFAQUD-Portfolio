@@ -1,5 +1,5 @@
-import 'package:app/features/medications/presentation/widgets/ruler_look.dart';
-import 'package:app/features/medications/presentation/widgets/ruler_picker_state.dart';
+import 'package:app/core/widgets/pickers/ruler_look.dart';
+import 'package:app/core/widgets/pickers/ruler_picker_state.dart';
 import 'package:flutter/material.dart';
 
 /// A whole number on a ruler that slides under a fixed mark: the number

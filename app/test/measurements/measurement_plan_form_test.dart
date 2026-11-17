@@ -4,6 +4,7 @@ import '../support/widget_harness.dart';
 import 'dart:async';
 
 import 'package:app/core/widgets/forms/missed_after_field.dart';
+import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_plan.dart';
@@ -98,6 +99,10 @@ void main() {
     tester,
   ) async {
     await open(tester);
+    // The ranges sit at the end of the form, past the first screen: a
+    // long drag lands there, and the list builds them.
+    await tester.drag(find.byType(ListView).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
 
     // The default glucose time is fasting: the fasting range only.
     expect(find.text('measurements.normal_range'.tr()), findsWidgets);
@@ -122,39 +127,23 @@ void main() {
     expect(find.text('home'), findsOneWidget);
   });
 
-  Finder missedAfterBox() => find.descendant(
-    of: find.byType(MissedAfterField),
-    matching: find.byType(TextField),
-  );
-
-  testWidgets('the missed-after minutes are typed freely and sent as typed', (
-    tester,
-  ) async {
+  testWidgets('the missed-after minutes are chosen on the ruler, 5 to 360, '
+      'and sent as chosen', (tester) async {
     final _Measurements repository = await open(tester);
 
-    await tester.enterText(missedAfterBox(), '45');
+    await tester.ensureVisible(find.byType(MissedAfterField));
+    await tester.tap(find.byType(MissedAfterField));
+    await tester.pumpAndSettle();
+    final RulerPicker ruler = tester.widget(find.byType(RulerPicker));
+    expect((ruler.min, ruler.max), (5, 360));
+    ruler.onChanged(45);
+    await tester.pump();
+    await tester.tap(find.text('common.confirm'.tr()));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('measurements.save'.tr()));
     await tester.pumpAndSettle();
 
     expect(repository.created.single.missedAfterMinutes, 45);
-  });
-
-  testWidgets('minutes above the limit are refused and nothing is sent', (
-    tester,
-  ) async {
-    final _Measurements repository = await open(tester);
-
-    await tester.enterText(missedAfterBox(), '400');
-    await tester.tap(find.text('measurements.save'.tr()));
-    await tester.pumpAndSettle();
-
-    expect(repository.created, isEmpty);
-    expect(
-      find.text(
-        'plan_limits.missed_after_range'.tr(args: <String>['5', '360']),
-      ),
-      findsOneWidget,
-    );
   });
 
   testWidgets('saving a plan says so', (tester) async {

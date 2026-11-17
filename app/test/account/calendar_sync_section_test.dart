@@ -1,5 +1,8 @@
 import 'package:app/core/services/calendar_sync.dart';
+import 'package:app/core/services/permissions/app_permission.dart';
+import 'package:app/core/services/permissions/app_settings_page.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_section.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -133,6 +136,66 @@ void main() {
         ]),
       );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('«ليس الآن» before the first question asks again next time', (
+      tester,
+    ) async {
+      calendar.access = AppPermission.notAsked;
+      await open(tester);
+      final Finder ask = find.text(
+        'circle_overview.calendar_sync_confirm_title'.tr(),
+      );
+
+      await tester.tap(find.byType(CupertinoSwitch).last);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text('circle_overview.calendar_sync_confirm_cancel'.tr()),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CupertinoSwitch).last);
+      await tester.pumpAndSettle();
+
+      expect(ask, findsOneWidget);
+      expect(find.text('circle_overview.calendar_opening'.tr()), findsNothing);
+      expect(calendar.requests, 0);
+    });
+
+    testWidgets('a calendar refused before: a word, then the phone Settings, '
+        'keeping the wish', (tester) async {
+      calendar.access = AppPermission.denied;
+      // No Settings page in a test: count the leaving, and say it failed.
+      int opened = 0;
+      final Future<bool> Function() opener = appSettingsOpener;
+      appSettingsOpener = () async {
+        opened++;
+        return false;
+      };
+      addTearDown(() => appSettingsOpener = opener);
+      await open(tester);
+
+      await tester.tap(find.byType(CupertinoSwitch).last);
+      await tester.pump();
+
+      expect(
+        find.text('circle_overview.calendar_sync_confirm_title'.tr()),
+        findsNothing,
+      );
+      expect(
+        find.text('circle_overview.calendar_opening'.tr()),
+        findsOneWidget,
+      );
+      expect(calendar.on, contains('c-2:doses'));
+      expect(opened, 0);
+      await tester.pump(AppMotion.settingsLead);
+      await tester.pumpAndSettle();
+      expect(opened, 1);
+      // Settings did not open, so it says so.
+      expect(
+        find.text('circle_overview.open_settings_failed'.tr()),
+        findsOneWidget,
+      );
+      expect(calendar.requests, 0);
     });
   });
 }

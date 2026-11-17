@@ -2,10 +2,12 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/buttons/stop_button.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_attend_window.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_status_change.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +15,9 @@ import 'package:flutter/material.dart';
 /// What an appointment card opens, in the groups of a plan's details:
 /// «الموعد» (when, where or how, and that it shows in «اليوم» when
 /// [appearsToday]), [otherVisits] of its booking, «المرافقون», «أضاف
-/// الموعد» (the one person who added it), then for a manager «حضرت» once
-/// its time came and «إلغاء الموعد» last, the stop button of a medicine.
+/// الموعد» (the one person who added it), then for a manager «حضرت» while
+/// it can be answered ([AppointmentAttendWindow]) and «إلغاء الموعد» last,
+/// the stop button of a medicine. A missed visit asks nothing.
 List<Widget> appointmentCardDetails(
   BuildContext context, {
   required CareAppointment value,
@@ -23,11 +26,11 @@ List<Widget> appointmentCardDetails(
   bool appearsToday = false,
   Widget? otherVisits,
 }) {
-  final bool open = value.status == AppointmentStatus.scheduled;
+  final PatientClock clock = PatientClockScope.of(context);
+  final bool open =
+      value.status == AppointmentStatus.scheduled &&
+      !value.isMissedOn(clock.today());
   final bool remote = value.kind == AppointmentKind.remote;
-  final bool passed = !value.scheduledAt.isAfter(
-    PatientClockScope.of(context).now(),
-  );
   const Size tall = Size(0, AppItemCard.touch);
   return <Widget>[
     PlanFactGroup(
@@ -90,7 +93,7 @@ List<Widget> appointmentCardDetails(
           ),
         ],
       ),
-    if (canManage && open && passed)
+    if (canManage && value.canAttendAt(clock.now(), clock.today()))
       Align(
         alignment: AlignmentDirectional.centerStart,
         child: TextButton(

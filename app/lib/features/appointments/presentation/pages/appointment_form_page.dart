@@ -1,6 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/network/api_endpoints.dart';
@@ -15,7 +14,6 @@ import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
@@ -48,12 +46,9 @@ class AppointmentFormPage extends StatefulWidget {
 class _AppointmentFormPageState extends State<AppointmentFormPage> {
   AppointmentKind _kind = AppointmentKind.followUp;
 
-  /// A new visit starts on the patient's today.
-  late DateTime _date = PatientClockScope.of(context).today();
-
-  /// The other dates of this booking; always empty while an existing visit
-  /// is edited, where the form changes that visit alone.
-  List<DateTime> _alsoOn = const <DateTime>[];
+  /// The visit days, oldest first, all in «أيام المواعيد»: a new visit
+  /// starts on the patient's today; an edited one is its own day alone.
+  late List<DateTime> _days = <DateTime>[PatientClockScope.of(context).today()];
   TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
   String _remoteMethod = 'video';
   final Set<String> _companionIds = <String>{};
@@ -81,7 +76,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
     _clinic.text = value.specialty ?? '';
     _kind = value.kind;
     _otherKind.text = value.otherKind ?? '';
-    _date = value.scheduledOn;
+    _days = <DateTime>[value.scheduledOn];
     final parts = value.time.split(':');
     _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
     _place.text = value.place ?? '';
@@ -104,11 +99,15 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       setState(() => _errorKey = 'appointments.place_required');
       return;
     }
+    if (_days.isEmpty) {
+      setState(() => _errorKey = 'appointments.days_required');
+      return;
+    }
     final draft = AppointmentDraft(
       specialty: _clinic.text.trim().isEmpty ? null : _clinic.text.trim(),
       kind: _kind,
       otherKind: _kind == AppointmentKind.other ? _otherKind.text.trim() : null,
-      scheduledOn: _date,
+      scheduledOn: _days.first,
       time:
           '${_time.hour.toString().padLeft(2, '0')}:'
           '${_time.minute.toString().padLeft(2, '0')}',
@@ -116,7 +115,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       remoteMethod: _kind == AppointmentKind.remote ? _remoteMethod : null,
       companionAccountIds: _companionIds.toList(),
       reminderLeadMinutes: _lead,
-      alsoOn: _alsoOn,
+      alsoOn: _days.skip(1).toList(),
     );
     if (wallClockAt(
       draft.scheduledOn,
@@ -265,30 +264,11 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
           InsetGroup(
             header: context.tr('appointments.time_place_group'),
             children: [
-              InsetRow(
-                label: context.tr('appointments.date'),
-                value: appointmentDate(context, _date),
-                showChevron: true,
-                onTap: () async {
-                  final today = PatientClockScope.of(context).today();
-                  final selected = await showTafaqodDateSheet(
-                    context,
-                    title: context.tr('appointments.date'),
-                    initialDate: _date.isBefore(today) ? today : _date,
-                    firstDate: today,
-                    lastDate: DateTime(today.year + 5, 12, 31),
-                  );
-                  if (selected != null && mounted) {
-                    setState(() => _date = selected);
-                  }
-                },
+              AppointmentDatesRow(
+                dates: _days,
+                single: widget.appointmentId != null,
+                onChanged: (value) => setState(() => _days = value),
               ),
-              if (widget.appointmentId == null)
-                AppointmentDatesRow(
-                  first: _date,
-                  dates: _alsoOn,
-                  onChanged: (value) => setState(() => _alsoOn = value),
-                ),
               InsetRow(
                 label: context.tr('appointments.time'),
                 value: timeOfDayText(_time),
@@ -306,6 +286,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
               ),
               AppointmentLeadRow(
                 minutes: _lead,
+                time: _time,
                 onChanged: (int value) => setState(() => _lead = value),
               ),
               if (_kind == AppointmentKind.remote)

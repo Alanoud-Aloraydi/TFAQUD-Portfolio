@@ -226,6 +226,36 @@ def test_attended_from_an_hour_before_its_time_not_earlier(
     assert error_code(too_early, 422) == "appointment_not_started"
 
 
+def test_attended_until_it_leaves_the_attention_list_then_missed(
+    database_app, circle, evening
+):
+    # A visit can be marked attended two patient days after its own, as
+    # long as «يحتاج انتباهك» lists it; the day after, it is missed.
+    owner, care = circle
+    api = Api(database_app, owner)
+    base = f"/api/v1/circles/{care.id}/appointments"
+    first = api.post(
+        base, visit(owner, scheduled_on="2026-11-09", time_of_day="10:00")
+    ).get_json()["appointment"]
+    second = api.post(
+        base, visit(owner, scheduled_on="2026-11-10", time_of_day="10:00")
+    ).get_json()["appointment"]
+    # 12 November, 01:09 in Riyadh: 9 November is three days back.
+    evening.advance(days=3)
+
+    missed = api.post(
+        f"{base}/{first['id']}/status",
+        {"status": "completed", "expected_updated_at": first["updated_at"]},
+    )
+    attended = api.post(
+        f"{base}/{second['id']}/status",
+        {"status": "completed", "expected_updated_at": second["updated_at"]},
+    )
+
+    assert error_code(missed, 422) == "appointment_missed"
+    assert attended.status_code == 200, attended.get_json()
+
+
 def test_a_simplified_patient_says_attended_but_cannot_cancel(
     database_app, database, account, evening
 ):
