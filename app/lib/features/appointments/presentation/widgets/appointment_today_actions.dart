@@ -1,6 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/components/task_button_role.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
@@ -12,18 +13,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-/// What an appointment of «اليوم» asks, in the buttons every task shares:
-/// «حضرت» across the card, then «تعديل الموعد» and «إلغاء الموعد» under
-/// it, so a visit answers the way a dose and a reading do.
+/// What an open visit asks, in the buttons every task shares, wherever it
+/// shows on «اليوم» (its row, the top card, «يحتاج انتباهك»): «حضرت»
+/// across the card, then «تعديل الموعد» and «إلغاء الموعد» under it.
 ///
-/// Open from an hour before its time ([attendEarly], as the server allows).
-///
-/// «حضرت» is asked only of those who went: the patient, and the
-/// companions picked for this visit — accompanying belongs to one
-/// appointment, not to the circle. Someone who manages the appointments
-/// is not thereby at one, so a manager who did not go sees «تعديل
-/// الموعد» and «إلغاء الموعد» and is asked nothing; they could not
-/// answer for a visit they never attended.
+/// On its day those who manage the appointments see «تعديل الموعد» and
+/// «إلغاء الموعد». «حضرت» joins them from an hour before its time
+/// ([attendEarly], as the server allows), asked only of those who go: the
+/// patient and this visit's companions. A manager who does not go is not
+/// asked it. Once the visit is missed (two days on) it asks nothing.
 Widget? appointmentTodayActions(
   BuildContext context, {
   required CareAppointment value,
@@ -31,10 +29,14 @@ Widget? appointmentTodayActions(
   required String? circleId,
   required bool canManage,
 }) {
-  if (circleId == null || value.attendOpensAt.isAfter(now)) return null;
-  if (value.status != AppointmentStatus.scheduled) return null;
+  final DateTime today = scheduleDay(now);
+  if (circleId == null || value.status != AppointmentStatus.scheduled) {
+    return null;
+  }
+  if (value.isMissedOn(today)) return null;
   final bool went =
-      TaskViewerScope.of(context)?.goesWith(value.companionIds) ?? false;
+      value.canAttendAt(now, today) &&
+      (TaskViewerScope.of(context)?.goesWith(value.companionIds) ?? false);
   if (!went && !canManage) return null;
   return TaskButtonGrid(
     answer: went

@@ -5,17 +5,17 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
-import 'package:app/features/appointments/presentation/widgets/overdue_appointment_actions.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_today_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// An appointment of an earlier day nobody closed yet, answered here with
-/// the same confirmation as on the appointment's card: «حضرت» for those
-/// who went to it, «إلغاء» for those who manage the appointments.
+/// A visit nobody closed yet that waits in «يحتاج انتباهك»: one of an
+/// earlier day, or today's once another task came after it. It asks what
+/// it asks on its row ([appointmentTodayActions]), until it is missed.
 class OverdueAppointmentCard extends StatelessWidget {
   const OverdueAppointmentCard({
     super.key,
@@ -30,9 +30,14 @@ class OverdueAppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool canAttend =
-        TaskViewerScope.of(context)?.goesWith(value.companionIds) ?? false;
-    if (!canAttend && !canManage) return const SizedBox.shrink();
+    final Widget? actions = appointmentTodayActions(
+      context,
+      value: value,
+      now: PatientClockScope.of(context).now(),
+      circleId: circleId,
+      canManage: canManage,
+    );
+    if (actions == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: CareItemRow(
@@ -48,12 +53,7 @@ class OverdueAppointmentCard extends StatelessWidget {
           text: context.tr('today_dashboard.status.appointment_waiting'),
           tone: StatusTone.attention,
         ),
-        actions: OverdueAppointmentActions(
-          value: value,
-          circleId: circleId,
-          canAttend: canAttend,
-          canCancel: canManage,
-        ),
+        actions: actions,
       ),
     );
   }

@@ -152,7 +152,12 @@ class NextTaskCard extends StatelessWidget {
                 ],
               ),
             ),
-            NextTaskAction(task: task, circleId: circleId, now: now),
+            NextTaskAction(
+              task: task,
+              circleId: circleId,
+              canManage: canManage,
+              now: now,
+            ),
           ],
         ),
       ),

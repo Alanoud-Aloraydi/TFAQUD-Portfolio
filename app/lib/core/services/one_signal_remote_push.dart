@@ -5,20 +5,16 @@ import 'package:app/core/services/remote_push.dart';
 import 'package:flutter/foundation.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-/// The OneSignal app the server's pushes come from. Not a secret: it only
-/// names the app; sending needs the API key, which only the server has.
+/// The OneSignal app the pushes come from; no secret (sending needs a key).
 const String oneSignalAppId = '50e5581f-1938-47b7-a23a-c65c70c4a26d';
 
 /// [RemotePush] through the OneSignal SDK (onesignal_flutter). On a platform
 /// OneSignal has no SDK for (web, desktop) every call does nothing.
 class OneSignalRemotePush implements RemotePush {
-  /// The observers given, by the SDK's observer each is wrapped in, so the
-  /// wrapper lives as long as the caller's observer.
+  /// Each observer given, by the SDK observer that wraps it (kept alive).
   final Map<RemotePushObserver, OnPushSubscriptionChangeObserver> _observers =
       <RemotePushObserver, OnPushSubscriptionChangeObserver>{};
-
   final StreamController<String> _taps = StreamController<String>.broadcast();
-
   bool _started = false;
 
   static bool get _supported =>
@@ -35,8 +31,7 @@ class OneSignalRemotePush implements RemotePush {
       kDebugMode ? OSLogLevel.verbose : OSLogLevel.error,
     );
     await OneSignal.initialize(oneSignalAppId);
-    // The server puts the push's `kind` and its item in its data
-    // (app/push/targets.py); a tap passes on both (push_target.dart).
+    // A push's data has its `kind` and item (targets.py, push_target.dart).
     OneSignal.Notifications.addClickListener((OSNotificationClickEvent tap) {
       final String? text = pushTapText(tap.notification.additionalData);
       if (text != null) _taps.add(text);
@@ -48,14 +43,12 @@ class OneSignalRemotePush implements RemotePush {
 
   @override
   Future<void> signIn(String accountId) async {
-    if (!_started) return;
-    await OneSignal.login(accountId);
+    if (_started) await OneSignal.login(accountId);
   }
 
   @override
   Future<void> signOut() async {
-    if (!_started) return;
-    await OneSignal.logout();
+    if (_started) await OneSignal.logout();
   }
 
   @override
@@ -82,8 +75,15 @@ class OneSignalRemotePush implements RemotePush {
   }
 
   @override
-  Future<bool> requestPermission() async {
-    if (!_started) return false;
-    return OneSignal.Notifications.requestPermission(true);
+  Future<bool> requestPermission() async =>
+      _started && await OneSignal.Notifications.requestPermission(true);
+
+  @override
+  Future<void> setWanted(bool wanted) async {
+    if (!_started) return;
+    final push = OneSignal.User.pushSubscription;
+    if (!wanted) return push.optOut();
+    // optIn would ask for a permission the phone lacks; the switch asks.
+    if (OneSignal.Notifications.permission) await push.optIn();
   }
 }

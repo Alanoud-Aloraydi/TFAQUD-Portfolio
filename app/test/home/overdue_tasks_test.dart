@@ -22,13 +22,14 @@ MeasurementOccurrence _task(
 CareAppointment _visit(
   int day, {
   AppointmentStatus status = AppointmentStatus.scheduled,
+  String time = '16:30',
 }) => CareAppointment(
-  id: 'a-$day',
+  id: 'a-$day-$time',
   specialty: 'عيادة السكري',
   kind: AppointmentKind.followUp,
   otherKind: null,
   scheduledOn: DateTime(2026, 11, day),
-  time: '16:30',
+  time: time,
   place: null,
   remoteMethod: null,
   companions: const <AppointmentCompanion>[],
@@ -71,6 +72,31 @@ void main() {
 
       // «يحتاج انتباهك» reads from the oldest to the newest.
       expect(result.map((item) => item.scheduledOn.day), [9, 10]);
+    });
+
+    test('today\'s waits there once another task came after it', () {
+      final List<CareAppointment> visits = [_visit(11)];
+      final DateTime visitAt = visits.single.scheduledAt;
+
+      // Nothing after it yet: it stays on the top card.
+      expect(
+        OverdueTasks.appointments(
+          visits,
+          _today,
+          now: visitAt.add(const Duration(hours: 1)),
+        ),
+        isEmpty,
+      );
+      // Another visit of the day came after it.
+      final List<CareAppointment> two = [...visits, _visit(11, time: '23:00')];
+      expect(
+        OverdueTasks.appointments(
+          two,
+          _today,
+          now: visitAt.add(const Duration(hours: 7)),
+        ).map((item) => item.time),
+        [visits.single.time],
+      );
     });
 
     test('leaves today to the schedule and closed ones out', () {

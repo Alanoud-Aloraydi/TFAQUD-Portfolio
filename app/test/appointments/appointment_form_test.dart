@@ -252,6 +252,17 @@ void main() {
       expect(repository.created.single.alsoOn, isEmpty);
     });
 
+    testWidgets('a new visit says more than one day can be added', (
+      tester,
+    ) async {
+      await open(tester, _riyadhAt(8));
+
+      await scrollTo(tester, find.text('appointments.add_day'.tr()));
+
+      expect(find.text('appointments.add_day'.tr()), findsOneWidget);
+      expect(find.text('appointments.days_note'.tr()), findsOneWidget);
+    });
+
     testWidgets('«تذكير قبل الموعد» is chosen on the ruler, up to six hours, '
         'and saved', (tester) async {
       final _Appointments repository = await open(tester, _riyadhAt(8));

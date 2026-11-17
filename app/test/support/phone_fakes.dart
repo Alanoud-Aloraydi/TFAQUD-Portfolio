@@ -229,6 +229,12 @@ class FakeRemotePush implements RemotePush {
     return true;
   }
 
+  /// Each [setWanted], in order.
+  final List<bool> wanted = <bool>[];
+
+  @override
+  Future<void> setWanted(bool wanted) async => this.wanted.add(wanted);
+
   @override
   Stream<String> get taps => tapController.stream;
 }

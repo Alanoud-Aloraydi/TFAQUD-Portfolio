@@ -53,22 +53,23 @@ mixin CalendarSyncChoices<T extends StatefulWidget> on State<T> {
   }
 
   /// Saves [value] for every kind; turning on explains, then asks the phone.
-  /// A calendar refused before is not asked again (iOS asks once): the switch
-  /// says so and leaves for Settings, keeping the wish for the way back.
+  /// A calendar locked in Settings is not asked again (iOS asks once), and
+  /// its switch does not move: a word, then the Settings.
   Future<void> setChoice(bool value) async {
     final bool? current = _chosen;
     if (current == null || _confirming) return;
-    final bool refused = value && access == AppPermission.denied;
-    if (!refused && current == value) return;
-    if (!refused && value && !await _agreedAndAllowed(current)) return;
+    if (access == AppPermission.denied) {
+      // Locked: the switch keeps what it was, on or off.
+      return leaveForSettings(
+        context,
+        'circle_overview.calendar_opening',
+        failedKey: 'circle_overview.open_settings_failed',
+      );
+    }
+    if (current == value) return;
+    if (value && !await _agreedAndAllowed(current)) return;
     setState(() => _chosen = value);
     await _calendar.setCircleEnabled(calendarCircleId, value);
-    if (!refused || !mounted) return;
-    await leaveForSettings(
-      context,
-      'circle_overview.calendar_opening',
-      failedKey: 'circle_overview.open_settings_failed',
-    );
   }
 
   /// The explanation, then the phone's question; false if either says no.

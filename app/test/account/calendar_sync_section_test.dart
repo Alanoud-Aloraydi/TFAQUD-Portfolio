@@ -172,8 +172,28 @@ void main() {
       expect(switches.map((CupertinoSwitch s) => s.value), <bool>[true, false]);
     });
 
+    testWidgets('a calendar locked in Settings: an on switch cannot be '
+        'turned off either', (tester) async {
+      calendar.access = AppPermission.denied;
+      final Future<bool> Function() opener = appSettingsOpener;
+      appSettingsOpener = () async => true;
+      addTearDown(() => appSettingsOpener = opener);
+      await open(tester);
+
+      await tester.tap(find.byType(CupertinoSwitch).first);
+      await tester.pumpAndSettle();
+      await tester.pump(AppMotion.settingsLead + const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      final CupertinoSwitch first = tester.widget<CupertinoSwitch>(
+        find.byType(CupertinoSwitch).first,
+      );
+      expect(calendar.on, contains('c-1:doses'));
+      expect(first.value, isTrue);
+    });
+
     testWidgets('a calendar refused before: a word, then the phone Settings, '
-        'keeping the wish', (tester) async {
+        'the switch never moves', (tester) async {
       calendar.access = AppPermission.denied;
       // No Settings page in a test: count the leaving, and say it failed.
       int opened = 0;
@@ -196,7 +216,8 @@ void main() {
         find.text('circle_overview.calendar_opening'.tr()),
         findsOneWidget,
       );
-      expect(calendar.on, contains('c-2:doses'));
+      // Locked: neither the off one nor the on one changes.
+      expect(calendar.on, isNot(contains('c-2:doses')));
       // The wait starts once the word is fully on screen.
       await tester.pumpAndSettle();
       await tester.pump(AppMotion.settingsLead - const Duration(seconds: 1));

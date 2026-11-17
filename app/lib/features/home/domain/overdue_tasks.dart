@@ -1,8 +1,11 @@
 import 'package:app/core/utils/overdue_window.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_attend_window.dart';
+import 'package:app/features/home/domain/day_task_times.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 
 /// The tasks of the overdue days that «اليوم» still lets the person answer,
 /// all counted from the patient's [today].
@@ -25,22 +28,39 @@ abstract final class OverdueTasks {
           return byDay != 0 ? byDay : a.time.compareTo(b.time);
         });
 
-  /// The appointments of the days before today that nobody closed. Today's
-  /// own wait for confirmation in the day's schedule.
+  /// The appointments nobody closed: of the days before today, and today's
+  /// that another task of the day ([doses], [measurements], the visits)
+  /// came after by [now]; until then one stays on «اليوم»'s top card.
   static List<CareAppointment> appointments(
     List<CareAppointment> items,
-    DateTime today,
-  ) =>
-      items
-          .where(
-            (item) =>
-                item.status == AppointmentStatus.scheduled &&
-                _inWindow(item.scheduledOn, today) &&
-                scheduleDay(item.scheduledOn).isBefore(scheduleDay(today)),
-          )
-          .toList()
-        // The oldest first, as «يحتاج انتباهك» reads.
-        ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+    DateTime today, {
+    DateTime? now,
+    Iterable<DoseOccurrence> doses = const <DoseOccurrence>[],
+    Iterable<MeasurementOccurrence> measurements =
+        const <MeasurementOccurrence>[],
+  }) {
+    final List<DateTime> times = dayTaskTimes(
+      today,
+      doses: doses,
+      measurements: measurements,
+      visits: items,
+    );
+    bool overtaken(CareAppointment item) =>
+        now != null &&
+        item.scheduledAt.isBefore(now) &&
+        item.overtakenAt(now, times);
+    return items
+        .where(
+          (item) =>
+              item.status == AppointmentStatus.scheduled &&
+              _inWindow(item.scheduledOn, today) &&
+              (scheduleDay(item.scheduledOn).isBefore(scheduleDay(today)) ||
+                  overtaken(item)),
+        )
+        .toList()
+      // The oldest first, as «يحتاج انتباهك» reads.
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+  }
 
   static bool _inWindow(DateTime day, DateTime today) {
     final DateTime scheduled = scheduleDay(day);

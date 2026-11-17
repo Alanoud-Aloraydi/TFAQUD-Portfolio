@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 
 from app import metrics
+from app.appointments.kinds import visit_name
 from app.clock import local_moment, patient_today, patient_zone
 from app.database import transaction
 from app.models.appointment import Appointment
@@ -38,7 +39,10 @@ def scan_appointments(circle_id: UUID, now: datetime) -> None:
         today = patient_today(patient, now)
         # Yesterday's too: one late at night is missed after midnight.
         appointments = [
-            (item.id, item.scheduled_on, item.time_of_day)
+            (
+                item.id, item.scheduled_on, item.time_of_day,
+                visit_name(item.kind, item.other_text),
+            )
             for item in session.scalars(
                 select(Appointment).where(
                     Appointment.care_circle_id == circle_id,
@@ -50,7 +54,7 @@ def scan_appointments(circle_id: UUID, now: datetime) -> None:
             )
         ]
         audience = read_audience(session, patient)
-    for appointment_id, day, wall_time in appointments:
+    for appointment_id, day, wall_time, visit in appointments:
         missed_at = (
             local_moment(day, wall_time, zone) + APPOINTMENT_MISSED_AFTER
         )
@@ -66,7 +70,8 @@ def scan_appointments(circle_id: UUID, now: datetime) -> None:
             APPOINTMENT_TITLE,
             "appointment_missed",
             lambda name, own: appointment_missed_text(
-                name=name, own=own, patient=audience.patient_name
+                name=name, own=own, patient=audience.patient_name,
+                visit=visit,
             ),
             appointment_target(circle_id, appointment_id),
         )

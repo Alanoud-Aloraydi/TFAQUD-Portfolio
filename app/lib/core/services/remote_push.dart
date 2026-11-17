@@ -38,6 +38,11 @@ abstract interface class RemotePush {
   /// when it may. The same permission covers the phone's own reminders.
   Future<bool> requestPermission();
 
+  /// Follows the app's own notifications switch: off stops the server's
+  /// pushes to this phone too; on lets them come again, once the phone
+  /// allows notifications (never asking for it here).
+  Future<void> setWanted(bool wanted);
+
   /// Each server push the person taps, as push_target.dart writes it: its
   /// `kind` and the item it is about (OneSignal keeps the tap that opened
   /// the app until [initialize] listens).
@@ -75,6 +80,9 @@ class NoRemotePush implements RemotePush {
 
   @override
   Future<bool> requestPermission() async => false;
+
+  @override
+  Future<void> setWanted(bool wanted) async {}
 
   @override
   Stream<String> get taps => const Stream<String>.empty();

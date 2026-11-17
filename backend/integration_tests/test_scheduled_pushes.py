@@ -206,7 +206,8 @@ def test_an_appointment_nobody_marked_is_told_two_hours_after_once(
     [message] = pushes.to(phone.token)
     assert message.kind == "appointment_missed"
     assert message.title == "موعد فائت"
-    assert message.body == "يا Reem، موعد Nora فات"
+    # The visit is named: a follow-up, «مراجعة».
+    assert message.body == "يا Reem، موعد مراجعة لـNora فات"
     assert dict(message.target)["circle_id"] == str(circle.id)
     assert set(dict(message.target)) == {"circle_id", "appointment_id"}
 

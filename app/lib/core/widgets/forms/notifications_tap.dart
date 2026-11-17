@@ -6,9 +6,10 @@ import 'package:flutter/material.dart';
 
 /// A tap on the notifications switch, in both modes.
 ///
-/// Refused before: the word, then the phone's Settings. Never asked: what
-/// the reminders are for, then the phone's own question. Allowed: the
-/// person's own choice, kept here.
+/// Locked in the phone's Settings: the switch does not move; a word, then
+/// the Settings. Turned on: what the reminders are for, as the calendar's
+/// switch says it, then the phone's own question when it was never asked.
+/// Turned off: off at once, and nothing more comes (askNotifications).
 Future<void> tapNotifications(
   BuildContext context,
   AppPermission allowed, {
@@ -22,7 +23,7 @@ Future<void> tapNotifications(
     );
     return;
   }
-  if (allowed == AppPermission.notAsked &&
+  if (wanted &&
       !await confirmPermission(context, 'account.notifications_confirm')) {
     return;
   }

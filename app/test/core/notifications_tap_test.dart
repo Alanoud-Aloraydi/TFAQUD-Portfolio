@@ -50,15 +50,20 @@ void main() {
 
   tearDown(GetIt.I.reset);
 
-  /// Turns the notifications switch on while the phone answers [allowed].
-  Future<void> switchOn(WidgetTester tester, AppPermission allowed) async {
+  /// Turns the notifications switch on (or off, [wanted] false) while the
+  /// phone answers [allowed].
+  Future<void> switchOn(
+    WidgetTester tester,
+    AppPermission allowed, {
+    bool wanted = true,
+  }) async {
     await pumpArabic(
       tester,
       home: Scaffold(
         body: Builder(
           builder: (BuildContext context) => TextButton(
             onPressed: () =>
-                unawaited(tapNotifications(context, allowed, wanted: true)),
+                unawaited(tapNotifications(context, allowed, wanted: wanted)),
             child: const Text('on'),
           ),
         ),
@@ -116,16 +121,25 @@ void main() {
       expect(reminders.asks, 0);
     });
 
-    testWidgets('allowed: the person turns them on and off here', (
-      tester,
-    ) async {
+    testWidgets('allowed and off in the app: on again after the same '
+        'question as the calendar', (tester) async {
       await reminders.enabled.set(false);
       await switchOn(tester, AppPermission.granted);
       await tester.pumpAndSettle();
 
-      expect(title(), findsNothing);
+      expect(title(), findsOneWidget);
+      await tester.tap(find.text('account.notifications_confirm_accept'.tr()));
+      await tester.pumpAndSettle();
       expect(reminders.enabled.on.value, isTrue);
       expect(reminders.asks, 0);
+    });
+
+    testWidgets('allowed: turning them off asks nothing', (tester) async {
+      await switchOn(tester, AppPermission.granted, wanted: false);
+      await tester.pumpAndSettle();
+
+      expect(title(), findsNothing);
+      expect(reminders.enabled.on.value, isFalse);
     });
   });
 }

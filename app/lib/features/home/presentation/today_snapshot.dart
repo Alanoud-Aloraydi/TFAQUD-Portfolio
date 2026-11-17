@@ -9,8 +9,7 @@ import 'package:app/features/medications/presentation/cubit/medication_occurrenc
 import 'package:app/features/medications/presentation/today_medication_view.dart';
 import 'package:flutter/material.dart';
 
-/// What «اليوم» shows, picked from every cubit's answer on the patient's
-/// clock: the day's rows and the overdue ones still waiting for an answer.
+/// What «اليوم» shows on the patient's clock: the day's rows and the rest.
 class TodaySnapshot {
   TodaySnapshot({
     required MedicationOccurrencesState doses,
@@ -26,7 +25,6 @@ class TodaySnapshot {
              : doses.occurrences,
          clock.now(),
        ) {
-    final DateTime today = clock.today();
     todayMeasurements = tasks
         .where((task) => DateUtils.isSameDay(task.scheduledOn, now))
         .toList();
@@ -37,8 +35,14 @@ class TodaySnapshot {
               DateUtils.isSameDay(item.scheduledOn, now),
         )
         .toList();
-    overdueMeasurements = OverdueTasks.measurements(tasks, today);
-    overdueAppointments = OverdueTasks.appointments(appointments, today);
+    overdueMeasurements = OverdueTasks.measurements(tasks, clock.today());
+    overdueAppointments = OverdueTasks.appointments(
+      appointments,
+      clock.today(),
+      now: now,
+      doses: medications.todayOccurrences,
+      measurements: todayMeasurements,
+    );
     measurementAttention = MeasurementAttention.count(
       overdueMeasurements,
       readings,
