@@ -15,10 +15,10 @@ class RefreshPull extends ChangeNotifier {
 
   static const Duration _move = AppMotion.contentEnter;
 
-  /// The pull that lets go (the loader is full size there), and how far
-  /// the page then stays open over the header while it reads.
+  /// The pull that lets go (the loader is full size there), and how far the
+  /// page stays open while it reads: room for the whole logo and its words.
   static const double reach = 88;
-  static const double held = 72;
+  static const double held = 88;
 
   final AnimationController hold;
   final AnimationController settle;

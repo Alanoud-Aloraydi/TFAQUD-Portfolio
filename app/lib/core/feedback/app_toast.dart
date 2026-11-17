@@ -27,14 +27,18 @@ abstract class AppToast {
 
   /// Shows an already translated [message]. Use it with a messenger taken
   /// before an `await` or a navigation, when the context may be gone.
+  /// [onVisible] runs once the toast is fully on screen.
   static void showText(
     ScaffoldMessengerState messenger,
     String message, {
     ToastKind kind = ToastKind.success,
+    VoidCallback? onVisible,
   }) {
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: _ToastBody(message, kind)));
+      ..showSnackBar(
+        SnackBar(content: _ToastBody(message, kind), onVisible: onVisible),
+      );
   }
 }
 

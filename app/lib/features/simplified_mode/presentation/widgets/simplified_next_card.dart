@@ -1,6 +1,7 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/care_visuals.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/domain/prayer_period.dart';
@@ -184,7 +185,7 @@ class SimplifiedNextCard extends StatelessWidget {
       child: Icon(
         measurement
             ? measurementIcon(task.measurement!.kind)
-            : CareVisuals.appointmentIcon,
+            : appointmentKindIcon(task.appointment!.kind),
         size: 80,
         color: AppSemanticColors.onSettingsTile,
       ),

@@ -1,5 +1,6 @@
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/logo_refresh.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
@@ -23,7 +24,7 @@ class PreviousNotificationsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<PreviousNotification> previous = state.inbox.previous;
-    return RefreshIndicator(
+    return LogoRefresh(
       onRefresh: cubit.load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),

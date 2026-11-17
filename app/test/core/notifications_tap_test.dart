@@ -100,10 +100,12 @@ void main() {
 
       expect(title(), findsNothing);
       expect(find.text('account.notifications_opening'.tr()), findsOneWidget);
-      // The word is read first; Settings opens after it.
-      await tester.pump(AppMotion.settingsLead ~/ 2);
+      // The word comes in; the wait starts once it is fully on screen, so
+      // it is read before Settings opens.
+      await tester.pumpAndSettle();
+      await tester.pump(AppMotion.settingsLead - const Duration(seconds: 1));
       expect(settingsOpened, 0);
-      await tester.pump(AppMotion.settingsLead);
+      await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
       expect(settingsOpened, 1);
       // Settings did not open, so it says so.

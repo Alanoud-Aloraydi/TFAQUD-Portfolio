@@ -23,12 +23,18 @@ abstract class AppMotion {
   /// One round of the loader's logo, as Claude Design turns it.
   static const Duration loaderTurn = Duration(milliseconds: 1600);
 
+  /// The launch logo: one breath in (or out), how long it stays over the
+  /// starting app at least, and its fade as the app shows under it.
+  static const Duration logoPulse = Duration(milliseconds: 1100);
+  static const Duration launchHold = Duration(milliseconds: 2500);
+  static const Duration launchFade = Duration(milliseconds: 450);
+
   /// How long a pulled page says «تم التحديث» before it closes.
   static const Duration refreshDone = Duration(milliseconds: 600);
 
-  /// How long a refused permission's switch shows where it is going before
-  /// the app leaves for the phone's Settings, so the word can be read.
-  static const Duration settingsLead = Duration(milliseconds: 1500);
+  /// How long a refused permission's switch shows where it is going, once
+  /// the word is on screen, before the app leaves for the phone's Settings.
+  static const Duration settingsLead = Duration(seconds: 2);
 
   /// The card a tapped notification opens, as Telegram marks the message a
   /// link opens: tinted for this long once in view, then fading out over

@@ -8,9 +8,9 @@ import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_body.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_details.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_status.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_other_visits.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,11 +42,7 @@ class AppointmentCard extends StatelessWidget {
     final bool open = value.status == AppointmentStatus.scheduled;
     final bool manage = canManage && editable;
     return PlanItemCard(
-      leading: Icon(
-        value.kind == AppointmentKind.remote
-            ? CupertinoIcons.videocam
-            : CupertinoIcons.calendar,
-      ),
+      leading: Icon(appointmentKindIcon(value.kind)),
       title: Text(
         appointmentTitle(context, value),
         style: Theme.of(context).textTheme.titleMedium,

@@ -159,6 +159,32 @@ void main() {
       },
     );
 
+    test('a reminder tapped while no page listens waits as the launch tap; '
+        'the latest tap wins', () {
+      // The phone's own reminder that opened the app arrives once its
+      // plugin is ready, before «اليوم» or the simplified page listens.
+      phone
+        ..deliverTap('dose:c-1')
+        ..deliverTap('measurement:c-1');
+
+      expect(phone.takeLaunchTap(), 'measurement:c-1');
+      expect(phone.takeLaunchTap(), isNull);
+    });
+
+    test('a reminder tapped while a page listens reaches it at once', () async {
+      final List<String> taps = <String>[];
+      final StreamSubscription<String> subscription = phone.taps.listen(
+        taps.add,
+      );
+      addTearDown(subscription.cancel);
+
+      phone.deliverTap('dose:c-1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(taps, <String>['dose:c-1']);
+      expect(phone.takeLaunchTap(), isNull);
+    });
+
     test('an empty kind is ignored', () async {
       pushes.add('');
       await Future<void>.delayed(Duration.zero);

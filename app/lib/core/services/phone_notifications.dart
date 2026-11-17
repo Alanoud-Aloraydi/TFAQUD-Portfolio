@@ -10,14 +10,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-/// The app's own notification sound: a soft two-note chime, calm like the
-/// app's words. The server's pushes name the same file (`sender.py`), so a
-/// reminder set on the phone and a push from the server sound the same.
-///
-/// iOS looks for a notification sound in the app's `Library/Sounds` folder
-/// (and in the main bundle). A Flutter asset is not in the main bundle, so
-/// [PluginPhoneNotifications.initialize] copies it to `Library/Sounds`; until
-/// then, and if the copy ever fails, iOS plays its default sound.
+/// The app's own notification sound, a soft two-note chime; the server's
+/// pushes name the same file (`sender.py`). iOS finds it in `Library/Sounds`
+/// once [PluginPhoneNotifications.initialize] copies it there (a Flutter
+/// asset is not in the main bundle); until then iOS plays its default.
 const String notificationSound = 'tafaqod_chime.wav';
 
 /// Where the sound is in the app's assets.
@@ -86,17 +82,15 @@ String? pushKind(String tap) => tap.startsWith(pushTapPrefix)
     ? tap.substring(pushTapPrefix.length).split(pushItemSeparator).first
     : null;
 
-/// The notifications the app sets on the phone itself (no server and no
-/// push needed), on iOS and Android. Behind an interface, so the tests run
-/// without the plugin.
+/// The notifications the app sets on the phone itself, on iOS and Android;
+/// behind an interface, so the tests run without the plugin.
 abstract interface class PhoneNotifications {
   /// Prepares the plugin without asking for permission, and keeps the tap
   /// that opened the app, if any.
   Future<void> initialize();
 
-  /// Asks whether the app may show notifications. iOS and Android 13+
-  /// show their question only the first time; later calls answer at once
-  /// (older Android allows without asking). True when allowed.
+  /// Asks whether the app may show notifications (iOS and Android 13+ ask
+  /// only the first time). True when allowed.
   Future<bool> requestPermission();
 
   /// What the phone allows now, without asking anything. Read it again on
@@ -114,18 +108,18 @@ abstract interface class PhoneNotifications {
   /// Removes every notification of the app, scheduled and shown.
   Future<void> cancelAll();
 
-  /// The payload of each notification the person taps while the app runs.
+  /// The payload of each notification tapped while a page listens.
   Stream<String> get taps;
 
-  /// The payload of the notification that opened the app, once.
+  /// The payload of a tap no page heard yet (the one that opened the
+  /// app), once.
   String? takeLaunchTap();
 }
 
 /// [PhoneNotifications] with the flutter_local_notifications plugin, on
 /// iOS and Android; on the web and desktop nothing is shown.
 class PluginPhoneNotifications implements PhoneNotifications {
-  /// [pushTaps]: the `kind` of each tapped server push (OneSignal's,
-  /// `RemotePush.taps`), joined to [taps] and [takeLaunchTap].
+  /// [pushTaps]: the `kind` of each tapped server push (`RemotePush.taps`).
   PluginPhoneNotifications({this._pushTaps = const Stream<String>.empty()});
 
   final Stream<String> _pushTaps;
@@ -186,7 +180,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
       ),
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         final String? tap = _tapOf(response);
-        if (tap != null) _taps.add(tap);
+        if (tap != null) deliverTap(tap);
       },
     );
     final NotificationAppLaunchDetails? launch = await _plugin
@@ -203,19 +197,25 @@ class PluginPhoneNotifications implements PhoneNotifications {
     if (_isIOS) unawaited(_installSound());
   }
 
-  /// Joins the taps on server pushes to [taps] and [takeLaunchTap], on iOS
-  /// and Android. A tap that comes while no page listens yet (the push that
-  /// launched the app, while it is still starting) waits as the launch tap.
+  /// Joins the taps on server pushes to [taps] and [takeLaunchTap].
   @visibleForTesting
-  void listenToPushTaps() {
-    _pushTaps.listen((String kind) {
-      if (kind.isEmpty) return;
-      if (_taps.hasListener) {
-        _taps.add('$pushTapPrefix$kind');
-      } else {
-        _launchTap ??= '$pushTapPrefix$kind';
-      }
-    });
+  void listenToPushTaps() => _pushTaps.listen((String kind) {
+    if (kind.isEmpty) return;
+    deliverTap('$pushTapPrefix$kind');
+  });
+
+  /// Gives [tap] to the page that listens, or keeps it as the launch tap
+  /// while none listens yet. A reminder or a push tapped while the app was
+  /// closed arrives as soon as its plugin is ready (on iOS's scenes, after
+  /// the plugin's own launch check), often before any page is built; the
+  /// broadcast [taps] would drop it, and the reminder would open nothing.
+  @visibleForTesting
+  void deliverTap(String tap) {
+    if (_taps.hasListener) {
+      _taps.add(tap);
+    } else {
+      _launchTap = tap;
+    }
   }
 
   /// The payload of a tap, or [snoozeTapPrefix] and the payload for the

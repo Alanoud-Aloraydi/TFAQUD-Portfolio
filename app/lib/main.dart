@@ -14,6 +14,7 @@ import 'core/services/token_storage.dart';
 import 'core/setup.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_scopes.dart';
+import 'core/widgets/loading/launch_curtain.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +54,9 @@ class MainApp extends StatelessWidget {
       builder: (context, orientation, screenType) {
         return MaterialApp.router(
           routerConfig: AppRouter.router,
-          builder: (context, child) => AppScopes(child: child!),
+          // The launch logo fades away over the app once it is ready.
+          builder: (context, child) =>
+              AppScopes(child: LaunchCurtain(child: child!)),
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,

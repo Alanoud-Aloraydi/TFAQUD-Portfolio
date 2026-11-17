@@ -1,4 +1,5 @@
 import 'package:app/core/theme/care_visuals.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/care_icon_tile.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_icon.dart';
@@ -38,7 +39,7 @@ class TaskThumb extends StatelessWidget {
             size: size,
           )
         : CareIconTile(
-            icon: CareVisuals.appointmentIcon,
+            icon: appointmentKindIcon(task.appointment!.kind),
             background: CareVisuals.appointmentTile,
             size: size,
           );

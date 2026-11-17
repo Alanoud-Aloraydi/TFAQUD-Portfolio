@@ -161,6 +161,17 @@ void main() {
       expect(calendar.requests, 0);
     });
 
+    testWidgets('a calendar refused in Settings keeps the circle on: its '
+        'events are still there', (tester) async {
+      calendar.access = AppPermission.denied;
+      await open(tester);
+
+      final List<CupertinoSwitch> switches = tester
+          .widgetList<CupertinoSwitch>(find.byType(CupertinoSwitch))
+          .toList();
+      expect(switches.map((CupertinoSwitch s) => s.value), <bool>[true, false]);
+    });
+
     testWidgets('a calendar refused before: a word, then the phone Settings, '
         'keeping the wish', (tester) async {
       calendar.access = AppPermission.denied;
@@ -186,8 +197,11 @@ void main() {
         findsOneWidget,
       );
       expect(calendar.on, contains('c-2:doses'));
+      // The wait starts once the word is fully on screen.
+      await tester.pumpAndSettle();
+      await tester.pump(AppMotion.settingsLead - const Duration(seconds: 1));
       expect(opened, 0);
-      await tester.pump(AppMotion.settingsLead);
+      await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
       expect(opened, 1);
       // Settings did not open, so it says so.
