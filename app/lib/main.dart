@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,8 @@ import 'core/navigation/app_router.dart';
 import 'core/network/api_options.dart';
 import 'core/services/fresh_install.dart';
 import 'core/services/phone_notifications.dart';
+import 'core/services/reminders/dose_reminders.dart';
+import 'core/services/reminders/reminders_enabled.dart';
 import 'core/services/remote_push.dart';
 import 'core/services/token_storage.dart';
 import 'core/setup.dart';
@@ -32,6 +36,11 @@ Future<void> main() async {
   // The server's pushes (OneSignal), after the phone's own reminders so
   // both keep answering the phone's notification taps on iOS.
   await GetIt.I<RemotePush>().initialize();
+  // The app's notifications switch covers the server's pushes too.
+  final RemindersEnabled reminders = GetIt.I<DoseReminders>().enabled;
+  reminders.on.addListener(
+    () => unawaited(GetIt.I<RemotePush>().setWanted(reminders.on.value)),
+  );
 
   runApp(
     EasyLocalization(

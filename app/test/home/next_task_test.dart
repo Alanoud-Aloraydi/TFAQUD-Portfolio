@@ -72,4 +72,55 @@ void main() {
       expect(next, isNull);
     });
   });
+
+  group('nearestTask visits', () {
+    CareAppointment visit(int day, String time) => CareAppointment(
+      id: 'v-$day-$time',
+      kind: AppointmentKind.dialysis,
+      otherKind: null,
+      scheduledOn: DateTime(2026, 11, day),
+      time: time,
+      place: null,
+      remoteMethod: null,
+      companions: const <AppointmentCompanion>[],
+      status: AppointmentStatus.scheduled,
+      updatedAt: DateTime.utc(2026, 11, 1),
+    );
+    NextTask? next(
+      DateTime now,
+      List<CareAppointment> visits, [
+      List<MeasurementOccurrence> tasks = const [],
+    ]) => nearestTask(now, const [], tasks, visits);
+
+    test('a visit of tomorrow is not on today\'s card', () {
+      final List<CareAppointment> tomorrow = [visit(20, '12:00')];
+
+      expect(next(DateTime.utc(2026, 11, 19, 12), tomorrow), isNull);
+    });
+
+    test('on its day it is the next task before its time', () {
+      final NextTask? task = next(DateTime.utc(2026, 11, 20, 9), [
+        visit(20, '12:00'),
+      ]);
+
+      expect(task?.appointment?.id, 'v-20-12:00');
+    });
+
+    test('past its time it stays until another task of the day comes', () {
+      final List<MeasurementOccurrence> later = [
+        _task(day: 20, time: '13:00', status: MeasurementStatus.upcoming),
+      ];
+      final List<CareAppointment> visits = [visit(20, '12:00')];
+
+      expect(
+        next(DateTime.utc(2026, 11, 20, 12, 40), visits, later)?.appointment,
+        isNotNull,
+      );
+      // At 13:00 the reading comes after it: the visit leaves the card.
+      expect(
+        next(DateTime.utc(2026, 11, 20, 13), visits, later)?.appointment,
+        isNull,
+      );
+    });
+  });
 }

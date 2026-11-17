@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/recordable_now.dart';
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/core/widgets/task_viewer_scope.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_attend_button.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_today_actions.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
@@ -14,18 +12,20 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// What «المهمة القادمة» answers on the card itself: a reading that can be
-/// recorded already, or «حضرت» from an hour before a visit ([attendEarly])
-/// for those who go with it, as the visit's row in «اليوم» does.
+/// recorded already, or a visit's buttons as its row in «اليوم» has them
+/// ([appointmentTodayActions]).
 class NextTaskAction extends StatelessWidget {
   const NextTaskAction({
     super.key,
     required this.task,
     required this.circleId,
+    required this.canManage,
     required this.now,
   });
 
   final NextTask task;
   final String circleId;
+  final bool canManage;
   final DateTime now;
 
   static const EdgeInsets _gap = EdgeInsets.only(top: AppSpacing.sm);
@@ -58,13 +58,13 @@ class NextTaskAction extends StatelessWidget {
       );
     }
     final appointment = task.appointment;
-    // Asked only of those who go: the patient and the visit's companions.
-    if (appointment != null &&
-        appointment.canAttendAt(now, scheduleDay(now)) &&
-        (TaskViewerScope.of(context)?.goesWith(appointment.companionIds) ??
-            false)) {
-      return AppointmentAttendButton(value: appointment, circleId: circleId);
-    }
-    return null;
+    if (appointment == null) return null;
+    return appointmentTodayActions(
+      context,
+      value: appointment,
+      now: now,
+      circleId: circleId,
+      canManage: canManage,
+    );
   }
 }

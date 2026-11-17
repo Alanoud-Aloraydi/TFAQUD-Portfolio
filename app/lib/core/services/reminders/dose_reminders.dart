@@ -26,24 +26,20 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// The slots of the doses and measurements put off («ذكّرني لاحقًا» on a
-/// card, a full-screen reminder or a notification, in either mode), after
-/// the note's: each task has its own, so two tasks put off both come again.
+/// The slots of the tasks put off («ذكّرني لاحقًا», in either mode), after
+/// the note's: each has its own, so two tasks put off both come again.
 const int cardSnoozeIdBase = reminderIdBase + maxDoseReminders + 1;
 
 /// At most this many tasks put off at once. The reminders to come give up
 /// as many places, so the phone's 64 are never passed.
 const int maxCardSnoozes = 5;
 
-/// Keeps the coming week's reminders on the phone: every dose time, every
-/// measurement time, and every appointment. The name stays from when it
-/// reminded of doses only.
-///
-/// The phone shows them with the app closed, so they need no push. They
-/// are set again when the home data loads ([sync]), when the app comes
-/// back to the front ([refresh]), and after any change to a medicine, a
-/// record, a plan or an appointment; [clear] removes them on sign-out.
-/// Without [measurements] or [appointments] only the doses are read.
+/// Keeps the coming week's reminders on the phone: every dose, measurement
+/// and appointment (the name stays from when it reminded of doses only).
+/// The phone shows them with the app closed. They are set again when the
+/// home data loads ([sync]), when the app comes back ([refresh]), and after
+/// any change to a medicine, a record, a plan or an appointment; [clear]
+/// removes them on sign-out, as turning them off ([enabled]) does.
 ///
 /// A task put off is told to the circle too ([share]), which reminds the
 /// other members: this phone then stays quiet at the planned time.
@@ -445,6 +441,10 @@ class DoseReminders {
     _circles = const <ReminderCircle>[];
     _runner.dropPending();
     await _phone.cancelAll();
+    await _dropSnoozes();
+  }
+
+  Future<void> _dropSnoozes() async {
     await _readSnoozes();
     _snoozed.clear();
     await _saveSnoozes();
@@ -454,8 +454,9 @@ class DoseReminders {
     final int session = _session;
     final List<ReminderCircle> circles = _circles;
     if (!enabled.on.value) {
-      await _replace(const <ScheduledNotification>[], session);
-      return;
+      // Off in the app: nothing more comes, a task put off included.
+      await _phone.cancelAll();
+      return _dropSnoozes();
     }
     if (circles.isEmpty) {
       await _replace(const <ScheduledNotification>[], session);

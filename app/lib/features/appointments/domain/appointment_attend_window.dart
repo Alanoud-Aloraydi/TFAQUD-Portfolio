@@ -25,4 +25,11 @@ extension AppointmentAttendWindow on CareAppointment {
   bool isMissedOn(DateTime today) =>
       status == AppointmentStatus.scheduled &&
       scheduleDay(scheduledOn).isBefore(overdueStart(today));
+
+  /// Whether another task of the day ([taskTimes], wall times) came after
+  /// this visit by [now]. Until one does, a visit past its time stays on
+  /// «اليوم»'s top card; from then it waits in «يحتاج انتباهك».
+  bool overtakenAt(DateTime now, Iterable<DateTime> taskTimes) => taskTimes.any(
+    (DateTime time) => time.isAfter(scheduledAt) && !time.isAfter(now),
+  );
 }

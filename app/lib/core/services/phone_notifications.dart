@@ -303,10 +303,10 @@ class PluginPhoneNotifications implements PhoneNotifications {
           presentSound: true,
           sound: notificationSound,
           categoryIdentifier: notification.snoozable ? reminderCategory : null,
-          // A dose or a reading is due now: shown through a Focus and the
-          // Scheduled Summary, once the app has the Time Sensitive
-          // capability (Runner.entitlements); without it, as usual.
-          interruptionLevel: notification.snoozable
+          // A task due (a dose, a reading, a visit): shown through a Focus
+          // and the Scheduled Summary (Time Sensitive, Runner.entitlements).
+          // The note to open the app, which has no person's thread: usual.
+          interruptionLevel: notification.thread != null
               ? InterruptionLevel.timeSensitive
               : InterruptionLevel.active,
         ),

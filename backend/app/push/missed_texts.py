@@ -40,14 +40,21 @@ def measurement_missed_text(
 
 
 def appointment_missed_text(
-    *, name: str | None, own: bool, patient: str | None
+    *, name: str | None, own: bool, patient: str | None,
+    visit: str | None = None,
 ) -> str:
-    """«يا خالد، الموعد فاتك» to the patient ([own]); «يا لينا، موعد خالد
-    فات» to the others."""
+    """«يا خالد، موعد غسيل كلى فاتك» to the patient ([own]); «يا لينا،
+    موعد غسيل كلى لـخالد فات» to the others. Without the [visit]'s name:
+    «الموعد فاتك» and «موعد خالد فات»."""
+    visit = (visit or "").strip()
+    if not visit:
+        if own:
+            return f"{_greeting(name)}الموعد فاتك"
+        whose = f"موعد {patient}" if patient else "الموعد"
+        return f"{_greeting(name)}{whose} فات"
     if own:
-        return f"{_greeting(name)}الموعد فاتك"
-    whose = f"موعد {patient}" if patient else "الموعد"
-    return f"{_greeting(name)}{whose} فات"
+        return f"{_greeting(name)}موعد {visit} فاتك"
+    return f"{_greeting(name)}موعد {visit}{_whose(own, patient)} فات"
 
 
 def _greeting(name: str | None) -> str:

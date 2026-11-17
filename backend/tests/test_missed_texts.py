@@ -1,6 +1,7 @@
 """The words of the missed-task pushes: each person called by name, the
 patient told it is theirs, everyone else told whose it is."""
 
+from app.appointments.kinds import APPOINTMENT_KINDS, KIND_NAMES, visit_name
 from app.push.missed_texts import (
     appointment_missed_text,
     dose_missed_text,
@@ -33,6 +34,22 @@ def test_a_missed_appointment_to_the_patient_and_to_a_carer():
     assert appointment_missed_text(
         name="لينا", own=False, patient="خالد"
     ) == "يا لينا، موعد خالد فات"
+
+
+def test_a_missed_appointment_says_which_visit():
+    assert appointment_missed_text(
+        name="خالد", own=True, patient="خالد", visit="غسيل كلى"
+    ) == "يا خالد، موعد غسيل كلى فاتك"
+    assert appointment_missed_text(
+        name="لينا", own=False, patient="خالد", visit="غسيل كلى"
+    ) == "يا لينا، موعد غسيل كلى لـخالد فات"
+
+
+def test_a_visit_is_named_as_the_app_names_it():
+    assert visit_name("dialysis", None) == "غسيل كلى"
+    assert visit_name("other", " علاج بالضوء ") == "علاج بالضوء"
+    assert visit_name("other", "  ") is None
+    assert set(KIND_NAMES) == set(APPOINTMENT_KINDS) - {"other"}
 
 
 def test_a_missing_name_is_left_out_never_blank():

@@ -8,11 +8,9 @@ import 'package:app/features/appointments/presentation/widgets/appointment_days_
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// «أيام المواعيد»: every day of a booking, the first one too. A clinic
-/// hands over a sheet of dates that follow no rule, and each becomes its
-/// own visit with the same type, time and place: a tap adds a day, and
-/// each day can be taken off. While a visit is edited ([single]) the row is
-/// that visit's one day, and a tap moves it.
+/// «أيام المواعيد»: every day of a booking, each its own visit with the
+/// same type, time and place; the row or «إضافة يوم» adds one. While a
+/// visit is edited ([single]) the row is its one day, and a tap moves it.
 class AppointmentDatesRow extends StatelessWidget {
   const AppointmentDatesRow({
     super.key,
@@ -44,12 +42,15 @@ class AppointmentDatesRow extends StatelessWidget {
         showChevron: true,
         onTap: () => unawaited(_pick(context)),
       ),
-      if (!single && dates.length > 1)
-        AppointmentDaysChips(dates: dates, onChanged: onChanged),
+      if (!single)
+        AppointmentDaysChips(
+          dates: dates,
+          onChanged: onChanged,
+          onAdd: () => unawaited(_pick(context)),
+        ),
     ],
   );
 
-  /// One more day, kept in order without repeats; while editing, the day.
   Future<void> _pick(BuildContext context) async {
     final DateTime today = PatientClockScope.of(context).today();
     final DateTime? last = dates.lastOrNull;
@@ -62,9 +63,8 @@ class AppointmentDatesRow extends StatelessWidget {
       firstDate: today,
       lastDate: DateTime(today.year + 5, 12, 31),
     );
-    if (chosen == null) return;
-    if (single) return onChanged(<DateTime>[chosen]);
-    if (dates.contains(chosen)) return;
-    onChanged(<DateTime>[...dates, chosen]..sort());
+    if (chosen == null || (!single && dates.contains(chosen))) return;
+    final List<DateTime> kept = single ? <DateTime>[] : dates;
+    onChanged(<DateTime>[...kept, chosen]..sort());
   }
 }

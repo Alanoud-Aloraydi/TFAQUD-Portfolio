@@ -308,16 +308,23 @@ void main() {
 
     Finder attend() => find.text('appointments.mark_completed'.tr());
 
-    testWidgets('shows from an hour before the visit', (tester) async {
+    testWidgets('shows from an hour before the visit, with the other two', (
+      tester,
+    ) async {
       await show(tester, '12:30');
 
       expect(attend(), findsOneWidget);
+      expect(find.text('appointments.edit'.tr()), findsOneWidget);
+      expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
 
-    testWidgets('not earlier than an hour before', (tester) async {
+    testWidgets('not earlier than an hour before; a manager can still '
+        'change or cancel it on its day', (tester) async {
       await show(tester, '13:30');
 
       expect(attend(), findsNothing);
+      expect(find.text('appointments.edit'.tr()), findsOneWidget);
+      expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
 
     testWidgets('not to someone who does not go with the visit', (
@@ -325,7 +332,9 @@ void main() {
     ) async {
       await show(tester, '12:30', patient: false);
 
+      // A manager who does not go has the other two.
       expect(attend(), findsNothing);
+      expect(find.text('appointments.edit'.tr()), findsOneWidget);
     });
   });
 

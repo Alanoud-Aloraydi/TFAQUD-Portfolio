@@ -958,6 +958,19 @@ void main() {
       expect(reminders.snoozes.value, isEmpty);
     });
 
+    test('turned off in the app: nothing more comes from the phone', () async {
+      medications.doses[_noura.id] = <DoseOccurrence>[_dose(3, '21:00')];
+      await reminders.sync(<ReminderCircle>[_noura]);
+      expect(phone.scheduled, isNotEmpty);
+
+      await reminders.enabled.set(false);
+      await settle();
+      await settle();
+
+      expect(phone.scheduled, isEmpty);
+      expect(reminders.snoozes.value, isEmpty);
+    });
+
     test('a call during a reading makes one more reading after it', () async {
       medications.gate = Completer<void>();
       final Future<void> first = reminders.sync(<ReminderCircle>[_noura]);
