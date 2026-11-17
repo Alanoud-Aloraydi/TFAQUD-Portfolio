@@ -1,3 +1,4 @@
+import 'package:app/core/widgets/layout/refresh_scope.dart';
 import 'package:app/features/home/presentation/controllers/home_shell_lifecycle.dart';
 import 'package:app/features/home/presentation/controllers/home_shell_wiring.dart';
 import 'package:app/features/home/presentation/controllers/home_state_reactor.dart';
@@ -56,13 +57,19 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     refreshOnResume(context, _reactor);
   }
 
+  /// What every main tab does when pulled down from its top.
+  Future<void> _refresh() => refreshNow(context, _reactor);
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<HomeCubit>();
-    return BlocConsumer<HomeCubit, HomeState>(
-      listener: _reactor.onState,
-      builder: (context, state) =>
-          homeShellView(context, state, cubit, widget.navigationShell),
+    return RefreshScope(
+      onRefresh: _refresh,
+      child: BlocConsumer<HomeCubit, HomeState>(
+        listener: _reactor.onState,
+        builder: (context, state) =>
+            homeShellView(context, state, cubit, widget.navigationShell),
+      ),
     );
   }
 }
