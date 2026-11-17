@@ -5,6 +5,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
@@ -18,7 +19,6 @@ import 'package:app/features/circles/presentation/widgets/invite_member_sheet.da
 import 'package:app/features/circles/presentation/widgets/leave_circle_button.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +40,7 @@ class CircleContent extends StatelessWidget {
             subtitle: context.tr('circle_overview.subtitle'),
           ),
           if (state.status == CircleOverviewStatus.loading)
-            const Center(child: CupertinoActivityIndicator())
+            const LoadingNote()
           else if (state.status == CircleOverviewStatus.failure)
             Column(
               children: <Widget>[

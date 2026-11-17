@@ -7,19 +7,19 @@ import 'package:flutter/material.dart';
 /// The buttons under a task that is due, in two levels: the one answer the
 /// task asks for is the tallest thing on the card and the only one in the
 /// circle's violet, and the choices beside it are a quieter yellow and
-/// grey. Deep violet filled the answer before, which read as the heaviest
-/// mark on a white card; the pale fill below is the tint «يحتاج انتباهك»
-/// uses, so a card asks rather than shouts.
+/// grey. The answer has the fill and words of every main action, as
+/// «إضافة عضو» has, so the app's one «do it» colour is the same
+/// everywhere.
 ///
 /// They have no edge, as the status pills beside them («حان وقتها») have
 /// none: a fill alone, so a card holds soft shapes rather than ruled lines.
 /// A fill is under the 3:1 a boundary would need, so what identifies these
-/// buttons is their words, which read at 8.4, 6.1 and 8.9 on their own
+/// buttons is their words, which read at 7.9, 6.1 and 8.9 on their own
 /// fill, and their icons.
 enum TaskButtonRole {
-  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the baby violet,
-  /// its words in the violet every main action uses.
-  answer(AppColors.leafTintDeep, AppColors.inkViolet),
+  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the violet and
+  /// ink of every main action («إضافة عضو»).
+  answer(AppColors.leaf, AppColors.ink),
 
   /// «ذكّرني لاحقًا»: putting the task off, in the honey the app warns
   /// with, told also by its bell.

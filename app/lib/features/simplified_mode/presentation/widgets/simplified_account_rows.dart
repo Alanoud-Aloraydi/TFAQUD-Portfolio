@@ -1,3 +1,4 @@
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
@@ -26,7 +27,7 @@ List<Widget> simplifiedAccountRows(
     if (account != null)
       simplifiedAccountHeader(context, account)
     else if (state.status == AccountStatus.loading)
-      const Center(child: CircularProgressIndicator()),
+      const LoadingNote(),
     SimplifiedSectionTitle(context.tr('simplified_mode.display')),
     const SimplifiedTextSizeCard(),
     SimplifiedSectionTitle(context.tr('account.notifications_title')),

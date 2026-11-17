@@ -1,6 +1,7 @@
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/presentation/widgets/medication_pending_box.dart';
 import 'package:app/features/medications/presentation/widgets/medication_pending_revision.dart';
 import 'package:app/features/medications/presentation/widgets/medication_revision_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_row.dart';
@@ -102,6 +103,28 @@ void main() {
       final Text crossed = tester.widget(find.textContaining('8:00').last);
       expect(crossed.style?.decoration, TextDecoration.lineThrough);
       expect(find.text('medications.cancel_pending'.tr()), findsOneWidget);
+    });
+
+    testWidgets('the plan card shows its waiting change in the same card', (
+      tester,
+    ) async {
+      await pumpArabic(
+        tester,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: MedicationPendingBox(
+              circleId: 'c-1',
+              current: _plan.version,
+              pending: _plan.pendingVersion!,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(MedicationVersionCard), findsOneWidget);
+      expect(find.text('medications.medicine_label'.tr()), findsOneWidget);
+      final Text crossed = tester.widget(find.textContaining('8:00'));
+      expect(crossed.style?.decoration, TextDecoration.lineThrough);
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/measurements/data/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
@@ -16,9 +17,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-/// The «الخطة» tab's measurements: the active plans of [circleId], each
-/// editable and stoppable when [canManage]. The plans and tasks read again
-/// by themselves after a change saved anywhere.
+/// «الخطة»'s measurements: the active plans of [circleId], editable and
+/// stoppable when [canManage], read again after a change saved anywhere.
 class MeasurementPlanSection extends StatelessWidget {
   const MeasurementPlanSection({
     super.key,
@@ -51,7 +51,7 @@ class MeasurementPlanSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           if (state.status == MeasurementLoadStatus.loading &&
               state.plans.isEmpty)
-            const Center(child: CircularProgressIndicator())
+            const LoadingNote()
           else if (state.status == MeasurementLoadStatus.failure)
             RetryView(
               messageKey: state.errorKey ?? 'error.unknown',

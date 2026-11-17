@@ -1,3 +1,4 @@
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
@@ -18,7 +19,7 @@ Widget visitPageBody(
   required bool canManage,
 }) {
   if (state.status == AppointmentsLoadStatus.loading || visit.loading) {
-    return const Center(child: CircularProgressIndicator());
+    return const LoadingNote();
   }
   if (visit.loadFailed) {
     return Center(

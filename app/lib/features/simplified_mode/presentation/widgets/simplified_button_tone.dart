@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 /// The look of a [SimplifiedButton]. The three a task uses borrow the
 /// detailed mode's colours ([TaskButtonRole]), so «أخذته الآن» is the same
-/// baby violet, «ذكّرني لاحقًا» the same honey and «ما أخذتها» the same
+/// violet, «ذكّرني لاحقًا» the same honey and «ما أخذتها» the same
 /// grey in both modes; the rest are the mode's own.
 enum SimplifiedButtonTone {
   primary,

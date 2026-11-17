@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 class RefreshScope extends StatefulWidget {
   const RefreshScope({super.key, required this.onRefresh, required this.child});
 
-  /// The shared data read again; done once it is back, so the spinner can
+  /// The shared data read again; done once it is back, so the loader can
   /// stop.
   final Future<void> Function() onRefresh;
   final Widget child;

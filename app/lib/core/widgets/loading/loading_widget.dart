@@ -1,12 +1,11 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/widgets/loading/page_skeleton.dart';
+import 'package:app/core/widgets/loading/tfaqud_loader.dart';
 import 'package:flutter/material.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 /// A page that is loading. With no [size] it is the page's shimmering
 /// skeleton (design system Skeleton), so every loading page shimmers instead
-/// of spinning. With a [size] it is a small spinner, for a control that is
-/// busy, such as a dose being recorded.
+/// of spinning. With a [size] it is the app's turning logo ([TfaqudLoader]),
+/// for a screen or a control that is busy, such as a dose being recorded.
 class LoadingWidget extends StatelessWidget {
   const LoadingWidget({super.key, this.size});
 
@@ -16,13 +15,6 @@ class LoadingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final double? spinner = size;
     if (spinner == null) return const PageSkeleton();
-    return Center(
-      child: LoadingAnimationWidget.discreteCircle(
-        secondRingColor: AppSemanticColors.accentWarm,
-        thirdRingColor: AppSemanticColors.accentLeaf,
-        color: AppSemanticColors.textPrimary,
-        size: spinner,
-      ),
-    );
+    return Center(child: TfaqudLoader(size: spinner));
   }
 }

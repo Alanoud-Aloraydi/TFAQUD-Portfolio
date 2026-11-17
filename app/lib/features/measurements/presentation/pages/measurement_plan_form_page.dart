@@ -12,6 +12,7 @@ import 'package:app/core/widgets/layout/info_row.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -197,7 +198,7 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
         body: Center(
           child: switch (state.status) {
             MeasurementLoadStatus.initial ||
-            MeasurementLoadStatus.loading => const CircularProgressIndicator(),
+            MeasurementLoadStatus.loading => const LoadingNote(),
             MeasurementLoadStatus.failure => TextButton(
               onPressed: () =>
                   context.read<MeasurementPlansCubit>().load(widget.circleId),

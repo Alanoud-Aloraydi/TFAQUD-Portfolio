@@ -1,3 +1,4 @@
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
@@ -23,9 +24,7 @@ List<Widget> simplifiedMeasureBody(
 }) {
   final MeasurementKind? kind = form.kind;
   return switch (state.status) {
-    SimplifiedMeasurementStatus.loading => const <Widget>[
-      Center(child: CircularProgressIndicator()),
-    ],
+    SimplifiedMeasurementStatus.loading => const <Widget>[LoadingNote()],
     SimplifiedMeasurementStatus.failure => <Widget>[
       simplifiedMeasureMessage(context, state.messageKey ?? 'error.unknown'),
       SimplifiedButton(

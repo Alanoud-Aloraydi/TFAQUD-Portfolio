@@ -9,104 +9,94 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/widget_harness.dart';
 
-/// A reading: its kind and its day of November 2026, by لينا.
-typedef _Reading = ({String kind, int day});
+/// A record: its day and who made it (account, name).
+typedef _Record = ({DateTime day, String account, String name});
 
-const Map<String, String> _kinds = <String, String>{
-  'glucose': 'سكر الدم',
-  'bp': 'ضغط الدم',
-};
-
-HistoryView<_Reading> _view(List<_Reading> items, HistoryFilter filter) =>
-    HistoryView<_Reading>(
+HistoryView<_Record> _view(List<_Record> items, HistoryFilter filter) =>
+    HistoryView<_Record>(
       items,
       filter,
-      dayOf: (r) => DateTime(2026, 11, r.day),
-      byOf: (_) => ('a-1', 'لينا'),
-      kinds: _kinds,
-      kindOf: (r) => r.kind,
+      dayOf: (r) => r.day,
+      byOf: (r) => (r.account, r.name),
     );
 
 void main() {
   setUpAll(initTestLocalization);
 
-  const List<_Reading> both = <_Reading>[
-    (kind: 'bp', day: 17),
-    (kind: 'glucose', day: 16),
-    (kind: 'bp', day: 15),
+  final List<_Record> records = <_Record>[
+    (day: DateTime(2026, 11, 17), account: 'a-1', name: 'لينا'),
+    (day: DateTime(2026, 11, 16), account: 'a-2', name: 'خالد'),
+    (day: DateTime(2026, 10, 30), account: 'a-1', name: 'لينا'),
   ];
 
-  group('A history filtered by kind', () {
-    test('keeps one kind, and offers only the kinds it has', () {
-      final HistoryView<_Reading> view = _view(
-        both,
-        HistoryFilter.all.withKind('bp'),
-      );
+  group('A history filter', () {
+    test('offers the months and the people the records have', () {
+      final HistoryView<_Record> view = _view(records, HistoryFilter.all);
 
-      expect(view.kinds, _kinds);
-      expect(view.shown.map((r) => r.day).toList(), <int>[17, 15]);
+      expect(view.months, <DateTime>[DateTime(2026, 11), DateTime(2026, 10)]);
+      expect(view.people, <String, String>{'a-1': 'لينا', 'a-2': 'خالد'});
+      expect(view.shown, hasLength(3));
     });
 
-    test('a kind the readings no longer have is off', () {
-      final HistoryView<_Reading> view = _view(<_Reading>[
-        (kind: 'glucose', day: 16),
-      ], HistoryFilter.all.withKind('bp'));
+    test('keeps one month and one person together', () {
+      final HistoryView<_Record> view = _view(
+        records,
+        HistoryFilter(month: DateTime(2026, 11), person: 'a-1'),
+      );
 
-      expect(view.kinds, <String, String>{'glucose': 'سكر الدم'});
-      expect(view.filter.kind, isNull);
+      expect(view.shown.single.day, DateTime(2026, 11, 17));
+    });
+
+    test('a person the records no longer have is off', () {
+      final HistoryView<_Record> view = _view(
+        records.take(1).toList(),
+        HistoryFilter.all.withPerson('a-2'),
+      );
+
+      expect(view.filter.person, isNull);
       expect(view.shown, hasLength(1));
     });
 
-    test('a kind keeps the month and the person chosen with it', () {
-      final HistoryFilter filter = HistoryFilter.all
-          .withPerson('a-1')
-          .withMonth(DateTime(2026, 11));
+    test('a menu line changes only its own group', () {
+      final HistoryFilter filter = HistoryFilter.all.withPerson('a-1');
 
-      expect(chooseInHistory(filter, 'k:bp').kind, 'bp');
-      expect(chooseInHistory(filter, 'k:bp').person, 'a-1');
-      expect(chooseInHistory(filter, 'k:bp').month, DateTime(2026, 11));
-      expect(chooseInHistory(filter.withKind('bp'), 'k:').kind, isNull);
+      final HistoryFilter chosen = chooseInHistory(
+        filter,
+        'm:${historyMonthKey(DateTime(2026, 10))}',
+      );
+      expect(chosen.month, DateTime(2026, 10));
+      expect(chosen.person, 'a-1');
+      expect(chooseInHistory(chosen, 'p:').person, isNull);
     });
 
-    testWidgets('its menu starts with «الكل»، «سكر الدم»، «ضغط الدم», and '
-        'leaves the group out with one kind only', (tester) async {
-      late List<List<GlassMenuItem<String>>> two;
-      late List<List<GlassMenuItem<String>>> one;
+    testWidgets('its menu has the months, then the people, and no kinds: '
+        'the kind is chosen at the top of the page', (tester) async {
+      late List<List<GlassMenuItem<String>>> sections;
       late String label;
       await pumpArabic(
         tester,
         home: Builder(
           builder: (BuildContext context) {
-            List<List<GlassMenuItem<String>>> sections(
-              Map<String, String> kinds,
-            ) => historyFilterSections(
+            sections = historyFilterSections(
               context,
               months: <DateTime>[DateTime(2026, 11)],
               people: const <String, String>{'a-1': 'لينا'},
               filter: HistoryFilter.all,
-              kinds: kinds,
             );
-            two = sections(_kinds);
-            one = sections(const <String, String>{'bp': 'ضغط الدم'});
             label = historyFilterLabel(
               context,
-              HistoryFilter.all.withKind('bp'),
-              people: const <String, String>{},
-              kinds: _kinds,
+              HistoryFilter.all.withPerson('a-1'),
+              people: const <String, String>{'a-1': 'لينا'},
             );
             return const SizedBox();
           },
         ),
       );
 
-      expect(two, hasLength(3));
-      expect(two.first.map((item) => item.label).toList(), <String>[
-        'history.all'.tr(),
-        'سكر الدم',
-        'ضغط الدم',
-      ]);
-      expect(one, hasLength(2));
-      expect(label, 'ضغط الدم');
+      expect(sections, hasLength(2));
+      expect(sections.first.first.label, 'history.all_months'.tr());
+      expect(sections.last.first.label, 'history.all_people'.tr());
+      expect(label, 'لينا');
     });
   });
 }

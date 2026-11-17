@@ -1,4 +1,5 @@
 import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/loading_widget.dart';
@@ -33,6 +34,8 @@ class SplashScreen extends StatelessWidget {
         }
       },
       builder: (context, destination) => Scaffold(
+        // White, as the launch screen before it and the design's page.
+        backgroundColor: AppSemanticColors.surfaceContent,
         body: destination == StartDestination.unavailable
             ? Center(
                 child: Padding(
@@ -55,7 +58,7 @@ class SplashScreen extends StatelessWidget {
                   ),
                 ),
               )
-            : const LoadingWidget(size: AppSizes.loadingIndicator),
+            : const LoadingWidget(size: AppSizes.loadingPage),
       ),
     );
   }
