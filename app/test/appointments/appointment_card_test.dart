@@ -63,9 +63,8 @@ Future<void> _open(
 
 Finder _button(String key) => find.widgetWithText(TextButton, key.tr());
 
-String _place(int index, int count) => 'appointments.visit_of_series'.tr(
-  args: <String>['$index', '$count'],
-);
+String _place(int index, int count) =>
+    'appointments.visit_of_series'.tr(args: <String>['$index', '$count']);
 
 void main() {
   setUpAll(initTestLocalization);
@@ -89,10 +88,7 @@ void main() {
       // The two attended dates each keep their sheet.
       expect(find.text('appointments.visit_title'.tr()), findsNWidgets(2));
       expect(find.byType(EditAction), findsOneWidget);
-      expect(
-        find.text('appointments.cancel_appointment'.tr()),
-        findsOneWidget,
-      );
+      expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
 
     testWidgets('a visit on its own has no «المواعيد الأخرى»', (tester) async {
@@ -105,10 +101,7 @@ void main() {
 
     testWidgets('in «السجل» only the sheet is left to change', (tester) async {
       final CareAppointment passed = _visit('b2', 8);
-      final List<CareAppointment> all = <CareAppointment>[
-        _booking[0],
-        passed,
-      ];
+      final List<CareAppointment> all = <CareAppointment>[_booking[0], passed];
       await _open(
         tester,
         passed,
@@ -133,10 +126,7 @@ void main() {
 
       expect(find.byType(EditAction), findsOneWidget);
       expect(_button('appointments.mark_completed'), findsOneWidget);
-      expect(
-        find.text('appointments.cancel_appointment'.tr()),
-        findsOneWidget,
-      );
+      expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
     });
   });
 }

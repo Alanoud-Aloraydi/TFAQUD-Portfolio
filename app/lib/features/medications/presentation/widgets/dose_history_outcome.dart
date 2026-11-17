@@ -27,8 +27,10 @@ class DoseHistoryOutcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if ((occurrence.record, status)
-        case (final DoseRecord record, final DoseRowStatus pill)) {
+    if ((occurrence.record, status) case (
+      final DoseRecord record,
+      final DoseRowStatus pill,
+    )) {
       final String? name = record.recordedByName;
       return Column(
         mainAxisSize: MainAxisSize.min,

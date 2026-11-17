@@ -25,8 +25,9 @@ CareAppointment _visit(
   seriesId: series,
 );
 
-List<String> _ids(List<CareAppointment> visits) =>
-    <String>[for (final CareAppointment visit in visits) visit.id];
+List<String> _ids(List<CareAppointment> visits) => <String>[
+  for (final CareAppointment visit in visits) visit.id,
+];
 
 void main() {
   // A booking of four dates: two behind, two ahead.

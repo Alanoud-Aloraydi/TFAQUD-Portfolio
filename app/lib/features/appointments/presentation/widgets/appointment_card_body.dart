@@ -21,9 +21,8 @@ List<Widget> appointmentCardBody(
         'appointments.visit_of_series',
         args: <String>['${at.index}', '${at.count}'],
       ),
-      style: Theme.of(
-        context,
-      ).textTheme.bodySmall?.copyWith(color: context.tokens.textSecondary),
+      style: Theme.of(context).textTheme.bodySmall
+          ?.copyWith(color: context.tokens.textSecondary),
     ),
   if (value.status == AppointmentStatus.completed)
     AppointmentVisitButton(

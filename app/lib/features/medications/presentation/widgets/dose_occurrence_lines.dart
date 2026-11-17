@@ -50,8 +50,10 @@ class DoseOccurrenceLines extends StatelessWidget {
         ),
         if (occurrence.instructions case final String instructions)
           Text(instructions, style: text.bodySmall),
-        if ((occurrence.record, status)
-            case (final DoseRecord record, final DoseRowStatus pill))
+        if ((occurrence.record, status) case (
+          final DoseRecord record,
+          final DoseRowStatus pill,
+        ))
           ...doseHistoryNotes(context, record, pill),
       ],
     );
