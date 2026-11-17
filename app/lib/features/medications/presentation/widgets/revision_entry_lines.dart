@@ -1,60 +1,53 @@
+import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/widgets/medication_schedule_summary.dart';
 import 'package:app/features/medications/presentation/widgets/medication_version_line.dart';
+import 'package:app/features/medications/presentation/widgets/revision_fact.dart';
+import 'package:app/features/medications/presentation/widgets/revision_schedules.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// What one version says: what the medicine was, and the schedule it took
-/// over from, crossed out when it changed.
+/// What one version says, in labelled lines that read at a glance: the
+/// medicine, its dose times in soft pills (what changed from [previous]
+/// crossed out), why and how it is taken, and when a dose counts as missed.
 class RevisionEntryLines extends StatelessWidget {
   const RevisionEntryLines({
     super.key,
-    required this.title,
     required this.version,
     required this.previous,
   });
 
-  final String title;
   final MedicationVersion version;
   final MedicationVersion? previous;
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final String? before = previous == null
-        ? null
-        : medicationScheduleSummary(context, previous!.schedules);
-    final String after = medicationScheduleSummary(context, version.schedules);
     final String what = medicationVersionLine(context, version);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: text.titleSmall),
-        const SizedBox(height: AppSpacing.xs),
-        Text(what, style: text.bodyMedium, semanticsLabel: spoken(what)),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          context.tr('medications.schedule_revision'),
-          style: text.bodySmall,
+      children: <Widget>[
+        RevisionFact(
+          label: context.tr('medications.medicine_label'),
+          child: Text(what, semanticsLabel: spoken(what)),
         ),
-        if (before != null && before != after)
-          Text(
-            before,
-            style: text.bodySmall?.copyWith(
-              decoration: TextDecoration.lineThrough,
+        RevisionFact(
+          label: context.tr('medications.dose_schedules'),
+          child: RevisionSchedules(version: version, previous: previous),
+        ),
+        for (final (String key, String? value) in <(String, String?)>[
+          ('medications.reason', version.reason),
+          ('medications.instructions', version.instructions),
+          (
+            'medications.missed_after',
+            arabicCount(
+              context,
+              ArabicCount.minutes,
+              version.missedAfterMinutes,
             ),
           ),
-        Text(after, style: text.bodyMedium),
-        if (version.reason case final reason?) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(reason, style: text.bodySmall),
-        ],
-        if (version.instructions case final instructions?) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(instructions, style: text.bodySmall),
-        ],
+        ])
+          if (value != null)
+            RevisionFact(label: context.tr(key), child: Text(value)),
       ],
     );
   }

@@ -1,7 +1,6 @@
 import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/status_pill.dart';
+import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_heading.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_notes.dart';
@@ -41,11 +40,7 @@ class DoseOccurrenceLines extends StatelessWidget {
                 occurrence.doseUnit,
               ),
             ])
-              StatusPill(
-                text: fact,
-                background: AppSemanticColors.selectedSurface,
-                foreground: AppSemanticColors.textPrimary,
-              ),
+              FactPill(fact),
           ],
         ),
         if (occurrence.instructions case final String instructions)

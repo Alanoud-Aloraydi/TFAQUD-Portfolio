@@ -8,18 +8,36 @@ import 'package:flutter/widgets.dart';
 String historyMonthKey(DateTime? month) =>
     month == null ? '' : month.toIso8601String();
 
-/// The two groups of the history menu: the months that have records,
-/// then who recorded. A value is its group's letter and its key, so one
-/// menu can answer two questions («m:2026-10-01…», «p:lina»).
+/// The groups of the history menu: the [kinds] of record when there are
+/// two or more («الكل»، «سكر الدم»، «ضغط الدم»), the months that have
+/// records, then who recorded. A value is its group's letter and its key,
+/// so one menu can answer three questions («k:bp», «m:2026-10-01…»,
+/// «p:lina»).
 List<List<GlassMenuItem<String>>> historyFilterSections(
   BuildContext context, {
   required List<DateTime> months,
   required Map<String, String> people,
   required HistoryFilter filter,
+  Map<String, String> kinds = const <String, String>{},
 }) {
   final String month = historyMonthKey(filter.month);
   final String person = filter.person ?? '';
+  final String kind = filter.kind ?? '';
   return <List<GlassMenuItem<String>>>[
+    if (kinds.length > 1)
+      <GlassMenuItem<String>>[
+        GlassMenuItem<String>(
+          value: 'k:',
+          label: context.tr('history.all'),
+          selected: kind.isEmpty,
+        ),
+        for (final MapEntry<String, String> entry in kinds.entries)
+          GlassMenuItem<String>(
+            value: 'k:${entry.key}',
+            label: entry.value,
+            selected: entry.key == kind,
+          ),
+      ],
     <GlassMenuItem<String>>[
       GlassMenuItem<String>(
         value: 'm:',

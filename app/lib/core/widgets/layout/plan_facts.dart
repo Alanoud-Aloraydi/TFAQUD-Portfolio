@@ -110,19 +110,19 @@ class PlanFact extends StatelessWidget {
   );
 }
 
-/// A fact about a person: their photo or avatar beside «أضافه» and their
-/// name in bold. Every name the app shows carries its picture.
+/// A person: photo or avatar, then [label] («أضافه», none under a title that
+/// says it) and the name in bold. Every name the app shows has its picture.
 class PlanPersonFact extends StatelessWidget {
   const PlanPersonFact({
     super.key,
-    required this.label,
+    this.label,
     required this.name,
     required this.circleId,
     this.accountId,
     this.avatarCode,
   });
 
-  final String label;
+  final String? label;
   final String name;
   final String circleId;
   final String? accountId;

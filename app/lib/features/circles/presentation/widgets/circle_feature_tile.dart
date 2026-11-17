@@ -4,7 +4,6 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/features/circles/presentation/widgets/attention_mark.dart';
 import 'package:flutter/material.dart';
 
@@ -42,11 +41,12 @@ class CircleFeatureTile extends StatelessWidget {
         color: attention
             ? AppSemanticColors.surfaceAttention
             : AppSemanticColors.surfaceContent,
+        // Only a file that needs attention keeps a line, in its colour.
         shape: AppRadius.shape(
           AppRadius.m,
           side: attention
               ? const BorderSide(color: AppSemanticColors.borderAttention)
-              : AppSurfaces.edge,
+              : BorderSide.none,
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

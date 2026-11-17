@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/buttons/edit_action.dart';
+import 'package:app/core/widgets/buttons/stop_button.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -127,6 +128,32 @@ void main() {
       expect(find.byType(EditAction), findsOneWidget);
       expect(_button('appointments.mark_completed'), findsOneWidget);
       expect(find.text('appointments.cancel_appointment'.tr()), findsOneWidget);
+    });
+
+    testWidgets('its details name the one person who added it, and its '
+        'cancel has the stop of a medicine', (tester) async {
+      final CareAppointment added = CareAppointment(
+        id: 'a',
+        kind: AppointmentKind.followUp,
+        otherKind: null,
+        scheduledOn: DateTime(2026, 11, 16),
+        time: '10:30',
+        place: 'مستشفى الملك فهد',
+        remoteMethod: null,
+        companions: const <AppointmentCompanion>[],
+        status: AppointmentStatus.scheduled,
+        updatedAt: DateTime.utc(2026, 11, 1),
+        createdByName: 'لينا',
+        updatedByName: 'سارة',
+      );
+      await _open(tester, added, all: <CareAppointment>[added]);
+
+      expect(find.text('appointments.added_by'.tr()), findsOneWidget);
+      expect(find.text('لينا'), findsOneWidget);
+      expect(find.text('سارة'), findsNothing);
+      expect(find.text('plan_details.people'.tr()), findsNothing);
+      final StopButton stop = tester.widget(find.byType(StopButton));
+      expect(stop.icon, const StopButton(label: '', onPressed: null).icon);
     });
   });
 }

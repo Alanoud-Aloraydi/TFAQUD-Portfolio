@@ -30,10 +30,11 @@ void refreshOnResume(BuildContext context, HomeStateReactor reactor) {
 }
 
 /// A main page pulled down: the same as coming back to the front, done
-/// once everything is back so the page's spinner waits for it. The photos
-/// are told they changed, which also reads the circle tab's members again.
+/// once everything is back so the page's spinner waits for it. Every read
+/// is quiet: each part keeps what it shows until its own data is back. The
+/// parts with data of their own read it on the scope's pull signal.
 Future<void> refreshNow(BuildContext context, HomeStateReactor reactor) {
-  GetIt.I<PrivatePhotoRepository>().clear();
+  GetIt.I<PrivatePhotoRepository>().invalidateCache();
   reactor.reminders.refresh();
   final HomeCubit home = context.read<HomeCubit>();
   final CareCircleSummary? circle = home.state.selectedCircle;

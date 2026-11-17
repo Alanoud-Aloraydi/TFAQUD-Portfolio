@@ -445,8 +445,6 @@
     "now": "من الآن",
     "specific_date": "من تاريخ تحدده",
     "pending_revision": "تعديل مجدول يبدأ {}",
-    "pending_schedule": "{}، {} {}",
-    "pending_strength": "{} {}، {}",
     "plan_subtitle": "خطتك الحالية والتعديلات القادمة",
     "plan_subtitle_other": "خطة {} الحالية والتعديلات القادمة",
     "cancel_pending": "إلغاء التعديل المجدول",
@@ -584,9 +582,9 @@
       "7": "أحد"
     },
     "revision_history": "سجل التعديلات",
+    "medicine_label": "الدواء",
     "revised_on": "تعديل بدأ بتاريخ {}",
     "initial_version": "بداية الخطة بتاريخ {}",
-    "schedule_revision": "تعديلات المواعيد والجرعات",
     "strength_display": {
       "milligram": "ملغ",
       "microgram": "ميكروغرام",
@@ -1233,6 +1231,7 @@
     "date": "التاريخ",
     "more_dates": "أيام المواعيد",
     "other_visits": "المواعيد الأخرى",
+    "added_by": "أضاف الموعد",
     "one_visit": "موعد واحد",
     "visits_count": "{} مواعيد",
     "remove_date": "حذف التاريخ",

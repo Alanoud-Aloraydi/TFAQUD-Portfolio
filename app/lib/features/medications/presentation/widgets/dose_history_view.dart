@@ -1,5 +1,6 @@
 import 'package:app/core/widgets/layout/filtered_history.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
@@ -9,8 +10,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// The doses that were read, newest first, under the two filters of
-/// «سجل الجرعات», with «أقدم» under them while there is more to read.
+/// The doses that were read, newest first, under the filter of «سجل
+/// الجرعات», with «أقدم» under them while there is more to read. Only the
+/// doses that had their time: one still ahead is not history yet.
 class DoseHistoryView extends StatelessWidget {
   const DoseHistoryView({
     super.key,
@@ -26,9 +28,13 @@ class DoseHistoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<MedicationOccurrencesCubit>();
+    final DateTime now = PatientClockScope.of(context).now();
     return FilteredHistory<DoseOccurrence>(
       title: context.tr('medications.dose_history'),
-      items: state.occurrences.reversed.toList(),
+      items: <DoseOccurrence>[
+        for (final DoseOccurrence dose in state.occurrences.reversed)
+          if (dose.isHistoryAt(now)) dose,
+      ],
       dayOf: (item) => item.scheduledOn,
       byOf: (item) =>
           (item.record?.recordedByAccountId, item.record?.recordedByName),

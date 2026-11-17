@@ -2,7 +2,6 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/circle_invitation_row.dart';
 import 'package:app/features/circles/presentation/widgets/circle_member_row.dart';
@@ -42,7 +41,7 @@ class CircleMembersList extends StatelessWidget {
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: AppSemanticColors.surfaceContent,
-        shape: AppRadius.shape(AppRadius.m, side: AppSurfaces.edge),
+        shape: AppRadius.shape(AppRadius.m),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),

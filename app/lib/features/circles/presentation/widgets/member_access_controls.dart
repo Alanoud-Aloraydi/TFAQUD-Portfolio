@@ -42,7 +42,6 @@ class MemberAccessControls extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppSemanticColors.background,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppSemanticColors.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,6 +72,7 @@ class MemberAccessControls extends StatelessWidget {
       children: <Widget>[
         for (final String area in EditAccess.areas)
           FilterChip(
+            side: BorderSide.none,
             label: Text(context.tr('circle_overview.area.$area')),
             selected: access.of(area),
             onSelected: enabled && accountId != null
