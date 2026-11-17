@@ -61,6 +61,9 @@ def appointment_view(
         "time_of_day": appointment.time_of_day.isoformat(timespec="minutes"),
         "place": appointment.place,
         "remote_method": appointment.remote_method,
+        # Minutes before the visit for its near reminder; the day-before
+        # one is always set and is not chosen.
+        "reminder_lead_minutes": appointment.reminder_lead_minutes,
         "companions": companions,
         "status": appointment.status,
         "updated_at": appointment.updated_at.isoformat(),

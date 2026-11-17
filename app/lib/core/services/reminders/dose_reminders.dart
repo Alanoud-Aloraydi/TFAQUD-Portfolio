@@ -8,6 +8,7 @@ import 'package:app/core/services/reminder_circle.dart';
 export 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/services/reminders/reminder_payloads.dart';
 import 'package:app/core/services/reminders/reminder_permission.dart';
+import 'package:app/core/services/reminders/reminders_enabled.dart';
 export 'package:app/core/services/reminders/task_snooze.dart';
 import 'package:app/core/services/reminders/task_snooze.dart';
 export 'package:app/core/services/reminders/reminder_plan.dart';
@@ -63,6 +64,8 @@ class DoseReminders {
     measurements?.changes.listen((_) => unawaited(refresh()));
     measurements?.recorded.listen((_) => unawaited(refresh()));
     appointments?.changes.listen((_) => unawaited(refresh()));
+    enabled.on.addListener(() => unawaited(refresh()));
+    unawaited(enabled.read());
   }
 
   final MedicationsUseCase _medications;
@@ -100,6 +103,10 @@ class DoseReminders {
       ValueNotifier<Map<String, TaskSnooze>>(const <String, TaskSnooze>{});
   Timer? _snoozeEnds;
   late final ReminderPermission _permission = ReminderPermission(_phone);
+
+  /// Whether the person still wants the reminders; see [RemindersEnabled].
+  /// A change plans them again, or takes them all off.
+  final RemindersEnabled enabled = RemindersEnabled();
 
   /// What the phone allows the reminders to do; see [ReminderPermission].
   ValueListenable<AppPermission?> get allowed => _permission.value;
@@ -446,6 +453,10 @@ class DoseReminders {
   Future<void> _run() async {
     final int session = _session;
     final List<ReminderCircle> circles = _circles;
+    if (!enabled.on.value) {
+      await _replace(const <ScheduledNotification>[], session);
+      return;
+    }
     if (circles.isEmpty) {
       await _replace(const <ScheduledNotification>[], session);
       return;

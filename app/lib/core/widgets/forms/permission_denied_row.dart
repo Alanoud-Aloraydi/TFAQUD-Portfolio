@@ -1,8 +1,6 @@
-import 'dart:async';
-
-import 'package:app/core/services/permissions/app_settings_page.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/buttons/open_settings_action.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -34,9 +32,9 @@ class PermissionDeniedRow extends StatelessWidget {
               color: AppSemanticColors.statusWarning,
             ),
           ),
-          TextButton(
-            onPressed: () => unawaited(openAppSettingsPage()),
-            child: Text(context.tr('circle_overview.open_settings')),
+          const Padding(
+            padding: EdgeInsets.only(top: AppSpacing.xs),
+            child: OpenSettingsAction(),
           ),
         ],
       ),

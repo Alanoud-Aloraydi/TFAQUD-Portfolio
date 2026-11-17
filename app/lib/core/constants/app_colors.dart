@@ -23,6 +23,11 @@ class AppColors {
   static const Color leafPressed = Color(0xFFAB98D0);
   static const Color leafTint = Color(0xFFEFEAF8);
 
+  /// A step between the page and [leafTint]: the folding groups of
+  /// «السجل», which sit on the page itself and would vanish in its colour
+  /// but read as the page's own tint rather than a block of their own.
+  static const Color leafMist = Color(0xFFF4F0FA);
+
   /// One step down from [leafTint], for a group that gathers cards: the
   /// tint itself reads 1.11 on the canvas, near enough to vanish, while
   /// this reads 1.36 and still leaves white cards on it at 1.45.

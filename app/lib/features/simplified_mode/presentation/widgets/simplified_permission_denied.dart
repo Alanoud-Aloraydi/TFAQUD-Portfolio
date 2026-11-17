@@ -1,6 +1,4 @@
-import 'dart:async';
-
-import 'package:app/core/services/permissions/app_settings_page.dart';
+import 'package:app/core/widgets/buttons/open_settings_action.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -31,15 +29,11 @@ class SimplifiedPermissionDenied extends StatelessWidget {
             color: SimplifiedStyle.attentionInk,
           ),
         ),
-        TextButton(
-          onPressed: () => unawaited(openAppSettingsPage()),
-          style: TextButton.styleFrom(
-            minimumSize: const Size(0, SimplifiedStyle.touch),
-            foregroundColor: SimplifiedStyle.ink,
-          ),
-          child: Text(
-            context.tr('circle_overview.open_settings'),
-            style: SimplifiedStyle.label(SimplifiedStyle.body),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: OpenSettingsAction(
+            labelStyle: SimplifiedStyle.label(SimplifiedStyle.body),
+            iconSize: SimplifiedStyle.body,
           ),
         ),
       ],

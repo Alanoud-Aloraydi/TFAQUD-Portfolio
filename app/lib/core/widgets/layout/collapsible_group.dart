@@ -30,8 +30,8 @@ class CollapsibleGroup extends StatelessWidget {
       // The same surface as «يحتاج انتباهك»: both gather cards under a
       // heading that folds, so they are one thing to the eye.
       decoration: BoxDecoration(
-        color: AppSemanticColors.surfaceAttentionGroup,
-        border: Border.all(color: AppSemanticColors.borderAttentionGroup),
+        color: AppSemanticColors.surfaceFold,
+        border: Border.all(color: AppSemanticColors.accentLeaf),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

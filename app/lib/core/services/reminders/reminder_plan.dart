@@ -75,10 +75,6 @@ const int maxDoseReminders = 60;
 /// The ids of the reminders: [reminderIdBase] to [reminderIdBase] + 60.
 const int reminderIdBase = 7000;
 
-/// How long before an appointment its second reminder comes; the first
-/// comes a day before.
-const Duration appointmentSoonLead = Duration(hours: 2);
-
 /// A reminder this close is not set: by the time the phone has it, its
 /// moment may have passed. Short, so a medicine saved a minute before its
 /// dose is still reminded.
@@ -92,14 +88,15 @@ const Duration appointmentSavedLead = Duration(seconds: 30);
 /// When an appointment saved after its day-before moment is said right
 /// away ([AppointmentLead.today]): [appointmentSavedLead] after it was
 /// saved, once (a later refresh finds that moment gone). Null when it was
-/// saved earlier, or when its two-hour reminder comes within ten minutes
-/// anyway. [clock] is the patient's, whose wall clock the visit's time is.
+/// saved earlier, or when the visit's own near reminder comes within ten
+/// minutes anyway. [clock] is the patient's, whose wall clock the visit's
+/// time is.
 DateTime? appointmentAnnouncedAt(PatientClock clock, CareAppointment visit) {
   final DateTime moment = clock.momentOf(visit.scheduledOn, visit.time);
   final DateTime saved = visit.updatedAt.toUtc();
   if (!saved.isAfter(moment.subtract(const Duration(days: 1)))) return null;
   final DateTime at = saved.add(appointmentSavedLead);
-  final DateTime soon = moment.subtract(appointmentSoonLead);
+  final DateTime soon = moment.subtract(visit.reminderLead);
   final bool soonComes =
       soon.isAfter(at) && soon.difference(at) < const Duration(minutes: 10);
   return at.isBefore(moment) && !soonComes ? at : null;
@@ -117,8 +114,8 @@ DateTime doseMoment(PatientClock clock, DoseOccurrence dose) =>
 ///
 /// (a dose or measurement put off, by its key in [snoozed], has its own
 /// reminder at the new time instead);
-/// * two for each appointment still to come: a day before it, and
-///   [appointmentSoonLead] before it.
+/// * two for each appointment still to come: a day before it, and its own
+///   [CareAppointment.reminderLead] before it.
 ///
 /// None at or after [until], so the reminders end together and the note
 /// after the last one is not far behind the others. After the last one
@@ -175,10 +172,13 @@ List<ScheduledNotification> planDoseReminders({
         ),
     for (final (ReminderCircle circle, CareAppointment visit) in appointments)
       if (visit.status == AppointmentStatus.scheduled)
+        // The day before, fixed; and the near one at the lead chosen
+        // when the visit was booked (an hour by default, up to three),
+        // which used to be two hours for every visit alike.
         for (final (AppointmentLead lead, Duration before)
-            in const <(AppointmentLead, Duration)>[
-              (AppointmentLead.dayBefore, Duration(days: 1)),
-              (AppointmentLead.soon, appointmentSoonLead),
+            in <(AppointmentLead, Duration)>[
+              (AppointmentLead.dayBefore, const Duration(days: 1)),
+              (AppointmentLead.soon, visit.reminderLead),
             ])
           if (inWindow(
             circle.clock

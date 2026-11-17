@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
-import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
+import 'package:app/features/circles/presentation/cubit/contact_draft_of.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/cubit/contact_kept.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_loading.dart';
@@ -37,11 +37,7 @@ mixin ContactSaving
         form: form.copyWith(saving: true, showErrors: false, clearError: true),
       ),
     );
-    final ContactDraft draft = ContactDraft(
-      name: name,
-      relation: relation,
-      phoneNumber: SaudiMobile.international(form.phone),
-    );
+    final ContactDraft draft = contactDraftOf(form, name, relation);
     final result = form.isNew
         ? await circles.addContact(circleId, draft)
         : await circles.updateContact(circleId, form.contactId!, draft);

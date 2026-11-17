@@ -1,6 +1,7 @@
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/measurement_timing.dart';
 import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 
@@ -33,10 +34,11 @@ NextTask? nearestTask(
           appointment: null,
         ),
     for (final item in measurements)
-      if (item.record == null &&
-          !wallClockAt(item.scheduledOn, item.time).isBefore(now))
+      if (measurementIsNextTaskCandidate(item, now))
         (
-          at: wallClockAt(item.scheduledOn, item.time),
+          at: wallClockAt(item.scheduledOn, item.time).isBefore(now)
+              ? now
+              : wallClockAt(item.scheduledOn, item.time),
           medication: null,
           measurement: item,
           appointment: null,

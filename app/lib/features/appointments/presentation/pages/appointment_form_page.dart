@@ -17,17 +17,19 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_dates_row.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_lead_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Adds or edits a visit: its kind, clinic, date, time, place and companions.
+// Adds or edits a visit: its kind, clinic, date, time, place and companions.
 class AppointmentFormPage extends StatefulWidget {
   const AppointmentFormPage({
     super.key,
@@ -54,6 +56,9 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
   TimeOfDay _time = const TimeOfDay(hour: 10, minute: 0);
   String _remoteMethod = 'video';
   final Set<String> _companionIds = <String>{};
+
+  /// How long before the visit its near reminder comes.
+  int _lead = defaultAppointmentLead;
   final _place = TextEditingController();
   final _clinic = TextEditingController();
   final _otherKind = TextEditingController();
@@ -80,6 +85,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
     _time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
     _place.text = value.place ?? '';
     _remoteMethod = value.remoteMethod ?? 'video';
+    _lead = value.reminderLeadMinutes;
     _companionIds
       ..clear()
       ..addAll(value.companions.map((item) => item.id));
@@ -108,6 +114,7 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
       place: _kind == AppointmentKind.remote ? null : _place.text.trim(),
       remoteMethod: _kind == AppointmentKind.remote ? _remoteMethod : null,
       companionAccountIds: _companionIds.toList(),
+      reminderLeadMinutes: _lead,
       alsoOn: _alsoOn,
     );
     if (wallClockAt(
@@ -296,6 +303,10 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                     setState(() => _time = selected);
                   }
                 },
+              ),
+              AppointmentLeadRow(
+                minutes: _lead,
+                onChanged: (int value) => setState(() => _lead = value),
               ),
               if (_kind == AppointmentKind.remote)
                 InsetBlock(

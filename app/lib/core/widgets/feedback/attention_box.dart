@@ -33,7 +33,7 @@ class AttentionBox extends StatelessWidget {
         // The simplified mode's cream: lighter than the honey of the
         // badges, so the white cards on it stand out and it does not shout.
         color: AppSemanticColors.surfaceAttentionGroup,
-        border: Border.all(color: AppSemanticColors.borderAttentionGroup),
+        border: Border.all(color: AppSemanticColors.surfaceAttentionGroup),
         borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       child: Column(

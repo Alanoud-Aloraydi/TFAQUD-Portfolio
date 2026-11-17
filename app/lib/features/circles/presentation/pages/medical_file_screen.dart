@@ -5,6 +5,7 @@ import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart'
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_body.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_header.dart';
+import 'package:app/features/circles/presentation/widgets/page_frame_padding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -35,12 +36,7 @@ class MedicalFileScreen extends StatelessWidget {
           listener: (BuildContext context, MedicalFileState state) =>
               context.go(Routes.auth),
           builder: (BuildContext context, MedicalFileState state) => Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              0,
-            ),
+            padding: pageFramePadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[

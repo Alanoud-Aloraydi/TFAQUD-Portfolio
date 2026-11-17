@@ -3,7 +3,15 @@
 from datetime import date, datetime, time
 from uuid import UUID
 
-from sqlalchemy import Date, DateTime, ForeignKey, Text, Time, text
+from sqlalchemy import (
+    Date,
+    DateTime,
+    ForeignKey,
+    SmallInteger,
+    Text,
+    Time,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
@@ -35,6 +43,13 @@ class Appointment(db.Model):
     time_of_day: Mapped[time] = mapped_column(Time)
     place: Mapped[str | None] = mapped_column(Text)
     remote_method: Mapped[str | None] = mapped_column(Text)
+    # How long before its time the visit's own reminder comes, in minutes
+    # (migration 0061). The day-before reminder is separate and always
+    # set; this is the near one, which used to be a fixed two hours for
+    # every visit. 60 for the visits saved before the choice existed.
+    reminder_lead_minutes: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, server_default=text("60")
+    )
     status: Mapped[str] = mapped_column(
         Text, server_default=text("'scheduled'")
     )

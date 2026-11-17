@@ -10,6 +10,14 @@ String notificationValueKey(AppPermission allowed) => switch (allowed) {
   AppPermission.denied => 'account.notifications_off',
 };
 
+/// The word the switch shows: the person's own choice comes first, since
+/// a permission the phone allows says nothing about still wanting the
+/// reminders.
+String notificationStateKey(AppPermission allowed, {required bool wanted}) =>
+    allowed.usable && !wanted
+    ? 'account.notifications_paused'
+    : notificationValueKey(allowed);
+
 /// Why the reminders cannot arrive properly, or null when they can.
 /// «محدودة» is iOS «Deliver Quietly»: allowed, but with no alert and no
 /// sound, which Settings is the only way out of.
