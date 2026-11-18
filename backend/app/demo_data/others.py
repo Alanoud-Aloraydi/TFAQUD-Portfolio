@@ -5,6 +5,7 @@ from datetime import date
 from app.care import CareService
 from app.demo_data.shapes import dose_at, medicine
 from app.demo_data.story import INVITED_PHONE, JEDDAH_POINT, REQUEST_PHONE
+from app.errors import ValidationFailed
 from app.models import CareCircle
 
 
@@ -53,6 +54,12 @@ class DemoOthers:
         sister.created_at = sister.last_sent_at
 
         # 4. Lina asked her father's number for a circle; it waits for him.
-        CareService(self.session, self.at(-2)).request_creation(
-            lina.id, REQUEST_PHONE, "simplified"
-        )
+        # The team may have signed in with that number on the test server
+        # and made its own circle: then nothing can be asked of it.
+        try:
+            CareService(self.session, self.at(-2)).request_creation(
+                lina.id, REQUEST_PHONE, "simplified"
+            )
+        except ValidationFailed as refused:
+            if refused.code != "patient_has_circle":
+                raise

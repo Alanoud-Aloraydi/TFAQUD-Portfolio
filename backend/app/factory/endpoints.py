@@ -59,3 +59,8 @@ def register_commands(app: Flask, database: bool) -> None:
         from app.demo_data import demo_data_command
 
         app.cli.add_command(demo_data_command)
+        # `keep-only`: only some accounts stay, on a test server
+        # (app/keep_only/).
+        from app.keep_only import keep_only_command
+
+        app.cli.add_command(keep_only_command)
