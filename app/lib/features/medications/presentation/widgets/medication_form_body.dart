@@ -18,6 +18,7 @@ class MedicationFormBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool startInPast = state.errorKey == 'medications.start_in_past';
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -46,8 +47,9 @@ class MedicationFormBody extends StatelessWidget {
             data: state.data,
             issue: state.issue,
             onChanged: state.changed,
+            startError: startInPast ? state.errorKey : null,
           ),
-          MedicationFormFooter(errorKey: state.errorKey),
+          MedicationFormFooter(errorKey: startInPast ? null : state.errorKey),
         ],
       ),
     );

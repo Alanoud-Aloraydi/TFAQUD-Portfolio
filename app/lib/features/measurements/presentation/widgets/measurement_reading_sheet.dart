@@ -185,6 +185,9 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
     }
   }
 
+  /// A typed digit: the level follows it, and an old error goes.
+  void _typed() => setState(() => _errorKey = null);
+
   @override
   Widget build(BuildContext context) {
     // The glass sheet draws the title, scrolls, and stays above the
@@ -194,6 +197,13 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
         .state
         .ranges
         ?.of(_kind, _mealState);
+    final bool bp = _kind == MeasurementKind.bp;
+    final String unit = context.tr(
+      bp ? 'measurements.bp_unit' : 'measurements.glucose_unit',
+    );
+    final String? outOfRange = _errorKey == 'measurements.invalid_reading'
+        ? context.tr(_errorKey!)
+        : null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -221,33 +231,29 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                   : null,
             ),
             const SizedBox(height: AppSpacing.lg),
-            // The upper number on top, the lower under it.
-            ReadingNumberField(
-              label: context.tr(
-                _kind == MeasurementKind.bp
-                    ? 'measurements.systolic'
-                    : 'measurements.value',
-              ),
-              controller: _kind == MeasurementKind.bp ? _systolic : _glucose,
-              onChanged: () => setState(() {}),
-              last: _kind != MeasurementKind.bp,
-            ),
-            if (_kind == MeasurementKind.bp) ...[
-              const SizedBox(height: AppSpacing.sm),
-              ReadingNumberField(
-                label: context.tr('measurements.diastolic'),
-                controller: _diastolic,
-                onChanged: () => setState(() {}),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              context.tr(
-                _kind == MeasurementKind.bp
-                    ? 'measurements.bp_unit'
-                    : 'measurements.glucose_unit',
-              ),
-              textAlign: TextAlign.center,
+            // The upper number on top, the lower under it; a number out of
+            // range is said under the last one.
+            InsetGroup(
+              children: [
+                ReadingNumberField(
+                  label: context.tr(
+                    bp ? 'measurements.systolic' : 'measurements.value',
+                  ),
+                  unit: unit,
+                  controller: bp ? _systolic : _glucose,
+                  onChanged: _typed,
+                  last: !bp,
+                  errorText: bp ? null : outOfRange,
+                ),
+                if (bp)
+                  ReadingNumberField(
+                    label: context.tr('measurements.diastolic'),
+                    unit: unit,
+                    controller: _diastolic,
+                    onChanged: _typed,
+                    errorText: outOfRange,
+                  ),
+              ],
             ),
             // Never in the way: saving does not wait for it, the server
             // judges the reading either way.
@@ -322,7 +328,9 @@ class _MeasurementReadingSheetState extends State<MeasurementReadingSheet> {
                 ),
               ],
             ),
-            if (_errorKey != null)
+            // The server's refusal stays above the button: a toast would be
+            // hidden behind the sheet.
+            if (_errorKey != null && outOfRange == null)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Text(

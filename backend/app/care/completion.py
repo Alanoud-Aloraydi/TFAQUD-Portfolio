@@ -78,6 +78,7 @@ class CareCompletion:
             latitude=latitude,
             longitude=longitude,
             time_zone=time_zone,
+            completing=request.id,
         )
         request.status = "completed"
         request.care_circle_id = circle.id

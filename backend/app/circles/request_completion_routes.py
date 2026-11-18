@@ -8,6 +8,8 @@ from app.circles.request_blueprint import NOT_FOUND, bp
 from app.circles.support import answer, care_work, parse_id, save_medical
 from app.models import Account
 from app.push.messages import circle_ready_push
+from app.push.messages.attention import send_all
+from app.push.messages.superseded import superseded_pushes
 from app.push.notify import notify
 from app.validation import parse_json_body
 
@@ -45,7 +47,12 @@ def complete(request_id):
         )
         # Tell the sender the circle is ready, after the commit.
         push = circle_ready_push(work.session, request_uuid, circle)
+        # The other requests sent to this number close: their senders hear.
+        closed = superseded_pushes(
+            work.session, work.care.superseded_requests
+        )
     notify(push)
+    send_all(closed)
     return answer({"circle": view, "account_app_mode": mode}, 201)
 
 

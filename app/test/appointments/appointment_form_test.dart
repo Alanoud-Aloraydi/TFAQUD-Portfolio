@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -135,7 +136,7 @@ void main() {
 
     /// The place field, below the clinic field in the form.
     Finder placeField() =>
-        find.widgetWithText(TextField, 'appointments.place'.tr());
+        find.widgetWithText(InsetTextRow, 'appointments.place'.tr());
 
     /// Taps a companion chip, which grows a check mark and pushes the row
     /// down, so it is brought back on screen before every tap.
@@ -191,7 +192,7 @@ void main() {
       await tester.tap(find.text('appointments.kinds.vaccine'.tr()));
       await tester.pump();
       await tester.enterText(
-        find.widgetWithText(TextField, 'appointments.clinic_field'.tr()),
+        find.widgetWithText(InsetTextRow, 'appointments.clinic_field'.tr()),
         'عيادة السكري',
       );
       await fillAndSave(tester);
@@ -266,11 +267,11 @@ void main() {
       expect(find.text('home'), findsOneWidget);
     });
 
-    testWidgets('the visit day is in «أيام المواعيد»: there is no row of '
-        'its own', (tester) async {
+    testWidgets('the main visit day is «يوم الموعد», with the days under '
+        'it', (tester) async {
       final _Appointments repository = await open(tester, _riyadhAt(8));
 
-      await scrollTo(tester, find.text('appointments.more_dates'.tr()));
+      await scrollTo(tester, find.text('appointments.main_day'.tr()));
       expect(find.text('appointments.date'.tr()), findsNothing);
       // A new visit starts on the patient's today, the one day it has.
       expect(

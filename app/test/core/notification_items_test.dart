@@ -97,6 +97,8 @@ void main() {
     expect(opensBell('request_answer', answeredItemKey('r-1')), isTrue);
     // Accepted: it waits for the patient, with no card on the bell yet.
     expect(opensBell('request_answer', null), isFalse);
+    // A request that can no longer be accepted: its card in «السابقة».
+    expect(opensBell('request_superseded', answeredItemKey('r-1')), isTrue);
     expect(opensBell('dose_missed', 'c-1|s-1|2026-11-5'), isFalse);
     expect(opensBell(null, null), isFalse);
   });

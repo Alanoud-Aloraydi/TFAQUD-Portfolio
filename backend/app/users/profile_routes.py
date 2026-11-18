@@ -7,6 +7,7 @@ from app.auth.decorators import current_auth, require_auth
 from app.clock import latest_today
 from app.errors import NotFound, ValidationFailed
 from app.extensions import get_clock, get_user_store
+from app.users.age import require_old_enough
 from app.users.blueprint import bp
 from app.users.profile_input import ProfileRequest
 from app.validation import parse_json_body
@@ -27,11 +28,14 @@ def save_profile():
     # No patient, so no zone yet: only a day that is still ahead
     # everywhere is in the future. A circle checks it again in the
     # patient's own zone (`CareService`).
-    if body.birth_date and body.birth_date > latest_today(get_clock().now()):
+    today = latest_today(get_clock().now())
+    if body.birth_date and body.birth_date > today:
         raise ValidationFailed(
             "The birth date cannot be in the future.",
             code="invalid_birth_date",
         )
+    if body.birth_date:
+        require_old_enough(body.birth_date, today)
     user = get_user_store().update_profile(
         current_auth().user_id,
         body.first_name,

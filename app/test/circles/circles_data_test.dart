@@ -493,6 +493,15 @@ void main() {
                   'other_name': null,
                   'other_phone_number': '+966501234567',
                 },
+                // Closed: the patient got a circle another way.
+                <String, dynamic>{
+                  'id': 'req-2',
+                  'kind': 'request_sent',
+                  'status': 'superseded',
+                  'answered_at': '2026-11-06T10:00:00+00:00',
+                  'circle_name': null,
+                  'other_name': 'سامي',
+                },
                 // A kind from a newer server, and an item with no time.
                 <String, dynamic>{
                   'id': 'x',
@@ -523,6 +532,14 @@ void main() {
             accepted: false,
             answeredAt: DateTime.utc(2026, 11, 7, 10),
             otherPhoneNumber: '+966501234567',
+          ),
+          PreviousNotification(
+            id: 'req-2',
+            kind: PreviousKind.requestSent,
+            accepted: false,
+            superseded: true,
+            answeredAt: DateTime.utc(2026, 11, 6, 10),
+            otherName: 'سامي',
           ),
         ]);
         expect(

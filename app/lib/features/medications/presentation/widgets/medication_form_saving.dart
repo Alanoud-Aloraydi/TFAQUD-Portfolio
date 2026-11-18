@@ -15,6 +15,8 @@ extension MedicationFormSaving on MedicationFormState {
   Future<void> submit() async {
     final String? saved = savedPlanId;
     if (saved != null) return savePhoto(saved);
+    // A refusal said again is shown again.
+    if (errorKey != null) update(() => errorKey = null);
     if (widget.plan == null &&
         data.startsOn.isBefore(PatientClockScope.of(context).today())) {
       update(() => errorKey = 'medications.start_in_past');

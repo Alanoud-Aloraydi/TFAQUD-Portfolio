@@ -69,7 +69,8 @@ def previous_requests(session, account, since, name) -> list[dict]:
     `since`."""
     other, patient = aliased(Account), aliased(Account)
     request = CareCircleRequest
-    done = request.status.in_(["completed", "declined"])
+    # Superseded: closed when the patient got a circle another way.
+    done = request.status.in_(["completed", "declined", "superseded"])
     when = func.coalesce(request.completed_at, request.responded_at)
     items = []
     for kind, mine, person in (

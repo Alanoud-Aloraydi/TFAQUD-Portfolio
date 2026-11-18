@@ -9,7 +9,9 @@ import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.da
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// The sheet of «إضافة عضو»: the number and «إرسال الدعوة».
+/// The sheet of «إضافة عضو»: the number and «إرسال الدعوة». A refused
+/// invitation is said under the number, the sheet's one field, right above
+/// the button (a toast would be hidden behind the sheet).
 class InviteMemberSheet extends StatefulWidget {
   const InviteMemberSheet({super.key, required this.cubit});
 
@@ -58,17 +60,8 @@ class _InviteMemberSheetState extends State<InviteMemberSheet> {
           controller: _phone,
           autofocus: false,
           onChanged: (_) => setState(() => _errorKey = null),
-          showError: _errorKey == 'circle_overview.phone_invalid',
+          error: _errorKey == null ? null : context.tr(_errorKey!),
         ),
-        if (_errorKey != null)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Text(
-              context.tr(_errorKey!),
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: AppSemanticColors.statusError),
-            ),
-          ),
         const SizedBox(height: AppSpacing.lg),
         FilledButton.icon(
           onPressed: _saving ? null : _send,

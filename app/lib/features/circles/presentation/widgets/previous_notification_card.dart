@@ -28,9 +28,7 @@ class PreviousNotificationCard extends StatelessWidget {
         .today()
         .difference(clock.today(item.answeredAt))
         .inDays;
-    final String key =
-        'circles.previous.${item.kind.name}_'
-        '${item.accepted ? 'accepted' : 'declined'}';
+    final String key = 'circles.previous.${item.kind.name}_${item.outcome}';
     return InboxCard(
       avatar: InboxAvatar(
         name: item.otherName ?? '',

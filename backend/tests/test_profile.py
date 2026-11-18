@@ -288,15 +288,15 @@ def test_a_day_that_is_already_today_somewhere_is_accepted(
     # The account has no patient and so no zone yet. At 15 Oct 12:00 UTC
     # it is still the 15th in Riyadh but already the 16th at UTC+14, where
     # someone may live and pick it on their phone; the 17th is still ahead
-    # everywhere.
+    # everywhere. And an account holder is 15 or older (`too_young`): 15
+    # years to that day is old enough, a day later is not.
     token = sign_in(client, sms)["access_token"]
 
-    accepted = save(
-        client, token, {**NAMES, "birth_date": "2026-10-16", "city": "Riyadh"}
-    )
-    refused = save(
-        client, token, {**NAMES, "birth_date": "2026-10-17", "city": "Riyadh"}
-    )
+    def saved(day):
+        return save(
+            client, token, {**NAMES, "birth_date": day, "city": "Riyadh"}
+        )
 
-    assert accepted.status_code == 200
-    error_of(refused, 422, "invalid_birth_date")
+    assert saved("2011-10-16").status_code == 200
+    error_of(saved("2011-10-17"), 422, "too_young")
+    error_of(saved("2026-10-17"), 422, "invalid_birth_date")

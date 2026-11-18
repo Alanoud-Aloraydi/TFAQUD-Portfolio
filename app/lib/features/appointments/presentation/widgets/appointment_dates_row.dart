@@ -4,13 +4,16 @@ import 'package:app/core/l10n/appointment_texts.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
+import 'package:app/features/appointments/domain/appointment_days.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_days_chips.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// «أيام المواعيد»: every day of a booking, each its own visit with the
-/// same type, time and place; the row or «إضافة يوم» adds one. While a
-/// visit is edited ([single]) the row is its one day, and a tap moves it.
+/// The days of a booking, each its own visit with the same type, time and
+/// place. The row is the main visit's day (the first), and a tap changes
+/// it; «إضافة يوم» under it adds another, and a chip takes a day off while
+/// another is left (the next one becomes the main). While a visit is
+/// edited ([single]) the row is its one day.
 class AppointmentDatesRow extends StatelessWidget {
   const AppointmentDatesRow({
     super.key,
@@ -19,7 +22,7 @@ class AppointmentDatesRow extends StatelessWidget {
     this.single = false,
   });
 
-  /// The days, oldest first.
+  /// The main day first, then the added ones, oldest first.
   final List<DateTime> dates;
   final ValueChanged<List<DateTime>> onChanged;
   final bool single;
@@ -29,42 +32,35 @@ class AppointmentDatesRow extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: <Widget>[
       InsetRow(
-        label: context.tr('appointments.more_dates'),
-        value: switch (dates) {
-          [] => null,
-          [final DateTime day] => appointmentDate(context, day),
-          _ => context.tr(
-            'appointments.visits_count',
-            args: <String>['${dates.length}'],
-          ),
-        },
-        placeholder: context.tr('appointments.pick_days'),
+        label: context.tr('appointments.main_day'),
+        value: dates.isEmpty ? null : appointmentDate(context, dates.first),
+        placeholder: context.tr('appointments.pick_day'),
         showChevron: true,
-        onTap: () => unawaited(_pick(context)),
+        onTap: () => unawaited(_pick(context, main: true)),
       ),
       if (!single)
         AppointmentDaysChips(
           dates: dates,
           onChanged: onChanged,
-          onAdd: () => unawaited(_pick(context)),
+          onAdd: () => unawaited(_pick(context, main: false)),
         ),
     ],
   );
 
-  Future<void> _pick(BuildContext context) async {
+  /// The main day ([main]) or another one, from the patient's today.
+  Future<void> _pick(BuildContext context, {required bool main}) async {
     final DateTime today = PatientClockScope.of(context).today();
-    final DateTime? last = dates.lastOrNull;
+    final DateTime? at = main ? dates.firstOrNull : dayAfterLast(dates);
     final DateTime? chosen = await showTafaqodDateSheet(
       context,
-      title: context.tr('appointments.more_dates'),
-      initialDate: single
-          ? (last == null || last.isBefore(today) ? today : last)
-          : (last == null ? today : last.add(const Duration(days: 1))),
+      title: context.tr(
+        main ? 'appointments.main_day' : 'appointments.add_day',
+      ),
+      initialDate: at == null || at.isBefore(today) ? today : at,
       firstDate: today,
       lastDate: DateTime(today.year + 5, 12, 31),
     );
-    if (chosen == null || (!single && dates.contains(chosen))) return;
-    final List<DateTime> kept = single ? <DateTime>[] : dates;
-    onChanged(<DateTime>[...kept, chosen]..sort());
+    if (chosen == null) return;
+    onChanged(main ? withMainDay(dates, chosen) : withAddedDay(dates, chosen));
   }
 }

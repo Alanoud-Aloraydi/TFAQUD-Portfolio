@@ -1,15 +1,13 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/core/utils/text_limits.dart';
+import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
+import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
@@ -20,6 +18,7 @@ import 'package:app/features/appointments/domain/appointment_reminder_lead.dart'
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_companion_chips.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_dates_row.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_lead_row.dart';
@@ -137,13 +136,20 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
     if (errorKey == null) {
       AppToast.show(context, 'toast.appointment_saved');
       context.pop(true);
+      return;
+    }
+    setState(() => _saving = false);
+    // The visit's time is checked again by the server; anything else is
+    // about no one field: a short message.
+    if (errorKey == 'appointments.time_in_past') {
+      setState(() => _errorKey = errorKey);
     } else {
-      setState(() {
-        _saving = false;
-        _errorKey = errorKey;
-      });
+      AppToast.show(context, errorKey, kind: ToastKind.error);
     }
   }
+
+  /// The error under the field it is about ([key]), while it is the one.
+  String? _fieldError(String key) => _errorKey == key ? context.tr(key) : null;
 
   @override
   Widget build(BuildContext context) {
@@ -220,44 +226,30 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
             children: [
               InsetBlock(
                 semanticLabel: context.tr('appointments.type'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppointmentKindChoices(
-                      selected: _kind,
-                      onSelected: (kind) => setState(() {
-                        _kind = kind;
-                        _errorKey = null;
-                      }),
-                    ),
-                    if (_kind == AppointmentKind.other) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      TextField(
-                        controller: _otherKind,
-                        maxLength: 80,
-                        inputFormatters: const [CodePointLengthFormatter(80)],
-                        textAlign: TextAlign.start,
-                        onChanged: (_) => setState(() => _errorKey = null),
-                        decoration: InputDecoration(
-                          labelText: context.tr('appointments.custom_kind'),
-                        ),
-                      ),
-                    ],
-                  ],
+                child: AppointmentKindChoices(
+                  selected: _kind,
+                  onSelected: (kind) => setState(() {
+                    _kind = kind;
+                    _errorKey = null;
+                  }),
                 ),
               ),
-              InsetBlock(
-                semanticLabel: context.tr('appointments.clinic_field'),
-                child: TextField(
-                  controller: _clinic,
-                  maxLength: 80,
-                  inputFormatters: const [CodePointLengthFormatter(80)],
-                  textAlign: TextAlign.start,
-                  decoration: InputDecoration(
-                    labelText: context.tr('appointments.clinic_field'),
-                    hintText: context.tr('appointments.clinic_hint'),
+              if (_kind == AppointmentKind.other)
+                FieldWithError(
+                  error: _fieldError('appointments.kind_required'),
+                  child: InsetTextRow(
+                    label: context.tr('appointments.custom_kind'),
+                    controller: _otherKind,
+                    maxLength: 80,
+                    onChanged: (_) => setState(() => _errorKey = null),
                   ),
                 ),
+              InsetTextRow(
+                label: context.tr('appointments.clinic_field'),
+                hint: context.tr('appointments.clinic_hint'),
+                controller: _clinic,
+                maxLength: 80,
+                onChanged: (_) {},
               ),
             ],
           ),
@@ -265,25 +257,34 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
           InsetGroup(
             header: context.tr('appointments.time_place_group'),
             children: [
-              AppointmentDatesRow(
-                dates: _days,
-                single: widget.appointmentId != null,
-                onChanged: (value) => setState(() => _days = value),
+              FieldWithError(
+                error: _fieldError('appointments.days_required'),
+                child: AppointmentDatesRow(
+                  dates: _days,
+                  single: widget.appointmentId != null,
+                  onChanged: (value) => setState(() => _days = value),
+                ),
               ),
-              InsetRow(
-                label: context.tr('appointments.time'),
-                value: timeOfDayText(_time),
-                showChevron: true,
-                onTap: () async {
-                  final selected = await showTafaqodTimeSheet(
-                    context,
-                    title: context.tr('appointments.time'),
-                    initialTime: _time,
-                  );
-                  if (selected != null && mounted) {
-                    setState(() => _time = selected);
-                  }
-                },
+              FieldWithError(
+                error: _fieldError('appointments.time_in_past'),
+                child: InsetRow(
+                  label: context.tr('appointments.time'),
+                  value: timeOfDayText(_time),
+                  showChevron: true,
+                  onTap: () async {
+                    final selected = await showTafaqodTimeSheet(
+                      context,
+                      title: context.tr('appointments.time'),
+                      initialTime: _time,
+                    );
+                    if (selected != null && mounted) {
+                      setState(() {
+                        _time = selected;
+                        _errorKey = null;
+                      });
+                    }
+                  },
+                ),
               ),
               AppointmentLeadRow(
                 minutes: _lead,
@@ -303,17 +304,15 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
                   ),
                 )
               else
-                InsetBlock(
-                  semanticLabel: context.tr('appointments.place'),
-                  child: TextField(
+                FieldWithError(
+                  error: _fieldError('appointments.place_required'),
+                  child: InsetTextRow(
+                    label: context.tr('appointments.place'),
+                    hint: context.tr('appointments.place_hint'),
                     controller: _place,
-                    textAlign: TextAlign.start,
                     maxLength: 160,
-                    inputFormatters: const [CodePointLengthFormatter(160)],
-                    decoration: InputDecoration(
-                      labelText: context.tr('appointments.place'),
-                      hintText: context.tr('appointments.place_hint'),
-                    ),
+                    maxLines: 3,
+                    onChanged: (_) => setState(() => _errorKey = null),
                   ),
                 ),
             ],
@@ -323,66 +322,16 @@ class _AppointmentFormPageState extends State<AppointmentFormPage> {
             header: context.tr('appointments.companion'),
             footer: companionHint(context, companions, _companionIds),
             children: [
-              InsetBlock(
-                child: companions.loading
-                    ? const LoadingNote()
-                    : companions.errorKey != null
-                    ? TextButton(
-                        onPressed: () => context
-                            .read<AppointmentCompanionsCubit>()
-                            .load(widget.circleId),
-                        child: Text(context.tr(companions.errorKey!)),
-                      )
-                    : companions.companions.isEmpty
-                    ? Text(context.tr('appointments.no_companions'))
-                    : Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          for (final item in companions.companions)
-                            FilterChip(
-                              avatar: PersonPhoto(
-                                name: item.name,
-                                photoPath: ApiEndpoints.memberPhoto(
-                                  widget.circleId,
-                                  item.id,
-                                ),
-                                avatarCode: item.avatarCode,
-                                size: 20,
-                              ),
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(item.name),
-                                  if (_companionIds.contains(item.id)) ...[
-                                    const SizedBox(width: AppSpacing.xs),
-                                    const Icon(AppIcons.check, size: 16),
-                                  ],
-                                ],
-                              ),
-                              showCheckmark: false,
-                              selected: _companionIds.contains(item.id),
-                              // Optional: the last one can go too.
-                              onSelected: (selected) => setState(() {
-                                if (selected) {
-                                  _companionIds.add(item.id);
-                                } else {
-                                  _companionIds.remove(item.id);
-                                }
-                              }),
-                            ),
-                        ],
-                      ),
+              AppointmentCompanionChips(
+                circleId: widget.circleId,
+                state: companions,
+                chosen: _companionIds,
+                onToggle: (String id, bool selected) => setState(() {
+                  selected ? _companionIds.add(id) : _companionIds.remove(id);
+                }),
               ),
             ],
           ),
-          if (_errorKey != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              context.tr(_errorKey!),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ],
         ],
       ),
     );

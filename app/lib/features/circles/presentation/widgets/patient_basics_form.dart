@@ -1,5 +1,6 @@
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
+import 'package:app/core/feedback/error_toast.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/patient_birth_field.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 
 /// Everything on the page of a person without the app, above the create
 /// button: the title, one line on what the circle is for, and the fields.
+/// A refusal of the birth date is under its field; any other is a toast.
 class PatientBasicsForm extends StatelessWidget {
   const PatientBasicsForm({
     required this.state,
@@ -43,10 +45,10 @@ class PatientBasicsForm extends StatelessWidget {
           PatientBirthField(state: state, cubit: cubit),
           gap,
           PatientCityField(state: state, cubit: cubit),
-          if (state.errorKey != null) ...<Widget>[
-            gap,
-            InlineError(messageKey: state.errorKey!),
-          ],
+          ErrorToast(
+            errorKey: isBirthDateError(state.errorKey) ? null : state.errorKey,
+            child: const SizedBox.shrink(),
+          ),
         ],
       ),
     );

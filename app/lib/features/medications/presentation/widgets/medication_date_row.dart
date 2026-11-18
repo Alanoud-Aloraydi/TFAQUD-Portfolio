@@ -12,6 +12,7 @@ class MedicationDateRow extends StatelessWidget {
     required this.onChanged,
     this.firstDate,
     this.focusNode,
+    this.errorText,
   });
 
   final String label;
@@ -20,6 +21,9 @@ class MedicationDateRow extends StatelessWidget {
   final DateTime? firstDate;
   final FocusNode? focusNode;
 
+  /// Why the date was refused, under the row.
+  final String? errorText;
+
   @override
   Widget build(BuildContext context) {
     final DateTime? date = value;
@@ -27,6 +31,7 @@ class MedicationDateRow extends StatelessWidget {
       label: label,
       value: date == null ? null : formatMedicationDate(context, date),
       focusNode: focusNode,
+      errorText: errorText,
       onTap: () => _select(context),
       showChevron: true,
     );

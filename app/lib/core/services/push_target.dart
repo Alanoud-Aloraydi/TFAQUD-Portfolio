@@ -8,11 +8,11 @@ import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminders/item_keys.dart';
 
 /// Whether a tapped push of [kind] opens the bell: an invitation, a
-/// request, and a declined answer to a request the person sent (its push
-/// names the request, which is in «السابقة»). An accepted one has no card
-/// there yet and opens «اليوم».
+/// request, a request that can no longer be accepted, and a declined
+/// answer to a request the person sent (its push names the request, which
+/// is in «السابقة»). An accepted one has no card there yet and opens «اليوم».
 bool opensBell(String? kind, String? item) => switch (kind) {
-  'invitation' || 'circle_request' => true,
+  'invitation' || 'circle_request' || 'request_superseded' => true,
   'request_answer' => item != null,
   _ => false,
 };
@@ -34,9 +34,10 @@ String? pushItemKey(Map<String, dynamic> data) {
     return inboxItemKey(id);
   }
   if (_text(data, 'request_id') case final String id) {
-    return data['kind'] == 'request_answer'
-        ? answeredItemKey(id)
-        : inboxItemKey(id);
+    return switch (data['kind']) {
+      'request_answer' || 'request_superseded' => answeredItemKey(id),
+      _ => inboxItemKey(id),
+    };
   }
   final String? circle = _text(data, 'circle_id');
   if (circle == null) return null;

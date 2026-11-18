@@ -1,18 +1,18 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/utils/text_limits.dart';
+import 'package:app/core/widgets/forms/tap_to_focus.dart';
+import 'package:app/core/widgets/layout/inset_field_decoration.dart';
 import 'package:app/core/widgets/layout/inset_row_error.dart';
 import 'package:app/core/widgets/layout/inset_row_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// A row with the small label in its column and a borderless text field
-/// after it. The card is the field's boundary, as in iOS forms. Typed text
-/// starts on the right, after the label, as Arabic is read. A short [hint]
-/// inside the field says what to type; it replaces any line under the row.
-/// An error shows under the row, with an icon, so it is not color alone.
+/// after it, the card its boundary as in iOS forms; a tap anywhere on the
+/// row starts typing. A short [hint] inside says what to type; an error
+/// shows under the row, with an icon, so it is not color alone.
 class InsetTextRow extends StatelessWidget {
   const InsetTextRow({
     super.key,
@@ -29,6 +29,7 @@ class InsetTextRow extends StatelessWidget {
     this.textInputAction = TextInputAction.next,
     this.trailing,
     this.autofocus = false,
+    this.ltr = false,
   });
 
   final String label;
@@ -51,89 +52,83 @@ class InsetTextRow extends StatelessWidget {
   final Widget? trailing;
   final bool autofocus;
 
+  /// Written left to right, from the left end, as a phone number beside its
+  /// country code ([trailing]); Arabic would put its digit groups backwards.
+  final bool ltr;
+
   @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    final bool multiline = maxLines > 1;
-    final Widget field = TextField(
-      controller: controller,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      onChanged: onChanged,
-      keyboardType: keyboardType,
-      textInputAction: multiline ? TextInputAction.newline : textInputAction,
-      maxLines: maxLines,
-      minLines: 1,
-      // Arabic is read from the right: the text starts after the label.
-      textAlign: TextAlign.start,
-      style: text.bodyLarge,
-      inputFormatters: <TextInputFormatter>[
-        // First: an Arabic keyboard types ٠-٩; they become 0-9 before any
-        // formatter that keeps only English digits.
-        WesternDigitsFormatter(decimal: keyboardType?.decimal ?? false),
-        ...?inputFormatters,
-        // Counted in code points, as the server counts.
-        if (maxLength != null) CodePointLengthFormatter(maxLength!),
-      ],
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: text.bodyMedium?.copyWith(
-          color: AppSemanticColors.borderControlBase,
-        ),
-        filled: false,
-        isDense: true,
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
-        errorBorder: InputBorder.none,
-        focusedErrorBorder: InputBorder.none,
-        disabledBorder: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      ),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: AppSizes.button),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Row(
-              crossAxisAlignment: multiline
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.center,
-              children: <Widget>[
-                // The visible label and the field merge into one node, so
-                // VoiceOver reads the label with the field.
-                Expanded(
-                  child: MergeSemantics(
-                    child: Row(
-                      crossAxisAlignment: multiline
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: multiline ? AppSpacing.md : 0,
+  Widget build(BuildContext context) => TapToFocus(
+    focusNode: focusNode,
+    builder: (FocusNode node) {
+      final TextTheme text = Theme.of(context).textTheme;
+      final bool multiline = maxLines > 1;
+      final Widget field = TextField(
+        controller: controller,
+        focusNode: node,
+        autofocus: autofocus,
+        onChanged: onChanged,
+        keyboardType: keyboardType,
+        textInputAction: multiline ? TextInputAction.newline : textInputAction,
+        maxLines: maxLines,
+        minLines: 1,
+        // Arabic is read from the right: the text starts after the label.
+        textAlign: ltr ? TextAlign.left : TextAlign.start,
+        textDirection: ltr ? TextDirection.ltr : null,
+        style: text.bodyLarge,
+        inputFormatters: <TextInputFormatter>[
+          // First: an Arabic keyboard types ٠-٩; they become 0-9 before any
+          // formatter that keeps only English digits.
+          WesternDigitsFormatter(decimal: keyboardType?.decimal ?? false),
+          ...?inputFormatters,
+          // Counted in code points, as the server counts.
+          if (maxLength != null) CodePointLengthFormatter(maxLength!),
+        ],
+        decoration: insetFieldDecoration(text, hint),
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppSizes.button),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Row(
+                crossAxisAlignment: multiline
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
+                children: <Widget>[
+                  // The visible label and the field merge into one node, so
+                  // VoiceOver reads the label with the field.
+                  Expanded(
+                    child: MergeSemantics(
+                      child: Row(
+                        crossAxisAlignment: multiline
+                            ? CrossAxisAlignment.start
+                            : CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: multiline ? AppSpacing.md : 0,
+                            ),
+                            child: InsetRowLabel(label),
                           ),
-                          child: InsetRowLabel(label),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: field),
-                      ],
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(child: field),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                if (trailing != null) ...<Widget>[
-                  const SizedBox(width: AppSpacing.xs),
-                  trailing!,
+                  if (trailing != null) ...<Widget>[
+                    const SizedBox(width: AppSpacing.xs),
+                    trailing!,
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ),
-        if (errorText != null) InsetRowError(errorText!),
-      ],
-    );
-  }
+          if (errorText != null) InsetRowError(errorText!),
+        ],
+      );
+    },
+  );
 }

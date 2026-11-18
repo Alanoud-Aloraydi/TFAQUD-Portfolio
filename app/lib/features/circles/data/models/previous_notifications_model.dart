@@ -31,7 +31,11 @@ abstract class PreviousNotificationsModel {
     return PreviousNotification(
       id: item['id'] as String,
       kind: kind,
-      accepted: item['status'] != 'declined',
+      accepted: !const <String>{
+        'declined',
+        'superseded',
+      }.contains(item['status']),
+      superseded: item['status'] == 'superseded',
       answeredAt: answeredAt,
       circleName: item['circle_name'] as String?,
       otherName: item['other_name'] as String?,

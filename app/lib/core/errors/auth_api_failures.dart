@@ -21,6 +21,7 @@ Failure? authApiFailure(String? code) {
     ApiErrorCodes.badRequest ||
     ApiErrorCodes.invalidJson => const ValidationFailure(),
     ApiErrorCodes.invalidBirthDate => const InvalidBirthDateFailure(),
+    ApiErrorCodes.tooYoung => const TooYoungFailure(),
     ApiErrorCodes.dataConflict => const ConflictFailure(),
     ApiErrorCodes.internalError => const ServerFailure(),
     _ => null,

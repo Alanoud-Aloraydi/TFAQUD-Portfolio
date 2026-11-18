@@ -9,3 +9,16 @@ import 'package:app/core/errors/failure.dart';
 class InvalidBirthDateFailure extends Failure {
   const InvalidBirthDateFailure() : super('common.invalid_birth_date');
 }
+
+/// The server refused an account holder younger than 15 (`too_young`). The
+/// sheet of one's own birth date stops 15 years back ([showBirthDateSheet]'s
+/// `youngestAge`), so this is a phone with a wrong clock or an older app.
+class TooYoungFailure extends Failure {
+  const TooYoungFailure() : super('common.too_young');
+}
+
+/// Whether [messageKey] is one of the two refusals above, which are shown
+/// under the birth date field.
+bool isBirthDateError(String? messageKey) =>
+    messageKey == 'common.invalid_birth_date' ||
+    messageKey == 'common.too_young';

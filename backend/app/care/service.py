@@ -45,3 +45,5 @@ class CareService(
         """Bind operations to a session and a consistent operation time."""
         self.session = session
         self.now = now
+        # The other requests a new circle closed (`CareBuilding`).
+        self.superseded_requests: list = []

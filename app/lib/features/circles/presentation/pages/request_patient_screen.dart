@@ -1,17 +1,15 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/choice_card.dart';
-import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
 import 'package:app/features/circles/presentation/widgets/request_patient_notice.dart';
+import 'package:app/features/circles/presentation/widgets/request_patient_phone.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -88,13 +86,10 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                   onBack: context.canPop() ? () => context.pop() : null,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                PhoneField(
+                RequestPatientPhone(
                   controller: _phone,
-                  label: context.tr('circles.patient_phone_label'),
-                  autofocus: false,
-                  showError: state.showErrors && !state.phoneValid,
-                  onChanged: (String typed) =>
-                      cubit.phoneChanged(ArabicDigits.digitsOnly(typed)),
+                  state: state,
+                  cubit: cubit,
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 InsetText.header(context.tr('circles.proposed_mode')),
@@ -119,10 +114,6 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
                 RequestPatientNotice(
                   text: context.tr('circles.request_notice'),
                 ),
-                if (state.errorKey != null) ...<Widget>[
-                  const SizedBox(height: AppSpacing.lg),
-                  InlineError(messageKey: state.errorKey!),
-                ],
               ],
             ),
           ),

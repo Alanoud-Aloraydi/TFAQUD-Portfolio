@@ -1,4 +1,5 @@
 import 'package:app/core/constants/name_limits.dart';
+import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
@@ -8,7 +9,6 @@ import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/settings_section.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
-import 'package:app/features/account/presentation/widgets/account_name_edit_field.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,7 +28,8 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
   final _display = TextEditingController();
   bool _filled = false;
   bool _saving = false;
-  String? _errorKey;
+  // After a save with a name left empty: «هذا الحقل مطلوب» under it.
+  bool _showErrors = false;
 
   @override
   void dispose() {
@@ -40,10 +41,12 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
 
   Future<void> _save() async {
     if (_saving) return;
-    setState(() {
-      _saving = true;
-      _errorKey = null;
-    });
+    final List<TextEditingController> names = [_first, _last, _display];
+    if (names.any((name) => name.text.trim().isEmpty)) {
+      setState(() => _showErrors = true);
+      return;
+    }
+    setState(() => _saving = true);
     final error = await context.read<AccountCubit>().saveProfile(
       firstName: _first.text,
       lastName: _last.text,
@@ -52,13 +55,18 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
     if (!mounted) return;
     if (error == null) {
       context.pop(true);
-    } else {
-      setState(() {
-        _saving = false;
-        _errorKey = error;
-      });
+      return;
     }
+    // About no one name: the server, or the connection.
+    setState(() => _saving = false);
+    AppToast.show(context, error, kind: ToastKind.error);
   }
+
+  /// «هذا الحقل مطلوب» under an empty name, after a save.
+  String? _required(TextEditingController name) =>
+      _showErrors && name.text.trim().isEmpty
+      ? context.tr('common.field_required')
+      : null;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -127,33 +135,29 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AccountNameEditField(
-                                label: context.tr('onboarding.first_name'),
-                                controller: _first,
-                                onChanged: (_) =>
-                                    setState(() => _errorKey = null),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: AccountNameEditField(
-                                label: context.tr('onboarding.last_name'),
-                                controller: _last,
-                                onChanged: (_) =>
-                                    setState(() => _errorKey = null),
-                              ),
-                            ),
-                          ],
+                        // The three names, each a row like «اسم العرض».
+                        LabeledTextField(
+                          label: context.tr('onboarding.first_name'),
+                          controller: _first,
+                          maxLength: NameLimits.name,
+                          errorText: _required(_first),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        LabeledTextField(
+                          label: context.tr('onboarding.last_name'),
+                          controller: _last,
+                          maxLength: NameLimits.name,
+                          errorText: _required(_last),
+                          onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: AppSpacing.md),
                         LabeledTextField(
                           label: context.tr('account.display_name'),
                           controller: _display,
                           maxLength: NameLimits.displayName,
-                          onChanged: (_) => setState(() => _errorKey = null),
+                          errorText: _required(_display),
+                          onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: AppSpacing.labelGap),
                         InsetText.note(context.tr('account.display_name_help')),
@@ -170,15 +174,6 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                             ),
                           ],
                         ),
-                        if (_errorKey != null) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          InsetText(
-                            context.tr(_errorKey!),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),

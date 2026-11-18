@@ -1,6 +1,8 @@
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/widgets/forms/birth_date_city_fields.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The patient's birth date and city, asked only of an account that has not
@@ -17,11 +19,13 @@ class CircleBasicsFields extends StatelessWidget {
   final CreateCircleState state;
   final double topGap;
 
+  /// Whether the page shows the fields for [state].
+  static bool shown(CreateCircleState state) =>
+      state.asksBasics && !state.waitingForAccount;
+
   @override
   Widget build(BuildContext context) {
-    if (!state.asksBasics || state.waitingForAccount) {
-      return const SizedBox.shrink();
-    }
+    if (!shown(state)) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(top: topGap),
       child: BirthDateCityFields(
@@ -30,6 +34,9 @@ class CircleBasicsFields extends StatelessWidget {
         onBirthDate: cubit.birthDateChanged,
         onCity: cubit.cityChanged,
         showErrors: state.showErrors,
+        birthDateError: isBirthDateError(state.errorKey)
+            ? context.tr(state.errorKey!)
+            : null,
       ),
     );
   }

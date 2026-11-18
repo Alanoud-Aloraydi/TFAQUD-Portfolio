@@ -13,9 +13,10 @@ error message."""
 
 from app.config import ConfigError
 from app.resilience import CircuitBreaker
+from app.sms.authentica_balance import read_balance
 from app.sms.authentica_calls import AuthenticaCalls, json_field
 from app.sms.base import SmsSender
-from app.sms.http_post import urllib_post
+from app.sms.http_post import urllib_get, urllib_post
 
 DEFAULT_BASE_URL = "https://api.authentica.sa/api/v2"
 DEFAULT_TEMPLATE_ID = 5
@@ -35,6 +36,7 @@ class AuthenticaSmsSender(AuthenticaCalls, SmsSender):
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
         transport=None,
         breaker: CircuitBreaker | None = None,
+        get=None,
     ):
         """Check the key and the https address, and keep the template, the time
         limit, the HTTP function and the circuit breaker.
@@ -53,6 +55,13 @@ class AuthenticaSmsSender(AuthenticaCalls, SmsSender):
         self._timeout = timeout
         self._transport = transport or urllib_post
         self._breaker = breaker or CircuitBreaker("authentica")
+        self._get = get or urllib_get
+
+    def balance(self) -> float | None:
+        """The points left on this key's account; None when unknown."""
+        return read_balance(
+            self._get, self._base_url, self._api_key, self._timeout
+        )
 
     def send_code(self, phone: str) -> None:
         """Ask Authentica to make a code and send it to `phone` by SMS; raise
