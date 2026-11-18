@@ -21,25 +21,25 @@ List<Widget> memberBadges(BuildContext context, CircleMember member) {
       StatusBadge(
         text: context.tr('circle_overview.leader'),
         tone: StatusTone.attention,
-        icon: AppIcons.crown,
+        icon: PeopleIcons.crown,
       ),
     if (member.isPatient)
       StatusBadge(
         text: context.tr('circle_overview.owner'),
         tone: StatusTone.success,
-        icon: AppIcons.user,
+        icon: PeopleIcons.user,
       ),
     if (member.isViewOnly)
       StatusBadge(
         text: context.tr('circle_overview.view_only'),
         tone: StatusTone.muted,
-        icon: AppIcons.lock,
+        icon: NoticeIcons.lock,
       ),
     if (limited)
       StatusBadge(
         text: context.tr('circle_overview.limited_editing'),
         tone: StatusTone.neutral,
-        icon: AppIcons.pencil,
+        icon: ActionIcons.pencil,
       ),
   ];
 }

@@ -4,6 +4,8 @@ import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:equatable/equatable.dart';
 
+export 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state_copy.dart';
+
 /// Where reading the patient's day stands.
 enum SimplifiedModeStatus { loading, ready, failure }
 
@@ -35,7 +37,7 @@ class SimplifiedModeState extends Equatable {
   final bool saving;
 
   /// The tasks put off with «ذكّرني لاحقًا», in either mode, by
-  /// [TodayTask.snoozeKey], until each comes again.
+  /// [TodayTaskSnoozeKey.snoozeKey], until each comes again.
   final Map<String, TaskSnooze> snoozes;
 
   /// [day]'s tasks with their statuses at [now].
@@ -49,26 +51,6 @@ class SimplifiedModeState extends Equatable {
     ),
     null => null,
   };
-
-  /// A copy with the given fields; [clearMessage] drops [messageKey].
-  SimplifiedModeState copyWith({
-    SimplifiedModeStatus? status,
-    SimplifiedDay? day,
-    DateTime? now,
-    String? messageKey,
-    bool clearMessage = false,
-    bool? saving,
-    Map<String, TaskSnooze>? snoozes,
-  }) {
-    return SimplifiedModeState(
-      status: status ?? this.status,
-      day: day ?? this.day,
-      now: now ?? this.now,
-      messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
-      saving: saving ?? this.saving,
-      snoozes: snoozes ?? this.snoozes,
-    );
-  }
 
   @override
   List<Object?> get props => [status, day, now, messageKey, saving, snoozes];

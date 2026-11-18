@@ -1,5 +1,6 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// One answer on a dark screen («نسيتها»): a wide, quiet card with its
 /// words in the middle, at least 76 high and taller when a large text
@@ -17,7 +18,7 @@ class SimplifiedDarkChoice extends StatelessWidget {
       button: true,
       enabled: onTap != null,
       child: Material(
-        color: SimplifiedStyle.surface.withValues(alpha: .1),
+        color: SimplifiedColors.surface.withValues(alpha: .1),
         borderRadius: radius,
         child: InkWell(
           borderRadius: radius,
@@ -35,7 +36,7 @@ class SimplifiedDarkChoice extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: SimplifiedStyle.head(
                     SimplifiedStyle.headline,
-                    color: SimplifiedStyle.surface,
+                    color: SimplifiedColors.surface,
                   ),
                 ),
               ),

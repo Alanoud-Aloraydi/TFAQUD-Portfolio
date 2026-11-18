@@ -60,7 +60,7 @@ class InfoRow extends StatelessWidget {
           if (onEdit != null) ...<Widget>[
             const SizedBox(width: AppSpacing.sm),
             Icon(
-              AppIcons.pencil,
+              ActionIcons.pencil,
               size: AppSizes.iconSmall,
               color: context.tokens.textSecondary,
             ),

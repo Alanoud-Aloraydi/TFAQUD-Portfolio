@@ -1,0 +1,22 @@
+/// The iOS action of a reminder that can be put off.
+const String snoozeAction = 'snooze';
+
+/// How long «ذكّرني لاحقًا» puts a reminder off from the notification.
+const Duration notificationSnooze = Duration(minutes: 15);
+
+/// What `PhoneNotifications.taps` gives for the snooze action: this, then
+/// the reminder's own payload.
+const String snoozeTapPrefix = 'snooze-action:';
+
+/// Whether [tap] is the snooze action of a reminder, not a plain tap.
+bool isSnoozeTap(String tap) => tap.startsWith(snoozeTapPrefix);
+
+/// What `PhoneNotifications.taps` gives for a tapped server push: this,
+/// its `kind`, then [pushItemSeparator] and the item (push_target.dart).
+const String pushTapPrefix = 'push:';
+const String pushItemSeparator = '#';
+
+/// The server's `kind` of a tapped push, or null for a reminder's tap.
+String? pushKind(String tap) => tap.startsWith(pushTapPrefix)
+    ? tap.substring(pushTapPrefix.length).split(pushItemSeparator).first
+    : null;

@@ -4,108 +4,22 @@
 /// reads the server and sets this plan on the phone.
 library;
 
+export 'package:app/core/services/reminders/appointment_lead.dart';
+export 'package:app/core/services/reminders/dose_reminder_texts.dart';
+export 'package:app/core/services/reminders/reminder_limits.dart';
+export 'package:app/core/services/reminders/reminder_moments.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminder_circle.dart';
+import 'package:app/core/services/reminders/dose_reminder_texts.dart';
+import 'package:app/core/services/reminders/numbered_reminders.dart';
+import 'package:app/core/services/reminders/planned_appointments.dart';
+import 'package:app/core/services/reminders/planned_doses.dart';
+import 'package:app/core/services/reminders/planned_measurements.dart';
 import 'package:app/core/services/reminders/planned_reminder.dart';
-import 'package:app/core/services/reminders/reminder_payloads.dart';
-import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/services/reminders/reminder_limits.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-
-/// Which of an appointment's reminders: the day before, shortly before it,
-/// or right after it was saved for today or tomorrow, when the day-before
-/// moment had already passed.
-enum AppointmentLead { dayBefore, soon, today }
-
-/// The words of the reminders. They are given from outside, so this file
-/// needs no translations and the tests can use plain words.
-class DoseReminderTexts {
-  const DoseReminderTexts({
-    required this.title,
-    required this.body,
-    required this.measurementTitle,
-    required this.measurementBody,
-    required this.appointmentTitle,
-    required this.appointmentBody,
-    required this.keepTitle,
-    required this.keepBody,
-  });
-
-  /// «حان موعد الدواء».
-  final String Function(ReminderCircle circle, DoseOccurrence dose) title;
-
-  /// «يا ياسر، لا ننسى ميتفورمين» over the dose, «1 حبة، الساعة 9:00 م».
-  final String Function(ReminderCircle circle, DoseOccurrence dose) body;
-
-  /// «ياسر، وقت القياس الحين».
-  final String Function(ReminderCircle circle) measurementTitle;
-
-  /// What to measure, «سكر الدم».
-  final String Function(
-    ReminderCircle circle,
-    MeasurementOccurrence measurement,
-  )
-  measurementBody;
-
-  /// «ياسر! عندك موعد القلب بكرة», or «… بعد ساعتين».
-  final String Function(
-    ReminderCircle circle,
-    AppointmentLead lead,
-    CareAppointment appointment,
-  )
-  appointmentTitle;
-
-  /// «الساعة 4:30 م، مستشفى الملك فهد».
-  final String Function(CareAppointment appointment) appointmentBody;
-
-  /// The last note: open the app so the reminders go on.
-  final String Function() keepTitle;
-  final String Function() keepBody;
-}
-
-/// iOS keeps at most 64 scheduled notifications for an app (the 64 set
-/// last). The reminders of doses, measurements and appointments share
-/// [maxDoseReminders] of them, the nearest first; the note after them takes
-/// one more. A dose or measurement put off takes the place of one of the
-/// reminders (`maxCardSnoozes`).
-const int maxDoseReminders = 60;
-
-/// The ids of the reminders: [reminderIdBase] to [reminderIdBase] + 60.
-const int reminderIdBase = 7000;
-
-/// A reminder this close is not set: by the time the phone has it, its
-/// moment may have passed. Short, so a medicine saved a minute before its
-/// dose is still reminded.
-const Duration reminderMargin = Duration(seconds: 10);
-
-/// How long after an appointment is saved its «اليوم» reminder comes, when
-/// it was saved after its day-before moment: right away, with time for the
-/// phone to set it.
-const Duration appointmentSavedLead = Duration(seconds: 30);
-
-/// When an appointment saved after its day-before moment is said right
-/// away ([AppointmentLead.today]): [appointmentSavedLead] after it was
-/// saved, once (a later refresh finds that moment gone). Null when it was
-/// saved earlier, or when the visit's own near reminder comes within ten
-/// minutes anyway. [clock] is the patient's, whose wall clock the visit's
-/// time is.
-DateTime? appointmentAnnouncedAt(PatientClock clock, CareAppointment visit) {
-  final DateTime moment = clock.momentOf(visit.scheduledOn, visit.time);
-  final DateTime saved = visit.updatedAt.toUtc();
-  if (!saved.isAfter(moment.subtract(const Duration(days: 1)))) return null;
-  final DateTime at = saved.add(appointmentSavedLead);
-  final DateTime soon = moment.subtract(visit.reminderLead);
-  final bool soonComes =
-      soon.isAfter(at) && soon.difference(at) < const Duration(minutes: 10);
-  return at.isBefore(moment) && !soonComes ? at : null;
-}
-
-/// The moment a dose is due: its time is the wall clock where the patient
-/// lives ([clock]), so it is the same moment on any phone, in any zone.
-DateTime doseMoment(PatientClock clock, DoseOccurrence dose) =>
-    clock.momentOf(dose.scheduledOn, dose.time);
 
 /// The reminders after [now], the nearest first, at most [limit]:
 ///
@@ -141,105 +55,9 @@ List<ScheduledNotification> planDoseReminders({
   bool inWindow(DateTime at) =>
       at.isAfter(earliest) && (until == null || at.isBefore(until));
   final List<PlannedReminder> upcoming = <PlannedReminder>[
-    for (final (ReminderCircle circle, DoseOccurrence dose) in doses)
-      if (dose.record == null &&
-          inWindow(doseMoment(circle.clock, dose)) &&
-          !snoozed.contains(doseSnoozeKey(circle.id, dose)))
-        PlannedReminder(
-          at: doseMoment(circle.clock, dose),
-          circle: circle,
-          title: texts.title(circle, dose),
-          body: texts.body(circle, dose),
-          prefix: doseReminderPayload,
-          snoozeKey: doseSnoozeKey(circle.id, dose),
-          subject: dose.name,
-        ),
-    for (final (ReminderCircle circle, MeasurementOccurrence task)
-        in measurements)
-      if (task.record == null &&
-          (task.status == MeasurementStatus.upcoming ||
-              task.status == MeasurementStatus.due) &&
-          inWindow(circle.clock.momentOf(task.scheduledOn, task.time)) &&
-          !snoozed.contains(measurementSnoozeKey(circle.id, task)))
-        PlannedReminder(
-          at: circle.clock.momentOf(task.scheduledOn, task.time),
-          circle: circle,
-          title: texts.measurementTitle(circle),
-          body: texts.measurementBody(circle, task),
-          prefix: measurementReminderPayload,
-          snoozeKey: measurementSnoozeKey(circle.id, task),
-          subject: task.kind.name,
-        ),
-    for (final (ReminderCircle circle, CareAppointment visit) in appointments)
-      if (visit.status == AppointmentStatus.scheduled)
-        // The day before, fixed; and the near one at the lead chosen
-        // when the visit was booked (an hour by default, up to six),
-        // which used to be two hours for every visit alike.
-        for (final (AppointmentLead lead, Duration before)
-            in <(AppointmentLead, Duration)>[
-              (AppointmentLead.dayBefore, const Duration(days: 1)),
-              (AppointmentLead.soon, visit.reminderLead),
-            ])
-          if (inWindow(
-            circle.clock
-                .momentOf(visit.scheduledOn, visit.time)
-                .subtract(before),
-          ))
-            PlannedReminder(
-              at: circle.clock
-                  .momentOf(visit.scheduledOn, visit.time)
-                  .subtract(before),
-              circle: circle,
-              title: texts.appointmentTitle(circle, lead, visit),
-              body: texts.appointmentBody(visit),
-              prefix: appointmentReminderPayload,
-              appointmentId: visit.id,
-            ),
-    // Saved for today or tomorrow after its day-before moment: said once,
-    // right away, so a change made today is not silent until the visit's
-    // own reminder.
-    for (final (ReminderCircle circle, CareAppointment visit) in appointments)
-      if (visit.status == AppointmentStatus.scheduled)
-        if (appointmentAnnouncedAt(circle.clock, visit) case final DateTime at
-            when inWindow(at))
-          PlannedReminder(
-            at: at,
-            circle: circle,
-            title: texts.appointmentTitle(circle, AppointmentLead.today, visit),
-            body: texts.appointmentBody(visit),
-            prefix: appointmentReminderPayload,
-            appointmentId: visit.id,
-          ),
+    ...plannedDoses(doses, texts, inWindow, snoozed),
+    ...plannedMeasurements(measurements, texts, inWindow, snoozed),
+    ...plannedAppointments(appointments, texts, inWindow),
   ]..sort((PlannedReminder a, PlannedReminder b) => a.at.compareTo(b.at));
-  final List<PlannedReminder> kept = upcoming.take(limit).toList();
-  return <ScheduledNotification>[
-    for (int i = 0; i < kept.length; i++)
-      ScheduledNotification(
-        id: reminderIdBase + i,
-        at: kept[i].at,
-        title: kept[i].title,
-        body: kept[i].body,
-        // A dose or measurement carries its words and which task it is,
-        // for «ذكّرني لاحقًا».
-        payload: kept[i].snoozable
-            ? payloadWithText(
-                kept[i].payloadHead,
-                kept[i].title,
-                kept[i].body,
-                snoozeKey: kept[i].snoozeKey,
-                subject: kept[i].subject,
-              )
-            : kept[i].payloadHead,
-        thread: kept[i].circle.id,
-        snoozable: kept[i].snoozable,
-      ),
-    if (kept.isNotEmpty)
-      ScheduledNotification(
-        id: reminderIdBase + maxDoseReminders,
-        at: kept.last.at.add(const Duration(minutes: 1)),
-        title: texts.keepTitle(),
-        body: texts.keepBody(),
-        payload: keepRemindersPayload,
-      ),
-  ];
+  return numberedReminders(upcoming.take(limit).toList(), texts);
 }

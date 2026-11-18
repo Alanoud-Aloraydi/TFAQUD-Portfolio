@@ -1,6 +1,7 @@
 import 'package:app/features/simplified_mode/presentation/widgets/care_icon_tile.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A row of this mode's «حسابي»: a coloured square, what the switch
 /// decides, and the switch — big enough to hit at this mode's sizes.
@@ -37,7 +38,7 @@ class SimplifiedSwitchRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeTrackColor: SimplifiedStyle.success,
+            activeTrackColor: SimplifiedColors.success,
           ),
         ],
       ),

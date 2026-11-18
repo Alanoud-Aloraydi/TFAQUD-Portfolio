@@ -1,11 +1,11 @@
+import 'package:app/features/onboarding/presentation/cubit/care_target.dart';
+import 'package:app/features/onboarding/presentation/cubit/onboarding_state_props.dart';
+import 'package:app/features/onboarding/presentation/cubit/onboarding_status.dart';
 import 'package:equatable/equatable.dart';
 
-/// Whether the profile request of the name step is running.
-enum OnboardingStatus { idle, saving }
-
-/// Who the care circle is for, chosen on the start step
-/// («كيف تحب تستخدم تفقُد؟»).
-enum CareTarget { self, other }
+export 'package:app/features/onboarding/presentation/cubit/care_target.dart';
+export 'package:app/features/onboarding/presentation/cubit/onboarding_state_copy.dart';
+export 'package:app/features/onboarding/presentation/cubit/onboarding_status.dart';
 
 /// Immutable state of `OnboardingCubit`: the answers of the name step and
 /// the choice of the start step, kept while the person moves between them.
@@ -65,52 +65,6 @@ class OnboardingState extends Equatable {
       careTarget == CareTarget.self ||
       (careTarget == CareTarget.other && patientUsesApp != null);
 
-  /// A copy with the given values. [clearError] drops [errorKey];
-  /// [clearPatientUsesApp] drops [patientUsesApp].
-  OnboardingState copyWith({
-    String? firstName,
-    String? lastName,
-    String? displayName,
-    DateTime? birthDate,
-    String? city,
-    bool? showErrors,
-    OnboardingStatus? status,
-    String? errorKey,
-    bool clearError = false,
-    bool? sessionEnded,
-    CareTarget? careTarget,
-    bool? patientUsesApp,
-    bool clearPatientUsesApp = false,
-  }) {
-    return OnboardingState(
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      displayName: displayName ?? this.displayName,
-      birthDate: birthDate ?? this.birthDate,
-      city: city ?? this.city,
-      showErrors: showErrors ?? this.showErrors,
-      status: status ?? this.status,
-      errorKey: clearError ? null : (errorKey ?? this.errorKey),
-      sessionEnded: sessionEnded ?? this.sessionEnded,
-      careTarget: careTarget ?? this.careTarget,
-      patientUsesApp: clearPatientUsesApp
-          ? null
-          : (patientUsesApp ?? this.patientUsesApp),
-    );
-  }
-
   @override
-  List<Object?> get props => [
-    firstName,
-    lastName,
-    displayName,
-    birthDate,
-    city,
-    showErrors,
-    status,
-    errorKey,
-    sessionEnded,
-    careTarget,
-    patientUsesApp,
-  ];
+  List<Object?> get props => onboardingStateProps(this);
 }

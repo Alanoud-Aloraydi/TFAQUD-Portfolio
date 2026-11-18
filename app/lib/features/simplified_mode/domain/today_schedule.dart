@@ -1,27 +1,15 @@
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/core/utils/recordable_now.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
+import 'package:app/features/simplified_mode/domain/today_schedule_ahead.dart';
+import 'package:app/features/simplified_mode/domain/today_task_statuses.dart';
 
-/// What the simplified home's one card shows.
-enum HomeFocus {
-  /// A dose whose time passed unrecorded: «هل أخذت هذا الدواء؟».
-  lateDose,
-
-  /// The next task still to come, or a measurement whose time passed.
-  task,
-
-  /// Every task of today is resolved: «أحسنت! أنجزت كل شيء».
-  allDone,
-
-  /// Nothing is scheduled today.
-  empty,
-}
+export 'package:app/features/simplified_mode/domain/home_focus.dart';
+export 'package:app/features/simplified_mode/domain/today_schedule_focus.dart';
+export 'package:app/features/simplified_mode/domain/today_schedule_recording.dart';
 
 /// Today's doses, measurements and appointments in time order, each with
 /// its status at one moment. Statuses are worked out here from the times,
@@ -32,7 +20,7 @@ class TodaySchedule {
     required List<TodayTask> tasks,
     required this.firstDoseTomorrow,
     required this.upcomingAppointment,
-    required this._wallNow,
+    required this.wallNow,
   }) : tasks = List<TodayTask>.unmodifiable(tasks);
 
   /// [now] is an instant, read on the patient's [clock]; [doses] may
@@ -47,22 +35,21 @@ class TodaySchedule {
   }) {
     final DateTime wall = clock.wallTime(now);
     final DateTime today = scheduleDay(wall);
-    final DateTime tomorrow = addDays(today, 1);
     final List<TodayTask> raw = <TodayTask>[
       for (final DoseOccurrence dose in doses)
-        if (_sameDay(dose.scheduledOn, today))
-          TodayTask.medication(dose, _doseStatus(dose, wall)),
+        if (isSameDate(dose.scheduledOn, today))
+          TodayTask.medication(dose, todayDoseStatus(dose, wall)),
       // A measurement nobody recorded leaves once the next one of its kind
       // is due: a reading now would be the same value, for that one.
       for (final MeasurementOccurrence item in measurements)
-        if (_sameDay(item.scheduledOn, today) &&
+        if (isSameDate(item.scheduledOn, today) &&
             (item.record != null || !item.supersededAt(wall)))
-          TodayTask.measurement(item, _measurementStatus(item, now)),
+          TodayTask.measurement(item, todayMeasurementStatus(item, now)),
       for (final CareAppointment item in appointments)
-        if (_sameDay(item.scheduledOn, today) &&
+        if (isSameDate(item.scheduledOn, today) &&
             item.status != AppointmentStatus.cancelled)
-          TodayTask.appointment(item, _appointmentStatus(item, wall)),
-    ]..sort(_byTime);
+          TodayTask.appointment(item, todayAppointmentStatus(item, wall)),
+    ]..sort(todayTaskOrder);
 
     // The first task still to come is «التالي»; the rest wait «لاحقًا».
     final List<TodayTask> tasks = List<TodayTask>.of(raw);
@@ -71,22 +58,10 @@ class TodaySchedule {
     );
     if (next != -1) tasks[next] = tasks[next].withStatus(TodayTaskStatus.next);
 
-    final List<DoseOccurrence> tomorrowDoses = <DoseOccurrence>[
-      for (final DoseOccurrence dose in doses)
-        if (_sameDay(dose.scheduledOn, tomorrow) && dose.record == null) dose,
-    ]..sort((a, b) => a.time.compareTo(b.time));
-
-    final List<CareAppointment> coming = <CareAppointment>[
-      for (final CareAppointment item in appointments)
-        if (item.status == AppointmentStatus.scheduled &&
-            item.scheduledAt.isAfter(wall))
-          item,
-    ]..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
-
     return TodaySchedule._(
       tasks: tasks,
-      firstDoseTomorrow: tomorrowDoses.firstOrNull,
-      upcomingAppointment: coming.firstOrNull,
+      firstDoseTomorrow: firstDoseOn(doses, addDays(today, 1)),
+      upcomingAppointment: nextAppointment(appointments, wall),
       wallNow: wall,
     );
   }
@@ -99,121 +74,7 @@ class TodaySchedule {
   /// The nearest scheduled appointment still to come, on any day: what an
   /// appointment reminder is about.
   final CareAppointment? upcomingAppointment;
-  final DateTime _wallNow;
 
-  int get total => tasks.length;
-
-  int get doneCount =>
-      tasks.where((task) => task.status == TodayTaskStatus.done).length;
-
-  TodayTask? get next =>
-      tasks.where((task) => task.status == TodayTaskStatus.next).firstOrNull;
-
-  /// The most recent dose whose time passed unrecorded.
-  TodayTask? get lateDose => tasks
-      .where(
-        (task) =>
-            task.kind == TodayTaskKind.medication &&
-            task.status == TodayTaskStatus.late,
-      )
-      .lastOrNull;
-
-  HomeFocus get focus {
-    if (lateDose != null) return HomeFocus.lateDose;
-    if (focusTask != null) return HomeFocus.task;
-    if (tasks.isEmpty) return HomeFocus.empty;
-    return HomeFocus.allDone;
-  }
-
-  /// The task the home card shows: the late dose, else the next task, else
-  /// the most recent other task whose time passed unrecorded.
-  TodayTask? get focusTask =>
-      lateDose ??
-      next ??
-      tasks.where((task) => task.status == TodayTaskStatus.late).lastOrNull;
-
-  /// The dose or measurement ([kind]) waiting now, for a reminder that
-  /// names no task ([reminderTask]): the most recent one whose time came
-  /// and is not recorded, else the next task when it is of [kind] and can
-  /// already be recorded. Null when nothing of [kind] waits.
-  TodayTask? taskToRecord(TodayTaskKind kind) {
-    final TodayTask? due = tasks
-        .where(
-          (task) =>
-              task.kind == kind &&
-              task.status != TodayTaskStatus.done &&
-              !task.scheduledAt.isAfter(_wallNow),
-        )
-        .lastOrNull;
-    if (due != null) return due;
-    final TodayTask? coming = next;
-    if (coming != null && coming.kind == kind && canRecord(coming)) {
-      return coming;
-    }
-    return null;
-  }
-
-  /// The dose or measurement a reminder for [request] in [circleId] asks
-  /// about, while it is still not recorded: that exact task by its key, or,
-  /// without a key, the one of its kind waiting now ([taskToRecord]). Null
-  /// when it was recorded (someone in the family may have), when it is of
-  /// another circle or day, and for a visit (reminder_appointment.dart).
-  TodayTask? reminderTask(ReminderRequest request, String circleId) {
-    if (request.kind == TodayTaskKind.appointment) return null;
-    final String? key = request.taskKey;
-    if (key == null) return taskToRecord(request.kind);
-    return tasks
-        .where(
-          (task) =>
-              task.status != TodayTaskStatus.done &&
-              task.snoozeKey(circleId) == key,
-        )
-        .firstOrNull;
-  }
-
-  /// Whether [task] can be recorded now: not resolved, and not more than an
-  /// hour before its time (the rule every «اليوم» row follows).
-  bool canRecord(TodayTask task) => canRecordOccurrence(
-    resolved: task.status == TodayTaskStatus.done,
-    scheduledAt: task.scheduledAt,
-    now: _wallNow,
-  );
-
-  static TodayTaskStatus _doseStatus(DoseOccurrence dose, DateTime wall) {
-    if (dose.record != null) return TodayTaskStatus.done;
-    return switch (medicationTimingState(dose, wall)) {
-      DoseTimingState.late || DoseTimingState.missed => TodayTaskStatus.late,
-      _ => TodayTaskStatus.later,
-    };
-  }
-
-  /// The server's status is read once; the deadline it sends keeps the
-  /// status right after that.
-  static TodayTaskStatus _measurementStatus(
-    MeasurementOccurrence item,
-    DateTime now,
-  ) {
-    if (item.record != null) return TodayTaskStatus.done;
-    if (now.isAfter(item.deadlineAt)) return TodayTaskStatus.late;
-    return TodayTaskStatus.later;
-  }
-
-  /// A visit is done once «حضرت» is said; one whose time came waits for it.
-  static TodayTaskStatus _appointmentStatus(
-    CareAppointment item,
-    DateTime wall,
-  ) {
-    if (item.status == AppointmentStatus.completed) return TodayTaskStatus.done;
-    return item.scheduledAt.isAfter(wall)
-        ? TodayTaskStatus.later
-        : TodayTaskStatus.late;
-  }
-
-  static int _byTime(TodayTask a, TodayTask b) {
-    final int byTime = a.scheduledAt.compareTo(b.scheduledAt);
-    return byTime != 0 ? byTime : a.kind.index.compareTo(b.kind.index);
-  }
-
-  static bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
+  /// The patient's wall time the statuses were worked out at.
+  final DateTime wallNow;
 }

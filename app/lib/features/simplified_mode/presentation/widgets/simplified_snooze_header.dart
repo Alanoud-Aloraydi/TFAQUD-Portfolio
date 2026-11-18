@@ -2,6 +2,7 @@ import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// «متى أذكّرك؟», then, as the detailed sheet, how long («بعد 15 دقيقة»)
 /// over the clock time it means, in this mode's largest type.
@@ -20,7 +21,7 @@ class SimplifiedSnoozeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color ink = SimplifiedStyle.surface;
+    const Color ink = SimplifiedColors.surface;
     return Column(
       children: <Widget>[
         Text(
@@ -40,7 +41,7 @@ class SimplifiedSnoozeHeader extends StatelessWidget {
             textAlign: TextAlign.center,
             style: SimplifiedStyle.text(
               SimplifiedStyle.title,
-              color: SimplifiedStyle.onDarkMuted,
+              color: SimplifiedColors.onDarkMuted,
             ),
           ),
           const SizedBox(height: 24),

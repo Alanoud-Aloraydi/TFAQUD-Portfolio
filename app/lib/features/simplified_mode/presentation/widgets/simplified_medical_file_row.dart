@@ -1,6 +1,7 @@
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedMedicalFileRow extends StatelessWidget {
   const SimplifiedMedicalFileRow({
@@ -24,7 +25,7 @@ class SimplifiedMedicalFileRow extends StatelessWidget {
           border: last
               ? null
               : const Border(
-                  bottom: BorderSide(color: SimplifiedStyle.disabled),
+                  bottom: BorderSide(color: SimplifiedColors.disabled),
                 ),
         ),
         child: Column(

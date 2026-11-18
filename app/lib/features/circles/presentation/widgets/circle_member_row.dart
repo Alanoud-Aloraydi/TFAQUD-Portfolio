@@ -1,13 +1,10 @@
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/member_access_controls.dart';
 import 'package:app/features/circles/presentation/widgets/member_photo_path.dart';
-import 'package:app/features/circles/presentation/widgets/member_profile_sheet.dart';
-import 'package:app/features/circles/presentation/widgets/member_row_content.dart';
+import 'package:app/features/circles/presentation/widgets/member_open_row.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// One member of the circle. Tapping the viewer's own row opens their
 /// account; any other row opens that member's card, to call them. The
@@ -40,18 +37,10 @@ class CircleMemberRow extends StatelessWidget {
       circleId: circleId,
       patientIsYou: patientIsYou,
     );
-    final Widget row = MergeSemantics(
-      child: Semantics(
-        button: true,
-        child: InkWell(
-          onTap: () => _open(context, photoPath),
-          child: MemberRowContent(
-            member: member,
-            photoPath: photoPath,
-            patientUsesApp: patientUsesApp,
-          ),
-        ),
-      ),
+    final Widget row = MemberOpenRow(
+      member: member,
+      photoPath: photoPath,
+      patientUsesApp: patientUsesApp,
     );
     // The leader decides about the others who hold a membership, not about
     // themself or a patient who only reads their own day.
@@ -67,19 +56,6 @@ class CircleMemberRow extends StatelessWidget {
           child: MemberAccessControls(member: member, canHandOver: canHandOver),
         ),
       ],
-    );
-  }
-
-  void _open(BuildContext context, String photoPath) {
-    if (member.isYou) {
-      context.push(Routes.account);
-      return;
-    }
-    showMemberProfileSheet(
-      context,
-      member: member,
-      photoPath: photoPath,
-      patientUsesApp: patientUsesApp,
     );
   }
 }

@@ -7,7 +7,7 @@ mixin _MemberRequests implements CircleMemberApi {
   @override
   Future<void> inviteManager(String circleId, String phoneNumber) async {
     await _client.post(
-      ApiEndpoints.circleInvitations(circleId),
+      CircleEndpoints.circleInvitations(circleId),
       data: <String, String>{'invitee_phone_number': phoneNumber},
     );
   }
@@ -18,7 +18,7 @@ mixin _MemberRequests implements CircleMemberApi {
     String invitationId,
   ) async {
     await _client.post(
-      ApiEndpoints.resendCircleInvitation(circleId, invitationId),
+      CircleEndpoints.resendCircleInvitation(circleId, invitationId),
     );
   }
 
@@ -27,7 +27,9 @@ mixin _MemberRequests implements CircleMemberApi {
     String circleId,
     String invitationId,
   ) async {
-    await _client.delete(ApiEndpoints.circleInvitation(circleId, invitationId));
+    await _client.delete(
+      CircleEndpoints.circleInvitation(circleId, invitationId),
+    );
   }
 
   @override
@@ -38,7 +40,7 @@ mixin _MemberRequests implements CircleMemberApi {
     required bool allowed,
   }) async {
     await _client.patch(
-      ApiEndpoints.circleMember(circleId, accountId),
+      CircleEndpoints.circleMember(circleId, accountId),
       data: <String, Object>{
         'edit_access': <String, bool>{area: allowed},
       },
@@ -48,14 +50,14 @@ mixin _MemberRequests implements CircleMemberApi {
   @override
   Future<void> handOverLeadership(String circleId, String accountId) async {
     await _client.put(
-      ApiEndpoints.circleLeader(circleId),
+      CircleEndpoints.circleLeader(circleId),
       data: <String, String>{'account_id': accountId},
     );
   }
 
   @override
   Future<void> removeMember(String circleId, String accountId) async {
-    await _client.delete(ApiEndpoints.circleMember(circleId, accountId));
+    await _client.delete(CircleEndpoints.circleMember(circleId, accountId));
   }
 
   @override
@@ -64,7 +66,7 @@ mixin _MemberRequests implements CircleMemberApi {
     required bool confirmDelete,
   }) async {
     await _client.post(
-      ApiEndpoints.leaveCircle(circleId),
+      CircleEndpoints.leaveCircle(circleId),
       data: <String, bool>{'confirm_delete': confirmDelete},
     );
   }

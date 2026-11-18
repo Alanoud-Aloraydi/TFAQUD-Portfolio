@@ -5,6 +5,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_mea
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// What to type next, under the number, in red once a reading was refused.
 Widget simplifiedMeasureHint(
@@ -17,8 +18,8 @@ Widget simplifiedMeasureHint(
   style: SimplifiedStyle.text(
     SimplifiedStyle.body,
     color: form.errorKey == null
-        ? SimplifiedStyle.muted
-        : SimplifiedStyle.danger,
+        ? SimplifiedColors.muted
+        : SimplifiedColors.danger,
     weight: AppTextTheme.medium,
   ),
 );

@@ -20,7 +20,7 @@ class NotificationsEmpty extends StatelessWidget {
       children: <Widget>[
         const SizedBox(height: _topGap),
         Icon(
-          AppIcons.bell,
+          NoticeIcons.bell,
           size: AppSizes.iconHero,
           color: context.tokens.textSecondary,
         ),

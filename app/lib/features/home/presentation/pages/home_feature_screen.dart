@@ -1,4 +1,5 @@
 import 'package:app/core/widgets/layout/refresh_scope.dart';
+import 'package:app/features/home/presentation/controllers/home_resume_refresh.dart';
 import 'package:app/features/home/presentation/controllers/home_shell_lifecycle.dart';
 import 'package:app/features/home/presentation/controllers/home_shell_wiring.dart';
 import 'package:app/features/home/presentation/controllers/home_state_reactor.dart';
@@ -25,40 +26,33 @@ class HomeFeatureScreen extends StatefulWidget {
 }
 
 class _HomeFeatureScreenState extends State<HomeFeatureScreen>
-    with WidgetsBindingObserver {
-  late final HomeStateReactor _reactor;
+    with WidgetsBindingObserver, HomeResumeRefresh<HomeFeatureScreen> {
+  @override
+  late final HomeStateReactor reactor;
 
   @override
   void initState() {
     super.initState();
-    _reactor = createHomeStateReactor(
+    reactor = createHomeStateReactor(
       context,
       widget.navigationShell.currentIndex,
     );
-    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void didUpdateWidget(covariant HomeFeatureScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncTab(context, _reactor, widget.navigationShell.currentIndex);
+    syncTab(context, reactor, widget.navigationShell.currentIndex);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _reactor.dispose();
+    reactor.dispose();
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    refreshOnResume(context, _reactor);
-  }
-
   /// What every main tab does when pulled down from its top.
-  Future<void> _refresh() => refreshNow(context, _reactor);
+  Future<void> _refresh() => refreshNow(context, reactor);
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +60,7 @@ class _HomeFeatureScreenState extends State<HomeFeatureScreen>
     return RefreshScope(
       onRefresh: _refresh,
       child: BlocConsumer<HomeCubit, HomeState>(
-        listener: _reactor.onState,
+        listener: reactor.onState,
         builder: (context, state) =>
             homeShellView(context, state, cubit, widget.navigationShell),
       ),

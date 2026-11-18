@@ -7,8 +7,11 @@ import 'package:app/features/measurements/presentation/models/plan_reading_draft
 class PlanScheduleDraft {
   PlanScheduleDraft(this.readings, this.start);
 
+  /// Several planned readings can share the same day.
+  static const int maxReadings = 6;
+
   /// The reading times of a day, like a medicine's dose times: one or more,
-  /// up to [_MeasurementPlanFormPageState._maxReadings], each with its own
+  /// up to [maxReadings], each with its own
   /// glucose measurement state.
   final List<PlanReadingDraft> readings;
   final Set<int> days = {1, 2, 3, 4, 5, 6, 7};
@@ -16,4 +19,7 @@ class PlanScheduleDraft {
   /// The first day, on the patient's calendar.
   DateTime start;
   int? missedAfter = PlanLimits.defaultMissedAfterMinutes;
+
+  /// [start] as day/month/year.
+  String get startText => '${start.day}/${start.month}/${start.year}';
 }

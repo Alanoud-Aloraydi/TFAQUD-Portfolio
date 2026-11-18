@@ -1,9 +1,7 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/expand_reveal.dart';
 import 'package:app/core/widgets/layout/plan_card_parts.dart';
+import 'package:app/core/widgets/layout/plan_item_details.dart';
+import 'package:app/core/widgets/layout/plan_item_frame.dart';
 import 'package:app/core/widgets/layout/plan_item_header.dart';
 import 'package:flutter/material.dart';
 
@@ -55,49 +53,33 @@ class _PlanItemCardState extends State<PlanItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: AppSemanticColors.surfaceContent,
-        shape: AppRadius.shape(
-          AppRadius.m,
-          side: const BorderSide(color: AppSemanticColors.borderSubtle),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppItemCard.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            ?widget.banner,
-            PlanItemHeader(
-              leading: widget.leading,
-              title: widget.title,
-              subtitle: widget.subtitle,
-              edit: widget.edit,
-              status: widget.status,
-            ),
-            for (final Widget part in widget.body) ...<Widget>[
-              const SizedBox(height: AppSpacing.sm),
-              part,
-            ],
-            if (widget.details.isNotEmpty)
-              PlanDetailsToggle(
-                start: widget.start,
-                label: widget.detailsLabel,
-                expanded: _expanded,
-                onTap: () => setState(() => _expanded = !_expanded),
-              ),
-            // The details slide down from the line that opens them.
-            if (widget.details.isNotEmpty)
-              ExpandReveal(
-                open: _expanded,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[const Divider(), ...widget.details],
-                ),
-              ),
+    return PlanItemFrame(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          ?widget.banner,
+          PlanItemHeader(
+            leading: widget.leading,
+            title: widget.title,
+            subtitle: widget.subtitle,
+            edit: widget.edit,
+            status: widget.status,
+          ),
+          for (final Widget part in widget.body) ...<Widget>[
+            const SizedBox(height: AppSpacing.sm),
+            part,
           ],
-        ),
+          if (widget.details.isNotEmpty)
+            PlanDetailsToggle(
+              start: widget.start,
+              label: widget.detailsLabel,
+              expanded: _expanded,
+              onTap: () => setState(() => _expanded = !_expanded),
+            ),
+          // The details slide down from the line that opens them.
+          if (widget.details.isNotEmpty)
+            PlanItemDetails(open: _expanded, details: widget.details),
+        ],
       ),
     );
   }

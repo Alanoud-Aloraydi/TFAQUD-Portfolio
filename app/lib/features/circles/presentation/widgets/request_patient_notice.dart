@@ -27,7 +27,7 @@ class RequestPatientNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
-            AppIcons.info,
+            NoticeIcons.info,
             size: AppSizes.iconSmall,
             color: context.tokens.textSecondary,
           ),

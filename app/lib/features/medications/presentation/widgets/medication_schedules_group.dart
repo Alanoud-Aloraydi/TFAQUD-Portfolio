@@ -21,7 +21,7 @@ class MedicationSchedulesGroup extends StatelessWidget {
         ...medicationScheduleList(state),
         InsetRow(
           label: context.tr('medications.add_schedule'),
-          leading: const Icon(AppIcons.plusCircle),
+          leading: const Icon(ActionIcons.plusCircle),
           onTap: () {
             state.data.addSchedule();
             state.changed();

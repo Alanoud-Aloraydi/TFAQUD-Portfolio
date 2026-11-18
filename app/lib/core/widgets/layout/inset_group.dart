@@ -1,7 +1,7 @@
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/layout/inset_group_header.dart';
 import 'package:flutter/material.dart';
 
 /// iOS inset grouped section, as in Settings and Health (design system
@@ -28,36 +28,13 @@ class InsetGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
     final TextTheme text = Theme.of(context).textTheme;
     final ShapeBorder shape = AppSurfaces.cardShape();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         if (header != null || headerAction != null)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.inset,
-              end: AppSpacing.xs,
-              bottom: AppSpacing.labelGap,
-            ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Semantics(
-                    header: true,
-                    child: Text(
-                      header ?? '',
-                      style: text.titleSmall?.copyWith(
-                        color: tokens.textSecondary,
-                      ),
-                    ),
-                  ),
-                ),
-                ?headerAction,
-              ],
-            ),
-          ),
+          InsetGroupHeader(header: header, headerAction: headerAction),
         DecoratedBox(
           decoration: AppSurfaces.card(),
           child: Material(

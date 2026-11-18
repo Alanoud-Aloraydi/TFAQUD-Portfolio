@@ -7,6 +7,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// WCAG 2 contrast ratio of two opaque colors.
 double contrast(Color a, Color b) {
@@ -93,12 +94,12 @@ void main() {
 
     test('settings icon squares and the ruler mark can be seen', () {
       for (final Color tile in <Color>[
-        AppSemanticColors.settingsTileDoses,
-        AppSemanticColors.settingsTileMeasurements,
-        AppSemanticColors.settingsTileAppointments,
+        AppSettingsTileColors.doses,
+        AppSettingsTileColors.measurements,
+        AppSettingsTileColors.appointments,
       ]) {
         expect(
-          contrast(AppSemanticColors.onSettingsTile, tile),
+          contrast(AppSettingsTileColors.onTile, tile),
           greaterThanOrEqualTo(4.5),
         );
       }

@@ -2,6 +2,7 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// Someone of the circle on a label: their photo first, then their name,
 /// so the patient knows who it is before reading.
@@ -28,8 +29,8 @@ class SimplifiedPersonChip extends StatelessWidget {
     padding: const EdgeInsetsDirectional.fromSTEB(6, 6, 16, 6),
     decoration: BoxDecoration(
       color: onDark
-          ? SimplifiedStyle.surface.withValues(alpha: .14)
-          : SimplifiedStyle.chip,
+          ? SimplifiedColors.surface.withValues(alpha: .14)
+          : SimplifiedColors.chip,
       borderRadius: BorderRadius.circular(26),
     ),
     child: Row(
@@ -49,7 +50,7 @@ class SimplifiedPersonChip extends StatelessWidget {
             name,
             style: SimplifiedStyle.label(
               SimplifiedStyle.caption,
-              color: onDark ? SimplifiedStyle.surface : SimplifiedStyle.ink,
+              color: onDark ? SimplifiedColors.surface : SimplifiedColors.ink,
             ),
           ),
         ),

@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 
 /// Displays the medication photo builder UI.
 class MedicationPhotoBuilder extends StatelessWidget {
@@ -22,7 +22,7 @@ class MedicationPhotoBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repository = RepositoryProvider.of<PrivatePhotoRepository>(context);
-    final path = ApiEndpoints.medicationPhoto(circleId, planId);
+    final path = MedicationEndpoints.medicationPhoto(circleId, planId);
     return ListenableBuilder(
       listenable: repository.changes,
       builder: (context, _) => FutureBuilder<Uint8List?>(

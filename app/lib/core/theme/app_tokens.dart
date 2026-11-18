@@ -1,4 +1,5 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens_lerp.dart';
+import 'package:app/core/theme/app_tokens_presets.dart';
 import 'package:flutter/material.dart';
 
 /// Roles that change with the Increased Contrast setting, plus the colors that
@@ -43,33 +44,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
   /// Contrast, as Apple does.
   final Color glassBorder;
 
-  static const AppTokens light = AppTokens(
-    textSecondary: AppSemanticColors.textSupporting,
-    focus: AppSemanticColors.textSupporting,
-    borderControl: AppSemanticColors.borderControlBase,
-    success: AppSemanticColors.statusSuccess,
-    successText: AppSemanticColors.statusSuccess,
-    warning: AppSemanticColors.statusWarning,
-    warningText: AppSemanticColors.statusWarning,
-    error: AppSemanticColors.statusError,
-    errorText: AppSemanticColors.statusError,
-    infoText: AppSemanticColors.statusInfo,
-    glassBorder: AppSemanticColors.surfaceContent,
-  );
+  static const AppTokens light = appTokensLight;
 
-  static const AppTokens contrast = AppTokens(
-    textSecondary: AppSemanticColors.textPrimary,
-    focus: AppSemanticColors.textSupporting,
-    borderControl: AppSemanticColors.textSupporting,
-    success: AppSemanticColors.statusSuccess,
-    successText: AppSemanticColors.textPrimary,
-    warning: AppSemanticColors.statusWarning,
-    warningText: AppSemanticColors.textPrimary,
-    error: AppSemanticColors.statusError,
-    errorText: AppSemanticColors.textPrimary,
-    infoText: AppSemanticColors.textPrimary,
-    glassBorder: AppSemanticColors.textSupporting,
-  );
+  static const AppTokens contrast = appTokensContrast;
 
   @override
   AppTokens copyWith({
@@ -103,19 +80,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   @override
   AppTokens lerp(ThemeExtension<AppTokens>? other, double t) {
     if (other is! AppTokens) return this;
-    return AppTokens(
-      textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
-      focus: Color.lerp(focus, other.focus, t)!,
-      borderControl: Color.lerp(borderControl, other.borderControl, t)!,
-      success: Color.lerp(success, other.success, t)!,
-      successText: Color.lerp(successText, other.successText, t)!,
-      warning: Color.lerp(warning, other.warning, t)!,
-      warningText: Color.lerp(warningText, other.warningText, t)!,
-      error: Color.lerp(error, other.error, t)!,
-      errorText: Color.lerp(errorText, other.errorText, t)!,
-      infoText: Color.lerp(infoText, other.infoText, t)!,
-      glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
-    );
+    return lerpAppTokens(this, other, t);
   }
 }
 

@@ -20,12 +20,12 @@ class ChartZoomButtons extends StatelessWidget {
       IconButton(
         tooltip: context.tr('measurements.zoom_out'),
         onPressed: zoom > 1 ? () => onZoom(1 / ChartZoom.step) : null,
-        icon: const Icon(AppIcons.minus),
+        icon: const Icon(ActionIcons.minus),
       ),
       IconButton(
         tooltip: context.tr('measurements.zoom_in'),
         onPressed: zoom < ChartZoom.most ? () => onZoom(ChartZoom.step) : null,
-        icon: const Icon(AppIcons.plus),
+        icon: const Icon(ActionIcons.plus),
       ),
     ],
   );

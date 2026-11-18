@@ -1,5 +1,5 @@
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The reminder's one picture: as wide as the screen, in the honey edge,
 /// big enough to know the medicine by its box from across the room.
@@ -20,9 +20,9 @@ class SimplifiedReminderHero extends StatelessWidget {
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: SimplifiedStyle.muted,
+        color: SimplifiedColors.muted,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: SimplifiedStyle.attentionEdge, width: 5),
+        border: Border.all(color: SimplifiedColors.attentionEdge, width: 5),
       ),
       clipBehavior: Clip.antiAlias,
       child: child,

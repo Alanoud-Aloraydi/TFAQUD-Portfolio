@@ -5,7 +5,7 @@ import 'dart:async';
 
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/repositories/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/domain/measurement_plan_draft.dart';

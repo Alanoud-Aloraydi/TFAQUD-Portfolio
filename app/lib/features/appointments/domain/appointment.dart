@@ -1,79 +1,16 @@
+export 'package:app/features/appointments/domain/appointment_companion.dart';
+export 'package:app/features/appointments/domain/appointment_draft.dart';
+export 'package:app/features/appointments/domain/appointment_kind.dart';
+export 'package:app/features/appointments/domain/appointment_kind_group.dart';
+export 'package:app/features/appointments/domain/appointment_status.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
+import 'package:app/features/appointments/domain/appointment_companion.dart';
+import 'package:app/features/appointments/domain/appointment_kind.dart';
+import 'package:app/features/appointments/domain/appointment_props.dart';
 import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
+import 'package:app/features/appointments/domain/appointment_status.dart';
 import 'package:equatable/equatable.dart';
-
-/// What the visit is for; the form groups these by [AppointmentKindGroup].
-enum AppointmentKind {
-  followUp,
-  newVisit,
-  remote,
-  emergency,
-  test,
-  imaging,
-  eyeExam,
-  hearingTest,
-  surgery,
-  physio,
-  dialysis,
-  therapySession,
-  dressing,
-  vaccine,
-  checkup,
-  dental,
-  pharmacy,
-  mental,
-  speech,
-  other;
-
-  /// The wire name: «follow_up» for [followUp].
-  String get code => name.replaceAllMapped(
-    RegExp('[A-Z]'),
-    (Match m) => '_${m[0]!.toLowerCase()}',
-  );
-
-  /// The kind with this wire name; [other] for one this app does not know.
-  static AppointmentKind fromCode(String code) => values.firstWhere(
-    (AppointmentKind kind) => kind.code == code,
-    orElse: () => other,
-  );
-}
-
-/// The rows of the form's type choice; [AppointmentKind.other] stands alone.
-enum AppointmentKindGroup {
-  visit(<AppointmentKind>[
-    AppointmentKind.followUp,
-    AppointmentKind.newVisit,
-    AppointmentKind.remote,
-    AppointmentKind.emergency,
-  ]),
-  checks(<AppointmentKind>[
-    AppointmentKind.test,
-    AppointmentKind.imaging,
-    AppointmentKind.eyeExam,
-    AppointmentKind.hearingTest,
-  ]),
-  treatment(<AppointmentKind>[
-    AppointmentKind.surgery,
-    AppointmentKind.physio,
-    AppointmentKind.dialysis,
-    AppointmentKind.therapySession,
-    AppointmentKind.dressing,
-  ]),
-  routine(<AppointmentKind>[
-    AppointmentKind.vaccine,
-    AppointmentKind.checkup,
-    AppointmentKind.dental,
-    AppointmentKind.pharmacy,
-  ]),
-  sessions(<AppointmentKind>[AppointmentKind.mental, AppointmentKind.speech]);
-
-  const AppointmentKindGroup(this.kinds);
-
-  final List<AppointmentKind> kinds;
-}
-
-enum AppointmentStatus { scheduled, completed, cancelled }
 
 /// One planned visit: what for, when, where, and who goes along.
 class CareAppointment extends Equatable {
@@ -141,87 +78,5 @@ class CareAppointment extends Equatable {
   DateTime get scheduledAt => wallClockAt(scheduledOn, time);
 
   @override
-  List<Object?> get props => [
-    id,
-    specialty,
-    kind,
-    otherKind,
-    scheduledOn,
-    time,
-    place,
-    remoteMethod,
-    companions,
-    reminderLeadMinutes,
-    status,
-    updatedAt,
-    createdByName,
-    updatedByName,
-    createdBy,
-    updatedBy,
-  ];
-}
-
-/// Identifies a circle member accompanying an appointment, or who added or
-/// changed one.
-class AppointmentCompanion extends Equatable {
-  const AppointmentCompanion({
-    required this.id,
-    required this.name,
-    this.avatarCode,
-  });
-
-  final String id;
-  final String name;
-  final String? avatarCode;
-
-  @override
-  List<Object?> get props => [id, name, avatarCode];
-}
-
-/// Holds editable appointment values before saving.
-class AppointmentDraft extends Equatable {
-  const AppointmentDraft({
-    this.specialty,
-    required this.kind,
-    required this.otherKind,
-    required this.scheduledOn,
-    required this.time,
-    required this.place,
-    required this.remoteMethod,
-    required this.companionAccountIds,
-    this.reminderLeadMinutes = defaultAppointmentLead,
-    this.alsoOn = const <DateTime>[],
-  });
-
-  /// The clinic or doctor as typed; null when not given.
-  final String? specialty;
-  final AppointmentKind kind;
-  final String? otherKind;
-  final DateTime scheduledOn;
-  final String time;
-  final String? place;
-  final String? remoteMethod;
-  final List<String> companionAccountIds;
-
-  /// How long before the visit to remind, in minutes, from
-  /// [minAppointmentLead] to [maxAppointmentLead].
-  final int reminderLeadMinutes;
-
-  /// The other dates booked at the same time, each saved as its own visit
-  /// with these same answers. Empty for a visit on its own.
-  final List<DateTime> alsoOn;
-
-  @override
-  List<Object?> get props => [
-    specialty,
-    kind,
-    otherKind,
-    scheduledOn,
-    time,
-    place,
-    remoteMethod,
-    companionAccountIds,
-    reminderLeadMinutes,
-    alsoOn,
-  ];
+  List<Object?> get props => careAppointmentProps(this);
 }

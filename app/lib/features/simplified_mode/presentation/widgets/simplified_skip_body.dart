@@ -3,6 +3,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_dar
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// «ليش ما أخذتها؟» over the medicine's name, then three reasons in the
 /// patient's own words and «سبب ثاني» for the rest: the reason is never
@@ -40,7 +41,7 @@ class SimplifiedSkipBody extends StatelessWidget {
               textAlign: TextAlign.center,
               style: SimplifiedStyle.head(
                 SimplifiedStyle.display,
-                color: SimplifiedStyle.surface,
+                color: SimplifiedColors.surface,
               ),
             ),
             const SizedBox(height: 6),
@@ -49,7 +50,7 @@ class SimplifiedSkipBody extends StatelessWidget {
               textAlign: TextAlign.center,
               style: SimplifiedStyle.text(
                 SimplifiedStyle.title,
-                color: SimplifiedStyle.onDarkMuted,
+                color: SimplifiedColors.onDarkMuted,
               ),
             ),
           ],

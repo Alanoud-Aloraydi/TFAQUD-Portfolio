@@ -36,7 +36,7 @@ class PatientQuestion extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.labelGap),
           ChoiceCard(
-            icon: AppIcons.users,
+            icon: PeopleIcons.users,
             title: context.tr('onboarding.patient_uses_title'),
             hint: context.tr('onboarding.patient_uses_hint'),
             selected: state.patientUsesApp == true,
@@ -44,7 +44,7 @@ class PatientQuestion extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           ChoiceCard(
-            icon: AppIcons.user,
+            icon: PeopleIcons.user,
             title: context.tr('onboarding.patient_no_title'),
             hint: context.tr('onboarding.patient_no_hint'),
             selected: state.patientUsesApp == false,

@@ -9,7 +9,7 @@ class NeedsReplyPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StatusBadge(
-    icon: AppIcons.clock,
+    icon: ScheduleIcons.clock,
     text: context.tr('circles.needs_reply_pill'),
     tone: StatusTone.attention,
   );

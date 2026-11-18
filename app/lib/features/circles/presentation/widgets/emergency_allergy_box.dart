@@ -35,7 +35,7 @@ class EmergencyAllergyBox extends StatelessWidget {
         child: Row(
           children: <Widget>[
             const Icon(
-              AppIcons.warning,
+              NoticeIcons.warning,
               size: AppSizes.icon,
               color: AppSemanticColors.statusError,
             ),

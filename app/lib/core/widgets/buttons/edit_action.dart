@@ -68,7 +68,7 @@ class EditAction extends StatelessWidget {
 
   Widget _chip(BuildContext context) => ActionChip(
     avatar: const Icon(
-      AppIcons.pencil,
+      ActionIcons.pencil,
       size: AppSizes.iconSmall,
       color: AppSemanticColors.textPrimary,
     ),
@@ -84,6 +84,6 @@ class EditAction extends StatelessWidget {
     tooltip: tooltip,
     padding: const EdgeInsets.all(AppSpacing.xs),
     color: AppSemanticColors.textPrimary,
-    icon: const Icon(AppIcons.pencil, size: AppSizes.iconSmall),
+    icon: const Icon(ActionIcons.pencil, size: AppSizes.iconSmall),
   );
 }

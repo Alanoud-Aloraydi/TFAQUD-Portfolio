@@ -26,12 +26,12 @@ class SimplifiedSnoozeSteps extends StatelessWidget {
     children: <Widget>[
       SimplifiedSnoozeStep(
         key: const Key('snooze-less'),
-        icon: AppIcons.minus,
+        icon: ActionIcons.minus,
         onPressed: minutes > _step ? () => onChanged(minutes - _step) : null,
       ),
       SimplifiedSnoozeStep(
         key: const Key('snooze-more'),
-        icon: AppIcons.plus,
+        icon: ActionIcons.plus,
         onPressed: minutes < maxMinutes
             ? () => onChanged(minutes + _step)
             : null,

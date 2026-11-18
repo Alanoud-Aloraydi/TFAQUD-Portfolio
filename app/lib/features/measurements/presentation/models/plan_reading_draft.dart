@@ -6,4 +6,9 @@ class PlanReadingDraft {
 
   TimeOfDay time;
   String? measurementState;
+
+  /// The time as the server writes it: «07:30».
+  String get clock =>
+      '${time.hour.toString().padLeft(2, '0')}:'
+      '${time.minute.toString().padLeft(2, '0')}';
 }

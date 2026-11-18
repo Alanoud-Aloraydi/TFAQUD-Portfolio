@@ -8,6 +8,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_sty
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// What the simplified file shows: the turning circle while it loads, the
 /// reason it could not be loaded with «حاول مرة ثانية», else the answers
@@ -20,7 +21,7 @@ List<Widget> simplifiedFileBody(BuildContext context, MedicalFileState state) =>
           context.tr(state.messageKey ?? 'error.unknown'),
           style: SimplifiedStyle.text(
             SimplifiedStyle.body,
-            color: SimplifiedStyle.ink,
+            color: SimplifiedColors.ink,
           ),
         ),
         SimplifiedButton(

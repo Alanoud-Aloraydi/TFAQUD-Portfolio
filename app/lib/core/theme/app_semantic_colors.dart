@@ -37,13 +37,6 @@ abstract class AppSemanticColors {
   /// Accent for prayer periods and attention notices.
   static const Color accentWarm = AppColors.honey;
 
-  /// The small rounded squares behind a settings row's icon, as in iOS
-  /// Settings: one color per kind of care, the icon in [onSettingsTile].
-  static const Color settingsTileDoses = AppColors.leaf;
-  static const Color settingsTileMeasurements = AppColors.honey;
-  static const Color settingsTileAppointments = AppColors.slateSoft;
-  static const Color onSettingsTile = AppColors.inkViolet;
-
   /// The action that must stand out on a tinted surface: the pale
   /// [actionPrimary] reaches 1.8:1 on the simplified mode's honey card;
   /// this deep violet, 11.3:1 there and 12.1:1 on white, takes white words.
@@ -86,15 +79,6 @@ abstract class AppSemanticColors {
   /// Small supporting text on ink, such as «فصيلة الدم» in the dark box.
   static const Color onInkSupporting = AppColors.slateSoft;
 
-  /// The welcome pages: the page behind the pictures, the soft glows on it
-  /// (two per page: warm honey, light leaf, and a calm grey blue on the
-  /// last), and the dots of the pages not on show.
-  static const Color introCanvas = AppColors.canvas;
-  static const Color introGlowWarm = AppColors.honeyBorder;
-  static const Color introGlowLeaf = AppColors.leafTint;
-  static const Color introGlowMist = AppColors.slatePale;
-  static const Color introGlowCalm = AppColors.slateMist;
-  static const Color introDotIdle = AppColors.slateSoft;
   static const Color navigationSelected = AppColors.ink;
   static const Color overlayScrim = Color(0x66202734);
 

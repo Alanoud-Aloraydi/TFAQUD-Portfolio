@@ -1,4 +1,3 @@
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/circles/data/models/account_model.dart';
 import 'package:app/features/circles/data/models/circle_model.dart';
@@ -17,6 +16,9 @@ import 'package:app/features/circles/domain/entities/patient_update.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_invitation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:app/core/network/account_endpoints.dart';
+import 'package:app/core/network/circle_endpoints.dart';
+import 'package:app/core/network/circle_request_endpoints.dart';
 
 part 'circles_remote_data_source/account_api.dart';
 part 'circles_remote_data_source/account_requests.dart';

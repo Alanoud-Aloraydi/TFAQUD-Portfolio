@@ -1,18 +1,13 @@
-import 'package:app/core/l10n/appointment_texts.dart';
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:app/core/widgets/layout/plan_item_card.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_body.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_card_details.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_card_edit.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_card_heading.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_card_opened.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_status.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_other_visits.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// One appointment as a plan card, as a medicine's is; a booking of several
 /// dates is one card with its [others] in the details. «السجل» is not
@@ -39,30 +34,14 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool open = value.status == AppointmentStatus.scheduled;
     final bool manage = canManage && editable;
     return PlanItemCard(
       leading: Icon(appointmentKindIcon(value.kind)),
-      title: Text(
-        appointmentTitle(context, value),
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      subtitle: switch (appointmentClinic(value)) {
-        final String clinic => Text(clinic),
-        null => null,
-      },
-      edit: manage && open
-          ? EditAction.pen(
-              onPressed: () => context.push<bool>(
-                Routes.editAppointment(circleId, value.id),
-              ),
-              tooltip: context.tr('appointments.edit'),
-            )
-          : null,
+      title: appointmentCardTitle(context, value),
+      subtitle: appointmentCardClinic(value),
+      edit: appointmentCardEdit(context, value, circleId, manage: manage),
       status: AppointmentCardStatus(value: value, relative: showRelativeDate),
-      start:
-          '${appointmentDate(context, value.scheduledOn)}، '
-          '${clockText(value.time)}',
+      start: appointmentCardStart(context, value),
       body: appointmentCardBody(
         context,
         value: value,
@@ -71,22 +50,15 @@ class AppointmentCard extends StatelessWidget {
         canManage: canManage,
       ),
       detailsLabel: context.tr('appointments.details'),
-      details: appointmentCardDetails(
+      details: appointmentCardOpened(
         context,
         value: value,
         circleId: circleId,
-        canManage: manage,
-        appearsToday:
-            showRelativeDate &&
-            open &&
-            !value.scheduledAt.isBefore(PatientClockScope.of(context).now()),
-        otherVisits: appointmentOtherVisits(
-          context,
-          others: others,
-          all: all,
-          circleId: circleId,
-          canManage: canManage,
-        ),
+        canManage: canManage,
+        manage: manage,
+        showRelativeDate: showRelativeDate,
+        others: others,
+        all: all,
       ),
     );
   }

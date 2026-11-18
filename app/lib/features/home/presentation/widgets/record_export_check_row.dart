@@ -35,7 +35,7 @@ class RecordExportCheckRow extends StatelessWidget {
           dimension: AppSizes.iconSmall,
           child: checked
               ? const Icon(
-                  AppIcons.check,
+                  ActionIcons.check,
                   size: AppSizes.iconSmall,
                   color: AppSemanticColors.textPrimary,
                 )

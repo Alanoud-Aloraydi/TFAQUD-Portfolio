@@ -18,7 +18,7 @@ class GlassMenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
-    final IconData? icon = entry.selected ? AppIcons.check : entry.icon;
+    final IconData? icon = entry.selected ? ActionIcons.check : entry.icon;
     return Semantics(
       button: true,
       selected: entry.selected,

@@ -3,6 +3,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_per
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// Who comes along to a visit: «معك» and then each one, their photo
 /// before their name.
@@ -31,7 +32,7 @@ class SimplifiedCompanions extends StatelessWidget {
         context.tr('simplified_mode.with_you'),
         style: SimplifiedStyle.label(
           SimplifiedStyle.caption,
-          color: onDark ? SimplifiedStyle.surface : SimplifiedStyle.muted,
+          color: onDark ? SimplifiedColors.surface : SimplifiedColors.muted,
         ),
       ),
       for (final AppointmentCompanion one in companions)

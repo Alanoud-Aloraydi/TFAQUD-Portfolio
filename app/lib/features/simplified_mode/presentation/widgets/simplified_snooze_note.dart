@@ -3,6 +3,7 @@ import 'package:app/features/medications/domain/snooze_limit.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// How far the reminder can be put off, in the detailed sheet's own
 /// words: the app's twelve hours, the shorter room before the medicine's
@@ -25,7 +26,7 @@ class SimplifiedSnoozeNote extends StatelessWidget {
     textAlign: TextAlign.center,
     style: SimplifiedStyle.text(
       SimplifiedStyle.body,
-      color: SimplifiedStyle.onDarkMuted,
+      color: SimplifiedColors.onDarkMuted,
     ),
   );
 }

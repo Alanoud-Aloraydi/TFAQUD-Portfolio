@@ -25,7 +25,7 @@ class EmergencyBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           const Icon(
-            AppIcons.firstAid,
+            CareIcons.firstAid,
             size: AppSizes.iconSmall,
             color: AppSemanticColors.surfaceContent,
           ),

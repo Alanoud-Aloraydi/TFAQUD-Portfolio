@@ -5,7 +5,8 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/circles/presentation/widgets/member_access_actions.dart';
+import 'package:app/features/circles/presentation/widgets/confirm_hand_over.dart';
+import 'package:app/features/circles/presentation/widgets/confirm_remove_member.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -40,7 +41,7 @@ class MemberAccessButtons extends StatelessWidget {
         if (canHandOver)
           TextButton.icon(
             onPressed: on ? () => confirmHandOver(context, member, id) : null,
-            icon: const Icon(AppIcons.crown, size: AppSizes.iconSmall),
+            icon: const Icon(PeopleIcons.crown, size: AppSizes.iconSmall),
             label: Text(context.tr('circle_overview.hand_over')),
           ),
         TextButton.icon(
@@ -49,7 +50,7 @@ class MemberAccessButtons extends StatelessWidget {
             foregroundColor: context.tokens.errorText,
             disabledForegroundColor: AppSemanticColors.borderControlBase,
           ),
-          icon: const Icon(AppIcons.trash, size: AppSizes.iconSmall),
+          icon: const Icon(ActionIcons.trash, size: AppSizes.iconSmall),
           label: Text(context.tr('circle_overview.remove_member')),
         ),
       ],

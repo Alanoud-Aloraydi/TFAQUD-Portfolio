@@ -1,11 +1,9 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
+import 'package:app/features/circles/presentation/widgets/invite_send_button.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -63,16 +61,7 @@ class _InviteMemberSheetState extends State<InviteMemberSheet> {
           error: _errorKey == null ? null : context.tr(_errorKey!),
         ),
         const SizedBox(height: AppSpacing.lg),
-        FilledButton.icon(
-          onPressed: _saving ? null : _send,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppSemanticColors.textPrimary,
-            foregroundColor: AppSemanticColors.surfaceContent,
-            iconColor: AppSemanticColors.accentLeaf,
-          ),
-          icon: const Icon(AppIcons.paperPlane, size: AppSizes.iconSmall),
-          label: Text(context.tr('circle_overview.send_invite')),
-        ),
+        InviteSendButton(onPressed: _saving ? null : _send),
       ],
     );
   }

@@ -1,8 +1,8 @@
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/features/medications/data/models/dose_occurrence_model.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 
 /// The requests about the doses of a range of days, and the answer to one.
 mixin MedicationDoseRequests {
@@ -15,7 +15,7 @@ mixin MedicationDoseRequests {
     String? planId,
   }) async {
     final response = await client.get(
-      ApiEndpoints.medicationOccurrences(circleId),
+      MedicationEndpoints.medicationOccurrences(circleId),
       queryParameters: {
         'from': apiDate(from),
         'to': apiDate(to),
@@ -37,7 +37,7 @@ mixin MedicationDoseRequests {
     DoseRecordDraft record,
   ) async {
     final response = await client.put(
-      ApiEndpoints.medicationDoseRecord(
+      MedicationEndpoints.medicationDoseRecord(
         circleId,
         occurrence.scheduleId,
         apiDate(occurrence.scheduledOn),

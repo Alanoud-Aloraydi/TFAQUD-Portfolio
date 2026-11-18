@@ -2,6 +2,7 @@ import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedSchedulePeriodHeader extends StatelessWidget {
   const SimplifiedSchedulePeriodHeader({super.key, required this.period});
@@ -21,7 +22,7 @@ class SimplifiedSchedulePeriodHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: SimplifiedStyle.chip,
+        color: SimplifiedColors.chip,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Wrap(

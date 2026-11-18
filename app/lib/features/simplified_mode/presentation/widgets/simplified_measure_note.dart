@@ -4,6 +4,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_mea
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The free note «أخرى» asks for, 250 characters at most.
 Widget simplifiedMeasureNote(
@@ -15,21 +16,21 @@ Widget simplifiedMeasureNote(
   inputFormatters: const [CodePointLengthFormatter(250)],
   style: SimplifiedStyle.text(
     SimplifiedStyle.body,
-    color: SimplifiedStyle.ink,
+    color: SimplifiedColors.ink,
     weight: AppTextTheme.medium,
   ),
   decoration: InputDecoration(
     hintText: context.tr('simplified_mode.other_hint'),
     filled: true,
-    fillColor: SimplifiedStyle.surface,
+    fillColor: SimplifiedColors.surface,
     contentPadding: const EdgeInsets.all(18),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
-      borderSide: const BorderSide(color: SimplifiedStyle.ink, width: 2),
+      borderSide: const BorderSide(color: SimplifiedColors.ink, width: 2),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
-      borderSide: const BorderSide(color: SimplifiedStyle.ink, width: 2),
+      borderSide: const BorderSide(color: SimplifiedColors.ink, width: 2),
     ),
   ),
 );

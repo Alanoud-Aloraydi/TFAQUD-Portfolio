@@ -19,7 +19,7 @@ class IntroDone extends StatelessWidget {
         shape: CircleBorder(),
       ),
       child: const Icon(
-        AppIcons.check,
+        ActionIcons.check,
         size: AppSizes.iconSmall - 4,
         color: AppSemanticColors.surfaceContent,
       ),

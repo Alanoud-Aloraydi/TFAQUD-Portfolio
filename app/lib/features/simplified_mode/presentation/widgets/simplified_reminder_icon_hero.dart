@@ -1,5 +1,5 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// The picture of a task that has no photo: its kind's icon on its kind's
 /// colour (CareVisuals), filling the reminder's frame.
@@ -22,7 +22,7 @@ class SimplifiedReminderIconHero extends StatelessWidget {
       child: Icon(
         icon,
         size: height * .45,
-        color: AppSemanticColors.onSettingsTile,
+        color: AppSettingsTileColors.onTile,
       ),
     ),
   );

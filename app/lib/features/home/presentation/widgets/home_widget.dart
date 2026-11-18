@@ -1,14 +1,9 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
-import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_state.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/features/home/presentation/widgets/add_circle_capsule.dart';
+import 'package:app/features/home/presentation/widgets/choose_circle.dart';
+import 'package:app/features/home/presentation/widgets/circle_switcher_capsule.dart';
+import 'package:app/features/home/presentation/widgets/selected_circle_of.dart';
 import 'package:flutter/material.dart';
 
 /// The circle switcher in the middle of the top bar (design system TopBar):
@@ -30,9 +25,6 @@ class HomeWidget extends StatefulWidget {
   /// Null hides «إضافة دائرة» (for example while the home data loads).
   final VoidCallback? onAddCircle;
 
-  /// What the menu returns for «إضافة دائرة». Circle ids never look like it.
-  static const String _addCircle = '\u0000add-circle';
-
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
 }
@@ -50,100 +42,25 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) {
     final List<CareCircleSummary> circles =
         state.data?.circles ?? const <CareCircleSummary>[];
-    if (circles.isEmpty) {
-      if (onAddCircle == null) return const SizedBox.shrink();
-      final String add = context.tr('topbar.add_circle');
-      return GlassCapsuleButton(
-        label: add,
-        semanticLabel: add,
-        icon: AppIcons.plus,
-        onPressed: onAddCircle,
-      );
-    }
-    CareCircleSummary selected = circles.first;
-    for (final CareCircleSummary circle in circles) {
-      if (circle.id == state.selectedCircleId) selected = circle;
-    }
-    final String name = selected.name;
-    final String selectedId = selected.id;
+    if (circles.isEmpty) return AddCircleCapsule(onPressed: onAddCircle);
+    final CareCircleSummary selected = selectedCircleOf(
+      circles,
+      state.selectedCircleId,
+    );
     return Opacity(
       opacity: _menuOpen ? 0 : 1,
-      child: GlassCapsuleButton(
-        label: name,
-        // Display only here: editing the patient's photo happens in the
-        // circle tab, never from the switcher.
-        leading: PersonPhoto(
-          name: name,
-          photoPath: ApiEndpoints.patientPhoto(selectedId),
-          avatarCode: selected.patientAvatarCode,
-          size: 26,
+      child: CircleSwitcherCapsule(
+        selected: selected,
+        onPressed: () => chooseCircle(
+          context,
+          circles: circles,
+          selected: selected,
+          onSelected: onSelected,
+          onAddCircle: onAddCircle,
+          setMenuOpen: (open) => setState(() => _menuOpen = open),
+          isMounted: () => mounted,
         ),
-        semanticLabel: context.tr(
-          'topbar.switch_circle',
-          args: <String>[selected.name],
-        ),
-        icon: AppIcons.caretDown,
-        onPressed: () => _choose(context, circles, selectedId, name),
       ),
     );
-  }
-
-  Future<void> _choose(
-    BuildContext context,
-    List<CareCircleSummary> circles,
-    String selectedId,
-    String name,
-  ) async {
-    setState(() => _menuOpen = true);
-    final String? picked = await showGlassMenu<String>(
-      anchorContext: context,
-      semanticLabel: context.tr('topbar.circles_title'),
-      // The capsule's own content, which blurs away as the glass grows.
-      anchorContent: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Flexible(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          const Icon(
-            AppIcons.caretDown,
-            size: AppSizes.iconSmall,
-            color: AppSemanticColors.textPrimary,
-          ),
-        ],
-      ),
-      sections: <List<GlassMenuItem<String>>>[
-        <GlassMenuItem<String>>[
-          for (final CareCircleSummary circle in circles)
-            GlassMenuItem<String>(
-              value: circle.id,
-              label: circle.name,
-              selected: circle.id == selectedId,
-            ),
-        ],
-        if (onAddCircle != null)
-          <GlassMenuItem<String>>[
-            GlassMenuItem<String>(
-              value: HomeWidget._addCircle,
-              label: context.tr('topbar.add_circle'),
-              icon: AppIcons.plus,
-            ),
-          ],
-      ],
-    );
-    if (!mounted) return;
-    setState(() => _menuOpen = false);
-    if (picked == null) return;
-    if (picked == HomeWidget._addCircle) {
-      onAddCircle?.call();
-    } else if (picked != selectedId) {
-      onSelected(picked);
-    }
   }
 }

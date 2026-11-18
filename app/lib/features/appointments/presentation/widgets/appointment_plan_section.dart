@@ -1,19 +1,16 @@
 import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
-import 'package:app/core/widgets/feedback/retry_view.dart';
-import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment_group.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_list_body.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/navigation/care_item_routes.dart';
 
 /// The plan tab's appointments: the upcoming ones, soonest first, one card
 /// for each booking.
@@ -43,33 +40,23 @@ class AppointmentPlanSection extends StatelessWidget {
       children: <Widget>[
         header,
         const SizedBox(height: AppSpacing.lg),
-        if (state.status == AppointmentsLoadStatus.loading && values.isEmpty)
-          const LoadingNote()
-        else if (state.status == AppointmentsLoadStatus.failure)
-          RetryView(
-            messageKey: state.errorKey ?? 'error.unknown',
-            onRetry: () => context.read<AppointmentsCubit>().load(circleId),
-          )
-        else if (values.isEmpty)
-          EmptyStateNote.section(
+        ...appointmentListBody(
+          context,
+          state: state,
+          values: values,
+          circleId: circleId,
+          empty: EmptyStateNote.section(
             context.tr('appointments.no_upcoming'),
             actionLabel: canManage ? context.tr('add.appointment') : null,
             onAction: canManage
-                ? () => context.push<bool>(Routes.newAppointment(circleId))
+                ? () => context.push<bool>(
+                    CareItemRoutes.newAppointment(circleId),
+                  )
                 : null,
-          )
-        else
-          for (final AppointmentGroup group in values) ...<Widget>[
-            AppointmentCard(
-              value: group.shown,
-              circleId: circleId,
-              canManage: canManage,
-              showRelativeDate: true,
-              others: group.others,
-              all: state.appointments,
-            ),
-            const SizedBox(height: AppItemCard.listGap),
-          ],
+          ),
+          canManage: canManage,
+          showRelativeDate: true,
+        ),
       ],
     );
   }

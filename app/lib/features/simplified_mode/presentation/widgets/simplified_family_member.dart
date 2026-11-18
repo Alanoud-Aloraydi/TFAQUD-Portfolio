@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_family_member_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -43,40 +41,7 @@ class SimplifiedFamilyMember extends StatelessWidget {
           width: 88,
           child: Column(
             children: <Widget>[
-              Stack(
-                clipBehavior: Clip.none,
-                children: <Widget>[
-                  PersonPhoto(
-                    name: member.name,
-                    photoPath: ApiEndpoints.memberPhoto(
-                      circleId,
-                      member.accountId ?? '',
-                    ),
-                    avatarCode: member.avatarCode,
-                    size: 72,
-                  ),
-                  PositionedDirectional(
-                    bottom: -2,
-                    end: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: SimplifiedStyle.success,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: SimplifiedStyle.surface,
-                          width: 3,
-                        ),
-                      ),
-                      child: const Icon(
-                        AppIcons.phoneCall,
-                        size: 14,
-                        color: SimplifiedStyle.surface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              SimplifiedFamilyMemberPhoto(member: member, circleId: circleId),
               const SizedBox(height: 6),
               Text(
                 member.name.split(' ').first,

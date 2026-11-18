@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:dio/dio.dart';
+import 'package:app/core/network/appointment_endpoints.dart';
 
 /// Sends visit requests to the API.
 class VisitRemoteDataSource {
@@ -12,7 +12,7 @@ class VisitRemoteDataSource {
 
   Future<Map<String, dynamic>> get(String circleId, String id) async {
     final response = await _client.get(
-      ApiEndpoints.appointmentVisit(circleId, id),
+      AppointmentEndpoints.appointmentVisit(circleId, id),
     );
     return response.data as Map<String, dynamic>;
   }
@@ -23,7 +23,7 @@ class VisitRemoteDataSource {
     Map<String, dynamic> data,
   ) async {
     final response = await _client.put(
-      ApiEndpoints.appointmentVisit(circleId, id),
+      AppointmentEndpoints.appointmentVisit(circleId, id),
       data: data,
     );
     return response.data as Map<String, dynamic>;
@@ -31,7 +31,7 @@ class VisitRemoteDataSource {
 
   Future<Uint8List> audio(String circleId, String id) async {
     final response = await _client.dio.get<List<int>>(
-      ApiEndpoints.appointmentVisitAudio(circleId, id),
+      AppointmentEndpoints.appointmentVisitAudio(circleId, id),
       options: Options(responseType: ResponseType.bytes),
     );
     return Uint8List.fromList(response.data!);
@@ -43,7 +43,7 @@ class VisitRemoteDataSource {
     Uint8List bytes,
   ) async {
     final response = await _client.dio.put<Map<String, dynamic>>(
-      ApiEndpoints.appointmentVisitAudio(circleId, id),
+      AppointmentEndpoints.appointmentVisitAudio(circleId, id),
       data: Stream.value(bytes),
       options: Options(
         contentType: 'audio/mp4',
@@ -55,7 +55,7 @@ class VisitRemoteDataSource {
 
   Future<Map<String, dynamic>> removeAudio(String circleId, String id) async {
     final response = await _client.delete(
-      ApiEndpoints.appointmentVisitAudio(circleId, id),
+      AppointmentEndpoints.appointmentVisitAudio(circleId, id),
     );
     return response.data as Map<String, dynamic>;
   }

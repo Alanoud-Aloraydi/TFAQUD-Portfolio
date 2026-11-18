@@ -4,6 +4,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_sty
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// «إغلاق» at the top: back to where the reminder opened over, answering
 /// nothing, so the task stays as it was.
@@ -20,16 +21,16 @@ class SimplifiedReminderCloseBar extends StatelessWidget {
           onPressed: () => context.canPop()
               ? context.pop()
               : context.go(Routes.simplifiedMode),
-          icon: const Icon(AppIcons.x, size: 26),
+          icon: const Icon(ActionIcons.x, size: 26),
           label: Text(
             context.tr('simplified_mode.close'),
             style: SimplifiedStyle.label(
               SimplifiedStyle.body,
-              color: SimplifiedStyle.surface,
+              color: SimplifiedColors.surface,
             ),
           ),
           style: TextButton.styleFrom(
-            foregroundColor: SimplifiedStyle.surface,
+            foregroundColor: SimplifiedColors.surface,
             minimumSize: const Size(0, SimplifiedStyle.touch),
           ),
         ),

@@ -1,13 +1,13 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 import 'package:flutter/material.dart';
 
 /// The simplified mode's own scale over the app's tokens: larger type
 /// (nothing below 18), bigger touch targets and one big action height, for
-/// a patient who reads and taps less easily. Colors are the app's semantic
-/// colors; only their roles here are named.
+/// a patient who reads and taps less easily. Its colors are
+/// [SimplifiedColors].
 abstract final class SimplifiedStyle {
   // Layout.
   static const double page = AppSpacing.space5;
@@ -35,43 +35,9 @@ abstract final class SimplifiedStyle {
   static const double time = 44;
   static const double number = 56;
 
-  // Color roles.
-  static const Color ink = AppSemanticColors.textPrimary;
-  static const Color muted = AppSemanticColors.textSupporting;
-  static const Color canvas = AppSemanticColors.background;
-  static const Color surface = AppSemanticColors.surfaceContent;
-  static const Color line = AppSemanticColors.borderSubtle;
-  static const Color control = AppSemanticColors.borderControlBase;
-  static const Color accent = AppSemanticColors.actionPrimary;
-
-  /// The fill of the one action a screen asks for, deep enough to carry
-  /// over the mode's tinted cards.
-  static const Color accentStrong = AppSemanticColors.actionStrong;
-  static const Color accentTint = AppSemanticColors.selectedSurface;
-  static const Color success = AppSemanticColors.statusSuccess;
-  static const Color attention = AppSemanticColors.surfaceAttentionGroup;
-  static const Color attentionBorder = AppSemanticColors.borderAttentionGroup;
-  static const Color attentionEdge = AppSemanticColors.accentWarm;
-  static const Color attentionInk = AppSemanticColors.statusWarning;
-  static const Color danger = AppSemanticColors.statusError;
-  static const Color chip = AppSemanticColors.segmentTrack;
-  static const Color disabled = AppSemanticColors.disabledSurface;
-  static const Color onDarkMuted = AppSemanticColors.onInkSupporting;
-  static const Color clear = AppSemanticColors.transparent;
-
-  /// The calm dark ground of a full-screen reminder, like a call: one
-  /// colour, never a gradient.
-  static const Color reminderGround = AppSemanticColors.textPrimary;
-
-  /// The ground of «تم، يعطيك العافية»: one colour, the light lavender.
-  static const Color doneGround = AppSemanticColors.selectedSurface;
-
-  /// Something done, in the detailed mode's «تم أخذها»: the pale green.
-  static const Color successTint = AppSemanticColors.surfaceSuccess;
-
   static TextStyle head(
     double size, {
-    Color color = ink,
+    Color color = SimplifiedColors.ink,
     double height = 1.25,
   }) => TextStyle(
     fontSize: size,
@@ -80,16 +46,17 @@ abstract final class SimplifiedStyle {
     height: height,
   );
 
-  static TextStyle label(double size, {Color color = ink}) => TextStyle(
-    fontSize: size,
-    fontWeight: AppTextTheme.semibold,
-    color: color,
-    height: 1.3,
-  );
+  static TextStyle label(double size, {Color color = SimplifiedColors.ink}) =>
+      TextStyle(
+        fontSize: size,
+        fontWeight: AppTextTheme.semibold,
+        color: color,
+        height: 1.3,
+      );
 
   static TextStyle text(
     double size, {
-    Color color = muted,
+    Color color = SimplifiedColors.muted,
     FontWeight weight = AppTextTheme.regular,
   }) =>
       TextStyle(fontSize: size, fontWeight: weight, color: color, height: 1.5);

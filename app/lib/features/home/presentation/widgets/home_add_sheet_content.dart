@@ -40,7 +40,7 @@ class HomeAddSheetContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         HomeAddQuickAction(
-          icon: AppIcons.heartbeat,
+          icon: CareIcons.heartbeat,
           title: context.tr('add.reading_now'),
           hint: context.tr('add.reading_now_hint'),
           onTap: onReading,

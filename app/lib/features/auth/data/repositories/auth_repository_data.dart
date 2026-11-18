@@ -1,10 +1,9 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
-import 'package:app/core/errors/storage_failures.dart';
 import 'package:app/core/network/api_error_body.dart';
 import 'package:app/core/services/token_storage.dart';
 import 'package:app/features/auth/data/datasources/auth_remote_data_source.dart';
-import 'package:app/features/auth/data/models/account_status_response.dart';
+import 'package:app/features/auth/data/repositories/auth_session_calls.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:app/features/auth/domain/entities/sign_in_result.dart';
@@ -64,44 +63,11 @@ class AuthRepositoryData implements AuthRepositoryDomain {
   }
 
   @override
-  Future<Result<bool, Failure>> signOut() async {
-    final revision = _tokens.revision;
-    Result<bool, Failure> result = const Success(true);
-    try {
-      await _remote.signOut();
-    } on Exception catch (error) {
-      result = Error(FailureExceptions.getException(error));
-    }
-    try {
-      await _tokens.clear(expectedRevision: revision);
-    } on Exception {
-      return const Error(StorageFailure('auth.sign_out_failed'));
-    }
-    return result;
-  }
+  Future<Result<bool, Failure>> signOut() => signOutSession(_remote, _tokens);
 
   @override
-  Future<Result<SignInResult?, Failure>> restoreSession() async {
-    try {
-      final String? before = await _tokens.readAccessToken();
-      if (before == null || before.isEmpty) return const Success(null);
-      final AccountStatusResponse account = await _remote.checkSession();
-      return Success(
-        SignInResult(
-          needsProfile: !account.profileComplete,
-          appMode: account.appMode,
-        ),
-      );
-    } on Exception catch (error) {
-      try {
-        final String? after = await _tokens.readAccessToken();
-        if (after == null || after.isEmpty) return const Success(null);
-      } on Exception {
-        return const Error(StorageFailure());
-      }
-      return Error(FailureExceptions.getException(error));
-    }
-  }
+  Future<Result<SignInResult?, Failure>> restoreSession() =>
+      restoreStoredSession(_remote, _tokens);
 
   /// The API code decides the failure for the two code calls. Any other error
   /// (no connection, a timeout, a server error) goes to the shared mapping.

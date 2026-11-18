@@ -5,6 +5,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_sty
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// «ملفي الطبي» as one big card that opens the simplified medical file.
 Widget simplifiedAccountFileCard(BuildContext context, String circleId) =>
@@ -32,7 +33,7 @@ Widget simplifiedAccountFileCard(BuildContext context, String circleId) =>
                 ],
               ),
             ),
-            const Icon(AppIcons.next, size: 28, color: SimplifiedStyle.ink),
+            const Icon(ArrowIcons.next, size: 28, color: SimplifiedColors.ink),
           ],
         ),
       ),

@@ -10,7 +10,7 @@ mixin _ReplyRequests implements CircleReplyApi {
     required bool accept,
   }) async {
     final response = await _client.post(
-      ApiEndpoints.respondCircleRequest(id),
+      CircleRequestEndpoints.respondCircleRequest(id),
       data: <String, dynamic>{'accept': accept},
     );
     return SentCircleRequestModel.fromJson(
@@ -21,7 +21,7 @@ mixin _ReplyRequests implements CircleReplyApi {
   @override
   Future<String?> respondToInvitation(String id, {required bool accept}) async {
     final response = await _client.post(
-      ApiEndpoints.respondInvitation(id),
+      CircleRequestEndpoints.respondInvitation(id),
       data: <String, dynamic>{'accept': accept},
     );
     final Map<String, dynamic> body = response.data as Map<String, dynamic>;
@@ -36,7 +36,7 @@ mixin _ReplyRequests implements CircleReplyApi {
     CompleteCircleRequestModel body,
   ) async {
     final response = await _client.post(
-      ApiEndpoints.completeCircleRequest(id),
+      CircleRequestEndpoints.completeCircleRequest(id),
       data: body.toJson(),
     );
     return CircleModel.fromJson(response.data as Map<String, dynamic>);
@@ -44,6 +44,6 @@ mixin _ReplyRequests implements CircleReplyApi {
 
   @override
   Future<void> cancelRequest(String id) async {
-    await _client.delete(ApiEndpoints.circleRequest(id));
+    await _client.delete(CircleRequestEndpoints.circleRequest(id));
   }
 }

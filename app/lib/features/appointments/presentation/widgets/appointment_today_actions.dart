@@ -1,5 +1,4 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
@@ -12,6 +11,7 @@ import 'package:app/features/appointments/presentation/widgets/appointment_statu
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/navigation/care_item_routes.dart';
 
 /// What an open visit asks, in the buttons every task shares, wherever it
 /// shows on «اليوم» (its row, the top card, «يحتاج انتباهك»): «حضرت»
@@ -46,10 +46,11 @@ Widget? appointmentTodayActions(
       if (canManage) ...<Widget>[
         TaskButton(
           role: TaskButtonRole.later,
-          icon: AppIcons.pencil,
+          icon: ActionIcons.pencil,
           label: context.tr('appointments.edit'),
-          onPressed: () =>
-              context.push<bool>(Routes.editAppointment(circleId, value.id)),
+          onPressed: () => context.push<bool>(
+            CareItemRoutes.editAppointment(circleId, value.id),
+          ),
         ),
         TaskButton(
           role: TaskButtonRole.skip,

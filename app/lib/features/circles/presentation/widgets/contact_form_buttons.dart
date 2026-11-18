@@ -46,7 +46,7 @@ List<Widget> contactFormButtons(
       // so the trash sits on the card's content edge.
       child: TextButton.icon(
         onPressed: props.form.saving ? null : props.onDelete,
-        icon: const Icon(AppIcons.trash, size: AppSizes.iconSmall),
+        icon: const Icon(ActionIcons.trash, size: AppSizes.iconSmall),
         label: Text(context.tr('circles.contact_delete')),
         style: TextButton.styleFrom(
           foregroundColor: AppSemanticColors.statusError,

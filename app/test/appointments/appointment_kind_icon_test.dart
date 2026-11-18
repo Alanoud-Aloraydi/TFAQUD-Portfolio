@@ -25,7 +25,10 @@ void main() {
     });
 
     test('«أخرى» keeps the calendar', () {
-      expect(appointmentKindIcon(AppointmentKind.other), AppIcons.calendar);
+      expect(
+        appointmentKindIcon(AppointmentKind.other),
+        ScheduleIcons.calendar,
+      );
     });
   });
 }

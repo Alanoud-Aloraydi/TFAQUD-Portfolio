@@ -6,7 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The "رجوع" link at the top of a step page.
-/// The back chevron (SF chevron.backward, AppIcons.back) turns to
+/// The back chevron (SF chevron.backward, ArrowIcons.back) turns to
 /// point right on an Arabic (right-to-left) screen, as iOS draws it. A
 /// swipe from that edge of the screen goes back too (an iOS page).
 class BackLink extends StatelessWidget {
@@ -20,7 +20,7 @@ class BackLink extends StatelessWidget {
       alignment: AlignmentDirectional.centerStart,
       child: TextButton.icon(
         onPressed: onPressed,
-        icon: const Icon(AppIcons.back, size: AppSizes.iconSmall),
+        icon: const Icon(ArrowIcons.back, size: AppSizes.iconSmall),
         label: Text(context.tr('common.back')),
         // No padding on the start side: the chevron sits on the page margin,
         // on the same line as the title under it.

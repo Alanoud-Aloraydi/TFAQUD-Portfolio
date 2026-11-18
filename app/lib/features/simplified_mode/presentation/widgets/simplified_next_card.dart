@@ -1,23 +1,13 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/care_visuals.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_task_status.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/measurement_icon.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_next_content.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_next_lines.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_snoozed_line.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_details.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The next task: the medicine's photo first (how the patient knows it),
 /// then the time, the name and what to take.
@@ -39,155 +29,35 @@ class SimplifiedNextCard extends StatelessWidget {
   /// «سأذكّرك 2:09 مساءً» when the task is put off.
   final String? snoozed;
 
-  /// What the card says, in its order.
-  static List<String> lines(
-    BuildContext context,
-    TodayTask task,
-    SimplifiedDay day,
-    DateTime now,
-    String? snoozed,
-  ) {
-    final PrayerPeriod? period = _period(task, day);
-    return <String>[
-      snoozed ?? _when(context, task, now),
-      simplifiedTime(context, task.time),
-      if (period != null) simplifiedPeriod(context, period),
-      simplifiedTaskTitle(context, task),
-      // The amount, not the strength. «حبة واحدة» is what the patient
-      // acts on; «81 ملغ» is for whoever manages the plan, and spoken it
-      // is a whole clause between them and the next thing they need.
-      if (task.dose case final dose?) ...<String>[
-        simplifiedDoseAmount(context, dose),
-      ],
-      ...simplifiedTaskChips(context, task, day),
-    ];
-  }
-
-  static PrayerPeriod? _period(TodayTask task, SimplifiedDay day) =>
-      day.prayers == null ? null : prayerPeriodOf(task.time, day.prayers!);
-
-  /// «التالي، بعد ساعتين», or «فات موعده» («تأكيد الحضور» for a visit).
-  static String _when(BuildContext context, TodayTask task, DateTime now) =>
-      task.status == TodayTaskStatus.late
-      ? simplifiedLate(context, task)
-      : context.tr(
-          'simplified_mode.next_in',
-          args: <String>[simplifiedUntil(context, task.scheduledAt, now)],
-        );
-
   @override
   Widget build(BuildContext context) {
     // The whole card is the one tap, so it is one stop that says everything
     // and carries the action itself: the card inside is excluded.
     final bool recordable = schedule.canRecord(task);
     return Semantics(
-      label: spoken(lines(context, task, day, now, snoozed).join('، ')),
+      label: spoken(
+        simplifiedNextLines(context, task, day, now, snoozed).join('، '),
+      ),
       button: recordable,
       onTap: recordable
           ? () => openSimplifiedTask(context, task, day.circleId)
           : null,
       excludeSemantics: true,
-      child: _body(context),
+      child: _body(context, recordable),
     );
   }
 
-  Widget _body(BuildContext context) {
-    final bool recordable = schedule.canRecord(task);
-    final PrayerPeriod? period = _period(task, day);
-    final String when = snoozed ?? _when(context, task, now);
+  Widget _body(BuildContext context, bool recordable) {
     return SimplifiedCard(
       padding: EdgeInsets.zero,
-      side: const BorderSide(color: SimplifiedStyle.ink, width: 2),
+      side: const BorderSide(color: SimplifiedColors.ink, width: 2),
       onTap: recordable
           ? () => openSimplifiedTask(context, task, day.circleId)
           : null,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Stack(
-            children: <Widget>[
-              _hero(),
-              if (period != null)
-                PositionedDirectional(
-                  top: 14,
-                  start: 14,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: SimplifiedStyle.surface,
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    child: Text(
-                      simplifiedPeriod(context, period),
-                      style: SimplifiedStyle.head(SimplifiedStyle.caption),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(SimplifiedStyle.pad),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SimplifiedSnoozedLine(
-                  text: when,
-                  task: task,
-                  day: day,
-                  style: SimplifiedStyle.label(
-                    SimplifiedStyle.caption,
-                    color: task.status == TodayTaskStatus.late
-                        ? SimplifiedStyle.attentionInk
-                        : SimplifiedStyle.muted,
-                  ),
-                ),
-                Text(
-                  simplifiedTime(context, task.time),
-                  style: SimplifiedStyle.head(
-                    SimplifiedStyle.time,
-                    height: 1.1,
-                  ),
-                ),
-                const Divider(height: 28, color: SimplifiedStyle.line),
-                Text(
-                  simplifiedTaskTitle(context, task),
-                  style: SimplifiedStyle.head(SimplifiedStyle.name),
-                ),
-                SimplifiedTaskDetails(task: task, day: day),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _hero() {
-    if (task.kind == TodayTaskKind.medication) {
-      return MedicinePhoto(
-        circleId: day.circleId,
-        planId: task.dose!.planId,
-        height: 210,
-        radius: 0,
-        iconSize: 96,
-      );
-    }
-    final bool measurement = task.kind == TodayTaskKind.measurement;
-    return Container(
-      height: 150,
-      width: double.infinity,
-      color: measurement
-          ? CareVisuals.measurementTile
-          : CareVisuals.appointmentTile,
-      child: Icon(
-        measurement
-            ? measurementIcon(task.measurement!.kind)
-            : appointmentKindIcon(task.appointment!.kind),
-        size: 80,
-        color: AppSemanticColors.onSettingsTile,
+      child: SimplifiedNextContent(
+        task: task,
+        day: day,
+        when: snoozed ?? simplifiedNextWhen(context, task, now),
       ),
     );
   }

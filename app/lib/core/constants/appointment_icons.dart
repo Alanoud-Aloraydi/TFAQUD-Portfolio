@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-/// The Phosphor regular glyphs of the visit kinds that have none in AppIcons
-/// (phosphor_flutter 2.1.0 code points), not mirrored, as AppIcons declares
-/// its own. Read through appointmentKindIcon.
+/// The Phosphor regular glyphs of the visit kinds that have none in the
+/// icon groups of `icons/` (phosphor_flutter 2.1.0 code points), not
+/// mirrored, as those groups declare theirs. Read through appointmentKindIcon.
 abstract final class AppointmentIcons {
   static const String _family = 'PhosphorRegular';
   static const String _package = 'phosphor_flutter';

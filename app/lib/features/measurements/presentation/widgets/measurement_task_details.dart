@@ -1,17 +1,11 @@
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/media/person_photo_editor.dart';
-import 'package:app/core/services/reminders/shared_snooze.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/core/widgets/layout/recorder_line.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_record_lines.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_snooze_text.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_snooze.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The lines under a measurement row's title: its condition, a snooze, and
@@ -21,10 +15,9 @@ List<Widget> measurementTaskDetails(
   MeasurementOccurrence task,
   String circleId,
 ) {
-  final TextStyle? small = Theme.of(context).textTheme.bodySmall;
   final MeasurementReading? record = task.record;
-  final PatientClock clock = PatientClockScope.of(context);
-  final String? putOff = _snoozeText(context, task, clock);
+  final clock = PatientClockScope.of(context);
+  final String? putOff = measurementSnoozeText(context, task, clock);
   return <Widget>[
     if (task.measurementState != null)
       Padding(
@@ -35,72 +28,8 @@ List<Widget> measurementTaskDetails(
         ),
       ),
     if (putOff != null)
-      Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.xs),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(CupertinoIcons.bell_fill, size: AppSizes.iconSmall),
-            const SizedBox(width: AppSpacing.tight),
-            Flexible(child: Text(putOff, style: small)),
-            // Who put it off, with their picture beside their name.
-            if (task.snooze?.byName case final String name) ...<Widget>[
-              const SizedBox(width: AppSpacing.tight),
-              PersonPhoto(
-                name: name,
-                photoPath: task.snooze?.byAccountId == null
-                    ? ''
-                    : personPhotoPath(circleId, task.snooze!.byAccountId),
-                avatarCode: task.snooze?.byAvatarCode,
-                size: AppSizes.iconSmall,
-              ),
-            ],
-          ],
-        ),
-      ),
-    if (record != null) ...<Widget>[
-      if (record.outcome == 'read')
-        Text(record.valueText, style: Theme.of(context).textTheme.titleSmall),
-      Text(
-        context.tr(
-          'measurements.recorded_at',
-          args: <String>[wallTimeText(clock.wallTime(record.recordedAt))],
-        ),
-        style: small,
-      ),
-      if (record.recordedByName case final String name)
-        RecorderLine(
-          name: name,
-          photoPath: personPhotoPath(circleId, record.recordedByAccountId),
-          avatarCode: record.recordedByAvatarCode,
-        ),
-      if (record.outcome == 'skipped' && record.skipReasonCode != null)
-        Text(
-          context.tr(
-            'measurements.skip_reason_line',
-            args: <String>[measurementSkipReasonText(context, record)],
-          ),
-          style: small,
-        ),
-    ],
+      MeasurementTaskSnooze(task: task, text: putOff, circleId: circleId),
+    if (record != null)
+      ...measurementTaskRecordLines(context, record, clock, circleId),
   ];
-}
-
-/// «ذكّرني لاحقًا» put off by someone in the circle, while it waits.
-String? _snoozeText(
-  BuildContext context,
-  MeasurementOccurrence task,
-  PatientClock clock,
-) {
-  final SharedSnooze? snooze = task.snooze;
-  if (snooze == null || task.record != null) return null;
-  final DateTime until = clock.wallTime(snooze.remindAt);
-  if (!until.isAfter(clock.now())) return null;
-  final String time = wallTimeText(until);
-  return snooze.byName == null
-      ? context.tr('measurements.snoozed_shared', args: <String>[time])
-      : context.tr(
-          'measurements.snoozed_by',
-          args: <String>[time, snooze.byName!],
-        );
 }

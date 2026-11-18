@@ -1,7 +1,7 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// The small rounded square with an icon at the start of a settings row,
 /// as in iOS Settings: it tells the rows apart at a glance. Decorative: the
@@ -33,7 +33,7 @@ class SettingsIconTile extends StatelessWidget {
         child: Icon(
           icon,
           size: AppSizes.iconSmall,
-          color: AppSemanticColors.onSettingsTile,
+          color: AppSettingsTileColors.onTile,
         ),
       ),
     );

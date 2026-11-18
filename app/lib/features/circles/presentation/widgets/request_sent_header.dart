@@ -29,7 +29,7 @@ class RequestSentHeader extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            accepted ? AppIcons.check : AppIcons.clock,
+            accepted ? ActionIcons.check : ScheduleIcons.clock,
             size: AppSizes.iconEmpty,
             color: accepted
                 ? AppSemanticColors.statusSuccess

@@ -5,10 +5,9 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/account_name_field.dart';
-import 'package:app/features/circles/presentation/widgets/already_has_circle_view.dart';
 import 'package:app/features/circles/presentation/widgets/circle_basics_error.dart';
 import 'package:app/features/circles/presentation/widgets/circle_basics_fields.dart';
-import 'package:app/features/circles/presentation/widgets/circle_basics_frame.dart';
+import 'package:app/features/circles/presentation/widgets/circle_basics_scaffold.dart';
 import 'package:app/features/circles/presentation/widgets/circle_name_chips.dart';
 import 'package:app/features/circles/presentation/widgets/create_circle_name_state.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -35,42 +34,24 @@ class _ApprovedBasicsState extends State<ApprovedCircleBasicsScreen>
   @override
   Widget build(BuildContext context) {
     final CreateCircleCubit cubit = context.read<CreateCircleCubit>();
-    return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<CreateCircleCubit, CreateCircleState>(
-          builder: (BuildContext context, CreateCircleState state) {
-            if (state.alreadyHasCircle) return const AlreadyHasCircleView();
-            return CircleBasicsFrame(
-              state: state,
-              onCreate: () => create(cubit),
-              children: <Widget>[
-                StepHeader(
-                  title: context.tr('circles.approved_title'),
-                  onBack: context.canPop()
-                      ? () => context.pop()
-                      : () => context.go(Routes.notifications),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                AccountNameField(state: state, onRetry: cubit.loadAccount),
-                const SizedBox(height: AppSpacing.xl),
-                CircleNameChips(
-                  cubit: cubit,
-                  state: state,
-                  customName: customName,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                InsetText.note(context.tr('circles.name_hint')),
-                CircleBasicsFields(
-                  cubit: cubit,
-                  state: state,
-                  topGap: AppSpacing.lg,
-                ),
-                CircleBasicsError(state: state),
-              ],
-            );
-          },
+    return CircleBasicsScaffold(
+      onCreate: () => create(cubit),
+      children: (BuildContext context, CreateCircleState state) => <Widget>[
+        StepHeader(
+          title: context.tr('circles.approved_title'),
+          onBack: context.canPop()
+              ? () => context.pop()
+              : () => context.go(Routes.notifications),
         ),
-      ),
+        const SizedBox(height: AppSpacing.xl),
+        AccountNameField(state: state, onRetry: cubit.loadAccount),
+        const SizedBox(height: AppSpacing.xl),
+        CircleNameChips(cubit: cubit, state: state, customName: customName),
+        const SizedBox(height: AppSpacing.sm),
+        InsetText.note(context.tr('circles.name_hint')),
+        CircleBasicsFields(cubit: cubit, state: state, topGap: AppSpacing.lg),
+        CircleBasicsError(state: state),
+      ],
     );
   }
 }

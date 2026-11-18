@@ -1,10 +1,8 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/circles/presentation/widgets/attention_mark.dart';
+import 'package:app/features/circles/presentation/widgets/circle_feature_tile_content.dart';
 import 'package:flutter/material.dart';
 
 /// A tile under the patient card: an outline icon, its name and one line
@@ -31,7 +29,6 @@ class CircleFeatureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
       label: spoken('$title، $subtitle'),
@@ -53,30 +50,12 @@ class CircleFeatureTile extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Icon(icon, size: AppSizes.icon, color: iconColor),
-                    if (attention) ...<Widget>[
-                      const Spacer(),
-                      const AttentionMark(),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(title, style: text.titleSmall),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  subtitle,
-                  style: attention
-                      ? text.bodySmall?.copyWith(
-                          color: context.tokens.warningText,
-                        )
-                      : text.bodySmall,
-                ),
-              ],
+            child: CircleFeatureTileContent(
+              icon: icon,
+              iconColor: iconColor,
+              title: title,
+              subtitle: subtitle,
+              attention: attention,
             ),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/features/measurements/presentation/widgets/calendar_day_dot.dart';
 import 'package:flutter/material.dart';
 
 /// One day of the month calendar: its number, a dot when it has readings
@@ -23,8 +24,6 @@ class CalendarDayCell extends StatelessWidget {
   final bool selected;
   final bool isToday;
   final VoidCallback onTap;
-
-  static const double _dot = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -55,17 +54,7 @@ class CalendarDayCell extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text('$day', style: Theme.of(context).textTheme.labelSmall),
-              if (count > 0)
-                Container(
-                  width: _dot,
-                  height: _dot,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: outside
-                        ? AppSemanticColors.statusWarning
-                        : AppSemanticColors.statusSuccess,
-                  ),
-                ),
+              if (count > 0) CalendarDayDot(outside: outside),
             ],
           ),
         ),

@@ -1,17 +1,17 @@
 import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/widgets/layout/plan_card_parts.dart';
-import 'package:app/core/widgets/layout/plan_info_box.dart';
 import 'package:app/core/widgets/layout/plan_item_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/plan_status_badge.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/measurement_plan_condition.dart';
+import 'package:app/features/measurements/domain/measurement_plan_start.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_details.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_plan_edit_action.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_plan_pending_note.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// One measurement plan as a plan card: its kind and status with the
 /// pencil, a change waiting for later, and «تفاصيل القياس» with its times,
@@ -30,12 +30,9 @@ class MeasurementPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MeasurementVersion version = plan.version;
     final DateTime today = PatientClockScope.of(context).today();
     final bool glucose = plan.kind == MeasurementKind.glucose;
-    final String? condition = version.readingTimes.length == 1
-        ? version.readingTimes.single.measurementState
-        : null;
+    final String? condition = plan.singleCondition;
     return PlanItemCard(
       leading: Icon(glucose ? CupertinoIcons.drop : CupertinoIcons.heart),
       title: Text(
@@ -47,29 +44,20 @@ class MeasurementPlanCard extends StatelessWidget {
       subtitle: condition == null
           ? null
           : Text(context.tr('measurements.condition.$condition')),
-      edit: canManage
-          ? EditAction.pen(
-              onPressed: () =>
-                  context.push(Routes.editMeasurement(circleId, plan.id)),
-              tooltip: context.tr('measurements.edit_plan'),
-            )
-          : null,
+      edit: measurementPlanEditAction(
+        context,
+        canManage: canManage,
+        circleId: circleId,
+        planId: plan.id,
+      ),
       status: PlanStatusBadge(plan.statusOn(today)),
       // The times, days and normal range are in «تفاصيل القياس», so the
       // closed card is only what tells the plans apart.
       body: <Widget>[
         if (plan.pendingVersion case final MeasurementVersion pending)
-          PlanInfoBox(
-            emphasis: true,
-            child: Text(
-              context.tr(
-                'measurements.pending_change',
-                args: <String>[_dayText(pending.effectiveFromOn)],
-              ),
-            ),
-          ),
+          MeasurementPlanPendingNote(pending: pending),
       ],
-      start: formatStartDate(context, _startsOn(plan), today: today),
+      start: formatStartDate(context, plan.startsOn, today: today),
       detailsLabel: context.tr('measurements.details'),
       details: measurementPlanDetails(
         context,
@@ -79,14 +67,4 @@ class MeasurementPlanCard extends StatelessWidget {
       ),
     );
   }
-
-  /// The first day of the plan: its earliest version's (an edit starts a
-  /// later version).
-  static DateTime _startsOn(MeasurementPlan plan) =>
-      <MeasurementVersion>[plan.version, ...plan.history]
-          .map((MeasurementVersion item) => item.effectiveFromOn)
-          .reduce((DateTime a, DateTime b) => a.isBefore(b) ? a : b);
-
-  /// «9/11/2026», as the plan form's «يسري التعديل من» writes it.
-  static String _dayText(DateTime day) => '${day.day}/${day.month}/${day.year}';
 }

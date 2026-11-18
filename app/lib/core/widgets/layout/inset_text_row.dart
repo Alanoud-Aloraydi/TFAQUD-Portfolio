@@ -1,11 +1,7 @@
-import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/arabic_digits.dart';
-import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/forms/tap_to_focus.dart';
-import 'package:app/core/widgets/layout/inset_field_decoration.dart';
 import 'package:app/core/widgets/layout/inset_row_error.dart';
-import 'package:app/core/widgets/layout/inset_row_label.dart';
+import 'package:app/core/widgets/layout/inset_text_field.dart';
+import 'package:app/core/widgets/layout/inset_text_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -59,76 +55,29 @@ class InsetTextRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TapToFocus(
     focusNode: focusNode,
-    builder: (FocusNode node) {
-      final TextTheme text = Theme.of(context).textTheme;
-      final bool multiline = maxLines > 1;
-      final Widget field = TextField(
-        controller: controller,
-        focusNode: node,
-        autofocus: autofocus,
-        onChanged: onChanged,
-        keyboardType: keyboardType,
-        textInputAction: multiline ? TextInputAction.newline : textInputAction,
-        maxLines: maxLines,
-        minLines: 1,
-        // Arabic is read from the right: the text starts after the label.
-        textAlign: ltr ? TextAlign.left : TextAlign.start,
-        textDirection: ltr ? TextDirection.ltr : null,
-        style: text.bodyLarge,
-        inputFormatters: <TextInputFormatter>[
-          // First: an Arabic keyboard types ٠-٩; they become 0-9 before any
-          // formatter that keeps only English digits.
-          WesternDigitsFormatter(decimal: keyboardType?.decimal ?? false),
-          ...?inputFormatters,
-          // Counted in code points, as the server counts.
-          if (maxLength != null) CodePointLengthFormatter(maxLength!),
-        ],
-        decoration: insetFieldDecoration(text, hint),
-      );
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: AppSizes.button),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Row(
-                crossAxisAlignment: multiline
-                    ? CrossAxisAlignment.start
-                    : CrossAxisAlignment.center,
-                children: <Widget>[
-                  // The visible label and the field merge into one node, so
-                  // VoiceOver reads the label with the field.
-                  Expanded(
-                    child: MergeSemantics(
-                      child: Row(
-                        crossAxisAlignment: multiline
-                            ? CrossAxisAlignment.start
-                            : CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top: multiline ? AppSpacing.md : 0,
-                            ),
-                            child: InsetRowLabel(label),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: field),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (trailing != null) ...<Widget>[
-                    const SizedBox(width: AppSpacing.xs),
-                    trailing!,
-                  ],
-                ],
-              ),
-            ),
+    builder: (FocusNode node) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        InsetTextLine(
+          label: label,
+          multiline: maxLines > 1,
+          trailing: trailing,
+          field: InsetTextField(
+            controller: controller,
+            focusNode: node,
+            autofocus: autofocus,
+            onChanged: onChanged,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
+            maxLines: maxLines,
+            inputFormatters: inputFormatters,
+            maxLength: maxLength,
+            hint: hint,
+            ltr: ltr,
           ),
-          if (errorText != null) InsetRowError(errorText!),
-        ],
-      );
-    },
+        ),
+        if (errorText != null) InsetRowError(errorText!),
+      ],
+    ),
   );
 }

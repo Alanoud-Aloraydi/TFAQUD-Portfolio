@@ -4,6 +4,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
+import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 enum TodayRowTone { normal, attention, danger }
 
@@ -72,7 +73,7 @@ class TodayTaskKindIcon extends StatelessWidget {
       child: Icon(
         icon,
         size: AppSizes.iconSmall,
-        color: AppSemanticColors.onSettingsTile,
+        color: AppSettingsTileColors.onTile,
       ),
     ),
   );
