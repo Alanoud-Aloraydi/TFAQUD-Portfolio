@@ -1,5 +1,7 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/birth_date_rules.dart';
+import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/picker_field.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/core/widgets/pickers/city_sheet.dart';
@@ -17,6 +19,7 @@ class BirthDateCityFields extends StatelessWidget {
     required this.onBirthDate,
     required this.onCity,
     this.showErrors = false,
+    this.birthDateError,
   });
 
   final DateTime? birthDate;
@@ -27,10 +30,15 @@ class BirthDateCityFields extends StatelessWidget {
   /// After a tap on the main button with a field still empty.
   final bool showErrors;
 
+  /// The server's refusal of the picked date, translated, shown under it.
+  final String? birthDateError;
+
   Future<void> _pickBirthDate(BuildContext context) async {
+    // One's own birth date: an account holder is 15 or older.
     final DateTime? picked = await showBirthDateSheet(
       context,
       selected: birthDate,
+      youngestAge: BirthDateRules.youngestAccountAge,
     );
     if (picked != null) onBirthDate(picked);
   }
@@ -47,13 +55,18 @@ class BirthDateCityFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        PickerField(
-          label: context.tr('circles.birth_date'),
-          hint: context.tr('circles.birth_date_hint'),
-          icon: AppIcons.calendar,
-          value: date == null ? null : formatBirthDate(context, date),
-          onTap: () => _pickBirthDate(context),
-          errorText: showErrors && date == null ? requiredText : null,
+        FieldWithError.reveal(
+          error: birthDateError,
+          child: PickerField(
+            label: context.tr('circles.birth_date'),
+            hint: context.tr('circles.birth_date_hint'),
+            icon: AppIcons.calendar,
+            value: date == null ? null : formatBirthDate(context, date),
+            onTap: () => _pickBirthDate(context),
+            errorText:
+                birthDateError ??
+                (showErrors && date == null ? requiredText : null),
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         PickerField(

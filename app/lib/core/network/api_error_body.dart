@@ -56,12 +56,12 @@ abstract class ApiErrorCodes {
   static const String resendWait = 'resend_wait';
   static const String smsUnavailable = 'sms_unavailable';
 
-  // Circle creation (backend/app/care.py).
+  // Circle creation (backend/app/care.py); an account holder is 15 or older.
   static const String alreadyHasCircle = 'already_has_circle';
   static const String profileIncomplete = 'profile_incomplete';
   static const String invalidBirthDate = 'invalid_birth_date';
+  static const String tooYoung = 'too_young';
   static const String modeConflict = 'mode_conflict';
-
   // Circle requests (backend/app/care.py).
   static const String selfRequest = 'self_request';
   static const String requestNotPending = 'request_not_pending';

@@ -1,8 +1,9 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/overlays/choice_row.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// One reason of a [showSkipReasonSheet]: its API code and its words.
@@ -19,7 +20,7 @@ typedef SkipReasonChoice = ({String? code, String? note});
 
 /// The one sheet that skips a dose or a reading: the question as its
 /// [title], «(اختياري)» under it ([message]), the [reasons] with a check
-/// on the chosen one, a text box for «سبب آخر», and [confirmLabel]. Returns
+/// on the chosen one, a row to write «سبب آخر» in, and [confirmLabel]. Returns
 /// null when the person closes it.
 Future<SkipReasonChoice?> showSkipReasonSheet(
   BuildContext context, {
@@ -81,14 +82,14 @@ class _SkipReasonBodyState extends State<_SkipReasonBody> {
         ),
       if (_code == _other) ...<Widget>[
         const SizedBox(height: AppSpacing.sm),
-        TextField(
+        LabeledTextField(
+          label: context.tr('common.reason'),
+          helperText: widget.noteLabel,
           controller: _note,
           autofocus: true,
           maxLength: 250,
-          inputFormatters: const <CodePointLengthFormatter>[
-            CodePointLengthFormatter(250),
-          ],
-          decoration: InputDecoration(labelText: widget.noteLabel),
+          maxLines: 3,
+          onChanged: (_) {},
         ),
       ],
       const SizedBox(height: AppSpacing.lg),

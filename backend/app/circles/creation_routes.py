@@ -6,6 +6,8 @@ from app.circles import views
 from app.circles.blueprint import MANAGER, bp
 from app.circles.inputs import CreateOfflineCircleInput, CreateSelfCircleInput
 from app.circles.support import answer, care_work, save_medical
+from app.push.messages.attention import send_all
+from app.push.messages.superseded import superseded_pushes
 from app.validation import parse_json_body
 
 
@@ -26,6 +28,11 @@ def create_self_circle():
         )
         save_medical(work, circle.id, body.medical_profile)
         view = views.circle_view(work.session, circle.id, work.actor, MANAGER)
+        # Requests sent to this number close: each sender is told.
+        pushes = superseded_pushes(
+            work.session, work.care.superseded_requests
+        )
+    send_all(pushes)
     return answer({"circle": view}, 201)
 
 

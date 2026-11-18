@@ -219,6 +219,44 @@ void main() {
       expect(find.text('circles.inbox_empty'.tr()), findsNothing);
     });
 
+    testWidgets('a request that can no longer be accepted says why', (
+      WidgetTester tester,
+    ) async {
+      circles.inbox = Success(
+        CircleInbox(
+          sent: const <SentCircleRequest>[],
+          received: const <ReceivedCircleRequest>[],
+          invitations: const <ReceivedInvitation>[],
+          previous: <PreviousNotification>[
+            PreviousNotification(
+              id: 'request-2',
+              kind: PreviousKind.requestSent,
+              accepted: false,
+              superseded: true,
+              answeredAt: DateTime.now().toUtc(),
+              otherName: 'سامي',
+            ),
+          ],
+        ),
+      );
+      await openNotifications(tester, 0);
+      await tester.tap(find.text('circles.tab_previous'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('circles.previous.requestSent_superseded.title'.tr()),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'circles.previous.requestSent_superseded.body'.tr(
+            args: <String>['سامي', 'circles.previous.a_circle'.tr()],
+          ),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('«السابقة» with nothing answered says so', (
       WidgetTester tester,
     ) async {

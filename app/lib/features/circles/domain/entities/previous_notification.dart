@@ -22,6 +22,7 @@ class PreviousNotification extends Equatable {
     required this.id,
     required this.kind,
     required this.accepted,
+    this.superseded = false,
     required this.answeredAt,
     this.circleName,
     this.otherName,
@@ -35,6 +36,17 @@ class PreviousNotification extends Equatable {
   /// Whether it ended with a yes (an accepted invitation, a completed
   /// request); false for a declined one.
   final bool accepted;
+
+  /// Whether a request closed because the patient got a circle another way
+  /// (their own, or another request): it can no longer be accepted.
+  final bool superseded;
+
+  /// How it ended, as its texts are named: accepted, declined, superseded.
+  String get outcome => superseded
+      ? 'superseded'
+      : accepted
+      ? 'accepted'
+      : 'declined';
   final DateTime answeredAt;
 
   /// The circle, as the signed-in person reads its name; null for a request
@@ -55,6 +67,7 @@ class PreviousNotification extends Equatable {
     id,
     kind,
     accepted,
+    superseded,
     answeredAt,
     circleName,
     otherName,

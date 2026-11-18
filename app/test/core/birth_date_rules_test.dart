@@ -58,6 +58,20 @@ void main() {
       expect(BirthDateRules.ageOn(birth, DateTime(2026, 11, 1)), 72);
       expect(BirthDateRules.ageOn(birth, DateTime(2026, 3, 1)), 71);
     });
+
+    test('an account holder is 15 years old to the day', () {
+      final DateTime newest = BirthDateRules.yearsBefore(
+        DateTime(2026, 11, 18),
+        BirthDateRules.youngestAccountAge,
+      );
+      expect(newest, DateTime(2011, 11, 18));
+      expect(BirthDateRules.ageOn(newest, DateTime(2026, 11, 18)), 15);
+      // A leap day goes back to the 28th of a common year.
+      expect(
+        BirthDateRules.yearsBefore(DateTime(2028, 2, 29), 15),
+        DateTime(2013, 2, 28),
+      );
+    });
   });
 
   group('lists', () {

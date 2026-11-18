@@ -1,3 +1,4 @@
+import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/core/widgets/pickers/city_sheet.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
@@ -12,9 +13,13 @@ Future<void> pickBirthDate(
   MedicalFileEditState state,
   MedicalFileEditCubit cubit,
 ) async {
+  // A patient with an account holds it, so is 15 or older.
   final DateTime? picked = await showBirthDateSheet(
     context,
     selected: state.birthDate,
+    youngestAge: (state.file?.patient.hasAccount ?? false)
+        ? BirthDateRules.youngestAccountAge
+        : 0,
   );
   if (picked != null) cubit.birthDateChanged(picked);
 }

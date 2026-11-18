@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_number_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,8 @@ void main() {
     addTearDown(lower.dispose);
     await tester.pumpWidget(
       MaterialApp(
+        // The rows read the app's colours, as on every page.
+        theme: AppTheme.lightTheme,
         home: Directionality(
           textDirection: TextDirection.rtl,
           child: Scaffold(
@@ -18,12 +21,14 @@ void main() {
               children: <Widget>[
                 ReadingNumberField(
                   label: 'الانقباضي',
+                  unit: 'ملم زئبق',
                   controller: upper,
                   onChanged: () {},
                   last: false,
                 ),
                 ReadingNumberField(
                   label: 'الانبساطي',
+                  unit: 'ملم زئبق',
                   controller: lower,
                   onChanged: () {},
                 ),

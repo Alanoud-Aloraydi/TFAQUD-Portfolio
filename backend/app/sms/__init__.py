@@ -5,7 +5,9 @@ and keeps the demo numbers away from it.
 
 from app.config import ConfigError
 from app.demo_accounts import DEMO_PHONES
+from app.resilience import CircuitBreaker
 from app.sms.authentica import AuthenticaSmsSender
+from app.sms.authentica_keys import AuthenticaKeys
 from app.sms.base import CODE_LENGTH, SmsDeliveryError, SmsSender
 from app.sms.demo import DemoSmsSender
 from app.sms.fake import FakeSmsSender, SentSms
@@ -55,8 +57,20 @@ def _create_sender(config: dict, clock) -> SmsSender:
             raise ConfigError(
                 "SMS_BACKEND is authentica, so AUTHENTICA_API_KEY is required."
             )
-        return AuthenticaSmsSender(
-            api_key, template_id=config["AUTHENTICA_TEMPLATE_ID"]
+        keys = (api_key, *config.get("AUTHENTICA_BACKUP_API_KEYS", ()))
+        senders = [
+            AuthenticaSmsSender(
+                key, template_id=config["AUTHENTICA_TEMPLATE_ID"],
+                breaker=CircuitBreaker(
+                    "authentica" if place == 0 else f"authentica-{place + 1}"
+                ),
+            )
+            for place, key in enumerate(keys)
+        ]
+        if len(senders) == 1:
+            return senders[0]
+        return AuthenticaKeys(
+            senders, low=config["AUTHENTICA_LOW_BALANCE"], clock=clock
         )
     raise ConfigError(
         f"Unknown SMS_BACKEND {backend!r}. Use 'fake' or 'authentica'."

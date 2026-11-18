@@ -5,6 +5,7 @@ from datetime import date
 from app.clock import DEFAULT_ZONE, is_zone, patient_today
 from app.errors import ValidationFailed
 from app.models import Account, CareCircle
+from app.users.age import require_old_enough
 
 
 class CarePatientBasics:
@@ -32,6 +33,9 @@ class CarePatientBasics:
                 "The birth date cannot be in the future.",
                 code="invalid_birth_date",
             )
+        # A patient with an account holds it, so is 15 or older.
+        if circle.account_id is not None:
+            require_old_enough(birth_date, patient_today(circle, self.now))
 
     @staticmethod
     def _zone_for(time_zone: str | None, current: str | None = None) -> str:

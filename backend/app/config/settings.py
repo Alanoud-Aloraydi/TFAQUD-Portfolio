@@ -37,6 +37,7 @@ def load_config(
         config["SECRET_KEY"] = TEST_SECRET_KEY
         config["SMS_BACKEND"] = "fake"
         config["AUTHENTICA_API_KEY"] = None
+        config["AUTHENTICA_BACKUP_API_KEYS"] = ()
         config["PUSH_BACKEND"] = "none"
     elif env_name == "development" and not config["SECRET_KEY"]:
         config["SECRET_KEY"] = DEV_SECRET_KEY

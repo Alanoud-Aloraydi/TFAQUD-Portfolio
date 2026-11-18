@@ -51,3 +51,17 @@ def urllib_post(url: str, headers: dict, body: dict, timeout: float):
     except urllib.error.HTTPError as error:
         with error:
             return error.code, _parse_json(error.read())
+
+
+def urllib_get(url: str, headers: dict, timeout: float):
+    """GET `url`, the same way: (HTTP status, parsed JSON or None), with a
+    4xx or 5xx returned and a network problem raised."""
+    request = urllib.request.Request(
+        url, method="GET", headers={**headers, "Accept": "application/json"}
+    )
+    try:
+        with opener.open(request, timeout=timeout) as response:
+            return response.status, _parse_json(response.read())
+    except urllib.error.HTTPError as error:
+        with error:
+            return error.code, _parse_json(error.read())

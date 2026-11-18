@@ -5,6 +5,7 @@ import 'package:app/core/l10n/arabic_names.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/forms/weekday_selector.dart';
@@ -126,13 +127,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
   }
 
   Future<void> _save(MeasurementPlan? plan) async {
-    if (plan == null &&
-        context.read<MeasurementPlansCubit>().state.plans.any(
-          (item) => item.kind == _kind && item.stoppedAt == null,
-        )) {
-      setState(() => _errorKey = 'measurements.active_plan_exists');
-      return;
-    }
     if (_days.isEmpty) {
       setState(() => _errorKey = 'measurements.days_required');
       return;
@@ -174,12 +168,16 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
       AppToast.show(context, 'toast.measurement_plan_saved');
       context.pop(true);
     } else {
-      setState(() {
-        _saving = false;
-        _errorKey = errorKey;
-      });
+      setState(() => _saving = false);
+      _refused(errorKey);
     }
   }
+
+  /// A refusal that belongs to a row is said under it; any other is a toast.
+  void _refused(String key) =>
+      key == 'measurements.days_required' || key == 'measurements.times_repeat'
+      ? setState(() => _errorKey = key)
+      : AppToast.show(context, key, kind: ToastKind.error);
 
   @override
   Widget build(BuildContext context) {
@@ -332,22 +330,28 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                   leading: const Icon(AppIcons.plusCircle),
                   onTap: _addReading,
                 ),
-              InsetBlock(
-                semanticLabel: context.tr('measurements.days'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(context.tr('measurements.days')),
-                    const SizedBox(height: AppSpacing.sm),
-                    WeekdaySelector(
-                      selected: _days,
-                      onChanged: (Set<int> days) => setState(() {
-                        _days
-                          ..clear()
-                          ..addAll(days);
-                      }),
-                    ),
-                  ],
+              FieldWithError(
+                error: _errorKey == 'measurements.days_required'
+                    ? context.tr(_errorKey!)
+                    : null,
+                child: InsetBlock(
+                  semanticLabel: context.tr('measurements.days'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(context.tr('measurements.days')),
+                      const SizedBox(height: AppSpacing.sm),
+                      WeekdaySelector(
+                        selected: _days,
+                        onChanged: (Set<int> days) => setState(() {
+                          _days
+                            ..clear()
+                            ..addAll(days);
+                          _errorKey = null;
+                        }),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               InsetRow(
@@ -409,14 +413,6 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
                 ),
               ),
             ),
-          if (_errorKey != null)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                context.tr(_errorKey!),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
         ],
       ),
     );
@@ -429,10 +425,14 @@ class _MeasurementPlanFormPageState extends State<MeasurementPlanFormPage> {
     final String label = _readings.length == 1
         ? context.tr('measurements.time')
         : context.tr('measurements.reading_number', args: ['${index + 1}']);
+    final bool repeated =
+        _errorKey == 'measurements.times_repeat' &&
+        _readings.where((item) => item.time == reading.time).length > 1;
     return <Widget>[
       InsetRow(
         label: label,
         value: timeOfDayText(reading.time),
+        errorText: repeated ? context.tr(_errorKey!) : null,
         trailing: _readings.length == 1
             ? null
             : IconButton(

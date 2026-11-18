@@ -1,7 +1,7 @@
+import 'package:app/core/feedback/error_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
@@ -11,8 +11,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// The scrolling part of the request page: header, details card, the note
-/// about declining and the error line.
+/// The scrolling part of the request page: header, details card and the
+/// note about declining. A refused answer is a toast: no field is wrong.
 List<Widget> requestReplyBody(
   BuildContext context,
   RequestReplyState state,
@@ -29,13 +29,12 @@ List<Widget> requestReplyBody(
     const SizedBox(height: AppSpacing.xl),
     RequestDetails(request: request),
     const SizedBox(height: AppSpacing.lg),
-    InsetText(
-      context.tr('circles.reply_decline_note'),
-      style: text.bodyMedium?.copyWith(color: context.tokens.textSecondary),
+    ErrorToast(
+      errorKey: state.errorKey,
+      child: InsetText(
+        context.tr('circles.reply_decline_note'),
+        style: text.bodyMedium?.copyWith(color: context.tokens.textSecondary),
+      ),
     ),
-    if (state.errorKey != null) ...<Widget>[
-      const SizedBox(height: AppSpacing.lg),
-      InlineError(messageKey: state.errorKey!),
-    ],
   ];
 }

@@ -56,6 +56,16 @@ def sign_in_settings(env_name: str) -> dict:
         "CLIENT_IP_HEADER": os.environ.get("CLIENT_IP_HEADER", "").strip(),
         # Provider credentials remain server-side.
         "AUTHENTICA_API_KEY": os.environ.get("AUTHENTICA_API_KEY"),
+        # Ready keys of other Authentica accounts, comma-separated: codes go
+        # out with the next one when an account is under AUTHENTICA_LOW_
+        # BALANCE points (app/sms/authentica_keys.py).
+        "AUTHENTICA_BACKUP_API_KEYS": tuple(
+            key.strip()
+            for key in os.environ.get("AUTHENTICA_BACKUP_API_KEYS", "")
+            .split(",")
+            if key.strip()
+        ),
+        "AUTHENTICA_LOW_BALANCE": int_from_env("AUTHENTICA_LOW_BALANCE", 20),
         "AUTHENTICA_TEMPLATE_ID": int_from_env(
             "AUTHENTICA_TEMPLATE_ID", DEFAULT_AUTHENTICA_TEMPLATE_ID
         ),

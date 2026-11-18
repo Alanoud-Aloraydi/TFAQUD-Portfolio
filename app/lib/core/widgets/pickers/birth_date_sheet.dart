@@ -9,11 +9,13 @@ import 'package:flutter/material.dart';
 /// sheet is closed without confirming. [today] is only for tests.
 ///
 /// It is the app's one date picker (the iOS wheel of [DateWheelSheet]),
-/// limited to what [BirthDateRules] allows: from 1900 up to today.
+/// limited to what [BirthDateRules] allows: from 1900 up to today, or up
+/// to [youngestAge] years back (15 for a person's own: an account holder).
 Future<DateTime?> showBirthDateSheet(
   BuildContext context, {
   DateTime? selected,
   DateTime? today,
+  int youngestAge = 0,
 }) {
   return showGlassSheet<DateTime>(
     context,
@@ -24,6 +26,7 @@ Future<DateTime?> showBirthDateSheet(
       // where the person lives, whatever this phone's zone. The server
       // checks a patient's again in the patient's own zone.
       today: today ?? latestToday(),
+      youngestAge: youngestAge,
     ),
   );
 }
@@ -38,21 +41,33 @@ String formatBirthDate(BuildContext context, DateTime date) {
 /// The birth date wheel. With no date chosen yet it opens about 40 years
 /// back, on the first of January.
 class BirthDateSheet extends StatelessWidget {
-  const BirthDateSheet({super.key, this.selected, required this.today});
+  const BirthDateSheet({
+    super.key,
+    this.selected,
+    required this.today,
+    this.youngestAge = 0,
+  });
 
   final DateTime? selected;
   final DateTime today;
 
+  /// The youngest the person may be: the newest day is that many years
+  /// back (0: today).
+  final int youngestAge;
+
   @override
   Widget build(BuildContext context) {
-    final DateTime last = DateUtils.dateOnly(today);
+    final DateTime last = BirthDateRules.yearsBefore(
+      DateUtils.dateOnly(today),
+      youngestAge,
+    );
     return DateWheelSheet(
       confirmLabel: context.tr('circles.date_confirm'),
       initialDate: BirthDateRules.clamp(
         selected?.year ?? today.year - 40,
         selected?.month ?? 1,
         selected?.day ?? 1,
-        today,
+        last,
       ),
       firstDate: DateTime(BirthDateRules.firstYear),
       lastDate: last,

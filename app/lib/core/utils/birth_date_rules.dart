@@ -39,6 +39,17 @@ abstract class BirthDateRules {
     return DateTime(y, m, d);
   }
 
+  /// The account holder's youngest age (the server's `too_young`).
+  static const int youngestAccountAge = 15;
+
+  /// The same day [years] years before [day]; 28 February for 29 February.
+  static DateTime yearsBefore(DateTime day, int years) {
+    final DateTime back = DateTime(day.year - years, day.month, day.day);
+    return back.month == day.month
+        ? back
+        : DateTime(day.year - years, day.month, 28);
+  }
+
   /// The full years lived by [birth] on [today]: the year difference, one
   /// less until the birthday has come.
   static int ageOn(DateTime birth, DateTime today) {

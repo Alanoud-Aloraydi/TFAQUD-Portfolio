@@ -1,7 +1,9 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
+import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/picker_field.dart';
+import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_sheets.dart';
@@ -11,7 +13,7 @@ import 'package:flutter/material.dart';
 
 /// The birth date, the city, and the time zone. Every Saudi city has one
 /// zone; any other city needs one picked here, because all the circle's
-/// times follow it.
+/// times follow it. The server's refusal of the birth date is under it.
 List<Widget> medicalIdentityFields(
   BuildContext context, {
   required MedicalFileEditState state,
@@ -19,16 +21,23 @@ List<Widget> medicalIdentityFields(
 }) {
   final String requiredText = context.tr('common.field_required');
   final bool show = state.showErrors;
+  final String? refused = isBirthDateError(state.errorKey)
+      ? context.tr(state.errorKey!)
+      : null;
   return <Widget>[
-    PickerField(
-      label: context.tr('circles.birth_date'),
-      hint: context.tr('circles.birth_date_hint'),
-      icon: AppIcons.calendar,
-      value: state.birthDate == null
-          ? null
-          : formatBirthDate(context, state.birthDate!),
-      onTap: () => pickBirthDate(context, state, cubit),
-      errorText: show && state.birthDate == null ? requiredText : null,
+    FieldWithError.reveal(
+      error: refused,
+      child: PickerField(
+        label: context.tr('circles.birth_date'),
+        hint: context.tr('circles.birth_date_hint'),
+        icon: AppIcons.calendar,
+        value: state.birthDate == null
+            ? null
+            : formatBirthDate(context, state.birthDate!),
+        onTap: () => pickBirthDate(context, state, cubit),
+        errorText:
+            refused ?? (show && state.birthDate == null ? requiredText : null),
+      ),
     ),
     const SizedBox(height: AppSpacing.lg),
     PickerField(

@@ -4,7 +4,7 @@ leader in one step."""
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import update
+from sqlalchemy import func, true, update
 
 from app.errors import ValidationFailed
 from app.models import (
@@ -31,6 +31,7 @@ class CareBuilding:
         latitude: float | None = None,
         longitude: float | None = None,
         time_zone: str | None = None,
+        completing: UUID | None = None,
     ) -> CareCircle:
         """Build a complete circle before deferred constraints run.
 
@@ -72,17 +73,27 @@ class CareBuilding:
                 )
             )
         self.session.flush()
-        # The patient has a circle now: their other open requests close.
+        # The patient has a circle now: their other open requests close, as
+        # answered by them now, so «السابقة» shows them with the reason and
+        # each sender is told (`superseded_requests`, read by the route).
+        self.superseded_requests = []
         if patient_account:
-            self.session.execute(
-                update(CareCircleRequest)
+            request = CareCircleRequest
+            self.superseded_requests = list(self.session.scalars(
+                update(request)
                 .where(
-                    CareCircleRequest.patient_phone_number
+                    request.patient_phone_number
                     == patient_account.phone_number,
-                    CareCircleRequest.status.in_(
-                        ["pending", "accepted"]
+                    request.status.in_(["pending", "accepted"]),
+                    request.id != completing if completing else true(),
+                )
+                .values(
+                    status="superseded",
+                    responded_at=func.coalesce(request.responded_at, self.now),
+                    responded_by_account_id=func.coalesce(
+                        request.responded_by_account_id, patient_account.id
                     ),
                 )
-                .values(status="superseded")
-            )
+                .returning(request.id)
+            ))
         return circle

@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:app/core/constants/name_limits.dart';
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/feedback/error_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/signed_out.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/text_limits.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/core/widgets/forms/birth_date_city_fields.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
@@ -166,7 +167,15 @@ class _ProfileStepScreenState extends State<ProfileStepScreen> {
             // error appearing or going, the picked date or city, saving.
             buildWhen: _shownChanged,
             builder: (BuildContext context, OnboardingState state) {
-              final String requiredText = context.tr('common.field_required');
+              // «هذا الحقل مطلوب» under an empty name, once saving was tried.
+              String? missing(String value) =>
+                  state.showErrors && value.trim().isEmpty
+                  ? context.tr('common.field_required')
+                  : null;
+              final OnboardingCubit cubit = context.read<OnboardingCubit>();
+              final String? birthError = isBirthDateError(state.errorKey)
+                  ? context.tr(state.errorKey!)
+                  : null;
               return Column(
                 children: <Widget>[
                   Expanded(
@@ -193,25 +202,15 @@ class _ProfileStepScreenState extends State<ProfileStepScreen> {
                             maxLength: NameLimits.name,
                             autofocus: true,
                             onChanged: _onFirstNameChanged,
-                            errorText:
-                                state.showErrors &&
-                                    state.firstName.trim().isEmpty
-                                ? requiredText
-                                : null,
+                            errorText: missing(state.firstName),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           LabeledTextField(
                             label: context.tr('onboarding.last_name'),
                             controller: _last,
                             maxLength: NameLimits.name,
-                            onChanged: context
-                                .read<OnboardingCubit>()
-                                .lastNameChanged,
-                            errorText:
-                                state.showErrors &&
-                                    state.lastName.trim().isEmpty
-                                ? requiredText
-                                : null,
+                            onChanged: cubit.lastNameChanged,
+                            errorText: missing(state.lastName),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           LabeledTextField(
@@ -223,26 +222,24 @@ class _ProfileStepScreenState extends State<ProfileStepScreen> {
                             helperText: context.tr(
                               'onboarding.display_name_hint',
                             ),
-                            errorText:
-                                state.showErrors &&
-                                    state.displayName.trim().isEmpty
-                                ? requiredText
-                                : null,
+                            errorText: missing(state.displayName),
                           ),
                           const SizedBox(height: AppSpacing.xl),
-                          BirthDateCityFields(
-                            birthDate: state.birthDate,
-                            city: state.city,
-                            onBirthDate: context
-                                .read<OnboardingCubit>()
-                                .birthDateChanged,
-                            onCity: context.read<OnboardingCubit>().cityChanged,
-                            showErrors: state.showErrors,
+                          // A refused birth date is said under it; any other
+                          // refusal is a toast.
+                          ErrorToast(
+                            errorKey: birthError == null
+                                ? state.errorKey
+                                : null,
+                            child: BirthDateCityFields(
+                              birthDate: state.birthDate,
+                              city: state.city,
+                              onBirthDate: cubit.birthDateChanged,
+                              onCity: cubit.cityChanged,
+                              showErrors: state.showErrors,
+                              birthDateError: birthError,
+                            ),
                           ),
-                          if (state.errorKey != null) ...<Widget>[
-                            const SizedBox(height: AppSpacing.lg),
-                            InlineError(messageKey: state.errorKey!),
-                          ],
                         ],
                       ),
                     ),

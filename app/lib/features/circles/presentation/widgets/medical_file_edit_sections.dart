@@ -1,5 +1,6 @@
+import 'package:app/core/errors/invalid_birth_date_failure.dart';
+import 'package:app/core/feedback/error_toast.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/inline_error.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:app/features/circles/presentation/widgets/allergies_section.dart';
@@ -11,7 +12,8 @@ import 'package:app/features/circles/presentation/widgets/medical_name_fields.da
 import 'package:flutter/material.dart';
 
 /// Everything the edit page scrolls through, in order: who the patient is,
-/// then the questions about them, then whatever went wrong on the last save.
+/// then the questions about them. A refused save is a toast, but for the
+/// birth date, which is shown under its field.
 List<Widget> medicalFileEditSections(
   BuildContext context, {
   required MedicalFileEditState state,
@@ -29,9 +31,8 @@ List<Widget> medicalFileEditSections(
     other: fields.conditionOther,
   ),
   allergiesSection(context, state: state, cubit: cubit, fields: fields),
-  if (state.errorKey != null) ...<Widget>[
-    const SizedBox(height: AppSpacing.lg),
-    InlineError(messageKey: state.errorKey!),
-  ],
-  const SizedBox(height: AppSpacing.sm),
+  ErrorToast(
+    errorKey: isBirthDateError(state.errorKey) ? null : state.errorKey,
+    child: const SizedBox(height: AppSpacing.sm),
+  ),
 ];
