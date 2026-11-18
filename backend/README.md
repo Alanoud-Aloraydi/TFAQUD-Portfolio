@@ -358,21 +358,47 @@ The first time:
 5. Build the app for it: `[testflight api=https://<address>]` in a commit
    message.
 
-Signing in: for now `SMS_BACKEND` is `fake` and `FAKE_SMS_LOG_CODES` is
-`"true"`, so each code is in the API's **Logs** (search for `FAKE SMS`). For
-real SMS through Authentica, add `AUTHENTICA_API_KEY` in **Environment** first,
-then set `SMS_BACKEND` to `authentica` and `FAKE_SMS_LOG_CODES` to `"false"` in
-`render.yaml` and sync the Blueprint: with `authentica` and no key, the server
-cannot start.
+Signing in: `SMS_BACKEND` is `authentica` and `FAKE_SMS_LOG_CODES` is
+`"false"` in `render.yaml`, so every tester gets a real SMS. Add
+`AUTHENTICA_API_KEY` in **Environment** before the Blueprint syncs: with
+`authentica` and no key, the server cannot start.
 
 The demo on Render: add `DEMO_SIGN_IN_CODE` (six digits) in **Environment**.
-The demo numbers (`0500000001` detailed, `0500000004` simplified) then get no
-SMS and sign in with that code; every other number gets its real SMS as
-before. The start makes the demo when it is missing (`DEMO_DATA` is
-`"true"`), and the workflow **Demo refresh** makes it fresh every morning
-and from **Actions**, **Run workflow**, before showing it (it calls
-`POST /internal/demo-data` with `TICK_SECRET`). Never set the code in
-production: the server refuses to start with it.
+The demo numbers (`0500000001` detailed, `0500000004` simplified, and
+`0500000003`) then get no SMS and sign in with that code; every other number
+gets its real SMS as before. The team's own phones can take the code too:
+`DEMO_SIGN_IN_PHONES` in **Environment**, `5XXXXXXXX` separated by commas,
+never in git. Anyone who knows one of these numbers and the code can open its
+account, so the code stays inside the team. The start makes the demo when it
+is missing (`DEMO_DATA` is `"true"`); the workflow **Demo refresh** makes it
+fresh again only from **Actions**, **Run workflow** (it calls
+`POST /internal/demo-data` with `TICK_SECRET`), and that deletes what the
+demo accounts did. Never set the code in production: the server refuses to
+start with it.
+
+### Keep only some accounts (before testers come)
+
+`flask --app wsgi keep-only NUMBER...` keeps the accounts of these numbers
+with everything of theirs, and deletes every other account, every circle that
+has one of those people in it (whole, even a circle of a kept account), the
+invitations and circle requests of the other numbers, and their sign-in
+codes. Without `--yes` it only lists what would go; it deletes nothing when
+none of the numbers has an account, and it never runs in production. To run
+it on Render's database from your own computer, with Docker, put the
+database's **External Database URL** (Render, the database, **Connect**) in
+`$env:RENDER_DB` in PowerShell, never in a file or in git, then from the
+backend folder:
+
+```powershell
+docker compose build api
+docker compose run --rm --no-deps -e DATABASE_URL=$env:RENDER_DB api flask --app wsgi keep-only 500000001 500000002
+```
+
+Back the database up first, into a folder outside the repository:
+
+```powershell
+docker run --rm -v "${HOME}\Downloads:/backup" postgres:16 pg_dump $env:RENDER_DB -Fc -f /backup/tfaqud-backup.dump
+```
 
 For a test server without SMS, set `SMS_BACKEND` to `fake`,
 `FAKE_SMS_LOG_CODES` to `"true"` and `DEMO_DATA` to `"true"` in

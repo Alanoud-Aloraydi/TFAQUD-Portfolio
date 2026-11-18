@@ -3,6 +3,8 @@ the scheduled scan and work done after the answer."""
 
 import os
 
+from app.config.phone_values import phones_from_env
+
 
 def service_settings(env_name: str) -> dict:
     """The push, demo, scan and background part of the settings."""
@@ -20,6 +22,11 @@ def service_settings(env_name: str) -> dict:
         "DEMO_SIGN_IN_CODE": (
             os.environ.get("DEMO_SIGN_IN_CODE", "").strip() or None
         ),
+        # More numbers that sign in with that code and get no SMS: the
+        # team's own phones on the shared test server, comma-separated,
+        # typed in Render (Environment), never in git. Anyone who knows one
+        # of them and the code can open its account.
+        "DEMO_SIGN_IN_PHONES": phones_from_env("DEMO_SIGN_IN_PHONES"),
         # Shared secret for /internal/tick and /internal/metrics (the
         # scheduled scan runs as `flask --app wsgi tick` on Render's cron).
         # None (unset) keeps the endpoints refusing every request.

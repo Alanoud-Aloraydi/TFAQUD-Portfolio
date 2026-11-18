@@ -2,7 +2,9 @@
 (app/demo_data/) and the sign-in of those numbers (app/sms/demo.py).
 
 The numbers are made up (+96650000000x), so no real SMS may ever reach
-them: they sign in with the demo code instead (DEMO_SIGN_IN_CODE).
+them: they sign in with the demo code instead (DEMO_SIGN_IN_CODE). The
+team's own phones can be added to that sign-in in Render, never here
+(DEMO_SIGN_IN_PHONES).
 """
 
 from datetime import date
@@ -20,3 +22,11 @@ DEMO_ACCOUNTS = (
     ("+966500000004", "خالد", "العتيبي", "خالد", date(1952, 6, 1), "الرياض"),
 )
 DEMO_PHONES = tuple(phone for phone, *_ in DEMO_ACCOUNTS)
+
+# The story's other made-up number, which Lina asks for a circle
+# (app/demo_data/story.py). It signs in with the demo code as well, so the
+# request can be answered on a phone, and no SMS can reach a stranger.
+REQUEST_DEMO_PHONE = "+966500000003"
+
+# Every made-up number that signs in with the demo code.
+SIGN_IN_DEMO_PHONES = (*DEMO_PHONES, REQUEST_DEMO_PHONE)

@@ -1,9 +1,9 @@
 """The shared test server's demo, made fresh by the external scheduler.
 
 The demo story is built around the moment it is made (a dose due an hour
-ago, the next one in 45 minutes), so it ages: a scheduled workflow calls
-this each morning, and anyone may run that workflow before showing the
-demo (.github/workflows/demo-refresh.yml).
+ago, the next one in 45 minutes), so it ages: the team runs a workflow
+by hand to make it fresh again, which deletes what the demo accounts did
+(.github/workflows/demo-refresh.yml).
 """
 
 import hmac

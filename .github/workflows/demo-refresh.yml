@@ -3,12 +3,12 @@
 # due an hour ago, the next one in 45 minutes, today's appointments), so
 # both the simplified and the detailed mode show every case.
 #
-# When it runs:
-#   - every morning at 07:00 in Riyadh (04:00 UTC);
-#   - from the Actions tab ("Run workflow"), right before showing the demo.
+# When it runs: only from the Actions tab ("Run workflow"). It no longer
+# runs each morning: the team keeps the demo accounts for itself while
+# testers use their own numbers, so what the team does in them stays.
 #
-# Whatever the demo accounts did since the last run is lost: they are for
-# showing the app, not for keeping data.
+# A run deletes whatever the demo accounts did since they were made, and
+# builds the story again.
 #
 # Secret it needs: TICK_SECRET (repository Settings, Secrets and variables,
 # Actions), the same value as on Render. The server must have
@@ -17,8 +17,6 @@
 name: Demo refresh
 
 on:
-  schedule:
-    - cron: "0 4 * * *"
   workflow_dispatch:
 
 jobs:

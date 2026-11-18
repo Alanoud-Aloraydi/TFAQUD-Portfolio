@@ -5,11 +5,13 @@ from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from app.clock import DEFAULT_ZONE
+from app.demo_accounts import REQUEST_DEMO_PHONE
 
 EVERY_DAY = [1, 2, 3, 4, 5, 6, 7]
 
-# A number with no account: the main demo account asks it for a circle.
-REQUEST_PHONE = "+966500000003"
+# The main demo account asks this number for a circle. It has no account
+# unless the team signed in with it (it takes the demo code).
+REQUEST_PHONE = REQUEST_DEMO_PHONE
 # A number with no account: the main demo account invites it to help with
 # her mother's care, and the invitation waits.
 INVITED_PHONE = "+966559876543"
