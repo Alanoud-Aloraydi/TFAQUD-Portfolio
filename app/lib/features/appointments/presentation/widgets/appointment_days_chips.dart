@@ -44,7 +44,7 @@ class AppointmentDaysChips extends StatelessWidget {
                 ),
               ),
             ActionChip(
-              avatar: const Icon(AppIcons.plus),
+              avatar: const Icon(ActionIcons.plus),
               label: Text(context.tr('appointments.add_day')),
               onPressed: onAdd,
             ),

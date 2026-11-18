@@ -1,17 +1,9 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/forms/choice_card.dart';
-import 'package:app/core/widgets/layout/inset_text.dart';
-import 'package:app/core/widgets/layout/step_header.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/send_circle_request_state.dart';
-import 'package:app/features/circles/presentation/widgets/request_patient_notice.dart';
-import 'package:app/features/circles/presentation/widgets/request_patient_phone.dart';
+import 'package:app/features/circles/presentation/widgets/request_patient_form.dart';
 import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +32,6 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final SendCircleRequestCubit cubit = context.read<SendCircleRequestCubit>();
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -60,71 +51,11 @@ class _RequestPatientScreenState extends State<RequestPatientScreen> {
             builder: (BuildContext context, SendCircleRequestState state) {
               final sent = state.sent;
               if (sent != null) return RequestSentView(request: sent);
-              return _form(context, cubit, state);
+              return RequestPatientForm(phone: _phone, state: state);
             },
           ),
         ),
       ),
-    );
-  }
-
-  Widget _form(
-    BuildContext context,
-    SendCircleRequestCubit cubit,
-    SendCircleRequestState state,
-  ) {
-    return Column(
-      children: <Widget>[
-        Expanded(
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                StepHeader(
-                  title: context.tr('circles.request_title'),
-                  onBack: context.canPop() ? () => context.pop() : null,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                RequestPatientPhone(
-                  controller: _phone,
-                  state: state,
-                  cubit: cubit,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                InsetText.header(context.tr('circles.proposed_mode')),
-                const SizedBox(height: AppSpacing.sm),
-                // Both modes and what each one means, on the screen at once.
-                ChoiceCard(
-                  icon: AppIcons.user,
-                  title: context.tr('circles.mode_detailed'),
-                  hint: context.tr('circles.mode_detailed_hint'),
-                  selected: state.mode == CircleAppMode.detailed,
-                  onTap: () => cubit.chooseMode(CircleAppMode.detailed),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ChoiceCard(
-                  icon: AppIcons.heart,
-                  title: context.tr('circles.mode_simplified'),
-                  hint: context.tr('circles.mode_simplified_hint'),
-                  selected: state.mode == CircleAppMode.simplified,
-                  onTap: () => cubit.chooseMode(CircleAppMode.simplified),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                RequestPatientNotice(
-                  text: context.tr('circles.request_notice'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        PillButton(
-          label: context.tr('circles.send_request'),
-          isLoading: state.status == SendStatus.sending,
-          onPressed: () => cubit.send(),
-        ),
-      ],
     );
   }
 }

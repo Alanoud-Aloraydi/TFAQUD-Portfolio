@@ -4,6 +4,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_sty
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The reminder's task is no longer waiting (someone in the family may
 /// have recorded it, or it is of another circle), so there is nothing to
@@ -29,7 +30,7 @@ class SimplifiedReminderNothingWaiting extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: SimplifiedStyle.head(
                     SimplifiedStyle.display,
-                    color: SimplifiedStyle.surface,
+                    color: SimplifiedColors.surface,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -38,7 +39,7 @@ class SimplifiedReminderNothingWaiting extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: SimplifiedStyle.text(
                     SimplifiedStyle.body,
-                    color: SimplifiedStyle.onDarkMuted,
+                    color: SimplifiedColors.onDarkMuted,
                   ),
                 ),
               ],

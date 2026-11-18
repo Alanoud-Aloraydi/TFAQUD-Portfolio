@@ -17,7 +17,7 @@ class MedicalFileFillButton extends StatelessWidget {
       backgroundColor: AppSemanticColors.textPrimary,
       foregroundColor: AppSemanticColors.surfaceContent,
     ),
-    icon: const Icon(AppIcons.pencil, size: AppSizes.iconSmall),
+    icon: const Icon(ActionIcons.pencil, size: AppSizes.iconSmall),
     label: Text(context.tr('medical_alert.fill')),
   );
 }

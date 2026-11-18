@@ -1,6 +1,7 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// Why a feature cannot work, at this mode's sizes, under its switch. As
 /// in the detailed mode, the way back is the switch itself: turned on, it
@@ -22,7 +23,7 @@ class SimplifiedPermissionDenied extends StatelessWidget {
       context.tr(messageKey),
       style: SimplifiedStyle.text(
         SimplifiedStyle.caption,
-        color: SimplifiedStyle.attentionInk,
+        color: SimplifiedColors.attentionInk,
       ),
     ),
   );

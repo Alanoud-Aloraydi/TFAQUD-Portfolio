@@ -1,10 +1,10 @@
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/navigation/care_item_routes.dart';
 
 /// «ورقة الزيارة» of an attended [visit], opened for writing when
 /// [canManage]: on its card, and beside each attended date of a booking in
@@ -29,7 +29,7 @@ class AppointmentVisitButton extends StatelessWidget {
         minimumSize: const Size(0, AppItemCard.touch),
       ),
       onPressed: () => context.push<void>(
-        Routes.appointmentVisit(circleId, visit.id),
+        CareItemRoutes.appointmentVisit(circleId, visit.id),
         extra: canManage,
       ),
       icon: const Icon(CupertinoIcons.doc_text),

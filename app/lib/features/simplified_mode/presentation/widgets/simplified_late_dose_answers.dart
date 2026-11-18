@@ -32,7 +32,7 @@ class SimplifiedLateDoseAnswers extends StatelessWidget {
     children: <Widget>[
       SimplifiedButton(
         label: context.tr('simplified_mode.took_now'),
-        icon: AppIcons.check,
+        icon: ActionIcons.check,
         tone: SimplifiedButtonTone.answer,
         onPressed: saving ? null : () => _take(context),
       ),

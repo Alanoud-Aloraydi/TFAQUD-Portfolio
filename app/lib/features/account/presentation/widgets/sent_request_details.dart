@@ -1,12 +1,11 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
+import 'package:app/features/account/presentation/widgets/sent_request_cancel_button.dart';
 import 'package:app/features/account/presentation/widgets/sent_request_line.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/account/presentation/widgets/sent_request_mode_line.dart';
+import 'package:app/features/account/presentation/widgets/sent_request_status_line.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -47,46 +46,10 @@ class SentRequestDetails extends StatelessWidget {
             style: text.bodyMedium,
           ),
         ),
-        SentRequestLine(
-          label: context.tr('circles.app_mode'),
-          child: StatusBadge(
-            text: context.tr(
-              request.proposedAppMode == CircleAppMode.detailed
-                  ? 'circles.mode_detailed'
-                  : 'circles.mode_simplified',
-            ),
-            tone: StatusTone.success,
-          ),
-        ),
-        SentRequestLine(
-          label: context.tr('circles.request_status'),
-          child: StatusBadge(
-            icon: accepted ? AppIcons.check : AppIcons.clock,
-            text: context.tr(
-              accepted
-                  ? 'account.status_accepted'
-                  : 'circles.request_status_pending',
-            ),
-            tone: accepted ? StatusTone.success : StatusTone.attention,
-          ),
-        ),
+        SentRequestModeLine(mode: request.proposedAppMode),
+        SentRequestStatusLine(accepted: accepted),
         const SizedBox(height: AppSpacing.lg),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => _cancel(context),
-            // Cancelling a request cannot be undone: the error red.
-            style: OutlinedButton.styleFrom(
-              shape: const StadiumBorder(),
-              minimumSize: const Size.fromHeight(48),
-              foregroundColor: AppSemanticColors.statusError,
-              side: const BorderSide(
-                color: AppSemanticColors.borderControlBase,
-              ),
-            ),
-            child: Text(context.tr('circles.cancel_request')),
-          ),
-        ),
+        SentRequestCancelButton(onPressed: () => _cancel(context)),
       ],
     );
   }

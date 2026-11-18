@@ -1,11 +1,11 @@
 import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
 import 'package:app/features/medications/presentation/widgets/medication_date_row.dart';
 import 'package:app/features/medications/presentation/widgets/medication_duration_chips.dart';
 import 'package:app/features/medications/presentation/widgets/medication_issue_note.dart';
+import 'package:app/features/medications/presentation/widgets/medication_start_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -39,18 +39,10 @@ class MedicationPeriodFields extends StatelessWidget {
             header: context.tr('medications.treatment_period'),
             children: <Widget>[
               MedicationDurationChips(data: data, onChanged: onChanged),
-              MedicationDateRow(
-                label: context.tr('medications.starts'),
-                value: data.startsOn,
-                errorText: start,
-                firstDate: data.effectiveFromOn == null
-                    ? PatientClockScope.of(context).today()
-                    : null,
-                onChanged: (DateTime? value) {
-                  if (value == null) return;
-                  data.startsOn = value;
-                  onChanged();
-                },
+              MedicationStartRow(
+                data: data,
+                error: start,
+                onChanged: onChanged,
               ),
               if (data.endsOn != null)
                 MedicationDateRow(

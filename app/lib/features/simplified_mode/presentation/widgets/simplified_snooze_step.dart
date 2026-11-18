@@ -1,5 +1,5 @@
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A round «−» or «+» beside the ruler: five minutes less or more with
 /// one tap, for a hand that slides a ruler less easily. The ruler itself
@@ -24,12 +24,12 @@ class SimplifiedSnoozeStep extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: SimplifiedStyle.surface.withValues(alpha: .16),
-          foregroundColor: SimplifiedStyle.surface,
-          disabledBackgroundColor: SimplifiedStyle.surface.withValues(
+          backgroundColor: SimplifiedColors.surface.withValues(alpha: .16),
+          foregroundColor: SimplifiedColors.surface,
+          disabledBackgroundColor: SimplifiedColors.surface.withValues(
             alpha: .06,
           ),
-          disabledForegroundColor: SimplifiedStyle.onDarkMuted,
+          disabledForegroundColor: SimplifiedColors.onDarkMuted,
           shape: const CircleBorder(),
           padding: EdgeInsets.zero,
         ),

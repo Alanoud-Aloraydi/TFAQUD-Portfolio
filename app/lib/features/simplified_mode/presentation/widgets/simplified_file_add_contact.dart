@@ -5,6 +5,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_fil
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The form of a contact being added, else the button that starts one while
 /// the file can still hold another.
@@ -26,8 +27,8 @@ List<Widget> simplifiedFileAddContact(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(64),
         shape: const StadiumBorder(),
-        side: const BorderSide(color: SimplifiedStyle.control, width: 1.5),
-        foregroundColor: SimplifiedStyle.ink,
+        side: const BorderSide(color: SimplifiedColors.control, width: 1.5),
+        foregroundColor: SimplifiedColors.ink,
       ),
       child: Text(
         context.tr('simplified_mode.file.add_contact'),

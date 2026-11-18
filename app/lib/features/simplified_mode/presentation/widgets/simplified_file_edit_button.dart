@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// «✎ تعديل» beside the title, which opens the detailed mode's edit page
 /// inside this mode. The pencil and the fill are the app's one edit
@@ -14,10 +15,10 @@ class SimplifiedFileEditButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FilledButton.icon(
     onPressed: onPressed,
-    icon: Icon(AppIcons.pencil, size: SimplifiedStyle.caption),
+    icon: Icon(ActionIcons.pencil, size: SimplifiedStyle.caption),
     style: FilledButton.styleFrom(
-      backgroundColor: SimplifiedStyle.accentTint,
-      foregroundColor: SimplifiedStyle.ink,
+      backgroundColor: SimplifiedColors.accentTint,
+      foregroundColor: SimplifiedColors.ink,
       minimumSize: const Size(0, SimplifiedStyle.touch),
       shape: const StadiumBorder(),
       padding: const EdgeInsets.symmetric(horizontal: 24),

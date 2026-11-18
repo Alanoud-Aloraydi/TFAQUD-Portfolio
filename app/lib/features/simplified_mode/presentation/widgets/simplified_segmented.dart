@@ -1,6 +1,7 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// Two or three big choices in one capsule («ضغط الدم | سكر الدم»).
 class SimplifiedSegmented<T> extends StatelessWidget {
@@ -20,9 +21,9 @@ class SimplifiedSegmented<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: SimplifiedStyle.surface.withValues(alpha: .6),
+        color: SimplifiedColors.surface.withValues(alpha: .6),
         borderRadius: BorderRadius.circular(36),
-        border: Border.all(color: SimplifiedStyle.control, width: 1.5),
+        border: Border.all(color: SimplifiedColors.control, width: 1.5),
       ),
       child: Row(
         children: <Widget>[
@@ -44,8 +45,8 @@ class SimplifiedSegmented<T> extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: entry.key == selected
-                          ? SimplifiedStyle.surface
-                          : SimplifiedStyle.clear,
+                          ? SimplifiedColors.surface
+                          : SimplifiedColors.clear,
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
@@ -54,7 +55,7 @@ class SimplifiedSegmented<T> extends StatelessWidget {
                           ? SimplifiedStyle.head(SimplifiedStyle.body)
                           : SimplifiedStyle.text(
                               SimplifiedStyle.body,
-                              color: SimplifiedStyle.ink,
+                              color: SimplifiedColors.ink,
                             ),
                     ),
                   ),

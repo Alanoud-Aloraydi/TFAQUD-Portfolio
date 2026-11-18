@@ -4,6 +4,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_sty
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedLoadFailed extends StatelessWidget {
   const SimplifiedLoadFailed({super.key, required this.messageKey});
@@ -22,7 +23,7 @@ class SimplifiedLoadFailed extends StatelessWidget {
             textAlign: TextAlign.center,
             style: SimplifiedStyle.text(
               SimplifiedStyle.body,
-              color: SimplifiedStyle.ink,
+              color: SimplifiedColors.ink,
             ),
           ),
           const SizedBox(height: SimplifiedStyle.gap),

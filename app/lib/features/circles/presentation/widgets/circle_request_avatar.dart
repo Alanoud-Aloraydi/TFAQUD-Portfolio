@@ -20,7 +20,7 @@ class CircleRequestAvatar extends StatelessWidget {
           shape: CircleBorder(),
         ),
         child: const Icon(
-          AppIcons.hourglass,
+          PeopleIcons.hourglass,
           size: AppSizes.iconSmall,
           color: AppSemanticColors.doseDueMarker,
         ),

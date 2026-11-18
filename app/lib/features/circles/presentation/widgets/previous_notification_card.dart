@@ -49,7 +49,7 @@ class PreviousNotificationCard extends StatelessWidget {
         ],
       ),
       pill: StatusBadge(
-        icon: AppIcons.clock,
+        icon: ScheduleIcons.clock,
         text: daysAgo(context, days),
         tone: StatusTone.neutral,
       ),

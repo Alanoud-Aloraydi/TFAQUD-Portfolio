@@ -47,6 +47,7 @@ abstract class SimplifiedReminding {
   /// in the detailed mode. False when [tap] is not that button.
   Future<bool> snoozeFromNotification(String tap) => _reminders.snoozeTap(tap);
 
-  /// The tasks put off, by [TodayTask.snoozeKey], until each comes again.
+  /// The tasks put off, by [TodayTaskSnoozeKey.snoozeKey], until each comes
+  /// again.
   ValueListenable<Map<String, TaskSnooze>> get snoozes => _reminders.snoozes;
 }

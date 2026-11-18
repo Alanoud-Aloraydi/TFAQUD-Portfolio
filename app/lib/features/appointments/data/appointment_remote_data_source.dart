@@ -1,7 +1,7 @@
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/core/network/appointment_endpoints.dart';
 
 /// Sends appointment requests to the API.
 class AppointmentRemoteDataSource {
@@ -10,14 +10,16 @@ class AppointmentRemoteDataSource {
   final DioClient _client;
 
   Future<List<dynamic>> appointments(String circleId) async {
-    final response = await _client.get(ApiEndpoints.appointments(circleId));
+    final response = await _client.get(
+      AppointmentEndpoints.appointments(circleId),
+    );
     return (response.data as Map<String, dynamic>)['appointments']
         as List<dynamic>;
   }
 
   Future<Map<String, dynamic>> companions(String circleId) async {
     final response = await _client.get(
-      ApiEndpoints.appointmentCompanions(circleId),
+      AppointmentEndpoints.appointmentCompanions(circleId),
     );
     return response.data as Map<String, dynamic>;
   }
@@ -27,7 +29,7 @@ class AppointmentRemoteDataSource {
     AppointmentDraft draft,
   ) async {
     final response = await _client.post(
-      ApiEndpoints.appointments(circleId),
+      AppointmentEndpoints.appointments(circleId),
       data: AppointmentModel.toJson(draft),
     );
     return response.data as Map<String, dynamic>;
@@ -39,7 +41,7 @@ class AppointmentRemoteDataSource {
     AppointmentDraft draft,
   ) async {
     final response = await _client.put(
-      ApiEndpoints.appointment(circleId, appointment.id),
+      AppointmentEndpoints.appointment(circleId, appointment.id),
       data: AppointmentModel.toJson(
         draft,
         expectedUpdatedAt: appointment.updatedAt,
@@ -54,7 +56,7 @@ class AppointmentRemoteDataSource {
     AppointmentStatus status,
   ) async {
     final response = await _client.post(
-      ApiEndpoints.appointmentStatus(circleId, appointment.id),
+      AppointmentEndpoints.appointmentStatus(circleId, appointment.id),
       data: {
         'status': status.name,
         'expected_updated_at': appointment.updatedAt.toUtc().toIso8601String(),

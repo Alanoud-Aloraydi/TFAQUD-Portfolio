@@ -1,6 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The mark of something done, in the colours of the detailed mode's «تم
 /// أخذها»: a green check on the pale green, ringed in the same green so it
@@ -18,14 +18,14 @@ class SimplifiedDoneMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: SimplifiedStyle.successTint,
+        color: SimplifiedColors.successTint,
         shape: BoxShape.circle,
-        border: Border.all(color: SimplifiedStyle.success, width: size / 36),
+        border: Border.all(color: SimplifiedColors.success, width: size / 36),
       ),
       child: Icon(
-        AppIcons.check,
+        ActionIcons.check,
         size: size / 2,
-        color: SimplifiedStyle.success,
+        color: SimplifiedColors.success,
       ),
     ),
   );

@@ -2,8 +2,7 @@ import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_state.dart';
-import 'package:app/features/measurements/presentation/widgets/condition_file_row.dart';
-import 'package:app/features/measurements/presentation/widgets/normal_range_card.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_range_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,28 +42,14 @@ class MeasurementRangesBox extends StatelessWidget {
               child: Text(context.tr(state.errorKey ?? 'error.unknown')),
             );
           }
-          final List<NormalRange> shown = <NormalRange>[
-            if (kind == MeasurementKind.bp)
-              ?ranges.of(MeasurementKind.bp)
-            else
-              for (final String group in _groups())
-                ?ranges.of(MeasurementKind.glucose, group),
-          ];
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final NormalRange range in shown) ...[
-                if (range != shown.first) const SizedBox(height: 16),
-                NormalRangeCard(
-                  range: range,
-                  footer: range == shown.last
-                      ? context.tr('measurements.range_from_file')
-                      : null,
-                  action: range == shown.last
-                      ? ConditionFileRow(circleId: circleId)
-                      : null,
-                ),
-              ],
+          return MeasurementRangeCards(
+            circleId: circleId,
+            ranges: <NormalRange>[
+              if (kind == MeasurementKind.bp)
+                ?ranges.of(MeasurementKind.bp)
+              else
+                for (final String group in _groups())
+                  ?ranges.of(MeasurementKind.glucose, group),
             ],
           );
         },

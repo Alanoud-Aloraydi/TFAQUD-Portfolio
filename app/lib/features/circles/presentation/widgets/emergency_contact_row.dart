@@ -54,7 +54,7 @@ class EmergencyContactRow extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   const Icon(
-                    AppIcons.phoneCall,
+                    PeopleIcons.phoneCall,
                     size: AppSizes.iconSmall,
                     color: AppSemanticColors.statusSuccess,
                   ),

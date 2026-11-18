@@ -1,11 +1,8 @@
 import 'dart:async';
 
 import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/push_target.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
-import 'package:app/core/services/reminders/item_keys.dart';
-import 'package:app/core/services/reminders/tapped_item.dart';
-import 'package:app/core/services/tap_focus.dart';
+import 'package:app/features/home/presentation/controllers/tapped_item_opener.dart';
 import 'package:flutter/foundation.dart' show VoidCallback;
 
 /// Turns a tap on a notification into what the app does: it opens the
@@ -42,11 +39,8 @@ class NotificationTapHandler {
   String? _pending;
 
   void _onTap(String payload) {
-    if (isSnoozeTap(payload) || _isReady()) {
-      _open(payload);
-    } else {
-      _pending = payload;
-    }
+    if (isSnoozeTap(payload) || _isReady()) return _open(payload);
+    _pending = payload;
   }
 
   /// The home data is ready: opens the tap that waited.
@@ -57,20 +51,14 @@ class NotificationTapHandler {
 
   void _open(String payload) {
     _pending = null;
-    if (isSnoozeTap(payload)) {
-      unawaited(_snooze(payload));
-      return;
-    }
-    final String? item = tappedItemKey(payload);
-    TapFocus.instance.show(item);
-    if (opensBell(pushKind(payload), item)) return _openInbox();
-    _openToday(reminderCircleId(payload) ?? itemCircleId(item));
-  }
-
-  /// Puts a reminder off from its notification.
-  Future<void> _snooze(String tap) async {
-    final bool done = await _reminders.snoozeTap(tap);
-    if (done && !_disposed) _onSnoozed();
+    openTap(
+      payload,
+      reminders: _reminders,
+      openInbox: _openInbox,
+      openToday: _openToday,
+      onSnoozed: _onSnoozed,
+      isDisposed: () => _disposed,
+    );
   }
 
   /// Stops listening; a tap that is still waiting is dropped.

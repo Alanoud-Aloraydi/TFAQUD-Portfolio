@@ -21,7 +21,7 @@ class AmbulanceButton extends StatelessWidget {
         foregroundColor: AppSemanticColors.surfaceContent,
         minimumSize: const Size.fromHeight(AppSizes.button),
       ),
-      icon: const Icon(AppIcons.siren, size: AppSizes.icon),
+      icon: const Icon(CareIcons.siren, size: AppSizes.icon),
       label: Text(
         context.tr(
           'emergency_card.ambulance',

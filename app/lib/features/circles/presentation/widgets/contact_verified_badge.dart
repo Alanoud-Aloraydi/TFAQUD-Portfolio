@@ -16,6 +16,6 @@ class ContactVerifiedBadge extends StatelessWidget {
       verified ? 'circles.contact_verified' : 'circles.contact_unverified',
     ),
     tone: verified ? StatusTone.success : StatusTone.muted,
-    icon: verified ? AppIcons.checkCircle : AppIcons.warningCircle,
+    icon: verified ? ActionIcons.checkCircle : NoticeIcons.warningCircle,
   );
 }

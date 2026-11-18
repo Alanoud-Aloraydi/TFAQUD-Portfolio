@@ -5,6 +5,8 @@ import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+export 'package:app/features/measurements/presentation/widgets/measurement_condition_text.dart';
+
 /// «ظروف القياس»: chips to choose none, one or more conditions of a reading
 /// or a reading time. A meal state replaces the one already chosen; a
 /// condition the form no longer offers («قبل النوم») stays while chosen.
@@ -56,20 +58,3 @@ class MeasurementConditionChips extends StatelessWidget {
     );
   }
 }
-
-/// [codes] on one line: «بعد الوجبة، بعد جهد».
-String conditionsText(BuildContext context, List<String> codes) =>
-    codes.map((code) => context.tr('measurements.condition.$code')).join('، ');
-
-/// A reading's conditions on one line, «أخرى» in the reader's words when
-/// they wrote some: «بعد جهد، بعد القهوة».
-String readingConditionsText(
-  BuildContext context,
-  MeasurementReading reading,
-) => <String>[
-  for (final String code in reading.conditions)
-    if (code == 'other' && reading.otherCondition != null)
-      reading.otherCondition!
-    else
-      context.tr('measurements.condition.$code'),
-].join('، ');

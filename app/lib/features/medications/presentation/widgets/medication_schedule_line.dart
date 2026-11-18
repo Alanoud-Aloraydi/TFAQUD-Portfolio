@@ -18,7 +18,7 @@ class MedicationScheduleLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextStyle? small = Theme.of(context).textTheme.labelMedium;
     return PlanFact(
-      icon: AppIcons.clock,
+      icon: ScheduleIcons.clock,
       value: clockText(schedule.time),
       trailing: StatusBadge(
         text: formatMedicationDose(
@@ -27,7 +27,7 @@ class MedicationScheduleLine extends StatelessWidget {
           schedule.doseUnit,
         ),
         tone: StatusTone.neutral,
-        icon: AppIcons.pill,
+        icon: CareIcons.pill,
       ),
       below: switch (schedule.repeat) {
         ScheduleRepeat.monthly => Text(

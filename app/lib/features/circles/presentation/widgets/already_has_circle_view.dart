@@ -24,7 +24,7 @@ class AlreadyHasCircleView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Icon(
-                AppIcons.checkCircle,
+                ActionIcons.checkCircle,
                 size: AppSizes.iconHero,
                 color: AppSemanticColors.textPrimary,
               ),

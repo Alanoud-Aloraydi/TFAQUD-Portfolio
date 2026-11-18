@@ -1,13 +1,14 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/photo_edit_badge.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/core/network/account_endpoints.dart';
+import 'package:app/core/network/circle_endpoints.dart';
 
 /// The patient's picture on the circle card, with the pencil badge and the
 /// sheet that changes it for whoever is allowed to. A patient with their own
@@ -24,8 +25,8 @@ class PatientPhotoButton extends StatelessWidget {
   final CircleOverview overview;
 
   String get _photoPath => overview.patientIsYou
-      ? ApiEndpoints.accountPhoto
-      : ApiEndpoints.patientPhoto(circleId);
+      ? AccountEndpoints.accountPhoto
+      : CircleEndpoints.patientPhoto(circleId);
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +46,8 @@ class PatientPhotoButton extends StatelessWidget {
                 name: overview.patientName,
                 photoPath: _photoPath,
                 avatarPath: overview.patientIsYou
-                    ? ApiEndpoints.accountAvatar
-                    : ApiEndpoints.patientAvatar(circleId),
+                    ? AccountEndpoints.accountAvatar
+                    : CircleEndpoints.patientAvatar(circleId),
                 avatarCode: overview.patientAvatarCode,
                 onSaved: context.read<CircleOverviewCubit>().load,
               )

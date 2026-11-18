@@ -19,7 +19,7 @@ class PatientCityField extends StatelessWidget {
     return PickerField(
       label: context.tr('circles.city'),
       hint: context.tr('circles.patient_city_hint'),
-      icon: AppIcons.mapPin,
+      icon: ScheduleIcons.mapPin,
       value: state.city,
       onTap: () => pickPatientCity(context, cubit, state.city),
       errorText: state.showErrors && state.city == null

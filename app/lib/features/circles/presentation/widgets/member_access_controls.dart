@@ -3,7 +3,7 @@ import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
-import 'package:app/features/circles/presentation/widgets/member_access_actions.dart';
+import 'package:app/features/circles/presentation/widgets/member_access_area_chips.dart';
 import 'package:app/features/circles/presentation/widgets/member_access_buttons.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +51,11 @@ class MemberAccessControls extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall,
           ),
           const SizedBox(height: AppSpacing.xs),
-          _areas(context, accountId, enabled),
+          MemberAccessAreaChips(
+            access: member.editAccess,
+            accountId: accountId,
+            enabled: enabled,
+          ),
           const Divider(height: AppSpacing.lg),
           MemberAccessButtons(
             member: member,
@@ -61,30 +65,6 @@ class MemberAccessControls extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _areas(BuildContext context, String? accountId, bool enabled) {
-    final EditAccess access = member.editAccess;
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.xs,
-      children: <Widget>[
-        for (final String area in EditAccess.areas)
-          FilterChip(
-            side: BorderSide.none,
-            label: Text(context.tr('circle_overview.area.$area')),
-            selected: access.of(area),
-            onSelected: enabled && accountId != null
-                ? (bool allowed) => changeMemberAccess(
-                    context,
-                    accountId,
-                    area: area,
-                    allowed: allowed,
-                  )
-                : null,
-          ),
-      ],
     );
   }
 }

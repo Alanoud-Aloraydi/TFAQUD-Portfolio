@@ -20,7 +20,7 @@ class ConditionFileRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InsetRow(
     label: context.tr('measurements.change_condition'),
-    leading: const Icon(AppIcons.fileText),
+    leading: const Icon(CareIcons.fileText),
     showChevron: true,
     onTap: () => _open(context),
   );

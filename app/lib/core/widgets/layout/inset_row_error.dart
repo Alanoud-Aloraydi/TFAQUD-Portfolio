@@ -24,7 +24,7 @@ class InsetRowError extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
-            AppIcons.warningCircle,
+            NoticeIcons.warningCircle,
             size: AppSizes.iconSmall,
             color: tokens.error,
           ),

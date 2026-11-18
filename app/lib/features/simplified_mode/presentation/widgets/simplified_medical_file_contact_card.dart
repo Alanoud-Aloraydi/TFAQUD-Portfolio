@@ -1,11 +1,11 @@
-import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_contact_edit_button.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_contact_lines.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedMedicalFileContactCard extends StatelessWidget {
   const SimplifiedMedicalFileContactCard({
@@ -31,7 +31,7 @@ class SimplifiedMedicalFileContactCard extends StatelessWidget {
           ExcludeSemantics(
             child: CircleAvatar(
               radius: 28,
-              backgroundColor: SimplifiedStyle.accentTint,
+              backgroundColor: SimplifiedColors.accentTint,
               child: Text(
                 contact.name.characters.firstOrNull ?? '',
                 style: SimplifiedStyle.head(SimplifiedStyle.title),
@@ -51,25 +51,7 @@ class SimplifiedMedicalFileContactCard extends StatelessWidget {
             ),
           ),
           if (onEdit case final VoidCallback edit)
-            Semantics(
-              button: true,
-              label: spoken(
-                '${context.tr('circles.contact_edit_title')}، '
-                '${contact.name}',
-              ),
-              onTap: edit,
-              excludeSemantics: true,
-              // The pencil alone, as on the detailed mode's contact.
-              child: IconButton(
-                onPressed: edit,
-                constraints: const BoxConstraints(
-                  minWidth: SimplifiedStyle.touch,
-                  minHeight: SimplifiedStyle.touch,
-                ),
-                color: SimplifiedStyle.ink,
-                icon: const Icon(AppIcons.pencil, size: 26),
-              ),
-            ),
+            SimplifiedContactEditButton(contact: contact, onEdit: edit),
         ],
       ),
     );

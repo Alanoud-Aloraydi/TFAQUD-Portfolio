@@ -1,15 +1,11 @@
-import 'package:app/core/constants/name_limits.dart';
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/core/widgets/forms/labeled_text_field.dart';
-import 'package:app/core/widgets/layout/info_row.dart';
-import 'package:app/core/widgets/layout/inset_text.dart';
-import 'package:app/core/widgets/layout/settings_section.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:app/features/account/presentation/pages/account_edit_flow.dart';
+import 'package:app/features/account/presentation/widgets/account_edit_bar.dart';
+import 'package:app/features/account/presentation/widgets/account_edit_failure.dart';
+import 'package:app/features/account/presentation/widgets/account_edit_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -22,52 +18,8 @@ class AccountEditScreen extends StatefulWidget {
   State<AccountEditScreen> createState() => _AccountEditScreenState();
 }
 
-class _AccountEditScreenState extends State<AccountEditScreen> {
-  final _first = TextEditingController();
-  final _last = TextEditingController();
-  final _display = TextEditingController();
-  bool _filled = false;
-  bool _saving = false;
-  // After a save with a name left empty: «هذا الحقل مطلوب» under it.
-  bool _showErrors = false;
-
-  @override
-  void dispose() {
-    _first.dispose();
-    _last.dispose();
-    _display.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    if (_saving) return;
-    final List<TextEditingController> names = [_first, _last, _display];
-    if (names.any((name) => name.text.trim().isEmpty)) {
-      setState(() => _showErrors = true);
-      return;
-    }
-    setState(() => _saving = true);
-    final error = await context.read<AccountCubit>().saveProfile(
-      firstName: _first.text,
-      lastName: _last.text,
-      displayName: _display.text,
-    );
-    if (!mounted) return;
-    if (error == null) {
-      context.pop(true);
-      return;
-    }
-    // About no one name: the server, or the connection.
-    setState(() => _saving = false);
-    AppToast.show(context, error, kind: ToastKind.error);
-  }
-
-  /// «هذا الحقل مطلوب» under an empty name, after a save.
-  String? _required(TextEditingController name) =>
-      _showErrors && name.text.trim().isEmpty
-      ? context.tr('common.field_required')
-      : null;
-
+class _AccountEditScreenState extends State<AccountEditScreen>
+    with AccountEditFlow<AccountEditScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
@@ -79,103 +31,30 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
               context.go(Routes.auth);
               return;
             }
-            final account = state.account;
-            if (_filled || account == null) return;
-            _first.text = account.firstName;
-            _last.text = account.lastName;
-            _display.text = account.displayName;
-            _filled = true;
+            fill(state.account);
           },
           builder: (context, state) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: Text(context.tr('common.cancel')),
-                  ),
-                  Expanded(
-                    child: Text(
-                      context.tr('account.edit_title'),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  FilledButton(
-                    onPressed: state.status == AccountStatus.ready && !_saving
-                        ? _save
-                        : null,
-                    child: Text(context.tr('account.save')),
-                  ),
-                ],
+              AccountEditBar(
+                onSave: state.status == AccountStatus.ready && !saving
+                    ? save
+                    : null,
               ),
               const SizedBox(height: AppSpacing.lg),
               if (state.status == AccountStatus.loading)
                 const Center(child: CircularProgressIndicator())
               else if (state.status == AccountStatus.failure)
-                Column(
-                  children: [
-                    Text(
-                      context.tr(state.messageKey ?? 'error.unknown'),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    FilledButton(
-                      onPressed: context.read<AccountCubit>().load,
-                      child: Text(context.tr('auth.retry')),
-                    ),
-                  ],
-                )
+                AccountEditFailure(messageKey: state.messageKey)
               else
                 Expanded(
-                  child: SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // The three names, each a row like «اسم العرض».
-                        LabeledTextField(
-                          label: context.tr('onboarding.first_name'),
-                          controller: _first,
-                          maxLength: NameLimits.name,
-                          errorText: _required(_first),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        LabeledTextField(
-                          label: context.tr('onboarding.last_name'),
-                          controller: _last,
-                          maxLength: NameLimits.name,
-                          errorText: _required(_last),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        LabeledTextField(
-                          label: context.tr('account.display_name'),
-                          controller: _display,
-                          maxLength: NameLimits.displayName,
-                          errorText: _required(_display),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: AppSpacing.labelGap),
-                        InsetText.note(context.tr('account.display_name_help')),
-                        const SizedBox(height: AppSpacing.lg),
-                        SettingsSection(
-                          title: context.tr('account.phone'),
-                          children: [
-                            InfoRow(
-                              label: context.tr('account.phone'),
-                              value: SaudiMobile.display(
-                                state.account!.phoneNumber,
-                              ),
-                              ltr: true,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  child: AccountEditFields(
+                    first: first,
+                    last: last,
+                    display: display,
+                    phoneNumber: state.account!.phoneNumber,
+                    requiredError: requiredError,
+                    onChanged: refresh,
                   ),
                 ),
             ],

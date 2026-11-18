@@ -1,5 +1,4 @@
 import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -10,6 +9,7 @@ import 'package:app/features/medications/presentation/widgets/plans_skeleton.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/navigation/care_item_routes.dart';
 
 /// What «الأدوية» holds for one state of its cubit: the skeleton while it
 /// loads, the retry view when it failed, or the medicines in use today.
@@ -57,7 +57,7 @@ class MedicationPlansContent extends StatelessWidget {
       circleId: circleId,
       canManage: canManage,
       // The cubit reads the list again by itself when the form saves.
-      onAdd: () => context.push<bool>(Routes.newMedication(circleId)),
+      onAdd: () => context.push<bool>(CareItemRoutes.newMedication(circleId)),
     );
   }
 }

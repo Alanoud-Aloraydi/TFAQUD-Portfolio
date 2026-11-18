@@ -37,7 +37,7 @@ class StepperControl extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           StepperHalfButton(
-            icon: AppIcons.minus,
+            icon: ActionIcons.minus,
             label: decrementLabel,
             onPressed: onDecrement,
           ),
@@ -50,7 +50,7 @@ class StepperControl extends StatelessWidget {
             ),
           ),
           StepperHalfButton(
-            icon: AppIcons.plus,
+            icon: ActionIcons.plus,
             label: incrementLabel,
             onPressed: onIncrement,
           ),

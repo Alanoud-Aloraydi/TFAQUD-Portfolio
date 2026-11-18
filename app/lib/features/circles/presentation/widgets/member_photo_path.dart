@@ -1,7 +1,8 @@
 import 'package:app/core/media/person_photo_editor.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/core/network/account_endpoints.dart';
+import 'package:app/core/network/circle_endpoints.dart';
 
 /// Where a member's portrait is read from. A patient with their own account
 /// is one person with one photo, read through the account endpoint so the
@@ -13,6 +14,6 @@ String memberPhotoPath(
 }) {
   if (!member.isPatient) return personPhotoPath(circleId, member.accountId);
   return patientIsYou
-      ? ApiEndpoints.accountPhoto
-      : ApiEndpoints.patientPhoto(circleId);
+      ? AccountEndpoints.accountPhoto
+      : CircleEndpoints.patientPhoto(circleId);
 }

@@ -1,5 +1,6 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A red-worded capsule for leaving or deleting the account.
 class SimplifiedOutlinedDanger extends StatelessWidget {
@@ -26,13 +27,13 @@ class SimplifiedOutlinedDanger extends StatelessWidget {
         minimumSize: const Size.fromHeight(64),
         shape: const StadiumBorder(),
         backgroundColor: filled
-            ? SimplifiedStyle.surface
-            : SimplifiedStyle.clear,
+            ? SimplifiedColors.surface
+            : SimplifiedColors.clear,
         side: BorderSide(
-          color: filled ? SimplifiedStyle.line : SimplifiedStyle.danger,
+          color: filled ? SimplifiedColors.line : SimplifiedColors.danger,
           width: filled ? 1 : 1.5,
         ),
-        foregroundColor: SimplifiedStyle.danger,
+        foregroundColor: SimplifiedColors.danger,
       ),
       child: busy
           ? const SizedBox.square(
@@ -43,7 +44,7 @@ class SimplifiedOutlinedDanger extends StatelessWidget {
               label,
               style: SimplifiedStyle.head(
                 SimplifiedStyle.body,
-                color: SimplifiedStyle.danger,
+                color: SimplifiedColors.danger,
               ),
             ),
     );

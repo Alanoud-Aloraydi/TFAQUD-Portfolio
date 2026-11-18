@@ -1,17 +1,16 @@
-import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task_kind.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task_props.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task_status.dart';
 import 'package:equatable/equatable.dart';
 
-/// What a task of the day is.
-enum TodayTaskKind { medication, measurement, appointment }
-
-/// Where a task stands now, as the simplified mode words it: «تم»,
-/// «التالي», «فات موعده», «لاحقًا».
-enum TodayTaskStatus { done, next, late, later }
+export 'package:app/features/simplified_mode/domain/entities/today_task_kind.dart';
+export 'package:app/features/simplified_mode/domain/entities/today_task_snooze_key.dart';
+export 'package:app/features/simplified_mode/domain/entities/today_task_status.dart';
 
 /// One dose, measurement or appointment of today, with exactly one of
 /// [dose], [measurement] and [appointment] set, matching [kind].
@@ -66,18 +65,6 @@ class TodayTask extends Equatable {
   /// The task's wall time, on the scale of [PatientClock.now].
   DateTime get scheduledAt => wallClockAt(day, time);
 
-  /// The key its «ذكّرني لاحقًا» is kept by in [circleId], the same as
-  /// the detailed mode's ([DoseReminders.snoozes]); null for an
-  /// appointment, which is not put off.
-  String? snoozeKey(String circleId) => switch ((dose, measurement)) {
-    (final DoseOccurrence value, _) => doseSnoozeKey(circleId, value),
-    (_, final MeasurementOccurrence value) => measurementSnoozeKey(
-      circleId,
-      value,
-    ),
-    _ => null,
-  };
-
   TodayTask withStatus(TodayTaskStatus value) => TodayTask._(
     kind: kind,
     day: day,
@@ -89,13 +76,5 @@ class TodayTask extends Equatable {
   );
 
   @override
-  List<Object?> get props => [
-    kind,
-    day,
-    time,
-    status,
-    dose,
-    measurement,
-    appointment,
-  ];
+  List<Object?> get props => todayTaskProps(this);
 }

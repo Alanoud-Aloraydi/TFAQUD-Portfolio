@@ -16,21 +16,21 @@ List<Widget> homeAddPlanOptions(
 }) => <Widget>[
   if (onMedication case final VoidCallback open)
     HomeAddPlanOption(
-      icon: AppIcons.pill,
+      icon: CareIcons.pill,
       title: context.tr('add.medication'),
       hint: CareVoice.tr(context, circleId, 'add.medication_hint'),
       onTap: open,
     ),
   if (onMeasurement case final VoidCallback open)
     HomeAddPlanOption(
-      icon: AppIcons.listPlus,
+      icon: CareIcons.listPlus,
       title: context.tr('add.measurement'),
       hint: context.tr('add.measurement_hint'),
       onTap: open,
     ),
   if (onAppointment case final VoidCallback open)
     HomeAddPlanOption(
-      icon: AppIcons.calendarPlus,
+      icon: ScheduleIcons.calendarPlus,
       title: context.tr('add.appointment'),
       hint: context.tr('add.appointment_hint'),
       onTap: open,

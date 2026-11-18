@@ -5,4 +5,4 @@ import 'package:flutter/material.dart';
 /// The icon of a measurement kind, as the detailed mode's measurement rows
 /// draw it: a drop for glucose, a heart for blood pressure.
 IconData measurementIcon(MeasurementKind kind) =>
-    kind == MeasurementKind.bp ? AppIcons.heart : AppIcons.drop;
+    kind == MeasurementKind.bp ? CareIcons.heart : CareIcons.drop;

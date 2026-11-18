@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 List<Widget> circleFacts(BuildContext context, MedicalProfileDraft profile) =>
     <Widget>[
       CircleFact(
-        icon: AppIcons.drop,
+        icon: CareIcons.drop,
         label: context.tr('circle_overview.blood_type'),
         value: MedicalTexts.bloodType(context, profile.bloodType),
       ),
@@ -21,7 +21,7 @@ List<Widget> circleFacts(BuildContext context, MedicalProfileDraft profile) =>
 /// «حساسية **البنسلين**», or only «لا توجد حساسية» when that was the answer.
 Widget _allergies(BuildContext context, AllergiesDraft? allergies) =>
     CircleFact(
-      icon: AppIcons.warning,
+      icon: NoticeIcons.warning,
       label: allergies?.answer == ListAnswer.none
           ? null
           : context.tr('circle_overview.allergy'),
@@ -33,13 +33,13 @@ Widget _allergies(BuildContext context, AllergiesDraft? allergies) =>
 Widget _conditions(BuildContext context, ConditionsDraft? conditions) {
   if (conditions == null) {
     return CircleFact(
-      icon: AppIcons.heartbeat,
+      icon: CareIcons.heartbeat,
       label: context.tr('circle_overview.conditions'),
       value: MedicalTexts.conditions(context, conditions),
     );
   }
   return CircleFact(
-    icon: AppIcons.heartbeat,
+    icon: CareIcons.heartbeat,
     value: conditions.answer == ListAnswer.none
         ? context.tr('circle_overview.no_conditions')
         : MedicalTexts.conditions(context, conditions),

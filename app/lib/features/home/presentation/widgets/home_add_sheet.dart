@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/widgets/home_add_sheet_content.dart';
@@ -8,6 +7,7 @@ import 'package:app/features/measurements/presentation/widgets/measurement_readi
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/navigation/care_item_routes.dart';
 
 /// The shared add sheet: a quick reading, and a creation flow for each area
 /// the account may edit in [circle] (the circle's leader decides which).
@@ -24,21 +24,24 @@ Future<void> showHomeAddSheet(
     builder: (BuildContext sheetContext) => HomeAddSheetContent(
       circleId: circleId,
       onMedication: circle.canManageMedications
-          ? () =>
-                _openFrom(sheetContext, context, Routes.newMedication(circleId))
+          ? () => _openFrom(
+              sheetContext,
+              context,
+              CareItemRoutes.newMedication(circleId),
+            )
           : null,
       onMeasurement: circle.canManageMeasurements
           ? () => _openFrom(
               sheetContext,
               context,
-              Routes.newMeasurement(circleId),
+              CareItemRoutes.newMeasurement(circleId),
             )
           : null,
       onAppointment: circle.canManageAppointments
           ? () => _openFrom(
               sheetContext,
               context,
-              Routes.newAppointment(circleId),
+              CareItemRoutes.newAppointment(circleId),
             )
           : null,
       onReading: () {

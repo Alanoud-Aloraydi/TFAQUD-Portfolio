@@ -1,7 +1,7 @@
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/medications/data/models/medication_plan_model.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 
 /// The requests about the medicines themselves: reading them, adding one,
 /// changing one, ending one, and dropping a change that waits.
@@ -9,7 +9,9 @@ mixin MedicationPlanRequests {
   DioClient get client;
 
   Future<List<MedicationPlanModel>> getPlans(String circleId) async {
-    final response = await client.get(ApiEndpoints.medicationPlans(circleId));
+    final response = await client.get(
+      MedicationEndpoints.medicationPlans(circleId),
+    );
     final body = response.data as Map<String, dynamic>;
     final values = body['medication_plans'] as List<dynamic>;
     return values
@@ -21,7 +23,7 @@ mixin MedicationPlanRequests {
 
   Future<MedicationPlanModel> getPlan(String circleId, String planId) async {
     final response = await client.get(
-      ApiEndpoints.medicationPlan(circleId, planId),
+      MedicationEndpoints.medicationPlan(circleId, planId),
     );
     return onePlan(response.data);
   }
@@ -31,7 +33,7 @@ mixin MedicationPlanRequests {
     MedicationPlanDraft draft,
   ) async {
     final response = await client.post(
-      ApiEndpoints.medicationPlans(circleId),
+      MedicationEndpoints.medicationPlans(circleId),
       data: draft.toJson(),
     );
     return onePlan(response.data);
@@ -44,7 +46,7 @@ mixin MedicationPlanRequests {
     MedicationPlanDraft draft,
   ) async {
     final response = await client.put(
-      ApiEndpoints.medicationPlan(circleId, planId),
+      MedicationEndpoints.medicationPlan(circleId, planId),
       data: draft.toJson(expectedVersion: expectedVersion),
     );
     return onePlan(response.data);
@@ -55,7 +57,7 @@ mixin MedicationPlanRequests {
     String planId,
   ) async {
     final response = await client.post(
-      ApiEndpoints.discontinueMedication(circleId, planId),
+      MedicationEndpoints.discontinueMedication(circleId, planId),
     );
     return onePlan(response.data);
   }
@@ -66,7 +68,7 @@ mixin MedicationPlanRequests {
     int expectedVersion,
   ) async {
     final response = await client.post(
-      ApiEndpoints.cancelPendingMedication(circleId, planId),
+      MedicationEndpoints.cancelPendingMedication(circleId, planId),
       data: {'expected_version_number': expectedVersion},
     );
     return onePlan(response.data);

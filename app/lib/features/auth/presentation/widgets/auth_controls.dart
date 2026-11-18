@@ -52,7 +52,7 @@ class AuthControls extends StatelessWidget {
             children: <Widget>[
               Text(context.tr('intro.next')),
               const SizedBox(width: AppSpacing.sm),
-              const Icon(AppIcons.next, size: AppSizes.iconSmall),
+              const Icon(ArrowIcons.next, size: AppSizes.iconSmall),
             ],
           ),
         ),

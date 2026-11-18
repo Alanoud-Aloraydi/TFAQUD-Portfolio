@@ -6,9 +6,9 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_rem
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_close_bar.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_content.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_nothing_waiting.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The full-screen reminder a tapped notification or a home card opens,
 /// for a dose, a reading or a visit alike. Like a call: one calm dark
@@ -29,7 +29,7 @@ class SimplifiedReminderScreen extends StatelessWidget {
             state,
           );
           return Scaffold(
-            backgroundColor: SimplifiedStyle.reminderGround,
+            backgroundColor: SimplifiedColors.reminderGround,
             body: SafeArea(
               child: Column(
                 children: <Widget>[

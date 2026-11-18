@@ -2,7 +2,7 @@ import '../support/normal_ranges.dart';
 import '../support/widget_harness.dart';
 
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/features/measurements/data/measurement_repository.dart';
+import 'package:app/features/measurements/domain/repositories/measurement_repository.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';

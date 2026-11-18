@@ -7,7 +7,7 @@ import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_sheets.dart';
-import 'package:app/features/circles/presentation/widgets/time_zone_sheet.dart';
+import 'package:app/features/circles/presentation/widgets/time_zone_names.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -30,7 +30,7 @@ List<Widget> medicalIdentityFields(
       child: PickerField(
         label: context.tr('circles.birth_date'),
         hint: context.tr('circles.birth_date_hint'),
-        icon: AppIcons.calendar,
+        icon: ScheduleIcons.calendar,
         value: state.birthDate == null
             ? null
             : formatBirthDate(context, state.birthDate!),
@@ -43,7 +43,7 @@ List<Widget> medicalIdentityFields(
     PickerField(
       label: context.tr('circles.city'),
       hint: context.tr('circles.patient_city_hint'),
-      icon: AppIcons.mapPin,
+      icon: ScheduleIcons.mapPin,
       value: state.city,
       onTap: () => pickCity(context, state, cubit),
       errorText: show && state.city == null ? requiredText : null,
@@ -53,7 +53,7 @@ List<Widget> medicalIdentityFields(
       PickerField(
         label: context.tr('circles.time_zone'),
         hint: context.tr('circles.time_zone_sheet_title'),
-        icon: AppIcons.clock,
+        icon: ScheduleIcons.clock,
         value: state.timeZone == null ? null : timeZoneName(state.timeZone!),
         onTap: () => pickTimeZone(context, state, cubit),
         errorText: show && state.zoneMissing ? requiredText : null,

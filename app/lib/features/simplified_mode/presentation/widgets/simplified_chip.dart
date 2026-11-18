@@ -1,6 +1,8 @@
-import 'package:app/core/constants/app_icons.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip_fill.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip_label.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A small grey label («مع الأكل»), or a tappable choice when [onTap] is
 /// set.
@@ -23,13 +25,11 @@ class SimplifiedChip extends StatelessWidget {
     final bool choice = onTap != null;
     // A choice says whether it is the chosen one; a plain label says nothing
     // beyond its text.
-    final Color fill = onDark
-        ? SimplifiedStyle.surface.withValues(alpha: .14)
-        : selected
-        ? SimplifiedStyle.accentTint
-        : choice
-        ? SimplifiedStyle.clear
-        : SimplifiedStyle.chip;
+    final Color fill = simplifiedChipFill(
+      onDark: onDark,
+      selected: selected,
+      choice: choice,
+    );
     // A choice is at least [SimplifiedStyle.touch] high, and grows with a
     // large text.
     final Widget body = Container(
@@ -42,25 +42,10 @@ class SimplifiedChip extends StatelessWidget {
         color: fill,
         borderRadius: BorderRadius.circular(26),
         border: choice
-            ? Border.all(color: SimplifiedStyle.control, width: 1.5)
+            ? Border.all(color: SimplifiedColors.control, width: 1.5)
             : null,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(
-            text,
-            style: SimplifiedStyle.label(
-              SimplifiedStyle.caption,
-              color: onDark ? SimplifiedStyle.surface : SimplifiedStyle.ink,
-            ),
-          ),
-          if (selected) ...<Widget>[
-            const SizedBox(width: 6),
-            const ExcludeSemantics(child: Icon(AppIcons.check, size: 18)),
-          ],
-        ],
-      ),
+      child: SimplifiedChipLabel(text, selected: selected, onDark: onDark),
     );
     if (!choice) return body;
     return Semantics(

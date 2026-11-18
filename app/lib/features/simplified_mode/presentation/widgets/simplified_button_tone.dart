@@ -1,6 +1,6 @@
 import 'package:app/core/theme/components/task_button_role.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The look of a [SimplifiedButton]. The three a task uses borrow the
 /// detailed mode's colours ([TaskButtonRole]), so «أخذته الآن» is the same
@@ -30,22 +30,22 @@ enum SimplifiedButtonTone {
     }
     return switch (this) {
       primary => (
-        SimplifiedStyle.accentStrong,
-        SimplifiedStyle.surface,
+        SimplifiedColors.accentStrong,
+        SimplifiedColors.surface,
         BorderSide.none,
       ),
       secondary => (
-        SimplifiedStyle.surface,
-        SimplifiedStyle.ink,
-        const BorderSide(color: SimplifiedStyle.control, width: 2),
+        SimplifiedColors.surface,
+        SimplifiedColors.ink,
+        const BorderSide(color: SimplifiedColors.control, width: 2),
       ),
       danger => (
-        SimplifiedStyle.danger,
-        SimplifiedStyle.surface,
+        SimplifiedColors.danger,
+        SimplifiedColors.surface,
         BorderSide.none,
       ),
-      dark => (SimplifiedStyle.ink, SimplifiedStyle.surface, BorderSide.none),
-      _ => (SimplifiedStyle.chip, SimplifiedStyle.ink, BorderSide.none),
+      dark => (SimplifiedColors.ink, SimplifiedColors.surface, BorderSide.none),
+      _ => (SimplifiedColors.chip, SimplifiedColors.ink, BorderSide.none),
     };
   }
 }

@@ -14,18 +14,18 @@ Widget medicationAboutGroup(BuildContext context, MedicationVersion version) {
     children: <Widget>[
       if (version.reason case final String reason)
         PlanFact(
-          icon: AppIcons.firstAid,
+          icon: CareIcons.firstAid,
           label: context.tr('medications.reason'),
           value: reason,
         ),
       if (version.instructions case final String instructions)
         PlanFact(
-          icon: AppIcons.info,
+          icon: NoticeIcons.info,
           label: context.tr('medications.instructions'),
           value: instructions,
         ),
       PlanFact(
-        icon: AppIcons.hourglass,
+        icon: PeopleIcons.hourglass,
         label: context.tr('medications.missed_after'),
         value: arabicCount(
           context,

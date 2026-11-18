@@ -19,7 +19,7 @@ class EmergencyCardTop extends StatelessWidget {
         EmergencyBadge(label: words.t('title')),
         const Spacer(),
         Icon(
-          AppIcons.lock,
+          NoticeIcons.lock,
           size: AppSizes.iconSmall,
           color: context.tokens.textSecondary,
         ),

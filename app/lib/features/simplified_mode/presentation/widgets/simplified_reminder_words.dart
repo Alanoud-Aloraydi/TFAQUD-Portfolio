@@ -2,6 +2,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_chi
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_content.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// What the reminder asks, read as one sentence: «حان وقت»، the task's
 /// name, its line, who comes along, and its short notes.
@@ -10,7 +11,7 @@ class SimplifiedReminderWords extends StatelessWidget {
 
   final SimplifiedReminderContent content;
 
-  static const Color _ink = SimplifiedStyle.surface;
+  static const Color _ink = SimplifiedColors.surface;
 
   @override
   Widget build(BuildContext context) => MergeSemantics(

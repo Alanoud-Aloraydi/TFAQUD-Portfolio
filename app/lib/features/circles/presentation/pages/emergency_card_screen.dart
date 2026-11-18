@@ -1,11 +1,9 @@
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_state.dart';
-import 'package:app/features/circles/presentation/widgets/emergency_card_export.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_page.dart';
+import 'package:app/features/circles/presentation/widgets/emergency_card_sharing.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -33,25 +31,9 @@ class EmergencyCardScreen extends StatefulWidget {
   State<EmergencyCardScreen> createState() => _EmergencyCardScreenState();
 }
 
-class _EmergencyCardScreenState extends State<EmergencyCardScreen> {
-  /// The picture of the card for the PDF is taken from here.
-  final GlobalKey _cardKey = GlobalKey();
+class _EmergencyCardScreenState extends State<EmergencyCardScreen>
+    with EmergencyCardSharing<EmergencyCardScreen> {
   bool _english = false;
-  bool _exporting = false;
-
-  Future<void> _export() async {
-    if (_exporting) return;
-    setState(() => _exporting = true);
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    final String failed = context.tr('record_export.failed');
-    final bool shared = await shareEmergencyCardSafely(
-      boundary: _cardKey,
-      title: context.tr('circles.card_title'),
-    );
-    if (!mounted) return;
-    setState(() => _exporting = false);
-    if (!shared) AppToast.showText(messenger, failed, kind: ToastKind.error);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +48,11 @@ class _EmergencyCardScreenState extends State<EmergencyCardScreen> {
               EmergencyCardPage(
                 state: state,
                 closeTo: widget.closeTo,
-                cardKey: _cardKey,
+                cardKey: cardKey,
                 english: _english,
                 onLanguage: (bool english) =>
                     setState(() => _english = english),
-                onExport: _exporting ? null : _export,
+                onExport: exporting ? null : export,
               ),
         ),
       ),

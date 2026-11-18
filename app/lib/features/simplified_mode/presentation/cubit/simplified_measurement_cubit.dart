@@ -2,6 +2,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_draft.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
@@ -49,15 +50,7 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
     final Result<MeasurementReading, Failure> result = await _useCase
         .recordMeasurement(
           _circleId,
-          MeasurementReadingDraft(
-            kind: reading.kind,
-            outcome: 'read',
-            measuredAt: _clock(),
-            valueOne: reading.valueOne,
-            valueTwo: reading.valueTwo,
-            conditions: reading.conditions,
-            otherCondition: reading.note,
-          ),
+          reading.toDraft(_clock()),
           occurrence: state.task,
         );
     if (isClosed) return result.isSuccess();

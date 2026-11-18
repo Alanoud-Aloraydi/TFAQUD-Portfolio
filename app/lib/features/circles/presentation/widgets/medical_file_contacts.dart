@@ -44,7 +44,7 @@ List<Widget> medicalFileContacts(
     Align(
       child: OutlinedButton.icon(
         onPressed: cubit.startAdd,
-        icon: const Icon(AppIcons.plus),
+        icon: const Icon(ActionIcons.plus),
         label: Text(context.tr('circles.contact_add')),
       ),
     ),

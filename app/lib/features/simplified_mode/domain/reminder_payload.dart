@@ -8,7 +8,7 @@ import 'package:equatable/equatable.dart';
 
 /// What a full-screen reminder asks about: the [kind] of task and that
 /// exact task by its key (item_keys.dart): a dose's or a measurement's
-/// [TodayTask.snoozeKey], a visit's [appointmentItemKey].
+/// [TodayTaskSnoozeKey.snoozeKey], a visit's [appointmentItemKey].
 ///
 /// A null [taskKey] (an older reminder that names no task) means the task
 /// of [kind] waiting now: for an appointment, the nearest one still to

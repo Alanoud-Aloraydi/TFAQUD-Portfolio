@@ -1,9 +1,9 @@
 import 'package:app/core/media/private_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/core/theme/app_settings_tile_colors.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 
 /// A medicine's photo, the way the patient recognises it; while it has
 /// none, the medicines' own look ([CareVisuals]): a pill on green.
@@ -28,7 +28,7 @@ class MedicinePhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PrivatePhoto(
-      path: ApiEndpoints.medicationPhoto(circleId, planId),
+      path: MedicationEndpoints.medicationPhoto(circleId, planId),
       height: height,
       width: width,
       radius: radius,
@@ -43,7 +43,7 @@ class MedicinePhoto extends StatelessWidget {
         child: Icon(
           CareVisuals.medicationIcon,
           size: iconSize,
-          color: AppSemanticColors.onSettingsTile,
+          color: AppSettingsTileColors.onTile,
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The frame of a typed measurement: a thick ink border on the field being
 /// filled in and a thin grey one on the other. A [small] frame holds one of
@@ -22,10 +23,10 @@ class SimplifiedMeasureFrame extends StatelessWidget {
       constraints: BoxConstraints(minHeight: small ? 76 : 116),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: SimplifiedStyle.surface,
+        color: SimplifiedColors.surface,
         borderRadius: BorderRadius.circular(SimplifiedStyle.radius),
         border: Border.all(
-          color: active ? SimplifiedStyle.ink : SimplifiedStyle.disabled,
+          color: active ? SimplifiedColors.ink : SimplifiedColors.disabled,
           width: active ? 3 : 2,
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedReminderRoundAnswer extends StatelessWidget {
   const SimplifiedReminderRoundAnswer({
@@ -53,7 +54,10 @@ class SimplifiedReminderRoundAnswer extends StatelessWidget {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: SimplifiedStyle.head(21, color: SimplifiedStyle.surface),
+                style: SimplifiedStyle.head(
+                  21,
+                  color: SimplifiedColors.surface,
+                ),
               ),
             ],
           ),

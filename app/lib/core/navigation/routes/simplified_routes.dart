@@ -1,81 +1,50 @@
-part of '../app_router.dart';
+import 'package:app/core/navigation/routers.dart';
+import 'package:app/core/navigation/routes/loaded_account_cubit.dart';
+import 'package:app/core/navigation/routes/page_builders.dart';
+import 'package:app/core/navigation/routes/simplified_care_routes.dart';
+import 'package:app/core/navigation/routes/simplified_shell_cubits.dart';
+import 'package:app/core/navigation/routes/simplified_task_routes.dart';
+import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_account_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_measure_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_mode_feature_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
 /// The simplified mode's screens share one day ([SimplifiedModeCubit]),
 /// so a reminder, the day's list and the home always agree, and one text
 /// size. The medical file's edit page and the emergency card are the
 /// detailed mode's pages, routed inside this shell so the size holds and
 /// leaving them returns here, never to the detailed mode.
-ShellRoute _simplifiedShell() {
+ShellRoute simplifiedShell() {
   return ShellRoute(
-    pageBuilder: _iosShellPage(
-      (context, state, child) => MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (context) => SimplifiedModeCubit(
-              GetIt.I<SimplifiedModeUseCase>(),
-              photoChanges: GetIt.I<PrivatePhotoRepository>().changes,
-              shownClock: GetIt.I<ShownCircleClock>(),
-            )..load(),
-          ),
-          BlocProvider(
-            create: (context) =>
-                SimplifiedSettingsCubit(GetIt.I<SimplifiedSettingsStore>())
-                  ..load(),
-          ),
-        ],
-        child: SimplifiedTextScale(child: child),
-      ),
+    pageBuilder: iosShellPage(
+      (context, state, child) => simplifiedShellCubits(child: child),
     ),
     routes: <RouteBase>[
       GoRoute(
         path: Routes.simplifiedMode,
-        pageBuilder: _iosPage(
+        pageBuilder: iosPage(
           (context, state) => const SimplifiedModeFeatureScreen(),
         ),
       ),
       GoRoute(
         path: Routes.simplifiedSchedule,
-        pageBuilder: _iosPage(
+        pageBuilder: iosPage(
           (context, state) => const SimplifiedScheduleScreen(),
         ),
       ),
-      GoRoute(
-        path: Routes.simplifiedReminder,
-        redirect: requireExtra<ReminderRequest>(Routes.simplifiedMode),
-        pageBuilder: _iosModalPage(
-          (context, state) => SimplifiedReminderScreen(
-            request: state.extra! as ReminderRequest,
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedSnooze,
-        redirect: requireExtra<TodayTask>(Routes.simplifiedMode),
-        pageBuilder: _iosPage(
-          (context, state) =>
-              SimplifiedSnoozeScreen(task: state.extra! as TodayTask),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedSkip,
-        redirect: requireExtra<TodayTask>(Routes.simplifiedMode),
-        pageBuilder: _iosPage(
-          (context, state) =>
-              SimplifiedSkipScreen(task: state.extra! as TodayTask),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedDone,
-        redirect: requireExtra<SimplifiedDoneMessage>(Routes.simplifiedMode),
-        pageBuilder: _iosPage(
-          (context, state) => SimplifiedDoneScreen(
-            message: state.extra! as SimplifiedDoneMessage,
-          ),
-        ),
-      ),
+      ...simplifiedTaskRoutes(),
       GoRoute(
         path: Routes.simplifiedMeasurePath,
-        pageBuilder: _iosPage(
+        pageBuilder: iosPage(
           (context, state) => BlocProvider(
             create: (context) => SimplifiedMeasurementCubit(
               GetIt.I<SimplifiedModeUseCase>(),
@@ -90,10 +59,10 @@ ShellRoute _simplifiedShell() {
       ),
       GoRoute(
         path: Routes.simplifiedAccount,
-        pageBuilder: _iosPage(
+        pageBuilder: iosPage(
           (context, state) => MultiBlocProvider(
             providers: [
-              BlocProvider(create: (context) => _loadedAccountCubit()),
+              BlocProvider(create: (context) => loadedAccountCubit()),
               BlocProvider(
                 create: (context) => AuthCubit(GetIt.I<AuthUseCase>()),
               ),
@@ -102,49 +71,7 @@ ShellRoute _simplifiedShell() {
           ),
         ),
       ),
-      // The same card as the detailed mode's, but inside this shell and at
-      // this mode's size, like the edit page below it: «رجوع» never lands
-      // in the detailed mode.
-      GoRoute(
-        path: Routes.simplifiedEmergencyCardPath,
-        pageBuilder: _iosPage(
-          (context, state) => SimplifiedDetailScale(
-            child: _emergencyCard(
-              state.pathParameters['circleId']!,
-              Routes.simplifiedMode,
-            ),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.simplifiedMedicalFilePath,
-        pageBuilder: _iosPage((context, state) {
-          final String circleId = state.pathParameters['circleId']!;
-          return BlocProvider(
-            create: (context) =>
-                MedicalFileCubit(GetIt.I<CirclesUseCase>(), circleId)..load(),
-            child: SimplifiedMedicalFileScreen(circleId: circleId),
-          );
-        }),
-      ),
-      // The detailed mode's edit page inside this shell, at this mode's
-      // size: «حفظ» and «رجوع» return to the simplified medical file.
-      GoRoute(
-        path: Routes.simplifiedMedicalFileEditPath,
-        pageBuilder: _iosPage(
-          (context, state) => _medicalFileEdit(
-            state,
-            SimplifiedDetailScale(
-              child: MedicalFileEditScreen(
-                savedTo: null,
-                closeTo: Routes.simplifiedMedicalFile(
-                  state.pathParameters['circleId']!,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+      ...simplifiedCareRoutes(),
     ],
   );
 }

@@ -1,15 +1,10 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/theme/materials/glass_style.dart';
-import 'package:app/core/widgets/navigation/glass_icon_button.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/features/shell/widgets/top_bar_account_button.dart';
+import 'package:app/features/shell/widgets/top_bar_notifications_button.dart';
+import 'package:app/features/shell/widgets/top_bar_scroll_edge.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// Top bar of the shell (design system TopBar): the account button at the
 /// start, the circle switcher in the middle and the notifications button at
@@ -51,27 +46,16 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       // No bar behind the controls: content scrolls under them, fading out
       // (a soft scroll edge effect) so the controls stay readable.
       backgroundColor: AppSemanticColors.transparent,
-      flexibleSpace: const IgnorePointer(child: _ScrollEdge()),
+      flexibleSpace: const IgnorePointer(child: TopBarScrollEdge()),
       toolbarHeight: kToolbarHeight + AppSpacing.sm,
       leadingWidth: AppSizes.avatarPortrait + AppSpacing.lg,
       leading: Padding(
         padding: const EdgeInsetsDirectional.only(start: AppSpacing.lg),
         child: Center(
-          child: GlassIconButton(
-            size: AppSizes.avatarPortrait,
-            tooltip: context.tr('topbar.account'),
-            icon: displayName == null
-                ? const Icon(AppIcons.user)
-                : PersonPhoto(
-                    name: displayName!,
-                    photoPath: ApiEndpoints.accountPhoto,
-                    avatarCode: avatarCode,
-                    size: AppSizes.avatarPortrait,
-                  ),
-            onPressed: () async {
-              await context.push<void>(Routes.account);
-              if (context.mounted) onPhotoSaved?.call();
-            },
+          child: TopBarAccountButton(
+            displayName: displayName,
+            avatarCode: avatarCode,
+            onPhotoSaved: onPhotoSaved,
           ),
         ),
       ),
@@ -79,41 +63,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: AppSpacing.sm,
       title: circles,
       actions: <Widget>[
-        GlassIconButton(
-          // The tooltip is also what a screen reader says, so it carries the
-          // count: the dot alone would be a colour and nothing else.
-          tooltip: needsReply > 0
-              ? context.tr(
-                  'topbar.notifications_new',
-                  args: <String>['$needsReply'],
-                )
-              : context.tr('topbar.notifications'),
-          // The badge is an ink capsule with the count in white (14.99:1);
-          // it never uses the error red.
-          icon: needsReply > 0
-              ? Badge(
-                  label: Text('$needsReply'),
-                  backgroundColor: AppSemanticColors.textPrimary,
-                  textColor: AppSemanticColors.surfaceContent,
-                  child: const Icon(AppIcons.bell),
-                )
-              : const Icon(AppIcons.bell),
+        TopBarNotificationsButton(
+          needsReply: needsReply,
           onPressed: onNotifications,
         ),
         const SizedBox(width: AppSpacing.lg),
       ],
-    );
-  }
-}
-
-/// Soft scroll edge effect: the canvas fades in behind the top controls.
-class _ScrollEdge extends StatelessWidget {
-  const _ScrollEdge();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(gradient: AppGlass.scrollEdge),
     );
   }
 }

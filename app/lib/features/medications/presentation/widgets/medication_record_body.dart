@@ -34,7 +34,7 @@ List<Widget> medicationRecordBody(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text(context.tr('medications.full_record'), style: text.labelMedium),
-        const Icon(AppIcons.forward, size: AppSizes.iconSmall),
+        const Icon(ArrowIcons.forward, size: AppSizes.iconSmall),
       ],
     ),
   ];

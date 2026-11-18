@@ -1,13 +1,13 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_delete_body.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The first question of deleting, asked as a big sheet.
 Future<bool?> confirmSimplifiedDelete(BuildContext context) {
   return showModalBottomSheet<bool>(
     context: context,
     useRootNavigator: true,
-    backgroundColor: SimplifiedStyle.surface,
+    backgroundColor: SimplifiedColors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),

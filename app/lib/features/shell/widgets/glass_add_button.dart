@@ -40,7 +40,7 @@ class GlassAddButton extends StatelessWidget {
                 onTap: onPressed,
                 child: Center(
                   child: Icon(
-                    AppIcons.plus,
+                    ActionIcons.plus,
                     size: AppSizes.iconAction,
                     color: enabled
                         ? AppSemanticColors.textPrimary

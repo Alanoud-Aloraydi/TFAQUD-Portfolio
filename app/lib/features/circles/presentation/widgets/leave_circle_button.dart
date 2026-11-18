@@ -32,7 +32,7 @@ class LeaveCircleButton extends StatelessWidget {
         foregroundColor: AppSemanticColors.statusError,
         minimumSize: const Size.fromHeight(AppSizes.button),
       ),
-      icon: const Icon(AppIcons.signOut, size: AppSizes.iconSmall),
+      icon: const Icon(ActionIcons.signOut, size: AppSizes.iconSmall),
       label: Text(context.tr('circle_overview.leave')),
     );
   }

@@ -4,6 +4,7 @@ import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:app/core/theme/app_intro_colors.dart';
 
 /// The dots of the pages: the page on show is a longer ink bar. VoiceOver
 /// reads «الخطوة 1 من 3».
@@ -41,7 +42,7 @@ class AuthDots extends StatelessWidget {
               decoration: ShapeDecoration(
                 color: i == current
                     ? AppSemanticColors.textPrimary
-                    : AppSemanticColors.introDotIdle,
+                    : AppIntroColors.dotIdle,
                 shape: const StadiumBorder(),
               ),
             ),

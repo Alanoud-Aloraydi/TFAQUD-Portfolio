@@ -1,7 +1,7 @@
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:injectable/injectable.dart';
+import 'package:app/core/network/account_endpoints.dart';
 
 /// Data layer contract for the signed-in person's profile on the server.
 ///
@@ -38,7 +38,7 @@ class ProfileRemoteDataSource implements BaseProfileRemoteDataSource {
     String? city,
   }) async {
     await _client.put(
-      ApiEndpoints.profile,
+      AccountEndpoints.profile,
       data: <String, String>{
         'first_name': firstName,
         'last_name': lastName,

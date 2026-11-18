@@ -5,6 +5,7 @@ import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_day_props.dart';
 import 'package:equatable/equatable.dart';
 
 /// Everything the simplified mode shows for the patient's circle, as read
@@ -76,21 +77,5 @@ class SimplifiedDay extends Equatable {
   final double? longitude;
 
   @override
-  List<Object?> get props => [
-    circleId,
-    circleName,
-    accountId,
-    isPatient,
-    displayName,
-    avatarCode,
-    timeZone,
-    doses,
-    measurements,
-    appointments,
-    family,
-    reasons,
-    prayers,
-    latitude,
-    longitude,
-  ];
+  List<Object?> get props => simplifiedDayProps(this);
 }

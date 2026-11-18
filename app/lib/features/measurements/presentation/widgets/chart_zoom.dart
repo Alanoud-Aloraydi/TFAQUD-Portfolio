@@ -37,6 +37,10 @@ class ChartZoom extends Equatable {
     );
   }
 
+  /// [times] as wide, around the middle of a plot [plot] wide at zoom 1.
+  ChartZoom zoomedBy(double times, double plot) =>
+      moved(from: plot / 2, at: plot / 2, to: zoom * times, width: plot);
+
   @override
   List<Object?> get props => <Object?>[zoom, shift];
 }

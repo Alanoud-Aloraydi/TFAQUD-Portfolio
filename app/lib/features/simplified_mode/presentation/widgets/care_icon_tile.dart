@@ -1,6 +1,6 @@
-import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:flutter/material.dart';
+import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// The detailed mode's settings icon square (SettingsIconTile), in this
 /// mode's size: a kind's icon on its colour ([CareVisuals]). Decorative:
@@ -28,11 +28,7 @@ class CareIconTile extends StatelessWidget {
           // A quarter of the side, as iOS Settings' squares.
           borderRadius: BorderRadius.circular(size / 4),
         ),
-        child: Icon(
-          icon,
-          size: size / 2,
-          color: AppSemanticColors.onSettingsTile,
-        ),
+        child: Icon(icon, size: size / 2, color: AppSettingsTileColors.onTile),
       ),
     );
   }

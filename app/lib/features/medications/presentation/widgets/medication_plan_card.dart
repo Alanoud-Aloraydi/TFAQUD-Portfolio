@@ -6,6 +6,7 @@ import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_plan_status.dart';
 import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
 import 'package:app/features/medications/presentation/widgets/medication_edit_button.dart';
+import 'package:app/features/medications/presentation/widgets/medication_form_text.dart';
 import 'package:app/features/medications/presentation/widgets/medication_leading.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card_body.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_details.dart';
@@ -39,10 +40,7 @@ class MedicationPlanCard extends StatelessWidget {
         strengthValue: version.strengthValue,
         strengthUnit: version.strengthUnit,
       ),
-      subtitle: Text(
-        context.tr('medications.form.${version.dosageForm.name}'),
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
+      subtitle: MedicationFormText(version.dosageForm),
       edit: medicationEditButton(
         context,
         circleId: circleId,

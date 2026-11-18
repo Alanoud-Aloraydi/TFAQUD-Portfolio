@@ -1,6 +1,4 @@
-import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/empty_state_note_content.dart';
 import 'package:flutter/material.dart';
 
 /// A "nothing here yet" note, with an optional action such as opening the
@@ -38,35 +36,11 @@ class EmptyStateNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget note = Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.inset),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            // A whole empty tab has nothing else to read, so it speaks up;
-            // a note under a list stays quiet.
-            style:
-                (_fillsSection
-                        ? Theme.of(context).textTheme.bodyLarge
-                        : Theme.of(context).textTheme.bodySmall)
-                    ?.copyWith(color: context.tokens.textSecondary),
-          ),
-        ),
-        if (actionLabel != null && onAction != null)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            // Filled, not a bare text link: a clear, tappable button.
-            child: FilledButton.tonalIcon(
-              onPressed: onAction,
-              icon: const Icon(AppIcons.plus, size: 18),
-              label: Text(actionLabel!),
-            ),
-          ),
-      ],
+    final Widget note = EmptyStateNoteContent(
+      message: message,
+      fillsSection: _fillsSection,
+      actionLabel: actionLabel,
+      onAction: onAction,
     );
     if (!_fillsSection) {
       // Full width even inside a start-aligned column, only as tall as the

@@ -1,6 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
@@ -9,6 +8,7 @@ import 'package:app/features/appointments/presentation/cubit/appointment_compani
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/core/network/circle_endpoints.dart';
 
 /// «المرافقون»: a chip for each member who can go, checked when [chosen];
 /// a tap toggles one ([onToggle]), and going is optional.
@@ -46,7 +46,7 @@ class AppointmentCompanionChips extends StatelessWidget {
                 FilterChip(
                   avatar: PersonPhoto(
                     name: item.name,
-                    photoPath: ApiEndpoints.memberPhoto(circleId, item.id),
+                    photoPath: CircleEndpoints.memberPhoto(circleId, item.id),
                     avatarCode: item.avatarCode,
                     size: 20,
                   ),
@@ -56,7 +56,7 @@ class AppointmentCompanionChips extends StatelessWidget {
                       Text(item.name),
                       if (chosen.contains(item.id)) ...<Widget>[
                         const SizedBox(width: AppSpacing.xs),
-                        const Icon(AppIcons.check, size: 16),
+                        const Icon(ActionIcons.check, size: 16),
                       ],
                     ],
                   ),

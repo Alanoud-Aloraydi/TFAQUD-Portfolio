@@ -39,7 +39,7 @@ class InsetChoiceButton extends StatelessWidget {
           children: <Widget>[
             Text(label),
             const SizedBox(width: AppSpacing.xs),
-            const Icon(AppIcons.caretUpDown, size: AppSizes.iconSmall),
+            const Icon(ArrowIcons.caretUpDown, size: AppSizes.iconSmall),
           ],
         ),
       ),

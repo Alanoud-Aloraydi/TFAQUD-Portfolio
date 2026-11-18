@@ -1,5 +1,5 @@
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A full dark screen of this mode, in one colour: [child] at the top,
 /// [actions] at the bottom when there is room, and the whole of it
@@ -18,7 +18,7 @@ class SimplifiedDarkPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: SimplifiedStyle.reminderGround,
+    backgroundColor: SimplifiedColors.reminderGround,
     body: SafeArea(
       child: LayoutBuilder(
         builder: (context, box) => SingleChildScrollView(

@@ -1,7 +1,7 @@
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/task_thumb.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A task's small picture with where it stands on its corner: ✓ done,
 /// ● next, ! its time came, ○ later. Decorative: the row's words say it.
@@ -17,10 +17,10 @@ class SimplifiedTaskMark extends StatelessWidget {
 
   /// The colour of the status words beside the mark.
   static Color ink(TodayTaskStatus status) => switch (status) {
-    TodayTaskStatus.done => SimplifiedStyle.success,
-    TodayTaskStatus.next => SimplifiedStyle.ink,
-    TodayTaskStatus.late => SimplifiedStyle.attentionInk,
-    TodayTaskStatus.later => SimplifiedStyle.muted,
+    TodayTaskStatus.done => SimplifiedColors.success,
+    TodayTaskStatus.next => SimplifiedColors.ink,
+    TodayTaskStatus.late => SimplifiedColors.attentionInk,
+    TodayTaskStatus.later => SimplifiedColors.muted,
   };
 
   @override
@@ -44,15 +44,15 @@ class SimplifiedTaskMark extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: task.status == TodayTaskStatus.later
-                  ? SimplifiedStyle.control
+                  ? SimplifiedColors.control
                   : ink(task.status),
               shape: BoxShape.circle,
-              border: Border.all(color: SimplifiedStyle.surface, width: 3),
+              border: Border.all(color: SimplifiedColors.surface, width: 3),
             ),
             child: Text(
               glyph,
               style: const TextStyle(
-                color: SimplifiedStyle.surface,
+                color: SimplifiedColors.surface,
                 fontSize: 13,
                 height: 1,
               ),

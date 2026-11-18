@@ -53,7 +53,7 @@ List<Widget> homeAddQuickActionRow(
     ),
     const SizedBox(width: AppSpacing.sm),
     const Icon(
-      AppIcons.forward,
+      ArrowIcons.forward,
       size: AppSizes.iconSmall,
       color: AppSemanticColors.borderSubtle,
     ),

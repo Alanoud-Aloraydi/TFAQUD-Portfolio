@@ -2,10 +2,10 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_square.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedSquares extends StatelessWidget {
   const SimplifiedSquares({super.key, required this.circleId});
@@ -31,8 +31,8 @@ class SimplifiedSquares extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: SimplifiedSquare(
-              icon: AppIcons.firstAid,
-              iconColor: SimplifiedStyle.danger,
+              icon: CareIcons.firstAid,
+              iconColor: SimplifiedColors.danger,
               title: context.tr('simplified_mode.emergency'),
               subtitle: context.tr('simplified_mode.emergency_sub'),
               onTap: () =>

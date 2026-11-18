@@ -6,7 +6,9 @@ mixin _MedicalRequests implements CircleMedicalApi {
 
   @override
   Future<MedicalFile> getMedicalFile(String circleId) async {
-    final response = await _client.get(ApiEndpoints.medicalProfile(circleId));
+    final response = await _client.get(
+      CircleEndpoints.medicalProfile(circleId),
+    );
     return MedicalFileModel.fromJson(response.data as Map<String, dynamic>)
         .toEntity();
   }
@@ -17,7 +19,7 @@ mixin _MedicalRequests implements CircleMedicalApi {
     MedicalProfileDraft profile,
   ) async {
     final response = await _client.patch(
-      ApiEndpoints.medicalProfile(circleId),
+      CircleEndpoints.medicalProfile(circleId),
       data: MedicalProfileJson.toPatchJson(profile),
     );
     return MedicalProfileAnswerModel.fromJson(
@@ -28,7 +30,7 @@ mixin _MedicalRequests implements CircleMedicalApi {
   @override
   Future<void> updatePatient(String circleId, PatientUpdate update) async {
     await _client.put(
-      ApiEndpoints.circlePatient(circleId),
+      CircleEndpoints.circlePatient(circleId),
       data: PatientUpdateModel(update).toJson(),
     );
   }
@@ -39,7 +41,7 @@ mixin _MedicalRequests implements CircleMedicalApi {
     ContactDraft draft,
   ) async {
     final response = await _client.post(
-      ApiEndpoints.emergencyContacts(circleId),
+      CircleEndpoints.emergencyContacts(circleId),
       data: EmergencyContactModel.draftToJson(draft),
     );
     return EmergencyContactModel.fromAnswer(
@@ -54,7 +56,7 @@ mixin _MedicalRequests implements CircleMedicalApi {
     ContactDraft draft,
   ) async {
     final response = await _client.put(
-      ApiEndpoints.emergencyContact(circleId, contactId),
+      CircleEndpoints.emergencyContact(circleId, contactId),
       data: EmergencyContactModel.draftToJson(draft),
     );
     return EmergencyContactModel.fromAnswer(
@@ -64,12 +66,12 @@ mixin _MedicalRequests implements CircleMedicalApi {
 
   @override
   Future<void> deleteContact(String circleId, String contactId) async {
-    await _client.delete(ApiEndpoints.emergencyContact(circleId, contactId));
+    await _client.delete(CircleEndpoints.emergencyContact(circleId, contactId));
   }
 
   @override
   Future<EmergencyCard> getEmergencyCard(String circleId) async {
-    final response = await _client.get(ApiEndpoints.emergencyCard(circleId));
+    final response = await _client.get(CircleEndpoints.emergencyCard(circleId));
     return EmergencyCardModel.fromJson(response.data as Map<String, dynamic>)
         .toEntity();
   }

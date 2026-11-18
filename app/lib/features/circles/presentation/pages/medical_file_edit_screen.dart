@@ -1,12 +1,8 @@
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
-import 'package:app/features/circles/presentation/widgets/medical_file_edit_skeleton.dart';
-import 'package:app/features/circles/presentation/widgets/medical_file_edit_form.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_edit_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -52,65 +48,15 @@ class MedicalFileEditScreen extends StatelessWidget {
             ) => after.sessionEnded && !before.sessionEnded,
             listener: (BuildContext context, MedicalFileEditState state) =>
                 context.go(Routes.auth),
-            builder: (BuildContext context, MedicalFileEditState state) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  StepHeader(
-                    title: context.tr('circles.file_edit_title'),
-                    onBack: context.canPop()
-                        ? () => context.pop()
-                        : () => context.go(fileRoute),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Expanded(
-                    // Loading, error and content fade into each other.
-                    child: ContentSwitcher(
-                      stateKey: state.status,
-                      child: _body(context, cubit, state, fileRoute),
-                    ),
-                  ),
-                ],
-              );
-            },
+            builder: (BuildContext context, MedicalFileEditState state) =>
+                MedicalFileEditPage(
+                  state: state,
+                  savedTo: savedTo,
+                  fileRoute: fileRoute,
+                ),
           ),
         ),
       ),
     );
-  }
-
-  Widget _body(
-    BuildContext context,
-    MedicalFileEditCubit cubit,
-    MedicalFileEditState state,
-    String fileRoute,
-  ) {
-    switch (state.status) {
-      case MedicalFileEditStatus.loading:
-        return const MedicalFileEditSkeleton();
-      case MedicalFileEditStatus.failure:
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                context.tr(state.messageKey ?? 'error.unknown'),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                onPressed: cubit.load,
-                child: Text(context.tr('auth.retry')),
-              ),
-            ],
-          ),
-        );
-      case MedicalFileEditStatus.ready:
-        return MedicalFileEditForm(
-          state: state,
-          savedTo: savedTo,
-          fileRoute: fileRoute,
-        );
-    }
   }
 }

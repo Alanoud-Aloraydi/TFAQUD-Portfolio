@@ -1,6 +1,6 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/layout/care_item_line.dart';
 import 'package:flutter/material.dart';
 
 /// The top line of a [CareItemRow]: time, kind icon, the text column and the
@@ -48,54 +48,15 @@ class CareItemHeader extends StatelessWidget {
       ),
     );
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints box) =>
-          _line(context, text, scaler, stacked, box.maxWidth),
-    );
-  }
-
-  Widget _line(
-    BuildContext context,
-    Widget text,
-    TextScaler scaler,
-    bool stacked,
-    double width,
-  ) {
-    return MergeSemantics(
-      child: Semantics(
-        button: onTap != null,
-        label: spoken(spokenLabel),
-        excludeSemantics: spokenLabel != null,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: AppItemCard.touch),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(
-                  width: scaler.scale(AppItemCard.timeColumn),
-                  child: Text(
-                    time,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ),
-                const SizedBox(width: AppItemCard.gap),
-                leading,
-                const SizedBox(width: AppItemCard.gap),
-                text,
-                if (!stacked) ...<Widget>[
-                  const SizedBox(width: AppItemCard.gap),
-                  // A long badge wraps inside its share of the line rather
-                  // than squeezing the name into a column of letters.
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: width * _statusShare),
-                    child: status,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
+      builder: (BuildContext context, BoxConstraints box) => CareItemLine(
+        time: time,
+        leading: leading,
+        text: text,
+        status: status,
+        stacked: stacked,
+        statusMaxWidth: box.maxWidth * _statusShare,
+        onTap: onTap,
+        spokenLabel: spokenLabel,
       ),
     );
   }

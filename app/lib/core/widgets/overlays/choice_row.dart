@@ -28,7 +28,7 @@ class ChoiceRow extends StatelessWidget {
     selected: selected,
     title: Text(label),
     trailing: selected
-        ? const Icon(AppIcons.check, color: AppSemanticColors.textPrimary)
+        ? const Icon(ActionIcons.check, color: AppSemanticColors.textPrimary)
         : null,
   );
 }

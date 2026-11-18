@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
@@ -10,6 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/navigation/care_item_routes.dart';
 
 /// «حضرت»: marks the visit attended, then opens its «ورقة الزيارة» to
 /// fill in; «السجل» can change it later. Who may press it, and the two
@@ -43,7 +43,7 @@ class AppointmentAttendButton extends StatelessWidget {
       return AppToast.show(context, errorKey, kind: ToastKind.error);
     }
     AppToast.show(context, 'toast.appointment_completed');
-    final String visit = Routes.appointmentVisit(circleId, value.id);
+    final String visit = CareItemRoutes.appointmentVisit(circleId, value.id);
     unawaited(context.push<void>('$visit?fill=1', extra: true));
   }
 }

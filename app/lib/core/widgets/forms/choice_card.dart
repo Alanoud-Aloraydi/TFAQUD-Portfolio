@@ -2,6 +2,7 @@ import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/forms/choice_radio_mark.dart';
 import 'package:flutter/material.dart';
 
 /// One option of a single-choice question (who the circle is for, the mode
@@ -74,48 +75,12 @@ class ChoiceCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                _RadioMark(selected: selected),
+                ChoiceRadioMark(selected: selected),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-/// The radio mark at the end of a [ChoiceCard]: a ring, filled when
-/// selected.
-class _RadioMark extends StatelessWidget {
-  const _RadioMark({required this.selected});
-
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: selected
-              ? AppSemanticColors.textPrimary
-              : AppSemanticColors.borderControlBase,
-          width: AppSizes.borderEmphasis,
-        ),
-      ),
-      child: selected
-          ? Container(
-              width: 12,
-              height: 12,
-              decoration: const BoxDecoration(
-                color: AppSemanticColors.textPrimary,
-                shape: BoxShape.circle,
-              ),
-            )
-          : null,
     );
   }
 }

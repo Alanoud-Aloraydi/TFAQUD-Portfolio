@@ -6,13 +6,13 @@ mixin _AccountRequests implements CircleAccountApi {
 
   @override
   Future<AccountModel> getAccount() async {
-    final response = await _client.get(ApiEndpoints.account);
+    final response = await _client.get(AccountEndpoints.account);
     return AccountModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
   Future<CircleOverviewModel> getCircleOverview(String circleId) async {
-    final response = await _client.get(ApiEndpoints.circle(circleId));
+    final response = await _client.get(CircleEndpoints.circle(circleId));
     return CircleOverviewModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -29,7 +29,7 @@ mixin _AccountRequests implements CircleAccountApi {
     };
     // An account with no circles sends no body.
     await _client.delete(
-      ApiEndpoints.account,
+      AccountEndpoints.account,
       data: body.isEmpty ? null : body,
     );
   }

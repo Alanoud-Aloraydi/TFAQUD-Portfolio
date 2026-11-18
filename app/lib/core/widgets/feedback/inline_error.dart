@@ -22,7 +22,7 @@ class InlineError extends StatelessWidget {
         children: <Widget>[
           // The icon is as tall as the text's 20 line, so it sits on it.
           const Icon(
-            AppIcons.warningCircle,
+            NoticeIcons.warningCircle,
             size: AppSizes.iconSmall,
             color: AppSemanticColors.statusError,
           ),

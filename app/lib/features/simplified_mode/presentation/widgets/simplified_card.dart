@@ -1,5 +1,6 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A white rounded card with a light edge.
 class SimplifiedCard extends StatelessWidget {
@@ -7,8 +8,8 @@ class SimplifiedCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(SimplifiedStyle.pad),
-    this.color = SimplifiedStyle.surface,
-    this.side = const BorderSide(color: SimplifiedStyle.line),
+    this.color = SimplifiedColors.surface,
+    this.side = const BorderSide(color: SimplifiedColors.line),
     this.onTap,
   });
 

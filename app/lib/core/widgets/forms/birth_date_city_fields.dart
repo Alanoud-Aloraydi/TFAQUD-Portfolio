@@ -60,7 +60,7 @@ class BirthDateCityFields extends StatelessWidget {
           child: PickerField(
             label: context.tr('circles.birth_date'),
             hint: context.tr('circles.birth_date_hint'),
-            icon: AppIcons.calendar,
+            icon: ScheduleIcons.calendar,
             value: date == null ? null : formatBirthDate(context, date),
             onTap: () => _pickBirthDate(context),
             errorText:
@@ -72,7 +72,7 @@ class BirthDateCityFields extends StatelessWidget {
         PickerField(
           label: context.tr('circles.city'),
           hint: context.tr('circles.city_hint'),
-          icon: AppIcons.mapPin,
+          icon: ScheduleIcons.mapPin,
           value: city,
           onTap: () => _pickCity(context),
           errorText: showErrors && city == null ? requiredText : null,

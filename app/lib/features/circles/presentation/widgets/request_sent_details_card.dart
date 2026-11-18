@@ -53,7 +53,7 @@ class RequestSentDetailsCard extends StatelessWidget {
         RequestSentDetailRow(
           label: context.tr('circles.request_status'),
           child: StatusBadge(
-            icon: accepted ? AppIcons.check : AppIcons.clock,
+            icon: accepted ? ActionIcons.check : ScheduleIcons.clock,
             text: context.tr(
               accepted
                   ? 'circles.request_status_accepted'

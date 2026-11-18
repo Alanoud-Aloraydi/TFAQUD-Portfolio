@@ -32,7 +32,7 @@ class PatientBirthField extends StatelessWidget {
       child: PickerField(
         label: context.tr('circles.birth_date'),
         hint: context.tr('circles.birth_date_hint'),
-        icon: AppIcons.calendar,
+        icon: ScheduleIcons.calendar,
         value: date == null ? null : formatBirthDate(context, date),
         onTap: () => pickPatientBirthDate(context, cubit, date),
         errorText:

@@ -50,52 +50,14 @@ class Routes {
 
   // Inside a circle: its medical file (read, then edit) and its emergency
   // card. The id of the circle is part of the address, so the pages work after
-  // a reload in the browser. The `...Path` constants are the patterns of the
-  // router; the functions build the address of one circle.
-  static const String medicalFilePath = '/circle/:circleId/medical-file';
-  static const String medicalFileEditPath =
-      '/circle/:circleId/medical-file/edit';
-  static const String emergencyCardPath = '/circle/:circleId/emergency-card';
-
+  // a reload in the browser. The patterns of the router are in
+  // `MedicalFilePaths`; the functions build the address of one circle.
   static String medicalFile(String circleId) =>
       '/circle/$circleId/medical-file';
   static String medicalFileEdit(String circleId) =>
       '/circle/$circleId/medical-file/edit';
   static String emergencyCard(String circleId) =>
       '/circle/$circleId/emergency-card';
-
-  static const String medicationNewPath = '/circles/:circleId/medications/new';
-  static const String medicationDetailsPath =
-      '/circles/:circleId/medications/:planId';
-  static const String medicationEditPath =
-      '/circles/:circleId/medications/:planId/edit';
-
-  static String newMedication(String circleId) =>
-      '/circles/$circleId/medications/new';
-  static String medicationDetails(String circleId, String planId) =>
-      '/circles/$circleId/medications/$planId';
-  static String editMedication(String circleId, String planId) =>
-      '/circles/$circleId/medications/$planId/edit';
-  static const String measurementNewPath =
-      '/circles/:circleId/measurements/new';
-  static const String measurementEditPath =
-      '/circles/:circleId/measurements/:planId/edit';
-  static String newMeasurement(String circleId) =>
-      '/circles/$circleId/measurements/new';
-  static String editMeasurement(String circleId, String planId) =>
-      '/circles/$circleId/measurements/$planId/edit';
-  static const String appointmentNewPath =
-      '/circles/:circleId/appointments/new';
-  static const String appointmentEditPath =
-      '/circles/:circleId/appointments/:appointmentId/edit';
-  static String newAppointment(String circleId) =>
-      '/circles/$circleId/appointments/new';
-  static String editAppointment(String circleId, String appointmentId) =>
-      '/circles/$circleId/appointments/$appointmentId/edit';
-  static const String appointmentVisitPath =
-      '/circles/:circleId/appointments/:appointmentId/visit';
-  static String appointmentVisit(String circleId, String appointmentId) =>
-      '/circles/$circleId/appointments/$appointmentId/visit';
 
   // The simplified mode: one home and the screens it opens. The task a
   // reminder or the done screen is about travels as the navigation's
@@ -109,12 +71,6 @@ class Routes {
   static const String simplifiedAccount = '/simplifiedMode/account';
   static const String simplifiedMeasurePath =
       '/simplifiedMode/:circleId/measure';
-  static const String simplifiedMedicalFilePath =
-      '/simplifiedMode/:circleId/medical-file';
-  static const String simplifiedMedicalFileEditPath =
-      '/simplifiedMode/:circleId/medical-file/edit';
-  static const String simplifiedEmergencyCardPath =
-      '/simplifiedMode/:circleId/emergency-card';
 
   static String simplifiedMeasure(String circleId) =>
       '/simplifiedMode/$circleId/measure';

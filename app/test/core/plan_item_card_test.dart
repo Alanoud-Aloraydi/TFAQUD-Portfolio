@@ -95,7 +95,11 @@ void main() {
         body: PlanFactGroup(
           title: 'الأشخاص',
           children: <Widget>[
-            PlanFact(icon: AppIcons.clock, label: 'الوقت', value: '9:00 ص'),
+            PlanFact(
+              icon: ScheduleIcons.clock,
+              label: 'الوقت',
+              value: '9:00 ص',
+            ),
             PlanPersonFact(
               label: 'أضافه',
               name: 'سارة',

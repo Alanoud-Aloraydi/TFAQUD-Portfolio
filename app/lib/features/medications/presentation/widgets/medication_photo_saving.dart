@@ -1,9 +1,9 @@
 import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/features/medications/presentation/widgets/medication_form_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 
 /// Saving the medicine's photo, once the plan it belongs to has an id. The
 /// form closes on «تم» whether a photo was picked or not; only a photo that
@@ -11,7 +11,7 @@ import 'package:go_router/go_router.dart';
 extension MedicationPhotoSaving on MedicationFormState {
   Future<void> savePhoto(String planId) async {
     final repository = RepositoryProvider.of<PrivatePhotoRepository>(context);
-    final path = ApiEndpoints.medicationPhoto(widget.circleId, planId);
+    final path = MedicationEndpoints.medicationPhoto(widget.circleId, planId);
     try {
       if (photoDirty) {
         if (photoRemoved) {

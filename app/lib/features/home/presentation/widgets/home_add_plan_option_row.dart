@@ -48,7 +48,7 @@ List<Widget> homeAddPlanOptionRow(
     ),
     const SizedBox(width: AppSpacing.sm),
     const Icon(
-      AppIcons.forward,
+      ArrowIcons.forward,
       size: AppSizes.iconSmall,
       color: AppSemanticColors.borderControlBase,
     ),

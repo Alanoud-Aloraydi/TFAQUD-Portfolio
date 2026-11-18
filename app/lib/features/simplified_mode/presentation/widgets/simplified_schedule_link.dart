@@ -3,29 +3,21 @@ import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_link_lines.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedScheduleLink extends StatelessWidget {
   const SimplifiedScheduleLink({super.key, required this.schedule});
 
   final TodaySchedule schedule;
 
-  /// What the card says: its title, then how the day stands.
-  static List<String> lines(BuildContext context, TodaySchedule schedule) =>
-      <String>[
-        context.tr('simplified_mode.schedule_title'),
-        context.tr(
-          'simplified_mode.schedule_summary',
-          args: <String>['${schedule.doneCount}', '${schedule.total}'],
-        ),
-      ];
-
   @override
   Widget build(BuildContext context) {
-    final List<String> texts = lines(context, schedule);
+    final List<String> texts = simplifiedScheduleLinkLines(context, schedule);
     return Semantics(
       button: true,
       label: spoken(
@@ -64,7 +56,7 @@ class SimplifiedScheduleLink extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(AppIcons.next, size: 28, color: SimplifiedStyle.ink),
+          const Icon(ArrowIcons.next, size: 28, color: SimplifiedColors.ink),
         ],
       ),
     );

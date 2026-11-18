@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/network/api_endpoints.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_target.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 
 /// «صورة الدواء» in the form: the photo saved for the medicine, the one
 /// just picked, or the dashed frame that asks for one.
@@ -30,7 +30,7 @@ class MedicationPhotoField extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = planId == null
         ? null
-        : ApiEndpoints.medicationPhoto(circleId, planId!);
+        : MedicationEndpoints.medicationPhoto(circleId, planId!);
     final repository = RepositoryProvider.of<PrivatePhotoRepository>(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

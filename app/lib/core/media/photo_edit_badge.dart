@@ -25,7 +25,7 @@ class PhotoEditBadge extends StatelessWidget {
         ),
         child: Padding(
           padding: EdgeInsets.all(AppSpacing.xs),
-          child: Icon(AppIcons.pencil, size: 16),
+          child: Icon(ActionIcons.pencil, size: 16),
         ),
       ),
     );

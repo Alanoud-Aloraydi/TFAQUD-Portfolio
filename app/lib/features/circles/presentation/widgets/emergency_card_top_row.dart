@@ -32,7 +32,7 @@ class EmergencyCardTopRow extends StatelessWidget {
         if (canExport)
           TextButton.icon(
             onPressed: onExport,
-            icon: const Icon(AppIcons.export, size: AppSizes.iconSmall),
+            icon: const Icon(NoticeIcons.export, size: AppSizes.iconSmall),
             label: Text(context.tr('emergency_card.export')),
           ),
       ],

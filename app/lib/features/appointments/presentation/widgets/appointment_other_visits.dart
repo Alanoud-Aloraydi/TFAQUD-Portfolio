@@ -27,7 +27,7 @@ Widget? appointmentOtherVisits(
     children: <Widget>[
       for (final CareAppointment visit in others)
         PlanFact(
-          icon: AppIcons.calendar,
+          icon: ScheduleIcons.calendar,
           label: switch (AppointmentSeries.of(visit, all)) {
             final AppointmentSeries at => context.tr(
               'appointments.visit_of_series',
