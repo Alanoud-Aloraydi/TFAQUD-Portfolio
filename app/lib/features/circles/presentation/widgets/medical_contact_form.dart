@@ -23,6 +23,7 @@ Widget medicalContactForm(
     props: ContactFormProps(
       form: form,
       onRelation: cubit.relationChosen,
+      onRelationOther: cubit.relationOtherChanged,
       onName: cubit.nameChanged,
       onPhone: cubit.phoneChanged,
       onSave: cubit.saveContact,

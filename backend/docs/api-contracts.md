@@ -843,8 +843,8 @@ Errors: 422 `self_request`, `already_has_circle`, `accepted_request_exists`,
     }
   },
   "emergency_contacts": [
-    { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111",
-      "verified": true,
+    { "id": "...", "name": "Reem", "relation": "daughter", "relation_other": null,
+      "phone_number": "+966511111111", "verified": true,
       "account": { "account_id": "...", "name": "Reem", "avatar_code": "w1_1" } }
   ]
 }
@@ -877,9 +877,11 @@ in the creation requests.
 | Same time | Two edits of the same circle at the same time run one after the other. |
 
 Emergency contacts (the medical file page): `name` (1 to 50 characters), `relation`
-(`son`, `daughter`, `husband`, `wife`, `other`) and `phone_number` (`+9665XXXXXXXX`).
-At most 5 per patient and no number twice (422 `too_many_contacts`,
-`duplicate_contact`). `PUT` replaces all three fields.
+(`son`, `daughter`, `husband`, `wife`, `other`), `relation_other` (the relation in
+the user's words, 1 to 100 characters, sent exactly when `relation` is `other`:
+422 `other_text_required` or `other_text_unexpected` otherwise) and `phone_number`
+(`+9665XXXXXXXX`). At most 5 per patient and no number twice (422
+`too_many_contacts`, `duplicate_contact`). `PUT` replaces all four fields.
 
 Who may read and change the medical file: every manager of the circle, and the
 patient when the patient has an account. The server checks this again after taking
@@ -905,7 +907,8 @@ coordinates):
       "food": ["milk"], "other_food": null
     },
     "emergency_contacts": [
-      { "id": "...", "name": "Reem", "relation": "daughter", "phone_number": "+966511111111" }
+      { "id": "...", "name": "Reem", "relation": "daughter", "relation_other": null,
+        "phone_number": "+966511111111" }
     ]
   }
 }
@@ -946,7 +949,7 @@ without hyphens, section 10 point 9). Names follow the ER diagram of the team.
 | `care_circle_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `cancelled`. | One pending invitation per circle and number. |
 | `patient_condition` | Chronic conditions of a patient (`code`, and `other_text` for `other`). | Codes from the official list; `other_text` exactly when the code is `other`; a code once per patient. |
 | `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or none when `allergies_status` is `none`. | The same rules; the code must belong to the kind. |
-| `emergency_contact` | Contacts of a patient: `name`, `relation`, `phone_number`. | Phone format, relation from the list, a number once per patient. The limit of 5 is checked by the server, not by the database. |
+| `emergency_contact` | Contacts of a patient: `name`, `relation`, `relation_other` for `other`, `phone_number`. | Phone format, relation from the list, `relation_other` exactly when the relation is `other`, a number once per patient. The limit of 5 is checked by the server, not by the database. |
 
 The medical tables (`care_circle.blood_type`, `patient_condition`, `patient_allergy`,
 `emergency_contact`) are **To confirm**: they are the design of 26 October 2026,

@@ -19,6 +19,7 @@ def add_emergency_contact(circle_id):
             parse_id(circle_id, "care circle"),
             body.name,
             body.relation,
+            body.relation_other,
             body.phone_number,
         )
         view = views.contact_view(work.session, contact)
@@ -37,6 +38,7 @@ def update_emergency_contact(circle_id, contact_id):
             parse_id(contact_id, "emergency contact"),
             body.name,
             body.relation,
+            body.relation_other,
             body.phone_number,
         )
         view = views.contact_view(work.session, contact)

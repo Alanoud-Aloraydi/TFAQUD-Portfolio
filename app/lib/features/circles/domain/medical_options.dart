@@ -82,4 +82,7 @@ abstract class MedicalOptions {
 
   /// The longest name of an emergency contact the API accepts.
   static const int contactNameMaxLength = 50;
+
+  /// The longest relation typed for «أخرى»: a word or two, such as «جارتنا».
+  static const int contactRelationMaxLength = 30;
 }

@@ -50,8 +50,12 @@ abstract class MedicalTexts {
     ]);
   }
 
+  /// «ابن», «ابنة»... or, for «أخرى», the words the user typed.
   static String relation(BuildContext context, EmergencyContact contact) =>
-      context.tr('medical.relation.${contact.relation}');
+      contact.relation == MedicalOptions.other &&
+          (contact.relationOther ?? '').isNotEmpty
+      ? contact.relationOther!
+      : context.tr('medical.relation.${contact.relation}');
 
   /// `+966 50 123 4567`, written with the digits 0-9. Shown left to right.
   static String phone(EmergencyContact contact) =>

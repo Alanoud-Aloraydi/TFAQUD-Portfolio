@@ -51,7 +51,7 @@ class _ContactFormCardState extends State<ContactFormCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           ContactFormTitle(isNew: props.form.isNew),
-          ...contactRelationChips(context, props),
+          ...contactRelationChips(context, props, _typed),
           ...contactMemberChoices(context, props, onPick: _pick),
           ...contactNamePhoneFields(context, props, _typed),
           ...contactFormButtons(context, props),

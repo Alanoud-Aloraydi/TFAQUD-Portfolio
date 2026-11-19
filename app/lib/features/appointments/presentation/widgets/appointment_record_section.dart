@@ -1,14 +1,13 @@
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/appointment_group.dart';
 import 'package:app/features/appointments/presentation/appointment_record_filter.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_list_body.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_record_empty.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_record_filter_menu.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -59,7 +58,11 @@ class _AppointmentRecordSectionState extends State<AppointmentRecordSection> {
           state: state,
           values: values,
           circleId: widget.circleId,
-          empty: EmptyStateNote.section(context.tr('appointments.no_records')),
+          empty: AppointmentRecordEmpty(
+            circleId: widget.circleId,
+            // Only a circle with no visit at all, as «الخطة» does.
+            canAdd: widget.canManage && state.appointments.isEmpty,
+          ),
           canManage: widget.canManage,
           editable: false,
         ),

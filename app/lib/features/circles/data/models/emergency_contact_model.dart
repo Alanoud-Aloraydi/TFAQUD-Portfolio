@@ -1,7 +1,7 @@
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 
-/// One contact of the API: `{id, name, relation, phone_number, verified,
-/// account}`.
+/// One contact of the API: `{id, name, relation, relation_other,
+/// phone_number, verified, account}`.
 class EmergencyContactModel {
   const EmergencyContactModel(this._entity);
 
@@ -13,6 +13,7 @@ class EmergencyContactModel {
         id: json['id'] as String,
         name: json['name'] as String,
         relation: json['relation'] as String,
+        relationOther: json['relation_other'] as String?,
         phoneNumber: json['phone_number'] as String,
         verified: json['verified'] as bool? ?? false,
         accountId:
@@ -40,6 +41,8 @@ class EmergencyContactModel {
     return <String, dynamic>{
       'name': draft.name,
       'relation': draft.relation,
+      // Only with «أخرى»; the server refuses the words without it.
+      if (draft.relationOther != null) 'relation_other': draft.relationOther,
       'phone_number': draft.phoneNumber,
     };
   }

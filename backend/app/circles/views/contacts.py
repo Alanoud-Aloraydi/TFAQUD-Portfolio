@@ -60,6 +60,7 @@ def one_contact_view(
         "id": str(contact.id),
         "name": contact.name,
         "relation": contact.relation,
+        "relation_other": contact.relation_other,
         "phone_number": contact.phone_number,
         "verified": account is not None,
         "account": (

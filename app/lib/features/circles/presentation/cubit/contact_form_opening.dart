@@ -41,6 +41,7 @@ mixin ContactFormOpening on Cubit<MedicalFileState>, MedicalFileScope {
             form: ContactForm(
               contactId: contact.id,
               relation: contact.relation,
+              relationOther: contact.relationOther ?? '',
               name: contact.name,
               phone: contact.nationalNumber,
             ),

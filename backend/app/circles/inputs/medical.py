@@ -87,8 +87,10 @@ class MedicalProfileInput(Dto):
 
 
 class EmergencyContactInput(Dto):
-    """One emergency contact: name, relation and a Saudi mobile number."""
+    """One emergency contact: name, relation (with its words for «أخرى»)
+    and a Saudi mobile number."""
 
     name: Name50
     relation: Literal[CONTACT_RELATIONS]
+    relation_other: OtherText | None = None
     phone_number: Phone
