@@ -8,8 +8,8 @@ import 'package:app/features/home/presentation/widgets/home_add_quick_action.dar
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The content of the add sheet: the quick reading, then the plans. A plan
-/// whose callback is null is left out.
+/// The content of the add sheet: the quick reading and dose, then the
+/// plans. A plan whose callback is null is left out.
 class HomeAddSheetContent extends StatelessWidget {
   const HomeAddSheetContent({
     required this.circleId,
@@ -17,6 +17,7 @@ class HomeAddSheetContent extends StatelessWidget {
     required this.onMeasurement,
     required this.onAppointment,
     required this.onReading,
+    required this.onDose,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class HomeAddSheetContent extends StatelessWidget {
   final VoidCallback? onMeasurement;
   final VoidCallback? onAppointment;
   final VoidCallback onReading;
+  final VoidCallback onDose;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +46,13 @@ class HomeAddSheetContent extends StatelessWidget {
           title: context.tr('add.reading_now'),
           hint: context.tr('add.reading_now_hint'),
           onTap: onReading,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        HomeAddQuickAction(
+          icon: CareIcons.pill,
+          title: context.tr('add.dose_now'),
+          hint: context.tr('add.dose_now_hint'),
+          onTap: onDose,
         ),
         const SizedBox(height: AppSpacing.lg),
         HomeAddLabelledLine(label: context.tr('add.plans')),

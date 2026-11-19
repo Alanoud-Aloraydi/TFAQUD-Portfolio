@@ -1,7 +1,6 @@
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/period_open_rule.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/photo_probe.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/prayer_clock.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period/prayer_period_view.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
@@ -46,20 +45,15 @@ class TodayPrayerPeriod extends StatelessWidget {
       appointments: appointments,
     );
     final bool current = isInPeriod(now, time, nextTime);
-    return PhotoProbe(
+    return PrayerPeriodView(
+      prayer: prayer,
+      time: time,
+      current: current,
+      open: periodStartsOpen(entries, current: current, circleId: circleId),
+      rows: entries.sorted,
       circleId: circleId,
-      planIds: [for (final item in entries.doses) item.planId],
-      builder: (context, hasPhoto) => PrayerPeriodView(
-        prayer: prayer,
-        time: time,
-        current: current,
-        open: periodStartsOpen(entries, current: current, circleId: circleId),
-        rows: entries.sorted,
-        circleId: circleId,
-        canManage: canManage,
-        hasPhoto: hasPhoto,
-        now: now,
-      ),
+      canManage: canManage,
+      now: now,
     );
   }
 }

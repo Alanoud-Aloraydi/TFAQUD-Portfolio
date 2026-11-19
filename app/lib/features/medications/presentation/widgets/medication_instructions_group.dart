@@ -44,16 +44,18 @@ class MedicationInstructionsGroup extends StatelessWidget {
             autofocus: data.instructions.text.isEmpty,
             onChanged: (_) => onChanged(),
           ),
-        MissedAfterField(
-          label: context.tr('medications.missed_after'),
-          minutes: data.missedAfterMinutes,
-          focusNode: data.missedAfterFocus,
-          showError: issue?.field == MedicationFormField.missedAfter,
-          onChanged: (int? minutes) {
-            data.missedAfterMinutes = minutes;
-            onChanged();
-          },
-        ),
+        // Without a dose time no dose can be missed.
+        if (data.schedules.isNotEmpty)
+          MissedAfterField(
+            label: context.tr('medications.missed_after'),
+            minutes: data.missedAfterMinutes,
+            focusNode: data.missedAfterFocus,
+            showError: issue?.field == MedicationFormField.missedAfter,
+            onChanged: (int? minutes) {
+              data.missedAfterMinutes = minutes;
+              onChanged();
+            },
+          ),
       ],
     );
   }

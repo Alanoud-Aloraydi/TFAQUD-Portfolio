@@ -34,6 +34,9 @@ class MedicationDetails extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
           InsetGroup(
             header: context.tr('medications.dose_schedules'),
+            footer: version.schedules.isEmpty
+                ? context.tr('medications.no_schedules_line')
+                : null,
             children: [
               for (final schedule in version.schedules)
                 MedicationScheduleRow(schedule: schedule),

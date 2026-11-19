@@ -1,6 +1,7 @@
 import 'package:app/features/medications/data/models/dose_occurrence_model.dart';
 import 'package:app/features/medications/data/models/medication_plan_model.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 
 /// Sends base medications requests to the API.
@@ -34,4 +35,11 @@ abstract class BaseMedicationsRemoteDataSource {
     DoseOccurrence occurrence,
     DoseRecordDraft record,
   );
+  Future<ExtraDose> recordExtraDose(String circleId, ExtraDoseDraft draft);
+  Future<List<ExtraDose>> getExtraDoses(
+    String circleId,
+    DateTime from,
+    DateTime to, {
+    String? planId,
+  });
 }

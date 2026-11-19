@@ -42,7 +42,6 @@ class TodayFallbackRows extends StatelessWidget {
           entries,
           circleId: circleId,
           canManage: canManage,
-          hasPhoto: false,
           now: now,
         ),
         if (entries.isNotEmpty) const SizedBox(height: AppSpacing.sm),

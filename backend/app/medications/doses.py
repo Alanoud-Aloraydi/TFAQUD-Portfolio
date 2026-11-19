@@ -10,6 +10,7 @@ from app.clock import as_utc, patient_today
 from app.errors import Conflict, NotFound, ValidationFailed
 from app.medications.dose_occurrence import DoseOccurrence
 from app.medications.inputs import DoseRecordRequest
+from app.medications.retention import first_kept_day
 from app.models import CareCircle, MedicationDoseRecord
 
 
@@ -46,6 +47,10 @@ class MedicationDoseService(DoseOccurrence):
             raise ValidationFailed(
                 "A future dose cannot be recorded.",
                 code="future_dose_record",
+            )
+        if scheduled_on < first_kept_day(self.now):
+            raise ValidationFailed(
+                "Doses past three months are deleted.", code="dose_too_old"
             )
         if body.taken_at is not None:
             if body.taken_at.tzinfo is None:

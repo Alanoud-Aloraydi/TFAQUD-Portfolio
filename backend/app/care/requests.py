@@ -50,6 +50,7 @@ class CareRequests:
         )
         if existing:
             return existing
+        self._require_room_for_circle(actor_id)
         request = CareCircleRequest(
             requested_by_account_id=actor_id,
             patient_phone_number=phone,

@@ -5,19 +5,17 @@ import 'package:app/features/medications/presentation/widgets/medication_photo_b
 import 'package:app/features/medications/presentation/widgets/medication_photo_image.dart';
 import 'package:flutter/material.dart';
 
-/// The start of a dose row: the medicine's photo when it has one and the
-/// period shows photos, otherwise the shared medicine icon.
+/// The start of a dose row: the medicine's photo when it has one, otherwise
+/// the shared medicine icon. Both are the same size, so the rows line up.
 class DoseRowLeading extends StatelessWidget {
   const DoseRowLeading({
     super.key,
     required this.circleId,
     required this.planId,
-    required this.showPhoto,
   });
 
   final String circleId;
   final String planId;
-  final bool showPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +23,6 @@ class DoseRowLeading extends StatelessWidget {
       icon: CareVisuals.medicationIcon,
       background: CareVisuals.medicationTile,
     );
-    if (!showPhoto) return icon;
     return MedicationPhotoBuilder(
       circleId: circleId,
       planId: planId,

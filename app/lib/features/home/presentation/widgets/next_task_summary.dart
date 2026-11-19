@@ -12,9 +12,15 @@ import 'package:flutter/material.dart';
 /// What the next task is and when: its kind and name, the day and time, the
 /// time left when it is within two days, and who goes with a visit.
 class NextTaskSummary extends StatelessWidget {
-  const NextTaskSummary({super.key, required this.task, required this.now});
+  const NextTaskSummary({
+    super.key,
+    required this.task,
+    required this.circleId,
+    required this.now,
+  });
 
   final NextTask task;
+  final String circleId;
   final DateTime now;
 
   @override
@@ -31,7 +37,7 @@ class NextTaskSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          NextTaskHeader(task: task),
+          NextTaskHeader(task: task, circleId: circleId),
           const SizedBox(height: AppSpacing.sm),
           Text(
             '${context.tr('common.weekdays.${task.at.weekday}')} '

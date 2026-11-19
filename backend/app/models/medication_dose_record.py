@@ -56,7 +56,8 @@ class MedicationDoseRecord(db.Model):
     schedule_id: Mapped[UUID] = mapped_column(
         ForeignKey("medication_schedule.id", ondelete="CASCADE"),
     )
-    scheduled_on: Mapped[date] = mapped_column(Date)
+    # Indexed for the tick that deletes the days past three months.
+    scheduled_on: Mapped[date] = mapped_column(Date, index=True)
     outcome: Mapped[str] = mapped_column(Text)
     taken_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)

@@ -1,3 +1,4 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/widgets/buttons/stop_button.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
 import 'package:app/core/widgets/status/plan_status.dart';
@@ -32,6 +33,11 @@ List<Widget> medicationPlanDetails(
       children: <Widget>[
         for (final schedule in plan.version.schedules)
           MedicationScheduleLine(schedule: schedule),
+        if (plan.version.schedules.isEmpty)
+          PlanFact(
+            icon: CareIcons.pill,
+            value: context.tr('medications.no_schedules_line'),
+          ),
       ],
     ),
     medicationAboutGroup(context, plan.version),

@@ -20,7 +20,6 @@ class PrayerPeriodView extends StatelessWidget {
     required this.rows,
     required this.circleId,
     required this.canManage,
-    required this.hasPhoto,
     required this.now,
   });
 
@@ -31,7 +30,6 @@ class PrayerPeriodView extends StatelessWidget {
   final List<PeriodEntry> rows;
   final String circleId;
   final bool canManage;
-  final bool hasPhoto;
   final DateTime now;
 
   @override
@@ -53,7 +51,6 @@ class PrayerPeriodView extends StatelessWidget {
         rows,
         circleId: circleId,
         canManage: canManage,
-        hasPhoto: hasPhoto,
         now: now,
       ),
     ),

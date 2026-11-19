@@ -44,7 +44,7 @@ class NextTaskCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            NextTaskSummary(task: task, now: now),
+            NextTaskSummary(task: task, circleId: circleId, now: now),
             NextTaskAction(
               task: task,
               circleId: circleId,

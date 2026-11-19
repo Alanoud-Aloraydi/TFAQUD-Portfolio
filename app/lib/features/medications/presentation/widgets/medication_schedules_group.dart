@@ -7,7 +7,8 @@ import 'package:app/features/medications/presentation/widgets/medication_schedul
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// «أوقات الجرعات»: the dose times of the form, with the row that adds one.
+/// «مواعيد الجرعات»: the dose times of the form, with the row that adds one,
+/// and while there are none, what that means.
 class MedicationSchedulesGroup extends StatelessWidget {
   const MedicationSchedulesGroup({super.key, required this.state});
 
@@ -17,6 +18,9 @@ class MedicationSchedulesGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return InsetGroup(
       header: context.tr('medications.dose_schedules'),
+      footer: state.data.schedules.isEmpty
+          ? context.tr('medications.no_schedules_hint')
+          : null,
       children: [
         ...medicationScheduleList(state),
         InsetRow(

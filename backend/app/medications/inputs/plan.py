@@ -31,9 +31,11 @@ class PlanRequest(Dto):
     missed_after_minutes: MissedAfter = DEFAULT_MISSED_AFTER_MINUTES
     treatment_starts_on: date
     treatment_ends_on: date | None = None
+    # None at all is a medicine taken when needed: no reminders, and its
+    # doses are recorded with «سجّل جرعة الآن».
     schedules: Annotated[
         list[ScheduleRequest],
-        Field(min_length=1, max_length=24),
+        Field(max_length=24),
     ]
 
     @field_validator("strength_value", mode="before")

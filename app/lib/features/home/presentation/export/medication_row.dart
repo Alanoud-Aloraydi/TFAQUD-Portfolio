@@ -10,14 +10,16 @@ import 'package:flutter/widgets.dart';
 List<RecordPdfCell> medicationRow(BuildContext context, MedicationPlan plan) {
   final version = plan.version;
   // Every time of the day in one cell: «8:00 ص — قرص واحد».
-  final String times = version.schedules
-      .map(
-        (schedule) =>
-            '${clockText(schedule.time)} — '
-            '${formatMedicationNumber(schedule.doseValue)} '
-            '${context.tr('medications.unit.${schedule.doseUnit.name}')}',
-      )
-      .join('، ');
+  final String times = version.schedules.isEmpty
+      ? context.tr('medications.no_schedules_line')
+      : version.schedules
+            .map(
+              (schedule) =>
+                  '${clockText(schedule.time)} — '
+                  '${formatMedicationNumber(schedule.doseValue)} '
+                  '${context.tr('medications.unit.${schedule.doseUnit.name}')}',
+            )
+            .join('، ');
   return <RecordPdfCell>[
     RecordPdfCell(version.name),
     RecordPdfCell(

@@ -41,6 +41,7 @@ class CareConsent:
                     "Complete or cancel accepted care.",
                     code="accepted_request_exists",
                 )
+            self._require_room_for_circle(actor_id)
             # Not yet: the mode is only committed once the circle actually
             # exists (complete_creation). Committing it here would strand
             # the account on an abandoned or canceled request, since

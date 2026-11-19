@@ -7,6 +7,7 @@ from app.models.circle_request import CareCircleInvitation, CareCircleRequest
 from app.models.medical import EmergencyContact, PatientAllergy
 from app.models.medical import PatientCondition
 from app.models.medication_dose_record import MedicationDoseRecord
+from app.models.medication_extra_dose import MedicationExtraDose
 from app.models.medication_plan import MedicationPlan, MedicationPlanVersion
 from app.models.medication_schedule import (
     MedicationSchedule,
@@ -52,6 +53,7 @@ __all__ = [
     "MedicationScheduleDay",
     "MedicationScheduleMonthDay",
     "MedicationDoseRecord",
+    "MedicationExtraDose",
     "MeasurementPlan",
     "MeasurementPlanTime",
     "MeasurementPlanVersion",

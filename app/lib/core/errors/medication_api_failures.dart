@@ -30,6 +30,9 @@ Failure? medicationApiFailure(String? code) {
     ApiErrorCodes.futureTakenTime => const ValidationFailure(
       'medications.future_taken_time',
     ),
+    ApiErrorCodes.doseTooOld => const ValidationFailure(
+      'medications.dose_too_old',
+    ),
     _ => null,
   };
 }

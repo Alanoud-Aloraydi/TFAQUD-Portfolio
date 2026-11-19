@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/home/presentation/widgets/dose_retention_notice.dart';
 import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/home/presentation/widgets/today_content.dart';
@@ -10,9 +11,9 @@ import 'package:app/features/home/presentation/widgets/today_header.dart';
 import 'package:app/features/home/presentation/widgets/today_weather.dart';
 import 'package:flutter/material.dart';
 
-/// «اليوم»: the weather in the patient's city and the greeting, what needs
-/// attention, the next task and the day's schedule by prayer period, all
-/// on the patient's clock.
+/// «اليوم»: the weather in the patient's city and the greeting, the doses
+/// about to be deleted, what needs attention, the next task and the day's
+/// schedule by prayer period, all on the patient's clock.
 class TodayPage extends StatefulWidget {
   const TodayPage({super.key});
 
@@ -53,6 +54,7 @@ class _TodayPageState extends State<TodayPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
+          DoseRetentionNotice(circleId: circle.id),
           TodayContent(
             circleId: circle.id,
             // Recording is open to a member who edits any area.

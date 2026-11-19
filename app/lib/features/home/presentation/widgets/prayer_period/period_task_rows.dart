@@ -15,7 +15,6 @@ List<Widget> periodTaskRows(
   List<PeriodEntry> entries, {
   required String circleId,
   required bool canManage,
-  required bool hasPhoto,
   required DateTime now,
 }) => <Widget>[
   for (final PeriodEntry entry in entries) ...<Widget>[
@@ -28,7 +27,6 @@ List<Widget> periodTaskRows(
           circleId: circleId,
           canManage: canManage,
           now: now,
-          showThumbnail: hasPhoto,
         ),
         PeriodEntry(measurement: final task?) => MeasurementTaskRow(
           task: task,

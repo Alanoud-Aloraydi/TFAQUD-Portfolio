@@ -1,6 +1,7 @@
 """Validated medication request bodies and query parameters."""
 
 from app.medications.inputs.doses import DoseRecordRequest, OccurrenceQuery
+from app.medications.inputs.extra_dose import ExtraDoseRequest
 from app.medications.inputs.fields import (
     MAX_INTERVAL_DAYS,
     DosageForm,
@@ -25,6 +26,7 @@ __all__ = [
     "DoseRecordRequest",
     "DoseUnit",
     "DoseValue",
+    "ExtraDoseRequest",
     "MAX_INTERVAL_DAYS",
     "OccurrenceQuery",
     "OptionalText250",

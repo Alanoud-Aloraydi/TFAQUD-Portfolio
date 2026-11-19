@@ -26,6 +26,7 @@ class CareCreation:
         birth_date, city = self._own_basics(account, birth_date, city)
         self._assign_app_mode(account, "detailed")
         self._require_no_patient(actor_id)
+        self._require_room_for_circle(actor_id)
         return self._create_circle(
             name,
             birth_date,
@@ -62,6 +63,7 @@ class CareCreation:
                 "Both patient names are required.",
                 code="patient_name_required",
             )
+        self._require_room_for_circle(actor_id)
         return self._create_circle(
             None,
             birth_date,

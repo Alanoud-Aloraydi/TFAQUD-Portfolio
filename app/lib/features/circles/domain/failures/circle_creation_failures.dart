@@ -7,6 +7,12 @@ class AlreadyHasCircleFailure extends Failure {
   const AlreadyHasCircleFailure() : super('circles.already_has_circle');
 }
 
+/// The person is already in [CircleLimit.perPerson] circles, counting the
+/// requests they sent or accepted that are still open.
+class TooManyCirclesFailure extends Failure {
+  const TooManyCirclesFailure() : super('circles.too_many_circles');
+}
+
 /// The account has no names yet. The account setup pages come first.
 class ProfileIncompleteFailure extends Failure {
   const ProfileIncompleteFailure() : super('circles.profile_incomplete');

@@ -41,7 +41,7 @@ class AttentionMedicationLines extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AttentionDosePill(),
+        AttentionDosePill(circleId: circleId, planId: occurrence.planId),
         const SizedBox(width: AppSpacing.tight),
         Expanded(
           child: MergeSemantics(
