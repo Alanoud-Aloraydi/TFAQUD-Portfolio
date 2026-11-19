@@ -52,6 +52,7 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
         "medication_schedule_day",
         "medication_schedule_month_day",
         "medication_dose_record",
+        "medication_extra_dose",
         "account_photo",
         "care_circle_photo",
         "medication_plan_photo",

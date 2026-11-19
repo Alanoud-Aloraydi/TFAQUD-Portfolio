@@ -15,8 +15,9 @@ from app.models import (
 from app.push.scheduled import purge_old_rows
 from integration_tests.test_extra_doses import record, setup_plan
 
-# Two days past the limit, whatever the patient's day is in UTC.
-GONE = DOSES_KEPT_DAYS + 2
+# Past the limit whatever the patient's day is in UTC, and on the weekday
+# of the weekly dose time (whole weeks back).
+GONE = (DOSES_KEPT_DAYS // 7 + 2) * 7
 
 
 def start_long_ago(database, plan):
@@ -36,6 +37,7 @@ def test_doses_past_three_months_are_deleted(
     database_app, database, account
 ):
     _, _, _, plan, now = setup_plan(database_app, database, account)
+    start_long_ago(database, plan)
     schedule_id = UUID(plan["version"]["schedules"][0]["id"])
     stamp = datetime.now(timezone.utc)
     with Session(database) as session, session.begin():
