@@ -5,15 +5,14 @@ import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/cancel_pending_revision.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
-import 'package:app/features/medications/presentation/widgets/medication_extra_doses.dart';
 import 'package:app/features/medications/presentation/widgets/medication_pending_revision.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_banner.dart';
 import 'package:app/features/medications/presentation/widgets/medication_revision_history.dart';
 import 'package:flutter/material.dart';
 
 /// What the medicine's page holds, top to bottom: its photo, the plan, the
-/// changes it went through, a change waiting for the patient, the extra
-/// doses, and the month of doses.
+/// changes it went through, a change waiting for the patient, and the
+/// month of doses with its extra doses.
 class MedicationDetailsBody extends StatelessWidget {
   const MedicationDetailsBody({
     super.key,
@@ -54,11 +53,11 @@ class MedicationDetailsBody extends StatelessWidget {
             onCancel: () => cancelPendingRevision(context, circleId, plan),
           ),
         ],
-        MedicationExtraDoses(circleId: circleId, planId: plan.id),
         const SizedBox(height: AppSpacing.xl),
         MedicationDoseHistory(
           earliest: start.isBefore(kept) ? kept : start,
           circleId: circleId,
+          medicine: plan.version,
         ),
       ],
     );

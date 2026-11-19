@@ -1,4 +1,7 @@
+import 'package:app/core/l10n/app_calendar.dart';
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/utils/calendar_month.dart';
+import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/core/widgets/layout/refresh_scope.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
@@ -8,7 +11,8 @@ import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 
 /// The month «السجل» shows and its readings: the patient's current month at
-/// first, read again when the circle changes; never a month ahead of it.
+/// first, in the calendar chosen in «حسابي», read again when the circle or
+/// the calendar changes; never a month ahead of it.
 mixin MeasurementRecordMonth on State<MeasurementRecordSection> {
   // A saved photo anywhere, or «السجل» pulled down, reads it again quietly.
   late final MeasurementReadingsCubit readings = MeasurementReadingsCubit(
@@ -17,19 +21,21 @@ mixin MeasurementRecordMonth on State<MeasurementRecordSection> {
   );
 
   /// The month shown; the patient's current one at first.
-  late DateTime month = thisMonth;
+  late CalendarMonth month = thisMonth;
   bool _started = false;
 
-  DateTime get thisMonth {
-    final DateTime today = PatientClockScope.of(context).today();
-    return DateTime(today.year, today.month);
-  }
+  DateTime get _today => PatientClockScope.of(context).today();
+  DateCalendar get _calendar => CalendarScope.of(context);
+
+  CalendarMonth get thisMonth => CalendarMonth.of(_today, _calendar);
 
   /// The first month is read here, not in initState: the patient's month.
+  /// Another calendar starts again on this month, in it.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_started) return;
+    if (_started && month.calendar == _calendar) return;
+    if (_started) month = thisMonth;
     _started = true;
     loadMonth();
   }
@@ -46,13 +52,10 @@ mixin MeasurementRecordMonth on State<MeasurementRecordSection> {
     super.dispose();
   }
 
-  void loadMonth() {
-    final DateTime end = DateTime(month.year, month.month + 1, 0);
-    readings.load(widget.circleId, month, end);
-  }
+  void loadMonth() => readings.load(widget.circleId, month.first, month.last);
 
   void changeMonth(int offset) {
-    final DateTime candidate = DateTime(month.year, month.month + offset);
+    final CalendarMonth candidate = month.shift(offset);
     if (candidate.isAfter(thisMonth)) return;
     setState(() => month = candidate);
     loadMonth();

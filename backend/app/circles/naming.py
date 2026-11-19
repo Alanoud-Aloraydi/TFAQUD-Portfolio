@@ -5,12 +5,14 @@
   «صحتي», «دائرتي» or a name they type). Only they see that name.
 - Everyone else sees «دائرة» and the patient's display name, so a personal
   choice such as «صحتي» is never shown to the others.
-- A patient without an account (no phone number) names nothing: everyone
-  sees «دائرة» and the patient's first name.
+- A patient without an account (no phone number) names nothing: their
+  managers may name the circle, as they choose the patient's picture, and
+  everyone sees that name; until then «دائرة» and the patient's first
+  name.
 
 The name of the others is worked out when it is read, so a new display name
 or a corrected first name shows at once. `care_circle.name` keeps the
-patient's own choice, and is empty for a patient without an account.
+patient's own choice, or the managers' for a patient without an account.
 """
 
 from uuid import UUID
@@ -50,7 +52,7 @@ def name_for(
 ) -> str:
     """The circle's name as `viewer` sees it."""
     if patient_account_id is None:
-        return shared_name(patient_first_name)
+        return own_name or shared_name(patient_first_name)
     if patient_account_id == viewer:
         return own_name
     return shared_name(patient_account_name)

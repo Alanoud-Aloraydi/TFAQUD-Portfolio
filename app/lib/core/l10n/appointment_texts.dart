@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
@@ -35,7 +36,8 @@ String appointmentCompanionLine(BuildContext context, CareAppointment value) =>
         args: [appointmentCompanionNames(context, value)],
       );
 
-/// «الأحد 3 نوفمبر»: the weekday, day and month of [date].
+/// «الأحد 3 نوفمبر», or «الأحد 12 جمادى الآخرة» in Hijri: the weekday,
+/// day and month of [date].
 String appointmentDate(BuildContext context, DateTime date) =>
     '${context.tr('common.weekdays.${date.weekday}')} '
-    '${date.day} ${context.tr('circles.months.${date.month}')}';
+    '${calendarDate(context, date, year: false)}';

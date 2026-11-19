@@ -19,7 +19,4 @@ class PlanScheduleDraft {
   /// The first day, on the patient's calendar.
   DateTime start;
   int? missedAfter = PlanLimits.defaultMissedAfterMinutes;
-
-  /// [start] as day/month/year.
-  String get startText => '${start.day}/${start.month}/${start.year}';
 }

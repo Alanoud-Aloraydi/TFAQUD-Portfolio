@@ -160,3 +160,19 @@ def test_only_a_reading_outside_its_range_is_followed_up(patient):
     assert refused.json["error"]["code"] == "measurement_within_target"
     assert followed.status_code == 200, followed.json
     assert followed.json["measurement_reading"]["followed_up_at"]
+
+
+def test_the_first_day_with_a_reading_is_known(patient):
+    empty = patient("get", "/measurement-readings/first")
+    assert empty.status_code == 200, empty.json
+    assert empty.json == {"first_reading_on": None}
+
+    patient("post", "/measurement-readings", json=_free(150, "after_meal"))
+    earlier = _free(120, "fasting") | {
+        "measured_at": "2026-09-30T22:30:00+00:00"
+    }
+    patient("post", "/measurement-readings", json=earlier)
+
+    # 22:30 UTC is already 1 October in Riyadh, the patient's day.
+    first = patient("get", "/measurement-readings/first")
+    assert first.json == {"first_reading_on": "2026-10-01"}

@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/overlays/glass_sheet.dart';
@@ -31,12 +32,11 @@ Future<DateTime?> showBirthDateSheet(
   );
 }
 
-/// The date as a field shows it, "12 مارس 1964": the day and the year are
-/// written with the digits 0 to 9, like every number of the app.
-String formatBirthDate(BuildContext context, DateTime date) {
-  final String month = context.tr('circles.months.${date.month}');
-  return '${date.day} $month ${date.year}';
-}
+/// The date as a field shows it, "12 مارس 1964" (or Hijri, as chosen in
+/// «حسابي»): the day and the year are written with the digits 0 to 9, like
+/// every number of the app.
+String formatBirthDate(BuildContext context, DateTime date) =>
+    calendarDate(context, date);
 
 /// The birth date wheel. With no date chosen yet it opens about 40 years
 /// back, on the first of January.
@@ -71,6 +71,8 @@ class BirthDateSheet extends StatelessWidget {
       ),
       firstDate: DateTime(BirthDateRules.firstYear),
       lastDate: last,
+      // A birth date may be known in either calendar: both are offered.
+      offerCalendars: true,
     );
   }
 }

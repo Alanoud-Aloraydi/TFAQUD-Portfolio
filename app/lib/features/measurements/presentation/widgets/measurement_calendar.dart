@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
@@ -18,7 +19,7 @@ class MeasurementCalendar extends StatefulWidget {
   });
 
   final List<MeasurementReading> readings;
-  final DateTime month;
+  final CalendarMonth month;
   final String circleId;
 
   @override
@@ -31,8 +32,7 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
   @override
   void didUpdateWidget(MeasurementCalendar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.month.year != widget.month.year ||
-        oldWidget.month.month != widget.month.month) {
+    if (oldWidget.month != widget.month) {
       _selectedDay = null;
     }
   }

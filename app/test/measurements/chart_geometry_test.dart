@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -7,6 +9,10 @@ import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/domain/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// [year]'s Gregorian [month], as the chart reads it.
+CalendarMonth _month(int year, int month) =>
+    CalendarMonth.of(DateTime(year, month), DateCalendar.gregorian);
 
 MeasurementReading _glucose(
   DateTime at, {
@@ -64,7 +70,7 @@ void main() {
 
       final Map<int, List<MeasurementReading>> december = readingsByDay(
         <MeasurementReading>[late],
-        DateTime(2026, 12),
+        _month(2026, 12),
         PatientClock('Asia/Riyadh'),
       );
 
@@ -83,7 +89,7 @@ void main() {
 
       final List<MeasurementReading> day = readingsByDay(
         sent,
-        DateTime(2026, 11),
+        _month(2026, 11),
         PatientClock('Asia/Riyadh'),
       )[5]!;
 
@@ -98,7 +104,7 @@ void main() {
     test('puts day 1 at the right edge and the top value at the top', () {
       final ChartScale scale = ChartScale.of(
         const Size(400, 176),
-        DateTime(2026, 11),
+        _month(2026, 11),
         const <MeasurementReading>[],
         null,
       );
@@ -111,7 +117,7 @@ void main() {
     test('inside a day the earlier reading is to the right as well', () {
       final ChartScale scale = ChartScale.of(
         const Size(400, 176),
-        DateTime(2026, 11),
+        _month(2026, 11),
         const <MeasurementReading>[],
         null,
       );
@@ -130,7 +136,7 @@ void main() {
     test('the axis holds the readings, not everything down to zero', () {
       final ChartScale scale = ChartScale.of(
         const Size(400, 176),
-        DateTime(2026, 11),
+        _month(2026, 11),
         <MeasurementReading>[_glucose(DateTime.utc(2026, 11, 5, 9))],
         140,
         targetLow: 70,
@@ -147,7 +153,7 @@ void main() {
     test('labels four round lines', () {
       final ChartScale scale = ChartScale.of(
         const Size(400, 176),
-        DateTime(2026, 11),
+        _month(2026, 11),
         <MeasurementReading>[_glucose(DateTime.utc(2026, 11, 5, 9))],
         140,
         targetLow: 70,

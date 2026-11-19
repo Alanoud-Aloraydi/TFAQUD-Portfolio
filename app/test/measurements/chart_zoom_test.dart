@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_hit.dart';
@@ -7,10 +9,14 @@ import 'package:app/features/measurements/presentation/widgets/chart_scale.dart'
 import 'package:app/features/measurements/presentation/widgets/chart_zoom.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// [year]'s Gregorian [month], as the chart reads it.
+CalendarMonth _month(int year, int month) =>
+    CalendarMonth.of(DateTime(year, month), DateCalendar.gregorian);
+
 /// A chart whose days share 300 points at zoom 1: 10 a day in November.
 ChartScale _scale([ChartZoom view = ChartZoom.none]) => ChartScale.of(
   const Size(333, 176),
-  DateTime(2026, 11),
+  _month(2026, 11),
   const <MeasurementReading>[],
   null,
   view: view,

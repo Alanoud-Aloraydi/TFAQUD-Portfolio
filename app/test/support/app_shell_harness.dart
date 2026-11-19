@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/l10n/app_calendar.dart';
 import 'package:app/core/l10n/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/navigation/app_router.dart';
@@ -147,6 +148,9 @@ class EmptyMeasurementsRepository extends Fake
   @override
   Future<List<MeasurementReading>> allReadings(String circleId) async =>
       const [];
+
+  @override
+  Future<DateTime?> firstReadingOn(String circleId) async => null;
 
   @override
   Future<List<MeasurementPlan>> plans(String circleId) async => const [];
@@ -313,6 +317,8 @@ void setUpShellApp() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
+    // The shell tests were written with Gregorian dates.
+    AppCalendar.choice.value = DateCalendar.gregorian;
     await EasyLocalization.ensureInitialized();
   });
 

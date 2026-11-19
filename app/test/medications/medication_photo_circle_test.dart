@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:app/core/network/medication_endpoints.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_circle.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -47,6 +48,18 @@ void main() {
 
       expect(find.byType(Image), findsOneWidget);
       expect(find.byIcon(Icons.medication), findsNothing);
+    });
+
+    testWidgets('a tap on the photo opens it full screen', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, 'with-photo');
+
+      await tester.tap(find.byType(Image));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InteractiveViewer), findsOneWidget);
+      expect(find.byIcon(CupertinoIcons.xmark), findsOneWidget);
     });
 
     testWidgets('shows the pill while the medicine has no photo', (

@@ -22,7 +22,9 @@ void main() {
     expect(dose.takenAt.toUtc(), DateTime.utc(2026, 11, 19, 9, 30));
     expect(dose.doseValue, 2.5);
     expect(dose.doseUnit, DoseUnit.milliliter);
+    expect(dose.recordedByAccountId, 'account');
     expect(dose.recordedByName, 'لينا');
+    expect(dose.recordedByAvatarCode, 'w_1');
   });
 
   test('a draft is sent in UTC with the dose as a number', () {

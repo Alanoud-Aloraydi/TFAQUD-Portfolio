@@ -4,10 +4,10 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/presentation/widgets/stepper_half_button.dart';
 import 'package:flutter/material.dart';
 
-/// The iOS stepper: a white outlined capsule with − and + divided by a thin
-/// line, at the end of a row. Each half is 44 by
-/// 44, so it is easy to tap. Null [onDecrement] or [onIncrement] turns that
-/// half off, for example − at the smallest dose.
+/// The dose stepper: a lavender capsule with − and + divided by a thin
+/// line, at the end of a row. Each half is 44 by 44, so it is easy to tap.
+/// Null [onDecrement] or [onIncrement] turns that half off, for example −
+/// at the smallest dose.
 class StepperControl extends StatelessWidget {
   const StepperControl({
     super.key,
@@ -27,11 +27,9 @@ class StepperControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: AppSemanticColors.surfaceContent,
-        shape: StadiumBorder(
-          side: BorderSide(color: AppSemanticColors.borderControlBase),
-        ),
+      decoration: const ShapeDecoration(
+        color: AppSemanticColors.selectedSurface,
+        shape: StadiumBorder(),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -46,7 +44,7 @@ class StepperControl extends StatelessWidget {
             child: VerticalDivider(
               width: 1,
               thickness: 1,
-              color: AppSemanticColors.borderControlBase,
+              color: AppSemanticColors.selectedSurfaceStrong,
             ),
           ),
           StepperHalfButton(

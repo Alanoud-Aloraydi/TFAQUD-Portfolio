@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -18,7 +19,7 @@ import 'package:flutter/material.dart';
 List<Widget> measurementRecordContent(
   MeasurementReadingsState state, {
   required String circleId,
-  required DateTime month,
+  required CalendarMonth month,
   required MeasurementRecordFilter filter,
   required VoidCallback onRetry,
   VoidCallback? onAddReading,

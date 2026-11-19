@@ -1,57 +1,64 @@
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/layout/filtered_history.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/medications/domain/entities/dose_history_entry.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/extra_dose.dart';
+import 'package:app/features/medications/domain/entities/medication_version.dart';
+import 'package:app/features/medications/presentation/cubit/extra_dose_history_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_days.dart';
+import 'package:app/features/medications/presentation/widgets/dose_history_earlier.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_empty_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The doses that were read, newest first, under the filter of «سجل
-/// الجرعات», with «أقدم» under them while there is more to read. Only the
-/// doses that had their time: one still ahead is not history yet.
+/// الجرعات», with «أقدم» under them while there is more to read: the doses
+/// that had their time (one still ahead is not history yet), and the extra
+/// doses of «سجّل جرعة الآن» of the same days, among them.
 class DoseHistoryView extends StatelessWidget {
   const DoseHistoryView({
     super.key,
     required this.state,
     required this.earliest,
     required this.circleId,
+    required this.medicine,
   });
 
   final MedicationOccurrencesState state;
   final DateTime earliest;
   final String circleId;
 
+  /// The medicine, as its page shows it: the name of its extra doses.
+  final MedicationVersion medicine;
+
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<MedicationOccurrencesCubit>();
-    final DateTime now = PatientClockScope.of(context).now();
-    return FilteredHistory<DoseOccurrence>(
+    final PatientClock clock = PatientClockScope.of(context);
+    final DateTime now = clock.now();
+    final List<ExtraDose> extras =
+        context.watch<ExtraDoseHistoryCubit>().state ?? const <ExtraDose>[];
+    return FilteredHistory<DoseHistoryEntry>(
       title: context.tr('medications.dose_history'),
-      items: <DoseOccurrence>[
-        for (final DoseOccurrence dose in state.occurrences.reversed)
-          if (dose.isHistoryAt(now)) dose,
-      ],
-      dayOf: (item) => item.scheduledOn,
-      byOf: (item) =>
-          (item.record?.recordedByAccountId, item.record?.recordedByName),
+      items: doseHistoryEntries(
+        clock,
+        doses: <DoseOccurrence>[
+          for (final DoseOccurrence dose in state.occurrences)
+            if (dose.isHistoryAt(now)) dose,
+        ],
+        extras: extras,
+        medicine: medicine,
+        from: context.read<MedicationOccurrencesCubit>().from,
+      ),
+      dayOf: (item) => item.day,
+      byOf: (item) => item.recorder,
       empty: InsetText(doseHistoryEmptyText(context, earliest)),
-      builder: (shown) =>
-          DoseHistoryDays(occurrences: shown, circleId: circleId),
-      footer: cubit.canLoadEarlier(earliest)
-          ? Center(
-              child: TextButton(
-                onPressed:
-                    state.status == MedicationOccurrencesStatus.loadingMore
-                    ? null
-                    : () => cubit.loadEarlier(earliest),
-                child: Text(context.tr('medications.load_earlier')),
-              ),
-            )
-          : null,
+      builder: (shown) => DoseHistoryDays(entries: shown, circleId: circleId),
+      footer: DoseHistoryEarlier.orNull(context, state, earliest),
     );
   }
 }

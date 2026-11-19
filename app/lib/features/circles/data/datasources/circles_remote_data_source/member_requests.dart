@@ -33,6 +33,14 @@ mixin _MemberRequests implements CircleMemberApi {
   }
 
   @override
+  Future<void> renameCircle(String circleId, String name) async {
+    await _client.patch(
+      CircleEndpoints.circle(circleId),
+      data: <String, String>{'name': name},
+    );
+  }
+
+  @override
   Future<void> setMemberEditAccess(
     String circleId,
     String accountId, {

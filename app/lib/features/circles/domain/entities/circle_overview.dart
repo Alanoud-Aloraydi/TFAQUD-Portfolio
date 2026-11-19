@@ -54,6 +54,7 @@ class CircleOverview extends Equatable {
 
   /// The patient themself; or a manager, when the patient has no account.
   /// A patient with an account in the circle chooses their own picture.
+  /// The same people name the circle (one pen edits both).
   bool get canEditPatientPhoto =>
       patientIsYou || (canManage && !patientUsesApp);
 

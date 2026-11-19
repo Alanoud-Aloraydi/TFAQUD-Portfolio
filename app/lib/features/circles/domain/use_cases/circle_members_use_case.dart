@@ -5,10 +5,13 @@ import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:app/features/circles/domain/use_cases/circles_use_case_scope.dart';
 
-/// Reading a circle and changing who is in it.
+/// Reading a circle, naming it, and changing who is in it.
 mixin CircleMembersUseCase on CirclesUseCaseScope {
   Future<Result<CircleOverview, Failure>> getCircleOverview(String circleId) =>
       repository.getCircleOverview(circleId);
+
+  Future<Result<void, Failure>> renameCircle(String circleId, String name) =>
+      repository.renameCircle(circleId, name);
 
   Future<Result<void, Failure>> inviteManager(
     String circleId,

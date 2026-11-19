@@ -1,8 +1,22 @@
 part of '../circles_repository_data.dart';
 
-/// What a member may edit, who leads the circle, and leaving it.
+/// The circle's name, what a member may edit, who leads the circle, and
+/// leaving it.
 mixin _MemberCalls implements CirclesRepositoryDomain {
   BaseCirclesRemoteDataSource get _remote;
+
+  @override
+  Future<Result<void, Failure>> renameCircle(
+    String circleId,
+    String name,
+  ) async {
+    try {
+      await _remote.renameCircle(circleId, name);
+      return const Success(null);
+    } catch (error) {
+      return Error(FailureExceptions.getException(error));
+    }
+  }
 
   @override
   Future<Result<void, Failure>> setMemberEditAccess(

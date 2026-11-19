@@ -6,18 +6,24 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:flutter/material.dart';
 
 /// The top line of a dose in the history, right above the medicine: its
-/// time, or for a dose taken, the time it really was.
+/// time, or for a dose taken, the time it really was; for an extra dose,
+/// [takenAt].
 class DoseHistoryHeading extends StatelessWidget {
-  const DoseHistoryHeading({super.key, required this.occurrence});
+  const DoseHistoryHeading({super.key, required DoseOccurrence this.occurrence})
+    : takenAt = null;
 
-  final DoseOccurrence occurrence;
+  const DoseHistoryHeading.taken({super.key, required DateTime this.takenAt})
+    : occurrence = null;
+
+  final DoseOccurrence? occurrence;
+  final DateTime? takenAt;
 
   @override
   Widget build(BuildContext context) {
-    final DateTime? taken = occurrence.record?.takenAt;
+    final DateTime? taken = takenAt ?? occurrence?.record?.takenAt;
     return Text(
       taken == null
-          ? clockText(occurrence.time)
+          ? clockText(occurrence!.time)
           : wallTimeText(PatientClockScope.of(context).wallTime(taken)),
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
         fontWeight: AppTextTheme.bold,

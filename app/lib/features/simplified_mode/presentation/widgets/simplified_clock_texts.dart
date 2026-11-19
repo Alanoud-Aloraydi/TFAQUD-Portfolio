@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -26,12 +27,13 @@ String simplifiedClockAt(BuildContext context, DateTime at) {
 /// آ«ط§ظ„ظٹظˆظ…طŒ ط§ظ„ط¬ظ…ط¹ط© 6 ظ†ظˆظپظ…ط¨ط±آ».
 String simplifiedToday(BuildContext context, DateTime now) {
   final DateTime day = PatientClockScope.of(context).today(now);
+  final parts = calendarParts(context, day);
   return context.tr(
     'simplified_mode.today_date',
     args: <String>[
       context.tr('common.weekdays.${day.weekday}'),
-      '${day.day}',
-      context.tr('circles.months.${day.month}'),
+      '${parts.day}',
+      parts.month,
     ],
   );
 }

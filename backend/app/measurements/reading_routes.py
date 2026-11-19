@@ -1,5 +1,5 @@
-"""The normal ranges, the tasks and saved readings of some days, and
-the export."""
+"""The normal ranges, the tasks and saved readings of some days, the
+first day with one, and the export."""
 
 from flask import jsonify
 
@@ -8,6 +8,7 @@ from app.database import transaction
 from app.extensions import get_clock
 from app.measurements.blueprint import MEMBERS, bp
 from app.measurements.queries import MeasurementQueries
+from app.measurements.queries.first_reading import first_reading_on
 from app.measurements.route_helpers import parse_range, parse_uuid
 
 
@@ -48,6 +49,17 @@ def list_readings(circle_id):
             parse_uuid(circle_id), dates.from_date, dates.to_date
         )
     response = jsonify(measurement_readings=values)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@bp.get("/measurement-readings/first")
+@require_circle_role(*MEMBERS)
+def first_reading(circle_id):
+    """The patient's first day with a saved reading or skip, or null."""
+    with transaction() as session:
+        day = first_reading_on(session, parse_uuid(circle_id))
+    response = jsonify(first_reading_on=day.isoformat() if day else None)
     response.headers["Cache-Control"] = "no-store"
     return response
 

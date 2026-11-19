@@ -5,6 +5,7 @@ import 'package:app/features/measurements/presentation/cubit/measurement_reading
 import 'package:app/features/measurements/presentation/measurement_record_filter.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_content.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_filter_menu.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_record_first.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_month.dart';
 import 'package:app/features/measurements/presentation/widgets/month_switcher.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// «السجل»'s read-only readings of [circleId], a month at a time, through
 /// its own [MeasurementReadingsCubit], which reads again by itself when a
 /// reading of the circle is saved anywhere. Unrecorded times stay on «اليوم».
+/// With nothing saved yet, only the empty note shows: no month bar or
+/// filter.
 class MeasurementRecordSection extends StatefulWidget {
   const MeasurementRecordSection({
     super.key,
@@ -33,7 +36,7 @@ class MeasurementRecordSection extends StatefulWidget {
 }
 
 class _MeasurementRecordSectionState extends State<MeasurementRecordSection>
-    with MeasurementRecordMonth {
+    with MeasurementRecordMonth, MeasurementRecordFirst {
   MeasurementRecordFilter _filter = MeasurementRecordFilter.all;
 
   @override
@@ -46,17 +49,20 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection>
             children: <Widget>[
               widget.header,
               const SizedBox(height: AppSpacing.md),
-              MeasurementRecordFilterMenu(
-                selected: _filter,
-                onChanged: (value) => setState(() => _filter = value),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              MonthSwitcher(
-                month: month,
-                canGoForward: month != thisMonth,
-                onChange: changeMonth,
-              ),
-              const SizedBox(height: AppSpacing.md),
+              if (showsMonths(shown: state.readings.isNotEmpty)) ...<Widget>[
+                MeasurementRecordFilterMenu(
+                  selected: _filter,
+                  onChanged: (value) => setState(() => _filter = value),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                MonthSwitcher(
+                  month: month,
+                  canGoForward: month != thisMonth,
+                  canGoBack: canGoBack(month),
+                  onChange: changeMonth,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               ...measurementRecordContent(
                 state,
                 circleId: widget.circleId,

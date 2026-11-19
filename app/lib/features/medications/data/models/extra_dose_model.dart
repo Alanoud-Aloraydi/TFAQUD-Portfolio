@@ -13,7 +13,9 @@ ExtraDose extraDoseFromJson(Map<String, dynamic> json) {
     takenAt: DateTime.parse(json['taken_at'] as String).toLocal(),
     doseValue: double.parse(json['dose_value'] as String),
     doseUnit: unit == 'mL' ? DoseUnit.milliliter : DoseUnit.values.byName(unit),
+    recordedByAccountId: recordedBy?['account_id'] as String?,
     recordedByName: recordedBy?['name'] as String?,
+    recordedByAvatarCode: recordedBy?['avatar_code'] as String?,
   );
 }
 

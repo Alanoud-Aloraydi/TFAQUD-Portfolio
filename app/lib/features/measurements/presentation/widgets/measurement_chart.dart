@@ -1,4 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -30,7 +31,7 @@ class MeasurementChart extends StatefulWidget {
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
-  final DateTime month;
+  final CalendarMonth month;
   final String circleId;
 
   /// The normal bands drawn behind the readings.

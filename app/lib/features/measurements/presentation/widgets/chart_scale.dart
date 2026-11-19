@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_axis.dart';
@@ -23,7 +24,7 @@ class ChartScale {
 
   factory ChartScale.of(
     Size size,
-    DateTime month,
+    CalendarMonth month,
     List<MeasurementReading> readings,
     int? targetHigh, {
     int? targetLow,
@@ -33,7 +34,7 @@ class ChartScale {
     final ChartAxis axis = ChartAxis.fit(readings, targetHigh, targetLow, kind);
     return ChartScale(
       size: size,
-      days: DateTime(month.year, month.month + 1, 0).day,
+      days: month.days,
       topValue: axis.top,
       bottomValue: axis.bottom,
       step: axis.step,

@@ -35,16 +35,15 @@ class CareCircleChanges:
     def rename_circle(
         self, actor_id: UUID, circle_id: UUID, name: str
     ) -> None:
-        """Only the patient with an account names the circle, for themself.
-
-        The others see an automatic name (`app.circles.naming`), so a
-        manager who is not the patient cannot change it.
-        """
-        # Only the circle's patient names it (the others see «دائرة» and the
-        # patient's name), and not with a blank name.
+        """Whoever chooses the patient's picture names the circle: the
+        patient with an account, for themself (the others see an automatic
+        name, `app.circles.naming`), or, for a patient without one, its
+        managers, for everyone."""
         self._lock_accounts(actor_id)
         circle = self._lock_circle(circle_id)
-        if circle.account_id is None or circle.account_id != actor_id:
+        if circle.account_id is None:
+            self._require_manager(actor_id, circle_id)
+        elif circle.account_id != actor_id:
             raise Forbidden(
                 "Only the patient names this circle.",
                 code="patient_names_circle",

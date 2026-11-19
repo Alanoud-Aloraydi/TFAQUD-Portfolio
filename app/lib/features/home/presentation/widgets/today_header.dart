@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/core/l10n/care_voice.dart';
 import 'package:app/core/l10n/greeting.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
@@ -24,7 +25,7 @@ class TodayHeader extends StatelessWidget {
       now,
     );
     final String weekday = context.tr('common.weekdays.${now.weekday}');
-    final String month = context.tr('circles.months.${now.month}');
+    final String date = calendarDate(context, now, year: false);
     return LargeTitle(
       title: greeting(
         context,
@@ -33,7 +34,7 @@ class TodayHeader extends StatelessWidget {
         fajr: day?.times[Prayer.fajr],
         dhuhr: day?.times[Prayer.dhuhr],
       ),
-      subtitle: '$weekday ${now.day} $month',
+      subtitle: '$weekday $date',
       subtitleTrailing: weather,
     );
   }
