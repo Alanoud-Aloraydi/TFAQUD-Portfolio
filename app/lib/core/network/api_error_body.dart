@@ -24,6 +24,7 @@ abstract class ApiErrorCodes {
   static const String doseRecordConflict = 'dose_record_conflict';
   static const String futureDoseRecord = 'future_dose_record';
   static const String futureTakenTime = 'future_taken_time';
+  static const String doseTooOld = 'dose_too_old';
   static const String appointmentTimeInPast = 'appointment_time_in_past';
   static const String appointmentNotStarted = 'appointment_not_started';
   static const String appointmentMissed = 'appointment_missed';
@@ -62,6 +63,8 @@ abstract class ApiErrorCodes {
   static const String invalidBirthDate = 'invalid_birth_date';
   static const String tooYoung = 'too_young';
   static const String modeConflict = 'mode_conflict';
+  // Six circles per person, open requests included (backend/app/care).
+  static const String tooManyCircles = 'too_many_circles';
   // Circle requests (backend/app/care.py).
   static const String selfRequest = 'self_request';
   static const String requestNotPending = 'request_not_pending';

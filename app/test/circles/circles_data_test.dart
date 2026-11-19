@@ -730,6 +730,7 @@ void main() {
         'already_has_circle': const AlreadyHasCircleFailure(),
         'profile_incomplete': const ProfileIncompleteFailure(),
         'invalid_birth_date': const InvalidBirthDateFailure(),
+        'too_many_circles': const TooManyCirclesFailure(),
       };
       for (final MapEntry<String, Failure> entry in codes.entries) {
         test('${entry.key} has its own failure', () async {
@@ -790,6 +791,7 @@ void main() {
         'self_request': const SelfRequestFailure(),
         'profile_incomplete': const ProfileIncompleteFailure(),
         'mode_conflict': const ModeConflictFailure(),
+        'too_many_circles': const TooManyCirclesFailure(),
       };
       for (final MapEntry<String, Failure> entry in requestCodes.entries) {
         test(

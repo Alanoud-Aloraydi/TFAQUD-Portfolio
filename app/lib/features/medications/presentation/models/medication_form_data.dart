@@ -34,8 +34,10 @@ class MedicationFormData {
       startsOn = version?.startsOn ?? today,
       endsOn = version?.endsOn,
       effectiveFromOn = version == null ? null : today,
+      // A new medicine starts with no dose time: one taken when needed
+      // keeps none, and its doses go through «سجّل جرعة الآن».
       schedules = version == null
-          ? [newScheduleForm()]
+          ? <ScheduleFormData>[]
           : version.schedules.map(scheduleFormOf).toList();
 
   final TextEditingController name;

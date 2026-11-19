@@ -74,8 +74,7 @@ class CareInvitations:
         invitation = self._get_invitation(invitation_id, lock=True)
         if invitation.invitee_phone_number != account.phone_number:
             raise Forbidden("This invitation targets another account.")
-        # The same answer again changes nothing; only a pending invitation is
-        # answered.
+        # The same answer changes nothing; only a pending one is answered.
         desired = "accepted" if accept else "declined"
         if invitation.status == desired:
             return invitation
@@ -86,6 +85,7 @@ class CareInvitations:
             )
         # Accepting makes the account a manager, in the detailed mode.
         if accept:
+            self._require_room_for_circle(actor_id)
             self._assign_app_mode(account, "detailed")
             self.session.add(
                 CareCircleManager(

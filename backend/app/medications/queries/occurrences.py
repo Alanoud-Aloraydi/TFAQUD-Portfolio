@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.accounts import accounts_by_id
 from app.clock import patient_zone
 from app.medications.occurrence_builder import build_occurrences
+from app.medications.retention import first_kept_day
 from app.medications.schedule_loading import load_days
 from app.models import (
     MedicationPlan,
@@ -31,6 +32,11 @@ class Occurrences:
         their timing (to come, due, missed) and who put them off until when
         (`snooze`), optionally for one medicine.
         """
+        # The days past three months are deleted (retention.py): none of
+        # their doses is answered, so none comes back as missed.
+        from_date = max(from_date, first_kept_day(self.now))
+        if from_date > to_date:
+            return []
         patient = self._patient(circle_id)
         # Every dose time of the patient's versions (not cancelled) whose
         # treatment overlaps the range.

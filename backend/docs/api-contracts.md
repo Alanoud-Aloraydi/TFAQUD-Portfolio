@@ -103,6 +103,7 @@ English and for developers; the app shows its own Arabic text for the `code`.
 | `request_not_pending` | The request was already answered the other way, or is finished. |
 | `request_not_cancelable` | Only a pending or accepted request can be cancelled. |
 | `consent_required` | The patient has not accepted this request, so the circle cannot be created. |
+| `too_many_circles` | The person is already in 6 circles, counting the requests they sent or accepted that are still open. Creating a circle, sending a request, accepting a request as the patient and accepting an invitation are refused; declining never is. |
 | `self_invitation`, `already_manager` | An invitation to yourself, or to a number that already manages the circle. |
 | `invitation_not_pending`, `invitation_not_cancelable` | The invitation is already answered or cancelled. |
 | `confirmation_required` | Leaving as the last manager, or deleting the circle, needs the explicit confirmation. |
@@ -531,6 +532,40 @@ the one who put it off gets a push (`kind`: `dose_snoozed` or
 `measurement_snoozed`); that person's own phone reminds them. A task put off is
 not called missed until its grace has passed after `remind_at`. Errors: 404 (no
 such task that day), 409 `task_already_recorded`, 422 `validation_error`.
+
+### Medicines without dose times, and «سجّل جرعة الآن»
+
+A medicine's `schedules` can be empty (0 to 24): a medicine taken when needed,
+with no reminders and no doses in `…/medication-occurrences`.
+
+`POST /api/v1/circles/{circle_id}/medication-extra-doses` (manager, simplified
+patient) records a dose taken outside the dose times. It is always one more
+dose, of any medicine, and never answers a scheduled one.
+
+```json
+{ "plan_id": "…", "taken_at": "2026-11-19T10:00:00+03:00",
+  "dose_value": "1", "dose_unit": "tablet" }
+```
+
+201 `{"medication_extra_dose": {"id", "plan_id", "taken_at", "dose_value",
+"dose_unit", "recorded_at", "recorded_by"}}`. Errors: 404 (no such medicine in
+the circle), 422 `medication_stopped`, `taken_time_offset_required`,
+`future_taken_time`, `dose_unit_mismatch` (the unit must fit the medicine's
+form, as for a dose time), `dose_too_old`, `validation_error`.
+
+`GET /api/v1/circles/{circle_id}/medication-extra-doses?from=…&to=…[&plan_id=…]`
+(every member) lists them, newest first, by the days of the patient's clock (at
+most 35 days): `{"medication_extra_doses": [...]}`.
+
+### Doses are kept three months
+
+Every minute the scheduled tick deletes, for good, the dose records of the
+days more than 90 days ago (UTC), and the extra doses taken before then
+(`app/medications/retention.py`). `…/medication-occurrences` answers none of
+those days, so a deleted record never comes back as a missed dose, and
+recording a dose of those days, scheduled or extra, is refused with 422
+`dose_too_old`. The app warns five days before a day's doses go, so they can
+be exported first. Readings, appointments and plans are kept.
 
 ### Circles, requests, invitations and the medical file
 

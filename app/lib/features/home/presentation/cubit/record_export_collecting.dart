@@ -38,6 +38,7 @@ mixin RecordExportCollecting
         plans: plans,
         medicalFile: options.patient ? state.medicalFile : null,
         doses: options.medications ? await dosesIn(period) : const [],
+        extraDoses: options.medications ? await extraDosesIn(period) : const [],
         readings: options.measurements
             ? await readingsIn(period, clock)
             : const [],

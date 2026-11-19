@@ -29,7 +29,7 @@ Widget homeShellView(
         state: state,
         onSelected: cubit.selectCircle,
         onAddCircle: state.status == HomeStatus.ready
-            ? () => context.push(Routes.addCircle)
+            ? () => openAddCircle(context, state.data?.circles.length ?? 0)
             : null,
       ),
       // A person with no circle yet can still have a request to answer.

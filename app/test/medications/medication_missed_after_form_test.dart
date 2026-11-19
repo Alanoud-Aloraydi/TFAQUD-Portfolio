@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 final DateTime _today = DateTime(2026, 11, 10);
 
 MedicationFormData _filled() {
-  final data = MedicationFormData(null, today: _today);
+  final data = MedicationFormData(null, today: _today)..addSchedule();
   data.name.text = 'Medicine';
   data.strength.text = '5';
   data.schedules.single.doseController.text = '1';

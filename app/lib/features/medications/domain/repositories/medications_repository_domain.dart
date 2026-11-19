@@ -1,5 +1,6 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -40,4 +41,16 @@ abstract class MedicationsRepositoryDomain {
     DoseOccurrence occurrence,
     DoseRecordDraft record,
   );
+
+  /// «سجّل جرعة الآن»: always one more dose, never a scheduled one.
+  Future<Result<ExtraDose, Failure>> recordExtraDose(
+    String circleId,
+    ExtraDoseDraft draft,
+  );
+  Future<Result<List<ExtraDose>, Failure>> getExtraDoses(
+    String circleId,
+    DateTime from,
+    DateTime to, {
+    String? planId,
+  });
 }

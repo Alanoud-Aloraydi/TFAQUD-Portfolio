@@ -4,14 +4,18 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
+import 'package:app/features/medications/domain/use_cases/extra_dose_use_cases.dart';
 import 'package:injectable/injectable.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 @lazySingleton
-class MedicationsUseCase {
+class MedicationsUseCase with ExtraDoseUseCases {
   MedicationsUseCase(this._repository);
 
   final MedicationsRepositoryDomain _repository;
+
+  @override
+  MedicationsRepositoryDomain get repository => _repository;
 
   final StreamController<String> _changes =
       StreamController<String>.broadcast();

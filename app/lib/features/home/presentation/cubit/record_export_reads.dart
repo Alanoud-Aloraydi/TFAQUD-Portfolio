@@ -7,6 +7,7 @@ import 'package:app/features/home/presentation/cubit/record_export_scope.dart';
 import 'package:app/features/home/presentation/cubit/record_export_state.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Each part of the record an export can hold, read for one period.
@@ -17,6 +18,14 @@ mixin RecordExportReads
         final result = await medications.getOccurrences(id, from, to);
         final values = result.tryGetSuccess();
         if (values == null) throw StateError('Medication export failed');
+        return values;
+      });
+
+  Future<List<ExtraDose>> extraDosesIn(ExportPeriod period) =>
+      chunked(period, (id, from, to) async {
+        final result = await medications.getExtraDoses(id, from, to);
+        final values = result.tryGetSuccess();
+        if (values == null) throw StateError('Extra dose export failed');
         return values;
       });
 

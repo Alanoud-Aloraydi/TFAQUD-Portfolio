@@ -7,6 +7,7 @@ import 'package:app/features/home/domain/record_export_options.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 
 /// Everything one export needs, read before the file is written. Days and
@@ -19,6 +20,7 @@ class RecordExportData {
     required this.plans,
     this.medicalFile,
     this.doses = const <DoseOccurrence>[],
+    this.extraDoses = const <ExtraDose>[],
     this.readings = const <MeasurementReading>[],
     this.measurementTasks = const <MeasurementOccurrence>[],
     this.appointments = const <CareAppointment>[],
@@ -31,6 +33,9 @@ class RecordExportData {
   final List<MedicationPlan> plans;
   final MedicalFile? medicalFile;
   final List<DoseOccurrence> doses;
+
+  /// «سجّل جرعة الآن»: on top of [doses], never one of them.
+  final List<ExtraDose> extraDoses;
   final List<MeasurementReading> readings;
   final List<MeasurementOccurrence> measurementTasks;
   final List<CareAppointment> appointments;

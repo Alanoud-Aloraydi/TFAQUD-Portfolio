@@ -135,8 +135,19 @@ void main() {
       expect(occurrence.record!.takenAt, isNotNull);
     });
 
-    test('form reports the first invalid field in reading order', () {
+    test('a new medicine starts with no dose time, and saves without one', () {
       final data = MedicationFormData(null, today: _today);
+      addTearDown(data.dispose);
+      data.name.text = 'Medicine';
+      data.strength.text = '5';
+
+      expect(data.schedules, isEmpty);
+      expect(data.firstIssue(), isNull);
+      expect(data.toDraft()!.schedules, isEmpty);
+    });
+
+    test('form reports the first invalid field in reading order', () {
+      final data = MedicationFormData(null, today: _today)..addSchedule();
       addTearDown(data.dispose);
 
       expect(data.firstIssue()!.field, MedicationFormField.name);
@@ -165,7 +176,7 @@ void main() {
       expect(formatted.text, '50.5');
       expect(formatted.selection.baseOffset, 4);
 
-      final data = MedicationFormData(null, today: _today);
+      final data = MedicationFormData(null, today: _today)..addSchedule();
       addTearDown(data.dispose);
       data.name.text = 'Medicine';
       data.strength.text = '\u0665\u0660\u066B\u06F5';
@@ -283,7 +294,7 @@ void main() {
       });
 
       test('the form sends the number of days and keeps the week', () {
-        final data = MedicationFormData(null, today: _today);
+        final data = MedicationFormData(null, today: _today)..addSchedule();
         addTearDown(data.dispose);
         data.name.text = 'Medicine';
         data.strength.text = '5';
@@ -342,6 +353,7 @@ void main() {
         _mapped('future_dose_record').messageKey,
         'medications.future_dose',
       );
+      expect(_mapped('dose_too_old').messageKey, 'medications.dose_too_old');
     });
   });
 }

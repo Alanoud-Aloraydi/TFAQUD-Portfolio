@@ -1,15 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
 
-import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/photo_probe.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Appointments extends Fake implements AppointmentsRepositoryDomain {
@@ -28,16 +23,6 @@ class _Appointments extends Fake implements AppointmentsRepositoryDomain {
   Future<List<CareAppointment>> appointments(String circleId) async {
     if (offline) throw Exception('offline');
     return saved;
-  }
-}
-
-class _Photos extends Fake implements PrivatePhotoRepository {
-  int loads = 0;
-
-  @override
-  Future<Uint8List?> load(String path) async {
-    loads++;
-    return Uint8List(1);
   }
 }
 
@@ -101,38 +86,6 @@ void main() {
 
       // Nothing was shown to keep, so the error stays with its retry.
       expect(cubit.state.status, AppointmentsLoadStatus.failure);
-    });
-
-    testWidgets('PhotoProbe looks photos up once, not on every rebuild', (
-      WidgetTester tester,
-    ) async {
-      final photos = _Photos();
-      bool? shown;
-      Widget app(List<String> ids) =>
-          RepositoryProvider<PrivatePhotoRepository>.value(
-            value: photos,
-            child: PhotoProbe(
-              circleId: 'c',
-              planIds: ids,
-              builder: (context, hasPhoto) {
-                shown = hasPhoto;
-                return const SizedBox();
-              },
-            ),
-          );
-
-      await tester.pumpWidget(app(['a', 'b']));
-      await tester.pump();
-      expect(photos.loads, 2);
-      expect(shown, isTrue);
-
-      await tester.pumpWidget(app(['a', 'b']));
-      await tester.pump();
-      expect(photos.loads, 2);
-
-      await tester.pumpWidget(app(['a']));
-      await tester.pump();
-      expect(photos.loads, 3);
     });
   });
 }

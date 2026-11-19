@@ -22,7 +22,6 @@ class TodayDoseRow extends StatelessWidget {
     required this.circleId,
     required this.canManage,
     required this.now,
-    this.showThumbnail = false,
   });
 
   final DoseOccurrence occurrence;
@@ -31,7 +30,6 @@ class TodayDoseRow extends StatelessWidget {
   /// Passed on to the medicine's page.
   final bool canManage;
   final DateTime now;
-  final bool showThumbnail;
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +43,7 @@ class TodayDoseRow extends StatelessWidget {
       time: clockText(occurrence.time),
       spokenLabel: doseRowSpokenLabel(context, occurrence, status),
       tone: status.unrecorded ? TodayRowTone.attention : TodayRowTone.normal,
-      leading: DoseRowLeading(
-        circleId: circleId,
-        planId: occurrence.planId,
-        showPhoto: showThumbnail,
-      ),
+      leading: DoseRowLeading(circleId: circleId, planId: occurrence.planId),
       title: doseRowTitle(context, occurrence),
       subtitle: doseRowSubtitle(context, occurrence),
       details: doseRowDetails(context, occurrence, circleId, status),

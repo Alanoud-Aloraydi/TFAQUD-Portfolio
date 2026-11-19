@@ -9,6 +9,7 @@ from app.care.account_circles import CareAccountCircles
 from app.care.account_deletion import CareAccountDeletion
 from app.care.building import CareBuilding
 from app.care.circle_changes import CareCircleChanges
+from app.care.circle_limit import CareCircleLimit
 from app.care.completion import CareCompletion
 from app.care.consent import CareConsent
 from app.care.creation import CareCreation
@@ -25,6 +26,7 @@ from app.care.rules import CareRules
 class CareService(
     CareLocks,
     CareRules,
+    CareCircleLimit,
     CareMembers,
     CarePatientBasics,
     CareBuilding,

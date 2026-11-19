@@ -7,6 +7,7 @@ Failure _circleFailure(Object error) {
     ApiErrorCodes.alreadyHasCircle => const AlreadyHasCircleFailure(),
     ApiErrorCodes.profileIncomplete => const ProfileIncompleteFailure(),
     ApiErrorCodes.modeConflict => const ModeConflictFailure(),
+    ApiErrorCodes.tooManyCircles => const TooManyCirclesFailure(),
     _ => FailureExceptions.getException(error),
   };
 }
@@ -32,6 +33,7 @@ Failure _requestFailure(Object error) {
     ApiErrorCodes.selfRequest => const SelfRequestFailure(),
     ApiErrorCodes.profileIncomplete => const ProfileIncompleteFailure(),
     ApiErrorCodes.modeConflict => const ModeConflictFailure(),
+    ApiErrorCodes.tooManyCircles => const TooManyCirclesFailure(),
     _ => FailureExceptions.getException(error),
   };
 }
@@ -58,6 +60,7 @@ Failure _replyFailure(Object error) {
     ApiErrorCodes.alreadyHasCircle => const AlreadyHasCircleFailure(),
     ApiErrorCodes.acceptedRequestExists => const AcceptedRequestExistsFailure(),
     ApiErrorCodes.modeConflict => const ReplyModeConflictFailure(),
+    ApiErrorCodes.tooManyCircles => const TooManyCirclesFailure(),
     ApiErrorCodes.profileIncomplete => const ProfileIncompleteFailure(),
     _ => FailureExceptions.getException(error),
   };
