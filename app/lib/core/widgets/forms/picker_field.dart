@@ -16,6 +16,7 @@ class PickerField extends StatelessWidget {
     required this.onTap,
     this.value,
     this.errorText,
+    this.note,
   });
 
   final String label;
@@ -25,9 +26,13 @@ class PickerField extends StatelessWidget {
   final String? value;
   final String? errorText;
 
+  /// A line under the field, such as a birth date in the other calendar.
+  final String? note;
+
   @override
   Widget build(BuildContext context) {
     return InsetGroup(
+      footer: note,
       children: <Widget>[
         InsetRow(
           label: label,

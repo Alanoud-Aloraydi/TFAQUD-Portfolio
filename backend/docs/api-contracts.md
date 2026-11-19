@@ -567,6 +567,13 @@ recording a dose of those days, scheduled or extra, is refused with 422
 `dose_too_old`. The app warns five days before a day's doses go, so they can
 be exported first. Readings, appointments and plans are kept.
 
+### The first day with a reading
+
+`GET /measurement-readings/first` answers `{"first_reading_on": "YYYY-MM-DD"}`:
+the patient's first day with a saved reading (by when it was measured) or a
+skip (by its task's day), or `null` while there is none. «السجل» shows no month
+bar or filter before there is one, and goes back no further than that month.
+
 ### Circles, requests, invitations and the medical file
 
 Built on 26 October 2026 for the circle creation, circle management and profile
@@ -593,7 +600,7 @@ the team has not approved them yet.
 | `POST /api/v1/circles/self` | any signed-in account with a profile | 201 `circle` |
 | `POST /api/v1/circles/patient-without-account` | the same | 201 `circle` |
 | `GET /api/v1/circles/{circle_id}` | manager, simplified patient | 200 `circle` |
-| `PATCH /api/v1/circles/{circle_id}` (rename) | the patient with an account (the rule below) | 200 `circle` |
+| `PATCH /api/v1/circles/{circle_id}` (rename) | whoever changes the patient's picture (the rule below) | 200 `circle` |
 | `PUT /api/v1/circles/{circle_id}/patient` | manager, simplified patient | 200 `circle` |
 | `POST /api/v1/circles/{circle_id}/leave` | manager | 204 |
 | `DELETE /api/v1/circles/{circle_id}?confirm=true` | manager, simplified patient (the rule below) | 204 |
@@ -757,9 +764,11 @@ get the key.
 ```
 
 `PATCH` takes `{ "name": "صحتي" }` (1 to 60 characters) and returns the circle.
-Only the patient with an account may call it, as a manager or as a simplified
-patient: it changes their own name for the circle. Anyone else, and anyone in a
-circle of a patient without an account, gets 403 `patient_names_circle`. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
+Whoever may change the patient's picture names the circle (0067). The patient
+with an account, as a manager or as a simplified patient, changes their own name
+for it; anyone else in that circle gets 403 `patient_names_circle`. In a circle
+of a patient without an account, a manager names it for everyone (until then
+everyone sees «دائرة» and the first name); a member who only reads gets 403. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
 `birth_date` and `city` are required; `latitude`/`longitude` are replaced (sending
 none clears them); `time_zone` is optional and, left out, the saved zone stays. A patient without an account also needs `first_name` and
 `last_name`; for a patient with an account those two fields are an error

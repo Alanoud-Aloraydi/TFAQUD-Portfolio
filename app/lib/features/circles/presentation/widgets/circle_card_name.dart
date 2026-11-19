@@ -1,15 +1,24 @@
 import 'package:app/core/l10n/spoken_arabic.dart';
 import 'package:app/core/utils/birth_date_rules.dart';
+import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
+import 'package:app/features/circles/presentation/widgets/circle_edit_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// The circle's name, and under it who it cares for:
-/// «نورة العتيبي، 72 سنة، بريدة».
+/// The circle's name, with the one pen that edits it and the patient's
+/// picture for whoever may change the picture, and under it who it cares
+/// for: «نورة العتيبي، 72 سنة، بريدة».
 class CircleCardName extends StatelessWidget {
-  const CircleCardName({super.key, required this.name, required this.overview});
+  const CircleCardName({
+    super.key,
+    required this.circleId,
+    required this.name,
+    required this.overview,
+  });
 
+  final String circleId;
   final String name;
   final CircleOverview overview;
 
@@ -34,7 +43,21 @@ class CircleCardName extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(name, style: text.headlineMedium),
+          Row(
+            children: <Widget>[
+              Flexible(child: Text(name, style: text.headlineMedium)),
+              if (overview.canEditPatientPhoto)
+                EditAction.pen(
+                  tooltip: context.tr('circle_edit.title'),
+                  onPressed: () => showCircleEditSheet(
+                    context,
+                    circleId: circleId,
+                    name: name,
+                    overview: overview,
+                  ),
+                ),
+            ],
+          ),
           Text(who, style: text.bodySmall, semanticsLabel: spoken(who)),
         ],
       ),

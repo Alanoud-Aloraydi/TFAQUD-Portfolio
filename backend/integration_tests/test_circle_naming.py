@@ -3,7 +3,8 @@ PostgreSQL.
 
 - The patient with an account sees the name they chose.
 - Everyone else sees «دائرة» and the patient's display name.
-- A patient without an account: everyone sees «دائرة» and the first name.
+- A patient without an account: everyone sees the name its managers chose,
+  or until then «دائرة» and the first name.
 """
 
 from integration_tests.helpers import Api, error_code
@@ -196,14 +197,21 @@ def test_a_simplified_patient_renames_their_own_circle(database_app, account):
     assert renamed.json["circle"]["name"] == "رعايتي"
 
 
-def test_nobody_renames_a_circle_of_a_patient_without_a_number(
+def test_the_managers_name_a_circle_of_a_patient_without_a_number(
     database_app, account
 ):
+    """As they choose the patient's picture; everyone sees the name."""
     reem = Api(database_app, account(name="Reem"))
+    sara = Api(database_app, account(name="Sara"))
     circle_id = reem.post(
         "/api/v1/circles/patient-without-account", OFFLINE
     ).json["circle"]["id"]
+    assert circle_name(reem, circle_id) == "دائرة Huda"
+    invite_and_join(reem, sara, circle_id)
 
-    refused = reem.patch(f"/api/v1/circles/{circle_id}", {"name": "أمي"})
+    renamed = reem.patch(f"/api/v1/circles/{circle_id}", {"name": "أمي"})
 
-    assert error_code(refused, 403) == "patient_names_circle"
+    assert renamed.status_code == 200
+    assert renamed.json["circle"]["name"] == "أمي"
+    assert circle_name(sara, circle_id) == "أمي"
+    assert home_names(sara) == ["أمي"]

@@ -3,6 +3,7 @@ import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/presentation/cubit/extra_dose_history_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details_body.dart';
 import 'package:app/features/medications/presentation/widgets/medication_edit_route.dart';
@@ -11,7 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-/// The medicine's page: its own month of doses loaded beside it.
+/// The medicine's page: its own month of doses loaded beside it, and its
+/// extra doses.
 class MedicationDetailsContent extends StatelessWidget {
   const MedicationDetailsContent({
     super.key,
@@ -32,11 +34,20 @@ class MedicationDetailsContent extends StatelessWidget {
     final start = plan.version.startsOn.isAfter(from)
         ? plan.version.startsOn
         : from;
-    return BlocProvider(
-      create: (_) => MedicationOccurrencesCubit(
-        GetIt.I<MedicationsUseCase>(),
-        photoChanges: GetIt.I<PrivatePhotoRepository>().changes,
-      )..load(circleId, start, today, planId: plan.id),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => MedicationOccurrencesCubit(
+            GetIt.I<MedicationsUseCase>(),
+            photoChanges: GetIt.I<PrivatePhotoRepository>().changes,
+          )..load(circleId, start, today, planId: plan.id),
+        ),
+        BlocProvider(
+          create: (_) =>
+              ExtraDoseHistoryCubit(GetIt.I<MedicationsUseCase>())
+                ..load(circleId, plan.id, today),
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.tr('medications.details')),

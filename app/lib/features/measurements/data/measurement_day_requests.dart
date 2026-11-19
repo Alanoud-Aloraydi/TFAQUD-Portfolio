@@ -5,7 +5,8 @@ import 'package:app/features/measurements/domain/measurement_task_link.dart';
 import 'package:app/core/network/measurement_endpoints.dart';
 
 /// The requests that read what happened on the patient's days: the tasks,
-/// the readings of a span, and every reading for the record export.
+/// the readings of a span, the first day with one, and every reading for
+/// the record export.
 mixin MeasurementDayRequests {
   DioClient get client;
 
@@ -42,6 +43,17 @@ mixin MeasurementDayRequests {
         (response.data as Map<String, dynamic>)['measurement_readings']
             as List<dynamic>;
     return knownMeasurementItems(values, MeasurementReading.fromJson);
+  }
+
+  /// The patient's first day with a saved reading or skip; null while
+  /// there is none.
+  Future<DateTime?> firstReadingOn(String circleId) async {
+    final response = await client.get(
+      MeasurementEndpoints.measurementFirstReading(circleId),
+    );
+    final Object? day =
+        (response.data as Map<String, dynamic>)['first_reading_on'];
+    return day is String ? DateTime.tryParse(day) : null;
   }
 
   /// Every reading of [circleId], for the record export.

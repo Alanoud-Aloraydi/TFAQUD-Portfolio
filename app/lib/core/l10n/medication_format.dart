@@ -1,5 +1,8 @@
 import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/l10n/calendar_texts.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/utils/schedule_day.dart';
+import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -10,13 +13,18 @@ import 'package:flutter/material.dart';
 String formatMedicationNumber(double value) =>
     value.toString().replaceFirst(RegExp(r'\.0$'), '');
 
-/// «3 مارس 2026»: a treatment or schedule day with the Arabic month name.
+/// «3 مارس 2026», or «14 رمضان 1447» in Hijri: a treatment or schedule
+/// day with the Arabic month name, in the calendar chosen in «حسابي».
 String formatMedicationDate(BuildContext context, DateTime date) =>
-    '${date.day} ${context.tr('circles.months.${date.month}')} ${date.year}';
+    calendarDate(context, date);
 
-/// «نوفمبر 2026»: a month without its days, for the history filter.
-String formatMonth(BuildContext context, DateTime month) =>
-    '${context.tr('circles.months.${month.month}')} ${month.year}';
+/// «نوفمبر 2026» or «جمادى الآخرة 1448»: the month that starts on [first]
+/// in the calendar chosen in «حسابي», without its days, for the history
+/// filter.
+String formatMonth(BuildContext context, DateTime first) => calendarMonthTitle(
+  context,
+  CalendarMonth.of(first, CalendarScope.of(context)),
+);
 
 /// «بدأ في 3 مارس 2026» for a plan without an end that has started by
 /// [today] (the patient's day), «يبدأ في 3 مارس 2026» for one yet to start

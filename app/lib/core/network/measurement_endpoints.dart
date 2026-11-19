@@ -14,6 +14,8 @@ abstract final class MeasurementEndpoints {
       '/circles/$circleId/measurement-readings';
   static String measurementReadingsExport(String circleId) =>
       '${measurementReadings(circleId)}/export';
+  static String measurementFirstReading(String circleId) =>
+      '${measurementReadings(circleId)}/first';
 
   /// One task: a version's reading [time] («HH:mm») on [scheduledOn].
   static String measurementRecord(

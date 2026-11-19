@@ -2,42 +2,44 @@ import 'package:app/core/l10n/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/dose_history_entry.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';
+import 'package:app/features/medications/presentation/widgets/extra_dose_card.dart';
 import 'package:flutter/material.dart';
 
-/// [occurrences], newest first, under the date of their day.
+/// [entries], newest first, under the date of their day: the doses of the
+/// dose times and the extra doses, each in the same card.
 class DoseHistoryDays extends StatelessWidget {
   const DoseHistoryDays({
     super.key,
-    required this.occurrences,
+    required this.entries,
     required this.circleId,
   });
 
-  final List<DoseOccurrence> occurrences;
+  final List<DoseHistoryEntry> entries;
 
   /// Needed to show who recorded each dose.
   final String circleId;
 
   @override
   Widget build(BuildContext context) {
-    final Map<DateTime, List<DoseOccurrence>> days =
-        <DateTime, List<DoseOccurrence>>{};
-    for (final DoseOccurrence item in occurrences) {
-      final DateTime day = DateUtils.dateOnly(item.scheduledOn);
-      days.putIfAbsent(day, () => <DoseOccurrence>[]).add(item);
+    final Map<DateTime, List<DoseHistoryEntry>> days =
+        <DateTime, List<DoseHistoryEntry>>{};
+    for (final DoseHistoryEntry item in entries) {
+      final DateTime day = DateUtils.dateOnly(item.day);
+      days.putIfAbsent(day, () => <DoseHistoryEntry>[]).add(item);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        for (final MapEntry<DateTime, List<DoseOccurrence>> day
+        for (final MapEntry<DateTime, List<DoseHistoryEntry>> day
             in days.entries) ...<Widget>[
           Text(
             formatMedicationDate(context, day.key),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
-          for (final DoseOccurrence item in day.value) ...<Widget>[
+          for (final DoseHistoryEntry item in day.value) ...<Widget>[
             DecoratedBox(
               decoration: BoxDecoration(
                 color: AppSemanticColors.surfaceContent,
@@ -46,7 +48,16 @@ class DoseHistoryDays extends StatelessWidget {
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: DoseOccurrenceCard(occurrence: item, circleId: circleId),
+                child: switch (item) {
+                  ScheduledDoseEntry(:final occurrence) => DoseOccurrenceCard(
+                    occurrence: occurrence,
+                    circleId: circleId,
+                  ),
+                  ExtraDoseEntry() => ExtraDoseCard(
+                    entry: item,
+                    circleId: circleId,
+                  ),
+                },
               ),
             ),
             const SizedBox(height: AppSpacing.sm),

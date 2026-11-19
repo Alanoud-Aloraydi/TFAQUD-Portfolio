@@ -10,7 +10,9 @@ class ExtraDose extends Equatable {
     required this.takenAt,
     required this.doseValue,
     required this.doseUnit,
+    this.recordedByAccountId,
     this.recordedByName,
+    this.recordedByAvatarCode,
   });
 
   final String id;
@@ -21,8 +23,11 @@ class ExtraDose extends Equatable {
   final double doseValue;
   final DoseUnit doseUnit;
 
-  /// Who recorded it: null once their account was deleted.
+  /// Who recorded it, with their photo or avatar in «سجل الجرعات»: null
+  /// once their account was deleted.
+  final String? recordedByAccountId;
   final String? recordedByName;
+  final String? recordedByAvatarCode;
 
   @override
   List<Object?> get props => [
@@ -31,7 +36,9 @@ class ExtraDose extends Equatable {
     takenAt,
     doseValue,
     doseUnit,
+    recordedByAccountId,
     recordedByName,
+    recordedByAvatarCode,
   ];
 }
 

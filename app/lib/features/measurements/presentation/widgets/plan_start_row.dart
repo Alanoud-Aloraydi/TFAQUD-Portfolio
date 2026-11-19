@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
@@ -25,7 +26,7 @@ class PlanStartRow extends StatelessWidget {
     );
     return InsetRow(
       label: label,
-      value: '${start.day}/${start.month}/${start.year}',
+      value: calendarDate(context, start),
       onTap: () async {
         final earliest = PatientClockScope.of(context).today();
         final selected = await showTafaqodDateSheet(

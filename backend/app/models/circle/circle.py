@@ -17,8 +17,9 @@ class CareCircle(db.Model):
     0037. While the patient has an account (`account_id`), the names, the
     birth date, the city and the avatar are the account's and are not
     copied here; `name` is then the patient's own name for the circle.
-    A patient without an account keeps them here and has no circle name
-    (everyone reads «دائرة» and the first name, `app.circles.naming`).
+    A patient without an account keeps them here; the circle's name is
+    then the one its managers chose, or none (everyone reads «دائرة» and
+    the first name, `app.circles.naming`).
     At least one manager is checked when the transaction commits.
     """
 
@@ -29,8 +30,8 @@ class CareCircle(db.Model):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
-    # The patient's own name for the circle; null for a patient without an
-    # account.
+    # The patient's own name for the circle; for a patient without an
+    # account, the managers' name, or null.
     name: Mapped[str | None] = mapped_column(Text)
     # The patient's account; null for a patient without one.
     account_id: Mapped[UUID | None] = mapped_column(

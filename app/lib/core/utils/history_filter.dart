@@ -1,3 +1,5 @@
+import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:equatable/equatable.dart';
 
 /// What a history shows: one [month] or every month (null), and what one
@@ -12,7 +14,8 @@ class HistoryFilter extends Equatable {
 
   static const HistoryFilter all = HistoryFilter();
 
-  /// The first day of the month shown; null for every month.
+  /// The first day of the month shown (of the calendar chosen in «حسابي»);
+  /// null for every month.
   final DateTime? month;
   final String? person;
 
@@ -23,18 +26,19 @@ class HistoryFilter extends Equatable {
       HistoryFilter(month: month, person: person);
 
   /// Whether a record of the day [on], by [by] (account, name), shows.
-  bool shows(DateTime on, (String?, String?) by) =>
-      (month == null || _sameMonth(month!, on)) &&
+  bool shows(
+    DateTime on,
+    (String?, String?) by, {
+    DateCalendar calendar = DateCalendar.gregorian,
+  }) =>
+      (month == null || _firstDayOf(on, calendar) == month) &&
       (person == null || person == personKey(by.$1, by.$2));
 
   /// This filter less a month or a person the items no longer have, as
   /// after another month is read.
   HistoryFilter within(List<DateTime> months, Map<String, String> people) =>
       HistoryFilter(
-        month:
-            months.any((DateTime m) => month != null && _sameMonth(m, month!))
-            ? month
-            : null,
+        month: months.contains(month) ? month : null,
         person: people.containsKey(person) ? person : null,
       );
 
@@ -43,9 +47,13 @@ class HistoryFilter extends Equatable {
   static String? personKey(String? accountId, String? name) =>
       accountId ?? ((name == null || name.trim().isEmpty) ? null : name);
 
-  /// The months of [moments], each once, newest first.
-  static List<DateTime> monthsOf(Iterable<DateTime> moments) =>
-      <DateTime>{for (final DateTime at in moments) DateTime(at.year, at.month)}
+  /// The months of [moments] in [calendar], each once by its first day,
+  /// newest first.
+  static List<DateTime> monthsOf(
+    Iterable<DateTime> moments, {
+    DateCalendar calendar = DateCalendar.gregorian,
+  }) =>
+      <DateTime>{for (final DateTime at in moments) _firstDayOf(at, calendar)}
           .toList()
         ..sort((DateTime a, DateTime b) => b.compareTo(a));
 
@@ -56,8 +64,8 @@ class HistoryFilter extends Equatable {
           if (personKey(account, name) case final String key) key: name ?? '',
       };
 
-  static bool _sameMonth(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month;
+  static DateTime _firstDayOf(DateTime day, DateCalendar calendar) =>
+      CalendarMonth.of(day, calendar).first;
 
   @override
   List<Object?> get props => <Object?>[month, person];

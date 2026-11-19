@@ -4,6 +4,7 @@ import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_actions_card.dart';
 import 'package:app/features/account/presentation/widgets/account_awaiting_section.dart';
+import 'package:app/features/account/presentation/widgets/account_calendar_card.dart';
 import 'package:app/features/account/presentation/widgets/account_calendar_sync_card.dart';
 import 'package:app/features/account/presentation/widgets/account_data_section.dart';
 import 'package:app/features/account/presentation/widgets/account_notifications_card.dart';
@@ -13,9 +14,9 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
 /// Everything «حسابي» scrolls through, in order: who the account is, its
-/// data, whether the phone's notifications are allowed, calendar sync, the
-/// requests that wait for a patient, the note about the medical file, and
-/// the two actions that end the account.
+/// data, هجري or ميلادي, whether the phone's notifications are allowed,
+/// calendar sync, the requests that wait for a patient, the note about the
+/// medical file, and the two actions that end the account.
 List<Widget> accountSections(
   BuildContext context, {
   required AccountCubit cubit,
@@ -25,6 +26,8 @@ List<Widget> accountSections(
   AccountProfileHeader(account: account, onPhotoSaved: cubit.load),
   const SizedBox(height: AppSpacing.xl),
   accountDataSection(context, account),
+  const SizedBox(height: AppSpacing.xl),
+  const AccountCalendarCard(),
   const SizedBox(height: AppSpacing.xl),
   const AccountNotificationsCard(),
   if (state.circles.isNotEmpty) ...<Widget>[

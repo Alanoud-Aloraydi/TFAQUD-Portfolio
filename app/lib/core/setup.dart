@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/app_calendar.dart';
 import 'package:app/core/services/app_accessibility.dart';
 import 'package:app/core/services/fresh_install.dart';
 import 'package:app/core/services/native_glass.dart';
@@ -14,6 +15,8 @@ Future<void> setup() async {
   // iOS 26 or later draws the add button as Apple's own glass.
   await NativeGlass.detect();
   await AppAccessibility.initialize();
+  // هجري or ميلادي, as chosen on this phone, before any date is written.
+  await AppCalendar.restore();
   // The IANA zones, for each circle's own clock and the reminders' moments.
   ensureTimeZones();
 }

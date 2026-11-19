@@ -3,6 +3,7 @@ import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/picker_field.dart';
+import 'package:app/core/widgets/pickers/birth_date_note.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
@@ -34,6 +35,7 @@ List<Widget> medicalIdentityFields(
         value: state.birthDate == null
             ? null
             : formatBirthDate(context, state.birthDate!),
+        note: birthDateNote(context, state.birthDate),
         onTap: () => pickBirthDate(context, state, cubit),
         errorText:
             refused ?? (show && state.birthDate == null ? requiredText : null),

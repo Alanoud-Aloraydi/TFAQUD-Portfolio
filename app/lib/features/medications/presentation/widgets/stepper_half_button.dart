@@ -20,7 +20,7 @@ class StepperHalfButton extends StatelessWidget {
       tooltip: label,
       onPressed: onPressed,
       icon: Icon(icon, size: AppSizes.iconSmall),
-      color: AppSemanticColors.textPrimary,
+      color: AppSemanticColors.actionStrong,
       disabledColor: AppSemanticColors.borderControlBase,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints.tight(const Size.square(AppSizes.touch)),

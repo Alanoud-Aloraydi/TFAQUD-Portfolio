@@ -2,10 +2,13 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-/// Reading a circle and changing who is in it.
+/// Reading a circle, its name, and changing who is in it.
 abstract class CircleMembersRepository {
   /// Read the members and pending invitations of one circle.
   Future<Result<CircleOverview, Failure>> getCircleOverview(String circleId);
+
+  /// Names the circle: whoever changes the patient's picture may.
+  Future<Result<void, Failure>> renameCircle(String circleId, String name);
 
   /// Invite a manager by verified account phone number.
   Future<Result<void, Failure>> inviteManager(

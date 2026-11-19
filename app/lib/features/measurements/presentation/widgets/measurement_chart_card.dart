@@ -1,6 +1,7 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_chart_card_header.dart';
@@ -22,7 +23,7 @@ class MeasurementChartCard extends StatefulWidget {
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
-  final DateTime month;
+  final CalendarMonth month;
   final String circleId;
 
   @override

@@ -1,3 +1,5 @@
+import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
@@ -10,6 +12,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/widget_harness.dart';
+
+/// [year]'s Gregorian [month], as the chart reads it.
+CalendarMonth _month(int year, int month) =>
+    CalendarMonth.of(DateTime(year, month), DateCalendar.gregorian);
 
 MeasurementReading _reading(MeasurementKind kind, {String outcome = 'read'}) =>
     MeasurementReading(
@@ -37,7 +43,7 @@ Future<void> _pump(
           readings: readings,
         ),
         circleId: 'circle-1',
-        month: DateTime(2026, 11),
+        month: _month(2026, 11),
         filter: MeasurementRecordFilter.all,
         onRetry: () {},
         onAddReading: onAdd,

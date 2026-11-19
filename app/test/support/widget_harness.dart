@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:app/core/l10n/app_calendar.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -57,6 +58,8 @@ class OfflinePhotoRepository implements PrivatePhotoRepository {
 /// Call in `setUpAll` of a widget test that shows texts.
 Future<void> initTestLocalization() async {
   SharedPreferences.setMockInitialValues(<String, Object>{});
+  // The tests were written with Gregorian dates; a Hijri test picks Hijri.
+  AppCalendar.choice.value = DateCalendar.gregorian;
   await EasyLocalization.ensureInitialized();
 }
 

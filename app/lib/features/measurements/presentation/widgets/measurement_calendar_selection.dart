@@ -1,4 +1,6 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_tile.dart';
@@ -10,13 +12,13 @@ import 'package:flutter/material.dart';
 List<Widget> measurementCalendarSelection(
   BuildContext context, {
   required int day,
-  required DateTime month,
+  required CalendarMonth month,
   required List<MeasurementReading> readings,
   required String circleId,
 }) => <Widget>[
   const SizedBox(height: AppSpacing.sm),
   Text(
-    '$day ${context.tr('circles.months.${month.month}')}',
+    calendarDate(context, month.dayAt(day), year: false),
     style: Theme.of(context).textTheme.titleSmall,
   ),
   if (readings.isEmpty)

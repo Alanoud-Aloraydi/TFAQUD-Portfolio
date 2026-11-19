@@ -47,6 +47,10 @@ abstract class MeasurementsRepositoryDomain {
     DateTime to,
   );
 
+  /// The patient's first day with a saved reading or skip; null while
+  /// there is none.
+  Future<DateTime?> firstReadingOn(String circleId);
+
   /// Every reading, for the record export.
   Future<List<MeasurementReading>> allReadings(String circleId);
 

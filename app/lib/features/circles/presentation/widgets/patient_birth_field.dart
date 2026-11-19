@@ -2,6 +2,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/picker_field.dart';
+import 'package:app/core/widgets/pickers/birth_date_note.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
@@ -34,6 +35,7 @@ class PatientBirthField extends StatelessWidget {
         hint: context.tr('circles.birth_date_hint'),
         icon: ScheduleIcons.calendar,
         value: date == null ? null : formatBirthDate(context, date),
+        note: birthDateNote(context, date),
         onTap: () => pickPatientBirthDate(context, cubit, date),
         errorText:
             refused ??

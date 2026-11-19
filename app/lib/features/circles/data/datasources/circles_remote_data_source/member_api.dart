@@ -1,7 +1,12 @@
 part of '../circles_remote_data_source.dart';
 
-/// A circle's managers: inviting them, what they may edit, and who leads.
+/// A circle's managers: inviting them, what they may edit, who leads, and
+/// the circle's name.
 abstract interface class CircleMemberApi {
+  /// PATCH /api/v1/circles/{id}: the name, by whoever changes the
+  /// patient's picture.
+  Future<void> renameCircle(String circleId, String name);
+
   /// POST /api/v1/circles/{id}/invitations.
   Future<void> inviteManager(String circleId, String phoneNumber);
 

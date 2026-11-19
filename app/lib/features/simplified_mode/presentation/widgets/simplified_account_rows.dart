@@ -4,6 +4,7 @@ import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_file_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_header.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_sync_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_outlined_danger.dart';
@@ -14,9 +15,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Everything «حسابي» shows, in order: who the patient is, the text size,
-/// whether the phone's notifications are allowed, the calendar copy, the
-/// medical file, signing out and deleting.
+/// Everything «حسابي» shows, in order: who the patient is, the text size
+/// and هجري or ميلادي, whether the phone's notifications are allowed, the
+/// calendar copy, the medical file, signing out and deleting.
 List<Widget> simplifiedAccountRows(
   BuildContext context,
   AccountState state,
@@ -30,6 +31,7 @@ List<Widget> simplifiedAccountRows(
       const LoadingNote(),
     SimplifiedSectionTitle(context.tr('simplified_mode.display')),
     const SimplifiedTextSizeCard(),
+    const SimplifiedCalendarCard(),
     SimplifiedSectionTitle(context.tr('account.notifications_title')),
     const SimplifiedNotificationsCard(),
     if (circleId != null) ...<Widget>[

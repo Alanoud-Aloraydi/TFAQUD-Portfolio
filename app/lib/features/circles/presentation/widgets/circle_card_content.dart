@@ -5,7 +5,7 @@ import 'package:app/features/circles/domain/entities/medical_profile_draft.dart'
 import 'package:app/features/circles/presentation/widgets/circle_app_mode_row.dart';
 import 'package:app/features/circles/presentation/widgets/circle_card_name.dart';
 import 'package:app/features/circles/presentation/widgets/circle_facts.dart';
-import 'package:app/features/circles/presentation/widgets/patient_photo_button.dart';
+import 'package:app/features/circles/presentation/widgets/patient_card_photo.dart';
 import 'package:flutter/material.dart';
 
 /// What the patient card holds, in order: the picture beside the names, the
@@ -20,10 +20,14 @@ List<Widget> circleCardContent(
 }) => <Widget>[
   Row(
     children: <Widget>[
-      PatientPhotoButton(circleId: circleId, overview: overview),
+      PatientCardPhoto(circleId: circleId, overview: overview),
       const SizedBox(width: AppSpacing.md),
       Expanded(
-        child: CircleCardName(name: circleName, overview: overview),
+        child: CircleCardName(
+          circleId: circleId,
+          name: circleName,
+          overview: overview,
+        ),
       ),
     ],
   ),

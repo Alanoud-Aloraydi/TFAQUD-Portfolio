@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/calendar_texts.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/measurements/domain/measurement_plan.dart';
 import 'package:app/features/measurements/presentation/pages/measurement_plan_form_readings.dart';
@@ -51,7 +52,7 @@ mixin MeasurementPlanFormLayout
           MeasurementPlanFormNote(
             text: context.tr(
               'measurements.edit_effective_hint',
-              args: [schedule.startText],
+              args: [calendarDate(context, schedule.start)],
             ),
           ),
       ],

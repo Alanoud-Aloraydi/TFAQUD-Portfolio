@@ -1,3 +1,4 @@
+import 'package:app/core/l10n/app_calendar.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
@@ -21,6 +22,7 @@ void main() {
   group('MedicationScheduleEditor', () {
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
+      AppCalendar.choice.value = DateCalendar.gregorian;
       await EasyLocalization.ensureInitialized();
     });
 

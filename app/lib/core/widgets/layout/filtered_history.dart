@@ -1,6 +1,7 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/history_filter.dart';
 import 'package:app/core/utils/history_view.dart';
+import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/core/widgets/layout/collapsible_group.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/navigation/history_filters.dart';
@@ -46,6 +47,7 @@ class _FilteredHistoryState<T> extends State<FilteredHistory<T>> {
       _filter,
       dayOf: widget.dayOf,
       byOf: widget.byOf,
+      calendar: CalendarScope.of(context),
     );
     return CollapsibleGroup(
       title: widget.title,

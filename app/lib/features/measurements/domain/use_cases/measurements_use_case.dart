@@ -51,6 +51,9 @@ class MeasurementsUseCase {
     DateTime to,
   ) => _repository.readings(circleId, from, to);
 
+  Future<DateTime?> firstReadingOn(String circleId) =>
+      _repository.firstReadingOn(circleId);
+
   Future<List<MeasurementReading>> allReadings(String circleId) =>
       _repository.allReadings(circleId);
 

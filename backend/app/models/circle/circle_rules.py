@@ -5,11 +5,12 @@ from sqlalchemy import CheckConstraint
 from app.models.circle.codes import AVATARS_SQL, BLOOD_SQL
 
 CIRCLE_TABLE_ARGS = (
+    # Without an account the name is the managers' choice, or none (0067).
     CheckConstraint(
         "(account_id IS NOT NULL AND name IS NOT NULL "
         "AND first_name IS NULL AND last_name IS NULL "
         "AND avatar_code IS NULL AND birth_date IS NULL "
-        "AND city IS NULL) OR (account_id IS NULL AND name IS NULL "
+        "AND city IS NULL) OR (account_id IS NULL "
         "AND first_name IS NOT NULL AND last_name IS NOT NULL "
         "AND birth_date IS NOT NULL AND city IS NOT NULL)",
         name="account_source",

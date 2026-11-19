@@ -1,3 +1,4 @@
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/measurements/domain/chart_target.dart';
 import 'package:app/features/measurements/domain/measurement_kind.dart';
@@ -24,7 +25,7 @@ class MeasurementPainter extends CustomPainter {
 
   final MeasurementKind kind;
   final List<MeasurementReading> readings;
-  final DateTime month;
+  final CalendarMonth month;
   final ChartTarget target;
 
   /// The patient's clock: a reading falls on its day where they live.

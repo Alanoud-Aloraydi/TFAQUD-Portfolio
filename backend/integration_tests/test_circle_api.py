@@ -444,7 +444,7 @@ def test_a_simplified_patient_sees_the_circle_without_invitations(
 # ---- rename and patient data ---------------------------------------------
 
 
-def test_a_manager_cannot_rename_an_automatic_name(
+def test_a_manager_names_the_circle_of_a_patient_without_an_account(
     database_app, database, account
 ):
     owner = account()
@@ -453,9 +453,9 @@ def test_a_manager_cannot_rename_an_automatic_name(
 
     response = api.patch(circle_url(circle.id), {"name": "Grandma Noura"})
 
-    assert error_code(response, 403) == "patient_names_circle"
+    assert response.status_code == 200, response.json
     with Session(database) as session:
-        assert session.get(CareCircle, circle.id).name is None
+        assert session.get(CareCircle, circle.id).name == "Grandma Noura"
 
 
 def test_a_blank_circle_name_is_refused(database_app, database, account):

@@ -1,5 +1,6 @@
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/calendar_day_cell.dart';
@@ -20,7 +21,7 @@ class MeasurementCalendarWeek extends StatelessWidget {
 
   final int firstDay;
   final int days;
-  final DateTime month;
+  final CalendarMonth month;
   final Map<int, List<MeasurementReading>> byDay;
   final int? selectedDay;
   final ValueChanged<int> onSelect;
@@ -52,10 +53,7 @@ class MeasurementCalendarWeek extends StatelessWidget {
       count: values.length,
       outside: values.any((r) => r.outsideTarget == true),
       selected: selectedDay == day,
-      isToday: DateUtils.isSameDay(
-        DateTime(month.year, month.month, day),
-        today,
-      ),
+      isToday: DateUtils.isSameDay(month.dayAt(day), today),
       onTap: () => onSelect(day),
     );
   }
