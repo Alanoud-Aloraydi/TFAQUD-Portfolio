@@ -9,6 +9,7 @@ class EmergencyContact extends Equatable {
     required this.name,
     required this.relation,
     required this.phoneNumber,
+    this.relationOther,
     this.verified = false,
     this.accountId,
     this.avatarCode,
@@ -20,6 +21,9 @@ class EmergencyContact extends Equatable {
   /// One of [MedicalOptions.contactRelations]: `son`, `daughter`, `husband`,
   /// `wife` or `other`.
   final String relation;
+
+  /// The relation in the user's words when [relation] is `other`.
+  final String? relationOther;
 
   /// With the country code, `+9665XXXXXXXX`.
   final String phoneNumber;
@@ -47,6 +51,7 @@ class EmergencyContact extends Equatable {
     id,
     name,
     relation,
+    relationOther,
     phoneNumber,
     verified,
     accountId,
@@ -54,22 +59,26 @@ class EmergencyContact extends Equatable {
   ];
 }
 
-/// What the user typed for a contact: the same three fields for a new contact
-/// and for a change of an old one.
+/// What the user typed for a contact: the same fields for a new contact and
+/// for a change of an old one.
 class ContactDraft extends Equatable {
   const ContactDraft({
     required this.name,
     required this.relation,
     required this.phoneNumber,
+    this.relationOther,
   });
 
   /// 1 to 50 characters, already trimmed.
   final String name;
   final String relation;
 
+  /// Trimmed, exactly when [relation] is `other`.
+  final String? relationOther;
+
   /// With the country code, `+9665XXXXXXXX`.
   final String phoneNumber;
 
   @override
-  List<Object?> get props => [name, relation, phoneNumber];
+  List<Object?> get props => [name, relation, relationOther, phoneNumber];
 }

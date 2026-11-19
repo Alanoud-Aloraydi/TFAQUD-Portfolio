@@ -38,10 +38,11 @@ class DemoMother:
         )
         contacts = MedicalService(self.session, self.at(-60))
         contacts.add_contact(
-            lina.id, mother.id, "محمد العتيبي", "son", "+966500000011"
+            lina.id, mother.id, "محمد العتيبي", "son", None, "+966500000011"
         )
         contacts.add_contact(
-            lina.id, mother.id, "ريم العتيبي", "daughter", "+966500000012"
+            lina.id, mother.id, "ريم العتيبي", "daughter", None,
+            "+966500000012",
         )
         return mother
 

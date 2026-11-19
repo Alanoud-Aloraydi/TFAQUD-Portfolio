@@ -521,6 +521,33 @@ void main() {
         expect(changed.name, 'خالد الجديد');
       });
 
+      test('sends and reads the words of «أخرى»', () async {
+        client.answer = <String, dynamic>{
+          'emergency_contact': <String, dynamic>{
+            ..._contact(),
+            'relation': 'other',
+            'relation_other': 'جارتنا',
+          },
+        };
+
+        final EmergencyContact added = await remote.addContact(
+          'c-1',
+          const ContactDraft(
+            name: 'خالد',
+            relation: 'other',
+            relationOther: 'جارتنا',
+            phoneNumber: '+966512345678',
+          ),
+        );
+
+        expect(client.calls.single.data, <String, dynamic>{
+          ...body,
+          'relation': 'other',
+          'relation_other': 'جارتنا',
+        });
+        expect(added.relationOther, 'جارتنا');
+      });
+
       test('removes a contact with DELETE on the contact', () async {
         await remote.deleteContact('c-1', 'k-1');
 

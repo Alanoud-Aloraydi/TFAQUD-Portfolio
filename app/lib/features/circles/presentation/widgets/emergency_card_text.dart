@@ -29,7 +29,9 @@ class EmergencyCardText {
   String unit(String name) =>
       context.tr(english ? 'card_en.unit.$name' : 'medications.unit.$name');
 
-  String relation(EmergencyContact contact) => english
+  /// The words typed for «أخرى» stay as typed in either language.
+  String relation(EmergencyContact contact) =>
+      english && contact.relationOther == null
       ? code('relation', contact.relation)
       : MedicalTexts.relation(context, contact);
 

@@ -1,12 +1,11 @@
-import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:equatable/equatable.dart';
 
-/// The form of one emergency contact, open below the list while the user adds
-/// a contact or changes one.
+/// The open form of one emergency contact; its checks: [ContactFormChecks].
 class ContactForm extends Equatable {
   const ContactForm({
     this.contactId,
     this.relation,
+    this.relationOther = '',
     this.name = '',
     this.phone = '',
     this.showErrors = false,
@@ -17,8 +16,10 @@ class ContactForm extends Equatable {
   /// The contact that is changed, or null for a new contact.
   final String? contactId;
 
-  /// One of [MedicalOptions.contactRelations], or null until the user picks.
+  /// One of [MedicalOptions.contactRelations], or null until the user picks,
+  /// and the words typed for «أخرى», kept if they pick another and back.
   final String? relation;
+  final String relationOther;
   final String name;
 
   /// The nine digits of the number, written 0-9, without the country code.
@@ -33,12 +34,9 @@ class ContactForm extends Equatable {
 
   bool get isNew => contactId == null;
 
-  /// [phone] is a whole Saudi mobile number ([SaudiMobile]); emergency
-  /// contacts are Saudi numbers (see `saudi_mobile.dart`).
-  bool get phoneValid => SaudiMobile.isValid(phone);
-
   ContactForm copyWith({
     String? relation,
+    String? relationOther,
     String? name,
     String? phone,
     bool? showErrors,
@@ -49,6 +47,7 @@ class ContactForm extends Equatable {
     return ContactForm(
       contactId: contactId,
       relation: relation ?? this.relation,
+      relationOther: relationOther ?? this.relationOther,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       showErrors: showErrors ?? this.showErrors,
@@ -61,6 +60,7 @@ class ContactForm extends Equatable {
   List<Object?> get props => [
     contactId,
     relation,
+    relationOther,
     name,
     phone,
     showErrors,

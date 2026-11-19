@@ -344,6 +344,40 @@ void main() {
         expect(circles.saveCalls, isEmpty);
       });
 
+      testWidgets('«أخرى» asks for the relation in words and sends them', (
+        WidgetTester tester,
+      ) async {
+        await openFile(tester);
+        await tester.tap(find.text('circles.contact_add'.tr()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('medical.relation.other'.tr()).last);
+        await tester.pumpAndSettle();
+        // The field for the words comes first, under the chips.
+        await tester.enterText(find.byType(TextField).at(1), 'سلمى');
+        await tester.enterText(phoneField(), '555555555');
+        final Finder save = find.text('circles.contact_save'.tr());
+        await tester.ensureVisible(save);
+        await tester.tap(save);
+        await tester.pumpAndSettle();
+
+        expect(find.text('common.field_required'.tr()), findsOneWidget);
+        expect(circles.saveCalls, isEmpty);
+
+        await tester.enterText(find.byType(TextField).first, ' جارتنا ');
+        await tester.ensureVisible(save);
+        await tester.tap(save);
+        await tester.pumpAndSettle();
+
+        expect(circles.addedContacts, <ContactDraft>[
+          const ContactDraft(
+            name: 'سلمى',
+            relation: 'other',
+            relationOther: 'جارتنا',
+            phoneNumber: '+966555555555',
+          ),
+        ]);
+      });
+
       testWidgets('cancel closes the form without saving', (
         WidgetTester tester,
       ) async {

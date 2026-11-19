@@ -50,6 +50,13 @@ MEDICATION_SQL = ", ".join(f"'{c}'" for c in MEDICATION_ALLERGY_CODES)
 FOOD_SQL = ", ".join(f"'{c}'" for c in FOOD_ALLERGY_CODES)
 RELATIONS_SQL = ", ".join(f"'{c}'" for c in CONTACT_RELATIONS)
 
+# A contact's «أخرى» carries the relation the user typed; the others none.
+RELATION_OTHER = (
+    "(relation = 'other' AND relation_other IS NOT NULL "
+    "AND length(btrim(relation_other)) BETWEEN 1 AND 100) OR "
+    "(relation <> 'other' AND relation_other IS NULL)"
+)
+
 # "other" always carries the text the user typed; every other code has none.
 OTHER_TEXT = (
     "(code = 'other' AND other_text IS NOT NULL "

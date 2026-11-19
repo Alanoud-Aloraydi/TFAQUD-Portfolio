@@ -4,6 +4,7 @@ import 'package:app/features/home/presentation/widgets/home_category_control.dar
 import 'package:app/features/home/presentation/widgets/record_header.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_section.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_state.dart';
@@ -42,8 +43,19 @@ class _RecordPageState extends State<RecordPage>
               return FadingBranches(
                 currentIndex: category.index,
                 children: [
-                  MedicationHistorySection(circleId: circle.id, header: header),
-                  MeasurementRecordSection(circleId: circle.id, header: header),
+                  MedicationHistorySection(
+                    circleId: circle.id,
+                    header: header,
+                    canManage: circle.canManageMedications,
+                  ),
+                  MeasurementRecordSection(
+                    circleId: circle.id,
+                    header: header,
+                    // The same sheet as «سجّل قراءة الآن» in the add sheet.
+                    onAddReading: circle.canRecord
+                        ? () => showMeasurementReadingSheet(context)
+                        : null,
+                  ),
                   AppointmentRecordSection(
                     circleId: circle.id,
                     header: header,

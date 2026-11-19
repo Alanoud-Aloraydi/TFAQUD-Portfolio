@@ -8,6 +8,7 @@ class ContactFormProps {
   const ContactFormProps({
     required this.form,
     required this.onRelation,
+    required this.onRelationOther,
     required this.onName,
     required this.onPhone,
     required this.onSave,
@@ -20,6 +21,9 @@ class ContactFormProps {
 
   final ContactForm form;
   final ValueChanged<String> onRelation;
+
+  /// Receives the words typed for «أخرى».
+  final ValueChanged<String> onRelationOther;
   final ValueChanged<String> onName;
 
   /// Receives the digits of the number, already written 0-9.

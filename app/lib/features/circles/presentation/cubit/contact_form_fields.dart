@@ -18,6 +18,11 @@ mixin ContactFormFields on Cubit<MedicalFileState>, MedicalFileScope {
     (ContactForm form) => form.copyWith(relation: code, clearError: true),
   );
 
+  /// The words typed for «أخرى».
+  void relationOtherChanged(String value) => editForm(
+    (ContactForm form) => form.copyWith(relationOther: value, clearError: true),
+  );
+
   void nameChanged(String value) => editForm(
     (ContactForm form) => form.copyWith(name: value, clearError: true),
   );

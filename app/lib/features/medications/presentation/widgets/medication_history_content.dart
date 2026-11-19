@@ -18,6 +18,7 @@ class MedicationHistoryContent extends StatelessWidget {
     super.key,
     required this.circleId,
     required this.header,
+    required this.canManage,
     required this.state,
     required this.filter,
     required this.onFilterChanged,
@@ -25,6 +26,7 @@ class MedicationHistoryContent extends StatelessWidget {
 
   final String circleId;
   final Widget header;
+  final bool canManage;
   final MedicationsState state;
   final MedicationRecordFilter filter;
   final ValueChanged<MedicationRecordFilter> onFilterChanged;
@@ -55,6 +57,8 @@ class MedicationHistoryContent extends StatelessWidget {
           plans: state.plans
               .where((plan) => filter.keeps(plan, today))
               .toList(),
+          // Only a circle with no medicine at all, as «الخطة» does.
+          canAdd: canManage && state.plans.isEmpty,
         ),
       ],
     );

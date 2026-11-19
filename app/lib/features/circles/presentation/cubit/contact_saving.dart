@@ -7,6 +7,7 @@ import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:app/features/circles/presentation/cubit/contact_draft_of.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
+import 'package:app/features/circles/presentation/cubit/contact_form_checks.dart';
 import 'package:app/features/circles/presentation/cubit/contact_kept.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_loading.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_scope.dart';
@@ -27,8 +28,7 @@ mixin ContactSaving
     final MedicalFile? file = state.file;
     if (form == null || file == null || form.saving) return false;
     final String name = form.name.trim();
-    final String? relation = form.relation;
-    if (relation == null || name.isEmpty || !form.phoneValid) {
+    if (!form.relationAnswered || name.isEmpty || !form.phoneValid) {
       emit(state.copyWith(form: form.copyWith(showErrors: true)));
       return false;
     }
@@ -37,7 +37,7 @@ mixin ContactSaving
         form: form.copyWith(saving: true, showErrors: false, clearError: true),
       ),
     );
-    final ContactDraft draft = contactDraftOf(form, name, relation);
+    final ContactDraft draft = contactDraftOf(form, name);
     final result = form.isNew
         ? await circles.addContact(circleId, draft)
         : await circles.updateContact(circleId, form.contactId!, draft);

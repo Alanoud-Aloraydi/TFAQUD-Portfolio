@@ -334,6 +334,7 @@ def test_emergency_contacts_are_added_listed_changed_and_removed(setup):
         "id": saved["id"],
         "name": "Khaled",
         "relation": "son",
+        "relation_other": None,
         "phone_number": "+966522222222",
         "verified": False,
         "account": None,
@@ -414,6 +415,36 @@ def test_a_patient_has_at_most_five_contacts(setup):
     )
 
     assert error_code(sixth, 422) == "too_many_contacts"
+
+
+def test_other_relation_keeps_the_words_typed(setup):
+    api, circle = setup
+
+    added = api.post(
+        url(circle, "/emergency-contacts"),
+        {**contact(relation="other"), "relation_other": "  جارتنا  "},
+    )
+
+    assert added.status_code == 201
+    saved = added.json["emergency_contact"]
+    assert (saved["relation"], saved["relation_other"]) == ("other", "جارتنا")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        contact(relation="other"),
+        {**contact(relation="other"), "relation_other": "   "},
+        {**contact(relation="son"), "relation_other": "جارتنا"},
+    ],
+)
+def test_other_relation_needs_its_words_and_only_it(setup, body):
+    api, circle = setup
+
+    response = api.post(url(circle, "/emergency-contacts"), body)
+
+    assert response.status_code == 422
+    assert response.json["error"]["details"][0]["field"] == "relation_other"
 
 
 @pytest.mark.parametrize(
@@ -580,6 +611,12 @@ def test_the_card_cannot_be_changed(setup):
         "FROM care_circle",
         "INSERT INTO emergency_contact (care_circle_id, name, relation, "
         "phone_number) SELECT id, 'A', 'son', 'not-a-phone' FROM care_circle",
+        "INSERT INTO emergency_contact (care_circle_id, name, relation, "
+        "phone_number) SELECT id, 'A', 'other', '+966511111111' "
+        "FROM care_circle",
+        "INSERT INTO emergency_contact (care_circle_id, name, relation, "
+        "relation_other, phone_number) SELECT id, 'A', 'son', 'B', "
+        "'+966511111111' FROM care_circle",
         "INSERT INTO emergency_contact (care_circle_id, name, relation, "
         "phone_number) SELECT id, '  ', 'son', '+966511111111' "
         "FROM care_circle",

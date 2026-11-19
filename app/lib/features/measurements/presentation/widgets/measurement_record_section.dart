@@ -10,20 +10,22 @@ import 'package:app/features/measurements/presentation/widgets/month_switcher.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// «السجل»'s read-only measurements: a month's charts, calendar and
-/// readings of [circleId]; unrecorded times stay on «اليوم».
-///
-/// Holds its own [MeasurementReadingsCubit] for the month shown; it reads
-/// again by itself when a reading of the circle is saved anywhere.
+/// «السجل»'s read-only readings of [circleId], a month at a time, through
+/// its own [MeasurementReadingsCubit], which reads again by itself when a
+/// reading of the circle is saved anywhere. Unrecorded times stay on «اليوم».
 class MeasurementRecordSection extends StatefulWidget {
   const MeasurementRecordSection({
     super.key,
     required this.circleId,
     required this.header,
+    this.onAddReading,
   });
 
   final String circleId;
   final Widget header;
+
+  /// Opens the reading sheet from the empty note; null hides it.
+  final VoidCallback? onAddReading;
 
   @override
   State<MeasurementRecordSection> createState() =>
@@ -61,6 +63,7 @@ class _MeasurementRecordSectionState extends State<MeasurementRecordSection>
                 month: month,
                 filter: _filter,
                 onRetry: loadMonth,
+                onAddReading: widget.onAddReading,
               ),
             ],
           ),

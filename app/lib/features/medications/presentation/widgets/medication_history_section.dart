@@ -15,10 +15,14 @@ class MedicationHistorySection extends StatefulWidget {
     super.key,
     required this.circleId,
     required this.header,
+    required this.canManage,
   });
 
   final String circleId;
   final Widget header;
+
+  /// Whether the empty record offers «جدولة دواء».
+  final bool canManage;
 
   @override
   State<MedicationHistorySection> createState() =>
@@ -41,6 +45,7 @@ class _MedicationHistorySectionState extends State<MedicationHistorySection> {
         child: MedicationHistoryContent(
           circleId: widget.circleId,
           header: widget.header,
+          canManage: widget.canManage,
           state: state,
           filter: _filter,
           onFilterChanged: (value) => setState(() => _filter = value),

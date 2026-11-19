@@ -61,6 +61,6 @@ class DemoUncle:
             },
         )
         MedicalService(self.session, self.at(-10)).add_contact(
-            lina.id, circle.id, "فهد العتيبي", "son", "+966500000021"
+            lina.id, circle.id, "فهد العتيبي", "son", None, "+966500000021"
         )
         return circle

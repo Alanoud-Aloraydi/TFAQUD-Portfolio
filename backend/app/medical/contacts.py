@@ -16,12 +16,15 @@ class Contacts:
         circle_id: UUID,
         name: str,
         relation: str,
+        relation_other: str | None,
         phone: str,
     ) -> EmergencyContact:
         """Add a contact. At most MAX_EMERGENCY_CONTACTS per patient."""
         # Check the contact, then lock the patient: at most five contacts, each
         # number once.
-        name = self._check_contact(name, relation)
+        name, relation_other = self._check_contact(
+            name, relation, relation_other
+        )
         patient = self._open_for(actor_id, circle_id, lock=True)
         contacts = self._contacts(patient)
         if len(contacts) >= MAX_EMERGENCY_CONTACTS:
@@ -39,6 +42,7 @@ class Contacts:
             care_circle_id=patient.id,
             name=name,
             relation=relation,
+            relation_other=relation_other,
             phone_number=phone,
         )
         self.session.add(contact)
@@ -53,12 +57,15 @@ class Contacts:
         contact_id: UUID,
         name: str,
         relation: str,
+        relation_other: str | None,
         phone: str,
     ) -> EmergencyContact:
         """Replace name, relation and phone of one contact."""
         # Check the contact, lock the patient; the new number must not be
         # another contact's.
-        name = self._check_contact(name, relation)
+        name, relation_other = self._check_contact(
+            name, relation, relation_other
+        )
         patient = self._open_for(actor_id, circle_id, lock=True)
         contact = self._get_contact(patient, contact_id)
         if any(
@@ -71,6 +78,7 @@ class Contacts:
             )
         contact.name = name
         contact.relation = relation
+        contact.relation_other = relation_other
         contact.phone_number = phone
         self.session.flush()
         return contact
