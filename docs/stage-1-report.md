@@ -1,232 +1,35 @@
-# Stage 1 Report
+# Stage 1: Team Formation and Idea Development
 
-## 1. Team Formation Overview
+## 1. Team Formation
 
-### 1.1 Initial Meeting & Team Members
+The first team meeting took place on September 8, 2026, via WhatsApp. Members discussed their skills, interests, and candidate project ideas.
 
-The team held its first meeting remotely via WhatsApp on September 8, 2026, with all three members present. The meeting focused on introducing team members and discussing their backgrounds, skills, and interests.
-
-| Team Member | Background, Skills & Interests |
-|---|---|
-| Alanoud Aloraydi | Information Technology and Cybersecurity; experience in full-stack and backend development, with an interest in application development. |
-| Leen Algraawi | Artificial Intelligence; skills in Flask and databases, with an interest in backend development and learning Flutter. |
-| Lama Alzahrani | Bioinformatics; skills in Python, Flask, REST APIs, and UI/UX fundamentals, with an interest in software development. |
-
-### 1.2 Initial Roles
-
-Initial roles were assigned through voting for a one-month period, with all members participating in project tasks.
-
-| Role | Member | Proposed Responsibilities |
+| Current Member | Role | Technical Background |
 |---|---|---|
-| Team Lead | Alanoud | Coordinate task assignments, lead technical discussions, and ensure work integration. |
-| Project Manager | Lama | Organize meetings, track progress and deadlines, and identify obstacles. |
-| Backend QA | Leen | Test the back end, verify that endpoints enforce role permissions, and report defects. |
-| Team Members | All Members | Participate in development, documentation, reviews, and decision-making. |
+| Alanoud Aloraydi | Team Lead and Project Manager | Information technology, cybersecurity, and full-stack development |
+| Leen Algraawi | Source Control Manager | Artificial intelligence, Flask, and databases |
 
-### 1.3 Team Norms & Collaboration
-
-- **Communication:** WhatsApp for messaging and Discord for remote meetings.
-- **Meetings:** In-person meetings every Tuesday for at least three hours, along with 15-minute stand-up meetings to track progress.
-- **Collaboration:** Use GitHub to share project files and distribute tasks fairly based on skills and required effort.
-- **Decision-Making:** Make decisions by consensus and discuss different perspectives to reach mutual agreement.
-- **Commitment:** Notify the team in advance and provide a reason when unable to participate.
-- **Task Management Tool:** The team is currently evaluating Trello and Jira and will confirm its choice at the next stand-up. This decision does not block current workflow, which continues to run through GitHub for file-sharing and WhatsApp/Discord for coordination.
+Both team members share development and QA. The team coordinated through WhatsApp and Discord and used GitHub and Jira for project work.
 
 ## 2. Ideas Explored
 
-### 2.1 Research
+The team researched six ideas and compared their feasibility, impact, technical fit, and scalability. Mind mapping expanded the medication-reminder idea into shared care coordination. The team used SCAMPER to combine medications, appointments, measurements, and follow-up in one application. The main design question was how several caregivers could share responsibility for one patient while supporting independent patients.
 
-The team conducted individual and group research to identify potential project ideas, based on real-world problems, user needs, and areas where technology could help improve organization and coordination.
-
-The research focused on healthcare management, patient care, communication, task and appointment scheduling, and service organization. The team also considered problems that could be addressed through a mobile application and evaluated the feasibility of developing the ideas based on the team's skills, available time, and technical resources.
-
-During the brainstorming process, the team explored several areas, including healthcare and medication management, bioinformatics and water desalination, e-commerce services, communication between schools and parents, home repair services, and event organization. This process resulted in the discussion of six main project directions before selecting the final idea.
-
-### 2.2 Brainstorming Techniques
-
-#### Mind Mapping
-
-The team used mind mapping to connect real-world problems with potential digital solutions. In the healthcare-related direction, the main concept was **patient care management**, from which several aspects branched out, such as medications, medical appointments, therapy sessions, health measurements, reminders, caregivers, responsibilities, and documentation of care activities.
-
-This helped the team expand the initial idea of medication management into a more comprehensive concept for healthcare and patient care coordination.
-
-#### SCAMPER-Based Thinking
-
-During the brainstorming process, the team explored different ways to improve and expand the initial ideas. In the healthcare direction, the team considered how multiple healthcare-related functions could be integrated into a single application instead of focusing only on medication management.
-
-The initial medication management idea evolved through:
-
-* **Combine:** Combining medication management with medical appointments, therapy sessions, health measurements, reminders, and care responsibilities.
-* **Adapt:** Adapting common reminder and task-management functions to meet the needs of healthcare and patient care.
-* **Modify:** Modifying the application to support patients who are able to manage their own care, as well as patients who require assistance from caregivers.
-* **Eliminate:** Reducing the need to rely on multiple separate tools to organize different aspects of patient care.
-* **Reverse:** Allowing the primary caregiver to manage care responsibilities and distribute them when needed, rather than requiring the patient to manage all aspects of their care independently.
-
-This process helped expand the initial medication management idea into a more comprehensive concept for healthcare and patient care, which later developed into the **TFAQUD** concept.
-
-#### How Might We Questions
-
-The team used "How Might We" questions to transform the healthcare problem into questions that could support the exploration of possible solutions:
-
-* **How might we help caregivers coordinate the care of a single patient?**
-* **How might we make managing medications and medical appointments easier?**
-* **How might we enable multiple caregivers to share and coordinate responsibilities?**
-* **How might we support patients who are able to manage their own care, as well as patients who need assistance?**
-* **How might we bring health information and patient care responsibilities together in one place?**
-
-The brainstorming process helped the team identify healthcare and patient care coordination as a potential area for developing a mobile application. The initial medication management idea was later expanded into the broader **TFAQUD** concept.
-
-### 2.3 Ideas Considered
-
-The following six directions were explored during the brainstorming process, each with its strengths, weaknesses, and outcome.
-
-**1. Medication Management Application**
-A mobile application focused on helping patients organize their medications, including medication schedules and reminders.
-- *Strength:* Addressed a clear, well-evidenced need (caregiver time pressure and inconsistent follow-up), with a simple and technically approachable starting scope.
-- *Weakness:* Too narrow on its own — limited to medications only, with no coverage of appointments, measurements, or multi-caregiver coordination.
-- *Outcome:* Not rejected — expanded through Mind Mapping and SCAMPER into the broader **TFAQUD** concept (see Section 3).
-
-**2. Microbiome-Based Biofouling Prediction in Water Desalination Plants**
-An application that could use metagenomics data to identify microorganisms and genetic traits associated with biofilm formation and help interpret changes in the level of biofouling risk.
-- *Strength:* A novel, differentiated use of metagenomics data with little existing competition, and a natural fit for the team's bioinformatics background.
-- *Weakness:* On closer analysis, the underlying computation turned out to be too simple — the risk output could be derived with basic calculations, leaving little room for a substantial application to be built around it.
-- *Reason for Rejection:* Insufficient technical depth to sustain a full MVP.
-
-**3. E-Commerce Store Evaluation Platform**
-A platform that brings together online stores and allows verified customers to submit reviews after receiving the service, with accounts verified through Nafath to prevent fake reviews.
-- *Strength:* Directly tackled a real trust problem in online shopping, with a credible anti-fraud mechanism via national identity verification.
-- *Weakness:* Government-backed platforms already address this space (e.g., "Mawthoq" and similar trusted-registry apps).
-- *Reason for Rejection:* Largely redundant with existing government solutions, weakening the case for a new product.
-
-**4. School–Parent Communication Platform**
-A platform designed to improve communication between schools and parents, including student dismissal notifications and attendance management.
-- *Strength:* Addressed a relatable, everyday problem with a clearly identifiable user base (schools and parents).
-- *Weakness:* The team did not explore the idea in enough depth and had not clearly defined its scope or boundaries.
-- *Reason for Rejection:* Insufficiently developed to commit to as an MVP direction.
-
-**5. Home Maintenance Worker Booking Application**
-An on-demand platform for booking home repair workers, such as electricians and plumbers, with the option to select a worker the user has previously worked with.
-- *Strength:* Proven market model (similar to existing hourly home-service apps), technically straightforward to build.
-- *Weakness:* An existing app was found to match the idea very closely.
-- *Reason for Rejection:* Automatically excluded due to lack of differentiation from an already-available product.
-
-**6. Comprehensive Event Organization Platform**
-An application that brings different event organization services together in one place, including venues, catering, photography, decoration, and booths.
-- *Strength:* A convenient one-stop-shop concept addressing genuine fragmentation in event planning.
-- *Weakness:* A previous team had already pursued the exact same idea.
-- *Reason for Rejection:* Considered a duplicate concept, raising originality concerns.
-
-### 2.4 Evaluation Summary
-
-**Evaluation Criteria**
-
-| Criterion | What it measures |
-|---|---|
-| Feasibility | Can the team realistically build this with the skills, time, and tools available (including tech that needs to be learned, like Flutter)? |
-| Potential Impact | How significant and well-evidenced is the problem, and how meaningfully does the idea solve it? |
-| Technical Alignment | How well does the required tech stack match the team's existing skills (backend, REST APIs, databases, Flask) vs. what needs to be learned from scratch? |
-| Scalability | Room to grow beyond the MVP — additional features, broader user base, future integrations. |
-
-Each idea is scored 1 (weak) to 5 (strong) per criterion.
-
-**Scoring Matrix**
-
-| Idea | Feasibility | Potential Impact | Technical Alignment | Scalability | Total /20 | Rank |
-|---|---|---|---|---|---|---|
-| TFAQUD (Care Circle) | 5 | 5 | 4 | 4 | 18 | 1 |
-| Event Planning Aggregator | 3 | 3 | 3 | 2 | 11 | 2 (tie) |
-| School–Parent Communication | 3 | 3 | 3 | 2 | 11 | 2 (tie) |
-| Repair Worker Booking | 4 | 2 | 3 | 2 | 11 | 2 (tie) |
-| E-Commerce Store Ratings | 3 | 2 | 3 | 2 | 10 | 5 |
-| Microbiome / Biofouling Prediction | 2 | 3 | 2 | 2 | 9 | 6 |
-
-**Risks & Constraints per Idea**
-
-| Idea | Key Risks / Constraints |
-|---|---|
-| TFAQUD | Learning curve for Flutter and mobile deployment; designing a care circle with clear roles and permissions without confusing users; making sure alerts for missed tasks reach the right person without overwhelming the circle; handling sensitive health data responsibly; device-integration APIs uncertain (kept out of MVP scope). |
-| Microbiome / Biofouling Prediction | Requires specialized domain knowledge (metagenomics) the team doesn't currently have; access to real desalination-plant data is uncertain; core computation too simple to sustain a full MVP. |
-| E-Commerce Store Ratings | Depends on Nafath integration, which may involve approval/access hurdles; direct overlap with existing government-backed trust platforms weakens differentiation. |
-| School–Parent Communication | Scope was never clearly bounded; would likely require partnerships with actual schools to pilot, which is outside the team's control. |
-| Repair Worker Booking | A closely matching app already exists in the market, making differentiation very difficult; discovered late in exploration. |
-| Event Planning Aggregator | A previous cohort/team pursued an identical concept — duplication risk for academic originality; also a crowded market of existing event-planning apps. |
-
-TFAQUD comes out clearly on top across all four criteria, which lines up with why it was selected — an evidence-backed problem, a feasible scope, and a stack the team already partially knows.
+| Idea | Feasibility | Impact | Technical Fit | Scalability | Total /20 | Decision |
+|---|---:|---:|---:|---:|---:|---|
+| TFAQUD care circles | 5 | 5 | 4 | 4 | 18 | Selected |
+| Event planning aggregator | 3 | 3 | 3 | 2 | 11 | Similar prior project |
+| School–parent communication | 3 | 3 | 3 | 2 | 11 | Scope and pilot requirements unclear |
+| Home maintenance booking | 4 | 2 | 3 | 2 | 11 | Similar product already available |
+| E-commerce store ratings | 3 | 2 | 3 | 2 | 10 | Overlap with existing trusted registries |
+| Biofouling prediction | 2 | 3 | 2 | 2 | 9 | Limited technical scope and uncertain data access |
 
 ## 3. Selected MVP Concept
 
-### 3.1 Selected Idea
+**TFAQUD | تفقُّد** is an Arabic mobile application for coordinating ongoing care. One care circle holds the medications, appointments, measurements, and care history for one patient. An account can participate in several circles.
 
-**Project Name: TFAQUD | تفقُّد**
+The primary audience is family caregivers who share care responsibilities. The application also supports independent patients and patients who need a simpler daily interface. Detailed Mode supports care management. Simplified Mode supports daily tasks and access to essential medical information.
 
-The team selected TFAQUD, a mobile application designed to organize healthcare through **care circles**, each built around a single patient, whether the patient manages their own care or a care manager is responsible for it. A user can belong to several care circles, with a different role in each, and so care for more than one patient in one application.
+The MVP covers circle membership and patient consent, scheduled care, recorded outcomes, reminders, follow-up, a medical profile, an Emergency Card, and Care Record export. The expected outcomes are shared visibility of completed care, follow-up of missed tasks, and a portable care history. The main design challenges are clear permissions, reliable reminders, and protection of patient data.
 
-The application brings medication management, medical appointments, therapy sessions, and health measurements together in one care plan, and turns the plan into daily tasks, each with a responsible person and a recorded result. It also provides reminders, follow-up of missed tasks, care activity documentation, and the ability for care circle members to share responsibilities.
-
-Each care circle includes the patient and the people who take part in the patient's care. Each member has a role: a care manager manages the care plan, a care assistant carries out the tasks assigned to them, a viewer can view care information but cannot modify it, and a patient who manages their own care has manager permissions. When a care manager creates a circle for a patient who has a phone, the patient approves or declines the request first.
-
-### 3.2 Reasons for Selection
-
-The team selected TFAQUD for the following reasons:
-
-- **Technical Feasibility:** The idea aligns with the team's existing skills in backend development, REST APIs, and databases, while providing an opportunity to learn Flutter for mobile development.
-- **Innovation:** The dual application modes — Simplified Mode for patients and Detailed Mode for caregivers — combined with care circles that have role-based permissions, task assignment, and follow-up of missed tasks, and with the ability to belong to several circles to care for more than one patient, address a coordination gap that typical single-user medication reminder apps do not solve.
-- **Value Proposition:** The application combines multiple aspects of healthcare management in one place and supports coordination among care circle members, so that the person responsible for each task and its result are clear.
-- **Potential Impact:** The scoring matrix in Section 2.4 rated TFAQUD highest on Potential Impact (5/5) of any idea considered. The problem it targets — fragmented coordination across medications, appointments, and measurements — affects two distinct, currently underserved groups at once: multi-caregiver households who have no shared system for dividing responsibility, and independent patients who must otherwise track their own care across separate tools. By centralizing both use cases in one application with mode-appropriate views, TFAQUD has a broader potential reach than a single-purpose reminder app while staying within the team's technical capacity.
-- **Alignment with Team Goals:** The project allows the team to apply software development skills and gain experience in mobile development and system integration.
-
-### 3.3 Problem Statement
-
-Patients who require continuous healthcare and their caregivers face challenges in organizing medications, appointments, health measurements, and caregiving responsibilities.
-
-These challenges become more complex when multiple caregivers are involved in managing a patient's care.
-
-TFAQUD aims to address these challenges by providing a centralized platform for organizing and tracking healthcare information and coordinating caregiving responsibilities within a care circle, with reminders and follow-up for tasks that are not completed.
-
-### 3.4 Target Audience
-
-The primary target audience is caregiving groups consisting of two or more caregivers who share responsibility for a single patient requiring regular medication, medical appointments, and health measurements.
-
-The application also supports independent patients who can manage their own care, patients who need assistance with follow-up through Simplified Mode, and viewers who follow the patient's care without modifying it.
-
-### 3.5 Key Features
-
-The MVP will include the following core features:
-
-1. **Application Modes:** Detailed Mode for healthcare management and Simplified Mode for patients who need assistance with follow-up. The mode is selected when the care circle is created.
-2. **Medication Management:** Record medications, doses, duration, schedules, and instructions, with medication history, supply tracking, and dose tracking. Medicine details can be read from a photo of the medicine.
-3. **Appointment Management:** Organize medical appointments and therapy sessions, with scheduled reminders, and record visit notes.
-4. **Health Measurements:** Schedule measurements with target ranges, manually record results, and display measurement history.
-5. **Care Coordination:** Create a care circle for each patient, invite members and assign each a role, assign responsibilities that members can accept or decline, and document completed tasks. A user can belong to several circles, with a different role in each.
-6. **Reminders and Escalation:** Remind the person responsible when a task is due and, when a task is missed, notify the recipients in the order configured by the care manager.
-7. **Care Record and Reports:** Display completed tasks, recorded measurements, and previous medications to help users monitor medication management and health measurements, and export the complete care record.
-8. **Medical Profile and Emergency Card:** Keep the patient's medical information and emergency contacts, and show an emergency card with the essential information.
-
-Integration with medical devices is excluded from the initial MVP scope.
-
-### 3.6 Expected Outcomes
-
-The project aims to:
-
-- Provide a centralized place for managing a single patient's healthcare information.
-- Simplify the organization and tracking of medications, appointments, and health measurements.
-- Support responsibility coordination and information sharing among care circle members.
-- Help patients and caregivers track care activities through reminders and documentation.
-- Ensure that missed tasks are followed up with the people chosen by the care manager.
-- Maintain organized records of care activities and health measurements for future reference, with the option to export them.
-
-### 3.7 Challenges and Opportunities
-
-The challenges below trace directly back to the brainstorming process: the care circle (roles, permissions, and responsibility sharing) that emerged from the SCAMPER "Reverse" step and the "How Might We" question on shared caregiving (Section 2.2) is the main source of design and implementation complexity, alongside the following technical challenges:
-
-**Challenges:**
-
-- Designing a care circle with roles, permissions, and responsibility sharing that stays clear and usable rather than confusing.
-- Notifying the right person about a missed task, in the right order, without overwhelming the care circle.
-- Learning Flutter for mobile application development.
-- Implementing API integration.
-- Working with Docker and deploying the application.
-
-**Opportunities:**
-
-- Future integration with medical devices to automatically import health measurements, subject to API availability and user consent.
+[Project charter](stage-2-project-charter.md) · [Implemented MVP](stage-4-mvp-development-and-execution.md)
