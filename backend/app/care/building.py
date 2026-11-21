@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import func, true, update
 
+from app.care.city_points import city_point
 from app.errors import ValidationFailed
 from app.models import (
     Account,
@@ -34,11 +35,11 @@ class CareBuilding:
         completing: UUID | None = None,
     ) -> CareCircle:
         """Build a complete circle before deferred constraints run.
-
         A patient with an account keeps the birth date and city on the
         account, and `name` is their own name for the circle; a patient
         without one keeps them on the circle, which has no name of its own.
         """
+        latitude, longitude = city_point(city, latitude, longitude)
         if patient_account is not None and not (name or "").strip():
             raise ValidationFailed(
                 "The circle name cannot be blank.", code="invalid_circle_name"
