@@ -28,11 +28,7 @@
   <p class="updated">آخر تحديث: {{ updated }}</p>
   {% block content %}{% endblock %}
   <h2>التواصل</h2>
-  {% if email %}
   <p>لأي سؤال أو طلب يخص بياناتك: <a href="mailto:{{ email }}">{{ email }}</a></p>
-  {% else %}
-  <p>لأي سؤال أو طلب يخص بياناتك، تواصل معنا من خلال صفحات تفقُد الرسمية.</p>
-  {% endif %}
 </main>
 </body>
 </html>

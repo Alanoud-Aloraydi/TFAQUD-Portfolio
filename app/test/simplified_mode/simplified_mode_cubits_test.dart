@@ -106,8 +106,9 @@ class _UseCase implements SimplifiedModeUseCase {
   Future<Result<DoseRecord, Failure>> skipDose(
     String circleId,
     DoseOccurrence dose,
-    DoseSkipReason? reason,
-  ) async {
+    DoseSkipReason? reason, {
+    String? note,
+  }) async {
     skipped.add((dose, reason));
     return doseResult;
   }

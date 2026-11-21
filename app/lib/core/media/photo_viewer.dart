@@ -6,7 +6,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Opens [bytes] full screen, zoomable.
+/// Opens [bytes] full screen, zoomable, with the close button at the top
+/// right.
 void openPhotoViewer(BuildContext context, Uint8List bytes) {
   Navigator.of(context).push<void>(
     CupertinoPageRoute(
@@ -21,9 +22,10 @@ void openPhotoViewer(BuildContext context, Uint8List bytes) {
                 child: Center(child: Image.memory(bytes, fit: BoxFit.contain)),
               ),
             ),
+            // Start is the right in Arabic.
             PositionedDirectional(
               top: MediaQuery.paddingOf(viewerContext).top + AppSpacing.sm,
-              end: AppSpacing.md,
+              start: AppSpacing.md,
               child: IconButton(
                 onPressed: () => Navigator.pop(viewerContext),
                 tooltip: viewerContext.tr('common.close'),

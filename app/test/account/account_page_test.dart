@@ -328,17 +328,16 @@ void main() {
           AppRouter.router.routeInformationProvider.value.uri.path,
           Routes.auth,
         );
-        // The welcome: the first page shows the next dose as on «اليوم»,
-        // with the step and its title; «التالي» at the bottom moves on to
-        // the second, and «تخطي» is next to it.
-        expect(find.text('intro.p1_title'.tr()), findsOneWidget);
-        expect(find.text('01، ${'intro.p1_step'.tr()}'), findsOneWidget);
-        expect(find.text('intro.demo.next_dose'.tr()), findsOneWidget);
+        // The welcome: the first page shows the circle switcher open, with
+        // its title; «التالي» at the bottom moves on to the circle's
+        // members, and «تخطي» is next to it.
+        expect(find.text('intro.p1.title'.tr()), findsOneWidget);
+        expect(find.text('intro.demo.noura_circle'.tr()), findsOneWidget);
         expect(find.text('intro.skip'.tr()), findsOneWidget);
         await tester.tap(find.text('intro.next'.tr()));
         await tester.pumpAndSettle();
-        expect(find.text('intro.p2_title'.tr()), findsOneWidget);
-        expect(find.text('intro.demo.circle'.tr()), findsOneWidget);
+        expect(find.text('intro.p2.title'.tr()), findsOneWidget);
+        expect(find.text('intro.demo.alanoud'.tr()), findsOneWidget);
       });
 
       testWidgets(
@@ -365,7 +364,7 @@ void main() {
             AppRouter.router.routeInformationProvider.value.uri.path,
             Routes.authPhone,
           );
-          expect(find.text('intro.p1_title'.tr()), findsNothing);
+          expect(find.text('intro.p1.title'.tr()), findsNothing);
           expect(find.text('auth.phone_title'.tr()), findsOneWidget);
           // The phone page is the first page: no back link to the welcome.
           expect(find.text('common.back'.tr()), findsNothing);

@@ -24,10 +24,14 @@ mixin SimplifiedModeWriting
     return saved ? takenAt : null;
   }
 
-  /// «ما أخذتها» on [dose], with [reason] when the patient named one.
-  /// Returns whether it was written.
-  Future<bool> skipDose(DoseOccurrence dose, DoseSkipReason? reason) =>
-      _write((day) => useCase.skipDose(day.circleId, dose, reason));
+  /// «لم آخذها» on [dose], with [reason] when the patient named one and
+  /// the [note] written for «سبب آخر». Returns whether it was written.
+  Future<bool> skipDose(
+    DoseOccurrence dose,
+    DoseSkipReason? reason, {
+    String? note,
+  }) =>
+      _write((day) => useCase.skipDose(day.circleId, dose, reason, note: note));
 
   /// «حضرت» on [visit], the patient's own appointment, from an hour
   /// before its time. Returns whether it was written.

@@ -30,19 +30,21 @@ abstract class SimplifiedDosing extends SimplifiedMeasuring {
     DoseRecordDraft(outcome: DoseOutcome.taken, takenAt: takenAt),
   );
 
-  /// «ما أخذتها»: the dose is written as skipped, with [reason] when the
-  /// patient named one. The same record the detailed mode writes, so the
-  /// family sees why in the log.
+  /// «لم آخذها»: the dose is written as skipped, with [reason] when the
+  /// patient named one and the [note] written for «سبب آخر». The same
+  /// record the detailed mode writes, so the family sees why in the log.
   Future<Result<DoseRecord, Failure>> skipDose(
     String circleId,
     DoseOccurrence dose,
-    DoseSkipReason? reason,
-  ) => _medications.recordDose(
+    DoseSkipReason? reason, {
+    String? note,
+  }) => _medications.recordDose(
     circleId,
     dose,
     DoseRecordDraft(
       outcome: DoseOutcome.skipped,
       skipReasonCode: reason?.apiValue,
+      skipReasonNote: note,
     ),
   );
 }
