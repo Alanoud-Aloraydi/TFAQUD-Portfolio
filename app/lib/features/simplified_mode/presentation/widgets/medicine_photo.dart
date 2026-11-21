@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:app/core/theme/app_settings_tile_colors.dart';
 import 'package:app/core/network/medication_endpoints.dart';
 
-/// A medicine's photo, the way the patient recognises it; while it has
-/// none, the medicines' own look ([CareVisuals]): a pill on green.
+/// A medicine's photo, the way the patient recognises it, opening full
+/// screen on a tap as in the detailed mode; while it has none, the
+/// medicines' own look ([CareVisuals]): a pill on green.
 class MedicinePhoto extends StatelessWidget {
   const MedicinePhoto({
     super.key,
@@ -32,7 +33,6 @@ class MedicinePhoto extends StatelessWidget {
       height: height,
       width: width,
       radius: radius,
-      openViewer: false,
       fallback: Container(
         width: width,
         height: height,

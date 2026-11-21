@@ -1,20 +1,17 @@
 import 'dart:async';
 
+import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/services/signed_out.dart';
-import 'package:app/core/theme/components/navigation_themes.dart';
-import 'package:app/features/auth/presentation/widgets/auth_welcome_body.dart';
-import 'package:app/features/auth/presentation/widgets/show_next_intro.dart';
-import 'package:app/features/auth/presentation/widgets/start_sign_in.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
+import 'package:app/features/auth/presentation/widgets/intro_bar.dart';
+import 'package:app/features/auth/presentation/widgets/intro_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:app/core/theme/app_intro_colors.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
-/// The welcome: three pages that show the app itself. Each has a picture
-/// of real parts of the app with example data (the next dose, the circle,
-/// the person switcher) over soft glows, then the step, a title and one
-/// line. At the bottom, in reach of the thumb: «تخطي», the dots of the
-/// pages, and «التالي». The last page has «ابدأ», which opens the phone
-/// number; «تخطي» goes there at once.
+/// The welcome: the app's name, its three pages ([introPages]) and one bar.
 class AuthFeatureScreen extends StatefulWidget {
   const AuthFeatureScreen({super.key});
 
@@ -23,38 +20,48 @@ class AuthFeatureScreen extends StatefulWidget {
 }
 
 class _AuthFeatureScreenState extends State<AuthFeatureScreen> {
-  final PageController _controller = PageController();
+  final PageController _pages = PageController();
   int _page = 0;
 
   @override
   void initState() {
     super.initState();
-    // Nobody is signed in on the welcome (after a sign-out, an ended sign-in
-    // or a deleted account): what was the last person's goes.
     unawaited(forgetSignedOutPerson());
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _pages.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // Every page is light, so the status bar icons are dark.
-      value: AppNavigationThemes.systemBars,
-      child: Scaffold(
-        backgroundColor: AppIntroColors.canvas,
-        body: AuthWelcomeBody(
-          controller: _controller,
-          page: _page,
-          onPageChanged: (int page) => setState(() => _page = page),
-          onStart: () => startSignIn(context),
-          onNext: () => showNextIntro(context, _controller, _page),
-        ),
-      ),
-    );
+  /// «تخطي» and «ابدأ»: the welcome is done on this phone.
+  void _start() {
+    unawaited(GetIt.I<WelcomeMemory>().markSeen());
+    context.push(Routes.authPhone);
   }
+
+  void _next() {
+    final int next = _page + 1;
+    if (next == introPages.length) return _start();
+    if (MediaQuery.disableAnimationsOf(context)) return _pages.jumpToPage(next);
+    const Duration time = AppMotion.contentEnter;
+    unawaited(_pages.nextPage(duration: time, curve: AppMotion.easeOutCubic));
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(context.tr('auth.app_name')), centerTitle: true),
+    body: PageView(
+      controller: _pages,
+      onPageChanged: (int page) => setState(() => _page = page),
+      children: introPages,
+    ),
+    bottomNavigationBar: IntroBar(
+      page: _page + 1,
+      total: introPages.length,
+      onSkip: _start,
+      onNext: _next,
+    ),
+  );
 }

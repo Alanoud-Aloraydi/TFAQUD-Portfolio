@@ -49,12 +49,6 @@ def service_settings(env_name: str) -> dict:
             os.environ.get("SCAN_EVERY_SECONDS")
             or (60 if env_name in ("staging", "production") else 0)
         ),
-        # The address the privacy policy, the terms and the deletion page
-        # give for questions and deletion requests (app/legal/). Unset: the
-        # pages leave that line out.
-        "LEGAL_CONTACT_EMAIL": (
-            os.environ.get("LEGAL_CONTACT_EMAIL", "").strip() or None
-        ),
         # Push notifications and other work no one waits for run after the
         # answer (app/background.py); tests run them at once.
         "BACKGROUND_INLINE": env_name == "testing",

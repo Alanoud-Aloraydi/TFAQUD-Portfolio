@@ -1,5 +1,5 @@
 """The privacy policy, the terms and the deletion page: open to anyone,
-in Arabic, with the contact address when one is set."""
+in Arabic, each with the project's address for questions."""
 
 import pytest
 
@@ -14,14 +14,8 @@ PAGES = {
 def test_each_page_opens_without_signing_in(client, path, heading):
     response = client.get(path)
 
+    page = response.get_data(as_text=True)
     assert response.status_code == 200
     assert response.mimetype == "text/html"
-    assert heading in response.get_data(as_text=True)
-
-
-def test_the_contact_address_shows_when_set(client):
-    client.application.config["LEGAL_CONTACT_EMAIL"] = "care@example.com"
-
-    page = client.get("/privacy").get_data(as_text=True)
-
-    assert 'href="mailto:care@example.com"' in page
+    assert heading in page
+    assert 'href="mailto:tafaqod.app@gmail.com"' in page

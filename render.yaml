@@ -88,11 +88,6 @@ services:
       # account, so the code stays inside the team.
       - key: DEMO_SIGN_IN_PHONES
         sync: false
-      # The address the privacy policy, the terms and the deletion page
-      # (/privacy, /terms, /delete-account) give for questions and
-      # deletion requests: public on those pages, so it can live here.
-      - key: LEGAL_CONTACT_EMAIL
-        value: tafaqod.app@gmail.com
       # The App Store and Google Play reviewers' sign-in, allowed in
       # production too: a number (5XXXXXXXX) that gets no SMS and the six
       # digits it signs in with. Typed in Render only, never in git, and

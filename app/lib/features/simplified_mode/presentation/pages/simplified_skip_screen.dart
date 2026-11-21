@@ -13,21 +13,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// «ليش ما أخذتها؟»: the patient says a dose was not taken, and why, on
-/// one calm dark colour like the reminder it follows. The reason is
-/// optional in the detailed mode and stays optional here, so «سبب ثاني»
-/// writes the dose as skipped with nothing attached; «رجوع» writes
-/// nothing.
+/// «لماذا لم تأخذها؟»: the patient says a dose was not taken, and why, on
+/// one calm dark colour like the reminder it follows. «سبب آخر» lets the
+/// patient write the reason, as the detailed mode's note does, and it may
+/// stay empty; «رجوع» writes nothing.
 class SimplifiedSkipScreen extends StatelessWidget {
   const SimplifiedSkipScreen({super.key, required this.task});
 
   /// The dose the patient did not take.
   final TodayTask task;
 
-  Future<void> _skip(BuildContext context, DoseSkipReason? reason) async {
+  Future<void> _skip(
+    BuildContext context,
+    DoseSkipReason reason,
+    String? note,
+  ) async {
     final SimplifiedModeCubit cubit = context.read<SimplifiedModeCubit>();
     final DoseOccurrence dose = task.dose!;
-    final bool saved = await cubit.skipDose(dose, reason);
+    final bool saved = await cubit.skipDose(dose, reason, note: note);
     if (!saved || !context.mounted) return;
     context.pushReplacement(
       Routes.simplifiedDone,
@@ -50,7 +53,8 @@ class SimplifiedSkipScreen extends StatelessWidget {
       child: SimplifiedSkipBody(
         name: task.dose!.name,
         saving: saving,
-        onReason: (DoseSkipReason? reason) => unawaited(_skip(context, reason)),
+        onReason: (DoseSkipReason reason, String? note) =>
+            unawaited(_skip(context, reason, note)),
       ),
     );
   }
