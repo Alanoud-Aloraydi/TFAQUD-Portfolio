@@ -2,7 +2,7 @@
 
 TFAQUD is an Arabic mobile application for coordinating care within a shared care circle. Each circle serves one patient. Caregivers and self-managing patients use Detailed Mode. Patients who need help with follow-up use Simplified Mode.
 
-Developed as a Holberton School Graduation Portfolio Project.
+We developed TFAQUD as our Holberton School Graduation Portfolio Project.
 
 ## MVP Features
 
@@ -33,10 +33,14 @@ Developed as a Holberton School Graduation Portfolio Project.
 
 See the [mobile setup](app/README.md) and [back-end setup](backend/README.md). Integrate work on `development` and merge to `main` through a pull request. The App and Backend checks are required on `main`. [GitHub Actions](https://github.com/Alanoud-Aloraydi/TFAQUD-Portfolio/actions)
 
+### Branches, Commits, and Pull Requests
+
+We integrate feature branches into `development` and merge to `main` through pull requests. Commit messages use a type such as `feat`, `fix`, `docs`, `test`, `refactor`, or `chore`. A pull request describes the change, links the Jira issue, and lists the checks performed. We review changes together before merging.
+
 ## Documentation
 
 - [Stage 1 — Team Formation and Idea Development](docs/stage-1-report.md)
-- [Stage 2 — Project Charter](docs/project-charter.md)
+- [Stage 2 — Project Charter](docs/stage-2-project-charter.md)
 - [Stage 3 — Technical Documentation](docs/stage-3-technical-documentation.md)
 - [Stage 4 — MVP Development and Execution](docs/stage-4-mvp-development-and-execution.md)
 - [Figma mockups](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1)
@@ -48,4 +52,4 @@ See the [mobile setup](app/README.md) and [back-end setup](backend/README.md). I
 | Alanoud Aloraydi | Team Lead and Project Manager |
 | Leen Algraawi | Source Control Manager |
 
-Both team members share development and QA.
+We share development, QA, documentation, and project decisions.

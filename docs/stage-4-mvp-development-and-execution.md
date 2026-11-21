@@ -1,6 +1,6 @@
 # Stage 4: MVP Development and Execution
 
-The TFAQUD v1.0 MVP runs against a shared Render beta. Signed iOS builds were uploaded to TestFlight. CI produced a signed Android AAB.
+We deployed the TFAQUD v1.0 backend on Render for beta testing, uploaded signed iOS builds to TestFlight, and built a signed Android AAB through CI.
 
 ## 1. Team and Sprint Plan
 
@@ -9,7 +9,7 @@ The TFAQUD v1.0 MVP runs against a shared Render beta. Signed iOS builds were up
 | Alanoud Aloraydi | Team Lead and Project Manager. Coordinates sprints, Jira, and delivery. |
 | Leen Algraawi | Source Control Manager. Coordinates branches, pull request reviews, and merges. |
 
-Alanoud and Leen share development and quality assurance. Jira assignees coordinate follow-up.
+We share development and quality assurance. Jira assignees coordinate follow-up.
 
 | Sprint | Planned Dates | Planned Focus |
 |---|---|---|
@@ -45,16 +45,16 @@ Dates are planned. [Jira](https://holbertonstudents-team-f4bzu0ub.atlassian.net/
 
 ### Manual Device Testing
 
-Alanoud Aloraydi and Leen Algraawi tested TFAQUD v1.0.0 on their iPhones across several builds, with a final round on the latest v1.0.0 build. Build `466743` is the latest upload documented above.
+We tested TFAQUD on our iPhones across several builds and completed a final round on v1.0.0. Build `466743` is the latest TestFlight upload documented above.
 
 | Area | Scenarios | Manual Result |
 |---|---|---|
 | Identity and permissions | Phone OTP, invitations, and access across care circles | Passed · [TFQD-54](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-54) |
-| Daily care | Medication, measurements, appointments, and Simplified Mode | An onboarding issue was found during testing and corrected before v1.0.0 · [TFQD-55](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-55) |
+| Daily care | Medication, measurements, appointments, and Simplified Mode | We found and corrected an onboarding issue before v1.0.0 · [TFQD-55](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-55) |
 | Notifications and records | Reminders, Needs Attention, visit audio, and PDF export | Passed · [TFQD-56](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-56) |
-| End-to-end care | Leen managed the care circle in Detailed Mode. Alanoud used the same circle as the patient in Simplified Mode. They exercised care from setup through the patient's response and the manager's review. | Completed on two iPhones · [TFQD-59](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-59) |
+| End-to-end care | We tested the same circle using two accounts. Leen acted as the manager in Detailed Mode, and Alanoud acted as the patient in Simplified Mode. We checked care setup, the patient's response, and the manager's review. | Completed on two iPhones · [TFQD-59](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-59) |
 
-**Defect corrected.** An earlier build derived the app mode from the first circle created or joined. Skipping circle setup could force Detailed Mode and prevent the user from joining a circle in Simplified Mode. The v1.0.0 onboarding fix lets the user select their mode and preserves the Simplified Mode invitation flow.
+**Defect corrected.** We found that an earlier build derived the app mode from the first circle created or joined. Skipping circle setup could force Detailed Mode and prevent the user from joining a circle in Simplified Mode. We updated onboarding in v1.0.0 so users can select their mode and accept a Simplified Mode invitation after skipping setup.
 
 ## 4. Sprint Reviews
 
