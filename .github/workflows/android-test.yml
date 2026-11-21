@@ -1,0 +1,130 @@
+# Builds the TFAQUD Android app, signs it with the upload key, and sends it
+# to the testers through Firebase App Distribution: Android's TestFlight.
+# Testers accept the email invite once (within 30 days), then install each
+# new build from the link or Google's App Tester app. A build stays
+# downloadable for 150 days; an installed one keeps working after that.
+#
+# When it runs:
+#   - from ci.yml, on a push whose commit message contains [android], on
+#     any branch, once the checks of that run pass.
+#     The app calls the team's server on Render
+#     (https://tfaqud-api.onrender.com).
+#   - from the Actions tab ("Run workflow"), once this file is on the
+#     default branch; there another https address can be given. This way
+#     skips the checks, so use it only on code that already passed them
+#
+# Secrets it needs (repository Settings, Secrets and variables, Actions):
+#   ANDROID_KEYSTORE_BASE64     the upload key (.jks), in base64. Keep the
+#                               .jks and its passwords safe outside git: Google
+#                               Play will know the app by this key
+#   ANDROID_KEYSTORE_PASSWORD   the password of the .jks
+#   ANDROID_KEY_ALIAS           the key's alias inside it (for example upload)
+#   ANDROID_KEY_PASSWORD        the key's own password
+#   FIREBASE_APP_ID             the Android app's App ID, from the Firebase
+#                               console's project settings (1:…:android:…)
+#   FIREBASE_SERVICE_ACCOUNT    the JSON key of a service account with the
+#                               "Firebase App Distribution Admin" role
+# The testers are the Firebase group "testers" (App Distribution, Testers &
+# Groups): add their Gmail addresses there.
+
+name: Android test
+
+on:
+  workflow_call:
+    inputs:
+      api_base_url:
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "API address the app calls, without /api/v1 (https only)"
+        required: false
+        default: "https://tfaqud-api.onrender.com"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v5
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # The version ci.yml checked the code with.
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
+
+      # The Run workflow field, else the server on Render. A release build
+      # sends no plain http, so a laptop's address will not work here.
+      - name: Create .env
+        env:
+          INPUT_API: ${{ inputs.api_base_url }}
+        run: |
+          API_BASE_URL="${INPUT_API:-https://tfaqud-api.onrender.com}"
+          echo "The app will call: $API_BASE_URL"
+          cp .env.example .env
+          sed -i "s#^API_BASE_URL=.*#API_BASE_URL=${API_BASE_URL}#" .env
+
+      # build.gradle.kts signs with the upload key when key.properties is
+      # there. Both files are made here and never committed.
+      - name: Write the upload key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEY_ALIAS" ]; then
+            echo "::error::The signing secrets are missing. See the top of .github/workflows/android-test.yml."
+            exit 1
+          fi
+          echo -n "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Get packages
+        run: flutter pub get
+
+      # Every build needs a higher version code, whether ci.yml or Run
+      # workflow started it: the minutes since 1 January 2026 (1767225600)
+      # always go up.
+      - name: Build the APK
+        run: flutter build apk --release --build-number=$(( ($(date +%s) - 1767225600) / 60 ))
+
+      - name: Send it to the testers
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          if [ -z "$FIREBASE_APP_ID" ] || [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::The Firebase secrets are missing. See the top of .github/workflows/android-test.yml."
+            exit 1
+          fi
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+          # The release notes the testers read: the commit's first line.
+          NOTES=$(printf '%s' "${COMMIT_MESSAGE:-Manual build}" | head -n 1)
+          npx --yes firebase-tools@15 appdistribution:distribute \
+            build/app/outputs/flutter-apk/app-release.apk \
+            --app "$FIREBASE_APP_ID" \
+            --groups testers \
+            --release-notes "$NOTES"

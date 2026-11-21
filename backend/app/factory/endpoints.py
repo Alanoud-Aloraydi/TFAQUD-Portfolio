@@ -15,6 +15,7 @@ from app.demo_routes import bp as demo_bp
 from app.errors import register_error_handlers
 from app.health import bp as health_bp
 from app.home import bp as home_bp
+from app.legal.routes import bp as legal_bp
 from app.measurements.routes import bp as measurements_bp
 from app.medications.routes import bp as medications_bp
 from app.photo_routes import bp as photos_bp
@@ -29,7 +30,7 @@ BLUEPRINTS = (
     health_bp, auth_bp, users_bp, home_bp, circles_bp, creation_requests_bp,
     invitations_bp, previous_notifications_bp, medications_bp, photos_bp,
     measurements_bp, appointments_bp, appointment_visits_bp,
-    prayer_times_bp, push_bp, tick_bp, snoozes_bp, demo_bp,
+    prayer_times_bp, push_bp, tick_bp, snoozes_bp, demo_bp, legal_bp,
 )
 
 

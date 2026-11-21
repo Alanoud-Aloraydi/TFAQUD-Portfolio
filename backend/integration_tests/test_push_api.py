@@ -174,7 +174,7 @@ def test_a_circle_request_from_sending_to_the_circle(
     )
     [asked] = pushes.to(noura_phone.token)
     assert asked.kind == "circle_request"
-    assert asked.body == "وصلك طلب من Reem لمتابعة رعايتك في تفقّد."
+    assert asked.body == "وصلك طلب من Reem لمتابعة رعايتك في تفقُد."
 
     request_id = sent.json["request"]["id"]
     assert asked.target == (("request_id", request_id),)
@@ -187,7 +187,7 @@ def test_a_circle_request_from_sending_to_the_circle(
     assert answered.target == ()
     assert answered.title == "تم قبول طلبك"
     assert answered.body == (
-        "تم قبول طلبك لرعاية Noura. الدائرة تجهز أول ما تكتمل البيانات."
+        "تم قبول طلبك لرعاية Noura. تجهز الدائرة فور اكتمال البيانات."
     )
 
     done = noura_phone.call(
@@ -199,7 +199,7 @@ def test_a_circle_request_from_sending_to_the_circle(
     circle_id = done.json["circle"]["id"]
     assert ready.target == (("circle_id", circle_id),)
     # Reem is told the name she sees, not Noura's own «صحتي».
-    assert ready.body == "«دائرة Noura» جاهزة، وتقدر تتابع الرعاية الحين."
+    assert ready.body == "«دائرة Noura» جاهزة، ويمكنك متابعة الرعاية الآن."
 
 
 def test_a_declined_request_is_told(database_app, database, account, pushes):

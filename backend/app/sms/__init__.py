@@ -14,16 +14,24 @@ from app.sms.fake import FakeSmsSender, SentSms
 
 
 def create_sms_sender(config: dict, clock) -> SmsSender:
-    """The sender named by `SMS_BACKEND`, and with DEMO_SIGN_IN_CODE set,
-    the demo numbers and the DEMO_SIGN_IN_PHONES kept away from it
-    (DemoSmsSender).
+    """The sender named by `SMS_BACKEND`, with the numbers that sign in
+    with a fixed code kept away from it (DemoSmsSender): the demo numbers
+    and DEMO_SIGN_IN_PHONES with DEMO_SIGN_IN_CODE, and the store
+    reviewers' REVIEW_SIGN_IN_PHONES with REVIEW_SIGN_IN_CODE.
     """
     sender = _create_sender(config, clock)
     code = config.get("DEMO_SIGN_IN_CODE")
-    if code is None:
-        return sender
-    phones = (*SIGN_IN_DEMO_PHONES, *config.get("DEMO_SIGN_IN_PHONES", ()))
-    return DemoSmsSender(sender, phones, code)
+    if code is not None:
+        phones = (
+            *SIGN_IN_DEMO_PHONES, *config.get("DEMO_SIGN_IN_PHONES", ())
+        )
+        sender = DemoSmsSender(sender, phones, code)
+    review_code = config.get("REVIEW_SIGN_IN_CODE")
+    if review_code is not None:
+        sender = DemoSmsSender(
+            sender, config["REVIEW_SIGN_IN_PHONES"], review_code
+        )
+    return sender
 
 
 def _create_sender(config: dict, clock) -> SmsSender:

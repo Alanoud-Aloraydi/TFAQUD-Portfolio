@@ -3,13 +3,15 @@
 # it from the TestFlight app on the iPhone. This build has the Push
 # Notifications capability, so the server can send circle updates.
 #
-# When it runs (and only after the checks of ci.yml pass in the same run):
-#   - on a push whose commit message contains [testflight], on any branch.
+# When it runs:
+#   - from ci.yml, on a push whose commit message contains [testflight], on
+#     any branch, once the checks of that run pass.
 #     The app calls the team's server on Render
 #     (https://tfaqud-api.onrender.com). To build for another server, add its
 #     address to the same message: [testflight api=http://192.168.1.20:5000]
 #   - from the Actions tab ("Run workflow"), once this file is on the
-#     default branch; there the address is a field
+#     default branch; there the address is a field. This way skips the
+#     checks, so use it only on code that already passed them
 #
 # The unsigned build for Sideloadly stays in ios-build.yml ([ios]).
 #
@@ -35,7 +37,12 @@
 name: TestFlight
 
 on:
-  push:
+  workflow_call:
+    inputs:
+      api_base_url:
+        type: string
+        required: false
+        default: ""
   workflow_dispatch:
     inputs:
       api_base_url:
@@ -44,14 +51,7 @@ on:
         default: "https://tfaqud-api.onrender.com"
 
 jobs:
-  # The checks of ci.yml first: a build that fails them never reaches the
-  # testers.
-  checks:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[testflight')
-    uses: ./.github/workflows/ci.yml
-
   testflight:
-    needs: checks
     # The same Mac as ios-build.yml (Xcode 27 for the glass tab bar).
     runs-on: xcode-27
     timeout-minutes: 60
@@ -94,10 +94,14 @@ jobs:
       - name: Get packages
         run: flutter pub get
 
-      # TestFlight needs a new build number for every upload: the run
-      # number of this workflow always goes up.
+      # TestFlight needs a higher build number for every upload, whether
+      # ci.yml or Run workflow started it: the minutes since 1 January 2026
+      # (1767225600) always go up.
       - name: Prepare the Xcode project
-        run: flutter build ios --release --config-only --no-codesign --build-number=${{ github.run_number }}
+        run: |
+          BUILD_NUMBER=$(( ($(date +%s) - 1767225600) / 60 ))
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+          flutter build ios --release --config-only --no-codesign --build-number=$BUILD_NUMBER
 
       - name: Install the Apple certificate and provisioning profile
         env:
@@ -245,7 +249,7 @@ jobs:
               -authenticationKeyID "$ASC_KEY_ID" \
               -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
               -allowProvisioningUpdates; then
-              echo "Uploaded build ${{ github.run_number }}. App Store Connect needs a few minutes to process it before it shows in TestFlight."
+              echo "Uploaded build $BUILD_NUMBER. App Store Connect needs a few minutes to process it before it shows in TestFlight."
               exit 0
             fi
             echo "::warning::The upload to App Store Connect failed (try $try of 3)."

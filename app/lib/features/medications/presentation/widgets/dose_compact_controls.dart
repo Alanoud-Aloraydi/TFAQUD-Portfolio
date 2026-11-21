@@ -16,7 +16,7 @@ Widget doseCompactControls(
   final ButtonStyle compact = doseCompactFilledStyle();
   final ButtonStyle compactText = doseCompactTextStyle();
   final bool canSnooze = isToday && circleId != null;
-  // The two answers first («انأخذت», «ذكّرني لاحقًا»), then the two
+  // The two answers first («تم أخذها», «ذكّرني لاحقًا»), then the two
   // less common ones as text buttons, so no label wraps.
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,

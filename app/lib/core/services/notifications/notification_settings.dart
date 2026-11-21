@@ -7,7 +7,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 /// something to remind.
 InitializationSettings notificationInitializationSettings() =>
     InitializationSettings(
-      android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+      // The white logo in the status bar, the one OneSignal's pushes use
+      // too: Android draws a small icon as a silhouette, so the colored
+      // launcher icon showed as a white square.
+      android: const AndroidInitializationSettings(
+        '@drawable/ic_stat_onesignal_default',
+      ),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,

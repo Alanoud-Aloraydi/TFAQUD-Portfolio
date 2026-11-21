@@ -11,16 +11,16 @@ from app.push.notify import Push
 from app.push.sender import PushMessage
 from app.push.targets import request_target
 
-TITLE = "طلبك ما يمكن قبوله"
+TITLE = "لا يمكن قبول طلبك"
 
 
 def superseded_text(patient: str | None) -> str:
-    """«ما يمكن قبول طلبك لرعاية خالد، لأن هذا الرقم صار له دائرة رعاية
-    في تفقّد.»: «له» is the number's, so the words fit a man or a woman."""
+    """«لا يمكن قبول طلبك لرعاية خالد، لأن هذا الرقم أصبحت له دائرة رعاية
+    في تفقُد.»: «له» is the number's, so the words fit a man or a woman."""
     whom = f"لرعاية {patient}" if patient else "للرعاية"
     return (
-        f"ما يمكن قبول طلبك {whom}، لأن هذا الرقم صار له دائرة رعاية "
-        "في تفقّد."
+        f"لا يمكن قبول طلبك {whom}، لأن هذا الرقم أصبحت له دائرة رعاية "
+        "في تفقُد."
     )
 
 

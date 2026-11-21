@@ -50,6 +50,12 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
+        <!-- The color OneSignal's pushes tint their white logo with
+             (res/drawable-*/ic_stat_onesignal_default.png): the app's
+             violet (AppColors.inkViolet), as ARGB. -->
+        <meta-data
+            android:name="com.onesignal.NotificationAccentColor.DEFAULT"
+            android:value="FF3F2A65" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
