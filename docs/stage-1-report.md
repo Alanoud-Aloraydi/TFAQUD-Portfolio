@@ -4,24 +4,22 @@
 
 ### 1.1 Initial Meeting & Team Members
 
-The team held its first meeting remotely via WhatsApp on September 8, 2026, with all three members present. The meeting focused on introducing team members and discussing their backgrounds, skills, and interests.
+We held our first meeting remotely via WhatsApp on September 8, 2026. We introduced ourselves and discussed our backgrounds, skills, and interests.
 
-| Team Member | Background, Skills & Interests |
+| Current Team Member | Background, Skills & Interests |
 |---|---|
 | Alanoud Aloraydi | Information Technology and Cybersecurity; experience in full-stack and backend development, with an interest in application development. |
 | Leen Algraawi | Artificial Intelligence; skills in Flask and databases, with an interest in backend development and learning Flutter. |
-| Lama Alzahrani | Bioinformatics; skills in Python, Flask, REST APIs, and UI/UX fundamentals, with an interest in software development. |
 
-### 1.2 Initial Roles
+### 1.2 Roles and Responsibilities
 
-Initial roles were assigned through voting for a one-month period, with all members participating in project tasks.
+We assigned our initial roles by voting for one month. The table records our final delivery responsibilities.
 
-| Role | Member | Proposed Responsibilities |
+| Role | Member | Responsibilities |
 |---|---|---|
-| Team Lead | Alanoud | Coordinate task assignments, lead technical discussions, and ensure work integration. |
-| Project Manager | Lama | Organize meetings, track progress and deadlines, and identify obstacles. |
-| Backend QA | Leen | Test the back end, verify that endpoints enforce role permissions, and report defects. |
-| Team Members | All Members | Participate in development, documentation, reviews, and decision-making. |
+| Team Lead and Project Manager | Alanoud Aloraydi | Coordinate task assignments, technical discussions, meetings, deadlines, integration, and delivery. |
+| Source Control Manager | Leen Algraawi | Coordinate branches, pull request reviews, and merges. |
+| Development and QA | Both members | Develop, document, and review the app, verify permissions and workflows, and report defects. |
 
 ### 1.3 Team Norms & Collaboration
 
@@ -30,29 +28,29 @@ Initial roles were assigned through voting for a one-month period, with all memb
 - **Collaboration:** Use GitHub to share project files and distribute tasks fairly based on skills and required effort.
 - **Decision-Making:** Make decisions by consensus and discuss different perspectives to reach mutual agreement.
 - **Commitment:** Notify the team in advance and provide a reason when unable to participate.
-- **Task Management Tool:** The team is currently evaluating Trello and Jira and will confirm its choice at the next stand-up. This decision does not block current workflow, which continues to run through GitHub for file-sharing and WhatsApp/Discord for coordination.
+- **Task Management Tool:** We evaluated Trello and Jira and selected Jira. We use GitHub for shared files and WhatsApp and Discord for coordination.
 
 ## 2. Ideas Explored
 
 ### 2.1 Research
 
-The team conducted individual and group research to identify potential project ideas, based on real-world problems, user needs, and areas where technology could help improve organization and coordination.
+We conducted individual and group research to identify potential project ideas, based on real-world problems, user needs, and areas where technology could help improve organization and coordination.
 
-The research focused on healthcare management, patient care, communication, task and appointment scheduling, and service organization. The team also considered problems that could be addressed through a mobile application and evaluated the feasibility of developing the ideas based on the team's skills, available time, and technical resources.
+The research focused on healthcare management, patient care, communication, task and appointment scheduling, and service organization. We also considered problems that could be addressed through a mobile application and evaluated the feasibility of developing the ideas based on the team's skills, available time, and technical resources.
 
-During the brainstorming process, the team explored several areas, including healthcare and medication management, bioinformatics and water desalination, e-commerce services, communication between schools and parents, home repair services, and event organization. This process resulted in the discussion of six main project directions before selecting the final idea.
+During the brainstorming process, we explored several areas, including healthcare and medication management, bioinformatics and water desalination, e-commerce services, communication between schools and parents, home repair services, and event organization. This process resulted in the discussion of six main project directions before selecting the final idea.
 
 ### 2.2 Brainstorming Techniques
 
 #### Mind Mapping
 
-The team used mind mapping to connect real-world problems with potential digital solutions. In the healthcare-related direction, the main concept was **patient care management**, from which several aspects branched out, such as medications, medical appointments, therapy sessions, health measurements, reminders, caregivers, responsibilities, and documentation of care activities.
+We used mind mapping to connect real-world problems with potential digital solutions. In the healthcare-related direction, the main concept was **patient care management**, from which several aspects branched out, such as medications, medical appointments, therapy sessions, health measurements, reminders, caregivers, responsibilities, and documentation of care activities.
 
-This helped the team expand the initial idea of medication management into a more comprehensive concept for healthcare and patient care coordination.
+This helped us expand the initial idea of medication management into a more comprehensive concept for healthcare and patient care coordination.
 
 #### SCAMPER-Based Thinking
 
-During the brainstorming process, the team explored different ways to improve and expand the initial ideas. In the healthcare direction, the team considered how multiple healthcare-related functions could be integrated into a single application instead of focusing only on medication management.
+During the brainstorming process, we explored different ways to improve and expand the initial ideas. In the healthcare direction, we considered how multiple healthcare-related functions could be integrated into a single application instead of focusing only on medication management.
 
 The initial medication management idea evolved through:
 
@@ -66,7 +64,7 @@ This process helped expand the initial medication management idea into a more co
 
 #### How Might We Questions
 
-The team used "How Might We" questions to transform the healthcare problem into questions that could support the exploration of possible solutions:
+We used "How Might We" questions to transform the healthcare problem into questions that could support the exploration of possible solutions:
 
 * **How might we help caregivers coordinate the care of a single patient?**
 * **How might we make managing medications and medical appointments easier?**
@@ -74,7 +72,7 @@ The team used "How Might We" questions to transform the healthcare problem into 
 * **How might we support patients who are able to manage their own care, as well as patients who need assistance?**
 * **How might we bring health information and patient care responsibilities together in one place?**
 
-The brainstorming process helped the team identify healthcare and patient care coordination as a potential area for developing a mobile application. The initial medication management idea was later expanded into the broader **TFAQUD** concept.
+The brainstorming process helped us identify healthcare and patient care coordination as a potential area for developing a mobile application. The initial medication management idea was later expanded into the broader **TFAQUD** concept.
 
 ### 2.3 Ideas Considered
 
@@ -101,7 +99,7 @@ A platform that brings together online stores and allows verified customers to s
 **4. School–Parent Communication Platform**
 A platform designed to improve communication between schools and parents, including student dismissal notifications and attendance management.
 - *Strength:* Addressed a relatable, everyday problem with a clearly identifiable user base (schools and parents).
-- *Weakness:* The team did not explore the idea in enough depth and had not clearly defined its scope or boundaries.
+- *Weakness:* We did not explore the idea in enough depth and had not clearly defined its scope or boundaries.
 - *Reason for Rejection:* Insufficiently developed to commit to as an MVP direction.
 
 **5. Home Maintenance Worker Booking Application**
@@ -122,9 +120,9 @@ An application that brings different event organization services together in one
 
 | Criterion | What it measures |
 |---|---|
-| Feasibility | Can the team realistically build this with the skills, time, and tools available (including tech that needs to be learned, like Flutter)? |
+| Feasibility | Can we realistically build this with the skills, time, and tools available (including tech that needs to be learned, like Flutter)? |
 | Potential Impact | How significant and well-evidenced is the problem, and how meaningfully does the idea solve it? |
-| Technical Alignment | How well does the required tech stack match the team's existing skills (backend, REST APIs, databases, Flask) vs. what needs to be learned from scratch? |
+| Technical Alignment | How well does the required tech stack match our existing skills (backend, REST APIs, databases, Flask) vs. what needs to be learned from scratch? |
 | Scalability | Room to grow beyond the MVP — additional features, broader user base, future integrations. |
 
 Each idea is scored 1 (weak) to 5 (strong) per criterion.
@@ -145,13 +143,13 @@ Each idea is scored 1 (weak) to 5 (strong) per criterion.
 | Idea | Key Risks / Constraints |
 |---|---|
 | TFAQUD | Learning curve for Flutter and mobile deployment; designing a care circle with clear roles and permissions without confusing users; making sure alerts for missed tasks reach the right person without overwhelming the circle; handling sensitive health data responsibly; device-integration APIs uncertain (kept out of MVP scope). |
-| Microbiome / Biofouling Prediction | Requires specialized domain knowledge (metagenomics) the team doesn't currently have; access to real desalination-plant data is uncertain; core computation too simple to sustain a full MVP. |
+| Microbiome / Biofouling Prediction | Requires specialized domain knowledge (metagenomics) we did not have at the time; access to real desalination-plant data is uncertain; core computation too simple to sustain a full MVP. |
 | E-Commerce Store Ratings | Depends on Nafath integration, which may involve approval/access hurdles; direct overlap with existing government-backed trust platforms weakens differentiation. |
 | School–Parent Communication | Scope was never clearly bounded; would likely require partnerships with actual schools to pilot, which is outside the team's control. |
 | Repair Worker Booking | A closely matching app already exists in the market, making differentiation very difficult; discovered late in exploration. |
 | Event Planning Aggregator | A previous cohort/team pursued an identical concept — duplication risk for academic originality; also a crowded market of existing event-planning apps. |
 
-TFAQUD comes out clearly on top across all four criteria, which lines up with why it was selected — an evidence-backed problem, a feasible scope, and a stack the team already partially knows.
+TFAQUD comes out clearly on top across all four criteria, which lines up with why it was selected — an evidence-backed problem, a feasible scope, and a stack we already partly knew.
 
 ## 3. Selected MVP Concept
 
@@ -159,7 +157,7 @@ TFAQUD comes out clearly on top across all four criteria, which lines up with wh
 
 **Project Name: TFAQUD | تفقُّد**
 
-The team selected TFAQUD, a mobile application designed to organize healthcare through **care circles**, each built around a single patient, whether the patient manages their own care or a care manager is responsible for it. A user can belong to several care circles, with a different role in each, and so care for more than one patient in one application.
+We selected TFAQUD, a mobile application designed to organize healthcare through **care circles**, each built around a single patient, whether the patient manages their own care or a care manager is responsible for it. A user can belong to several care circles, with a different role in each, and so care for more than one patient in one application.
 
 The application brings medication management, medical appointments, therapy sessions, and health measurements together in one care plan, and turns the plan into daily tasks, each with a responsible person and a recorded result. It also provides reminders, follow-up of missed tasks, care activity documentation, and the ability for care circle members to share responsibilities.
 
@@ -167,13 +165,13 @@ Each care circle includes the patient and the people who take part in the patien
 
 ### 3.2 Reasons for Selection
 
-The team selected TFAQUD for the following reasons:
+We selected TFAQUD for the following reasons:
 
-- **Technical Feasibility:** The idea aligns with the team's existing skills in backend development, REST APIs, and databases, while providing an opportunity to learn Flutter for mobile development.
+- **Technical Feasibility:** The idea aligns with our existing skills in backend development, REST APIs, and databases, while providing an opportunity to learn Flutter for mobile development.
 - **Innovation:** The dual application modes — Simplified Mode for patients and Detailed Mode for caregivers — combined with care circles that have role-based permissions, task assignment, and follow-up of missed tasks, and with the ability to belong to several circles to care for more than one patient, address a coordination gap that typical single-user medication reminder apps do not solve.
 - **Value Proposition:** The application combines multiple aspects of healthcare management in one place and supports coordination among care circle members, so that the person responsible for each task and its result are clear.
-- **Potential Impact:** The scoring matrix in Section 2.4 rated TFAQUD highest on Potential Impact (5/5) of any idea considered. The problem it targets — fragmented coordination across medications, appointments, and measurements — affects two distinct, currently underserved groups at once: multi-caregiver households who have no shared system for dividing responsibility, and independent patients who must otherwise track their own care across separate tools. By centralizing both use cases in one application with mode-appropriate views, TFAQUD has a broader potential reach than a single-purpose reminder app while staying within the team's technical capacity.
-- **Alignment with Team Goals:** The project allows the team to apply software development skills and gain experience in mobile development and system integration.
+- **Potential Impact:** The scoring matrix in Section 2.4 rated TFAQUD highest on Potential Impact (5/5) of any idea considered. The problem it targets — fragmented coordination across medications, appointments, and measurements — affects two distinct, currently underserved groups at once: multi-caregiver households who have no shared system for dividing responsibility, and independent patients who must otherwise track their own care across separate tools. By centralizing both use cases in one application with mode-appropriate views, TFAQUD has a broader potential reach than a single-purpose reminder app while staying within our technical capacity.
+- **Alignment with Team Goals:** The project allows us to apply software development skills and gain experience in mobile development and system integration.
 
 ### 3.3 Problem Statement
 
@@ -189,9 +187,9 @@ The primary target audience is caregiving groups consisting of two or more careg
 
 The application also supports independent patients who can manage their own care, patients who need assistance with follow-up through Simplified Mode, and viewers who follow the patient's care without modifying it.
 
-### 3.5 Key Features
+### 3.5 Proposed Features
 
-The MVP will include the following core features:
+Our initial proposal included the following features. The [Stage 4 report](stage-4-mvp-development-and-execution.md#2-implemented-scope) records the delivered release.
 
 1. **Application Modes:** Detailed Mode for healthcare management and Simplified Mode for patients who need assistance with follow-up. The mode is selected when the care circle is created.
 2. **Medication Management:** Record medications, doses, duration, schedules, and instructions, with medication history, supply tracking, and dose tracking. Medicine details can be read from a photo of the medicine.
@@ -230,3 +228,5 @@ The challenges below trace directly back to the brainstorming process: the care 
 **Opportunities:**
 
 - Future integration with medical devices to automatically import health measurements, subject to API availability and user consent.
+
+[Project Charter](stage-2-project-charter.md) · [Stage 4 Delivery](stage-4-mvp-development-and-execution.md)

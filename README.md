@@ -1,93 +1,55 @@
-# TFAQUD | تفقُّد
+# TFAQUD | تفقُّد
 
-A mobile application for iOS and Android that helps patients and caregivers organize care through shared care circles. Each circle supports one patient, while a user can participate in multiple circles to manage care for more than one patient.
+TFAQUD is an Arabic mobile application for coordinating care within a shared care circle. Each circle serves one patient. Caregivers and self-managing patients use Detailed Mode. Patients who need help with follow-up use Simplified Mode.
 
-Developed as a Holberton School Graduation Portfolio Project.
+We developed TFAQUD as our Holberton School Graduation Portfolio Project.
 
-## Overview
+## MVP Features
 
-Ongoing care requires the organization of medications, medical appointments, therapy sessions, and health measurements. Coordination becomes more demanding when one caregiver supports several patients or multiple caregivers share responsibility for one patient.
+- **Care Circles:** Phone sign-in, patient consent, caregiver invitations, membership permissions, and circle switching.
+- **Care Plans:** Medication schedules and dose history, blood pressure and glucose plans, and appointments with optional companions.
+- **Daily Care:** Task responses, on-demand readings, reminders, and follow-up through Needs Attention.
+- **Medical Information:** Patient profile, read-only Emergency Card, Care Record PDF, and visit sheets with a voice note.
 
-TFAQUD brings these activities into a care plan for each patient, with daily tasks, defined responsibilities, reminders, and follow-up of missed tasks. The application supports Arabic and provides **Detailed Mode** for care management and **Simplified Mode** for patients who need assistance with daily follow-up.
+## Technology and Delivery
 
-## Target Users
+| Area | Implementation |
+|---|---|
+| Mobile | Flutter and Dart for iOS and Android |
+| Back End | Flask REST API, SQLAlchemy, PostgreSQL, and Alembic |
+| Services | Authentica for SMS, Aladhan for prayer times, and OneSignal for remote push through FCM on Android and APNs on iOS |
+| Development | Docker Compose, Git, GitHub Actions, and Jira |
+| Beta | Flask and PostgreSQL on Render. iOS tester builds are uploaded to TestFlight. The Android AAB is available from CI. |
 
-TFAQUD primarily serves:
-
-- **Caregivers supporting multiple patients:** Organize each patient's care within a separate circle and access their care circles through one account.
-- **Groups sharing responsibility for one patient:** Coordinate responsibilities, share care information, and track task completion.
-
-The application also supports self-managing patients, patients who need a simplified interface, and viewers who follow care without modifying information.
-
-Within each circle, care managers organize the care plan and membership, care assistants carry out tasks, and viewers access information according to their permissions.
-
-## Planned MVP Features
-
-- **Care Circles:** Create a circle for each patient, participate in multiple circles, invite members, assign roles, and coordinate responsibilities.
-- **Medication Management:** Organize doses and schedules, track supplies, and retain medication history, with photo-assisted information entry using OCR.
-- **Appointments and Measurements:** Schedule medical visits, therapy sessions, and blood glucose and blood pressure measurements.
-- **Reminders and Follow-Up:** Notify the responsible person and escalate missed tasks according to a configured recipient order.
-- **Care Record:** Review recorded care information and export it as a PDF for future reference or doctor visits.
-- **Medical Profile and Emergency Card:** Maintain essential patient information and emergency contacts.
-
-## Planned Technologies and Services
-
-- **Core Technologies:** Flutter, Python, Flask REST API, and PostgreSQL.
-- **Supporting Services:** Local OCR, Firebase Cloud Messaging, an SMS gateway, and the Aladhan prayer-times API.
-- **Development and Deployment Tools:** Git, GitHub, Docker, and GitHub Actions.
+[API health](https://tfaqud-api.onrender.com/api/v1/health) · [Privacy policy](https://tfaqud-api.onrender.com/privacy)
 
 ## Development
 
-### Repository Structure
+| Path | Contents |
+|---|---|
+| `app/` | Flutter application, widget tests, and device smoke tests |
+| `backend/` | Flask API, PostgreSQL migrations, unit tests, and integration tests |
+| `docs/` | Holberton portfolio documents |
 
-| Folder | Content |
-| --- | --- |
-| `app/` | The Flutter mobile application |
-| `backend/` | The Flask REST API and the PostgreSQL database |
-| `docs/` | The project charter, the Stage 1 report, and the Stage 3 technical documentation |
+See the [mobile setup](app/README.md) and [back-end setup](backend/README.md). Integrate work on `development` and merge to `main` through a pull request. The App and Backend checks are required on `main`. [GitHub Actions](https://github.com/Alanoud-Aloraydi/TFAQUD-Portfolio/actions)
 
-### Running the Project
+### Branches, Commits, and Pull Requests
 
-- Back end: see [`backend/README.md`](backend/README.md).
-- Mobile application: see [`app/README.md`](app/README.md).
-
-### Branches and Commits
-
-| Branch | Purpose |
-| --- | --- |
-| `main` | Production code. Each release has a version tag. |
-| `development` | Integrated features. Deployed to staging. |
-| `feature/<issue>-<name>` | One task. Created from `development` and deleted after the merge. |
-
-`main` and `development` are protected. Changes reach them only through pull requests.
-
-Commit messages start with a type (`feat`, `fix`, `docs`, `test`, `refactor`, or `chore`) and refer to the issue. Each commit holds one change.
-
-```text
-feat: add the sign-in code request endpoint (KAN-14)
-```
-
-### Pull Requests
-
-Every change reaches `development` through a pull request that states what changed, which user story it implements, and how it was tested. A pull request is merged after the approval of one team member who did not write the change and after the automatic checks pass.
+We integrate feature branches into `development` and merge to `main` through pull requests. Commit messages use a type such as `feat`, `fix`, `docs`, `test`, `refactor`, or `chore`. A pull request describes the change, links the Jira issue, and lists the checks performed. We review changes together before merging.
 
 ## Documentation
 
 - [Stage 1 — Team Formation and Idea Development](docs/stage-1-report.md)
-- [Stage 2 — Project Charter](docs/project-charter.md)
+- [Stage 2 — Project Charter](docs/stage-2-project-charter.md)
 - [Stage 3 — Technical Documentation](docs/stage-3-technical-documentation.md)
-- [Application Mockups — Figma](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1)
+- [Stage 4 — MVP Development and Execution](docs/stage-4-mvp-development-and-execution.md)
+- [Figma mockups](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1)
 
-## Planned Delivery
-
-The Minimum Viable Product (MVP) is scheduled for delivery on **November 21, 2026**.
-
-## Team
+## Current Team
 
 | Member | Role |
-| --- | --- |
-| Alanoud Aloraydi | Team Lead and Developer |
-| Lama Alzahrani | Project Manager and Developer |
-| Leen Algraawi | Backend QA Engineer and Developer |
+|---|---|
+| Alanoud Aloraydi | Team Lead and Project Manager |
+| Leen Algraawi | Source Control Manager |
 
-All team members contribute to development, documentation, reviews, and project decisions.
+We share development, QA, documentation, and project decisions.

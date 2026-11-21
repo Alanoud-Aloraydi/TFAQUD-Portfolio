@@ -1,16 +1,196 @@
 # Stage 3: Technical Documentation
 
-## Table of Contents
-
-1. [User Stories and Mockups](#1-user-stories-and-mockups)
-2. [System Architecture](#2-system-architecture)
-3. [Components, Classes, and Database Design](#3-components-classes-and-database-design)
-4. [High-Level Sequence Diagrams](#4-high-level-sequence-diagrams)
-5. [API Specifications](#5-api-specifications)
-6. [SCM and QA Plans](#6-scm-and-qa-plans)
-7. [Technical Justifications](#7-technical-justifications)
+We document the implemented v1.0 design first. The [original planning design](#8-original-technical-design) records our initial requirements and decisions.
 
 ## 1. User Stories and Mockups
+
+| Priority | User Story | Jira |
+|---|---|---|
+| Must Have | As a patient or caregiver, I want to sign in by phone so I can access my care information. | [TFQD-35](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-35) |
+| Must Have | As a caregiver, I want to create a circle and obtain patient consent when required so I can coordinate care. | [TFQD-29](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-29) |
+| Must Have | As a manager, I want to invite other caregivers so we can share care responsibilities. | [TFQD-84](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-84) |
+| Must Have | As a manager, I want to plan medications, measurements, and appointments so daily care is scheduled. | [Care plan stories](https://holbertonstudents-team-f4bzu0ub.atlassian.net/issues/?jql=key%20in%20(TFQD-92,TFQD-87,TFQD-93)) |
+| Must Have | As a patient, I want to view and respond to daily tasks so my circle can follow my care. | [TFQD-90](https://holbertonstudents-team-f4bzu0ub.atlassian.net/browse/TFQD-90) |
+| Must Have | As a manager, I want access to the patient's current medical profile and Emergency Card. | [Medical stories](https://holbertonstudents-team-f4bzu0ub.atlassian.net/issues/?jql=key%20in%20(TFQD-32,TFQD-33)) |
+| Should Have | As a patient or caregiver, I want reminders and follow-up when care tasks need attention. | [Reminder stories](https://holbertonstudents-team-f4bzu0ub.atlassian.net/issues/?jql=key%20in%20(TFQD-96,TFQD-91)) |
+| Should Have | As a manager, I want to review care history, document visits, and export a PDF. | [Care Record stories](https://holbertonstudents-team-f4bzu0ub.atlassian.net/issues/?jql=key%20in%20(TFQD-97,TFQD-98,TFQD-99)) |
+
+Jira records the delivered behavior and linked evidence.
+
+[Full Jira backlog](https://holbertonstudents-team-f4bzu0ub.atlassian.net/jira/software/projects/TFQD/boards/3/backlog) · [Figma mockups](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1)
+
+## 2. System Architecture
+
+```mermaid
+flowchart TD
+    APP["Flutter app"] -->|"HTTPS and JSON"| API["Flask REST API on Render"]
+    API -->|"SQLAlchemy"| DB[("PostgreSQL on Render")]
+    API -->|"Send OTP"| SMS["Authentica"]
+    API -->|"City prayer times"| TIMES["Aladhan"]
+    API -->|"Send remote push"| PUSH["OneSignal"]
+    PUSH --> FCM["FCM for Android"]
+    PUSH --> APNS["APNs for iOS"]
+    FCM --> APP
+    APNS --> APP
+```
+
+We organized Flutter into presentation, domain, and data modules with Cubit, Dio, and GetIt. The app supports local reminders and generates the Care Record PDF. Flask validates requests, checks circle access, and applies care rules. Alembic manages the PostgreSQL schema.
+
+## 3. Components and Data Model
+
+| Component | Responsibility |
+|---|---|
+| Auth and Users | Phone OTP, account profile, session refresh, sign-out, and deletion |
+| Circles and Authorization | Consent, invitations, membership, leadership, and care-plan permissions |
+| Home and Care | Circle selection, daily tasks, and task responses |
+| Medications, Measurements, and Appointments | Plan rules, care history, readings, companions, and visit sheets |
+| Medical and Reminders | Patient information, Emergency Card, local reminders, and external push |
+
+```mermaid
+erDiagram
+    ACCOUNT ||--o{ ACCOUNT_SESSION : has
+    ACCOUNT ||--o{ CARE_CIRCLE_MANAGER : holds
+    ACCOUNT o|--o| CARE_CIRCLE : is_patient_in
+    CARE_CIRCLE ||--|{ CARE_CIRCLE_MANAGER : has
+    CARE_CIRCLE ||--o{ EMERGENCY_CONTACT : has
+    CARE_CIRCLE ||--o{ MEDICATION_PLAN : contains
+    MEDICATION_PLAN ||--|{ MEDICATION_PLAN_VERSION : versions
+    MEDICATION_PLAN_VERSION ||--o{ MEDICATION_SCHEDULE : schedules
+    MEDICATION_SCHEDULE ||--o{ MEDICATION_DOSE_RECORD : records
+    CARE_CIRCLE ||--o{ MEASUREMENT_PLAN : contains
+    CARE_CIRCLE ||--o{ MEASUREMENT_READING : records
+    CARE_CIRCLE ||--o{ APPOINTMENT : schedules
+    APPOINTMENT ||--o{ APPOINTMENT_COMPANION : lists
+    APPOINTMENT ||--o| APPOINTMENT_VISIT : documents
+```
+
+The circle holds one patient. A patient with an account uses the account's identity fields. The circle stores those fields for a patient without an account. Managers may have plan-specific edit permissions. The API also distinguishes a detailed member with paused editing access and a patient in Simplified Mode. The database checks that an active circle retains a manager.
+
+[Flutter features](../app/lib/features/) · [Back-end models](../backend/app/models/) · [Migrations](../backend/migrations/versions/)
+
+### Back-end Classes
+
+| Class | Responsibility |
+|---|---|
+| `CareService` | Circle creation, membership, and consent workflows |
+| `MedicationPlanService` and `MedicationDoseService` | Plan versions, schedules, and dose records |
+| `MeasurementService` | Measurement plans and readings |
+| `AppointmentService` and `VisitService` | Appointments, companions, and visit records |
+
+```mermaid
+classDiagram
+    CareService ..> CareCircle : coordinates
+    MedicationPlanService ..> MedicationPlan : versions
+    MeasurementService ..> MeasurementPlan : schedules
+    AppointmentService ..> Appointment : manages
+    VisitService ..> AppointmentVisit : records
+```
+
+## 4. Main Request Flows
+
+```mermaid
+sequenceDiagram
+    participant App as Flutter
+    participant API as Flask
+    participant SMS as Authentica
+    participant DB as PostgreSQL
+    App->>API: Request phone code
+    API->>DB: Check request limits and store challenge
+    API->>SMS: Send OTP
+    App->>API: Verify phone code
+    API->>DB: Verify challenge and create session
+    API-->>App: Return account and session tokens
+```
+
+```mermaid
+sequenceDiagram
+    participant App as Flutter
+    participant API as Flask
+    participant DB as PostgreSQL
+    App->>API: Submit medication plan and fixed dose times
+    API->>DB: Check circle permission and save plan version
+    API-->>App: Return saved plan
+    App->>API: Read scheduled occurrences
+    API-->>App: Return daily doses for the selected circle
+```
+
+## 5. API Specifications
+
+Routes below are relative to `/api/v1`. Account and circle routes require a session. Circle actions apply server-side authorization.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/health` | Check API and configured database schema |
+| POST | `/auth/request-code`, `/auth/verify-code` | Request and verify OTP |
+| POST | `/auth/refresh`, `/auth/sign-out` | Refresh or revoke a session |
+| GET, DELETE | `/accounts/me` | View or delete the account |
+| PUT | `/accounts/me/profile` | Update the signed-in profile |
+| GET | `/home` | Load authorized circles |
+| POST | `/circles/self`, `/circles/patient-without-account` | Create a circle |
+| GET, POST | `/circle-requests` | Read or send a patient consent request |
+| POST | `/circle-requests/{request_id}/respond` | Accept or decline a request |
+| GET, PATCH | `/circles/{circle_id}/medical-profile` | View or update the medical profile |
+| GET | `/circles/{circle_id}/emergency-card` | Read the derived Emergency Card |
+| GET, POST | `/circles/{circle_id}/medication-plans` | List and create medication plans |
+| GET, POST | `/circles/{circle_id}/measurement-plans` | List and create measurement plans |
+| GET, POST | `/circles/{circle_id}/appointments` | List and create appointments |
+| GET, POST | `/circles/{circle_id}/measurement-readings` | List readings or record an unscheduled reading |
+| GET, PUT | `/circles/{circle_id}/appointments/{appointment_id}/visit` | Read or save visit text |
+| GET, PUT, DELETE | `/circles/{circle_id}/appointments/{appointment_id}/visit/audio` | Read, replace, or delete the protected voice note |
+| GET | `/circles/{circle_id}/prayer-times` | Get prayer times for the patient city |
+| PUT | `/accounts/me/push-subscription` | Register or update remote push settings |
+
+OTP request throttling checks the phone number, caller IP, and installation ID. Verification uses challenge-level limits. Medication recurrence uses fixed clock times. The Today screen uses prayer periods for grouping. Appointment companions are optional and selected from eligible circle managers. Visit audio is stored in PostgreSQL.
+
+[API registration and configuration](../backend/app/factory/) · [Back-end setup](../backend/README.md)
+
+### Error Responses
+
+| HTTP status | Meaning |
+|---|---|
+| 400, 422 | Malformed request or invalid input |
+| 401, 403 | Session required or permission denied |
+| 404, 409 | Resource unavailable or state conflict |
+| 429, 503 | Request limit or temporary service failure |
+
+## 6. SCM, QA, and Deployment
+
+| Area | Practice |
+|---|---|
+| SCM | Integrate changes on `development` and merge to `main` through pull requests. App and Backend checks are required on `main`. |
+| Definition of Done | Link the Jira issue, verify authorization and validation, include required migrations, pass relevant checks, and record peer review and acceptance evidence. |
+| Automated QA | Use pytest for Flask and PostgreSQL integration tests and Flutter tests for units and widgets. |
+| Device QA | Use the smoke workflow for device coverage. Verify release flows separately on signed tester builds connected to Render. |
+| Deployment | Render hosts Flask and PostgreSQL for the beta. Signed iOS builds are uploaded to TestFlight. CI produces the signed Android AAB. |
+
+[CI workflow](../.github/workflows/ci.yml) · [Device workflow](../.github/workflows/device-matrix.yml) · [Stage 4 evidence](stage-4-mvp-development-and-execution.md)
+
+## 7. Technical Rationale
+
+- We chose Flutter for a shared iOS and Android codebase and Arabic interface support.
+- We used Flask to separate care rules and authorization from the mobile app.
+- PostgreSQL enforces relationships and supports atomic updates across linked care records.
+- Circle permissions protect patient data. Simplified Mode reduces the steps for daily follow-up.
+- Reminder delivery and task completion are tracked separately. Care Record export supports review and sharing.
+
+## 8. Original Technical Design
+
+This design records our Stage 3 planning baseline. Sections 1–7 describe the implemented release.
+
+<details>
+<summary>Original requirements, diagrams, API specifications, and plans</summary>
+
+### Original Table of Contents
+
+1. [User Stories and Mockups](#original-1-user-stories-and-mockups)
+2. [System Architecture](#original-2-system-architecture)
+3. [Components, Classes, and Database Design](#original-3-components-classes-and-database-design)
+4. [High-Level Sequence Diagrams](#original-4-high-level-sequence-diagrams)
+5. [API Specifications](#original-5-api-specifications)
+6. [SCM and QA Plans](#original-6-scm-and-qa-plans)
+7. [Technical Justifications](#original-7-technical-justifications)
+
+### Original 1. User Stories and Mockups
 
 ### 1.1 Prioritized User Stories
 
@@ -61,7 +241,7 @@ The stories are prioritized using MoSCoW: **Must Have** items are essential to t
 
 [View the main screen mockups in Figma](https://www.figma.com/design/Ojd0XVQSuC39YoJoiRyhou/Tafaqud-Care-OS?node-id=0-1&t=EkiVLBVRuXTGD5P6-1)
 
-## 2. System Architecture
+### Original 2. System Architecture
 ```mermaid
 flowchart TD
     USER["Patient / Manager / Performer / Viewer"]
@@ -94,7 +274,7 @@ flowchart TD
     FCM -->|"Push notification"| APP
 ```
 
-## 3. Components, Classes, and Database Design
+### Original 3. Components, Classes, and Database Design
 
 ### 3.1 Front-End Components and Interactions
 The front end is a Flutter mobile app. All data goes through the Flask REST API, and the actions shown on each screen depend on the member's role in the selected circle (`Manager`, `Performer`, `Viewer` or `Patient`).
@@ -934,7 +1114,7 @@ erDiagram
     TASKS |o--o{ ATTENTION_ITEMS : "about"
 ```
 
-## 4. High-Level Sequence Diagrams
+### Original 4. High-Level Sequence Diagrams
 
 ### 4.1 User Login
 
@@ -1022,7 +1202,7 @@ sequenceDiagram
 ```
 
 
-## 5. API Specifications
+### Original 5. API Specifications
 
 ### 5.1 External APIs
 
@@ -1178,7 +1358,7 @@ A patient with a phone is added through a request. A circle for oneself, or for 
 | `429` | `TOO_MANY_REQUESTS` | A code was requested again too soon. |
 | `503` | `SMS_UNAVAILABLE` | The SMS provider did not accept the message. |
 
-## 6. SCM and QA Plans
+### Original 6. SCM and QA Plans
 
 ### 6.1 Source Control Management
 
@@ -1220,9 +1400,9 @@ GitHub Actions with one Docker image for both environments.
 | Staging | Merge into `development`. | Deploy, migrate the database, check `GET /health`, run the Newman tests, run the manual tests. |
 | Production | Version tag on `main`, after manual approval. | Back up the database, deploy, migrate, check `GET /health`. If the check fails, restore the previous image. |
 
-## 7. Technical Justifications
+### Original 7. Technical Justifications
 
-- **Mobile Application and Flutter:** A mobile application was chosen to support patients and caregivers in following daily care tasks and receiving reminders. Flutter was selected to support both iOS and Android through a shared codebase, reducing duplicated development work for a three-member team.
+- **Mobile Application and Flutter:** A mobile application was chosen to support patients and caregivers in following daily care tasks and receiving reminders. Flutter was selected to support both iOS and Android through a shared codebase, reducing duplicated development work for our team.
 
 - **Flask and REST API:** Flask was selected to build on the team's existing experience with Python, Flask, and API development. A REST API separates the mobile interface from care-management logic and authorization, organizing operations around resources such as care circles, medications, and tasks through standard HTTP methods.
 
@@ -1237,3 +1417,5 @@ GitHub Actions with one Docker image for both environments.
 - **Reminders and Escalation:** Reminders and ordered escalation support follow-up of incomplete tasks by notifying the configured recipients. Reminder delivery is kept separate from user-confirmed task completion to ensure that care records reflect recorded actions.
 
 - **Care Record and Export:** Current and previous medications and recorded measurements are retained to document care changes and support future reference. Exporting the care record allows patients and caregivers to present this information to a doctor when needed.
+
+</details>
