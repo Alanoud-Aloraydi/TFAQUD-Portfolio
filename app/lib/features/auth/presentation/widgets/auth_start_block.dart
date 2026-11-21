@@ -1,5 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
+import 'package:app/core/widgets/legal/legal_links_note.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -16,11 +17,7 @@ class AuthStartBlock extends StatelessWidget {
       children: <Widget>[
         PillButton(label: context.tr('auth.start'), onPressed: onStart),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          context.tr('auth.terms_note'),
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        const LegalLinksNote(),
       ],
     );
   }

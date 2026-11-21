@@ -1,13 +1,11 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/presentation/widgets/stepper_half_button.dart';
 import 'package:flutter/material.dart';
 
-/// The dose stepper: a lavender capsule with − and + divided by a thin
-/// line, at the end of a row. Each half is 44 by 44, so it is easy to tap.
-/// Null [onDecrement] or [onIncrement] turns that half off, for example −
-/// at the smallest dose.
+/// The dose stepper: + in a round lavender button, then [middle] (the
+/// number and its unit), then − in a light one, at the end of a row. Null
+/// [onDecrement] or [onIncrement] turns that button off, for example − at
+/// the smallest dose.
 class StepperControl extends StatelessWidget {
   const StepperControl({
     super.key,
@@ -15,45 +13,33 @@ class StepperControl extends StatelessWidget {
     required this.onIncrement,
     required this.decrementLabel,
     required this.incrementLabel,
+    required this.middle,
   });
 
   final VoidCallback? onDecrement;
   final VoidCallback? onIncrement;
 
-  /// What VoiceOver reads for each half, for example «إنقاص الجرعة».
+  /// What VoiceOver reads for each button, for example «إنقاص الجرعة».
   final String decrementLabel;
   final String incrementLabel;
+  final Widget middle;
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const ShapeDecoration(
-        color: AppSemanticColors.selectedSurface,
-        shape: StadiumBorder(),
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: <Widget>[
+      StepperHalfButton(
+        icon: ActionIcons.plus,
+        label: incrementLabel,
+        onPressed: onIncrement,
+        strong: true,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          StepperHalfButton(
-            icon: ActionIcons.minus,
-            label: decrementLabel,
-            onPressed: onDecrement,
-          ),
-          const SizedBox(
-            height: AppSpacing.lg,
-            child: VerticalDivider(
-              width: 1,
-              thickness: 1,
-              color: AppSemanticColors.selectedSurfaceStrong,
-            ),
-          ),
-          StepperHalfButton(
-            icon: ActionIcons.plus,
-            label: incrementLabel,
-            onPressed: onIncrement,
-          ),
-        ],
+      middle,
+      StepperHalfButton(
+        icon: ActionIcons.minus,
+        label: decrementLabel,
+        onPressed: onDecrement,
       ),
-    );
-  }
+    ],
+  );
 }

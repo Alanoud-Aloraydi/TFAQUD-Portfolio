@@ -22,9 +22,9 @@ def circle_request_push(
         return None
     requester = display_name(session, request.requested_by_account_id)
     body = (
-        f"وصلك طلب من {requester} لمتابعة رعايتك في تفقّد."
+        f"وصلك طلب من {requester} لمتابعة رعايتك في تفقُد."
         if requester
-        else "وصلك طلب جديد لمتابعة رعايتك في تفقّد."
+        else "وصلك طلب جديد لمتابعة رعايتك في تفقُد."
     )
     message = PushMessage(
         "طلب رعاية جديد", body, "circle_request", request_target(request.id)
@@ -48,7 +48,7 @@ def request_answer_push(
     if request.status == "accepted":
         message = PushMessage(
             "تم قبول طلبك",
-            f"تم قبول طلبك {whom}. الدائرة تجهز أول ما تكتمل البيانات.",
+            f"تم قبول طلبك {whom}. تجهز الدائرة فور اكتمال البيانات.",
             "request_answer",
         )
     elif request.status == "declined":
@@ -77,7 +77,7 @@ def circle_ready_push(
         (request.requested_by_account_id,),
         PushMessage(
             "الدائرة جاهزة",
-            f"«{name}» جاهزة، وتقدر تتابع الرعاية الحين.",
+            f"«{name}» جاهزة، ويمكنك متابعة الرعاية الآن.",
             "circle_ready",
             circle_target(circle.id),
         ),

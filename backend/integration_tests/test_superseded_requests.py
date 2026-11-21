@@ -64,10 +64,11 @@ def test_making_an_own_circle_closes_the_request_with_its_reason(
     # And the sender is told, with nothing to answer.
     [message] = pushes.to(reem_phone.token)
     assert message.kind == "request_superseded"
-    assert message.title == "طلبك ما يمكن قبوله"
+    assert message.title == "لا يمكن قبول طلبك"
     assert message.body == (
-        "ما يمكن قبول طلبك لرعاية Sami، لأن هذا الرقم صار له دائرة رعاية "
-        "في تفقّد."
+        "لا يمكن قبول طلبك لرعاية Sami، لأن هذا الرقم أصبحت له دائرة "
+        "رعاية "
+        "في تفقُد."
     )
     assert dict(message.target) == {"request_id": request_id}
 

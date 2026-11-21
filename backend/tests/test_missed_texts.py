@@ -12,19 +12,19 @@ from app.push.missed_texts import (
 def test_a_missed_dose_to_the_patient_and_to_a_carer():
     assert dose_missed_text(
         "فيتامين ب12", name="خالد", own=True, patient="خالد"
-    ) == "يا خالد، جرعة فيتامين ب12 فاتت، الأفضل أخذها الحين"
+    ) == "يا خالد، جرعة فيتامين ب12 فاتت، الأفضل أخذها الآن"
     assert dose_missed_text(
         "فيتامين ب12", name="لينا", own=False, patient="خالد"
-    ) == "يا لينا، جرعة فيتامين ب12 لـخالد فاتت، الأفضل أخذها الحين"
+    ) == "يا لينا، جرعة فيتامين ب12 لـخالد فاتت، الأفضل أخذها الآن"
 
 
 def test_a_missed_reading_says_sugar_or_pressure():
     assert measurement_missed_text(
         "glucose", name="نورة", own=True, patient="نورة"
-    ) == "يا نورة، قياس السكر فات، الأفضل القياس الحين"
+    ) == "يا نورة، قياس السكر فات، الأفضل القياس الآن"
     assert measurement_missed_text(
         "blood_pressure", name="لينا", own=False, patient="نورة"
-    ) == "يا لينا، قياس الضغط لـنورة فات، الأفضل القياس الحين"
+    ) == "يا لينا، قياس الضغط لـنورة فات، الأفضل القياس الآن"
 
 
 def test_a_missed_appointment_to_the_patient_and_to_a_carer():
@@ -55,7 +55,7 @@ def test_a_visit_is_named_as_the_app_names_it():
 def test_a_missing_name_is_left_out_never_blank():
     assert dose_missed_text(
         "بنادول", name=None, own=False, patient=" "
-    ) == "جرعة بنادول فاتت، الأفضل أخذها الحين"
+    ) == "جرعة بنادول فاتت، الأفضل أخذها الآن"
     assert appointment_missed_text(
         name="", own=False, patient=None
     ) == "الموعد فات"

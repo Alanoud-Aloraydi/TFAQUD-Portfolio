@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} · تفقُد</title>
+<style>
+  body {
+    margin: 0; background: #faf8fd; color: #2b2340;
+    font: 17px/1.8 "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 32px 0 8px; }
+  .updated { color: #6b6280; margin: 0 0 24px; }
+  ul, ol { padding-inline-start: 22px; }
+  li { margin-bottom: 6px; }
+  .note {
+    background: #efeaf8; border-radius: 14px; padding: 14px 16px;
+    margin: 24px 0;
+  }
+  a { color: #4b3a7a; }
+</style>
+</head>
+<body>
+<main>
+  <h1>{% block heading %}{% endblock %}</h1>
+  <p class="updated">آخر تحديث: {{ updated }}</p>
+  {% block content %}{% endblock %}
+  <h2>التواصل</h2>
+  {% if email %}
+  <p>لأي سؤال أو طلب يخص بياناتك: <a href="mailto:{{ email }}">{{ email }}</a></p>
+  {% else %}
+  <p>لأي سؤال أو طلب يخص بياناتك، تواصل معنا من خلال صفحات تفقُد الرسمية.</p>
+  {% endif %}
+</main>
+</body>
+</html>

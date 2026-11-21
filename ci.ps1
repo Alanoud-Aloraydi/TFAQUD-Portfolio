@@ -5,6 +5,10 @@
 #   .\ci.ps1 -App         only the app job
 #   .\ci.ps1 -Backend     only the backend job
 #   .\ci.ps1 -Fix         format and fix instead of only reporting
+#   .\ci.ps1 -Quick       before a push: the app's tests only for the
+#                         folders changed since the last push, and no
+#                         backend integration tests. GitHub still runs
+#                         everything on the push, and builds only if it passes
 #
 # Close the watcher window first (tool\watch.bat). Two processes writing the
 # same files is what makes "file is being used by another process".
@@ -13,7 +17,8 @@
 param(
   [switch]$App,
   [switch]$Backend,
-  [switch]$Fix
+  [switch]$Fix,
+  [switch]$Quick
 )
 
 $ErrorActionPreference = 'Continue'
@@ -44,6 +49,28 @@ function Skip { param([string]$Name, [string]$Why)
 
 if (-not $App -and -not $Backend) { $App = $true; $Backend = $true }
 
+# -Quick: the files changed since the last push, committed or not.
+function Changed-Paths {
+  $paths = @(git -C $root diff --name-only '@{u}' 2>$null)
+  $paths += @(git -C $root status --porcelain |
+    ForEach-Object { $_.Substring(3) })
+  $paths | Where-Object { $_ } | Sort-Object -Unique
+}
+
+# The app's test folders for those files: a feature's own folder
+# (lib/features/x or test/x gives test/x), and test/core for lib/core.
+function App-TestFolders {
+  $dirs = foreach ($p in Changed-Paths) {
+    if ($p -match '^app/(?:lib/features|test)/([^/]+)/') {
+      "test/$($Matches[1])"
+    } elseif ($p -match '^app/lib/core/') {
+      'test/core'
+    }
+  }
+  $dirs | Sort-Object -Unique |
+    Where-Object { Test-Path (Join-Path $root "app/$_") }
+}
+
 # ---------------------------------------------------------------- app job
 if ($App) {
   if (-not (Test-Path (Join-Path $root 'app\.env'))) {
@@ -67,7 +94,17 @@ if ($App) {
   }
   Step 'app: analyze'   'app' { flutter analyze }
   Step 'app: structure' 'app' { dart run tool/check_structure.dart }
-  Step 'app: tests'     'app' { flutter test }
+  if (-not $Quick) {
+    Step 'app: tests' 'app' { flutter test }
+  } else {
+    $folders = @(App-TestFolders)
+    if ($folders.Count -eq 0) {
+      Skip 'app: tests' 'no app folder changed (-Quick)'
+    } else {
+      Write-Host "test folders: $($folders -join ', ')"
+      Step 'app: tests (changed folders)' 'app' { flutter test @folders }
+    }
+  }
 }
 
 # ------------------------------------------------------------ backend job
@@ -93,7 +130,7 @@ if ($Backend) {
     # db service in docker-compose.yml is the development database named
     # tfaqud, so this uses a throwaway container of its own on 5433
     # instead of touching it.
-    if (-not $env:TEST_DATABASE_URL) {
+    if (-not $Quick -and -not $env:TEST_DATABASE_URL) {
       if (Get-Command docker -ErrorAction SilentlyContinue) {
         $name = 'tfaqud-test-db'
         $existing = docker ps -aq -f "name=^$name$"
@@ -120,7 +157,9 @@ if ($Backend) {
         }
       }
     }
-    if ($env:TEST_DATABASE_URL) {
+    if ($Quick) {
+      Skip 'backend: integration tests' 'left to GitHub (-Quick)'
+    } elseif ($env:TEST_DATABASE_URL) {
       Write-Host "database: $env:TEST_DATABASE_URL"
       Step 'backend: integration tests' 'backend' {
         & $py -m pytest integration_tests -q

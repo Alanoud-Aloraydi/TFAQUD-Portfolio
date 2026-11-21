@@ -1,16 +1,16 @@
-import 'package:app/core/widgets/layout/inset_text_row.dart';
+import 'package:app/core/widgets/forms/tap_to_focus.dart';
+import 'package:app/core/widgets/layout/inset_row_error.dart';
+import 'package:app/core/widgets/layout/inset_text_line.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/models/medication_form_data.dart';
 import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
 import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_trailing.dart';
-import 'package:app/core/utils/arabic_digits.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// How much is taken: the number, typed in western digits whatever the
-/// keyboard sends, with its unit and stepper beside it.
+/// How much is taken: its label, then + , the number with its unit, − .
+/// A tap anywhere on the row puts the cursor in the number.
 class MedicationDoseRow extends StatelessWidget {
   const MedicationDoseRow({
     super.key,
@@ -26,26 +26,25 @@ class MedicationDoseRow extends StatelessWidget {
   final MedicationFormIssue? issue;
 
   @override
-  Widget build(BuildContext context) {
-    return InsetTextRow(
-      label: context.tr('medications.dose_value'),
-      hint: context.tr('medications.dose_hint'),
-      controller: data.doseController,
-      focusNode: data.doseFocus,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: <TextInputFormatter>[
-        const WesternDigitsFormatter(decimal: true),
-        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+  Widget build(BuildContext context) => TapToFocus(
+    focusNode: data.doseFocus,
+    builder: (FocusNode node) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        InsetTextLine(
+          label: context.tr('medications.dose_value'),
+          multiline: false,
+          field: const SizedBox.shrink(),
+          trailing: MedicationDoseTrailing(
+            data: data,
+            units: units,
+            onChanged: onChanged,
+            focusNode: node,
+          ),
+        ),
+        if (issue?.field == MedicationFormField.dose)
+          InsetRowError(context.tr('medications.positive_number')),
       ],
-      errorText: issue?.field == MedicationFormField.dose
-          ? context.tr('medications.positive_number')
-          : null,
-      onChanged: (_) => onChanged(),
-      trailing: MedicationDoseTrailing(
-        data: data,
-        units: units,
-        onChanged: onChanged,
-      ),
-    );
-  }
+    ),
+  );
 }

@@ -3,8 +3,10 @@
 The demo numbers are made up (app/demo_accounts.py), so a code sent to one
 could reach a stranger. With DEMO_SIGN_IN_CODE set, those numbers get no SMS
 and sign in with that one code; every other number goes to the real sender
-as before. The sign-in service still counts the codes and the wrong tries
-of a demo number, as for any other.
+as before. The store reviewers' numbers (REVIEW_SIGN_IN_PHONES) sign in
+the same way with their own code, in production too. The sign-in service
+still counts the codes and the wrong tries of these numbers, as for any
+other.
 """
 
 import hmac

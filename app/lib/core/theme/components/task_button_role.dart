@@ -17,7 +17,7 @@ import 'package:flutter/material.dart';
 /// buttons is their words, which read at 7.9, 10.2 and 8.9 on their own
 /// fill, and their icons.
 enum TaskButtonRole {
-  /// «انأخذت», «تسجيل قراءة», «حضرت»: the one answer, in the violet and
+  /// «تم أخذها», «تسجيل قراءة», «حضرت»: the one answer, in the violet and
   /// ink of every main action («إضافة عضو»).
   answer(AppColors.leaf, AppColors.ink),
 

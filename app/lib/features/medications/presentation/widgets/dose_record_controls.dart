@@ -10,7 +10,7 @@ import 'package:app/features/medications/presentation/widgets/dose_task_buttons.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// The answers to one unrecorded dose («انأخذت», another time, skip,
+/// The answers to one unrecorded dose («تم أخذها», another time, skip,
 /// «ذكّرني لاحقًا»), or its recorded status. Calls the nearest
 /// [MedicationOccurrencesCubit] and shows a refused answer's message.
 class DoseRecordControls extends StatelessWidget {

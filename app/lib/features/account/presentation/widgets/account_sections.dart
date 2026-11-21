@@ -7,6 +7,7 @@ import 'package:app/features/account/presentation/widgets/account_awaiting_secti
 import 'package:app/features/account/presentation/widgets/account_calendar_card.dart';
 import 'package:app/features/account/presentation/widgets/account_calendar_sync_card.dart';
 import 'package:app/features/account/presentation/widgets/account_data_section.dart';
+import 'package:app/features/account/presentation/widgets/account_legal_card.dart';
 import 'package:app/features/account/presentation/widgets/account_notifications_card.dart';
 import 'package:app/features/account/presentation/widgets/account_profile_header.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
@@ -16,7 +17,8 @@ import 'package:flutter/material.dart';
 /// Everything «حسابي» scrolls through, in order: who the account is, its
 /// data, هجري or ميلادي, whether the phone's notifications are allowed,
 /// calendar sync, the requests that wait for a patient, the note about the
-/// medical file, and the two actions that end the account.
+/// medical file, the privacy policy and terms with the note that the app
+/// does not replace a doctor, and the two actions that end the account.
 List<Widget> accountSections(
   BuildContext context, {
   required AccountCubit cubit,
@@ -40,6 +42,10 @@ List<Widget> accountSections(
   ],
   const SizedBox(height: AppSpacing.md),
   InsetText.note(context.tr('account.medical_note')),
+  const SizedBox(height: AppSpacing.xl),
+  accountLegalCard(context),
+  const SizedBox(height: AppSpacing.md),
+  InsetText.note(context.tr('legal.disclaimer')),
   const SizedBox(height: AppSpacing.xl),
   accountActionsCard(context, cubit: cubit, deleting: state.deleting),
 ];

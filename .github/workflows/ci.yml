@@ -6,8 +6,9 @@
 #     these checks pass on the commit (autoDeployTrigger: checksPass in
 #     render.yaml), and the main branch accepts a pull request only when
 #     they pass (see the branch protection steps below).
-#   - from testflight.yml, before a TestFlight build: the build starts only
-#     when these checks pass on its own run.
+#   - with [testflight] or [android] in the commit message, the test builds
+#     (testflight.yml, android-test.yml) run at the end of this same run,
+#     once both checks pass: a push runs the checks only once.
 #   - from the Actions tab ("Run workflow").
 #
 # Branch protection of main (repository Settings, Branches, Add rule):
@@ -22,7 +23,6 @@ name: CI
 
 on:
   push:
-  workflow_call:
   workflow_dispatch:
 
 # A newer push to the same branch makes an older run of it pointless.
@@ -134,3 +134,16 @@ jobs:
 
       - name: Run the tests
         run: flutter test
+
+  # The test builds, only when both checks above pass on this push.
+  testflight:
+    needs: [backend, app]
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[testflight')
+    uses: ./.github/workflows/testflight.yml
+    secrets: inherit
+
+  android:
+    needs: [backend, app]
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[android]')
+    uses: ./.github/workflows/android-test.yml
+    secrets: inherit

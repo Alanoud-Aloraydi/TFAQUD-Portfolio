@@ -2,7 +2,7 @@
 
 Each person is called by their name; everyone but the patient also hears
 whose task it is («لـخالد»). The words fit a woman and a man alike: no
-verb is spoken to one of them («الأفضل أخذها الحين», never «سارع» or
+verb is spoken to one of them («الأفضل أخذها الآن», never «سارع» or
 «ليسارع»). A name that is missing is left out, never written as a blank.
 """
 
@@ -17,25 +17,25 @@ READING = {"glucose": "السكر", "blood_pressure": "الضغط"}
 def dose_missed_text(
     medicine: str, *, name: str | None, own: bool, patient: str | None
 ) -> str:
-    """«يا خالد، جرعة فيتامين ب12 فاتت، الأفضل أخذها الحين» to the patient
-    ([own]); «يا لينا، جرعة فيتامين ب12 لـخالد فاتت، الأفضل أخذها الحين» to
+    """«يا خالد، جرعة فيتامين ب12 فاتت، الأفضل أخذها الآن» to the patient
+    ([own]); «يا لينا، جرعة فيتامين ب12 لـخالد فاتت، الأفضل أخذها الآن» to
     the others."""
     return (
         f"{greeting(name)}جرعة {medicine}{whose(own, patient)} فاتت، "
-        "الأفضل أخذها الحين"
+        "الأفضل أخذها الآن"
     )
 
 
 def measurement_missed_text(
     kind: str, *, name: str | None, own: bool, patient: str | None
 ) -> str:
-    """«يا خالد، قياس السكر فات، الأفضل القياس الحين» to the patient
-    ([own]); «يا لينا، قياس الضغط لـخالد فات، الأفضل القياس الحين» to the
+    """«يا خالد، قياس السكر فات، الأفضل القياس الآن» to the patient
+    ([own]); «يا لينا، قياس الضغط لـخالد فات، الأفضل القياس الآن» to the
     others."""
     reading = READING.get(kind, "الضغط")
     return (
         f"{greeting(name)}قياس {reading}{whose(own, patient)} فات، "
-        "الأفضل القياس الحين"
+        "الأفضل القياس الآن"
     )
 
 

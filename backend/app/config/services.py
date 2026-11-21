@@ -27,6 +27,14 @@ def service_settings(env_name: str) -> dict:
         # typed in Render (Environment), never in git. Anyone who knows one
         # of them and the code can open its account.
         "DEMO_SIGN_IN_PHONES": phones_from_env("DEMO_SIGN_IN_PHONES"),
+        # The App Store and Google Play reviewers' sign-in, the one kind
+        # allowed in production: these numbers get no SMS and sign in with
+        # REVIEW_SIGN_IN_CODE (six digits). Both are typed in Render only,
+        # never in git, and both unset means no such sign-in.
+        "REVIEW_SIGN_IN_PHONES": phones_from_env("REVIEW_SIGN_IN_PHONES"),
+        "REVIEW_SIGN_IN_CODE": (
+            os.environ.get("REVIEW_SIGN_IN_CODE", "").strip() or None
+        ),
         # Shared secret for /internal/tick and /internal/metrics (the
         # scheduled scan runs as `flask --app wsgi tick` on Render's cron).
         # None (unset) keeps the endpoints refusing every request.
@@ -40,6 +48,12 @@ def service_settings(env_name: str) -> dict:
         "SCAN_EVERY_SECONDS": int(
             os.environ.get("SCAN_EVERY_SECONDS")
             or (60 if env_name in ("staging", "production") else 0)
+        ),
+        # The address the privacy policy, the terms and the deletion page
+        # give for questions and deletion requests (app/legal/). Unset: the
+        # pages leave that line out.
+        "LEGAL_CONTACT_EMAIL": (
+            os.environ.get("LEGAL_CONTACT_EMAIL", "").strip() or None
         ),
         # Push notifications and other work no one waits for run after the
         # answer (app/background.py); tests run them at once.
