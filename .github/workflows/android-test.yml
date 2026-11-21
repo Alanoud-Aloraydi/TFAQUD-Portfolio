@@ -1,31 +1,32 @@
-# Builds the TFAQUD Android app, signs it with the upload key, and sends it
-# to the testers through Firebase App Distribution: Android's TestFlight.
-# Testers accept the email invite once (within 30 days), then install each
-# new build from the link or Google's App Tester app. A build stays
-# downloadable for 150 days; an installed one keeps working after that.
+# Builds the TFAQUD Android app as an app bundle (.aab), signs it with the
+# upload key, and sends it to Google Play's internal testing track:
+# Android's TestFlight. Testers on the track's email list install it from
+# the Play Store through the track's opt-in link.
 #
 # When it runs:
 #   - from ci.yml, on a push whose commit message contains [android], on
-#     any branch, once the checks of that run pass.
-#     The app calls the team's server on Render
-#     (https://tfaqud-api.onrender.com).
+#     any branch, once the checks of that run pass. The app calls the
+#     team's server on Render (https://tfaqud-api.onrender.com).
 #   - from the Actions tab ("Run workflow"), once this file is on the
 #     default branch; there another https address can be given. This way
 #     skips the checks, so use it only on code that already passed them
 #
+# Every run keeps the .aab on the run's page (Artifacts) for 14 days.
+# Google Play takes the very first one only by hand: Play Console, the app,
+# Test and release, Internal testing, Create new release, upload it. After
+# that, with PLAY_SERVICE_ACCOUNT set, each run uploads by itself.
+#
 # Secrets it needs (repository Settings, Secrets and variables, Actions):
 #   ANDROID_KEYSTORE_BASE64     the upload key (.jks), in base64. Keep the
 #                               .jks and its passwords safe outside git: Google
-#                               Play will know the app by this key
+#                               Play knows the app by this key
 #   ANDROID_KEYSTORE_PASSWORD   the password of the .jks
 #   ANDROID_KEY_ALIAS           the key's alias inside it (for example upload)
 #   ANDROID_KEY_PASSWORD        the key's own password
-#   FIREBASE_APP_ID             the Android app's App ID, from the Firebase
-#                               console's project settings (1:…:android:…)
-#   FIREBASE_SERVICE_ACCOUNT    the JSON key of a service account with the
-#                               "Firebase App Distribution Admin" role
-# The testers are the Firebase group "testers" (App Distribution, Testers &
-# Groups): add their Gmail addresses there.
+#   PLAY_SERVICE_ACCOUNT        the JSON key of a Google Cloud service account
+#                               invited in Play Console (Users and permissions)
+#                               with "Release apps to testing tracks". Unset,
+#                               the run only builds and keeps the .aab
 
 name: Android test
 
@@ -106,25 +107,28 @@ jobs:
       # Every build needs a higher version code, whether ci.yml or Run
       # workflow started it: the minutes since 1 January 2026 (1767225600)
       # always go up.
-      - name: Build the APK
-        run: flutter build apk --release --build-number=$(( ($(date +%s) - 1767225600) / 60 ))
+      - name: Build the app bundle
+        run: flutter build appbundle --release --build-number=$(( ($(date +%s) - 1767225600) / 60 ))
 
-      - name: Send it to the testers
+      - name: Keep the app bundle on this run's page
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfaqud-android
+          path: app/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 14
+
+      # Google's own client library, not a third-party action.
+      - name: Send it to Google Play internal testing
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          if [ -z "$FIREBASE_APP_ID" ] || [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "::error::The Firebase secrets are missing. See the top of .github/workflows/android-test.yml."
-            exit 1
+          if [ -z "$PLAY_SERVICE_ACCOUNT" ]; then
+            echo "::notice::No PLAY_SERVICE_ACCOUNT yet: the .aab is under this run's Artifacts. See the top of .github/workflows/android-test.yml."
+            exit 0
           fi
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase.json"
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+          pip install --quiet google-api-python-client google-auth
           # The release notes the testers read: the commit's first line.
           NOTES=$(printf '%s' "${COMMIT_MESSAGE:-Manual build}" | head -n 1)
-          npx --yes firebase-tools@15 appdistribution:distribute \
-            build/app/outputs/flutter-apk/app-release.apk \
-            --app "$FIREBASE_APP_ID" \
-            --groups testers \
-            --release-notes "$NOTES"
+          python ../.github/scripts/play_internal.py \
+            build/app/outputs/bundle/release/app-release.aab "$NOTES"
