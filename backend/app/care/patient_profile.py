@@ -3,6 +3,7 @@
 from datetime import date
 from uuid import UUID
 
+from app.care.city_points import city_point
 from app.errors import ValidationFailed
 from app.models import CareCircle
 
@@ -60,8 +61,9 @@ class CarePatientProfile:
         # Then the zone and the optional point on the circle, and the birth
         # date and city where the patient keeps them, checked together.
         circle.time_zone = self._zone_for(time_zone, circle.time_zone)
-        circle.latitude = latitude
-        circle.longitude = longitude
+        circle.latitude, circle.longitude = city_point(
+            city, latitude, longitude
+        )
         self._check_patient_basics(circle, birth_date, city)
         holder = (
             accounts[circle.account_id]
