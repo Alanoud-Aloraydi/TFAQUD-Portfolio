@@ -208,10 +208,10 @@ asks codes for that number cannot lock its owner out.
 
 The server tells a person's phone about a new invitation, a request to care
 for them, the answer to their request, a circle that is ready (the same
-things as the app's notifications page), and the scheduled scan below (a
-dose or measurement due or missed, an appointment the day before). The app
-also sets its own dose reminders on the phone itself, independent of the
-server's.
+things as the app's notifications page), and the scheduled scan below (the
+reminder at a task's time, and a dose, measurement or appointment missed).
+An app from before the server's reminders sets its own on the phone
+instead.
 
 Pushes go through [OneSignal](https://onesignal.com), to iOS and Android.
 The app signs its phone in to OneSignal with the account's id (OneSignal's
@@ -258,11 +258,20 @@ request.
 
 ### Scheduled notifications
 
-The reminders before a task are set on each phone by the app itself, so
-they come on time with no server and no tick: each dose and measurement at
-its time, and each appointment a day before and two hours before
-(`app/lib/core/services/reminders/dose_reminders.dart`). The server
-only tells what a phone cannot know ahead.
+The reminders before a task come from the server
+(`app/push/scheduled/reminders/`): each dose and reading time not recorded
+yet at its time, and each appointment a day before and at the lead chosen
+for it, to the people the app reminds, in the app's words. The server
+reads the plan at each reminder's moment, so a plan someone changed, a dose
+someone took early, or a task put off is never reminded of from an old copy,
+even on a phone whose app was not opened for days. Each is sent once
+(`notification_log`), only to the phones whose app asked for them
+(`server_reminders` with its push subscription); an app from before sets
+its own (`app/lib/core/services/reminders/dose_reminders.dart`), so nobody
+gets both. One not sent within 5 minutes of its time (the server was away)
+is dropped, and the missed task's push follows. `SERVER_REMINDERS=false`
+(Render, **Environment**) stops them: each app sets its own again the next
+time it opens.
 
 The scan (`flask --app wsgi tick`) finds every dose or measurement whose
 time passed with nothing recorded, and every appointment two hours past
@@ -286,8 +295,9 @@ when you want a scan.
 
 Each API process also runs the scan every `SCAN_EVERY_SECONDS` (60 on
 Render, 0 in development and tests) from its first request on
-(`app/minute_scan.py`), so a missed task is told within about a minute; the
-cron job is the safety net. Claims keep every push to once.
+(`app/minute_scan.py`), so a missed task is told within about a minute, and
+each reminder due before the next scan gets a timer, so it comes on its
+minute; the cron job is the safety net. Claims keep every push to once.
 
 `POST /internal/tick` runs the same scan on request, only with the
 `X-Tick-Secret` header equal to `TICK_SECRET` (otherwise 404, the same as a

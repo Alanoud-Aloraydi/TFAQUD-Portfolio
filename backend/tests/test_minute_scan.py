@@ -1,6 +1,7 @@
 """The scan the API runs every minute (app/minute_scan.py)."""
 
 import threading
+from datetime import timedelta
 
 import pytest
 from flask import Flask
@@ -60,8 +61,8 @@ def test_a_failed_scan_does_not_stop_the_next(monkeypatch):
     scans = []
     naps = []
 
-    def scan(now):
-        scans.append(now)
+    def scan(now, ahead):
+        scans.append((now, ahead))
         if len(scans) == 1:
             raise RuntimeError("database away")
 
@@ -79,6 +80,8 @@ def test_a_failed_scan_does_not_stop_the_next(monkeypatch):
 
     assert naps == [60, 60, 60]
     assert len(scans) == 2
+    # The reminders due before the next scan get their timers.
+    assert scans[1] == ("now", timedelta(seconds=60))
 
 
 class Clock:

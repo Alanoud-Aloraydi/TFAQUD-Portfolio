@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Text, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
@@ -39,3 +39,9 @@ class AccountSession(db.Model):
     # OneSignal reports that phone's app deleted, the sign-in ends
     # (app/push/notify.py). One phone belongs to one sign-in at a time.
     push_subscription_id: Mapped[UUID | None] = mapped_column(unique=True)
+    # Whether the app on that phone leaves the reminders at the tasks'
+    # times to the server (app/push/scheduled/reminders), as it asks with
+    # its subscription; false for an app from before, which sets its own.
+    server_reminders: Mapped[bool] = mapped_column(
+        default=False, server_default=false()
+    )

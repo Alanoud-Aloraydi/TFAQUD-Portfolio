@@ -122,6 +122,24 @@ def test_a_task_due_now_is_time_sensitive_and_a_request_is_not():
     )
 
 
+def test_a_reminder_stacks_by_circle_and_shows_its_button():
+    """A reminder at a task's time stacks with its circle's, as the phone's
+    own reminders do, and «ذكّرني لاحقًا» comes from the app's category."""
+    sender = onesignal(lambda request: httpx.Response(200, json={"id": "n"}))
+    message = PushMessage(
+        "حان موعد الدواء", "…", "dose_reminder",
+        thread="circle-1", category="tafaqod.reminder",
+    )
+
+    body = sender.payload(ACCOUNT, message)
+
+    assert body["thread_id"] == body["android_group"] == "circle-1"
+    assert body["ios_category"] == "tafaqod.reminder"
+    assert body["ios_interruption_level"] == "time_sensitive"
+    # Any other push has no buttons.
+    assert "ios_category" not in sender.payload(ACCOUNT, MESSAGE)
+
+
 def test_a_refused_interruption_level_never_loses_the_push():
     """OneSignal answered 400 to a level it did not know, and every missed
     push of a day was lost: the push now goes again without the level."""

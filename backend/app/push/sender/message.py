@@ -9,12 +9,18 @@ from typing import Protocol
 class PushMessage:
     """What the phone shows: a title and a line. `kind` tells the app what
     it is about (an invitation, a request, an answer), and `target` which
-    item, as pairs of text (app/push/targets.py), so a tap opens it."""
+    item, as pairs of text (app/push/targets.py), so a tap opens it.
+
+    `thread` stacks pushes together on the phone (the kind when None), and
+    `category` is the iOS category whose buttons the push shows («ذكّرني
+    لاحقًا» on a reminder), registered by the app."""
 
     title: str
     body: str
     kind: str
     target: tuple[tuple[str, str], ...] = ()
+    thread: str | None = None
+    category: str | None = None
 
 
 class PushSender(Protocol):
