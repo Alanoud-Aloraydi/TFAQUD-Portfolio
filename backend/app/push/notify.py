@@ -33,10 +33,13 @@ log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class Push:
-    """A message and the accounts it goes to."""
+    """A message and the accounts it goes to. A `reminder` (at a task's
+    time) goes only to the phones whose app leaves its reminders to the
+    server (app/push/scheduled/reminders): the others set their own."""
 
     account_ids: tuple[UUID, ...]
     message: PushMessage
+    reminder: bool = False
 
 
 def notify(push: Push | None) -> None:
@@ -48,15 +51,19 @@ def notify(push: Push | None) -> None:
     accounts: set[UUID] = set(push.account_ids)
     if not accounts:
         return
-    run_later(_deliver, accounts, push.message)
+    run_later(_deliver, accounts, push.message, push.reminder)
 
 
-def _deliver(accounts: set[UUID], message: PushMessage) -> None:
+def _deliver(
+    accounts: set[UUID], message: PushMessage, reminder: bool = False
+) -> None:
     """The background job: send `message` to the signed-in accounts among
     `accounts`, and never raise.
     """
     try:
-        send_to_accounts(get_push_sender(), accounts, message)
+        send_to_accounts(
+            get_push_sender(), accounts, message, reminder=reminder
+        )
     except Exception:  # noqa: BLE001 - see the module docstring
         metrics.increment("push.failed")
         log.warning("Push notifications were not sent.", exc_info=True)

@@ -19,20 +19,29 @@ _COUNTERS = {SENT: "push.sent", NO_DEVICE: "push.no_device"}
 
 
 def send_to_accounts(
-    sender, accounts: Iterable[UUID], message: PushMessage
+    sender,
+    accounts: Iterable[UUID],
+    message: PushMessage,
+    *,
+    reminder: bool = False,
 ) -> None:
     """Send to each account that has a live sign-in, counting every result;
-    then end the sign-ins whose phone deleted the app."""
+    then end the sign-ins whose phone deleted the app. A `reminder` goes
+    only to the phones whose app asked for the server's reminders, and
+    never to the account as a whole, which reaches the others too."""
+    query = select(
+        AccountSession.account_id, AccountSession.push_subscription_id
+    ).where(
+        AccountSession.account_id.in_(list(accounts)),
+        AccountSession.revoked_at.is_(None),
+    )
+    if reminder:
+        query = query.where(
+            AccountSession.server_reminders.is_(True),
+            AccountSession.push_subscription_id.is_not(None),
+        )
     with transaction() as session:
-        live = session.execute(
-            select(
-                AccountSession.account_id,
-                AccountSession.push_subscription_id,
-            ).where(
-                AccountSession.account_id.in_(list(accounts)),
-                AccountSession.revoked_at.is_(None),
-            )
-        ).all()
+        live = session.execute(query).all()
     phones: dict[UUID, set[str]] = {}
     for account_id, subscription_id in live:
         known = phones.setdefault(account_id, set())

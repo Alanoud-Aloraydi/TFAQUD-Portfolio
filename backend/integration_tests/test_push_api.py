@@ -48,14 +48,18 @@ class Phone:
             self.issued.session_id
         )
 
-    def subscribe(self, subscription=None):
+    def subscribe(self, subscription=None, server_reminders=None):
         """What the app does after signing in: send its phone's OneSignal
-        subscription (a new one unless given)."""
+        subscription (a new one unless given), and, from the app that asks
+        for them, `server_reminders`. The server's answer is kept in
+        `answer`."""
         self.subscription = subscription or str(uuid.uuid4())
-        answer = self.call(
-            "put", SUBSCRIPTION, {"subscription_id": self.subscription}
-        )
-        assert answer.status_code == 204, answer.json
+        body = {"subscription_id": self.subscription}
+        if server_reminders is not None:
+            body["server_reminders"] = server_reminders
+        answer = self.call("put", SUBSCRIPTION, body)
+        assert answer.status_code == 200, answer.json
+        self.answer = answer.json
         return self
 
     def signed_in(self):

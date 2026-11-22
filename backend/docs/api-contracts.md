@@ -485,14 +485,38 @@ every time it opens, and when OneSignal gives the phone a new one. Needs a valid
 access token. Body:
 
 ```json
-{ "subscription_id": "1dd608f2-c6a1-11e3-851d-000c2940e62c" }
+{ "subscription_id": "1dd608f2-c6a1-11e3-851d-000c2940e62c", "server_reminders": true }
 ```
 
 The id is kept with the session that sent it, in place of the one it sent before.
 One phone is one session: an id another session had (the phone signed in again)
 moves to this one. When OneSignal reports that phone's app deleted, the session is
-signed out (section 4). 204, empty body. Errors: 400 `invalid_json`, 401, 422
-`validation_error` (not an id), 503 without a database.
+signed out (section 4).
+
+`server_reminders` (optional, default `false`; Built, 22 November 2026): the app
+leaves the reminders at its tasks' times to the server. 200:
+
+```json
+{ "server_reminders": true }
+```
+
+`true` when the server sends this phone those reminders (it has
+`SERVER_REMINDERS` on and OneSignal set up): the app then sets none of its own.
+`false` (and for an app that did not ask): the app goes on setting its own.
+(Before 22 November 2026 the answer was 204 with an empty body.) Errors: 400
+`invalid_json`, 401, 422 `validation_error` (not an id), 503 without a database.
+
+The reminders at a task's time (Built, 22 November 2026) are sent at that time by
+the server's scan, from the plan as it is then: each dose and reading time not
+recorded yet, missed or put off, to every member and the patient; each
+appointment a day before and at its `reminder_lead_minutes`, and once half a
+minute after a visit saved after its day-before moment, to the patient and those
+going with them (the leader, for a patient without a phone, when nobody goes).
+The words are the app's own. The push carries `kind` (`dose_reminder`,
+`measurement_reminder`, `appointment_reminder`), the item (as the missed-task
+pushes do), and `reminder`: the payload the app's own reminder carries, so a tap
+and «ذكّرني لاحقًا» do the same. A dose's and a reading's show «ذكّرني لاحقًا» (iOS
+category `tafaqod.reminder`); all are stacked by circle.
 
 The server sends a push (title and one line, in Arabic) for: a new or resent
 invitation (to the invited number's account), a circle request (to the patient's

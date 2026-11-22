@@ -8,7 +8,16 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import db
 
-KINDS = ("dose_missed", "measurement_missed")
+MISSED = ("dose_missed", "measurement_missed", "appointment_missed")
+# The reminders at a task's time (app/push/scheduled/reminders).
+REMINDERS = (
+    "dose_reminder",
+    "measurement_reminder",
+    "appointment_day_before",
+    "appointment_soon",
+    "appointment_today",
+)
+KINDS = MISSED + REMINDERS
 
 
 class NotificationLog(db.Model):
@@ -23,12 +32,12 @@ class NotificationLog(db.Model):
     __tablename__ = "notification_log"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('dose_missed', 'measurement_missed', "
-            "'appointment_missed')",
+            "kind IN (" + ", ".join(f"'{kind}'" for kind in KINDS) + ")",
             name="kind",
         ),
         CheckConstraint(
-            "(kind = 'measurement_missed') = (time_of_day IS NOT NULL)",
+            "(kind IN ('dose_missed', 'appointment_missed')) "
+            "= (time_of_day IS NULL)",
             name="time_of_day",
         ),
         Index(
@@ -48,8 +57,9 @@ class NotificationLog(db.Model):
     # the log outlives an edited plan until it is purged.
     target_id: Mapped[UUID]
     scheduled_on: Mapped[date] = mapped_column(Date)
-    # The reading time; null for a dose (one per schedule and day) and an
-    # appointment (one per appointment).
+    # The task's time; null for a missed dose (one per schedule and day)
+    # and a missed appointment (one per appointment). A reminder has it, so
+    # a task moved to another time is reminded of again.
     time_of_day: Mapped[time | None] = mapped_column(Time)
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), index=True

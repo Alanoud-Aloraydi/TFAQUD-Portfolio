@@ -16,6 +16,7 @@ The loop starts with the process's first request, so a CLI command
 import logging
 import threading
 import time
+from datetime import timedelta
 
 from flask import Flask
 
@@ -57,6 +58,9 @@ def _scan_forever(app: Flask, every: int) -> None:
         time.sleep(every)
         try:
             with app.app_context():
-                run_tick(get_clock().now())
+                # The reminders due before the next scan get a timer each,
+                # so they come on their minute (app/push/scheduled/
+                # reminders).
+                run_tick(get_clock().now(), timedelta(seconds=every))
         except Exception:  # noqa: BLE001 - the loop must keep going
             log.exception("The minute scan failed; the next one retries.")

@@ -106,6 +106,11 @@ services:
         value: 50e5581f-1938-47b7-a23a-c65c70c4a26d
       - key: ONESIGNAL_API_KEY
         sync: false
+      # The reminders at a task's time, from the server, to the phones whose
+      # app asks for them. "false" stops them: each app sets its own again
+      # the next time it opens (backend README, "Scheduled notifications").
+      - key: SERVER_REMINDERS
+        value: "true"
       # The X-Tick-Secret header of POST /internal/tick, /internal/metrics
       # and /internal/demo-data (.github/workflows/demo-refresh.yml).
       - key: TICK_SECRET
@@ -160,6 +165,11 @@ services:
           type: web
           name: tfaqud-api
           envVarKey: ONESIGNAL_API_KEY
+      - key: SERVER_REMINDERS
+        fromService:
+          type: web
+          name: tfaqud-api
+          envVarKey: SERVER_REMINDERS
       # Asked at the start of each run, so the free API never sleeps
       # (Render stops it after 15 minutes without a request).
       - key: KEEP_AWAKE_URL

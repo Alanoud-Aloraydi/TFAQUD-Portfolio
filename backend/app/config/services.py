@@ -15,6 +15,12 @@ def service_settings(env_name: str) -> dict:
         "PUSH_BACKEND": os.environ.get("PUSH_BACKEND", "none"),
         "ONESIGNAL_APP_ID": os.environ.get("ONESIGNAL_APP_ID"),
         "ONESIGNAL_API_KEY": os.environ.get("ONESIGNAL_API_KEY"),
+        # The reminders at a task's time, sent by the server to the phones
+        # whose app asks for them (app/push/scheduled/reminders). "false"
+        # sends none, and each app sets its own again when it next opens.
+        "SERVER_REMINDERS": os.environ.get(
+            "SERVER_REMINDERS", "true"
+        ).strip().lower() in ("1", "true", "yes"),
         # The one code the demo accounts (app/demo_accounts.py) sign in
         # with, six digits, so a shared test server with real SMS can show
         # the demo: those made-up numbers get no SMS. Unset: no demo
