@@ -4,7 +4,7 @@ import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:flutter/material.dart';
 
-/// A medicine's dose times, one under the other: «8:00 ص، 1 قرص», where
+/// A medicine's dose times, one under the other: «8:00 ص • 1 قرص», where
 /// the dot keeps the time and the dose apart.
 class EmergencyMedicineTimes extends StatelessWidget {
   const EmergencyMedicineTimes({
@@ -31,6 +31,8 @@ class EmergencyMedicineTimes extends StatelessWidget {
               textDirection: TextDirection.ltr,
               style: small,
             ),
+            // Without it «2» and «11:00» read as «211:00».
+            Text(' • ', style: small),
             Text(
               '${formatMedicationNumber(schedule.doseValue)} '
               '${words.unit(schedule.doseUnit.name)}',

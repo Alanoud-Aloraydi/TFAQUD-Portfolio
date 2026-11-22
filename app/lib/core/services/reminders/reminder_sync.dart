@@ -10,7 +10,7 @@ import 'package:app/core/services/reminders/snooze_ledger.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
 
 /// Reads the tasks of the circles and sets the planned reminders on the
-/// phone, one reading at a time.
+/// phone, one reading at a time; none while the server sends them.
 class ReminderSync {
   ReminderSync({
     required this.sources,
@@ -19,6 +19,7 @@ class ReminderSync {
     required this.ledger,
     required this.enabled,
     required this.texts,
+    required this.fromServer,
   });
 
   final ReminderSources sources;
@@ -27,14 +28,14 @@ class ReminderSync {
   final SnoozeLedger ledger;
   final RemindersEnabled enabled;
   final DoseReminderTexts texts;
+  final bool Function() fromServer;
 
   /// The circles being reminded of.
   List<ReminderCircle> circles = const <ReminderCircle>[];
   late final CoalescingRunner _runner = CoalescingRunner(_run);
   bool _asked = false;
 
-  /// Goes up at each [clear], so a reading that ends after a sign-out sets
-  /// nothing.
+  /// Goes up at each [clear]: a reading that ends after it sets nothing.
   int _session = 0;
 
   /// Reminds of the doses of [circles] from now on.
@@ -73,6 +74,7 @@ class ReminderSync {
             ledger: ledger,
             texts: texts,
             stale: stale,
+            fromServer: fromServer(),
           );
     if (planned == null) return;
     // The question comes when there is something to remind of, once per run

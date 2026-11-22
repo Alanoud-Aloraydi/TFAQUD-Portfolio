@@ -10,6 +10,11 @@ import 'package:app/core/services/reminders/snooze_settling.dart';
 /// Reads the tasks of [circles] and plans the reminders to set, with the
 /// slots of the tasks put off taken out of the room they have. Null when a
 /// reading failed or [stale] says the run is over.
+///
+/// [fromServer]: the server sends this phone the reminders at the tasks'
+/// times (ServerReminders), so none is planned here; the tasks are still
+/// read, so a task put off from this phone and recorded meanwhile loses
+/// its reminder.
 Future<List<ScheduledNotification>?> readAndPlan({
   required List<ReminderCircle> circles,
   required ReminderSources sources,
@@ -17,6 +22,7 @@ Future<List<ScheduledNotification>?> readAndPlan({
   required SnoozeLedger ledger,
   required DoseReminderTexts texts,
   required bool Function() stale,
+  bool fromServer = false,
 }) async {
   final ReminderReading? reading = await readReminders(
     circles: circles,
@@ -27,6 +33,7 @@ Future<List<ScheduledNotification>?> readAndPlan({
   if (reading == null) return null;
   await settleSnoozes(ledger, phone, reading.doses, reading.measurements);
   if (stale()) return null;
+  if (fromServer) return const <ScheduledNotification>[];
   return planDoseReminders(
     doses: reading.doses,
     measurements: reading.measurements,

@@ -1,11 +1,14 @@
+export 'package:app/core/services/no_remote_push.dart';
+
 /// Called with this phone's OneSignal subscription id whenever it changes;
 /// null or `local-…` until OneSignal's servers have registered the phone.
 typedef RemotePushObserver = void Function(String? subscriptionId);
 
 /// The server's pushes, through OneSignal on iOS and Android: missed tasks,
-/// a task someone else put off, invitations and answers. The reminders at a
-/// task's time are not here: the phone sets those itself
-/// (`PhoneNotifications`), so they come without a network.
+/// a task someone else put off, invitations and answers, and the reminders
+/// at a task's time once the server sends them to this phone
+/// (`ServerReminders`; until then the phone sets those itself, through
+/// `PhoneNotifications`).
 ///
 /// `OneSignalRemotePush` (one_signal_remote_push.dart) is the only way into
 /// the OneSignal SDK: nothing else in the app imports it.
@@ -26,6 +29,11 @@ abstract interface class RemotePush {
   /// This phone's subscription id now; see [RemotePushObserver].
   String? get subscriptionId;
 
+  /// Whether OneSignal shows this phone the server's pushes now: the phone
+  /// allows notifications and the app's switch is on (opted in). Only then
+  /// may the phone leave its reminders to the server.
+  bool get receivesPushes;
+
   /// Calls [observer] on every change of [subscriptionId]. OneSignal keeps
   /// observers weakly: the caller keeps [observer] alive until
   /// [removeSubscriptionObserver].
@@ -44,8 +52,8 @@ abstract interface class RemotePush {
   Future<void> setWanted(bool wanted);
 
   /// Each server push the person taps, as push_target.dart writes it: its
-  /// `kind` and the item it is about (OneSignal keeps the tap that opened
-  /// the app until [initialize] listens).
+  /// `kind` and the item it is about, or a reminder's own tap (OneSignal
+  /// keeps the tap that opened the app until [initialize] listens).
   Stream<String> get taps;
 }
 
@@ -55,35 +63,3 @@ bool isRegisteredSubscription(String? subscriptionId) =>
     subscriptionId != null &&
     subscriptionId.isNotEmpty &&
     !subscriptionId.startsWith('local-');
-
-/// A [RemotePush] that does nothing: the default where none is given.
-class NoRemotePush implements RemotePush {
-  const NoRemotePush();
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<void> signIn(String accountId) async {}
-
-  @override
-  Future<void> signOut() async {}
-
-  @override
-  String? get subscriptionId => null;
-
-  @override
-  void addSubscriptionObserver(RemotePushObserver observer) {}
-
-  @override
-  void removeSubscriptionObserver(RemotePushObserver observer) {}
-
-  @override
-  Future<bool> requestPermission() async => false;
-
-  @override
-  Future<void> setWanted(bool wanted) async {}
-
-  @override
-  Stream<String> get taps => const Stream<String>.empty();
-}

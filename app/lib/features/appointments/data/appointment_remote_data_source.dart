@@ -1,6 +1,7 @@
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_outcome.dart';
 import 'package:app/core/network/appointment_endpoints.dart';
 
 /// Sends appointment requests to the API.
@@ -46,6 +47,21 @@ class AppointmentRemoteDataSource {
         draft,
         expectedUpdatedAt: appointment.updatedAt,
       ),
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> changeOutcome(
+    String circleId,
+    CareAppointment appointment,
+    AppointmentOutcome outcome,
+  ) async {
+    final response = await _client.post(
+      AppointmentEndpoints.appointmentOutcome(circleId, appointment.id),
+      data: {
+        'status': outcome.name,
+        'expected_updated_at': appointment.updatedAt.toUtc().toIso8601String(),
+      },
     );
     return response.data as Map<String, dynamic>;
   }

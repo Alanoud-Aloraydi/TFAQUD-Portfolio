@@ -1,5 +1,6 @@
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/appointment_companions.dart';
+import 'package:app/features/appointments/domain/appointment_outcome.dart';
 
 /// The appointments of a circle, wherever they are kept.
 abstract class AppointmentsRepositoryDomain {
@@ -26,5 +27,12 @@ abstract class AppointmentsRepositoryDomain {
     String circleId,
     CareAppointment appointment,
     AppointmentStatus status,
+  );
+
+  /// Changes how an appointment went, from «السجل».
+  Future<CareAppointment> changeOutcome(
+    String circleId,
+    CareAppointment appointment,
+    AppointmentOutcome outcome,
   );
 }

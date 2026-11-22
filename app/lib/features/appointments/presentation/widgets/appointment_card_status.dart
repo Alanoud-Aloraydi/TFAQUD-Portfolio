@@ -16,10 +16,13 @@ class AppointmentCardStatus extends StatelessWidget {
     super.key,
     required this.value,
     required this.relative,
+    this.trailing,
   });
 
   final CareAppointment value;
   final bool relative;
+  // The caret of a badge that opens a choice (AppointmentOutcomeBadge).
+  final IconData? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +40,7 @@ class AppointmentCardStatus extends StatelessWidget {
         ? 'unconfirmed'
         : value.status.name;
     return StatusBadge(
+      trailing: trailing,
       text: relative
           ? context.tr(_relativeKey(days), args: <String>['$days'])
           : context.tr('appointments.status.$key'),

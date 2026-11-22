@@ -13,6 +13,7 @@ class StatusPill extends StatelessWidget {
     required this.background,
     required this.foreground,
     this.icon,
+    this.trailing,
     this.border,
   });
 
@@ -20,6 +21,9 @@ class StatusPill extends StatelessWidget {
   final Color background;
   final Color foreground;
   final IconData? icon;
+
+  /// An icon after the words: the caret of a status that opens a choice.
+  final IconData? trailing;
 
   /// An outline, for a fill that matches what the pill sits on.
   final Color? border;
@@ -54,6 +58,10 @@ class StatusPill extends StatelessWidget {
               ),
             ),
           ),
+          if (trailing != null) ...<Widget>[
+            const SizedBox(width: AppSpacing.xs),
+            Icon(trailing, size: AppSizes.iconSmall, color: foreground),
+          ],
         ],
       ),
     );

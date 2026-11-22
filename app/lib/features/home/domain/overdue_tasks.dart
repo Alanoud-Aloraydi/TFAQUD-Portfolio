@@ -52,7 +52,8 @@ abstract final class OverdueTasks {
     return items
         .where(
           (item) =>
-              item.status == AppointmentStatus.scheduled &&
+              // «فائت» chosen from «السجل» is an answer already.
+              item.isOpen &&
               _inWindow(item.scheduledOn, today) &&
               (scheduleDay(item.scheduledOn).isBefore(scheduleDay(today)) ||
                   overtaken(item)),

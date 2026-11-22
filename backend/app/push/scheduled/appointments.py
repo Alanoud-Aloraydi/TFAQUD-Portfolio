@@ -47,6 +47,8 @@ def scan_appointments(circle_id: UUID, now: datetime) -> None:
                 select(Appointment).where(
                     Appointment.care_circle_id == circle_id,
                     Appointment.status == "scheduled",
+                    # Marked «فائت» already: nobody needs telling.
+                    Appointment.marked_missed.is_(False),
                     Appointment.scheduled_on.between(
                         today - timedelta(days=1), today
                     ),

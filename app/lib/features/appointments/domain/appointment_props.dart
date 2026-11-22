@@ -19,4 +19,6 @@ List<Object?> careAppointmentProps(CareAppointment state) => <Object?>[
   state.updatedByName,
   state.createdBy,
   state.updatedBy,
+  state.markedMissed,
+  state.visitFilled,
 ];

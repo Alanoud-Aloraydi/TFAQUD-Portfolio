@@ -215,6 +215,10 @@ class FakeRemotePush implements RemotePush {
   @override
   String? get subscriptionId => id;
 
+  /// Whether OneSignal shows this phone the pushes (opted in).
+  @override
+  bool receivesPushes = true;
+
   @override
   void addSubscriptionObserver(RemotePushObserver observer) =>
       observers.add(observer);

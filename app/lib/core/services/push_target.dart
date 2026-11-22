@@ -1,7 +1,9 @@
 /// What a tapped server push is about. The server puts its `kind` and the
 /// item in the push's data (backend `app/push/targets.py`); the app keeps
 /// both in one line of text, `kind`, then [pushItemSeparator] and the
-/// item's key (reminders/item_keys.dart).
+/// item's key (reminders/item_keys.dart). A reminder at a task's time
+/// carries the payload of the phone's own reminder instead, and is tapped
+/// as one ([serverReminderTapPrefix]).
 library;
 
 import 'package:app/core/services/phone_notifications.dart';
@@ -18,8 +20,14 @@ bool opensBell(String? kind, String? item) => switch (kind) {
 };
 
 /// The text of a tapped push: its `kind`, and the item when the data names
-/// one; null without a kind.
-String? pushTapText(Map<String, dynamic>? data) {
+/// one; null without a kind. A reminder from the server gives the tap of
+/// the phone's own reminder it carries, the snooze action's for [action]
+/// [snoozeAction].
+String? pushTapText(Map<String, dynamic>? data, {String? action}) {
+  if (_text(data, 'reminder') case final String payload) {
+    final String snooze = action == snoozeAction ? snoozeTapPrefix : '';
+    return '$serverReminderTapPrefix$snooze$payload';
+  }
   final String? kind = _text(data, 'kind');
   if (kind == null) return null;
   final String? item = pushItemKey(data!);

@@ -55,7 +55,7 @@ NextTask? nearestTask(
           appointment: null,
         ),
     for (final item in appointments)
-      if (item.status == AppointmentStatus.scheduled &&
+      if (item.isOpen &&
           scheduleDay(item.scheduledOn) == today &&
           (!item.scheduledAt.isBefore(now) || !item.overtakenAt(now, times)))
         (

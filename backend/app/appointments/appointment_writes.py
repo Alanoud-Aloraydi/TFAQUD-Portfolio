@@ -37,6 +37,8 @@ class AppointmentWrites:
         # Save the edit, say who, and move its change time forward (so the next
         # edit sees it changed).
         self._fill(appointment, body)
+        # Moved ahead, it is not missed any more.
+        appointment.marked_missed = False
         self._replace_companions(appointment.id, body.companion_account_ids)
         appointment.updated_by_account_id = actor_id
         appointment.updated_at = max(
@@ -69,6 +71,7 @@ class AppointmentWrites:
         # Close it, say who, and move its change time forward (so the next edit
         # sees it changed).
         appointment.status = status
+        appointment.marked_missed = False
         appointment.updated_by_account_id = actor_id
         appointment.updated_at = max(
             self.now, appointment.updated_at + timedelta(microseconds=1)

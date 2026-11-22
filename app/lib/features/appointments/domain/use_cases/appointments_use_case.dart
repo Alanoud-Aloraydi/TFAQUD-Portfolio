@@ -1,5 +1,6 @@
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/appointment_companions.dart';
+import 'package:app/features/appointments/domain/appointment_outcome.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 
 /// The appointment reads and writes the application is allowed to make.
@@ -32,4 +33,10 @@ class AppointmentsUseCase {
     CareAppointment appointment,
     AppointmentStatus status,
   ) => _repository.setStatus(circleId, appointment, status);
+
+  Future<CareAppointment> changeOutcome(
+    String circleId,
+    CareAppointment appointment,
+    AppointmentOutcome outcome,
+  ) => _repository.changeOutcome(circleId, appointment, outcome);
 }

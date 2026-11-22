@@ -75,6 +75,14 @@ class AppointmentStatusRequest(Dto):
     expected_updated_at: datetime
 
 
+class AppointmentOutcomeRequest(Dto):
+    """How a visit went, changed from «السجل»; «scheduled» brings a
+    cancelled visit still ahead back."""
+
+    status: Literal["completed", "cancelled", "missed", "scheduled"]
+    expected_updated_at: datetime
+
+
 class ReviseAppointmentRequest(AppointmentRequest):
     """An edit against the version last read by the client."""
 

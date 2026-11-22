@@ -1,0 +1,50 @@
+import 'package:app/core/theme/foundations/app_motion.dart';
+import 'package:flutter/material.dart';
+
+/// The drag that takes a photo away (PhotoViewerPage): the photo follows
+/// the finger up or down, and let go far or fast enough it closes the
+/// page, as in the phone's own photos; let go near, it goes back.
+mixin PhotoViewerDrag<T extends StatefulWidget> on State<T>, TickerProvider {
+  /// How far a drag closes it, and how fast a flick does.
+  static const double _closeAt = 120;
+  static const double _flick = 800;
+
+  /// How far the photo is from its place, up or down.
+  double drag = 0;
+  double _from = 0;
+
+  late final AnimationController _back;
+
+  @override
+  void initState() {
+    super.initState();
+    _back = AnimationController(vsync: this, duration: AppMotion.contentExit)
+      ..addListener(() => setState(() => drag = _from * (1 - _back.value)));
+  }
+
+  /// How much of the dark stays around it: less the farther it goes.
+  double get fade => (1 - drag.abs() / (_closeAt * 3)).clamp(0.3, 1.0);
+
+  void dragBy(DragUpdateDetails details) =>
+      setState(() => drag += details.delta.dy);
+
+  void release(DragEndDetails details) {
+    final double speed = details.primaryVelocity ?? 0;
+    if (drag.abs() > _closeAt || speed.abs() > _flick) {
+      Navigator.pop(context);
+      return;
+    }
+    _from = drag;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      setState(() => drag = 0);
+    } else {
+      _back.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _back.dispose();
+    super.dispose();
+  }
+}

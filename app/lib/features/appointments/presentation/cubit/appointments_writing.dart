@@ -5,6 +5,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/errors/network_failures.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_outcome.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_loading.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_scope.dart';
 
@@ -30,6 +31,16 @@ mixin AppointmentsWriting on AppointmentsScope, AppointmentsLoading {
   ) => _write(
     circleId,
     () => repository.setStatus(circleId, appointment, status),
+  );
+
+  /// Changes how [appointment] went (السجل); null when saved, else a key.
+  Future<String?> changeOutcome(
+    String circleId,
+    CareAppointment appointment,
+    AppointmentOutcome outcome,
+  ) => _write(
+    circleId,
+    () => repository.changeOutcome(circleId, appointment, outcome),
   );
 
   /// A saved change reloads through the repository's changes. An appointment

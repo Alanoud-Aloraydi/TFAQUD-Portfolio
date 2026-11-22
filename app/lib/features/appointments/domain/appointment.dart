@@ -32,6 +32,8 @@ class CareAppointment extends Equatable {
     this.updatedByName,
     this.createdBy,
     this.updatedBy,
+    this.markedMissed = false,
+    this.visitFilled = false,
   });
 
   final String id;
@@ -64,6 +66,12 @@ class CareAppointment extends Equatable {
   Duration get reminderLead => Duration(minutes: reminderLeadMinutes);
   final AppointmentStatus status;
   final DateTime updatedAt;
+
+  /// «فائت» was chosen for it from «السجل»: still open, missed at once.
+  final bool markedMissed;
+
+  /// Its «ورقة الزيارة» has something in it, so it stays «حضرت».
+  final bool visitFilled;
 
   /// Who added or last changed it, for tracking; null when unavailable.
   final String? createdByName;

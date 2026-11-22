@@ -34,6 +34,7 @@ def appointment_reminders(
     visits = list(session.scalars(select(Appointment).where(
         Appointment.care_circle_id == patient.id,
         Appointment.status == "scheduled",
+        Appointment.marked_missed.is_(False),
         Appointment.scheduled_on.between(first, last + timedelta(days=1)),
     )))
     if not visits:

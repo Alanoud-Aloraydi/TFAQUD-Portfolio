@@ -45,7 +45,7 @@ class PluginPhoneNotifications implements PhoneNotifications {
   @visibleForTesting
   void listenToPushTaps() => _pushTaps.listen((String kind) {
     if (kind.isEmpty) return;
-    deliverTap('$pushTapPrefix$kind');
+    deliverTap(pushTap(kind));
   });
 
   /// Gives [tap] to the page that listens; see [TapInbox.deliver].

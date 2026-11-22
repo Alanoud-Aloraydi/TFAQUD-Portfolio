@@ -38,11 +38,15 @@ class StatusBadge extends StatelessWidget {
     required this.text,
     required this.tone,
     this.icon,
+    this.trailing,
   });
 
   final String text;
   final StatusTone tone;
   final IconData? icon;
+
+  /// A caret after the words, for a status that opens a choice.
+  final IconData? trailing;
 
   /// The fill of [tone].
   static Color fill(StatusTone tone) => switch (tone) {
@@ -71,6 +75,7 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) => StatusPill(
     text: text,
     icon: icon,
+    trailing: trailing,
     background: fill(tone),
     foreground: ink(context, tone),
     // White on white would vanish: the muted badge is outlined.

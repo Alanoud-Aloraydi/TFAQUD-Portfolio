@@ -31,9 +31,9 @@ class OneSignalRemotePush implements RemotePush {
       kDebugMode ? OSLogLevel.verbose : OSLogLevel.error,
     );
     await OneSignal.initialize(oneSignalAppId);
-    // A push's data has its `kind` and item (targets.py, push_target.dart).
     OneSignal.Notifications.addClickListener((OSNotificationClickEvent tap) {
-      final String? text = pushTapText(tap.notification.additionalData);
+      final Map<String, dynamic>? data = tap.notification.additionalData;
+      final String? text = pushTapText(data, action: tap.result.actionId);
       if (text != null) _taps.add(text);
     });
   }
@@ -56,6 +56,10 @@ class OneSignalRemotePush implements RemotePush {
       _started ? OneSignal.User.pushSubscription.id : null;
 
   @override
+  bool get receivesPushes =>
+      _started && (OneSignal.User.pushSubscription.optedIn ?? false);
+
+  @override
   void addSubscriptionObserver(RemotePushObserver observer) {
     if (!_started || _observers.containsKey(observer)) return;
     void changed(OSPushSubscriptionChangedState state) =>
@@ -66,10 +70,7 @@ class OneSignalRemotePush implements RemotePush {
 
   @override
   void removeSubscriptionObserver(RemotePushObserver observer) {
-    final OnPushSubscriptionChangeObserver? changed = _observers.remove(
-      observer,
-    );
-    if (changed != null) {
+    if (_observers.remove(observer) case final changed?) {
       OneSignal.User.pushSubscription.removeObserver(changed);
     }
   }

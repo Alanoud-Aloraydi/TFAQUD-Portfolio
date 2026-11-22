@@ -21,10 +21,14 @@ extension AppointmentAttendWindow on CareAppointment {
       !attendOpensAt.isAfter(now) &&
       !isMissedOn(today);
 
-  /// Whether nobody answered it before it left «يحتاج انتباهك».
+  /// Whether it still waits for an answer: open, and not marked «فائت».
+  bool get isOpen => status == AppointmentStatus.scheduled && !markedMissed;
+
+  /// Whether nobody answered it before it left «يحتاج انتباهك», or
+  /// «فائت» was chosen for it from «السجل».
   bool isMissedOn(DateTime today) =>
       status == AppointmentStatus.scheduled &&
-      scheduleDay(scheduledOn).isBefore(overdueStart(today));
+      (markedMissed || scheduleDay(scheduledOn).isBefore(overdueStart(today)));
 
   /// Whether another task of the day ([taskTimes], wall times) came after
   /// this visit by [now]. Until one does, a visit past its time stays on

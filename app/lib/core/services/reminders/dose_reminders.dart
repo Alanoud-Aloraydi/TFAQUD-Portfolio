@@ -6,12 +6,12 @@ import 'package:app/core/services/reminders/dose_reminder_texts.dart';
 import 'package:app/core/services/reminders/dose_snoozer.dart';
 import 'package:app/core/services/reminders/dose_snoozing.dart';
 export 'package:app/core/services/reminders/dose_reminders_exports.dart';
-import 'package:app/core/services/reminders/reminder_limits.dart';
 import 'package:app/core/services/reminders/reminder_parts.dart';
 import 'package:app/core/services/reminders/reminder_permission.dart';
 import 'package:app/core/services/reminders/reminder_permissions.dart';
 import 'package:app/core/services/reminders/reminder_sources.dart';
 import 'package:app/core/services/reminders/reminders_enabled.dart';
+import 'package:app/core/services/reminders/server_reminders.dart';
 import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
@@ -22,7 +22,8 @@ import 'package:app/features/medications/domain/use_cases/medications_use_case.d
 /// The phone shows them with the app closed. They are set again when the
 /// home data loads ([sync]), when the app comes back ([refresh]), and after
 /// any change to a medicine, a record, a plan or an appointment; [clear]
-/// removes them on sign-out, as turning them off ([enabled]) does.
+/// removes them on sign-out, as turning them off ([enabled]) does. While
+/// the server sends them instead ([server]), none is set here.
 ///
 /// A task put off is told to the circle too (`share`), which reminds the
 /// other members: this phone then stays quiet at the planned time.
@@ -60,9 +61,6 @@ class DoseReminders with ReminderPermissions, DoseSnoozing {
   /// The words of the reminders.
   final DoseReminderTexts texts;
 
-  /// How many days are read ahead.
-  static const int days = reminderDays;
-
   late final ReminderParts _parts;
 
   @override
@@ -75,6 +73,9 @@ class DoseReminders with ReminderPermissions, DoseSnoozing {
   /// A change plans them again, or takes them all off.
   final RemindersEnabled enabled = RemindersEnabled();
 
+  /// Whether the server sends the reminders instead; see [ServerReminders].
+  ServerReminders get server => _parts.server;
+
   /// Reminds of the doses of [circles] from now on. Called when the home
   /// data loads with the person's circles.
   Future<void> sync(List<ReminderCircle> circles) => _parts.sync.sync(circles);
@@ -83,6 +84,7 @@ class DoseReminders with ReminderPermissions, DoseSnoozing {
   /// time; a call during it makes one more reading right after.
   Future<void> refresh() => _parts.sync.refresh();
 
-  /// Removes every reminder: the person signed out, or the sign-in ended.
-  Future<void> clear() => _parts.sync.clear();
+  /// Removes every reminder: the person signed out, or the sign-in ended;
+  /// the next sign-in asks the server again whether it sends them.
+  Future<void> clear() => _parts.clear();
 }

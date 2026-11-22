@@ -20,6 +20,11 @@ APPOINTMENT_TABLE_ARGS = (
         "status IN ('scheduled', 'completed', 'cancelled')",
         name="status",
     ),
+    # «فائت» chosen from «السجل» leaves a visit open (migration 0070).
+    CheckConstraint(
+        "NOT marked_missed OR status = 'scheduled'",
+        name="marked_missed",
+    ),
     CheckConstraint(
         "(kind = 'remote' AND remote_method IS NOT NULL "
         "AND remote_method IN ('video', 'phone') "
