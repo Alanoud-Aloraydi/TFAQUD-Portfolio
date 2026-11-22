@@ -6,12 +6,14 @@ import 'package:app/features/appointments/presentation/widgets/appointment_card_
 import 'package:app/features/appointments/presentation/widgets/appointment_card_opened.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_status.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_outcome_badge.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// One appointment as a plan card, as a medicine's is; a booking of several
 /// dates is one card with its [others] in the details. «السجل» is not
-/// [editable]: only «ورقة الزيارة» can still be written there.
+/// [editable]: only «ورقة الزيارة» can still be written there, and how the
+/// visit went changed from its badge.
 class AppointmentCard extends StatelessWidget {
   const AppointmentCard({
     super.key,
@@ -40,7 +42,10 @@ class AppointmentCard extends StatelessWidget {
       title: appointmentCardTitle(context, value),
       subtitle: appointmentCardClinic(value),
       edit: appointmentCardEdit(context, value, circleId, manage: manage),
-      status: AppointmentCardStatus(value: value, relative: showRelativeDate),
+      // In «السجل» a manager changes how it went from its badge.
+      status: canManage && !editable
+          ? AppointmentOutcomeBadge(value: value, circleId: circleId)
+          : AppointmentCardStatus(value: value, relative: showRelativeDate),
       start: appointmentCardStart(context, value),
       body: appointmentCardBody(
         context,

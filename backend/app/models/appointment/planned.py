@@ -10,6 +10,7 @@ from sqlalchemy import (
     SmallInteger,
     Text,
     Time,
+    false,
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -52,6 +53,11 @@ class Appointment(db.Model):
     )
     status: Mapped[str] = mapped_column(
         Text, server_default=text("'scheduled'")
+    )
+    # «فائت» chosen for it from «السجل» (migration 0070): still open, and
+    # missed on every page at once.
+    marked_missed: Mapped[bool] = mapped_column(
+        default=False, server_default=false()
     )
     created_by_account_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("account.id", ondelete="SET NULL"), index=True

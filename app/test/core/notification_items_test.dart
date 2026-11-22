@@ -72,6 +72,21 @@ void main() {
       );
     });
 
+    test("a reminder from the server is tapped as the phone's own", () {
+      const String payload = 'dose:c-1\u001Ftitle\u001Fbody\u001Fkey\u001Fname';
+      final Map<String, dynamic> data = <String, dynamic>{
+        'kind': 'dose_reminder',
+        'circle_id': 'c-1',
+        'reminder': payload,
+      };
+      expect(pushTapText(data), '$serverReminderTapPrefix$payload');
+      // «ذكّرني لاحقًا» on it puts that task off.
+      expect(
+        pushTapText(data, action: snoozeAction),
+        '$serverReminderTapPrefix$snoozeTapPrefix$payload',
+      );
+    });
+
     test('an older push has its kind only, and no kind is nothing', () {
       expect(
         pushTapText(<String, dynamic>{'kind': 'invitation'}),

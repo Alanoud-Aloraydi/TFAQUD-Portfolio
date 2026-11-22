@@ -50,6 +50,8 @@ class AppointmentModel {
         (json['updated_by'] as Map<String, dynamic>?)?['name'] as String?,
     createdBy: _person(json['created_by']),
     updatedBy: _person(json['updated_by']),
+    markedMissed: json['marked_missed'] == true,
+    visitFilled: json['visit_filled'] == true,
   );
 
   /// Who did something, as `recorded_by` shapes it; null for nobody.

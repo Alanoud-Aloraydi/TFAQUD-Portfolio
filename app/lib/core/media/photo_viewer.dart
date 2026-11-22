@@ -1,43 +1,21 @@
 import 'dart:typed_data';
 
-import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:app/core/media/photo_viewer_page.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:flutter/material.dart';
 
-/// Opens [bytes] full screen, zoomable, with the close button at the top
-/// right.
+/// Opens [bytes] over the whole app, tabs and top bar included: zoomable,
+/// closed with the button at the top right or by dragging it away.
 void openPhotoViewer(BuildContext context, Uint8List bytes) {
-  Navigator.of(context).push<void>(
-    CupertinoPageRoute(
-      fullscreenDialog: true,
-      builder: (viewerContext) => Scaffold(
-        backgroundColor: AppSemanticColors.textPrimary,
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: InteractiveViewer(
-                maxScale: 5,
-                child: Center(child: Image.memory(bytes, fit: BoxFit.contain)),
-              ),
-            ),
-            // Start is the right in Arabic.
-            PositionedDirectional(
-              top: MediaQuery.paddingOf(viewerContext).top + AppSpacing.sm,
-              start: AppSpacing.md,
-              child: IconButton(
-                onPressed: () => Navigator.pop(viewerContext),
-                tooltip: viewerContext.tr('common.close'),
-                icon: const Icon(
-                  CupertinoIcons.xmark,
-                  color: AppSemanticColors.surfaceContent,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+  Navigator.of(context, rootNavigator: true).push<void>(
+    PageRouteBuilder<void>(
+      // The page under it shows through as the photo is dragged away.
+      opaque: false,
+      transitionDuration: AppMotion.contentEnter,
+      reverseTransitionDuration: AppMotion.contentExit,
+      pageBuilder: (_, _, _) => PhotoViewerPage(bytes: bytes),
+      transitionsBuilder: (_, Animation<double> animation, _, Widget child) =>
+          FadeTransition(opacity: animation, child: child),
     ),
   );
 }

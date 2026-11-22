@@ -148,6 +148,22 @@ void main() {
       expect(phone.takeLaunchTap(), isNull);
     });
 
+    test("a reminder from the server reaches the page as the phone's own "
+        'reminder would', () async {
+      final List<String> taps = <String>[];
+      final StreamSubscription<String> subscription = phone.taps.listen(
+        taps.add,
+      );
+      addTearDown(subscription.cancel);
+
+      pushes
+        ..add('${serverReminderTapPrefix}dose:c-1')
+        ..add('$serverReminderTapPrefix${snoozeTapPrefix}dose:c-1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(taps, <String>['dose:c-1', '${snoozeTapPrefix}dose:c-1']);
+    });
+
     test(
       'the push that opened the app waits as the launch tap, once',
       () async {

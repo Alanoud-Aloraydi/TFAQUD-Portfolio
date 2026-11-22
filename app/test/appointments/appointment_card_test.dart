@@ -167,5 +167,51 @@ void main() {
       final StopButton stop = tester.widget(find.byType(StopButton));
       expect(stop.icon, const StopButton(label: '', onPressed: null).icon);
     });
+
+    testWidgets('in «السجل» the badge of a past visit opens how it went, '
+        'its own ticked', (tester) async {
+      final CareAppointment missed = _visit('m', 6, series: null);
+      await _open(
+        tester,
+        missed,
+        all: <CareAppointment>[missed],
+        editable: false,
+      );
+
+      await tester.tap(find.text('appointments.status.missed'.tr()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('appointments.status.completed'.tr()), findsOneWidget);
+      expect(find.text('appointments.status.cancelled'.tr()), findsOneWidget);
+    });
+
+    testWidgets('«حضرت» with something in «ورقة الزيارة» stays, and says '
+        'why', (tester) async {
+      final CareAppointment written = CareAppointment(
+        id: 'w',
+        kind: AppointmentKind.followUp,
+        otherKind: null,
+        scheduledOn: DateTime(2026, 11, 8),
+        time: '10:30',
+        place: 'مستشفى الملك فهد',
+        remoteMethod: null,
+        companions: const <AppointmentCompanion>[],
+        status: AppointmentStatus.completed,
+        updatedAt: DateTime.utc(2026, 11, 8),
+        visitFilled: true,
+      );
+      await _open(
+        tester,
+        written,
+        all: <CareAppointment>[written],
+        editable: false,
+      );
+
+      await tester.tap(find.text('appointments.status.completed'.tr()));
+      await tester.pump();
+
+      expect(find.text('appointments.outcome_locked'.tr()), findsOneWidget);
+      expect(find.text('appointments.status.missed'.tr()), findsNothing);
+    });
   });
 }

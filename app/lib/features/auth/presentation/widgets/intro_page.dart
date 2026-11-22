@@ -13,8 +13,8 @@ const List<Widget> introPages = <Widget>[
   IntroPage(picture: IntroAttentionPicture(), words: 'intro.p3'),
 ];
 
-/// A page: the picture in the room left, then the title and one line. With
-/// large text the page scrolls instead of overflowing.
+/// A page: the picture in the middle of the room left, then the title and
+/// one line. With large text the page scrolls instead of overflowing.
 class IntroPage extends StatelessWidget {
   const IntroPage({super.key, required this.picture, required this.words});
 
@@ -40,9 +40,16 @@ class IntroPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.sm,
               children: <Widget>[
-                // An example, not the app: it takes no taps.
+                // An example, not the app: it takes no taps. It sits in the
+                // middle of the room left at its own height; the scroll
+                // view keeps it from stretching to all of it.
                 Expanded(
-                  child: Center(child: IgnorePointer(child: picture)),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      primary: false,
+                      child: IgnorePointer(child: picture),
+                    ),
+                  ),
                 ),
                 Text(context.tr('$words.title'), style: text.displaySmall),
                 Text(context.tr('$words.body'), style: body),

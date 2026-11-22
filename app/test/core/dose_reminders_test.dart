@@ -492,6 +492,20 @@ void main() {
       );
     });
 
+    test('a visit saved late for tomorrow says «غدًا», not «اليوم»', () {
+      // Saved at 08:00 in Riyadh for 07:00 the next morning: its
+      // day-before moment, 07:00 today, has passed.
+      final CareAppointment visit = _appointment(4, '07:00', savedAt: _now);
+      final List<ScheduledNotification> planned = planDoseReminders(
+        appointments: <(ReminderCircle, CareAppointment)>[(_noura, visit)],
+        now: _now,
+        texts: _texts,
+      );
+
+      expect(planned[0].at, _now.add(appointmentSavedLead));
+      expect(planned[0].title, 'موعد أمي نورة dayBefore');
+    });
+
     test('an appointment saved days before is not said right away', () {
       expect(
         appointmentAnnouncedAt(
@@ -983,6 +997,61 @@ void main() {
       await settle();
 
       expect(medications.reads, hasLength(2));
+    });
+
+    test(
+      'while the server sends them, the phone sets none of its own',
+      () async {
+        medications.doses[_noura.id] = <DoseOccurrence>[_dose(3, '21:00')];
+        await reminders.sync(<ReminderCircle>[_noura]);
+        expect(phone.scheduled, hasLength(2));
+
+        await reminders.server.set(true);
+        await settle();
+        await settle();
+
+        expect(phone.scheduled, isEmpty);
+        // The server stops: the phone sets them again.
+        await reminders.server.set(false);
+        await settle();
+        await settle();
+        expect(phone.scheduled, hasLength(2));
+      },
+    );
+
+    test('a task put off from this phone still comes again from it while '
+        'the server sends the others', () async {
+      final DoseOccurrence dose = _dose(3, '07:00');
+      medications.doses[_me.id] = <DoseOccurrence>[dose];
+      await reminders.server.set(true);
+      await reminders.sync(<ReminderCircle>[_me]);
+
+      await reminders.snoozeDose(_me.id, dose, const Duration(minutes: 30));
+      await reminders.refresh();
+
+      expect(phone.scheduled.keys, <int>[cardSnoozeIdBase]);
+    });
+
+    test('signing out asks the server again at the next sign-in', () async {
+      await reminders.server.set(true);
+
+      await reminders.clear();
+
+      expect(reminders.server.on.value, isFalse);
+    });
+
+    test('the server says whether it sends this phone the reminders', () {
+      expect(
+        serverRemindsFrom(<String, dynamic>{'server_reminders': true}),
+        isTrue,
+      );
+      expect(
+        serverRemindsFrom(<String, dynamic>{'server_reminders': false}),
+        isFalse,
+      );
+      // A server from before answers nothing.
+      expect(serverRemindsFrom(null), isFalse);
+      expect(serverRemindsFrom(''), isFalse);
     });
 
     test('no circles: no reminders', () async {

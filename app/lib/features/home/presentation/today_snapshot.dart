@@ -1,5 +1,6 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/appointment_attend_window.dart';
 import 'package:app/features/home/domain/overdue_tasks.dart';
 import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/measurement_reading.dart';
@@ -30,9 +31,7 @@ class TodaySnapshot {
         .toList();
     todayAppointments = appointments
         .where(
-          (item) =>
-              item.status == AppointmentStatus.scheduled &&
-              DateUtils.isSameDay(item.scheduledOn, now),
+          (item) => item.isOpen && DateUtils.isSameDay(item.scheduledOn, now),
         )
         .toList();
     overdueMeasurements = OverdueTasks.measurements(tasks, clock.today());

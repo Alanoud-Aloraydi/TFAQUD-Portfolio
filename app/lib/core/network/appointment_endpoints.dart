@@ -6,6 +6,8 @@ abstract final class AppointmentEndpoints {
       '${appointments(circleId)}/$id';
   static String appointmentStatus(String circleId, String id) =>
       '${appointment(circleId, id)}/status';
+  static String appointmentOutcome(String circleId, String id) =>
+      '${appointment(circleId, id)}/outcome';
   static String appointmentCompanions(String circleId) =>
       '${appointments(circleId)}/companions';
   static String appointmentVisit(String circleId, String id) =>

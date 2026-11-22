@@ -47,7 +47,12 @@ List<PlannedReminder> plannedAppointments(
         PlannedReminder(
           at: at,
           circle: circle,
-          title: texts.appointmentTitle(circle, AppointmentLead.today, visit),
+          // «اليوم», or «غدًا» for a visit the next day.
+          title: texts.appointmentTitle(
+            circle,
+            announcedLead(circle.clock, visit, at),
+            visit,
+          ),
           body: texts.appointmentBody(visit),
           prefix: appointmentReminderPayload,
           appointmentId: visit.id,

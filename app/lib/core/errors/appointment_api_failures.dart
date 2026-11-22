@@ -30,6 +30,13 @@ Failure? appointmentApiFailure(String? code) {
     ApiErrorCodes.appointmentVisitNotCompleted => const ConflictFailure(
       'appointments.visit_not_completed',
     ),
+    // «حضرت» stays while «ورقة الزيارة» has something in it.
+    ApiErrorCodes.appointmentVisitFilled => const ConflictFailure(
+      'appointments.outcome_locked',
+    ),
+    ApiErrorCodes.appointmentOutcomeClosed => const ValidationFailure(
+      'appointments.outcome_closed',
+    ),
     _ => null,
   };
 }

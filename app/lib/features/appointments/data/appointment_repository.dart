@@ -5,9 +5,11 @@ import 'package:app/features/appointments/data/appointment_model.dart';
 import 'package:app/features/appointments/data/appointment_remote_data_source.dart';
 import 'package:app/features/appointments/domain/appointment.dart';
 import 'package:app/features/appointments/domain/appointment_companions.dart';
+import 'package:app/features/appointments/domain/appointment_outcome.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
 
-/// The server owns the appointments.
+/// The server owns the appointments. Each change is announced on
+/// [changes] once the server accepts it.
 class AppointmentRepository implements AppointmentsRepositoryDomain {
   AppointmentRepository(this._remote);
 
@@ -16,8 +18,7 @@ class AppointmentRepository implements AppointmentsRepositoryDomain {
   final StreamController<String> _changes =
       StreamController<String>.broadcast();
 
-  /// The circle whose appointments changed, each time the server accepts a
-  /// change (so calendar sync can pick it up right away).
+  /// The circle whose appointments changed (calendar sync picks it up).
   @override
   Stream<String> get changes => _changes.stream;
 
@@ -38,42 +39,41 @@ class AppointmentRepository implements AppointmentsRepositoryDomain {
   Future<AppointmentCompanions> companions(String circleId) async =>
       companionsFromJson(await _remote.companions(circleId));
 
-  /// Adds an appointment; announces the change on [changes].
+  /// Adds an appointment.
   @override
-  Future<CareAppointment> create(
-    String circleId,
-    AppointmentDraft draft,
-  ) async {
-    final result = _appointment(await _remote.create(circleId, draft));
-    _changes.add(circleId);
-    return result;
-  }
+  Future<CareAppointment> create(String circleId, AppointmentDraft draft) =>
+      _saved(circleId, _remote.create(circleId, draft));
 
-  /// Changes a scheduled appointment; announces the change on [changes].
+  /// Changes a scheduled appointment.
   @override
   Future<CareAppointment> revise(
     String circleId,
     CareAppointment appointment,
     AppointmentDraft draft,
-  ) async {
-    final result = _appointment(
-      await _remote.revise(circleId, appointment, draft),
-    );
-    _changes.add(circleId);
-    return result;
-  }
+  ) => _saved(circleId, _remote.revise(circleId, appointment, draft));
 
-  /// Marks an appointment attended or cancelled; announces the change on
-  /// [changes].
+  /// Marks an appointment attended or cancelled.
   @override
   Future<CareAppointment> setStatus(
     String circleId,
     CareAppointment appointment,
     AppointmentStatus status,
+  ) => _saved(circleId, _remote.setStatus(circleId, appointment, status));
+
+  /// Changes how an appointment went, from «السجل».
+  @override
+  Future<CareAppointment> changeOutcome(
+    String circleId,
+    CareAppointment appointment,
+    AppointmentOutcome outcome,
+  ) => _saved(circleId, _remote.changeOutcome(circleId, appointment, outcome));
+
+  /// The appointment [answer] holds, once the server accepted the change.
+  Future<CareAppointment> _saved(
+    String circleId,
+    Future<Map<String, dynamic>> answer,
   ) async {
-    final result = _appointment(
-      await _remote.setStatus(circleId, appointment, status),
-    );
+    final CareAppointment result = _appointment(await answer);
     _changes.add(circleId);
     return result;
   }

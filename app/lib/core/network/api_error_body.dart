@@ -35,6 +35,8 @@ abstract class ApiErrorCodes {
   static const String appointmentInvalidAudio = 'appointment_invalid_audio';
   static const String appointmentVisitNotCompleted =
       'appointment_visit_not_completed';
+  static const String appointmentVisitFilled = 'appointment_visit_filled';
+  static const String appointmentOutcomeClosed = 'appointment_outcome_closed';
 
   // Measurements (backend/app/measurements/service.py).
   static const String measurementActivePlanExists =
@@ -78,14 +80,12 @@ abstract class ApiErrorCodes {
   static const String alreadyManager = 'already_manager';
   static const String selfInvitation = 'self_invitation';
 
-  // Leaving a circle that the leave would delete (backend/app/care.py).
+  // Leaving a circle that the leave would delete (backend/app/care.py),
+  // deleting the account (backend/app/users), and the emergency contacts
+  // (backend/app/medical.py).
   static const String confirmationRequired = 'confirmation_required';
-
-  // Deleting the account (backend/app/users).
   static const String patientChoiceRequired = 'patient_choice_required';
   static const String lastManager = 'last_manager';
-
-  // Emergency contacts (backend/app/medical.py).
   static const String tooManyContacts = 'too_many_contacts';
   static const String duplicateContact = 'duplicate_contact';
 }
