@@ -2,6 +2,7 @@ import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/feedback/remind_later_check.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/snooze_limit.dart';
@@ -22,6 +23,7 @@ Future<void> requestDoseSnooze(
   required DoseReminders? reminders,
 }) async {
   final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+  if (!await mayRemindLater(context) || !context.mounted) return;
   final PatientClock clock = PatientClockScope.of(context);
   final Duration limit = doseSnoozeLimit(
     occurrence,
@@ -40,11 +42,17 @@ Future<void> requestDoseSnooze(
   );
   if (!context.mounted) return;
   if (minutes == null || reminders == null) return;
-  await reminders.snoozeDose(circleId, occurrence, Duration(minutes: minutes));
+  final bool done = await reminders.snoozeDose(
+    circleId,
+    occurrence,
+    Duration(minutes: minutes),
+  );
   if (!context.mounted) return;
-  AppToast.showText(
+  sayRemindLater(
     messenger,
-    context.tr(
+    context,
+    done: done,
+    snoozed: context.tr(
       'reminders.snoozed',
       args: <String>[afterDuration(context, minutes)],
     ),

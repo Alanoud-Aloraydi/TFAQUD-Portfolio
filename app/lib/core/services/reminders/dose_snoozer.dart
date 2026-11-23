@@ -26,8 +26,9 @@ class DoseSnoozer {
   final DateTime Function() now;
 
   /// «ذكّرني لاحقًا» on [dose] of [circleId], in either mode: its reminder
-  /// again [after] from now, with the words of its own reminder.
-  Future<void> snoozeDose(
+  /// again [after] from now, with the words of its own reminder. False
+  /// while the reminders are off: nothing is put off.
+  Future<bool> snoozeDose(
     String circleId,
     DoseOccurrence dose,
     Duration after,
@@ -48,7 +49,7 @@ class DoseSnoozer {
   }
 
   /// The same for a measurement [task].
-  Future<void> snoozeMeasurement(
+  Future<bool> snoozeMeasurement(
     String circleId,
     MeasurementOccurrence task,
     Duration after,

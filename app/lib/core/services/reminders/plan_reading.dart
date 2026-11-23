@@ -1,5 +1,6 @@
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminder_circle.dart';
+import 'package:app/core/services/reminders/own_snoozes.dart';
 import 'package:app/core/services/reminders/put_off_by_others.dart';
 import 'package:app/core/services/reminders/reminder_plan.dart';
 import 'package:app/core/services/reminders/reminder_reading.dart';
@@ -33,6 +34,9 @@ Future<List<ScheduledNotification>?> readAndPlan({
   if (reading == null) return null;
   await settleSnoozes(ledger, phone, reading.doses, reading.measurements);
   if (stale()) return null;
+  // Whoever reminds of the rest, a task put off from this account is
+  // reminded of by this phone; one whose reminder it lost is set again.
+  await restoreOwnSnoozes(ledger, phone, reading, texts);
   if (fromServer) return const <ScheduledNotification>[];
   return planDoseReminders(
     doses: reading.doses,

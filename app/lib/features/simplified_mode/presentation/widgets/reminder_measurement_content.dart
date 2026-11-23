@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/measurements/domain/measurement.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_snooze_open.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_icon.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_content.dart';
@@ -44,6 +47,6 @@ SimplifiedReminderContent? reminderMeasurementContent(
       extra: item,
     ),
     onLater: () =>
-        context.pushReplacement(Routes.simplifiedSnooze, extra: task),
+        unawaited(openSimplifiedSnooze(context, task, replace: true)),
   );
 }

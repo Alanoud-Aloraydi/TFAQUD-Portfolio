@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_failures.dart';
+import 'package:app/core/services/permissions/app_permission.dart';
 import 'package:app/core/services/phone_notifications.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
@@ -985,6 +986,71 @@ void main() {
       expect(reminders.snoozes.value, isEmpty);
     });
 
+    test('turned off in the app: «ذكّرني لاحقًا» puts nothing off, from a '
+        'card or a notification', () async {
+      final DoseOccurrence dose = _dose(3, '21:00');
+      medications.doses[_noura.id] = <DoseOccurrence>[dose];
+      await reminders.sync(<ReminderCircle>[_noura]);
+      final String payload = phone.inOrder.first.payload;
+      expect(await reminders.canRemindLater(), isTrue);
+
+      await reminders.enabled.set(false);
+      await settle();
+      await settle();
+
+      expect(await reminders.canRemindLater(), isFalse);
+      expect(
+        await reminders.snoozeDose(
+          _noura.id,
+          dose,
+          const Duration(minutes: 30),
+        ),
+        isFalse,
+      );
+      expect(await reminders.snoozeTap('$snoozeTapPrefix$payload'), isFalse);
+      expect(phone.scheduled, isEmpty);
+      expect(reminders.snoozes.value, isEmpty);
+    });
+
+    test('refused in the phone\'s Settings: «ذكّرني لاحقًا» puts nothing '
+        'off', () async {
+      final DoseOccurrence dose = _dose(3, '21:00');
+      medications.doses[_noura.id] = <DoseOccurrence>[dose];
+      await reminders.sync(<ReminderCircle>[_noura]);
+      phone.allowed = AppPermission.denied;
+
+      expect(await reminders.canRemindLater(), isFalse);
+      expect(
+        await reminders.snoozeDose(
+          _noura.id,
+          dose,
+          const Duration(minutes: 30),
+        ),
+        isFalse,
+      );
+      expect(phone.scheduled[cardSnoozeIdBase], isNull);
+      expect(reminders.snoozes.value, isEmpty);
+    });
+
+    test('never asked yet: «ذكّرني لاحقًا» may go on, and asks', () async {
+      phone.allowed = AppPermission.notAsked;
+      final DoseOccurrence dose = _dose(3, '07:00');
+
+      expect(await reminders.canRemindLater(), isTrue);
+      expect(phone.permissionRequests, 0);
+      phone.allowed = AppPermission.granted;
+      expect(
+        await reminders.snoozeDose(
+          _noura.id,
+          dose,
+          const Duration(minutes: 30),
+        ),
+        isTrue,
+      );
+      expect(phone.permissionRequests, 1);
+      expect(phone.scheduled[cardSnoozeIdBase], isNotNull);
+    });
+
     test('a call during a reading makes one more reading after it', () async {
       medications.gate = Completer<void>();
       final Future<void> first = reminders.sync(<ReminderCircle>[_noura]);
@@ -1309,6 +1375,68 @@ void main() {
       expect(phone.inOrder.map((ScheduledNotification n) => n.at), <DateTime>[
         DateTime.utc(2026, 11, 3, 19),
         DateTime.utc(2026, 11, 3, 19, 1),
+      ]);
+    });
+
+    test('a dose put off from this account, whose reminder this phone lost '
+        '(notifications off and on again, a new sign-in), comes again at '
+        'its time', () async {
+      final SharedSnooze byMe = SharedSnooze(
+        remindAt: DateTime.utc(2026, 11, 3, 5, 30),
+        minutes: 30,
+        byAccountId: _meId,
+      );
+      final DoseOccurrence dose = _dose(3, '07:00').withSnooze(byMe);
+      medications.doses[_me.id] = <DoseOccurrence>[dose];
+
+      await reminders.sync(<ReminderCircle>[_me]);
+
+      final ScheduledNotification again = phone.scheduled[cardSnoozeIdBase]!;
+      expect(again.at, byMe.remindAt);
+      expect(again.title, 'دواء صحتي');
+      expect(again.payload, startsWith(doseSnoozePayload));
+      expect(
+        reminders.snoozes.value[doseSnoozeKey(_me.id, dose)]?.at,
+        byMe.remindAt,
+      );
+      // The server has it already: the circle is not told again.
+      await pumpEventQueue();
+      expect(shared, isEmpty);
+
+      // Read again: still the one reminder.
+      await reminders.refresh();
+      expect(
+        phone.scheduled.keys.where((int id) => id >= cardSnoozeIdBase),
+        <int>[cardSnoozeIdBase],
+      );
+    });
+
+    test('the same while the server sends the reminders; one put off by '
+        'someone else is left to the server', () async {
+      await reminders.server.set(true);
+      medications.doses[_me.id] = <DoseOccurrence>[
+        _dose(3, '07:00').withSnooze(
+          SharedSnooze(
+            remindAt: DateTime.utc(2026, 11, 3, 5, 30),
+            minutes: 30,
+            byAccountId: _meId,
+          ),
+        ),
+        _dose(3, '07:30', name: 'فيتامين د').withSnooze(
+          SharedSnooze(
+            remindAt: DateTime.utc(2026, 11, 3, 5, 45),
+            minutes: 15,
+            byAccountId: 'a-reem',
+            byName: 'ريم',
+          ),
+        ),
+      ];
+
+      await reminders.sync(<ReminderCircle>[_me]);
+      await pumpEventQueue();
+
+      expect(phone.inOrder.map((ScheduledNotification n) => n.at), <DateTime>[
+        DateTime.utc(2026, 11, 3, 5, 30),
       ]);
     });
 

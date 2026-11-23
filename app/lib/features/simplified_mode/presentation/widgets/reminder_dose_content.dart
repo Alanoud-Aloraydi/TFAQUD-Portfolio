@@ -5,6 +5,7 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_snooze_open.dart';
 import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
@@ -53,6 +54,6 @@ SimplifiedReminderContent? reminderDoseContent(
     yesLabel: context.tr('simplified_mode.took'),
     onYes: saving ? null : () => unawaited(take()),
     onLater: () =>
-        context.pushReplacement(Routes.simplifiedSnooze, extra: task),
+        unawaited(openSimplifiedSnooze(context, task, replace: true)),
   );
 }

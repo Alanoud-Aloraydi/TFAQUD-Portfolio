@@ -2,6 +2,7 @@ import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/l10n/duration_text.dart';
 import 'package:app/core/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/feedback/remind_later_check.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_snooze_button.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_snooze_limit_of.dart';
@@ -16,6 +17,7 @@ import 'package:flutter/material.dart';
 class MeasurementSnoozeButtonState extends State<MeasurementSnoozeButton> {
   Future<void> _snooze() async {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    if (!await mayRemindLater(context) || !mounted) return;
     final PatientClock clock = PatientClockScope.of(context);
     final Duration limit = measurementSnoozeLimitOf(context, widget.task);
     if (limit.inMinutes < snoozeStepMinutes) {
@@ -30,15 +32,17 @@ class MeasurementSnoozeButtonState extends State<MeasurementSnoozeButton> {
     if (!mounted) return;
     final DoseReminders? reminders = registeredDoseReminders();
     if (minutes == null || reminders == null) return;
-    await reminders.snoozeMeasurement(
+    final bool done = await reminders.snoozeMeasurement(
       widget.circleId,
       widget.task,
       Duration(minutes: minutes),
     );
     if (!mounted) return;
-    AppToast.showText(
+    sayRemindLater(
       messenger,
-      context.tr(
+      context,
+      done: done,
+      snoozed: context.tr(
         'reminders.snoozed',
         args: <String>[afterDuration(context, minutes)],
       ),

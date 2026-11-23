@@ -79,6 +79,9 @@ class FakePhoneNotifications implements PhoneNotifications {
 class FakeDoseReminders extends Fake implements DoseReminders {
   /// What [snoozeTap] answers.
   bool result = true;
+
+  /// What [canRemindLater] answers: false while the notifications are off.
+  bool remindLater = true;
   final List<String> snoozed = <String>[];
   final List<List<ReminderCircle>> synced = <List<ReminderCircle>>[];
   int refreshes = 0;
@@ -96,6 +99,9 @@ class FakeDoseReminders extends Fake implements DoseReminders {
 
   @override
   Future<void> clear() async => clears++;
+
+  @override
+  Future<bool> canRemindLater() async => remindLater;
 
   @override
   Future<bool> snoozeTap(String tap) async {

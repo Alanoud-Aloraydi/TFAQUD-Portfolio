@@ -40,6 +40,7 @@ class ReminderParts {
         ledger: ledger,
         phone: phone,
         permission: permission,
+        enabled: enabled,
         share: share,
       ),
       texts: texts,
