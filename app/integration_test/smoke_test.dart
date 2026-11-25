@@ -18,6 +18,7 @@ import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/push_registration.dart';
 import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/app/services/remote_push.dart';
+import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/localization/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/storage/token_storage.dart';
@@ -31,6 +32,7 @@ import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/usecases/home_use_case.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
 import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
@@ -128,8 +130,12 @@ void main() {
     di.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(SmokeMedicationsRepository()),
     );
+    // The Plan tab reads the repository itself, for the normal ranges.
+    final SmokeMeasurementsRepository measurements =
+        SmokeMeasurementsRepository();
+    di.registerSingleton<MeasurementsRepository>(measurements);
     di.registerSingleton<MeasurementsUseCase>(
-      MeasurementsUseCase(SmokeMeasurementsRepository()),
+      MeasurementsUseCase(measurements),
     );
     di.registerSingleton<AppointmentsUseCase>(
       AppointmentsUseCase(SmokeAppointmentsRepository()),
@@ -155,6 +161,8 @@ void main() {
       PrayerTimesUseCase(PrayerTimesRepositoryImpl(SmokePrayerTimes())),
     );
     di.registerSingleton<PrivatePhotoRepository>(SmokePhotoRepository());
+    // The clock of the circle on screen; the home cubit sets it.
+    di.registerSingleton<ShownCircleClock>(ShownCircleClock());
   });
 
   tearDownAll(() => GetIt.I.reset());
