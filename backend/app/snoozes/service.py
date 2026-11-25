@@ -1,8 +1,11 @@
-"""Putting a task off: the rules, and the one row it keeps."""
+"""Putting a task off: the body of a snooze, the rules, and the one row it
+keeps."""
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
+from typing import Literal
 from uuid import UUID
 
+from pydantic import Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -11,7 +14,31 @@ from app.errors import Conflict, NotFound
 from app.measurements.queries import MeasurementQueries
 from app.medications.queries import MedicationQueries
 from app.models import TaskSnooze
-from app.snoozes.inputs import SnoozeRequest
+from app.validation import Dto
+
+
+class SnoozeRequest(Dto):
+    """One dose or reading time put off for `minutes` from now.
+
+    A dose is its schedule (`task_id`) on its day; a reading time is its
+    plan version (`task_id`) on its day at `time_of_day`, since a version
+    can read more than once a day.
+    """
+
+    task: Literal["dose", "measurement"]
+    task_id: UUID
+    scheduled_on: date
+    time_of_day: time | None = None
+    minutes: int = Field(ge=1, le=720)
+
+    @model_validator(mode="after")
+    def reading_time_given(self):
+        """A reading time names its time; a dose's comes from its
+        schedule."""
+        if self.task == "measurement" and self.time_of_day is None:
+            raise ValueError("A reading time needs its time_of_day.")
+        return self
+
 
 # What a reading recorded or skipped says in its status.
 _ANSWERED = {"read", "read_late", "skipped"}
@@ -38,7 +65,6 @@ class SnoozeService:
             "minutes": body.minutes,
             "remind_at": remind_at,
             "snoozed_by_account_id": actor_id,
-            "snoozed_at": self.now,
             "notified_at": None,
         }
         statement = insert(TaskSnooze).values(

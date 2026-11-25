@@ -1,8 +1,8 @@
 """The words of the missed-task pushes: each person called by name, the
 patient told it is theirs, everyone else told whose it is."""
 
-from app.appointments.kinds import APPOINTMENT_KINDS, KIND_NAMES, visit_name
-from app.push.missed_texts import (
+from app.models.appointment import APPOINTMENT_KINDS, KIND_NAMES, visit_name
+from app.push.texts import (
     appointment_missed_text,
     dose_missed_text,
     measurement_missed_text,

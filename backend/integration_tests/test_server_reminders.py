@@ -13,7 +13,7 @@ from app.clock import ManualClock
 from app.database import db
 from app.push import NoPushSender, RecordingPushSender
 from app.push.scheduled import run_tick
-from app.push.scheduled.reminders import remind_on_time
+from app.push.reminders import remind_on_time
 from integration_tests.helpers import BIRTH, add_manager, offline_circle, run
 from integration_tests.test_medications import create_plan, plan_body
 from integration_tests.test_push_api import Phone
@@ -168,7 +168,7 @@ def test_each_moment_before_the_next_scan_gets_a_timer(
     circle, reem, _, _ = care
     timers = []
     monkeypatch.setattr(
-        "app.push.scheduled.reminders.scan.run_at",
+        "app.push.reminders.run_at",
         lambda when, now, job, *args: timers.append((when, job, args)),
     )
     at(clock, 7, 59)

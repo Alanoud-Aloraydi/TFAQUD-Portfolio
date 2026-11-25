@@ -1,69 +1,76 @@
-"""Persistence models registered with SQLAlchemy metadata."""
-from app.models.account import Account
-from app.models.auth import AccountSession, OtpRequest, OtpSend
-from app.models.circle import CareCircle
-from app.models.manager import CareCircleManager
-from app.models.circle_request import CareCircleInvitation, CareCircleRequest
-from app.models.medical import EmergencyContact, PatientAllergy
-from app.models.medical import PatientCondition
-from app.models.medication_dose_record import MedicationDoseRecord
-from app.models.medication_extra_dose import MedicationExtraDose
-from app.models.medication_plan import MedicationPlan, MedicationPlanVersion
-from app.models.medication_schedule import (
-    MedicationSchedule,
-    MedicationScheduleDay,
-    MedicationScheduleMonthDay,
-)
-from app.models.measurement import (
-    MeasurementPlan,
-    MeasurementPlanTime,
-    MeasurementPlanVersion,
-    MeasurementPlanWeekday,
-    MeasurementReading,
-    MeasurementTarget,
-)
+"""Every table of the database, as SQLAlchemy models.
+
+Importing this package registers all of them with the metadata that the
+migrations and `flask db` compare against."""
+
+from app.models.account import Account, AccountSession, OtpRequest, OtpSend
 from app.models.appointment import (
     Appointment,
     AppointmentCompanion,
     AppointmentVisit,
 )
-from app.models.notification_log import NotificationLog
-from app.models.photo import AccountPhoto, CareCirclePhoto
-from app.models.photo import MedicationPlanPhoto
-from app.models.task_snooze import TaskSnooze
+from app.models.circle import CareCircle, CareCircleManager
+from app.models.circle_request import CareCircleInvitation, CareCircleRequest
+from app.models.measurement import (
+    MeasurementPlan,
+    MeasurementPlanTime,
+    MeasurementPlanVersion,
+    MeasurementPlanWeekday,
+)
+from app.models.measurement_reading import MeasurementReading
+from app.models.medical import (
+    EmergencyContact,
+    PatientAllergy,
+    PatientCondition,
+)
+from app.models.medication import (
+    MedicationPlan,
+    MedicationPlanVersion,
+    MedicationSchedule,
+    MedicationScheduleDay,
+    MedicationScheduleMonthDay,
+)
+from app.models.medication_dose import (
+    MedicationDoseRecord,
+    MedicationExtraDose,
+)
+from app.models.notification import NotificationLog, TaskSnooze
+from app.models.photo import (
+    AccountPhoto,
+    CareCirclePhoto,
+    MedicationPlanPhoto,
+)
 
 __all__ = [
     "Account",
     "AccountPhoto",
     "AccountSession",
-    "OtpRequest",
-    "OtpSend",
+    "Appointment",
+    "AppointmentCompanion",
+    "AppointmentVisit",
     "CareCircle",
     "CareCircleInvitation",
     "CareCircleManager",
-    "CareCircleRequest",
     "CareCirclePhoto",
+    "CareCircleRequest",
     "EmergencyContact",
-    "PatientAllergy",
-    "PatientCondition",
+    "MeasurementPlan",
+    "MeasurementPlanTime",
+    "MeasurementPlanVersion",
+    "MeasurementPlanWeekday",
+    "MeasurementReading",
+    "MedicationDoseRecord",
+    "MedicationExtraDose",
     "MedicationPlan",
     "MedicationPlanPhoto",
     "MedicationPlanVersion",
     "MedicationSchedule",
     "MedicationScheduleDay",
     "MedicationScheduleMonthDay",
-    "MedicationDoseRecord",
-    "MedicationExtraDose",
-    "MeasurementPlan",
-    "MeasurementPlanTime",
-    "MeasurementPlanVersion",
-    "MeasurementPlanWeekday",
-    "MeasurementReading",
-    "TaskSnooze",
-    "MeasurementTarget",
-    "Appointment",
-    "AppointmentCompanion",
-    "AppointmentVisit",
     "NotificationLog",
+    "OtpRequest",
+    "OtpSend",
+    "PatientAllergy",
+    "PatientCondition",
     "TaskSnooze",
 ]

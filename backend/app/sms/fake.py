@@ -1,34 +1,39 @@
-"""The fake sign-in code sender. It never contacts any provider.
-
-It makes and checks its own 6-digit code, with the rules that Authentica
-showed in the tests of TFQD-12 (docs/api-contracts.md, section 8):
-
-  - the code is valid for `valid_seconds` (300) after it is sent;
-  - a code is accepted once; the same code a second time is refused;
-  - a wrong code, a code of the wrong length and an expired code are all just
-    "False". There is no difference between them;
-  - wrong tries are never blocked (Authentica did not block any), so counting
-    them is the job of our server.
-
-One rule is a choice, not a finding: a new code replaces the old code of the
-same phone number. Whether Authentica does the same is test 9 of the test
-guide.
-
-Every message "sent" is kept in `outbox`, so a test can read the code that
-would have been texted to the user.
-
-The codes live in the memory of this one process. A server that runs several
-processes would not find a code sent by another one, so the Dockerfile starts
-one gunicorn worker when the fake sender is used."""
+"""The fake sign-in code sender. It never contacts any provider: it makes
+and checks its own 6-digit code with Authentica's rules, and keeps what it
+would have texted for tests to read."""
 
 import hmac
 import logging
 import secrets
 import threading
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from app.sms.base import CODE_LENGTH, SmsSender
-from app.sms.fake_outbox import FakeOutbox, SentSms
+
+
+@dataclass(frozen=True)
+class SentSms:
+    """One message the fake sender would have sent."""
+    to: str
+    message: str
+    sent_at: datetime
+    code: str
+
+
+class FakeOutbox:
+    """Reads the fake sender's `outbox`."""
+
+    def last_message_to(self, to: str) -> SentSms | None:
+        """The last message sent to `to`, or None (tests read the code from
+        it).
+        """
+        with self._lock:
+            for sms in reversed(self.outbox):
+                if sms.to == to:
+                    return sms
+        return None
+
 
 logger = logging.getLogger(__name__)
 

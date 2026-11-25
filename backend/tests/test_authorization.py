@@ -12,7 +12,7 @@ import pytest
 
 from app.authz import CircleRole, current_circle_role, require_circle_role
 from app.errors import NotFound
-from app.photos import route_helpers
+from app.photos import routes as photo_routes
 from tests.conftest import bearer
 
 
@@ -182,21 +182,21 @@ def test_manager_edits_only_an_offline_patient_photo(
     )
     session = Mock()
     session.get.return_value = SimpleNamespace(app_mode=mode)
-    monkeypatch.setattr(route_helpers, "patient_or_404", lambda *_: patient)
+    monkeypatch.setattr(photo_routes, "patient_or_404", lambda *_: patient)
     monkeypatch.setattr(
-        route_helpers, "current_auth",
+        photo_routes, "current_auth",
         lambda: SimpleNamespace(user_id=str(viewer)),
     )
     monkeypatch.setattr(
-        route_helpers, "current_circle_role",
+        photo_routes, "current_circle_role",
         lambda: CircleRole.MANAGER,
     )
 
     if allowed:
-        assert route_helpers.require_patient_write(session, uuid4()) is patient
+        assert photo_routes.require_patient_write(session, uuid4()) is patient
     else:
         with pytest.raises(NotFound):
-            route_helpers.require_patient_write(session, uuid4())
+            photo_routes.require_patient_write(session, uuid4())
 
 
 @pytest.mark.parametrize(
@@ -206,14 +206,14 @@ def test_linked_patient_can_edit_own_portrait(monkeypatch, role):
     """Patient ownership is enough, regardless of their circle role."""
     viewer = uuid4()
     patient = SimpleNamespace(account_id=viewer)
-    monkeypatch.setattr(route_helpers, "patient_or_404", lambda *_: patient)
+    monkeypatch.setattr(photo_routes, "patient_or_404", lambda *_: patient)
     monkeypatch.setattr(
-        route_helpers, "current_auth",
+        photo_routes, "current_auth",
         lambda: SimpleNamespace(user_id=str(viewer)),
     )
     monkeypatch.setattr(
-        route_helpers, "current_circle_role",
+        photo_routes, "current_circle_role",
         lambda: role,
     )
 
-    assert route_helpers.require_patient_write(Mock(), uuid4()) is patient
+    assert photo_routes.require_patient_write(Mock(), uuid4()) is patient

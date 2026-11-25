@@ -5,9 +5,10 @@ demo code too, and get no SMS. The team's phones come from Render
 import pytest
 
 from app.clock import SystemClock
-from app.config import ConfigError, load_config
-from app.config.phone_values import phones_from_env, saudi_mobile
-from app.demo_accounts import REQUEST_DEMO_PHONE
+from app.config import load_config
+from app.config.values import ConfigError
+from app.config.values import phones_from_env, saudi_mobile
+from app.demo import REQUEST_DEMO_PHONE
 from app.sms import create_sms_sender
 
 TEAM = "+966512345678"

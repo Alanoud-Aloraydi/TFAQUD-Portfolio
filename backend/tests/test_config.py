@@ -1,10 +1,11 @@
 import pytest
 
 from app import create_app
-from app.auth.otp_store import InMemoryOtpStore
-from app.auth.memory_sessions import InMemorySessionStore
+from app.auth.otp_memory import InMemoryOtpStore
+from app.auth.sessions import InMemorySessionStore
 from app.clock import SystemClock
-from app.config import ConfigError, load_config
+from app.config import load_config
+from app.config.values import ConfigError
 from app.sms import FakeSmsSender
 
 

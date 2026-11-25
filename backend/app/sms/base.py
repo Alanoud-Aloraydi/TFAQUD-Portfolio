@@ -1,24 +1,13 @@
-"""The sign-in code sender: the interface.
-
-The application sends and verifies codes through SmsSender.
+"""The sign-in code sender: the interface, and the demo accounts' sign-in.
 
 Authentica makes the code (6 digits), sends it by SMS and checks it
-(docs/api-contracts.md, section 8), so the interface has two jobs:
+(docs/api-contracts.md, section 8). The demo numbers are made up, so with
+DEMO_SIGN_IN_CODE set they get no SMS at all and sign in with that code."""
 
-  send_code(phone)         make a code and send it to the phone number
-  check_code(phone, code)  True if the code is correct, False if it is refused
-
-What it does not do. Counting the wrong tries (3) and limiting the codes per
-phone number (3 per hour) are done by our server, in the sign-in endpoints of
-F01, because Authentica does not block any try.
-
-Two implementations:
-
-  FakeSmsSender         - isolated tests; no messages leave the process.
-  AuthenticaSmsSender   - the real one. The only code that may send a real SMS.
-"""
-
+import hmac
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
+
 
 # The length of the code. Authentica template 5 makes a code of 6 digits.
 CODE_LENGTH = 6
@@ -74,3 +63,30 @@ class SmsSender(ABC):
         gives the same answer for all of them). Raises SmsDeliveryError if the
         provider could not decide.
         """
+
+
+class DemoSmsSender(SmsSender):
+    """`sender` for every number except `demo_phones`, which `code` signs
+    in."""
+
+    def __init__(self, sender: SmsSender, demo_phones: Iterable[str],
+                 code: str):
+        """Wrap `sender`; the numbers in `demo_phones` sign in with `code`."""
+        self._sender = sender
+        self._demo_phones = frozenset(demo_phones)
+        self._code = code
+
+    def send_code(self, phone: str) -> None:
+        """A demo number gets no SMS; any other number goes to the real sender.
+        """
+        if phone in self._demo_phones:
+            return
+        self._sender.send_code(phone)
+
+    def check_code(self, phone: str, code: str) -> bool:
+        """A demo number is checked against the demo code; any other number by
+        the real sender.
+        """
+        if phone in self._demo_phones:
+            return hmac.compare_digest(code.encode(), self._code.encode())
+        return self._sender.check_code(phone, code)

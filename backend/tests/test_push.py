@@ -7,7 +7,8 @@ import httpx
 import pytest
 
 from app import create_app
-from app.config import ConfigError, load_config
+from app.config import load_config
+from app.config.values import ConfigError
 from app.push import (
     NoPushSender,
     OneSignalPushSender,

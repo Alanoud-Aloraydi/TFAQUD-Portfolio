@@ -1,41 +1,32 @@
-"""Work the caller does not wait for, done after the answer is sent.
+"""Work outside the request.
 
-A push notification is the example: the person who sent an invitation
-should not wait while Apple is called for every phone of the other person,
-and the scheduled scan should not wait for one call per missed dose. Such a
-job runs on a small pool of threads in the same process, with its own app
-context (and so its own database session).
-
-What this does not give: a job still waiting when the process stops is
-lost. That is fine for a push (the app shows the same thing when opened),
-but not for anything that must happen; that needs a real queue.
-
-With BACKGROUND_INLINE (always in tests) a job runs at once, in the caller,
-so a test sees its effect when the request returns.
-
-`run_at` waits for a moment instead (a task put off comes again at its new
-time). It is lost the same way when the process stops, so what it does is
-also done by the scheduled tick, a little later. Under BACKGROUND_INLINE it
-does nothing: a test calls the tick's work itself, at the time it chooses.
-"""
+Work the caller does not wait for runs after the answer is sent (a push
+notification, for example). The scheduled scan runs every minute inside
+the API, and a ping keeps the free API awake."""
 
 import logging
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from flask import current_app
+import httpx
+from flask import Flask, current_app
 
 from app import metrics
+
 
 log = logging.getLogger(__name__)
 
 WORKERS = 2
+
 # Jobs waiting at most; a job beyond is dropped and counted.
 MAX_PENDING = 500
 
 _lock = threading.Lock()
+
 _pending = 0
+
 _pool: ThreadPoolExecutor | None = None
 
 
@@ -96,3 +87,64 @@ def _run(app, job, args, counted: bool = True) -> None:
         if counted:
             with _lock:
                 _pending -= 1
+
+
+# A sleeping API takes up to a minute to answer; the request wakes it even
+# when the answer comes after this wait.
+_WAIT_SECONDS = 30
+
+
+def keep_awake(url: str | None, client=None) -> None:
+    """Ask `url` once, if it is set; never raises, so the scan always
+    runs."""
+    if not url:
+        return
+    try:
+        (client or httpx).get(url, timeout=_WAIT_SECONDS)
+    except Exception:  # noqa: BLE001 - the scan must still run
+        log.info("The keep-awake request got no answer in time.")
+
+
+_scan_lock = threading.Lock()
+
+_scan_started = False
+
+
+def install_minute_scan(app: Flask, database: bool) -> None:
+    """Scan every SCAN_EVERY_SECONDS once a request arrives; off when it
+    is 0 (development and tests) or there is no database."""
+    every = app.config.get("SCAN_EVERY_SECONDS") or 0
+    if not database or every <= 0:
+        return
+
+    @app.before_request
+    def _start_scanning() -> None:
+        global _scan_started
+        with _scan_lock:
+            if _scan_started:
+                return
+            _scan_started = True
+        threading.Thread(
+            target=_scan_forever,
+            args=(app, every),
+            name="minute-scan",
+            daemon=True,
+        ).start()
+
+
+def _scan_forever(app: Flask, every: int) -> None:
+    """Scan, wait, repeat; a failed scan is logged, and the next one comes
+    a minute later."""
+    from app.extensions import get_clock
+    from app.push.scheduled import run_tick
+
+    while True:
+        time.sleep(every)
+        try:
+            with app.app_context():
+                # The reminders due before the next scan get a timer each,
+                # so they come on their minute (app/push/scheduled/
+                # reminders).
+                run_tick(get_clock().now(), timedelta(seconds=every))
+        except Exception:  # noqa: BLE001 - the loop must keep going
+            log.exception("The minute scan failed; the next one retries.")

@@ -9,8 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import db
-from app.authz.postgres import PostgresCircleAccess
-from app.authz.roles import CircleRole
+from app.authz import PostgresCircleAccess
+from app.authz import CircleRole
 from app.errors import Forbidden, ValidationFailed
 from app.models import Account, CareCircle, CareCircleRequest
 from app.models import CareCircleManager, CareCircleInvitation
@@ -60,7 +60,6 @@ def test_migrations_create_care_authentication_and_medical_tables(database):
         "measurement_plan",
         "measurement_plan_version",
         "measurement_plan_time",
-        "measurement_target",
         "measurement_reading",
         "appointment",
         "appointment_companion",

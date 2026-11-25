@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.care import CareService
 from app.database import db
-from app.demo_data import DEMO_PHONES, INVITED_PHONE, REQUEST_PHONE
+from app.demo import DEMO_PHONES
+from app.demo_data.story import INVITED_PHONE, REQUEST_PHONE
 from app.models import (
     Account,
     CareCircle,

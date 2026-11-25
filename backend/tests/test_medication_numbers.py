@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.medications.representations import plain_number
+from app.medications.views import plain_number
 
 
 @pytest.mark.parametrize(
