@@ -7,19 +7,21 @@ Managers send and cancel invitations under their circle
 from flask import Blueprint
 
 from app.auth.decorators import require_auth
-from app.circles import views
-from app.circles.inputs import RespondInput
+from app.circles.views import received_invitations_view
+from app.circles.circle_inputs import RespondInput
 from app.circles.support import answer, care_work, parse_id
 from app.errors import NotFound
 from app.models import Account
 from app.validation import parse_json_body
 
-bp = Blueprint("invitations", __name__, url_prefix="/api/v1/invitations")
+invitations_bp = Blueprint(
+    "invitations", __name__, url_prefix="/api/v1/invitations"
+)
 
 _NOT_FOUND = "The invitation does not exist."
 
 
-@bp.get("")
+@invitations_bp.get("")
 @require_auth
 def list_invitations():
     """Pending invitations to manage a circle, sent to the caller's
@@ -28,11 +30,11 @@ def list_invitations():
         account = work.session.get(Account, work.actor)
         if account is None:
             raise NotFound("This user does not exist.", code="user_not_found")
-        view = views.received_invitations_view(work.session, account)
+        view = received_invitations_view(work.session, account)
     return answer({"invitations": view})
 
 
-@bp.post("/<invitation_id>/respond")
+@invitations_bp.post("/<invitation_id>/respond")
 @require_auth
 def respond(invitation_id):
     """Accept (the caller becomes a manager of the circle) or decline."""

@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from app.measurements.inputs import PlanRequest as MeasurementPlan
 from app.medications.inputs import PlanRequest as MedicationPlan
 from app.models.measurement import MeasurementPlanVersion
-from app.models.medication_plan import MedicationPlanVersion
+from app.models.medication import MedicationPlanVersion
 from app.plan_limits import (
     DEFAULT_MISSED_AFTER_MINUTES,
     MAX_MISSED_AFTER_MINUTES,

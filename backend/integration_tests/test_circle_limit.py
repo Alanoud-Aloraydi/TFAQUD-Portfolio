@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.care.circle_limit import MAX_CIRCLES
+from app.care.rules import MAX_CIRCLES
 from app.errors import ValidationFailed
 from integration_tests.helpers import BIRTH, offline_circle, run
 

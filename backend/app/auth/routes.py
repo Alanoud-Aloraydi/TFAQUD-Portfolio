@@ -1,23 +1,16 @@
-"""Session and sign-in endpoints.
+"""The session and sign-in endpoints under /api/v1/auth, and who asks for a
+sign-in code (the app's install id and the caller's address)."""
 
-    POST /api/v1/auth/refresh    new access token from a refresh token
-    POST /api/v1/auth/sign-out   end the current session
-    GET  /api/v1/auth/session    who am I (needs a valid access token)
+import re
 
-    POST /api/v1/auth/request-code   send a sign-in code by SMS (F01)
-    POST /api/v1/auth/verify-code    check the code and sign in (F01)
+from flask import Blueprint, current_app, jsonify, request
 
-The rules of the two sign-in endpoints are in `app/auth/sign_in/`."""
-
-from flask import Blueprint, jsonify
-
-from app.auth.bodies import (
+from app.auth.decorators import current_auth, require_auth
+from app.auth.inputs import (
     RefreshRequest,
     RequestCodeRequest,
     VerifyCodeRequest,
 )
-from app.auth.decorators import current_auth, require_auth
-from app.auth.requester import client_ip, device_id
 from app.errors import Unauthorized
 from app.extensions import (
     get_session_service,
@@ -25,6 +18,27 @@ from app.extensions import (
     get_user_store,
 )
 from app.validation import parse_json_body
+
+
+_DEVICE_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
+
+
+def device_id() -> str | None:
+    """The app's install id (X-Device-Id), when it looks like one."""
+    value = request.headers.get("X-Device-Id", "").strip()
+    return value if _DEVICE_ID.match(value) else None
+
+
+def client_ip() -> str | None:
+    """The caller's address: from CLIENT_IP_HEADER behind a proxy (Render
+    puts it in CF-Connecting-IP), else the connection's own."""
+    header = current_app.config.get("CLIENT_IP_HEADER")
+    if header:
+        value = request.headers.get(header, "").split(",")[0].strip()
+        if value:
+            return value[:64]
+    return request.remote_addr
+
 
 bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
 

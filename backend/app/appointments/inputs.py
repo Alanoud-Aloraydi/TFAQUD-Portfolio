@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
-from app.appointments.kinds import APPOINTMENT_KINDS
+from app.models.appointment import APPOINTMENT_KINDS
 from app.validation import Dto
 
 

@@ -11,10 +11,10 @@ import socket
 import pytest
 
 from app import create_app, metrics, resilience
-from app.auth.otp_store import InMemoryOtpStore
+from app.auth.otp_memory import InMemoryOtpStore
 from app.authz import InMemoryCircleAccess
 from app.clock import ManualClock
-from app.users.memory import InMemoryUserStore
+from app.users.store import InMemoryUserStore
 
 
 @pytest.fixture(autouse=True)

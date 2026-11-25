@@ -4,7 +4,8 @@ number set in Render, in production too; nobody else does."""
 import pytest
 
 from app.clock import SystemClock
-from app.config import ConfigError, load_config
+from app.config import load_config
+from app.config.values import ConfigError
 from app.sms import create_sms_sender
 
 REVIEWER = "+966512345678"

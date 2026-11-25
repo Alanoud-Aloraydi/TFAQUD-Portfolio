@@ -1,14 +1,13 @@
-"""The two kinds of token.
+"""The tokens of a sign-in, and what a sign-in or a refresh gives the app.
 
-Access token  - a signed JWT. Short life (15 minutes, proposal). The app
-                sends it with every request. It carries the user id and the
-                session id.
+Access token - a signed JWT with a short life (15 minutes). The app sends
+it with every request. It carries the user id and the session id.
+
 Refresh token - a random string with no end date: it works until its
-                session is signed out. The app sends it only to get a new
-                access token. It is not a JWT: it means nothing by itself
-                and is valid only while the server has a matching,
-                non-revoked session record."""
+session is signed out. The server keeps only its hash."""
 
+import hashlib
+import secrets
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -16,7 +15,39 @@ import jwt
 
 from app.errors import Unauthorized
 
+
+@dataclass(frozen=True)
+class IssuedAccessToken:
+    """A new access token and when it ends."""
+
+    access_token: str
+    access_token_expires_at: datetime
+
+
+@dataclass(frozen=True)
+class IssuedSession(IssuedAccessToken):
+    """What a sign-in gives the app: the access token and when it ends, the
+    refresh token (which ends only at sign-out), and the session id.
+    """
+
+    refresh_token: str
+    session_id: str
+
+
+def new_refresh_token() -> str:
+    """A new random refresh token, long enough that it cannot be guessed."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_refresh_token(refresh_token: str) -> str:
+    """The SHA-256 of a refresh token: what the server keeps instead of the
+    token.
+    """
+    return hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
+
+
 _ALGORITHM = "HS256"
+
 _ACCESS_TYPE = "access"
 
 

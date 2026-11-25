@@ -10,7 +10,7 @@ import pytest
 from app import create_app
 from app.clock import ManualClock
 from app.sms import AuthenticaSmsSender
-from app.sms.authentica_balance import read_balance
+from app.sms.authentica_keys import read_balance
 from app.sms.authentica_keys import AuthenticaKeys
 from app.sms.base import SmsDeliveryError
 

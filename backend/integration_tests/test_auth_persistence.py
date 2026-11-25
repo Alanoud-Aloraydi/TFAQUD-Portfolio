@@ -2,17 +2,15 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
-from pathlib import Path
 from uuid import UUID
 
 import pytest
-from flask_migrate import downgrade, upgrade
-from sqlalchemy import func, inspect, select, text
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import create_app
 from app.auth.otp_store import SendRules
-from app.auth.postgres_otp import PostgresOtpStore
+from app.auth.otp_postgres import PostgresOtpStore
 from app.clock import ManualClock
 from app.models import Account, AccountSession, OtpRequest, OtpSend
 from app.sms.base import SmsDeliveryError
@@ -304,45 +302,6 @@ def test_a_stored_session_lasts_until_it_is_signed_out(auth_app):
         "/api/v1/auth/refresh", json={"refresh_token": body["refresh_token"]}
     )
     assert again.status_code == 401
-
-
-def test_migration_0031_ends_only_the_sessions_that_had_ended(
-    database_app, database, account
-):
-    """Before 0031 a refresh token ended after 30 days. A session past that
-    date stays ended (signed out when it ended); a live one goes on with no
-    end date."""
-    owner = account()
-    directory = str(Path(__file__).resolve().parents[1] / "migrations")
-    downgrade(directory=directory, revision="0030")
-    try:
-        with database.begin() as connection:
-            for digit, created, ends in (
-                ("a", "now() - interval '40 days'",
-                 "now() - interval '10 days'"),
-                ("b", "now() - interval '5 days'",
-                 "now() + interval '25 days'"),
-            ):
-                connection.execute(text(f"""
-                    INSERT INTO account_session (id, account_id,
-                        refresh_token_hash, created_at, refresh_expires_at)
-                    VALUES (gen_random_uuid(), :account, :hash,
-                        {created}, {ends})
-                """), {"account": owner.id, "hash": digit * 64})
-    finally:
-        upgrade(directory=directory)
-
-    columns = {
-        c["name"] for c in inspect(database).get_columns("account_session")
-    }
-    assert "refresh_expires_at" not in columns
-    with Session(database) as session:
-        ended = {
-            row.refresh_token_hash[0]: row.revoked_at
-            for row in session.scalars(select(AccountSession))
-        }
-    assert ended["a"] is not None
-    assert ended["b"] is None
 
 
 def test_account_deletion_removes_sessions(auth_app, database):

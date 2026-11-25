@@ -7,18 +7,14 @@ from datetime import date, datetime, time, timezone
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from app.push.scheduled.reminders.moments import visit_moments
-from app.push.scheduled.reminders.payloads import (
+from app.push.visit_reminders import visit_moments
+from app.push.reminder import (
     appointment_payload,
     dose_payload,
     measurement_payload,
 )
-from app.push.scheduled.reminders.visit_words import (
-    after,
-    visit_body,
-    visit_title,
-)
-from app.push.scheduled.reminders.words import dose_words, measurement_words
+from app.push.texts import after, visit_body, visit_title
+from app.push.texts import dose_words, measurement_words
 
 CIRCLE = UUID("11111111-1111-1111-1111-111111111111")
 RIYADH = ZoneInfo("Asia/Riyadh")

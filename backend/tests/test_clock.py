@@ -14,7 +14,7 @@ from app.clock import (
     patient_today,
     patient_zone,
 )
-from app.medications.timing import timing_state
+from app.medications.schedules import timing_state
 
 LONDON = SimpleNamespace(time_zone="Europe/London")
 RIYADH = SimpleNamespace(time_zone=DEFAULT_ZONE)

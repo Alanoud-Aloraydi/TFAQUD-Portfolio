@@ -1,4 +1,4 @@
-"""The scan the API runs every minute (app/minute_scan.py)."""
+"""The scan the API runs every minute (app/background.py)."""
 
 import threading
 from datetime import timedelta
@@ -6,7 +6,7 @@ from datetime import timedelta
 import pytest
 from flask import Flask
 
-from app import minute_scan
+from app import background
 
 
 class Stop(Exception):
@@ -15,7 +15,7 @@ class Stop(Exception):
 
 @pytest.fixture(autouse=True)
 def not_started(monkeypatch):
-    monkeypatch.setattr(minute_scan, "_started", False)
+    monkeypatch.setattr(background, "_scan_started", False)
 
 
 def flask_app(every):
@@ -33,9 +33,9 @@ def test_the_first_request_starts_one_loop(monkeypatch):
         loops.append(every)
         started.set()
 
-    monkeypatch.setattr(minute_scan, "_scan_forever", loop)
+    monkeypatch.setattr(background, "_scan_forever", loop)
     app = flask_app(60)
-    minute_scan.install_minute_scan(app, database=True)
+    background.install_minute_scan(app, database=True)
 
     client = app.test_client()
     client.get("/")
@@ -48,9 +48,9 @@ def test_the_first_request_starts_one_loop(monkeypatch):
 @pytest.mark.parametrize("every, database", [(0, True), (60, False)])
 def test_off_without_a_database_or_an_interval(monkeypatch, every, database):
     loops = []
-    monkeypatch.setattr(minute_scan, "_scan_forever", loops.append)
+    monkeypatch.setattr(background, "_scan_forever", loops.append)
     app = flask_app(every)
-    minute_scan.install_minute_scan(app, database=database)
+    background.install_minute_scan(app, database=database)
 
     app.test_client().get("/")
 
@@ -73,10 +73,10 @@ def test_a_failed_scan_does_not_stop_the_next(monkeypatch):
 
     monkeypatch.setattr("app.push.scheduled.run_tick", scan)
     monkeypatch.setattr("app.extensions.get_clock", lambda: Clock())
-    monkeypatch.setattr(minute_scan.time, "sleep", nap)
+    monkeypatch.setattr(background.time, "sleep", nap)
 
     with pytest.raises(Stop):
-        minute_scan._scan_forever(flask_app(60), 60)
+        background._scan_forever(flask_app(60), 60)
 
     assert naps == [60, 60, 60]
     assert len(scans) == 2

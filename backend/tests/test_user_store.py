@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.users.memory import InMemoryUserStore
+from app.users.store import InMemoryUserStore
 
 STORES = [InMemoryUserStore]
 

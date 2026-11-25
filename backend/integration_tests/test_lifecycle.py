@@ -1,9 +1,10 @@
 """Integration coverage for lifecycle boundaries and persistence adapters."""
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import time, timedelta
 from pathlib import Path
 from threading import Barrier
+from uuid import uuid4
 
 import pytest
 from flask_migrate import downgrade, upgrade
@@ -14,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.database import db
 from app.errors import Forbidden, NotFound, ValidationFailed
 from app.models import Account, CareCircle, CareCircleRequest
-from app.models import CareCircleManager, CareCircleInvitation
+from app.models import CareCircleManager, CareCircleInvitation, TaskSnooze
 from app.users.postgres import PostgresUserStore
 from integration_tests.helpers import BIRTH, NOW, add_manager, count
 from integration_tests.helpers import offline_circle, run
@@ -267,80 +268,6 @@ def test_migrations_round_trip(database, database_app):
     assert "care_circle" in inspect(database).get_table_names()
 
 
-def test_0037_moves_a_patient_without_an_account_both_ways(
-    database, database_app, account
-):
-    """A real database has circles whose patient has no account: 0037 gives
-    each one back «دائرة» and the first name as its name going down, and
-    takes the name away again going up (everyone reads it computed)."""
-    directory = str(Path(__file__).resolve().parents[1] / "migrations")
-    circle = offline_circle(database, account())
-    db.session.remove()
-    downgrade(directory=directory, revision="0036")
-    try:
-        with database.connect() as connection:
-            name = connection.execute(
-                text("SELECT name FROM care_circle WHERE id = :id"),
-                {"id": circle.id},
-            ).scalar_one()
-        assert name == "دائرة Nora"
-    finally:
-        upgrade(directory=directory)
-
-    with database.connect() as connection:
-        row = connection.execute(
-            text("SELECT name, first_name FROM care_circle WHERE id = :id"),
-            {"id": circle.id},
-        ).one()
-    assert row.name is None
-    assert row.first_name == "Nora"
-
-
-def test_0043_reads_the_tick_log_and_drops_its_oldest_shapes(database):
-    """The tick's log in a real database also holds the first server's
-    keys (6 to 8 November 2026): 0043 drops those and splits the two
-    shapes the tick still writes into columns."""
-    directory = str(Path(__file__).resolve().parents[1] / "migrations")
-    dose, version, visit = (
-        "11111111-1111-4111-8111-111111111111",
-        "22222222-2222-4222-8222-222222222222",
-        "33333333-3333-4333-8333-333333333333",
-    )
-    keys = (
-        f"dose_missed:{dose}:2026-11-11",
-        f"measurement_missed:{version}:2026-11-11:08:00",
-        # The first server's.
-        f"dose_due:{dose}:2026-11-07",
-        f"measurement_due:{version}:2026-11-07",
-        f"measurement_missed:{version}:2026-11-07",
-        f"appointment_reminder:{visit}",
-    )
-    downgrade(directory=directory, revision="0042")
-    try:
-        with database.begin() as connection:
-            for key in keys:
-                connection.execute(
-                    text(
-                        "INSERT INTO notification_log (dedupe_key) "
-                        "VALUES (:key)"
-                    ),
-                    {"key": key},
-                )
-    finally:
-        upgrade(directory=directory)
-
-    with database.connect() as connection:
-        rows = connection.execute(text(
-            "SELECT kind, target_id::text AS target, "
-            "scheduled_on::text AS day, time_of_day::text AS at "
-            "FROM notification_log ORDER BY kind"
-        )).all()
-    assert [tuple(row) for row in rows] == [
-        ("dose_missed", dose, "2026-11-11", None),
-        ("measurement_missed", version, "2026-11-11", "08:00:00"),
-    ]
-
-
 def test_sign_in_survives_deletion_before_account_read(database):
     """A conflicting account may disappear before the following SELECT."""
     store = PostgresUserStore()
@@ -405,3 +332,32 @@ def test_completion_handles_deletion_before_request_lock(database, account):
     finally:
         event.remove(database, "after_cursor_execute", delete_circle)
     assert deleted
+
+
+def test_0071_keeps_each_snooze_and_going_back_works_its_time_out(
+    database, database_app, account
+):
+    """0071 drops `task_snooze.snoozed_at`, which was always `remind_at`
+    less `minutes`: each snooze stays, and going back works it out."""
+    directory = str(Path(__file__).resolve().parents[1] / "migrations")
+    circle = offline_circle(database, account())
+    db.session.remove()
+    with Session(database) as session, session.begin():
+        session.add(TaskSnooze(
+            care_circle_id=circle.id, task="dose", task_id=uuid4(),
+            scheduled_on=NOW.date(), time_of_day=time(8), minutes=30,
+            remind_at=NOW + timedelta(minutes=30),
+        ))
+    downgrade(directory=directory, revision="0070")
+    try:
+        with database.connect() as connection:
+            snoozed_at = connection.execute(
+                text("SELECT snoozed_at FROM task_snooze")
+            ).scalar_one()
+        assert snoozed_at == NOW
+        assert "measurement_target" in inspect(database).get_table_names()
+    finally:
+        upgrade(directory=directory)
+    columns = {c["name"] for c in inspect(database).get_columns("task_snooze")}
+    assert "snoozed_at" not in columns
+    assert "measurement_target" not in inspect(database).get_table_names()

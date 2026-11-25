@@ -4,8 +4,9 @@ sends real SMS to everyone else."""
 import pytest
 
 from app.clock import SystemClock
-from app.config import ConfigError, load_config
-from app.demo_accounts import DEMO_PHONES
+from app.config import load_config
+from app.config.values import ConfigError
+from app.demo import DEMO_PHONES
 from app.sms import DemoSmsSender, FakeSmsSender, create_sms_sender
 
 OTHER = "+966511111111"

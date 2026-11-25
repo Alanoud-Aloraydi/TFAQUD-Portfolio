@@ -3,13 +3,13 @@ named by SMS_BACKEND (Authentica, or the fake one for tests and local work),
 and keeps the demo numbers away from it.
 """
 
-from app.config import ConfigError
-from app.demo_accounts import SIGN_IN_DEMO_PHONES
+from app.config.values import ConfigError
+from app.demo import SIGN_IN_DEMO_PHONES
 from app.resilience import CircuitBreaker
 from app.sms.authentica import AuthenticaSmsSender
 from app.sms.authentica_keys import AuthenticaKeys
 from app.sms.base import CODE_LENGTH, SmsDeliveryError, SmsSender
-from app.sms.demo import DemoSmsSender
+from app.sms.base import DemoSmsSender
 from app.sms.fake import FakeSmsSender, SentSms
 
 

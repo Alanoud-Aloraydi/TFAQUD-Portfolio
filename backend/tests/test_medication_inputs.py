@@ -7,13 +7,10 @@ import pytest
 from pydantic import ValidationError
 
 from app.measurements.inputs import ReadingQuery
-from app.medications.inputs import (
-    DoseRecordRequest,
-    OccurrenceQuery,
-    PlanRequest,
-)
-from app.medications.plans import normalize_medication_name
-from app.medications.timing import timing_state
+from app.medications.dose_inputs import DoseRecordRequest, OccurrenceQuery
+from app.medications.inputs import PlanRequest
+from app.medications.plan_versions import normalize_medication_name
+from app.medications.schedules import timing_state
 
 
 def schedule(**changes):

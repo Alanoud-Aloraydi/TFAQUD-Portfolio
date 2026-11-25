@@ -585,7 +585,7 @@ most 35 days): `{"medication_extra_doses": [...]}`.
 
 Every minute the scheduled tick deletes, for good, the dose records of the
 days more than 90 days ago (UTC), and the extra doses taken before then
-(`app/medications/retention.py`). `…/medication-occurrences` answers none of
+(`app/medications/doses.py`). `…/medication-occurrences` answers none of
 those days, so a deleted record never comes back as a missed dose, and
 recording a dose of those days, scheduled or extra, is refused with 422
 `dose_too_old`. The app warns five days before a day's doses go, so they can
@@ -1003,29 +1003,14 @@ with the `POSTGRES_*` settings) is set. The in-memory classes are used only by t
 unit tests, and the server refuses to start with them in production
 (`app/__init__.py`).
 
-**The tables.** Ids are `uuid` (the sign-in endpoints show them as 32 characters
-without hyphens, section 10 point 9). Names follow the ER diagram of the team.
+**The tables.** `docs/database.md` lists every table and what one row of it
+is, the rules the database keeps, how long rows are kept, and the
+migrations. Ids are `uuid` (the sign-in endpoints show them as 32
+characters without hyphens, section 10 point 9).
 
-| Table | What it holds | Rules the database enforces |
-|---|---|---|
-| `account` | One row per phone number: `phone_number`, `first_name`, `last_name`, `display_name`, `app_mode`, `birth_date`, `city`, `created_at`. | Phone in international format and unique. The three names are all null or all filled (1 to 50, 1 to 50, 1 to 30 characters). `app_mode` is `detailed` or `simplified`, and once set it cannot change. `birth_date` (not before 1900) and `city` (1 to 60 characters) are optional; onboarding fills them (migration 0009). |
-| `account_session` | One row per sign-in: the hash of the refresh token, `created_at`, `revoked_at` (no end date since migration 0031). | Deleted with the account. The hash is unique. No device and no IP address are stored. |
-| `otp_request`, `otp_send` | A sign-in code request and its SMS sends. The code itself is never stored. | At most one pending request per phone number. |
-| `care_circle` | A circle and its patient in one row (migration 0037): `name` when the patient has an account (`account_id`), otherwise the patient's own `first_name`, `last_name`, `birth_date`, `city`; `time_zone` (IANA), `latitude`, `longitude`, `blood_type`, `conditions_status` and `allergies_status` (`none` or `listed`). | One source of identity: the account or the own names, never both. At least one manager (checked when the transaction commits). A detailed patient manages their own circle. |
-| `care_circle_manager` | Who manages a circle. | Once per account and circle. A manager has a complete account in `detailed` mode. A detailed patient manages their own circle. |
-| `care_circle_request` | A request to create a circle for a patient: status `pending`, `accepted`, `completed`, `declined`, `cancelled` or `superseded`. | One open request per sender and number. A patient can have one accepted request. |
-| `care_circle_invitation` | An invitation to manage a circle: `pending`, `accepted`, `declined` or `cancelled`. | One pending invitation per circle and number. |
-| `patient_condition` | Chronic conditions of a patient (`code`, and `other_text` for `other`). | Codes from the official list; `other_text` exactly when the code is `other`; a code once per patient. |
-| `patient_allergy` | Allergies of a patient (`kind` `medication` or `food`, `code`, `other_text`), or none when `allergies_status` is `none`. | The same rules; the code must belong to the kind. |
-| `emergency_contact` | Contacts of a patient: `name`, `relation`, `relation_other` for `other`, `phone_number`. | Phone format, relation from the list, `relation_other` exactly when the relation is `other`, a number once per patient. The limit of 5 is checked by the server, not by the database. |
-
-The medical tables (`care_circle.blood_type`, `patient_condition`, `patient_allergy`,
-`emergency_contact`) are **To confirm**: they are the design of 26 October 2026,
-made from the Figma screens, and the team has not approved them. They are migration
-`0005`; it only adds, so it can be reverted without touching care data.
-
-**Migrations.** `migrations/versions/0001` to `0044`, run by Alembic through
-`flask --app wsgi db upgrade`. The tests start from an empty database and run the
+**Migrations.** Run by Alembic through `flask --app wsgi db upgrade`.
+Revision `0070` makes the whole database in one step; each later change is
+a migration of its own. The tests start from an empty database and run the
 migrations, so the migrations are tested too (`test_migrations_round_trip`).
 
 **A new database (Built).** A new PostgreSQL has no tables, and the API cannot sign
@@ -1047,9 +1032,9 @@ other and cannot deadlock. The sign-in operations use the same ideas: `INSERT ..
 ON CONFLICT DO NOTHING` for a new account, and a lock per phone number for the limits
 on its codes.
 
-The phone number is personal data. Rows of `otp_request` and `otp_send`
-older than 24 hours serve no purpose and can be deleted by a cleanup job (not built
-yet).
+The phone number is personal data. The scheduled scan deletes sign-in code
+requests after 30 days, with their sends, and the other rows that nothing
+reads any more (`docs/database.md`).
 
 Tests: `integration_tests/` (they need `TEST_DATABASE_URL`, see the README),
 `tests/test_sign_in.py`, `tests/test_profile.py`, `tests/test_sessions.py`,
@@ -1087,7 +1072,7 @@ which circles exist. The server also fails closed: a server started with no
 database has no membership lookup, so nobody is a member of anything and every
 circle endpoint refuses every request.
 
-**The roles with PostgreSQL (Built).** The lookup (`app/authz/postgres.py`) answers
+**The roles with PostgreSQL (Built).** The lookup (`app/authz.py`) answers
 `manager` for a row in `care_circle_manager`, and `simplified_patient` for the linked
 patient of the circle when the account uses Simplified Mode. It never answers
 `patient`: a patient in Detailed Mode is also a manager of their own circle. The

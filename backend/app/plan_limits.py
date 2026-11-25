@@ -1,7 +1,7 @@
 """Limits shared by every kind of care plan.
 
 The app (`MissedAfter` in `app/lib/core/constants/plan_limits.dart`), the
-request schemas, the models and migration 0047 use the same numbers.
+request schemas, the models and the database checks use the same numbers.
 """
 
 from typing import Annotated

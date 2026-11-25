@@ -11,7 +11,8 @@ import pytest
 
 from app import create_app
 from app.clock import ManualClock
-from app.config import ConfigError, load_config
+from app.config import load_config
+from app.config.values import ConfigError
 from app.sms import AuthenticaSmsSender, FakeSmsSender, SmsSender
 from app.sms import create_sms_sender
 

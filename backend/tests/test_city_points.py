@@ -1,8 +1,8 @@
 """The point for a patient's weather: the app's, else the city's centre
 when the city is in the app's list, else none."""
 
-from app.care.city_points import CITY_POINTS, city_point
-from app.prayer_times.cities import SAUDI_CITIES
+from app.care.building import CITY_POINTS, city_point
+from app.prayer_times import SAUDI_CITIES
 
 
 def test_a_city_from_the_list_gets_its_centre():
