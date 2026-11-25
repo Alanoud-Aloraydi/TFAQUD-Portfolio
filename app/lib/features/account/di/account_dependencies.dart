@@ -6,7 +6,8 @@ import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:get_it/get_it.dart';
 
 /// Registers the account feature's profile data source, repository and use
-/// case in [GetIt]. Called once at start-up by `configureDependencies` in app/di/injection.dart.
+/// case in [GetIt]. Called once at start-up by `configureDependencies` in
+/// app/bootstrap.dart.
 void registerAccountDependencies(GetIt getIt) {
   getIt.registerLazySingleton<BaseProfileRemoteDataSource>(
     () => ProfileRemoteDataSource(getIt<DioClient>()),

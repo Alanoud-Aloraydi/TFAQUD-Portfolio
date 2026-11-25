@@ -1,5 +1,5 @@
-import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/core/constants/plan_limits.dart';
+import 'package:app/core/reminders/shared_snooze.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -240,4 +240,10 @@ extension DoseOccurrenceCopies on DoseOccurrence {
     timingState: timingState,
     snooze: value,
   );
+}
+
+/// A dose put off: its circle, its time of the plan, and its day.
+String doseSnoozeKey(String circleId, DoseOccurrence dose) {
+  final DateTime day = dose.scheduledOn;
+  return '$circleId|${dose.scheduleId}|${day.year}-${day.month}-${day.day}';
 }

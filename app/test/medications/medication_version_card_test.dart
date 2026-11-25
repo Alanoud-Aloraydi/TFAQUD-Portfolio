@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
@@ -10,6 +8,8 @@ import 'package:app/features/medications/presentation/widgets/medication_version
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/widget_harness.dart';
 
 MedicationSchedule _at(String time, {int? every}) => MedicationSchedule(
   id: 's-$time',

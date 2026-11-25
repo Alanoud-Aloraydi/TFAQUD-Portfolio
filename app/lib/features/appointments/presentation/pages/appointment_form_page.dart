@@ -1,5 +1,4 @@
 // Adds or edits a visit: its kind, clinic, date, time, place and companions.
-
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/feedback/app_toast.dart';

@@ -1,8 +1,8 @@
 import 'package:app/core/localization/calendar_texts.dart';
 import 'package:app/core/localization/duration_text.dart';
-import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
+import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';

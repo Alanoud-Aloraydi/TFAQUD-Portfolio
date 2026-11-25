@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/calendar_day.dart';
 import 'package:app/core/widgets/pickers/date_wheel_choice.dart';
@@ -7,6 +5,8 @@ import 'package:app/core/widgets/pickers/date_wheel_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/widget_harness.dart';
 
 /// Opens the wheel on 19 November 2026 (9 جمادى الآخرة 1448) and keeps
 /// what it confirms.

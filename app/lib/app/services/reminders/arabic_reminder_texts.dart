@@ -3,6 +3,7 @@ import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/localization/care_voice.dart';
 import 'package:app/core/localization/duration_text.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';

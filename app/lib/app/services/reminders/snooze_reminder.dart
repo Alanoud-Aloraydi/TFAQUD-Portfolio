@@ -1,7 +1,7 @@
 import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/reminders/reminder_limits.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
-import 'package:app/app/services/reminders/task_snooze.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 
 /// Sets the reminder of the task of [key], put off to [snooze]'s moment,
 /// in its [slot] of the tasks put off, with the words [title] and [body].

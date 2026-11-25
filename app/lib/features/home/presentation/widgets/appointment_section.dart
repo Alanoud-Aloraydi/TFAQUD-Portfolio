@@ -1,7 +1,7 @@
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/domain/entities/visit_paper.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/home/domain/entities/record_export_data.dart';
 import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:easy_localization/easy_localization.dart';

@@ -7,7 +7,7 @@
 library;
 
 import 'package:app/app/services/phone_notifications.dart';
-import 'package:app/app/services/reminders/item_keys.dart';
+import 'package:app/core/reminders/item_keys.dart';
 
 /// Whether a tapped push of [kind] opens the bell: an invitation, a
 /// request, a request that can no longer be accepted, and a declined

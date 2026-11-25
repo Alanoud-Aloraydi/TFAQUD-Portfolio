@@ -1,6 +1,6 @@
 import 'package:app/app/router/routers.dart';
+import 'package:app/app/widgets/remind_later_check.dart';
 import 'package:app/core/localization/duration_text.dart';
-import 'package:app/core/widgets/feedback/remind_later_check.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';

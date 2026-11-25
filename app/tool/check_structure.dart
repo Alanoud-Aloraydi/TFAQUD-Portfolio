@@ -1,6 +1,7 @@
 // Checks the structure rules of docs/code-conventions.md that can be checked
 // mechanically: file size and the direction of the dependencies between the
-// layers.
+// layers (presentation, domain and data inside a feature; core below
+// everything; the app shell above the domain).
 //
 // Run from the app folder:
 //
@@ -45,7 +46,7 @@ bool isGenerated(String path) =>
 final RegExp _banner = RegExp(r'^\s*//\s*[-=*_~#]{3,}\s*$');
 
 String? _importTarget(String line) {
-  final RegExp pattern = RegExp(r"^import\s+'([^']+)'");
+  final RegExp pattern = RegExp(r"^(?:import|export)\s+'([^']+)'");
   return pattern.firstMatch(line)?.group(1);
 }
 
@@ -87,6 +88,17 @@ List<Violation> inspect(File file, String path) {
     // widgets that happen to ask them.
     if (path.contains('/data/') && imported.contains('/presentation/')) {
       found.add(Violation('layer', path, 0, 'data imports $imported'));
+    }
+    // Core is the floor every feature stands on, so it knows nothing about
+    // the app shell or any feature above it.
+    if (path.startsWith('lib/core/') &&
+        (imported.startsWith('app/') || imported.startsWith('features/'))) {
+      found.add(Violation('layer', path, 0, 'core imports $imported'));
+    }
+    // The domain states what a feature needs; the app shell supplies it
+    // through an interface the domain owns, never by being imported.
+    if (path.contains('/domain/') && imported.startsWith('app/')) {
+      found.add(Violation('layer', path, 0, 'domain imports $imported'));
     }
   }
   return found;

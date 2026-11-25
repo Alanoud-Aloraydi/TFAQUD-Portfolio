@@ -1,10 +1,10 @@
 import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/widgets/remind_later_check.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/localization/duration_text.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/feedback/app_toast.dart';
-import 'package:app/core/widgets/feedback/remind_later_check.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';

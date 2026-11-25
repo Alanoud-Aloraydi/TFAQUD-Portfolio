@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:app/app/services/tap_focus.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/widgets/feedback/tap_focus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 

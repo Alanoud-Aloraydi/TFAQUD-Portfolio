@@ -1,6 +1,6 @@
-import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/media/person_photo_editor.dart';
+import 'package:app/core/reminders/shared_snooze.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';

@@ -1,12 +1,9 @@
 /// The payloads of the reminders set on the phone: which kind of task a
 /// notification is about, its circle, the words a snoozable one carries,
 /// and the keys of the tasks put off with «ذكّرني لاحقًا». Read by both
-/// modes when a reminder is tapped, and by [DoseReminders] when it sets or
-/// puts off a reminder.
+/// modes when a reminder is tapped, and by the app's reminders when they
+/// set or put off a reminder.
 library;
-
-export 'package:app/app/services/reminders/reminder_payload_parts.dart';
-export 'package:app/app/services/reminders/snoozed_task.dart';
 
 /// What a dose reminder's payload starts with; the circle's id follows.
 const String doseReminderPayload = 'dose:';
@@ -31,7 +28,7 @@ bool isReminderPayload(String payload) =>
 
 /// What a dose's «ذكّرني لاحقًا» reminder's payload starts with; the
 /// circle's id follows, the same as [doseReminderPayload]. A separate
-/// prefix and id so [DoseReminders]'s own replace cycle never cancels it
+/// prefix and id so `DoseReminders`'s own replace cycle never cancels it
 /// as an orphaned reminder.
 const String doseSnoozePayload = 'dose-snooze:';
 

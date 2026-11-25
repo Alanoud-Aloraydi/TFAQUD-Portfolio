@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:app/app/services/reminders/item_keys.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/core/reminders/item_keys.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/focus_mark.dart';
@@ -14,10 +13,12 @@ import 'package:app/features/home/presentation/widgets/today_next_or_empty.dart'
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/home/presentation/widgets/today_schedule.dart';
 import 'package:app/features/home/presentation/widgets/today_snapshot.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_earlier.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_skeleton.dart';

@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/layout/recorder_line.dart';
@@ -10,6 +8,8 @@ import 'package:app/features/medications/presentation/widgets/dose_record_contro
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/widget_harness.dart';
 
 /// A 09:00 dose of 9 November 2026 with [record].
 DoseOccurrence _dose(DoseRecord record) => DoseOccurrence(

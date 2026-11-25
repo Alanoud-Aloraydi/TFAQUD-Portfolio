@@ -120,6 +120,9 @@ class SmokeMeasurementsRepository extends Fake
       const <MeasurementReading>[];
 
   @override
+  Future<DateTime?> firstReadingOn(String circleId) async => null;
+
+  @override
   Future<List<MeasurementPlan>> plans(String circleId) async =>
       const <MeasurementPlan>[];
 

@@ -14,6 +14,7 @@ import 'package:app/features/medications/presentation/widgets/dose_history_earli
 import 'package:app/features/medications/presentation/widgets/dose_history_outcome.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_status.dart';
 import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
+import 'package:app/features/medications/presentation/widgets/dose_text.dart';
 import 'package:app/features/medications/presentation/widgets/extra_dose_lines.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

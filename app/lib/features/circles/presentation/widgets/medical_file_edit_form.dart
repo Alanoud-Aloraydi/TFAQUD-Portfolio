@@ -1,5 +1,4 @@
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
-import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/feedback/app_toast.dart';
@@ -13,6 +12,7 @@ import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.
 import 'package:app/features/circles/presentation/widgets/allergies_section.dart';
 import 'package:app/features/circles/presentation/widgets/medical_identity_fields.dart';
 import 'package:app/features/circles/presentation/widgets/medical_name_fields.dart';
+import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

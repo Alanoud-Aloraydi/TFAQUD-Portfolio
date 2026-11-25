@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
@@ -24,6 +22,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+
+import '../support/widget_harness.dart';
 
 /// Records what the measurement row sends to the server.
 class _Measurements extends Fake implements MeasurementsRepository {

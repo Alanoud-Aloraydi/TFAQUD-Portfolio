@@ -9,9 +9,9 @@ import 'package:app/app/services/reminders/reminder_permission.dart';
 import 'package:app/app/services/reminders/reminder_reading.dart';
 import 'package:app/app/services/reminders/reminder_sync.dart';
 import 'package:app/app/services/reminders/reminders_enabled.dart';
-import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/app/services/reminders/snooze_ledger.dart';
 import 'package:app/app/services/reminders/snooze_putter.dart';
+import 'package:app/core/reminders/shared_snooze.dart';
 import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
@@ -19,10 +19,11 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:app/app/services/reminder_circle.dart';
-export 'package:app/app/services/reminders/reminder_payloads.dart';
+export 'package:app/app/services/reminders/reminder_payload_parts.dart';
 export 'package:app/app/services/reminders/reminder_plan.dart';
-export 'package:app/app/services/reminders/shared_snooze.dart';
-export 'package:app/app/services/reminders/task_snooze.dart';
+export 'package:app/core/reminders/reminder_payloads.dart';
+export 'package:app/core/reminders/shared_snooze.dart';
+export 'package:app/core/reminders/task_snooze.dart';
 
 /// Keeps the coming week's reminders on the phone: every dose, measurement
 /// and appointment (the name stays from when it reminded of doses only).

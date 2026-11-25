@@ -1,8 +1,6 @@
 // Each medicine page has its own skeleton (design system Skeleton), drawn in
 // the shape of the page it stands for, so nothing jumps when the content
 // comes.
-
-import 'package:app/app/services/reminders/reminder_payloads.dart';
 import 'package:app/core/constants/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/localization/medication_format.dart';
@@ -23,6 +21,7 @@ import 'package:app/features/medications/presentation/widgets/dose_history_outco
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_skeleton.dart';
 import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
+import 'package:app/features/medications/presentation/widgets/dose_text.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_circle.dart';
 import 'package:app/features/medications/presentation/widgets/navigate_to_medication.dart';
 import 'package:easy_localization/easy_localization.dart';

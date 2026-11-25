@@ -3,7 +3,6 @@ import 'package:app/core/localization/calendar_texts.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/calendar_scope.dart';
-import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -60,19 +59,6 @@ String formatStartDate(
     args: [formatMedicationDate(context, start)],
   );
 }
-
-/// One dose of a schedule or an occurrence, «1 قرص».
-String formatMedicationDose(
-  BuildContext context,
-  double value,
-  DoseUnit unit,
-) => context.tr(
-  'medications.dose',
-  args: [
-    formatMedicationNumber(value),
-    context.tr('medications.unit.${unit.name}'),
-  ],
-);
 
 /// A monthly schedule's days, «شهريًا: يوم 1، 15».
 String formatMonthDays(BuildContext context, List<int> days) => context.tr(

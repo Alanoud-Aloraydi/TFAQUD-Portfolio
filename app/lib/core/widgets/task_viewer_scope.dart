@@ -1,4 +1,4 @@
-import 'package:app/app/services/appointment_audience.dart';
+import 'package:app/core/utils/appointment_audience.dart';
 import 'package:flutter/widgets.dart';
 
 /// Who the person on this phone is in the circle on screen: their account,

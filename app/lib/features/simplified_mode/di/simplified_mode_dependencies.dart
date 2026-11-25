@@ -7,6 +7,7 @@ import 'package:app/features/measurements/domain/usecases/measurements_use_case.
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
 import 'package:app/features/simplified_mode/data/datasources/simplified_preferences.dart';
+import 'package:app/features/simplified_mode/data/repositories/simplified_reminders_impl.dart';
 import 'package:app/features/simplified_mode/domain/repositories/simplified_settings_store.dart';
 import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:get_it/get_it.dart';
@@ -25,8 +26,7 @@ void registerSimplifiedModeDependencies(GetIt getIt) {
       getIt<AppointmentsUseCase>(),
       getIt<CirclesUseCase>(),
       getIt<PrayerTimesUseCase>(),
-      getIt<DoseReminders>(),
-      getIt<CalendarSync>(),
+      SimplifiedRemindersImpl(getIt<DoseReminders>(), getIt<CalendarSync>()),
     ),
   );
 }

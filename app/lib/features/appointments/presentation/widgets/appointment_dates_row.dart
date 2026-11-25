@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
@@ -16,6 +15,7 @@ import 'package:app/features/appointments/domain/entities/appointment_days.dart'
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_fields.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_companion_chips.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 

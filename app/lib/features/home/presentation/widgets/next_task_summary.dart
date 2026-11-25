@@ -1,4 +1,3 @@
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/localization/duration_text.dart';
 import 'package:app/core/localization/medication_format.dart';
@@ -8,6 +7,7 @@ import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_circle.dart';
