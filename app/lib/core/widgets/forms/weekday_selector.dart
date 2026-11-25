@@ -1,6 +1,9 @@
+import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/weekdays.dart';
-import 'package:app/core/widgets/forms/weekday_box.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -57,4 +60,56 @@ class WeekdaySelector extends StatelessWidget {
       ],
     );
   }
+}
+
+/// One day of the weekday selector: a round chip with the day's name,
+/// drawn as the app's other chips are (an outline, the soft violet of
+/// «كل الأيام» when it is on), 44 points high. Seven of them share the
+/// row's width, so on a narrow phone a day is a little narrower than high.
+class WeekdayBox extends StatelessWidget {
+  const WeekdayBox({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.semanticLabel,
+  });
+
+  final String label;
+  final String? semanticLabel;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: selected,
+    onTap: onTap,
+    label: spoken(semanticLabel ?? label),
+    excludeSemantics: true,
+    child: InkWell(
+      onTap: onTap,
+      customBorder: const StadiumBorder(),
+      child: SizedBox(
+        height: AppSizes.touch,
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: selected
+                ? AppSemanticColors.selectedSurface
+                : AppSemanticColors.surfaceContent,
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: selected
+                    ? AppSemanticColors.selectedSurface
+                    : context.tokens.borderControl,
+              ),
+            ),
+          ),
+          child: Center(
+            child: Text(label, style: Theme.of(context).chipTheme.labelStyle),
+          ),
+        ),
+      ),
+    ),
+  );
 }

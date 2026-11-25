@@ -1,11 +1,10 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_text_theme.dart';
-import 'package:app/core/theme/foundations/app_effects.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/overlays/glass_menu_entry.dart';
+import 'package:app/core/widgets/overlays/glass_menu_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

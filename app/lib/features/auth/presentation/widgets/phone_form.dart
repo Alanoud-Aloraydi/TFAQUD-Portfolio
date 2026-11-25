@@ -45,3 +45,53 @@ class PhoneForm extends StatelessWidget {
     );
   }
 }
+
+/// The page around a sign-in step (the phone number, the code): the safe
+/// area and the margins.
+class SignInStepFrame extends StatelessWidget {
+  const SignInStepFrame({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// A sign-in step's content: the [form] scrolls (and a drag hides the
+/// keyboard), the [button] stays at the bottom.
+class SignInStepColumn extends StatelessWidget {
+  const SignInStepColumn({super.key, required this.form, required this.button});
+
+  final Widget form;
+  final Widget button;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: form,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        button,
+      ],
+    );
+  }
+}

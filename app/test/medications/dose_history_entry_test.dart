@@ -1,6 +1,5 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/medications/domain/entities/dose_history_entry.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/domain/entities/medication_version.dart';

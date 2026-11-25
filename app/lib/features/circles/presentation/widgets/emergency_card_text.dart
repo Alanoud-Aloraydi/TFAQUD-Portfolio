@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';

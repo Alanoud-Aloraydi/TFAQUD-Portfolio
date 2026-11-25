@@ -1,4 +1,4 @@
-import 'package:app/core/services/weather/patient_weather.dart';
+import 'package:app/app/services/weather/patient_weather.dart';
 import 'package:flutter/cupertino.dart';
 
 /// The icon of WeatherKit's condition, by day or night.

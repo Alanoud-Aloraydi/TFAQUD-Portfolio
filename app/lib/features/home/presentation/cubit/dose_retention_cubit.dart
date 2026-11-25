@@ -1,4 +1,4 @@
-import 'package:app/core/services/dose_retention_memory.dart';
+import 'package:app/app/services/dose_retention_memory.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Through which day the warning before doses are deleted was answered:

@@ -1,11 +1,11 @@
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/reminders/item_keys.dart';
-import 'package:app/core/services/reminders/reminder_payloads.dart';
-import 'package:app/core/services/tap_focus.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/reminders/item_keys.dart';
+import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/tap_focus.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/home/presentation/controllers/clinical_data_loader.dart';
-import 'package:app/features/home/presentation/controllers/notification_tap_handler.dart';
-import 'package:app/features/home/presentation/controllers/reminder_sync.dart';
+import 'package:app/features/home/presentation/cubit/clinical_data_loader.dart';
+import 'package:app/features/home/presentation/cubit/notification_tap_handler.dart';
+import 'package:app/features/home/presentation/cubit/reminder_sync.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/home_fakes.dart';

@@ -2,23 +2,22 @@ import '../support/widget_harness.dart';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
-import 'package:app/features/home/presentation/widgets/next_task_card.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
-import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/features/home/presentation/widgets/today_next_or_empty.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading_draft.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_row.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
-import 'package:app/features/medications/presentation/widgets/dose_controls_layout.dart';
+import 'package:app/features/medications/presentation/widgets/dose_history_outcome.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +26,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 /// Records what the measurement row sends to the server.
-class _Measurements extends Fake implements MeasurementsRepositoryDomain {
+class _Measurements extends Fake implements MeasurementsRepository {
   final List<MeasurementReadingDraft> drafts = <MeasurementReadingDraft>[];
 
   @override
@@ -60,7 +59,7 @@ class _Measurements extends Fake implements MeasurementsRepositoryDomain {
 }
 
 /// Records what the dose controls send to the server.
-class _Doses extends Fake implements MedicationsRepositoryDomain {
+class _Doses extends Fake implements MedicationsRepository {
   _Doses(this.dose);
 
   final DoseOccurrence dose;

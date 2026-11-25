@@ -1,7 +1,7 @@
 import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
-import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

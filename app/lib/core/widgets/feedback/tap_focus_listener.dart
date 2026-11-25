@@ -1,4 +1,4 @@
-import 'package:app/core/services/tap_focus.dart';
+import 'package:app/app/services/tap_focus.dart';
 import 'package:flutter/widgets.dart';
 
 /// Tells [onWaiting] the item of the notification just tapped while it

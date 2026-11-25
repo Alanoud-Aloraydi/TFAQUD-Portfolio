@@ -1,9 +1,11 @@
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/presentation/cubit/contact_choices_of.dart';
+import 'package:app/features/circles/domain/entities/medical_options.dart';
+import 'package:app/features/circles/presentation/cubit/contact_deleting.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_scope.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -56,4 +58,35 @@ mixin ContactFormOpening on Cubit<MedicalFileState>, MedicalFileScope {
     if (state.form?.saving ?? false) return;
     emit(state.copyWith(clearForm: true));
   }
+}
+
+/// The members a contact can be picked from: those with a Saudi number,
+/// the patient left out, since the patient is who the contacts are for.
+List<ContactChoice> contactChoicesOf(CircleOverview overview) =>
+    <ContactChoice>[
+      for (final CircleMember member in overview.members)
+        if (!member.isPatient &&
+            member.phoneNumber != null &&
+            SaudiMobile.isValid(SaudiMobile.national(member.phoneNumber!)))
+          ContactChoice(
+            name: member.name,
+            phone: SaudiMobile.national(member.phoneNumber!),
+            accountId: member.accountId,
+            avatarCode: member.avatarCode,
+          ),
+    ];
+
+/// What [ContactForm] needs before it can be saved.
+extension ContactFormChecks on ContactForm {
+  /// A relation is picked, and «أخرى» has its words.
+  bool get relationAnswered =>
+      relation != null &&
+      (relation != MedicalOptions.other || relationOther.trim().isNotEmpty);
+
+  /// The words of «أخرى» are missing after a tap on «حفظ».
+  bool get relationOtherMissing =>
+      showErrors && relation == MedicalOptions.other && !relationAnswered;
+
+  /// A whole Saudi mobile number: emergency contacts are Saudi numbers.
+  bool get phoneValid => SaudiMobile.isValid(phone);
 }

@@ -1,10 +1,15 @@
+import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/account/presentation/cubit/account_scope.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
-import 'package:app/features/account/presentation/cubit/account_waiting.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 /// Reading the account and the requests it sent.
@@ -64,4 +69,30 @@ mixin AccountLoading on AccountScope {
       },
     );
   }
+}
+
+/// The sent requests that wait for the patient. A declined one is not a
+/// circle waiting for approval; the notifications page tells about it.
+List<SentCircleRequest> waitingRequests(CircleInbox inbox) =>
+    <SentCircleRequest>[
+      for (final SentCircleRequest sent in inbox.sent)
+        if (sent.status == CircleRequestStatus.pending ||
+            sent.status == CircleRequestStatus.accepted)
+          sent,
+    ];
+
+/// What every part of the account cubit works on: the use cases it asks, the
+/// counter that drops an older reading, and how a failure ends the session.
+mixin AccountScope on Cubit<AccountState> {
+  CirclesUseCase get circles;
+  ProfileUseCase get profile;
+  AuthUseCase get auth;
+  HomeUseCase get home;
+
+  /// Goes up at each load, so an older reading that ends later is dropped.
+  int revision = 0;
+
+  /// Whether the failure means the sign-in is no longer valid.
+  bool endsSession(Failure failure) =>
+      failure is UnauthorizedFailure || failure is SessionExpiredFailure;
 }

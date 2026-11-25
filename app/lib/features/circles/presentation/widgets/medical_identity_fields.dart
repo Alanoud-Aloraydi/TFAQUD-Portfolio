@@ -1,14 +1,15 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/picker_field.dart';
-import 'package:app/core/widgets/pickers/birth_date_note.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
-import 'package:app/features/circles/presentation/widgets/medical_file_sheets.dart';
-import 'package:app/features/circles/presentation/widgets/time_zone_names.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_header.dart';
+import 'package:app/features/circles/presentation/widgets/time_zone_list.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -62,4 +63,30 @@ List<Widget> medicalIdentityFields(
       ),
     ],
   ];
+}
+
+/// One question of the medical file: its heading, and the answers in the
+/// same white card as every other section, so none looks heavier than the
+/// one above it.
+class MedicalSection extends StatelessWidget {
+  const MedicalSection({super.key, required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: <Widget>[
+      const SizedBox(height: AppSpacing.xl),
+      InsetText.header(title),
+      const SizedBox(height: AppSpacing.sm),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: AppSurfaces.card(),
+        child: child,
+      ),
+    ],
+  );
 }

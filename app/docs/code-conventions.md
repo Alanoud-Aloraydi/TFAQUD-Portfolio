@@ -4,80 +4,74 @@ The rules every change to the Flutter client follows. `tool/check_structure.dart
 enforces the ones that can be checked mechanically, and runs in CI
 (`.github/workflows/ci.yml`).
 
-## 1. One responsibility per file
+## 1. Files
 
-A file holds one thing and is named after it. A file that needs the word "and"
-to be described holds two things.
+A file holds code that is really connected, and is named after its main
+class.
 
-- One public widget per file, named like the file:
-  `dose_timing_badge.dart` holds `DoseTimingBadge`.
-- A private helper widget (`_Row`, `_Card`) stays in the file only while it is
-  used by that file alone **and** the file stays within the size limit.
-  Otherwise it becomes a file of its own under `widgets/`.
-- A page builds a tree out of widgets; it does not declare them.
+- Keep together what changes together: a class and its state, a widget and
+  the small widgets only it uses, a data source and the models it reads.
+- Never join code just to have fewer files. Two classes share a file only
+  when one exists to serve the other.
+- A helper used by several files lives in its own file, beside them.
+- Code of different layers never shares a file (see §3).
 
-`features/medications/presentation/widgets/` is the reference: thirty files,
-one widget each.
+## 2. Size limit
 
-## 2. Size limits
+Aim for about 200 lines per file; never more than 300 (generated files
+excepted: `*.g.dart`, `*.freezed.dart`, `*.config.dart`). A class is not cut
+into mixins to meet the limit: a file that outgrows it holds two jobs, and
+is split by meaning.
 
-| Scope | Limit |
-|---|---|
-| `presentation/` (pages, widgets, cubits) | 70 lines |
-| any other file | 90 lines |
+## 3. Layout and layers
 
-The limit is on responsibilities, not on lines: a file at 65 lines doing two
-jobs still gets split. Exempt, because splitting them makes them worse:
-
-- Generated files: `*.g.dart`, `*.freezed.dart`, `*.config.dart`.
-- Lookup tables with one entry per line: `core/constants/app_icons.dart`.
-- Design-system token files: one `abstract final class` of constants.
-
-An exemption is recorded in `tool/structure_baseline.txt` with its reason. A
-new file never joins that list.
-
-## 3. Layers
+The layout follows Cleany (feature-based clean architecture):
 
 ```text
-presentation  ->  domain  ->  data
+lib/
+  main.dart                  starts the app: bootstrap(), then runApp
+  app/
+    app.dart                 the MaterialApp
+    bootstrap.dart           everything ready before the first frame
+    di/injection.dart        configureDependencies(): calls every feature
+    router/                  the GoRouter and the shared route helpers
+    services/                app-wide services (reminders, notifications, push)
+  core/                      shared code: network, errors, storage,
+                             localization, theme, constants, utils, widgets
+  features/<feature>/
+    data/datasources/        API and device data sources
+    data/models/             JSON models
+    data/repositories/       <feature>_repository_impl.dart
+    domain/entities/         plain Dart classes
+    domain/repositories/     <feature>_repository.dart (the contract)
+    domain/usecases/         <feature>_use_case.dart
+    presentation/cubit/      cubits, their states, presentation logic
+    presentation/pages/      one page per screen
+    presentation/widgets/    the widgets of the pages
+    di/                      <feature>_dependencies.dart
+    routing/                 <feature>_routes.dart
 ```
-
-- **presentation** (widget, page, cubit) may import `domain` only. A cubit
-  calls a use case; it never sees a repository implementation, a data source,
-  a model, or Dio.
-- **domain** imports nothing from `data` or `presentation`. It declares the
-  entities, the repository interfaces, and the use cases.
-- **data** implements the domain repository interfaces and owns the models and
-  the data sources.
-
-Every feature has the same shape:
 
 ```text
-features/<feature>/
-  data/datasources/      <feature>_remote_data_source.dart
-  data/models/           <thing>_model.dart
-  data/repositories/     <feature>_repository_data.dart
-  di/                    <feature>_di.dart
-  domain/entities/       <thing>.dart
-  domain/repositories/   <feature>_repository_domain.dart
-  domain/use_cases/      <feature>_use_case.dart
-  presentation/cubit/    <thing>_cubit.dart, <thing>_state.dart
-  presentation/pages/    <thing>_page.dart
-  presentation/widgets/  <thing>.dart
+presentation  ->  domain  <-  data
 ```
 
-`features/medications` and `features/circles` follow it; new work matches them.
+- **presentation** imports `domain` only: a cubit calls a use case; it never
+  sees a repository implementation, a data source, a model, or Dio.
+- **domain** imports nothing from `data` or `presentation`.
+- **data** implements the domain contracts and owns models and data sources.
 
-## 4. State
+## 4. State and dependencies
 
-`flutter_bloc` with `Cubit` only, never `Bloc` with events. One cubit per
-screen concern, its state in its own file beside it. State classes are
-immutable and extend `Equatable`. A cubit returns `Result` from
-`multiple_result`; it does not throw across layers.
+`flutter_bloc` with `Cubit` only. State classes are immutable and extend
+`Equatable`. Repositories and use cases return `Result` from
+`multiple_result`; they do not throw across layers.
 
-Dependencies come from `get_it` (`GetIt.I<T>()`), registered by the feature's
-`di/<feature>_di.dart`. A widget does not reach into `GetIt` except at the
-point where it creates a `BlocProvider`.
+Dependencies come from `get_it`. Each feature registers its own in
+`di/<feature>_dependencies.dart`
+(`void register<Feature>Dependencies(GetIt getIt)`), and
+`app/di/injection.dart` calls them all once at start-up. A widget reaches
+into `GetIt` only where it creates a `BlocProvider`.
 
 ## 5. Comments
 

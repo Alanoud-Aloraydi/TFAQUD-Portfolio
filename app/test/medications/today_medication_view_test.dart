@@ -1,9 +1,7 @@
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/today_medication_view.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// The patient's wall clock, midday of 11 November.
 final DateTime _now = DateTime.utc(2026, 11, 11, 12);
 
 DoseOccurrence _dose(int day, {DoseRecord? record}) => DoseOccurrence(

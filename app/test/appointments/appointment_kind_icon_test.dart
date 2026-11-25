@@ -1,6 +1,6 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 

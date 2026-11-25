@@ -1,7 +1,9 @@
+import 'package:app/core/localization/duration_text.dart';
+import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/dose_late_line.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 
@@ -50,4 +52,49 @@ class DoseRowStatus {
 
   /// How long after its time a late dose was taken; null otherwise.
   final String? lateBy;
+}
+
+/// «بعد 5 ساعات من الموعد», a line under the name: the badge stays the
+/// short «تم أخذها» of every taken dose. Null unless the dose was taken
+/// after its missed boundary.
+String? doseLateLine(BuildContext context, DoseOccurrence occurrence) {
+  final DoseRecord? record = occurrence.record;
+  final PatientClock clock = PatientClockScope.of(context);
+  final DateTime? takenAt = record?.takenAt;
+  if (record?.outcome != DoseOutcome.taken ||
+      takenAt == null ||
+      !occurrence.isTakenLate(clock)) {
+    return null;
+  }
+  final Duration late = takenAt.toUtc().difference(
+    clock.momentOf(occurrence.scheduledOn, occurrence.time).toUtc(),
+  );
+  return context.tr(
+    'today_dashboard.status.late_line',
+    args: <String>[lateByText(context, late)],
+  );
+}
+
+/// Why a recorded dose was not taken, in the words the sheet offered.
+String doseSkipReasonText(BuildContext context, DoseRecord record) {
+  return doseSkipReasonLabel(
+    context,
+    record.skipReasonCode,
+    record.skipReasonNote,
+  );
+}
+
+/// The reason behind [code], or the note itself when «أخرى» was chosen and
+/// something was written. The server's older codes are read too.
+String doseSkipReasonLabel(BuildContext context, String? code, String? note) {
+  if (code == null) return '';
+  if (code == 'other' && note?.isNotEmpty == true) {
+    return note!;
+  }
+  final key = switch (code) {
+    'side_effects' => 'sideEffects',
+    'patient_refused' => 'patientRefused',
+    _ => code,
+  };
+  return context.tr('medications.skip_reason.$key');
 }

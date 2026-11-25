@@ -1,28 +1,27 @@
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
-
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
-import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
+import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/features/account/domain/repositories/profile_repository.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
-import 'package:app/features/auth/domain/entities/sign_in_result.dart';
-import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/entities/account_deletion.dart';
-import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/auth/domain/entities/sign_in_failures.dart';
+import 'package:app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
+import 'package:app/features/circles/domain/entities/account_summary.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-class _Auth implements AuthRepositoryDomain {
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
+
+class _Auth implements AuthRepository {
   int signOuts = 0;
 
   @override
@@ -50,7 +49,7 @@ class _Auth implements AuthRepositoryDomain {
       const Success(null);
 }
 
-class _Profile implements ProfileRepositoryDomain {
+class _Profile implements ProfileRepository {
   Result<void, Failure> result = const Success(null);
   final List<List<String>> saved = <List<String>>[];
 

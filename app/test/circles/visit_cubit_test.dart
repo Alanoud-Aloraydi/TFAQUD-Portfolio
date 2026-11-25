@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:app/features/appointments/domain/repositories/visits_repository_domain.dart';
-import 'package:app/features/appointments/domain/services/visit_audio.dart';
-import 'package:app/features/appointments/domain/use_cases/visits_use_case.dart';
+import 'package:app/features/appointments/domain/repositories/visit_audio.dart';
+import 'package:app/features/appointments/domain/repositories/visits_repository.dart';
+import 'package:app/features/appointments/domain/usecases/visits_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +26,7 @@ class _FakeAudio implements VisitAudio {
   dynamic noSuchMethod(Invocation invocation) => Future<void>.value();
 }
 
-class _FakeRepository implements VisitsRepositoryDomain {
+class _FakeRepository implements VisitsRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => Future<void>.value();
 }

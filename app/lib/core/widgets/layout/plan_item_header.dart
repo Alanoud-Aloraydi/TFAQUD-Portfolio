@@ -1,4 +1,4 @@
-import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// The top line of a [PlanItemCard]: the kind visual, the title and

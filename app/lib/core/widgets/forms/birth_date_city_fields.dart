@@ -3,7 +3,6 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/widgets/forms/field_with_error.dart';
 import 'package:app/core/widgets/forms/picker_field.dart';
-import 'package:app/core/widgets/pickers/birth_date_note.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/core/widgets/pickers/city_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';

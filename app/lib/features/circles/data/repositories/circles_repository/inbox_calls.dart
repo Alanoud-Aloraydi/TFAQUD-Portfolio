@@ -1,7 +1,7 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// The requests and invitations waiting for an answer, and the answered ones.
-mixin _InboxCalls implements CirclesRepositoryDomain {
+mixin _InboxCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
 
   /// What was answered lately. It is only history: when it cannot be read

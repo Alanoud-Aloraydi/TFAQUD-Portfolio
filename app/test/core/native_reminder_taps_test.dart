@@ -1,4 +1,4 @@
-import 'package:app/core/services/reminders/native_reminder_taps.dart';
+import 'package:app/app/services/notifications/plugin_phone_notifications.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

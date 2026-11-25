@@ -1,5 +1,5 @@
 import 'package:app/features/auth/data/models/account_status_response.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 
 /// Tokens and profile state returned by POST /api/v1/auth/verify-code.
 class VerifyCodeResponse {

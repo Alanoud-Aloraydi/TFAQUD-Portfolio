@@ -1,15 +1,13 @@
 import 'dart:async';
 
-import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/storage/token_storage.dart';
 import 'package:app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:app/features/auth/data/models/account_status_response.dart';
-import 'package:app/features/auth/data/repositories/auth_repository_data.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_signed_out_state.dart';
 import 'package:app/features/auth/presentation/cubit/splash_cubit.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -66,13 +64,13 @@ void main() {
   group('AuthSession', () {
     late _Tokens tokens;
     late _Remote remote;
-    late AuthRepositoryData repository;
+    late AuthRepositoryImpl repository;
     late SplashCubit splash;
 
     setUp(() {
       tokens = _Tokens();
       remote = _Remote();
-      repository = AuthRepositoryData(remote, tokens);
+      repository = AuthRepositoryImpl(remote, tokens);
       splash = SplashCubit(AuthUseCase(repository));
       addTearDown(splash.close);
     });

@@ -1,13 +1,12 @@
 import 'dart:async';
 
+import '../support/widget_harness.dart';
+
 import 'package:app/core/widgets/layout/pull_to_refresh.dart';
-import 'package:app/core/widgets/layout/refresh_header.dart';
 import 'package:app/core/widgets/layout/refresh_scope.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 /// A main page too short to scroll, as «اليوم» is on a quiet day.
 Widget _page({Future<void> Function()? onRefresh}) {

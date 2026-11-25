@@ -1,18 +1,19 @@
+import '../support/widget_harness.dart';
+
+import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/simplified_mode/data/simplified_preferences.dart';
+import 'package:app/features/simplified_mode/data/datasources/simplified_preferences.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
+import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/pages/simplified_snooze_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +23,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../support/widget_harness.dart';
 
 /// 12:00 in Riyadh on 9 November 2026.
 final DateTime _noon = DateTime.utc(2026, 11, 9, 9);

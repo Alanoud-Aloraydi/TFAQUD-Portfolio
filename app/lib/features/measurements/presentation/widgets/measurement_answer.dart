@@ -1,6 +1,6 @@
-import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';

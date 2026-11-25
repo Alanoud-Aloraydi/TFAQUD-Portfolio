@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/push_registration.dart';
-import 'package:app/core/services/remote_push.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/push_registration.dart';
+import 'package:app/app/services/remote_push.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/phone_fakes.dart';

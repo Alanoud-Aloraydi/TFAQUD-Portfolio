@@ -1,11 +1,10 @@
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
-import 'package:app/features/simplified_mode/domain/entities/simplified_day_props.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
 import 'package:equatable/equatable.dart';
 
 /// Everything the simplified mode shows for the patient's circle, as read
@@ -79,3 +78,23 @@ class SimplifiedDay extends Equatable {
   @override
   List<Object?> get props => simplifiedDayProps(this);
 }
+
+/// What makes two [SimplifiedDay]s equal: every field, in the order the
+/// class declares them.
+List<Object?> simplifiedDayProps(SimplifiedDay day) => <Object?>[
+  day.circleId,
+  day.circleName,
+  day.accountId,
+  day.isPatient,
+  day.displayName,
+  day.avatarCode,
+  day.timeZone,
+  day.doses,
+  day.measurements,
+  day.appointments,
+  day.family,
+  day.reasons,
+  day.prayers,
+  day.latitude,
+  day.longitude,
+];

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/constants/plan_limits.dart';
-import 'package:app/core/l10n/duration_text.dart';
+import 'package:app/core/localization/duration_text.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/pickers/minutes_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';

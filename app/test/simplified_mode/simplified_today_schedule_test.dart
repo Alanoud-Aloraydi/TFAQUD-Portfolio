@@ -1,17 +1,16 @@
-import 'package:app/core/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/reminder_payloads.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/prayer_period.dart';
+import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_schedule.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/prayer_period.dart';
-import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
-import 'package:app/features/simplified_mode/domain/today_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 12:00 in Riyadh on 9 November 2026.

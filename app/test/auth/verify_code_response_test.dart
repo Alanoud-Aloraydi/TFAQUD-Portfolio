@@ -1,5 +1,5 @@
 import 'package:app/features/auth/data/models/verify_code_response.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

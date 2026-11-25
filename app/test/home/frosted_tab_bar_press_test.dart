@@ -1,6 +1,6 @@
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/materials/tab_bar_style.dart';
-import 'package:app/features/shell/widgets/frosted_tab_bar.dart';
+import 'package:app/features/shell/presentation/widgets/frosted_tab_bar.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

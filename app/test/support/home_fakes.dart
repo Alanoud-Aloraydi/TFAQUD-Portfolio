@@ -1,7 +1,7 @@
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/home/domain/repositories/home_repository_domain.dart';
+import 'package:app/features/home/domain/repositories/home_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -19,7 +19,7 @@ HomeEntity homeData({
   circles: circles,
 );
 
-class HomeFakeRepository extends Fake implements HomeRepositoryDomain {
+class HomeFakeRepository extends Fake implements HomeRepository {
   Result<HomeEntity, Failure> response = Success(homeData());
   Future<Result<HomeEntity, Failure>>? pending;
   final selections = <String, String>{};

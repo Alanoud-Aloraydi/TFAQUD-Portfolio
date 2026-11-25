@@ -1,10 +1,10 @@
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
-import 'package:app/features/medications/presentation/widgets/medication_interval_notes.dart';
+import 'package:app/features/medications/presentation/cubit/medication_schedule_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -64,6 +64,53 @@ class MedicationIntervalPicker extends StatelessWidget {
           startsOn: startsOn,
           formerMonthDays: data.formerMonthDays,
         ),
+      ],
+    );
+  }
+}
+
+/// Under the ruler: the day the counting starts from, and, for a schedule
+/// that used to be monthly, the days of the month it kept.
+class MedicationIntervalNotes extends StatelessWidget {
+  const MedicationIntervalNotes({
+    super.key,
+    required this.formerMonthDays,
+    this.startsOn,
+  });
+
+  final List<int> formerMonthDays;
+  final DateTime? startsOn;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle? style = Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: AppSemanticColors.textSupporting);
+    final DateTime? start = startsOn;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (start != null) ...<Widget>[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            context.tr(
+              'medications.interval_from',
+              args: <String>[formatMedicationDate(context, start)],
+            ),
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ],
+        if (formerMonthDays.isNotEmpty) ...<Widget>[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            context.tr(
+              'medications.was_monthly',
+              args: <String>[formatMonthDays(context, formerMonthDays)],
+            ),
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ],
       ],
     );
   }

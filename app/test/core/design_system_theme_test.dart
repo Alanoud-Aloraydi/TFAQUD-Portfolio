@@ -1,13 +1,11 @@
 import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// WCAG 2 contrast ratio of two opaque colors.
 double contrast(Color a, Color b) {
@@ -204,7 +202,7 @@ void main() {
       final Set<double> sizes = <double>{
         for (final TextStyle? style in styles) style!.fontSize!,
       };
-      expect(sizes, <double>{...AppTextTheme.sizes});
+      expect(sizes, <double>{34, 22, 17, 15, 13});
       for (final TextStyle? style in styles) {
         final double line = style!.fontSize! * style.height!;
         expect(line.round() % 4, 0, reason: '${style.fontSize} has line $line');

@@ -1,11 +1,9 @@
-import 'package:app/core/di/configure_dependencies.dart';
+import 'package:app/app/bootstrap.dart';
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/data_failures.dart';
-import 'package:app/features/home/data/datasources/home_local_data_source.dart';
 import 'package:app/features/home/data/datasources/home_remote_data_source.dart';
-import 'package:app/features/home/data/models/home_model.dart';
-import 'package:app/features/home/data/repositories/home_repository_data.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/home/data/repositories/home_repository_impl.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,12 +52,12 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     late _Storage storage;
     late _Remote remote;
-    late HomeRepositoryData repository;
+    late HomeRepositoryImpl repository;
 
     setUp(() {
       storage = _Storage();
       remote = _Remote();
-      repository = HomeRepositoryData(remote, HomeLocalDataSource(storage));
+      repository = HomeRepositoryImpl(remote, HomeLocalDataSource(storage));
     });
 
     test(
@@ -173,7 +171,7 @@ void main() {
 
     test('separate instances restore selection only for its account', () async {
       await repository.selectCircle('account-a', 'circle-id');
-      final reopened = HomeRepositoryData(remote, HomeLocalDataSource(storage));
+      final reopened = HomeRepositoryImpl(remote, HomeLocalDataSource(storage));
       expect(reopened.selectedCircle('account-a'), 'circle-id');
       expect(reopened.selectedCircle('account-b'), isNull);
       expect(storage.values.values, ['circle-id']);

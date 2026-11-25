@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/appointments/presentation/cubit/appointments_state.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_loading.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _Appointments extends Fake implements AppointmentsRepositoryDomain {
+class _Appointments extends Fake implements AppointmentsRepository {
   final StreamController<String> changed = StreamController<String>.broadcast();
 
   /// When true, every read fails as offline.

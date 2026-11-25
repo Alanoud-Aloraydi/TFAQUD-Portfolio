@@ -1,4 +1,4 @@
-import 'package:app/features/medications/domain/dose_retention.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';

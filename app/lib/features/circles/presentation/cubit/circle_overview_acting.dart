@@ -1,9 +1,8 @@
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/presentation/cubit/circle_overview_loading.dart';
-import 'package:app/features/circles/presentation/cubit/circle_overview_scope.dart';
+import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
+import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';

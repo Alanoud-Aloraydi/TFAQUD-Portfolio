@@ -1,12 +1,11 @@
 import 'dart:ui';
 
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/calendar_month.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/presentation/widgets/chart_hit.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/presentation/widgets/chart_legend.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
-import 'package:app/features/measurements/presentation/widgets/chart_zoom.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// [year]'s Gregorian [month], as the chart reads it.

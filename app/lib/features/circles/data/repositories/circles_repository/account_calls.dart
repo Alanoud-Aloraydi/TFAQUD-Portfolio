@@ -1,8 +1,8 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// Reading the signed-in account and a circle's overview, and deleting the
 /// account.
-mixin _AccountCalls implements CirclesRepositoryDomain {
+mixin _AccountCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
 
   @override

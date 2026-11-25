@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:flutter/widgets.dart';
 
 /// The calendar chosen in «حسابي», above every page: a date written under

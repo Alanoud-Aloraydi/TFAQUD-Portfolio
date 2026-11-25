@@ -5,6 +5,3 @@
 #
 # rule  path  size
 
-size lib/core/network/api_error_body.dart 91
-size lib/features/appointments/presentation/widgets/appointment_record_section.dart 72
-size lib/features/measurements/presentation/widgets/measurement_record_section.dart 78

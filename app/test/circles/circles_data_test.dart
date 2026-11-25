@@ -1,33 +1,28 @@
-import 'package:app/core/di/configure_dependencies.dart';
+import 'package:app/app/bootstrap.dart';
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
-import 'package:app/core/errors/network_failures.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
 import 'package:app/features/circles/data/datasources/device_zone.dart';
-import 'package:app/features/circles/data/models/account_model.dart';
-import 'package:app/features/circles/data/models/circle_model.dart';
+import 'package:app/features/circles/data/models/circle_overview_model.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/data/models/new_patient_circle_model.dart';
-import 'package:app/features/circles/data/models/new_self_circle_model.dart';
-import 'package:app/features/circles/data/repositories/circles_repository_data.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
-import 'package:app/features/circles/domain/entities/account_deletion.dart';
-import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
+import 'package:app/features/circles/domain/entities/account_summary.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
 import 'package:app/features/circles/domain/entities/new_self_circle.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
-import 'package:app/features/circles/domain/entities/received_invitation.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/domain/request_age.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/entities/request_age.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -690,13 +685,13 @@ void main() {
       });
     });
 
-    group('CirclesRepositoryData', () {
+    group('CirclesRepositoryImpl', () {
       late _Remote remote;
-      late CirclesRepositoryData repository;
+      late CirclesRepositoryImpl repository;
 
       setUp(() {
         remote = _Remote();
-        repository = CirclesRepositoryData(
+        repository = CirclesRepositoryImpl(
           remote,
           const _Zone('Europe/London'),
         );

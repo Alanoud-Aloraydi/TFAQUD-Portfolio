@@ -1,11 +1,7 @@
-export 'package:app/features/circles/data/models/emergency_card_model.dart';
-export 'package:app/features/circles/data/models/emergency_contact_model.dart';
-export 'package:app/features/circles/data/models/medical_profile_answer_model.dart';
-export 'package:app/features/circles/data/models/medical_profile_json.dart';
-export 'package:app/features/circles/data/models/patient_update_model.dart';
+import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/time_zones.dart';
-import 'package:app/features/circles/data/models/medical_profile_json.dart';
-import 'package:app/features/circles/data/models/emergency_contacts_of.dart';
+import 'package:app/features/circles/domain/entities/emergency_card.dart';
+import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 
 /// The answer of GET /api/v1/circles/{id}/medical-profile.
@@ -48,5 +44,205 @@ class MedicalFileModel {
       int.parse(parts[1]),
       int.parse(parts[2]),
     );
+  }
+}
+
+/// The answer of PATCH /api/v1/circles/{id}/medical-profile:
+/// `{"medical_profile": {...}}`.
+class MedicalProfileAnswerModel {
+  const MedicalProfileAnswerModel(this._profile);
+
+  final MedicalProfileDraft _profile;
+
+  factory MedicalProfileAnswerModel.fromJson(Map<String, dynamic> json) {
+    return MedicalProfileAnswerModel(
+      MedicalProfileJson.fromJson(
+        json['medical_profile'] as Map<String, dynamic>,
+      ),
+    );
+  }
+
+  MedicalProfileDraft toEntity() => _profile;
+}
+
+/// The body of PUT /api/v1/circles/{id}/patient.
+class PatientUpdateModel {
+  const PatientUpdateModel(this._update);
+
+  final PatientUpdate _update;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'birth_date': apiDate(_update.birthDate),
+      'city': _update.city,
+      'first_name': ?_update.firstName,
+      'last_name': ?_update.lastName,
+      'latitude': _update.latitude,
+      'longitude': _update.longitude,
+      'time_zone': ?_update.timeZone,
+    };
+  }
+}
+
+/// One contact of the API: `{id, name, relation, relation_other,
+/// phone_number, verified, account}`.
+class EmergencyContactModel {
+  const EmergencyContactModel(this._entity);
+
+  final EmergencyContact _entity;
+
+  factory EmergencyContactModel.fromJson(Map<String, dynamic> json) {
+    return EmergencyContactModel(
+      EmergencyContact(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        relation: json['relation'] as String,
+        relationOther: json['relation_other'] as String?,
+        phoneNumber: json['phone_number'] as String,
+        verified: json['verified'] as bool? ?? false,
+        accountId:
+            (json['account'] as Map<String, dynamic>?)?['account_id']
+                as String?,
+        avatarCode:
+            (json['account'] as Map<String, dynamic>?)?['avatar_code']
+                as String?,
+      ),
+    );
+  }
+
+  /// Reads the answer of a call that adds or changes a contact:
+  /// `{"emergency_contact": {...}}`.
+  factory EmergencyContactModel.fromAnswer(Map<String, dynamic> json) {
+    return EmergencyContactModel.fromJson(
+      json['emergency_contact'] as Map<String, dynamic>,
+    );
+  }
+
+  EmergencyContact toEntity() => _entity;
+
+  /// The body of POST and PUT on the contacts.
+  static Map<String, dynamic> draftToJson(ContactDraft draft) {
+    return <String, dynamic>{
+      'name': draft.name,
+      'relation': draft.relation,
+      // Only with «أخرى»; the server refuses the words without it.
+      if (draft.relationOther != null) 'relation_other': draft.relationOther,
+      'phone_number': draft.phoneNumber,
+    };
+  }
+}
+
+/// The answer of GET /api/v1/circles/{id}/emergency-card.
+class EmergencyCardModel {
+  const EmergencyCardModel(this._entity);
+
+  final EmergencyCard _entity;
+
+  factory EmergencyCardModel.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> card =
+        json['emergency_card'] as Map<String, dynamic>;
+    return EmergencyCardModel(
+      EmergencyCard(
+        firstName: card['first_name'] as String? ?? '',
+        lastName: card['last_name'] as String? ?? '',
+        profile: MedicalProfileJson.fromJson(card),
+        contacts: emergencyContactsOf(card['emergency_contacts']),
+      ),
+    );
+  }
+
+  EmergencyCard toEntity() => _entity;
+}
+
+/// The emergency contacts of an answer, in the order the server sent them;
+/// none when the answer carries none.
+List<EmergencyContact> emergencyContactsOf(Object? value) {
+  return <EmergencyContact>[
+    for (final Object? item in (value as List<dynamic>? ?? <dynamic>[]))
+      EmergencyContactModel.fromJson(item as Map<String, dynamic>).toEntity(),
+  ];
+}
+
+/// Reads and writes the health answers in the shape of the API
+/// (docs/api-contracts.md, "The medical file").
+abstract class MedicalProfileJson {
+  MedicalProfileJson._();
+
+  /// Reads the `medical_profile` object. A status of `unknown` gives a null
+  /// part, which is how the app writes "nobody answered yet".
+  static MedicalProfileDraft fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic>? conditions =
+        json['conditions'] as Map<String, dynamic>?;
+    final Map<String, dynamic>? allergies =
+        json['allergies'] as Map<String, dynamic>?;
+    return MedicalProfileDraft(
+      bloodType: json['blood_type'] as String?,
+      conditions: conditions == null ? null : _conditions(conditions),
+      allergies: allergies == null ? null : _allergies(allergies),
+    );
+  }
+
+  static ConditionsDraft? _conditions(Map<String, dynamic> json) {
+    switch (json['status']) {
+      case 'none':
+        return const ConditionsDraft.none();
+      case 'listed':
+        return ConditionsDraft.listed(
+          codes: _strings(json['codes']),
+          other: json['other'] as String?,
+        );
+      default:
+        return null;
+    }
+  }
+
+  static AllergiesDraft? _allergies(Map<String, dynamic> json) {
+    switch (json['status']) {
+      case 'none':
+        return const AllergiesDraft.none();
+      case 'listed':
+        return AllergiesDraft.listed(
+          medication: _strings(json['medication']),
+          otherMedication: json['other_medication'] as String?,
+          food: _strings(json['food']),
+          otherFood: json['other_food'] as String?,
+        );
+      default:
+        return null;
+    }
+  }
+
+  static List<String> _strings(Object? value) {
+    return <String>[
+      for (final Object? item in (value as List<dynamic>? ?? <dynamic>[]))
+        item as String,
+    ];
+  }
+
+  /// The body of PATCH /api/v1/circles/{id}/medical-profile. Every part is
+  /// sent: a part with no answer is sent as `null`, which clears it back to
+  /// "unknown" on the server.
+  static Map<String, dynamic> toPatchJson(MedicalProfileDraft profile) {
+    final ConditionsDraft? conditions = profile.conditions;
+    final AllergiesDraft? allergies = profile.allergies;
+    return <String, dynamic>{
+      'blood_type': profile.bloodType,
+      'conditions': conditions == null
+          ? null
+          : <String, dynamic>{
+              'status': conditions.answer.name,
+              'codes': conditions.codes,
+              'other': conditions.other,
+            },
+      'allergies': allergies == null
+          ? null
+          : <String, dynamic>{
+              'status': allergies.answer.name,
+              'medication': allergies.medication,
+              'other_medication': allergies.otherMedication,
+              'food': allergies.food,
+              'other_food': allergies.otherFood,
+            },
+    };
   }
 }

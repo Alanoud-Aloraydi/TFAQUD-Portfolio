@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:app/core/services/shown_circle_clock.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
-import 'package:app/features/home/presentation/cubit/home_circle_selection.dart';
-import 'package:app/features/home/presentation/cubit/home_loaded.dart';
-import 'package:app/features/home/presentation/cubit/home_loading.dart';
-import 'package:app/features/home/presentation/cubit/home_scope.dart';
-import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:app/app/services/shown_circle_clock.dart';
+import 'package:app/core/errors/auth_failures.dart';
+import 'package:app/features/home/domain/entities/home_entity.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
+import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';
 import 'package:flutter/foundation.dart' show Listenable;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,8 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// [shownClock], when given, follows the selected circle, so every page
 /// reads that patient's clock (see [ShownCircleClock]).
-class HomeCubit extends Cubit<HomeState>
-    with HomeScope, HomeLoaded, HomeLoading, HomeCircleSelection {
+class HomeCubit extends Cubit<HomeState> {
   HomeCubit(this.home, [Listenable? photoChanges, this._shownClock])
     : _photoChanges = photoChanges,
       super(const HomeState()) {
@@ -25,7 +22,6 @@ class HomeCubit extends Cubit<HomeState>
     _photoChanges?.addListener(_onPhotoChanged);
   }
 
-  @override
   final HomeUseCase home;
 
   final Listenable? _photoChanges;
@@ -47,5 +43,124 @@ class HomeCubit extends Cubit<HomeState>
     _photoChanges?.removeListener(_onPhotoChanged);
     await _changes.cancel();
     return super.close();
+  }
+
+  /// Counts the reads of the home data; only the newest one is shown.
+  int revision = 0;
+
+  Future<void> showLoaded(
+    HomeEntity data,
+    int revision,
+    String? preferred,
+  ) async {
+    if (!data.profileComplete) {
+      emit(const HomeState(status: HomeStatus.onboarding));
+      return;
+    }
+    final saved = home.selectedCircle(data.accountId);
+    bool inList(String? id) =>
+        id != null && data.circles.any((circle) => circle.id == id);
+    // The circle asked for, then the saved one, then the first of the list.
+    final selected = inList(preferred)
+        ? preferred
+        : inList(saved)
+        ? saved
+        : data.circles.firstOrNull?.id;
+    if (selected != null && selected != saved) {
+      // A preference write failure must not hide authorized circles.
+      await home.selectCircle(data.accountId, selected);
+      if (isClosed || revision != this.revision) return;
+    }
+    emit(
+      HomeState(
+        status: HomeStatus.ready,
+        data: data,
+        selectedCircleId: selected,
+      ),
+    );
+  }
+
+  /// Loads the home data and shows the loading page first. [select] is a
+  /// circle to select once the data arrives, when it is in the list.
+  Future<void> load({String? select}) async {
+    final revision = ++this.revision;
+    emit(const HomeState());
+    final result = await home.getHome();
+    if (isClosed || revision != this.revision) return;
+    await result.when((data) => showLoaded(data, revision, select), (
+      failure,
+    ) async {
+      final ended =
+          failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+      emit(
+        HomeState(
+          status: ended ? HomeStatus.signIn : HomeStatus.failure,
+          messageKey: failure.messageKey,
+        ),
+      );
+    });
+  }
+
+  /// Loads the home data again without leaving the screen the user is on.
+  /// [load] shows the loading page first, so it is only used for the first
+  /// load and for a retry. This one is used when the app comes back to the
+  /// front and when the list of circles changes: the tabs, the forms and the
+  /// selected circle stay as they are until the new data arrives.
+  ///
+  /// A failure keeps what is on screen, except when the server says the
+  /// sign-in ended. [select] is a circle to select once the data arrives.
+  Future<void> refresh({String? select}) async {
+    if (state.status != HomeStatus.ready) {
+      await load(select: select);
+      return;
+    }
+    final revision = ++this.revision;
+    final result = await home.getHome();
+    if (isClosed || revision != this.revision) return;
+    await result.when((data) => showLoaded(data, revision, select), (
+      failure,
+    ) async {
+      final ended =
+          failure is UnauthorizedFailure || failure is SessionExpiredFailure;
+      if (ended) {
+        emit(
+          HomeState(status: HomeStatus.signIn, messageKey: failure.messageKey),
+        );
+      }
+    });
+  }
+
+  bool _selecting = false;
+
+  Future<void> selectCircle(String id) async {
+    final data = state.data;
+    if (_selecting ||
+        data == null ||
+        state.selectedCircleId == id ||
+        !data.circles.any((circle) => circle.id == id)) {
+      return;
+    }
+    _selecting = true;
+    final revision = this.revision;
+    final result = await home.selectCircle(data.accountId, id);
+    _selecting = false;
+    if (isClosed || revision != this.revision) return;
+    result.when(
+      (_) {
+        emit(
+          HomeState(status: HomeStatus.ready, data: data, selectedCircleId: id),
+        );
+      },
+      (failure) {
+        emit(
+          HomeState(
+            status: HomeStatus.ready,
+            data: data,
+            selectedCircleId: state.selectedCircleId,
+            messageKey: failure.messageKey,
+          ),
+        );
+      },
+    );
   }
 }

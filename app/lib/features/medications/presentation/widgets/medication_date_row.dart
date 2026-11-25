@@ -1,7 +1,7 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
+import 'package:app/core/widgets/pickers/date_wheel_choice.dart';
 import 'package:flutter/material.dart';
 
 class MedicationDateRow extends StatelessWidget {

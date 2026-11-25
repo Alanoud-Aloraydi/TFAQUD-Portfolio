@@ -1,5 +1,5 @@
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_earlier.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// What a doses cubit is pointed at: the circle, the range of the patient's

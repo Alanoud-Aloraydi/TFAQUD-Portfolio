@@ -1,19 +1,15 @@
-import '../support/normal_ranges.dart';
-import '../support/widget_harness.dart';
-
 import 'dart:async';
 
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
-import 'package:app/features/measurements/domain/repositories/measurement_repository.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/domain/measurement_plan_draft.dart';
-import 'package:app/features/measurements/domain/measurement_version.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan_draft.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
-import 'package:app/features/measurements/presentation/pages/measurement_plan_form_page.dart';
+import 'package:app/features/measurements/presentation/pages/measurement_plan_form_filling.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,8 +17,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
+import '../support/normal_ranges.dart';
+import '../support/widget_harness.dart';
+
 /// No plans yet; remembers the plans the form saves.
-class _Measurements extends Fake implements MeasurementRepository {
+class _Measurements extends Fake implements MeasurementsRepository {
   final List<MeasurementPlanDraft> created = <MeasurementPlanDraft>[];
 
   @override
@@ -65,8 +64,8 @@ void main() {
   Future<_Measurements> open(WidgetTester tester) async {
     final _Measurements repository = _Measurements();
     // The form reads the normal ranges itself.
-    GetIt.I.registerSingleton<MeasurementRepository>(repository);
-    addTearDown(() => GetIt.I.unregister<MeasurementRepository>());
+    GetIt.I.registerSingleton<MeasurementsRepository>(repository);
+    addTearDown(() => GetIt.I.unregister<MeasurementsRepository>());
     final MeasurementPlansCubit cubit = MeasurementPlansCubit(
       MeasurementsUseCase(repository),
     );

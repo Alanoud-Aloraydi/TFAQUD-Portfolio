@@ -1,7 +1,7 @@
 import 'dart:io' show zlib;
 import 'dart:typed_data';
 
-import 'package:app/core/media/png_encoder.dart';
+import 'package:app/core/media/photo_viewer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 64 x 48 pixels with every channel changing, and some see-through ones.

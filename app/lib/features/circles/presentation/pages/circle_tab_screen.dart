@@ -1,11 +1,11 @@
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/widgets/layout/refresh_scope.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/circle_content.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
-import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

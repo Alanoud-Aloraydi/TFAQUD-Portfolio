@@ -1,4 +1,4 @@
-import 'package:app/features/appointments/domain/visit_paper.dart';
+import 'package:app/features/appointments/domain/entities/visit_paper.dart';
 import 'package:equatable/equatable.dart';
 
 /// What the visit page shows, including the recording in progress.

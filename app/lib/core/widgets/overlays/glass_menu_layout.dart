@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/overlays/glass_menu_entry.dart';
 import 'package:flutter/material.dart';
 
 /// Where the open glass menu sits and how big it is, for the room the page
@@ -80,4 +79,19 @@ class GlassMenuLayout {
 
   /// The menu's rectangle once fully open.
   final Rect target;
+}
+
+/// A row as the menu draws it, without its type.
+class GlassMenuEntry {
+  const GlassMenuEntry({
+    required this.value,
+    required this.label,
+    this.icon,
+    this.selected = false,
+  });
+
+  final Object? value;
+  final String label;
+  final IconData? icon;
+  final bool selected;
 }

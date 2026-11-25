@@ -1,8 +1,9 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
+import 'package:app/core/widgets/loading/skeleton_form_group.dart';
+import 'package:app/core/widgets/loading/skeleton_page.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/widgets/medication_form.dart';
-import 'package:app/features/medications/presentation/widgets/medication_form_skeleton.dart';
+import 'package:app/features/medications/presentation/widgets/medication_form_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +43,25 @@ class MedicationFormPage extends StatelessWidget {
           plan: plan,
         );
       },
+    );
+  }
+}
+
+/// The medicine form while the medicine loads for editing: its three
+/// grouped sections, as `FormGroup` draws them.
+class MedicationFormSkeleton extends StatelessWidget {
+  const MedicationFormSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonPage(
+      children: <Widget>[
+        SkeletonFormGroup(rows: 5),
+        SizedBox(height: AppSpacing.xl),
+        SkeletonFormGroup(rows: 2),
+        SizedBox(height: AppSpacing.xl),
+        SkeletonFormGroup(rows: 4),
+      ],
     );
   }
 }

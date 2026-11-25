@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/hijri/hijri_date.dart';
 import 'package:equatable/equatable.dart';
 

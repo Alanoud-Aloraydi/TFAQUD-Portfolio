@@ -1,0 +1,75 @@
+import 'package:app/core/localization/care_voice.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/utils/overdue_window.dart';
+import 'package:app/core/utils/schedule_day.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
+import 'package:flutter/material.dart';
+
+/// Selects medication occurrences for the Today view.
+class TodayMedicationView {
+  TodayMedicationView(List<DoseOccurrence> occurrences, DateTime now) {
+    final today = scheduleDay(now);
+    todayOccurrences =
+        occurrences
+            .where(
+              (item) =>
+                  item.scheduledOn.year == today.year &&
+                  item.scheduledOn.month == today.month &&
+                  item.scheduledOn.day == today.day,
+            )
+            .toList()
+          ..sort((a, b) => a.time.compareTo(b.time));
+    next = todayOccurrences.where((item) {
+      final status = medicationTimingState(item, now);
+      return status == DoseTimingState.upcoming ||
+          status == DoseTimingState.due ||
+          status == DoseTimingState.late;
+    }).firstOrNull;
+    attention =
+        occurrences.where((item) {
+          final status = medicationTimingState(item, now);
+          final scheduledOn = scheduleDay(item.scheduledOn);
+          return item != next &&
+              !scheduledOn.isAfter(today) &&
+              !scheduledOn.isBefore(overdueStart(today)) &&
+              item.record == null &&
+              status == DoseTimingState.missed;
+        }).toList()..sort((a, b) {
+          // «يحتاج انتباهك» reads from the oldest to the newest, so a new
+          // one joins at the end of the box instead of moving the rest.
+          final byDate = a.scheduledOn.compareTo(b.scheduledOn);
+          return byDate != 0 ? byDate : a.time.compareTo(b.time);
+        });
+  }
+
+  late final List<DoseOccurrence> todayOccurrences;
+  late final DoseOccurrence? next;
+  late final List<DoseOccurrence> attention;
+}
+
+/// What the Today card calls its dose: «حان موعد», «تأخّرت», or the next
+/// one due, in the words of whoever is reading.
+class TodayDoseTitle extends StatelessWidget {
+  const TodayDoseTitle({
+    super.key,
+    required this.status,
+    required this.circleId,
+  });
+
+  final DoseTimingState? status;
+  final String circleId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      CareVoice.tr(context, circleId, switch (status) {
+        DoseTimingState.due => 'today_dashboard.due_title',
+        DoseTimingState.late => 'today_dashboard.late_title',
+        _ => 'today_dashboard.next_dose',
+      }),
+      style: Theme.of(context).textTheme.labelMedium
+          ?.copyWith(color: AppSemanticColors.textSupporting),
+    );
+  }
+}

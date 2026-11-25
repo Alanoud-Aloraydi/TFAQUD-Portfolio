@@ -1,16 +1,14 @@
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
-import 'package:app/core/errors/network_failures.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
 import 'package:app/features/circles/data/datasources/device_zone.dart';
-import 'package:app/features/circles/data/repositories/circles_repository_data.dart';
+import 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
-import 'package:app/features/circles/domain/entities/patient_update.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -144,11 +142,11 @@ const ContactDraft _draft = ContactDraft(
 
 void main() {
   late _Remote remote;
-  late CirclesRepositoryData repository;
+  late CirclesRepositoryImpl repository;
 
   setUp(() {
     remote = _Remote();
-    repository = CirclesRepositoryData(remote, const _Zone());
+    repository = CirclesRepositoryImpl(remote, const _Zone());
   });
 
   group('the entities', () {
@@ -189,7 +187,7 @@ void main() {
     });
   });
 
-  group('CirclesRepositoryData, the medical file', () {
+  group('CirclesRepositoryImpl, the medical file', () {
     test('reads the file', () async {
       final result = await repository.getMedicalFile('c-1');
 
@@ -244,7 +242,7 @@ void main() {
     }
   });
 
-  group('CirclesRepositoryData, the emergency contacts', () {
+  group('CirclesRepositoryImpl, the emergency contacts', () {
     test('adds a contact', () async {
       final result = await repository.addContact('c-1', _draft);
 
@@ -296,7 +294,7 @@ void main() {
     });
   });
 
-  group('CirclesRepositoryData, the emergency card', () {
+  group('CirclesRepositoryImpl, the emergency card', () {
     test('reads the card', () async {
       final result = await repository.getEmergencyCard('c-1');
 

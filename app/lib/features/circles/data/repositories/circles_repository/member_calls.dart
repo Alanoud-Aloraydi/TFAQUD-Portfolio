@@ -1,8 +1,8 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// The circle's name, what a member may edit, who leads the circle, and
 /// leaving it.
-mixin _MemberCalls implements CirclesRepositoryDomain {
+mixin _MemberCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
 
   @override
