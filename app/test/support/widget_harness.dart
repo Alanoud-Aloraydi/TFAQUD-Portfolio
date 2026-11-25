@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/utils/patient_clock.dart';

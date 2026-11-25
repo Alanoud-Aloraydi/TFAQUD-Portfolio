@@ -1,7 +1,7 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'dart:ui' show ImageFilter;
+
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
-import 'package:app/core/widgets/overlays/glass_menu_anchor_layer.dart';
-import 'package:app/core/widgets/overlays/glass_menu_blur.dart';
 import 'package:app/core/widgets/overlays/glass_menu_layout.dart';
 import 'package:app/core/widgets/overlays/glass_menu_motion.dart';
 import 'package:flutter/material.dart';
@@ -87,4 +87,13 @@ class GlassMenuSurface extends StatelessWidget {
       },
     );
   }
+}
+
+/// [child] blurred by [sigma]; unchanged when the blur would not show.
+Widget glassMenuBlurred(double sigma, Widget child) {
+  if (sigma < 0.2) return child;
+  return ImageFiltered(
+    imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+    child: child,
+  );
 }

@@ -1,6 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/error_toast.dart';
 import 'package:app/features/medications/presentation/widgets/medication_effective_date_group.dart';
-import 'package:app/features/medications/presentation/widgets/medication_form_footer.dart';
 import 'package:app/features/medications/presentation/widgets/medication_form_medicine.dart';
 import 'package:app/features/medications/presentation/widgets/medication_form_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_instructions_group.dart';
@@ -54,4 +54,20 @@ class MedicationFormBody extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The end of the medication form. Why it could not be saved ([errorKey])
+/// is a toast: a refusal of a field is said under that field. Stopping a
+/// medicine is not here: it is in the medicine's details on its card, with
+/// the stop of a measurement plan and the cancel of a visit.
+class MedicationFormFooter extends StatelessWidget {
+  const MedicationFormFooter({super.key, this.errorKey});
+
+  final String? errorKey;
+
+  @override
+  Widget build(BuildContext context) => ErrorToast(
+    errorKey: errorKey,
+    child: const SizedBox(height: AppSpacing.xl),
+  );
 }

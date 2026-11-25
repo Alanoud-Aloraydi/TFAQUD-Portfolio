@@ -1,8 +1,8 @@
-import 'package:app/core/l10n/app_calendar.dart';
-import 'package:app/core/l10n/calendar_texts.dart';
+import 'package:app/core/localization/app_calendar.dart';
+import 'package:app/core/localization/calendar_texts.dart';
 import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/features/account/presentation/widgets/account_calendar_card.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_tile.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

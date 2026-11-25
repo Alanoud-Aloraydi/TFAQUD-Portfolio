@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
+import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:flutter/cupertino.dart';
 
 /// One wheel. It keeps its own scroll controller, so the wheel being turned

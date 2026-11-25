@@ -1,14 +1,12 @@
-import 'package:app/features/medications/domain/entities/dose_unit.dart';
+import 'package:app/features/medications/domain/entities/dosage_form.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/schedule_repeat.dart';
 import 'package:equatable/equatable.dart';
 
 export 'package:app/features/medications/domain/entities/dosage_form.dart';
-export 'package:app/features/medications/domain/entities/dosage_form_unit.dart';
-export 'package:app/features/medications/domain/entities/dose_unit.dart';
-export 'package:app/features/medications/domain/entities/dose_unit_value.dart';
+export 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 export 'package:app/features/medications/domain/entities/medication_schedule_draft.dart';
 export 'package:app/features/medications/domain/entities/schedule_repeat.dart';
-export 'package:app/features/medications/domain/entities/strength_unit.dart';
 
 /// «نذكرك كل … يوم»: from every day to every 90 days, as the server allows.
 const int maxIntervalDays = 90;
@@ -59,4 +57,36 @@ class MedicationSchedule extends Equatable {
     monthDays,
     intervalDays,
   ];
+}
+
+enum StrengthUnit {
+  milligram('mg'),
+  microgram('mcg'),
+  milligramPerMilliliter('mg/mL'),
+  milligramPerFiveMilliliters('mg/5mL'),
+  microgramPerDose('mcg/dose'),
+  unitPerMilliliter('unit/mL'),
+  percent('%');
+
+  const StrengthUnit(this.apiValue);
+
+  final String apiValue;
+
+  static StrengthUnit fromApi(String value) =>
+      values.firstWhere((unit) => unit.apiValue == value);
+}
+
+/// Adds dosage form unit helpers to its target type.
+extension DosageFormUnit on DosageForm {
+  List<DoseUnit> get doseUnits => switch (this) {
+    DosageForm.tablet => const [DoseUnit.tablet],
+    DosageForm.capsule => const [DoseUnit.capsule],
+    DosageForm.liquid => const [DoseUnit.milliliter],
+    DosageForm.drops => const [DoseUnit.drop],
+    DosageForm.inhaler => const [DoseUnit.puff],
+    DosageForm.nebulizer => const [DoseUnit.milliliter],
+    DosageForm.injection => const [DoseUnit.milliliter, DoseUnit.unit],
+  };
+
+  DoseUnit get defaultDoseUnit => doseUnits.first;
 }

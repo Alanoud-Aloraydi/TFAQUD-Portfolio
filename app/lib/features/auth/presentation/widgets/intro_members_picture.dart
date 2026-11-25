@@ -1,10 +1,9 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/edit_access.dart';
-import 'package:app/features/circles/presentation/widgets/member_row_content.dart';
+import 'package:app/features/circles/presentation/widgets/member_open_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

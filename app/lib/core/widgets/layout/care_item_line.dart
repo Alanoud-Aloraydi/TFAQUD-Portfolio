@@ -1,5 +1,5 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// The laid-out line of a [CareItemHeader]: the time column, the kind icon,

@@ -1,17 +1,18 @@
+// Adds or edits a visit: its kind, clinic, date, time, place and companions.
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/appointments/presentation/pages/appointment_form_draft.dart';
+import 'package:app/features/appointments/presentation/cubit/appointments_loading.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_fields.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_saving.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_form_bar.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_form_body.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_form_missing.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Adds or edits a visit: its kind, clinic, date, time, place and companions.
 class AppointmentFormPage extends StatefulWidget {
   const AppointmentFormPage({
     super.key,
@@ -53,6 +54,38 @@ class _AppointmentFormPageState extends State<AppointmentFormPage>
         ),
       ),
       body: AppointmentFormBody(form: this, companions: companions),
+    );
+  }
+}
+
+/// The form page while the visit to edit is not in the list: loading, a
+/// retry when the list failed, or that the visit is gone.
+class AppointmentFormMissing extends StatelessWidget {
+  const AppointmentFormMissing({
+    super.key,
+    required this.state,
+    required this.circleId,
+  });
+
+  final AppointmentsState state;
+  final String circleId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: switch (state.status) {
+          AppointmentsLoadStatus.initial ||
+          AppointmentsLoadStatus.loading => const LoadingNote(),
+          AppointmentsLoadStatus.failure => TextButton(
+            onPressed: () => context.read<AppointmentsCubit>().load(circleId),
+            child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+          ),
+          AppointmentsLoadStatus.ready => Text(
+            context.tr('error.resource_not_found'),
+          ),
+        },
+      ),
     );
   }
 }

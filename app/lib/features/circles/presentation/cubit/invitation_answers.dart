@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
-import 'package:app/features/circles/domain/entities/received_invitation.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/presentation/cubit/inbox_busy.dart';
+import 'package:app/features/circles/domain/entities/received_circle_request.dart';
+import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_loading.dart';
-import 'package:app/features/circles/presentation/cubit/inbox_scope.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

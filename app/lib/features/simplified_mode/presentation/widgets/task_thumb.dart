@@ -1,8 +1,8 @@
 import 'package:app/core/theme/care_visuals.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/care_icon_tile.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/measurement_icon.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/measurement_verdict.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:flutter/material.dart';
 

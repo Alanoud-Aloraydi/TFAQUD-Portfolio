@@ -1,7 +1,7 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// Reading the medical file and saving the patient's part of it.
-mixin _MedicalFileCalls implements CirclesRepositoryDomain {
+mixin _MedicalFileCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
 
   @override

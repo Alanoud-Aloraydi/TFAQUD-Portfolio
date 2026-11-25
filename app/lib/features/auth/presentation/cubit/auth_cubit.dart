@@ -1,10 +1,6 @@
 import 'package:app/core/errors/storage_failures.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
-import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_initial_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_loading_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_signed_out_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_state.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Signs the person out. The page listens for [AuthSignedOutState] and goes
@@ -33,3 +29,40 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 }
+
+/// Nothing was asked yet.
+class AuthInitialState extends AuthState {}
+
+/// The tokens are gone from this phone. The screen goes to the welcome page.
+class AuthSignedOutState extends AuthState {
+  const AuthSignedOutState({this.serverConfirmed = true});
+
+  /// False when the server could not be reached: the person is out of this
+  /// phone, and the page says the server may still hold the session.
+  final bool serverConfirmed;
+
+  @override
+  List<Object?> get props => [serverConfirmed];
+}
+
+/// The tokens could not be removed from this phone.
+class AuthErrorState extends AuthState {
+  const AuthErrorState({required this.messageKey});
+
+  /// A key in assets/translations, never a text from the server.
+  final String messageKey;
+
+  @override
+  List<Object?> get props => [messageKey];
+}
+
+/// State of the sign-out row.
+abstract class AuthState extends Equatable {
+  const AuthState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// The sign-out is running.
+class AuthLoadingState extends AuthState {}

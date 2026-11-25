@@ -1,9 +1,9 @@
 import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/network/medication_endpoints.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
-import 'package:app/core/theme/app_settings_tile_colors.dart';
-import 'package:app/core/network/medication_endpoints.dart';
 
 /// A medicine's photo, the way the patient recognises it, opening full
 /// screen on a tap as in the detailed mode; while it has none, the

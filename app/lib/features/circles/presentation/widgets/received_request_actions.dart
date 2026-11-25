@@ -1,4 +1,4 @@
-import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';

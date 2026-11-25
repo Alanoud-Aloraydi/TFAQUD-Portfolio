@@ -1,3 +1,4 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/inline_error.dart';
@@ -5,8 +6,6 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
 import 'package:app/features/auth/presentation/widgets/code_resend_line.dart';
-import 'package:app/features/auth/presentation/widgets/code_routes.dart';
-import 'package:app/features/auth/presentation/widgets/edit_phone_button.dart';
 import 'package:app/features/auth/presentation/widgets/ltr_isolate.dart';
 import 'package:app/features/auth/presentation/widgets/otp_field.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -52,6 +51,30 @@ class CodeForm extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         CodeResendLine(resendSeconds: state.resendSeconds),
       ],
+    );
+  }
+}
+
+/// «تعديل الرقم» under the code page's title.
+class EditPhoneButton extends StatelessWidget {
+  const EditPhoneButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: AppSemanticColors.textPrimary,
+        padding: EdgeInsets.zero,
+        alignment: AlignmentDirectional.centerStart,
+      ),
+      child: Text(
+        context.tr('auth.edit_phone'),
+        style: Theme.of(context).textTheme.labelLarge
+            ?.copyWith(color: AppSemanticColors.textPrimary),
+      ),
     );
   }
 }

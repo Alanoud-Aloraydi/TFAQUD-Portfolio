@@ -1,9 +1,8 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A phone-style keypad: 1 to 9, then 0 and «حذف», drawn as the delete
 /// key every phone keyboard has (⌫), not as an arrow that reads «رجوع».

@@ -1,17 +1,17 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/app/router/care_item_routes.dart';
+import 'package:app/core/localization/medication_format.dart';
+import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/layout/plan_item_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/plan_status_badge.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/domain/measurement_plan_condition.dart';
-import 'package:app/features/measurements/domain/measurement_plan_start.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_details.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_edit_action.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_pending_note.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_plan_form_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// One measurement plan as a plan card: its kind and status with the
 /// pencil, a change waiting for later, and «تفاصيل القياس» with its times,
@@ -68,3 +68,18 @@ class MeasurementPlanCard extends StatelessWidget {
     );
   }
 }
+
+/// The pencil of a measurement plan card, to its form; none for someone who
+/// cannot manage the plans.
+EditAction? measurementPlanEditAction(
+  BuildContext context, {
+  required bool canManage,
+  required String circleId,
+  required String planId,
+}) => canManage
+    ? EditAction.pen(
+        onPressed: () =>
+            context.push(CareItemRoutes.editMeasurement(circleId, planId)),
+        tooltip: context.tr('measurements.edit_plan'),
+      )
+    : null;

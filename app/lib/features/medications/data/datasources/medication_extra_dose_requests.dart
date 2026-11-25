@@ -1,7 +1,7 @@
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/network/medication_endpoints.dart';
 import 'package:app/core/utils/api_date.dart';
-import 'package:app/features/medications/data/models/extra_dose_model.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/extra_dose.dart';
 
 /// The requests of «سجّل جرعة الآن»: recording an extra dose, and those of
@@ -43,3 +43,29 @@ mixin MedicationExtraDoseRequests {
         .toList();
   }
 }
+
+/// One extra dose of the API: `{id, plan_id, taken_at, dose_value,
+/// dose_unit, recorded_at, recorded_by}`.
+ExtraDose extraDoseFromJson(Map<String, dynamic> json) {
+  final recordedBy = json['recorded_by'] as Map<String, dynamic>?;
+  final String unit = json['dose_unit'] as String;
+  return ExtraDose(
+    id: json['id'] as String,
+    planId: json['plan_id'] as String,
+    takenAt: DateTime.parse(json['taken_at'] as String).toLocal(),
+    doseValue: double.parse(json['dose_value'] as String),
+    doseUnit: unit == 'mL' ? DoseUnit.milliliter : DoseUnit.values.byName(unit),
+    recordedByAccountId: recordedBy?['account_id'] as String?,
+    recordedByName: recordedBy?['name'] as String?,
+    recordedByAvatarCode: recordedBy?['avatar_code'] as String?,
+  );
+}
+
+/// The body of `POST medication-extra-doses`: the time in UTC, the dose as
+/// a number, as a dose time sends it.
+Map<String, Object?> extraDoseDraftToJson(ExtraDoseDraft draft) => {
+  'plan_id': draft.planId,
+  'taken_at': draft.takenAt.toUtc().toIso8601String(),
+  'dose_value': draft.doseValue,
+  'dose_unit': draft.doseUnit.apiValue,
+};

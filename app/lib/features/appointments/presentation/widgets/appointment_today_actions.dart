@@ -1,17 +1,16 @@
+import 'package:app/app/router/care_item_routes.dart';
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/components/task_button_role.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/buttons/task_button.dart';
-import 'package:app/core/widgets/buttons/task_button_grid.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_attend_button.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_status_change.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_form_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app/core/navigation/care_item_routes.dart';
 
 /// What an open visit asks, in the buttons every task shares, wherever it
 /// shows on «اليوم» (its row, the top card, «يحتاج انتباهك»): «حضرت»

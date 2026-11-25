@@ -2,7 +2,6 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/core/widgets/forms/labeled_text_field.dart';
 import 'package:app/core/widgets/overlays/choice_row.dart';
-import 'package:app/core/widgets/overlays/skip_reason_option.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -75,3 +74,15 @@ class _SkipReasonBodyState extends State<SkipReasonBody> {
     ));
   }
 }
+
+/// One reason of a [showSkipReasonSheet]: its API code and its words.
+class SkipReasonOption {
+  const SkipReasonOption(this.code, this.label);
+
+  final String code;
+  final String label;
+}
+
+/// What the person chose: the reason's code (null for none) and, for
+/// «سبب آخر» (`other`), what they typed.
+typedef SkipReasonChoice = ({String? code, String? note});

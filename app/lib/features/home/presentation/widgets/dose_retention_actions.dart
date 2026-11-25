@@ -1,10 +1,10 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/home/presentation/cubit/dose_retention_cubit.dart';
-import 'package:app/features/home/presentation/widgets/record_export_sheet.dart';
+import 'package:app/features/home/presentation/widgets/record_header.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
-import 'package:app/features/medications/domain/dose_retention.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

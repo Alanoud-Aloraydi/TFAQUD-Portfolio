@@ -1,0 +1,98 @@
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_version.dart';
+import 'package:app/features/measurements/domain/entities/normal_band.dart';
+import 'package:equatable/equatable.dart';
+
+export 'package:app/features/measurements/domain/entities/measurement_version.dart';
+export 'package:app/features/measurements/domain/entities/normal_band.dart';
+
+/// One kind's range with its four bands, low first.
+class NormalRange extends Equatable {
+  const NormalRange({
+    required this.kind,
+    required this.profile,
+    required this.bands,
+    this.state,
+  });
+
+  final MeasurementKind kind;
+  final String profile;
+  final String? state;
+  final List<NormalBand> bands;
+
+  /// The band of [level].
+  NormalBand band(MeasurementLevel level) =>
+      bands.firstWhere((band) => band.level == level);
+
+  NormalBand get normal => band(MeasurementLevel.normal);
+
+  /// The level of a value, as the server judges it: the worse number of a
+  /// blood pressure decides, and high wins over low.
+  MeasurementLevel levelOf(int value, [int? diastolic]) {
+    if (kind == MeasurementKind.glucose) {
+      for (final NormalBand item in bands) {
+        if ((item.glucoseHigh ?? value) >= value) return item.level;
+      }
+      return MeasurementLevel.high;
+    }
+    final NormalBand high = band(MeasurementLevel.high);
+    final NormalBand low = band(MeasurementLevel.low);
+    final NormalBand normal = this.normal;
+    final int second = diastolic ?? 0;
+    if (value >= high.systolicLow! || second >= high.diastolicLow!) {
+      return MeasurementLevel.high;
+    }
+    if (value <= low.systolicHigh! || second <= low.diastolicHigh!) {
+      return MeasurementLevel.low;
+    }
+    if (value > normal.systolicHigh! || second > normal.diastolicHigh!) {
+      return MeasurementLevel.elevated;
+    }
+    return MeasurementLevel.normal;
+  }
+
+  factory NormalRange.fromJson(Map<String, dynamic> json) => NormalRange(
+    kind: json['kind'] == 'blood_pressure'
+        ? MeasurementKind.bp
+        : MeasurementKind.glucose,
+    profile: json['profile'] as String,
+    state: json['state'] as String?,
+    bands: [
+      for (final dynamic item in json['bands'] as List<dynamic>)
+        NormalBand.fromJson(item as Map<String, dynamic>),
+    ],
+  );
+
+  @override
+  List<Object?> get props => [kind, profile, state, bands];
+}
+
+/// The glucose table a meal state is read from: `fasting` for fasting or
+/// before a meal, else `after_meal` (after a meal, at bedtime, or none).
+String normalRangeState(String? state) =>
+    state == 'fasting' || state == 'before_meal' ? 'fasting' : 'after_meal';
+
+/// The range one reading is judged by: its table ([profile]: `general`,
+/// `diabetes` or `hypertension`), its meal state ([state]: `fasting` or
+/// `after_meal` for glucose, null for blood pressure) and its normal band.
+class ReadingRange extends Equatable {
+  const ReadingRange({required this.profile, required this.normal, this.state});
+
+  final String profile;
+  final String? state;
+  final NormalBand normal;
+
+  /// The `normal_range` of a reading; null for a skip, or from a server
+  /// before fixed ranges.
+  static ReadingRange? fromJson(Object? value) {
+    if (value is! Map<String, dynamic>) return null;
+    return ReadingRange(
+      profile: value['profile'] as String,
+      state: value['state'] as String?,
+      normal: NormalBand.fromJson(value, level: MeasurementLevel.normal),
+    );
+  }
+
+  @override
+  List<Object?> get props => [profile, state, normal];
+}

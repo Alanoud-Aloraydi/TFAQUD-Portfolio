@@ -1,7 +1,7 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medications_scope.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 

@@ -3,7 +3,7 @@ import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
-import 'package:app/features/simplified_mode/presentation/pages/schedule/simplified_schedule_card.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_schedule_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

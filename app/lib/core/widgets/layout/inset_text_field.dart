@@ -1,6 +1,6 @@
 import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/utils/text_limits.dart';
-import 'package:app/core/widgets/layout/inset_field_decoration.dart';
+import 'package:app/core/widgets/layout/inset_field_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

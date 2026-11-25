@@ -1,13 +1,11 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
-import 'package:app/features/circles/domain/request_age.dart';
-import 'package:app/features/circles/presentation/widgets/circle_request_avatar.dart';
+import 'package:app/features/circles/domain/entities/request_age.dart';
 import 'package:app/features/circles/presentation/widgets/invitation_actions.dart';
-import 'package:app/features/circles/presentation/widgets/invitation_sent_text.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -59,4 +57,18 @@ class CircleInvitationRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// «أُرسلت اليوم», «أُرسلت قبل يومين», «أُرسلت قبل 5 أيام»: Arabic counts
+/// the first two, the few and the many differently.
+String invitationSentText(BuildContext context, int days) {
+  if (days == 0) return context.tr('circle_overview.sent_today');
+  if (days == 1) return context.tr('circle_overview.sent_yesterday');
+  if (days == 2) return context.tr('circle_overview.sent_two_days');
+  return context.tr(
+    days <= 10
+        ? 'circle_overview.sent_days_few'
+        : 'circle_overview.sent_days_many',
+    args: <String>['$days'],
+  );
 }

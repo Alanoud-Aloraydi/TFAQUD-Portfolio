@@ -1,13 +1,11 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/widgets/layout/plan_item_card.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/plan_status_badge.dart';
+import 'package:app/features/medications/domain/entities/dosage_form.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/entities/medication_plan_status.dart';
 import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
-import 'package:app/features/medications/presentation/widgets/medication_edit_button.dart';
-import 'package:app/features/medications/presentation/widgets/medication_form_text.dart';
-import 'package:app/features/medications/presentation/widgets/medication_leading.dart';
+import 'package:app/features/medications/presentation/widgets/medication_dose_number.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_card_body.dart';
 import 'package:app/features/medications/presentation/widgets/medication_plan_details.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -64,6 +62,21 @@ class MedicationPlanCard extends StatelessWidget {
         canManage: canManage,
         today: today,
       ),
+    );
+  }
+}
+
+/// The form of a medicine (tablets, syrup, …) in small words under its name.
+class MedicationFormText extends StatelessWidget {
+  const MedicationFormText(this.form, {super.key});
+
+  final DosageForm form;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      context.tr('medications.form.${form.name}'),
+      style: Theme.of(context).textTheme.bodySmall,
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/plan_card_parts.dart';
-import 'package:app/core/widgets/layout/plan_item_details.dart';
 import 'package:app/core/widgets/layout/plan_item_frame.dart';
 import 'package:app/core/widgets/layout/plan_item_header.dart';
 import 'package:flutter/material.dart';

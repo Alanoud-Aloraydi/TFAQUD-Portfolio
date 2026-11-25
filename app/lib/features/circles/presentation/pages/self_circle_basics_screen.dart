@@ -3,7 +3,6 @@ import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/circles/presentation/widgets/account_load_failed.dart';
-import 'package:app/features/circles/presentation/widgets/circle_basics_error.dart';
 import 'package:app/features/circles/presentation/widgets/circle_basics_fields.dart';
 import 'package:app/features/circles/presentation/widgets/circle_basics_scaffold.dart';
 import 'package:app/features/circles/presentation/widgets/circle_name_chips.dart';

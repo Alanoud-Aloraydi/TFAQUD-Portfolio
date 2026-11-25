@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';

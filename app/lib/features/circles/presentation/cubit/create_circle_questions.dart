@@ -1,3 +1,4 @@
+import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 
 /// What the page asks, and what it already knows from the account.
@@ -37,3 +38,58 @@ extension CreateCircleQuestions on CreateCircleState {
   /// The patient's city, the same way. It also gives the patient's zone.
   String? get patientCity => ownBasicsSaved ? account!.city : city;
 }
+
+/// The same page with one answer changed; [clearError] drops the message of
+/// the try before it.
+extension CreateCircleCopy on CreateCircleState {
+  CreateCircleState copyWith({
+    AccountSummary? account,
+    AccountLoad? accountLoad,
+    NamePreset? namePreset,
+    String? customName,
+    String? patientFirstName,
+    String? patientLastName,
+    DateTime? birthDate,
+    String? city,
+    bool? showErrors,
+    CreateStatus? status,
+    String? errorKey,
+    bool clearError = false,
+    bool? sessionEnded,
+    bool? switchToSimplified,
+  }) {
+    return CreateCircleState(
+      account: account ?? this.account,
+      accountLoad: accountLoad ?? this.accountLoad,
+      namePreset: namePreset ?? this.namePreset,
+      customName: customName ?? this.customName,
+      patientFirstName: patientFirstName ?? this.patientFirstName,
+      patientLastName: patientLastName ?? this.patientLastName,
+      birthDate: birthDate ?? this.birthDate,
+      city: city ?? this.city,
+      showErrors: showErrors ?? this.showErrors,
+      status: status ?? this.status,
+      errorKey: clearError ? null : (errorKey ?? this.errorKey),
+      sessionEnded: sessionEnded ?? this.sessionEnded,
+      switchToSimplified: switchToSimplified ?? this.switchToSimplified,
+    );
+  }
+}
+
+/// What makes two [CreateCircleState]s equal: every field, in the order the
+/// class declares them.
+List<Object?> createCircleProps(CreateCircleState state) => <Object?>[
+  state.account,
+  state.accountLoad,
+  state.namePreset,
+  state.customName,
+  state.patientFirstName,
+  state.patientLastName,
+  state.birthDate,
+  state.city,
+  state.showErrors,
+  state.status,
+  state.errorKey,
+  state.sessionEnded,
+  state.switchToSimplified,
+];

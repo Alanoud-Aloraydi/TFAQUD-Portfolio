@@ -1,9 +1,11 @@
 import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_attention.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_attention_cards.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_attention_card.dart';
+import 'package:app/features/measurements/presentation/widgets/missed_measurement_card.dart';
+import 'package:app/features/measurements/presentation/widgets/outside_reading_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -49,4 +51,45 @@ class MeasurementAttentionSection extends StatelessWidget {
       child: cards,
     );
   }
+}
+
+/// The cards of the attention box, drawn as readings are in «السجل»:
+/// «سجّل» and «تخطي» for a missed task (only «تخطي» once the next task of
+/// its kind is due at [now], a wall time), «تابعتها» for a reading outside
+/// its normal range, with its value, level and range.
+List<Widget> measurementAttentionCards(
+  BuildContext context,
+  List<MeasurementOccurrence> missed,
+  List<MeasurementReading> outside, {
+  required DateTime now,
+  String? circleId,
+}) => <Widget>[
+  for (final MeasurementOccurrence task in missed)
+    MissedMeasurementCard(task: task, now: now, circleId: circleId),
+  for (final MeasurementReading reading in outside)
+    OutsideReadingCard(reading: reading),
+];
+
+/// Which readings «السجل» shows: every kind, or one of them.
+enum MeasurementRecordFilter {
+  all,
+  glucose,
+  bp;
+
+  /// The kind this filter keeps; null for [all].
+  MeasurementKind? get kind => switch (this) {
+    all => null,
+    glucose => MeasurementKind.glucose,
+    bp => MeasurementKind.bp,
+  };
+
+  /// Whether a reading of [value] belongs in the list.
+  bool keeps(MeasurementKind value) => kind == null || kind == value;
+
+  /// The key of its words: «الكل», «سكر الدم», «ضغط الدم».
+  String get labelKey => switch (this) {
+    all => 'measurements.all',
+    glucose => 'measurements.glucose',
+    bp => 'measurements.bp',
+  };
 }

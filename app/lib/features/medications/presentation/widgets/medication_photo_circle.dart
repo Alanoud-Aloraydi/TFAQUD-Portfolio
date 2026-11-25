@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/media/photo_crop_page.dart';
-import 'package:app/features/medications/presentation/widgets/medication_photo_builder.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// A medicine's photo in a circle of [size], or [fallback] while it has
@@ -45,5 +47,40 @@ class MedicationPhotoCircle extends StatelessWidget {
               ),
             ),
           ),
+  );
+}
+
+/// Displays the medication photo image UI.
+class MedicationPhotoImage extends StatelessWidget {
+  const MedicationPhotoImage({
+    super.key,
+    required this.bytes,
+    required this.height,
+    this.width = double.infinity,
+    this.radius = AppRadius.m,
+  });
+
+  final Uint8List bytes;
+  final double height;
+  final double width;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: () => openPhotoViewer(context, bytes),
+    child: Semantics(
+      button: true,
+      label: spoken(context.tr('photos.enlarge')),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Image.memory(
+          bytes,
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        ),
+      ),
+    ),
   );
 }

@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/widgets/forms/permission_denied_row.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/core/widgets/forms/permission_confirm.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 

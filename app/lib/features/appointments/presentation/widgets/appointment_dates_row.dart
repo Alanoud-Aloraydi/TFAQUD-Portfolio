@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
-import 'package:app/features/appointments/domain/appointment_days.dart';
+import 'package:app/core/widgets/pickers/date_wheel_choice.dart';
+import 'package:app/features/appointments/domain/entities/appointment_days.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_days_chips.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';

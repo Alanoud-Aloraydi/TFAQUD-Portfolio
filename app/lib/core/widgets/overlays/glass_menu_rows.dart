@@ -1,7 +1,7 @@
-import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/overlays/glass_menu_entry.dart';
+import 'package:app/core/widgets/overlays/glass_menu_layout.dart';
 import 'package:app/core/widgets/overlays/glass_menu_row.dart';
 import 'package:flutter/material.dart';
 

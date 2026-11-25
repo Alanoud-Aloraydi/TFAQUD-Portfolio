@@ -1,6 +1,9 @@
+import 'package:app/core/widgets/forms/labeled_text_field.dart';
+import 'package:app/features/circles/domain/entities/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:app/features/circles/presentation/widgets/medical_file_edit_body.dart';
-import 'package:app/features/circles/presentation/widgets/medical_form_fields.dart';
+import 'package:app/features/circles/presentation/widgets/medical_name_fields.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The fields and the save button. It is created once the file is loaded and
@@ -49,5 +52,30 @@ class _EditFormState extends State<MedicalFileEditForm> {
     fields: _fields,
     savedTo: widget.savedTo,
     fileRoute: widget.fileRoute,
+  );
+}
+
+/// The text under a group of chips that «أخرى» asks for. [invalid] marks it
+/// red once the person tried to save it empty.
+class MedicalOtherField extends StatelessWidget {
+  const MedicalOtherField({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+    required this.invalid,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final bool invalid;
+
+  @override
+  Widget build(BuildContext context) => LabeledTextField(
+    label: context.tr('circles.other_hint'),
+    controller: controller,
+    maxLength: MedicalOptions.otherMaxLength,
+    textInputAction: TextInputAction.done,
+    onChanged: onChanged,
+    errorText: invalid ? context.tr('common.field_required') : null,
   );
 }

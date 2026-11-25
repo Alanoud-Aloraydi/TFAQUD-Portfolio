@@ -1,8 +1,10 @@
+import 'package:app/core/media/person_photo_editor.dart';
+import 'package:app/core/network/account_endpoints.dart';
+import 'package:app/core/network/circle_endpoints.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/member_access_controls.dart';
-import 'package:app/features/circles/presentation/widgets/member_photo_path.dart';
 import 'package:app/features/circles/presentation/widgets/member_open_row.dart';
 import 'package:flutter/material.dart';
 
@@ -58,4 +60,18 @@ class CircleMemberRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Where a member's portrait is read from. A patient with their own account
+/// is one person with one photo, read through the account endpoint so the
+/// circle tab and the profile stay in sync.
+String memberPhotoPath(
+  CircleMember member, {
+  required String circleId,
+  required bool patientIsYou,
+}) {
+  if (!member.isPatient) return personPhotoPath(circleId, member.accountId);
+  return patientIsYou
+      ? AccountEndpoints.accountPhoto
+      : CircleEndpoints.patientPhoto(circleId);
 }

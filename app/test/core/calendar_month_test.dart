@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/utils/history_filter.dart';
 import 'package:flutter_test/flutter_test.dart';

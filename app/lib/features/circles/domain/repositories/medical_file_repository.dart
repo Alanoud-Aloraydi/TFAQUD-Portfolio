@@ -2,8 +2,6 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
-import 'package:app/features/circles/domain/entities/patient_update.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 /// The medical file of a circle, its emergency contacts, and the

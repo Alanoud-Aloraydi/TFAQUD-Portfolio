@@ -1,8 +1,6 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:app/features/measurements/presentation/widgets/calendar_day_dot.dart';
 import 'package:flutter/material.dart';
 
 /// One day of the month calendar: its number, a dot when it has readings
@@ -61,4 +59,26 @@ class CalendarDayCell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The dot under a calendar day that has readings: amber when any of them
+/// is outside the target, green when all are inside.
+class CalendarDayDot extends StatelessWidget {
+  const CalendarDayDot({super.key, required this.outside});
+
+  final bool outside;
+
+  static const double _size = 5;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: _size,
+    height: _size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: outside
+          ? AppSemanticColors.statusWarning
+          : AppSemanticColors.statusSuccess,
+    ),
+  );
 }

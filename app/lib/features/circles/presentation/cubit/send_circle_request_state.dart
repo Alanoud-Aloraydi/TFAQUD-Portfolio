@@ -1,10 +1,7 @@
-export 'package:app/features/circles/presentation/cubit/send_status.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/presentation/cubit/send_status.dart';
 import 'package:equatable/equatable.dart';
-export 'package:app/features/circles/presentation/cubit/send_circle_request_copy.dart';
 
 /// State of the page that asks a patient who uses the app for a circle (CREAT-04)
 /// and of the waiting state that replaces it once the request is sent (CREAT-05).
@@ -53,4 +50,30 @@ class SendCircleRequestState extends Equatable {
     sessionEnded,
     sent,
   ];
+}
+
+enum SendStatus { idle, sending, sent }
+
+/// The same page with some answers replaced.
+extension SendCircleRequestCopy on SendCircleRequestState {
+  SendCircleRequestState copyWith({
+    String? phone,
+    CircleAppMode? mode,
+    bool? showErrors,
+    SendStatus? status,
+    String? errorKey,
+    bool clearError = false,
+    bool? sessionEnded,
+    SentCircleRequest? sent,
+  }) {
+    return SendCircleRequestState(
+      phone: phone ?? this.phone,
+      mode: mode ?? this.mode,
+      showErrors: showErrors ?? this.showErrors,
+      status: status ?? this.status,
+      errorKey: clearError ? null : (errorKey ?? this.errorKey),
+      sessionEnded: sessionEnded ?? this.sessionEnded,
+      sent: sent ?? this.sent,
+    );
+  }
 }

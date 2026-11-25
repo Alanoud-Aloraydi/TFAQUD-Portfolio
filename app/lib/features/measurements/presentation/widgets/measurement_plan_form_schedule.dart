@@ -1,10 +1,12 @@
+import 'package:app/core/localization/calendar_texts.dart';
 import 'package:app/core/widgets/forms/missed_after_field.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/presentation/models/plan_schedule_draft.dart';
+import 'package:app/core/widgets/layout/plan_fact_group.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_version.dart';
+import 'package:app/features/measurements/presentation/cubit/plan_schedule_draft.dart';
 import 'package:app/features/measurements/presentation/widgets/plan_days_block.dart';
 import 'package:app/features/measurements/presentation/widgets/plan_reading_rows.dart';
-import 'package:app/features/measurements/presentation/widgets/plan_start_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -63,5 +65,24 @@ class MeasurementPlanFormSchedule extends StatelessWidget {
             onChanged(() => schedule.missedAfter = minutes),
       ),
     ],
+  );
+}
+
+/// «يسري التعديل من 9 نوفمبر 2026» (or Hijri, as chosen in «حسابي»): the
+/// change of a plan that waits for its day.
+class MeasurementPlanPendingNote extends StatelessWidget {
+  const MeasurementPlanPendingNote({super.key, required this.pending});
+
+  final MeasurementVersion pending;
+
+  @override
+  Widget build(BuildContext context) => PlanInfoBox(
+    emphasis: true,
+    child: Text(
+      context.tr(
+        'measurements.pending_change',
+        args: <String>[calendarDate(context, pending.effectiveFromOn)],
+      ),
+    ),
   );
 }

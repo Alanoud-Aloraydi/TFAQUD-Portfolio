@@ -1,10 +1,9 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
-import 'package:app/features/appointments/presentation/widgets/visit_audio_bars.dart';
-import 'package:app/features/appointments/presentation/widgets/visit_duration.dart';
+import 'package:app/features/appointments/presentation/widgets/visit_manage_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -38,5 +37,25 @@ Widget visitAudioRow(BuildContext context, VisitState state) => Material(
         Text(visitDuration(state.audioSeconds)),
       ],
     ),
+  ),
+);
+
+/// The still waveform beside the play button: 28 bars of fixed heights,
+/// a picture of a recording rather than a reading of one.
+Widget visitAudioBars() => Expanded(
+  child: Row(
+    children: [
+      for (var index = 0; index < 28; index++)
+        Expanded(
+          child: Container(
+            height: 6.0 + (index * 7 % 13),
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: AppSemanticColors.borderControlBase,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+    ],
   ),
 );

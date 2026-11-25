@@ -2,10 +2,9 @@ import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
-import 'package:app/features/circles/presentation/widgets/request_reply_row.dart';
-import 'package:app/features/circles/presentation/widgets/request_sender_row.dart';
+import 'package:app/features/circles/presentation/widgets/request_sent_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -58,6 +57,30 @@ class RequestDetails extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A label that fills the row, with a widget (such as a badge) at its end.
+class RequestReplyRow extends StatelessWidget {
+  const RequestReplyRow({super.key, required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.tokens.textSecondary),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }

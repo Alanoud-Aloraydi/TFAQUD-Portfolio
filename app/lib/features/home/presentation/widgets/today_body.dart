@@ -1,9 +1,8 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/section_header.dart';
-import 'package:app/features/home/presentation/today_prayer_day.dart';
-import 'package:app/features/home/presentation/today_snapshot.dart';
+import 'package:app/core/widgets/layout/section_title.dart';
 import 'package:app/features/home/presentation/widgets/today_attention.dart';
 import 'package:app/features/home/presentation/widgets/today_schedule.dart';
+import 'package:app/features/home/presentation/widgets/today_snapshot.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

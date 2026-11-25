@@ -1,6 +1,6 @@
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/clock_time_slot.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/prayer_period_title.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/features/home/presentation/widgets/clock_time_slot.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

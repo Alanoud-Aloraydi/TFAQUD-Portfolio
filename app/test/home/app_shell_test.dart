@@ -1,11 +1,11 @@
-import 'package:app/core/navigation/app_router.dart';
-import 'package:app/core/navigation/fading_branches.dart';
+import 'package:app/app/router/app_router.dart';
+import 'package:app/app/router/fading_branches.dart';
 import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
 import 'package:app/features/account/presentation/pages/account_screen.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
-import 'package:app/features/shell/widgets/app_bottom_bar.dart';
-import 'package:app/features/shell/widgets/glass_add_button.dart';
+import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/presentation/widgets/glass_add_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,7 +1,7 @@
-import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/localization/care_voice.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_date_row.dart';
 import 'package:app/features/medications/presentation/widgets/medication_effective_chips.dart';
 import 'package:easy_localization/easy_localization.dart';

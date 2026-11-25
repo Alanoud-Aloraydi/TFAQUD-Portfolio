@@ -3,13 +3,6 @@ import 'package:flutter/widgets.dart';
 
 /// The home tab and the bottom bar's tabs, outline and filled.
 abstract final class TabIcons {
-  /// Tab «اليوم». Phosphor `houseSimple`.
-  static const IconData house = IconData(
-    0xe2c6,
-    fontFamily: phosphorFamily,
-    fontPackage: phosphorPackage,
-  );
-
   // The bottom bar: each tab's outline icon, and its filled one while the tab
   // is selected. The native bar on iOS shows the same drawings
   // (ios/Runner/Assets.xcassets/tab_*.imageset), because iOS draws its own

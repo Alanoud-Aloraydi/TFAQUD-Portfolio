@@ -1,11 +1,17 @@
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
+import 'dart:async';
+
+import 'package:app/app/router/routers.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_reading_when.dart';
+import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
+import 'package:go_router/go_router.dart';
 
 /// One past reading: what it was, how it was judged, and when.
 class SimplifiedReadingRow extends StatelessWidget {
@@ -66,4 +72,28 @@ class SimplifiedReadingRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// «8:00 ص» for today, «الأحد 8:00 ص» for a day before it.
+String simplifiedReadingWhen(
+  BuildContext context,
+  MeasurementReading reading,
+  DateTime now,
+) {
+  final DateTime at = reading.measuredAt ?? reading.recordedAt;
+  final String clock = wallTimeText(at);
+  if (DateUtils.isSameDay(at, now)) return clock;
+  return '${context.tr('common.weekdays.${at.weekday}')} $clock';
+}
+
+/// Opens the full-screen reminder of that exact [task], the same screen a
+/// tapped notification opens, for a dose, a reading or a visit alike: its
+/// picture, and its own answer («أخذته», «تسجيل القياس الآن», «حضرت»).
+void openSimplifiedTask(BuildContext context, TodayTask task, String circleId) {
+  unawaited(
+    context.push(
+      Routes.simplifiedReminder,
+      extra: ReminderRequest.of(task, circleId),
+    ),
+  );
 }

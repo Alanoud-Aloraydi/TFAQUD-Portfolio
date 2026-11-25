@@ -1,9 +1,9 @@
-import 'package:app/core/services/tap_focus.dart';
+import 'package:app/app/services/tap_focus.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
-import 'package:app/features/home/presentation/today_snapshot.dart';
 import 'package:app/features/home/presentation/widgets/today_prayer_period.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/home/presentation/widgets/today_snapshot.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

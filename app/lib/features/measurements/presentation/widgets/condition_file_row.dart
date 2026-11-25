@@ -1,5 +1,5 @@
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/navigation/routers.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:easy_localization/easy_localization.dart';

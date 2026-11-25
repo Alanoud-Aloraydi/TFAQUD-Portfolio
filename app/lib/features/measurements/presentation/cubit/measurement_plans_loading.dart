@@ -1,7 +1,8 @@
 import 'package:app/core/errors/network_exceptions.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_plans_scope.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_plans_state.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Reads the plans of a circle.
@@ -49,4 +50,20 @@ mixin MeasurementPlansLoading
       );
     }
   }
+}
+
+/// The plans on screen, and whether one is being saved.
+class MeasurementPlansState extends Equatable {
+  const MeasurementPlansState({
+    this.status = MeasurementLoadStatus.initial,
+    this.plans = const [],
+    this.errorKey,
+  });
+
+  final MeasurementLoadStatus status;
+  final List<MeasurementPlan> plans;
+  final String? errorKey;
+
+  @override
+  List<Object?> get props => [status, plans, errorKey];
 }

@@ -1,16 +1,10 @@
 import 'package:app/features/circles/domain/entities/account_summary.dart';
-import 'package:app/features/circles/presentation/cubit/account_load.dart';
-import 'package:app/features/circles/presentation/cubit/create_circle_props.dart';
-import 'package:app/features/circles/presentation/cubit/create_status.dart';
-import 'package:app/features/circles/presentation/cubit/name_preset.dart';
+import 'package:app/features/circles/presentation/cubit/circle_member_actions.dart';
+import 'package:app/features/circles/presentation/cubit/create_circle_questions.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/circles/presentation/cubit/account_load.dart';
-export 'package:app/features/circles/presentation/cubit/circle_flow.dart';
-export 'package:app/features/circles/presentation/cubit/create_circle_copy.dart';
+export 'package:app/features/circles/presentation/cubit/circle_member_actions.dart';
 export 'package:app/features/circles/presentation/cubit/create_circle_questions.dart';
-export 'package:app/features/circles/presentation/cubit/create_status.dart';
-export 'package:app/features/circles/presentation/cubit/name_preset.dart';
 
 /// State of the page that creates a circle: the circle's name, or the
 /// patient's names, and the patient's birth date and city.
@@ -65,4 +59,25 @@ class CreateCircleState extends Equatable {
 
   @override
   List<Object?> get props => createCircleProps(this);
+}
+
+/// The progress of the create call.
+enum CreateStatus { idle, saving, created }
+
+/// The circle name chips of the person's own circle: the one for their own
+/// care, or the one they agreed to. Only they see this name. [other] lets
+/// them type a name.
+enum NamePreset { care, health, circle, other }
+
+/// Loading of the signed-in account, which gives the name shown on the
+/// approved page, whether the account already has a circle of its own care
+/// and the birth date and city onboarding saved.
+enum AccountLoad {
+  loading,
+  loaded,
+  failed,
+
+  /// The [CircleFlow.patient] flow reads no account: the patient is someone
+  /// else.
+  notNeeded,
 }

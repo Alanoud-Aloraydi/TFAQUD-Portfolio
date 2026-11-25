@@ -1,12 +1,16 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/core/widgets/layout/refresh_scope.dart';
+import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_section.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 
@@ -59,5 +63,30 @@ mixin MeasurementRecordMonth on State<MeasurementRecordSection> {
     if (candidate.isAfter(thisMonth)) return;
     setState(() => month = candidate);
     loadMonth();
+  }
+}
+
+/// Which measurements «السجل» shows: all, or one kind.
+class MeasurementRecordFilterMenu extends StatelessWidget {
+  const MeasurementRecordFilterMenu({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final MeasurementRecordFilter selected;
+  final ValueChanged<MeasurementRecordFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return WhiteFilterMenu<MeasurementRecordFilter>(
+      options: <MeasurementRecordFilter, String>{
+        for (final MeasurementRecordFilter value
+            in MeasurementRecordFilter.values)
+          value: context.tr(value.labelKey),
+      },
+      selected: selected,
+      onChanged: onChanged,
+    );
   }
 }

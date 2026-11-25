@@ -1,4 +1,4 @@
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 
 /// Reads one request as the sender sees it. It is the answer of

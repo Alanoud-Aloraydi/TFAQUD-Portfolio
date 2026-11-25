@@ -5,7 +5,6 @@ import 'package:app/features/circles/presentation/widgets/emergency_card_text.da
 import 'package:app/features/circles/presentation/widgets/emergency_medicines_content.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

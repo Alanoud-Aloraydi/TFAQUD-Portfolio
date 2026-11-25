@@ -1,16 +1,16 @@
+import 'package:app/app/router/app_router.dart';
+import 'package:app/app/services/app_accessibility.dart';
+import 'package:app/app/services/remote_push.dart';
+import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/navigation/app_router.dart';
-import 'package:app/core/services/app_accessibility.dart';
-import 'package:app/core/services/remote_push.dart';
-import 'package:app/core/services/shown_circle_clock.dart';
 import 'package:app/core/theme/components/navigation_themes.dart';
-import 'package:app/core/theme/materials/glass_preferences.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/core/widgets/feedback/push_setup_check.dart';
-import 'package:app/core/widgets/forms/keyboard_dismiss.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
@@ -54,6 +54,38 @@ class AppScopes extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Closes the keyboard when the user touches anywhere outside the text
+/// fields, as iOS apps do. A number pad has no return key, so without this
+/// the keyboard would stay open.
+///
+/// Flutter asks [EditableTextTapOutsideIntent] what to do on such a touch;
+/// on a phone its default does nothing. This widget wraps the whole app and
+/// answers it: the field loses focus and the keyboard goes down. A touch on
+/// another text field counts as inside, so moving between fields keeps the
+/// keyboard up. Dragging a form also closes it (each form's scroll view
+/// uses `ScrollViewKeyboardDismissBehavior.onDrag`).
+class KeyboardDismissOnTap extends StatelessWidget {
+  const KeyboardDismissOnTap({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Actions(
+      actions: <Type, Action<Intent>>{
+        EditableTextTapOutsideIntent:
+            CallbackAction<EditableTextTapOutsideIntent>(
+              onInvoke: (EditableTextTapOutsideIntent intent) {
+                intent.focusNode.unfocus();
+                return null;
+              },
+            ),
+      },
+      child: child,
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/medical_form.dart';
+import 'package:app/features/circles/domain/entities/medical_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 
 /// The same page with some answers replaced. [clearError] drops the message

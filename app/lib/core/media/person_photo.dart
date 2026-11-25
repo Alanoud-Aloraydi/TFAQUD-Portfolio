@@ -1,10 +1,12 @@
 import 'package:app/core/media/avatar_codes.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/widgets/overlays/glass_menu_route.dart';
 import 'package:flutter/material.dart';
 
-export 'avatar_codes.dart';
-export 'person_photo_sheet.dart';
+export 'package:app/core/media/avatar_codes.dart';
 
 /// A person's round photo: the uploaded photo, else their chosen avatar,
 /// else the first letter of [name].
@@ -60,3 +62,28 @@ class PersonPhoto extends StatelessWidget {
     );
   }
 }
+
+/// Opens the sheet where a person's photo or avatar is changed; saves through
+/// [PrivatePhotoRepository] to [photoPath] / [avatarPath] and calls [onSaved].
+Future<void> showPersonPhotoSheet(
+  BuildContext context, {
+  required String title,
+  required String name,
+  required String photoPath,
+  required String avatarPath,
+  String? avatarCode,
+  bool frontCamera = false,
+  VoidCallback? onSaved,
+}) => showGlassSheet<void>(
+  context,
+  title: title,
+  builder: (_) => PersonPhotoEditor(
+    title: title,
+    name: name,
+    photoPath: photoPath,
+    avatarPath: avatarPath,
+    avatarCode: avatarCode,
+    frontCamera: frontCamera,
+    onSaved: onSaved,
+  ),
+);

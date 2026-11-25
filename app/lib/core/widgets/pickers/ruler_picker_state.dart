@@ -1,6 +1,5 @@
-import 'package:app/core/widgets/pickers/ruler_mark.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
-import 'package:app/core/widgets/pickers/ruler_slider_semantics.dart';
 import 'package:app/core/widgets/pickers/ruler_wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,6 +58,30 @@ class RulerPickerState extends State<RulerPicker> {
             ),
             RulerMark(look: widget.look),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The fixed mark, over the number chosen.
+class RulerMark extends StatelessWidget {
+  const RulerMark({super.key, this.look = const RulerLook()});
+
+  final RulerLook look;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          width: 3 * look.scale,
+          height: 34 * look.scale,
+          decoration: BoxDecoration(
+            color: look.mark,
+            borderRadius: BorderRadius.circular(AppRadius.capsule),
+          ),
         ),
       ),
     );

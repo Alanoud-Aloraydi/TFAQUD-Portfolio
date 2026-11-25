@@ -1,6 +1,5 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
-import 'package:app/features/circles/presentation/cubit/inbox_scope.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

@@ -1,6 +1,5 @@
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details_content.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details_skeleton.dart';
 import 'package:easy_localization/easy_localization.dart';

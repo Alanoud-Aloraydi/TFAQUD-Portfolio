@@ -1,7 +1,8 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:app/core/theme/materials/surface_style.dart';
+import 'package:app/core/widgets/layout/section_title.dart';
 import 'package:flutter/material.dart';
-import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// The small rounded square with an icon at the start of a settings row,
 /// as in iOS Settings: it tells the rows apart at a glance. Decorative: the
@@ -36,6 +37,57 @@ class SettingsIconTile extends StatelessWidget {
           color: AppSettingsTileColors.onTile,
         ),
       ),
+    );
+  }
+}
+
+/// A white card whose rows are separated by thin lines.
+class SettingsCard extends StatelessWidget {
+  const SettingsCard({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: AppSurfaces.card(),
+      child: Column(
+        children: <Widget>[
+          for (int i = 0; i < children.length; i++) ...<Widget>[
+            if (i > 0)
+              const Divider(
+                height: AppSizes.divider,
+                indent: 16,
+                endIndent: 16,
+              ),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A small grey title above a white card, as the account page groups its rows.
+class SettingsSection extends StatelessWidget {
+  const SettingsSection({
+    super.key,
+    required this.title,
+    required this.children,
+  });
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SectionTitle(title),
+        SettingsCard(children: children),
+      ],
     );
   }
 }

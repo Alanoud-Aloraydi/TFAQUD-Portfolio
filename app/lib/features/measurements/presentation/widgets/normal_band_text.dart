@@ -1,5 +1,5 @@
-import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

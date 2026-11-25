@@ -2,7 +2,6 @@ import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// Someone of the circle on a label: their photo first, then their name,
 /// so the patient knows who it is before reading.

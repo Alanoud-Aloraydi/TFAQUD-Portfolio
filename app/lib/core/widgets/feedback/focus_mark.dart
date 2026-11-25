@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/core/services/tap_focus.dart';
+import 'package:app/app/services/tap_focus.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/widgets/feedback/focus_highlight.dart';
 import 'package:flutter/material.dart';

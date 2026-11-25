@@ -1,6 +1,6 @@
 import 'package:app/core/theme/components/task_button_role.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The look of a [SimplifiedButton]. The three a task uses borrow the
 /// detailed mode's colours ([TaskButtonRole]), so «أخذته الآن» is the same

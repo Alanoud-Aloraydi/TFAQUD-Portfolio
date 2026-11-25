@@ -1,20 +1,23 @@
 import 'dart:async';
 
-import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/app/router/routers.dart';
+import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_kind_icon.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_appointment_lead.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_attend_visit.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_companions.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_content.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_icon_hero.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_done.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_family_member_photo.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_nothing_waiting.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_round_answer.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_texts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// The reminder of a visit: when, with whom, and «حضرت» from an hour
@@ -60,5 +63,22 @@ SimplifiedReminderContent? reminderAppointmentContent(
         attendSimplifiedVisit(context, visit, title),
       ),
     },
+  );
+}
+
+/// «حضرت» on [visit]: marks it attended, as the family's same button does
+/// in the detailed mode, then says so on «تم، يعطيك العافية» with its
+/// [title]. When it was not written, the screen stays and the mode's
+/// message says why.
+Future<void> attendSimplifiedVisit(
+  BuildContext context,
+  CareAppointment visit,
+  String title,
+) async {
+  final SimplifiedModeCubit cubit = context.read<SimplifiedModeCubit>();
+  if (!await cubit.attendAppointment(visit) || !context.mounted) return;
+  context.pushReplacement(
+    Routes.simplifiedDone,
+    extra: SimplifiedDoneMessage.visitAttended(title),
   );
 }

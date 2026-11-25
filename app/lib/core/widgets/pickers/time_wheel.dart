@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/pickers/picker_wheel_style.dart';
+import 'package:app/core/widgets/pickers/picker_sheet_frame.dart';
 import 'package:flutter/cupertino.dart';
 
 /// One wheel of the time picker sheet. It owns its scroll controller so a

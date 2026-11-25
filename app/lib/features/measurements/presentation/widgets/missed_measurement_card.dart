@@ -1,12 +1,12 @@
-import 'package:app/core/services/reminders/reminder_payloads.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/focus_mark.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_card.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_actions.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_task_title.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_snooze.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

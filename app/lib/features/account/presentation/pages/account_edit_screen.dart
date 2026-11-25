@@ -1,11 +1,11 @@
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/pages/account_edit_flow.dart';
-import 'package:app/features/account/presentation/widgets/account_edit_bar.dart';
-import 'package:app/features/account/presentation/widgets/account_edit_failure.dart';
+import 'package:app/features/account/presentation/widgets/account_content.dart';
 import 'package:app/features/account/presentation/widgets/account_edit_fields.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -63,4 +63,29 @@ class _AccountEditScreenState extends State<AccountEditScreen>
       ),
     ),
   );
+}
+
+/// What the name editor shows when the account could not be read: why, and
+/// a retry.
+class AccountEditFailure extends StatelessWidget {
+  const AccountEditFailure({super.key, required this.messageKey});
+
+  final String? messageKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          context.tr(messageKey ?? 'error.unknown'),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(
+          onPressed: context.read<AccountCubit>().load,
+          child: Text(context.tr('auth.retry')),
+        ),
+      ],
+    );
+  }
 }

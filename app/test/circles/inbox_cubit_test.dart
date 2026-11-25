@@ -1,21 +1,20 @@
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
-
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
-import 'package:app/features/circles/domain/entities/received_invitation.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
 
 CircleInbox _inbox({
   bool request = true,

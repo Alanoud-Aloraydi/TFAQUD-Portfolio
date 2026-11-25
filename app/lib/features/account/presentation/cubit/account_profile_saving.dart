@@ -1,5 +1,5 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/account/presentation/cubit/account_scope.dart';
+import 'package:app/features/account/presentation/cubit/account_loading.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 

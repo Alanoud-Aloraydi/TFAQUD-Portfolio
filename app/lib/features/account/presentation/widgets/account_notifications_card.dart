@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/services/permissions/notification_words.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/core/widgets/forms/permission_confirm.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/section_title.dart';
-import 'package:app/core/widgets/layout/settings_card.dart';
-import 'package:app/features/account/presentation/widgets/notification_note.dart';
+import 'package:app/core/widgets/layout/settings_icon_tile.dart';
 import 'package:app/features/account/presentation/widgets/notification_state_row.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -65,4 +67,20 @@ class _AccountNotificationsCardState extends State<AccountNotificationsCard> {
       ),
     ],
   );
+}
+
+/// What sits under the notifications row: the way out of a refusal or of
+/// «Deliver Quietly», the question itself while it has never been asked,
+/// or the line that says what the reminders are for.
+class NotificationNote extends StatelessWidget {
+  const NotificationNote({super.key, required this.allowed});
+
+  final AppPermission allowed;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? problem = notificationProblemKey(allowed);
+    if (problem != null) return PermissionDeniedRow(messageKey: problem);
+    return InsetText.note(context.tr('account.notifications_hint'));
+  }
 }

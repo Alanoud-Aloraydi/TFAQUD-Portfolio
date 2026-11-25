@@ -1,14 +1,13 @@
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/features/simplified_mode/domain/today_schedule.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_link_lines.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_schedule.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_weather.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedScheduleLink extends StatelessWidget {
   const SimplifiedScheduleLink({super.key, required this.schedule});
@@ -62,3 +61,15 @@ class SimplifiedScheduleLink extends StatelessWidget {
     );
   }
 }
+
+/// What the schedule link says: its title, then how the day stands.
+List<String> simplifiedScheduleLinkLines(
+  BuildContext context,
+  TodaySchedule schedule,
+) => <String>[
+  context.tr('simplified_mode.schedule_title'),
+  context.tr(
+    'simplified_mode.schedule_summary',
+    args: <String>['${schedule.doneCount}', '${schedule.total}'],
+  ),
+];

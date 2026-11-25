@@ -1,16 +1,11 @@
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/simplified_mode/domain/entities/today_task_kind.dart';
-import 'package:app/features/simplified_mode/domain/entities/today_task_props.dart';
-import 'package:app/features/simplified_mode/domain/entities/today_task_status.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/simplified_mode/domain/entities/today_task_kind.dart';
-export 'package:app/features/simplified_mode/domain/entities/today_task_snooze_key.dart';
-export 'package:app/features/simplified_mode/domain/entities/today_task_status.dart';
+export 'package:app/features/simplified_mode/domain/entities/today_task_statuses.dart';
 
 /// One dose, measurement or appointment of today, with exactly one of
 /// [dose], [measurement] and [appointment] set, matching [kind].
@@ -78,3 +73,22 @@ class TodayTask extends Equatable {
   @override
   List<Object?> get props => todayTaskProps(this);
 }
+
+/// What a task of the day is.
+enum TodayTaskKind { medication, measurement, appointment }
+
+/// Where a task stands now, as the simplified mode words it: «تم»,
+/// «التالي», «فات موعده», «لاحقًا».
+enum TodayTaskStatus { done, next, late, later }
+
+/// What makes two [TodayTask]s equal: every field, in the order the
+/// class declares them.
+List<Object?> todayTaskProps(TodayTask task) => <Object?>[
+  task.kind,
+  task.day,
+  task.time,
+  task.status,
+  task.dose,
+  task.measurement,
+  task.appointment,
+];

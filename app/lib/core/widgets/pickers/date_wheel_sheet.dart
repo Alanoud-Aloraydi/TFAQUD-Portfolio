@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/core/widgets/pickers/date_wheel_body.dart';
 import 'package:app/core/widgets/pickers/date_wheel_choice.dart';

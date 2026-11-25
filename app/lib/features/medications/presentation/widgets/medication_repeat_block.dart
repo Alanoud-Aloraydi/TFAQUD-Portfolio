@@ -1,12 +1,10 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/forms/weekday_selector.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/navigation/glass_segmented_control.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
-import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
-import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_interval_picker.dart';
-import 'package:app/features/medications/presentation/widgets/medication_weekdays_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -66,4 +64,27 @@ class MedicationRepeatBlock extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The days of the week the dose is taken on.
+class MedicationWeekdaysField extends StatelessWidget {
+  const MedicationWeekdaysField({
+    super.key,
+    required this.data,
+    required this.onChanged,
+  });
+
+  final ScheduleFormData data;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) => WeekdaySelector(
+    selected: data.weekdays,
+    onChanged: (Set<int> days) {
+      data.weekdays
+        ..clear()
+        ..addAll(days);
+      onChanged();
+    },
+  );
 }

@@ -1,24 +1,24 @@
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
-
 import 'dart:async';
 
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
-import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
+import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/new_self_circle.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
 
 /// An account that onboarding completed: it holds its birth date and city.
 final AccountSummary _onboarded = AccountSummary(

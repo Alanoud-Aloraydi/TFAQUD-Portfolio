@@ -1,11 +1,11 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
-import 'package:app/features/circles/domain/medical_options.dart';
+import 'package:app/features/circles/domain/entities/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 import 'package:app/features/circles/presentation/widgets/allergy_kind_chips.dart';
-import 'package:app/features/circles/presentation/widgets/medical_form_fields.dart';
-import 'package:app/features/circles/presentation/widgets/medical_section.dart';
+import 'package:app/features/circles/presentation/widgets/medical_identity_fields.dart';
+import 'package:app/features/circles/presentation/widgets/medical_name_fields.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

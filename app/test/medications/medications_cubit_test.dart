@@ -1,14 +1,12 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -93,7 +91,7 @@ DoseOccurrence _occurrence() => DoseOccurrence(
   doseUnit: DoseUnit.tablet,
 );
 
-class _PlansRepository extends Fake implements MedicationsRepositoryDomain {
+class _PlansRepository extends Fake implements MedicationsRepository {
   final responses = <Future<Result<List<MedicationPlan>, Failure>>>[];
   final calls = <String>[];
 

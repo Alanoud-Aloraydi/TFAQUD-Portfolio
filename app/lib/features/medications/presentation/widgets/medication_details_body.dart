@@ -1,12 +1,11 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/medications/domain/dose_retention.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/presentation/widgets/cancel_pending_revision.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
-import 'package:app/features/medications/presentation/widgets/medication_pending_revision.dart';
-import 'package:app/features/medications/presentation/widgets/medication_photo_banner.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:app/features/medications/presentation/widgets/medication_revision_history.dart';
 import 'package:flutter/material.dart';
 

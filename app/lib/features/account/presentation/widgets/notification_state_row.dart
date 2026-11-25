@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/permissions/notification_words.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/services/permissions/notification_words.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/widgets/forms/notifications_tap.dart';
 import 'package:app/core/widgets/layout/toggle_row.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;

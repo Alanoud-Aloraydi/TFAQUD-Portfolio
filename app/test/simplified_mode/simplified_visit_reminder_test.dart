@@ -1,16 +1,15 @@
+import 'package:app/app/router/routers.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart' show TaskSnooze;
+import 'package:app/app/services/reminders/item_keys.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart'
-    show TaskSnooze;
-import 'package:app/core/services/reminders/item_keys.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
-import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
+import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_reminder_screen.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';

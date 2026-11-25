@@ -1,14 +1,15 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/circle_endpoints.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
+import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
-import 'package:app/features/appointments/presentation/cubit/appointment_companions_state.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_lead_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app/core/network/circle_endpoints.dart';
 
 /// «المرافقون»: a chip for each member who can go, checked when [chosen];
 /// a tap toggles one ([onToggle]), and going is optional.
@@ -67,4 +68,29 @@ class AppointmentCompanionChips extends StatelessWidget {
             ],
           ),
   );
+}
+
+/// The menu that narrows «السجل» to one kind of its visits.
+class AppointmentRecordFilterMenu extends StatelessWidget {
+  const AppointmentRecordFilterMenu({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final AppointmentRecordFilter selected;
+  final ValueChanged<AppointmentRecordFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return WhiteFilterMenu<AppointmentRecordFilter>(
+      options: <AppointmentRecordFilter, String>{
+        for (final AppointmentRecordFilter value
+            in AppointmentRecordFilter.values)
+          value: context.tr(value.labelKey),
+      },
+      selected: selected,
+      onChanged: onChanged,
+    );
+  }
 }

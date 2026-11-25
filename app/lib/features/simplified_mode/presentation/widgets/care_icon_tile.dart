@@ -1,6 +1,6 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:flutter/material.dart';
-import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// The detailed mode's settings icon square (SettingsIconTile), in this
 /// mode's size: a kind's icon on its colour ([CareVisuals]). Decorative:

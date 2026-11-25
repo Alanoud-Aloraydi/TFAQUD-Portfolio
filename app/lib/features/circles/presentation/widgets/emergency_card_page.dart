@@ -1,8 +1,8 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/features/circles/presentation/cubit/emergency_card_state.dart';
+import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_content.dart';
-import 'package:app/features/circles/presentation/widgets/emergency_card_top_row.dart';
+import 'package:app/features/circles/presentation/widgets/emergency_card_export.dart';
 import 'package:app/features/circles/presentation/widgets/page_frame_padding.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

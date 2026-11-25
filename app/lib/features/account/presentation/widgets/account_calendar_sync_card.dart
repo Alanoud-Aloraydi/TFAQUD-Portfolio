@@ -1,15 +1,15 @@
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/network/account_endpoints.dart';
+import 'package:app/core/network/circle_endpoints.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/calendar_sync_notice.dart';
 import 'package:app/core/widgets/layout/section_title.dart';
 import 'package:app/core/widgets/layout/settings_icon_tile.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
-import 'package:app/features/account/presentation/widgets/calendar_sync_hint.dart';
-import 'package:app/features/account/presentation/widgets/calendar_sync_section.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
-import 'package:app/core/network/account_endpoints.dart';
-import 'package:app/core/network/circle_endpoints.dart';
 
 /// «مزامنة مع تقويم الجهاز» the way iOS Settings lays out a list of
 /// switches: one switch per circle, with its patient's photo, and one
@@ -52,6 +52,28 @@ class AccountCalendarSyncCard extends StatelessWidget {
         ),
         const CalendarSyncHint(),
       ],
+    );
+  }
+}
+
+/// The one explanation of what calendar sync does, shown once beneath
+/// however many circles' toggles a page lists.
+class CalendarSyncHint extends StatelessWidget {
+  const CalendarSyncHint({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        top: AppSpacing.sm,
+        start: AppSpacing.inset,
+        end: AppSpacing.inset,
+      ),
+      child: Text(
+        context.tr('circle_overview.calendar_sync_hint'),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: context.tokens.textSecondary),
+      ),
     );
   }
 }

@@ -1,7 +1,7 @@
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
-import 'package:app/features/home/presentation/cubit/home_state.dart';
-import 'package:app/features/home/presentation/widgets/home_notice.dart';
-import 'package:app/features/medications/presentation/widgets/today_skeleton.dart';
+import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_attention_section.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -53,4 +53,33 @@ class HomeBody extends StatelessWidget {
         return const SizedBox.shrink();
     }
   }
+}
+
+/// A centered message with one button under it.
+class HomeNotice extends StatelessWidget {
+  const HomeNotice({
+    super.key,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton(onPressed: onAction, child: Text(actionLabel)),
+        ],
+      ),
+    ),
+  );
 }

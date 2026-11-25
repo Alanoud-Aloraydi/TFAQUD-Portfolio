@@ -1,6 +1,6 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_text_theme.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_frame.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_form.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';

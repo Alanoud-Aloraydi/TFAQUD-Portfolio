@@ -1,13 +1,13 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet_saving.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet_scope.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet_values.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_conditions_section.dart';
-import 'package:app/features/measurements/presentation/widgets/reading_save_button.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_time_and_note.dart';
 import 'package:app/features/measurements/presentation/widgets/reading_values_section.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -66,4 +66,23 @@ mixin MeasurementReadingSheetLayout
       ],
     );
   }
+}
+
+/// «حفظ القراءة», off while it is being saved ([onPressed] null).
+class ReadingSaveButton extends StatelessWidget {
+  const ReadingSaveButton({super.key, required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: AppSpacing.lg),
+    child: SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: onPressed,
+        child: Text(context.tr('measurements.save_reading')),
+      ),
+    ),
+  );
 }

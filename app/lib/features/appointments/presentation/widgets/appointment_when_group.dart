@@ -1,8 +1,8 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/appointment_texts.dart';
-import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/localization/appointment_texts.dart';
+import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

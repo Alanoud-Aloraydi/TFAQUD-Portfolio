@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/permissions/app_settings_page.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
-import 'package:app/core/services/reminders/reminders_enabled.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/reminders/reminders_enabled.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/widgets/forms/notifications_tap.dart';
 import 'package:easy_localization/easy_localization.dart';

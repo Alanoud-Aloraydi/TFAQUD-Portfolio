@@ -1,4 +1,4 @@
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
@@ -51,4 +51,36 @@ Widget accountContent(
 Future<void> _edit(BuildContext context, AccountCubit cubit) async {
   final saved = await context.push<bool>(Routes.accountEdit);
   if (saved == true && !cubit.isClosed) await cubit.load();
+}
+
+/// The top of the name editor: cancel, the title, and save, which waits
+/// until the account is read and no save is running.
+class AccountEditBar extends StatelessWidget {
+  const AccountEditBar({super.key, required this.onSave});
+
+  /// Null while saving is not possible.
+  final VoidCallback? onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        TextButton(
+          onPressed: () => context.pop(),
+          child: Text(context.tr('common.cancel')),
+        ),
+        Expanded(
+          child: Text(
+            context.tr('account.edit_title'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        FilledButton(
+          onPressed: onSave,
+          child: Text(context.tr('account.save')),
+        ),
+      ],
+    );
+  }
 }

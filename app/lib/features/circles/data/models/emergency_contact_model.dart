@@ -1,3 +1,5 @@
+import 'package:app/features/circles/data/models/medical_profile_json.dart';
+import 'package:app/features/circles/domain/entities/emergency_card.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 
 /// One contact of the API: `{id, name, relation, relation_other,
@@ -46,4 +48,35 @@ class EmergencyContactModel {
       'phone_number': draft.phoneNumber,
     };
   }
+}
+
+/// The answer of GET /api/v1/circles/{id}/emergency-card.
+class EmergencyCardModel {
+  const EmergencyCardModel(this._entity);
+
+  final EmergencyCard _entity;
+
+  factory EmergencyCardModel.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> card =
+        json['emergency_card'] as Map<String, dynamic>;
+    return EmergencyCardModel(
+      EmergencyCard(
+        firstName: card['first_name'] as String? ?? '',
+        lastName: card['last_name'] as String? ?? '',
+        profile: MedicalProfileJson.fromJson(card),
+        contacts: emergencyContactsOf(card['emergency_contacts']),
+      ),
+    );
+  }
+
+  EmergencyCard toEntity() => _entity;
+}
+
+/// The emergency contacts of an answer, in the order the server sent them;
+/// none when the answer carries none.
+List<EmergencyContact> emergencyContactsOf(Object? value) {
+  return <EmergencyContact>[
+    for (final Object? item in (value as List<dynamic>? ?? <dynamic>[]))
+      EmergencyContactModel.fromJson(item as Map<String, dynamic>).toEntity(),
+  ];
 }

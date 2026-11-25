@@ -1,13 +1,9 @@
-export 'package:app/features/account/presentation/cubit/account_status.dart';
-export 'package:app/features/account/presentation/cubit/delete_prompt.dart';
-import 'package:app/features/account/presentation/cubit/account_state_props.dart';
-import 'package:app/features/account/presentation/cubit/account_status.dart';
-import 'package:app/features/account/presentation/cubit/delete_prompt.dart';
-import 'package:app/features/circles/domain/entities/account_deletion.dart';
+import 'package:app/features/account/presentation/cubit/account_state_copy.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:equatable/equatable.dart';
+
 export 'package:app/features/account/presentation/cubit/account_state_copy.dart';
 
 /// What «حسابي» shows: the account, its circles and sent requests, and
@@ -67,4 +63,21 @@ class AccountState extends Equatable {
 
   @override
   List<Object?> get props => accountStateProps(this);
+}
+
+enum AccountStatus { loading, ready, failure }
+
+/// The question the page asks while the account is being deleted. The server
+/// asks for a choice only when it matters, so the questions come one at a time.
+enum DeletePrompt {
+  none,
+
+  /// "Delete your account?" The first and last question.
+  confirm,
+
+  /// The account is the patient of a circle: delete it or keep it.
+  patientChoice,
+
+  /// The account is the only manager of a circle: delete it too, or stop.
+  lastManager,
 }

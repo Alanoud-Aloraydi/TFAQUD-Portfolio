@@ -1,20 +1,15 @@
 import 'dart:async';
 
 import 'package:app/core/network/api_endpoints.dart';
-import 'package:app/core/network/api_options.dart';
 import 'package:app/core/network/auth_recovery.dart';
 import 'package:app/core/network/auth_renewal.dart';
-import 'package:app/core/network/auth_retry.dart';
-import 'package:app/core/network/auth_session_scope.dart';
-import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/storage/token_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:injectable/injectable.dart';
 
 /// Attaches the access token and renews it when the API reports it expired.
 ///
 /// Queued renewal shares credentials only within the originating session.
-@lazySingleton
 class AuthInterceptor extends QueuedInterceptor
     with AuthSessionScope, AuthRenewal, AuthRetry, AuthRecovery {
   AuthInterceptor(this._tokens);
@@ -78,4 +73,14 @@ class AuthInterceptor extends QueuedInterceptor
       );
     }
   }
+}
+
+/// The sign-in routes of the API (backend/app/auth/routes.py): the code by
+/// SMS, the session and its renewal.
+abstract final class AuthEndpoints {
+  static const String refreshToken = '/auth/refresh';
+  static const String signOut = '/auth/sign-out';
+  static const String session = '/auth/session';
+  static const String requestCode = '/auth/request-code';
+  static const String verifyCode = '/auth/verify-code';
 }

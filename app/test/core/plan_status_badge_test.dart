@@ -1,4 +1,3 @@
-import 'package:app/core/widgets/status/plan_status.dart';
 import 'package:app/core/widgets/status/plan_status_badge.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:easy_localization/easy_localization.dart';

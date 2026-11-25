@@ -1,10 +1,11 @@
+import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
-import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
+import 'package:app/features/circles/presentation/cubit/contact_deleting.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
-import 'package:app/features/circles/presentation/widgets/contact_dialogs.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_card.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_props.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The card that adds a contact or changes one, wired to the page's cubit.
@@ -55,4 +56,25 @@ Future<void> _delete(
 ) async {
   final bool? agreed = await showDeleteContactDialog(context, name);
   if (agreed == true) await cubit.deleteContact();
+}
+
+/// "Delete this contact?" asked before a contact leaves the medical file and
+/// the emergency card. True when the person agreed.
+Future<bool?> showDeleteContactDialog(BuildContext context, String name) {
+  return showAppAlert<bool>(
+    context,
+    title: context.tr('circles.contact_delete_title'),
+    message: context.tr('circles.contact_delete_body', args: <String>[name]),
+    actions: <AppAlertAction<bool>>[
+      AppAlertAction<bool>(
+        label: context.tr('circles.contact_delete_no'),
+        value: false,
+      ),
+      AppAlertAction<bool>(
+        label: context.tr('circles.contact_delete_yes'),
+        value: true,
+        destructive: true,
+      ),
+    ],
+  );
 }

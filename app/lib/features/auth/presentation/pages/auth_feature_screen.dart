@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/signed_out.dart';
+import 'package:app/app/router/routers.dart';
+import 'package:app/app/services/signed_out.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
 import 'package:app/features/auth/presentation/widgets/intro_bar.dart';

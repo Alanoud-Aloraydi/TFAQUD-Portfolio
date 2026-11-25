@@ -1,48 +1,49 @@
 import 'dart:async';
 
+import 'package:app/app/router/app_router.dart';
+import 'package:app/app/router/routers.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/push_registration.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/remote_push.dart';
+import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/l10n/app_calendar.dart';
-import 'package:app/core/l10n/dose_reminder_texts.dart';
+import 'package:app/core/localization/app_calendar.dart';
+import 'package:app/core/localization/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/navigation/app_router.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/push_registration.dart';
-import 'package:app/core/services/remote_push.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
-import 'package:app/core/services/shown_circle_clock.dart';
-import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/storage/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
-import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/account/domain/repositories/profile_repository.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/auth/data/datasources/intro_memory.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
-import 'package:app/features/auth/domain/entities/sign_in_result.dart';
-import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
+import 'package:app/features/auth/domain/entities/sign_in_failures.dart';
+import 'package:app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:app/features/home/presentation/widgets/home_widget.dart';
-import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:app/features/prayer_times/data/prayer_day_model.dart';
-import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.dart';
-import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
-import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
-import 'package:app/features/shell/widgets/app_bottom_bar.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
+import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
+import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,9 +51,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
 
 import 'circles_fakes.dart';
 import 'home_fakes.dart';
@@ -90,7 +88,7 @@ class SignedInTokens implements TokenStorage {
 /// The account page builds an AuthCubit from the AuthUseCase. This repository
 /// answers without a server; the tests here never press its buttons.
 /// The sign-in service answering without a server; counts sign-outs.
-class OfflineAuthRepository implements AuthRepositoryDomain {
+class OfflineAuthRepository implements AuthRepository {
   /// How many times the phone was signed out.
   int signOuts = 0;
 
@@ -120,8 +118,7 @@ class OfflineAuthRepository implements AuthRepositoryDomain {
 }
 
 /// A medications service with no plans and no doses.
-class EmptyMedicationsRepository extends Fake
-    implements MedicationsRepositoryDomain {
+class EmptyMedicationsRepository extends Fake implements MedicationsRepository {
   @override
   Future<Result<List<MedicationPlan>, Failure>> getPlans(
     String circleId,
@@ -138,7 +135,7 @@ class EmptyMedicationsRepository extends Fake
 
 /// A measurements service with no plans, readings or tasks.
 class EmptyMeasurementsRepository extends Fake
-    implements MeasurementsRepositoryDomain {
+    implements MeasurementsRepository {
   @override
   Stream<String> get changes => const Stream.empty();
 
@@ -172,7 +169,7 @@ class EmptyMeasurementsRepository extends Fake
 
 /// An appointments service with no appointments.
 class EmptyAppointmentsRepository extends Fake
-    implements AppointmentsRepositoryDomain {
+    implements AppointmentsRepository {
   @override
   Stream<String> get changes => const Stream.empty();
 
@@ -206,7 +203,7 @@ class OfflinePrayerTimes extends Fake implements PrayerTimesRemoteDataSource {
 /// The start page builds an OnboardingCubit from the ProfileUseCase, and the
 /// account page saves the names through it. It keeps what it was asked to save.
 /// The profile service answering without a server; remembers what was saved.
-class OfflineProfileRepository implements ProfileRepositoryDomain {
+class OfflineProfileRepository implements ProfileRepository {
   /// The names that were saved, in order: first name, last name, display name.
   final List<List<String>> saved = <List<String>>[];
 
@@ -354,7 +351,7 @@ void setUpShellApp() {
       PushRegistration(phone, remote: remotePush),
     );
     GetIt.I.registerSingleton<PrayerTimesUseCase>(
-      PrayerTimesUseCase(PrayerTimesRepository(OfflinePrayerTimes())),
+      PrayerTimesUseCase(PrayerTimesRepositoryImpl(OfflinePrayerTimes())),
     );
     GetIt.I.registerSingleton<PrivatePhotoRepository>(photoRepository);
     // The clock of the circle on screen; the home cubit sets it.

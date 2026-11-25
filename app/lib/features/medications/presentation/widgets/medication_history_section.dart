@@ -1,8 +1,7 @@
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/medication_record_filter.dart';
 import 'package:app/features/medications/presentation/widgets/medication_history_content.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_details.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

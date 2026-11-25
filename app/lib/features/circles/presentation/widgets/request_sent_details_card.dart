@@ -4,9 +4,9 @@ import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
-import 'package:app/features/circles/presentation/widgets/request_sent_detail_row.dart';
+import 'package:app/features/circles/presentation/widgets/request_sent_header.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 

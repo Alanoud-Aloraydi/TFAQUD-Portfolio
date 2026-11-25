@@ -2,12 +2,11 @@ import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_late_dose_lines.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_late_dose_medicine.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_snoozed_line.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// How the late dose is taken and how late it is: its chips, when it was
 /// due, and what it was put off to.

@@ -1,7 +1,7 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// Answering a request or an invitation, completing a request, canceling one.
-mixin _ReplyCalls implements CirclesRepositoryDomain {
+mixin _ReplyCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
   Future<String> _newPatientZone(String city);
 

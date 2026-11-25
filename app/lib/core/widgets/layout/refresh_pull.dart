@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/widgets/layout/refresh_stage.dart';
+import 'package:app/core/widgets/layout/refresh_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

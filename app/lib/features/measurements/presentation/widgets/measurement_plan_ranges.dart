@@ -1,7 +1,10 @@
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/core/widgets/display/weekday_strip.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/core/widgets/status/status_badge.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -52,6 +55,41 @@ class MeasurementPlanRanges extends StatelessWidget {
                 '${normalBandText(context, kind, range.normal)} '
                 '${context.tr(kind == MeasurementKind.bp ? 'measurements.bp_unit' : 'measurements.glucose_unit')}',
           ),
+      ],
+    );
+  }
+}
+
+/// «الجدول» of a measurement plan: each time in bold with its meal state,
+/// and the days.
+class MeasurementPlanSchedule extends StatelessWidget {
+  const MeasurementPlanSchedule({super.key, required this.version});
+
+  final MeasurementVersion version;
+
+  @override
+  Widget build(BuildContext context) {
+    return PlanFactGroup(
+      title: context.tr('plan_details.schedule'),
+      children: <Widget>[
+        for (final MeasurementTime reading in version.readingTimes)
+          PlanFact(
+            icon: ScheduleIcons.clock,
+            value: clockText(reading.time),
+            trailing: reading.measurementState == null
+                ? null
+                : StatusBadge(
+                    text: context.tr(
+                      'measurements.condition.${reading.measurementState}',
+                    ),
+                    tone: StatusTone.neutral,
+                  ),
+          ),
+        PlanFact(
+          icon: ScheduleIcons.calendar,
+          label: context.tr('measurements.days'),
+          below: WeekdayStrip(days: version.weekdays),
+        ),
       ],
     );
   }

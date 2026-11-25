@@ -1,19 +1,19 @@
 import 'dart:async';
 
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/domain/measurement_plan_draft.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/domain/measurement_reading_draft.dart';
-import 'package:app/features/measurements/domain/measurement_version.dart';
-import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan_draft.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading_draft.dart';
+import 'package:app/features/measurements/domain/entities/measurement_version.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -33,7 +33,7 @@ DioException _refused(int status, String code) {
   );
 }
 
-class _Repository extends Fake implements MeasurementsRepositoryDomain {
+class _Repository extends Fake implements MeasurementsRepository {
   final requests = <String, Completer<List<MeasurementReading>>>{};
   final changesController = StreamController<String>.broadcast();
   final recordedController = StreamController<String>.broadcast();

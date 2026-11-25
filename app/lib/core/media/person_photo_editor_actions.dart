@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/media/person_photo_editor.dart';
-import 'package:app/core/media/photo_source.dart';
+import 'package:app/core/media/photo_crop_actions.dart';
 import 'package:app/core/media/private_photo.dart';
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -74,5 +76,24 @@ mixin PersonPhotoEditorActions on State<PersonPhotoEditor> {
     } finally {
       if (mounted) setState(() => saving = false);
     }
+  }
+}
+
+/// «اختر شخصية» and a line to the far edge, above the avatars.
+class AvatarChoicesLabel extends StatelessWidget {
+  const AvatarChoicesLabel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          context.tr('photos.choose_character'),
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        const Expanded(child: Divider()),
+      ],
+    );
   }
 }

@@ -1,13 +1,13 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/medications/domain/dose_timing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/medication_photo_banner.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
+import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:app/features/medications/presentation/widgets/next_dose_info.dart';
-import 'package:app/features/medications/presentation/widgets/today_dose_answer.dart';
-import 'package:app/features/medications/presentation/widgets/today_dose_frame.dart';
-import 'package:app/features/medications/presentation/widgets/today_dose_title.dart';
 import 'package:app/features/medications/presentation/widgets/today_dose_window.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_view.dart';
 import 'package:flutter/material.dart';
 
 /// The dose «اليوم» asks about: its photo, what it is, when it is due and
@@ -52,6 +52,30 @@ class TodayMedicationActionDose extends StatelessWidget {
         TodayDoseWindow(occurrence: occurrence, now: now),
         TodayDoseAnswer(occurrence: occurrence, circleId: circleId, now: now),
       ],
+    );
+  }
+}
+
+/// The warm frame «اليوم» draws around the dose it is asking about, so the
+/// one task that wants an answer is told apart from the day's list.
+class TodayDoseFrame extends StatelessWidget {
+  const TodayDoseFrame({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: AppSemanticColors.accentWarm, width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
     );
   }
 }

@@ -1,7 +1,5 @@
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/fold_affordance.dart';
 import 'package:app/core/widgets/layout/group_title.dart';
 import 'package:flutter/material.dart';
 

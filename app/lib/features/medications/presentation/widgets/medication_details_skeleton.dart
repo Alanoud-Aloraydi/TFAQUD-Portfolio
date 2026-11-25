@@ -1,8 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/loading/skeleton_line.dart';
 import 'package:app/core/widgets/loading/skeleton_page.dart';
-import 'package:app/core/widgets/loading/skeleton_surface.dart';
-import 'package:app/features/medications/presentation/widgets/skeleton_label_value.dart';
 import 'package:flutter/material.dart';
 
 /// A medicine's page while it loads: the name and strength, the details
@@ -36,6 +34,24 @@ class MedicationDetailsSkeleton extends StatelessWidget {
         SkeletonLabelValue(valueWidth: 0.45),
         SizedBox(height: AppSpacing.md),
         SkeletonLabelValue(valueWidth: 0.45),
+      ],
+    );
+  }
+}
+
+class SkeletonLabelValue extends StatelessWidget {
+  const SkeletonLabelValue({super.key, required this.valueWidth});
+
+  final double valueWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const SkeletonLine(widthFactor: 0.25, height: 12),
+        const SizedBox(height: AppSpacing.sm),
+        SkeletonLine(widthFactor: valueWidth, height: 16),
       ],
     );
   }

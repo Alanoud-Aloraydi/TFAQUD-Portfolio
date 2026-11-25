@@ -1,8 +1,8 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
-import 'package:app/features/measurements/presentation/models/plan_reading_draft.dart';
+import 'package:app/features/measurements/presentation/cubit/plan_schedule_draft.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

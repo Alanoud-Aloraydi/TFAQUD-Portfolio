@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/core/services/remote_push.dart';
+import 'package:app/app/services/remote_push.dart';
 import 'package:app/core/widgets/feedback/push_setup_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';

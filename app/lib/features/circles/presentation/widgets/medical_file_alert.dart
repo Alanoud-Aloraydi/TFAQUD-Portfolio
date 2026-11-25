@@ -1,12 +1,11 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/entities/medical_gap.dart';
-import 'package:app/features/circles/presentation/widgets/medical_alert_title.dart';
-import 'package:app/features/circles/presentation/widgets/medical_file_fill_button.dart';
-import 'package:app/features/circles/presentation/widgets/medical_gaps_text.dart';
+import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+import 'package:app/features/circles/presentation/widgets/attention_mark.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_edit_skeleton.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -59,4 +58,28 @@ class MedicalFileAlert extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The words of the missing answers, joined: «فصيلة الدم، الأمراض المزمنة».
+String medicalGapsText(BuildContext context, List<MedicalGap> gaps) => gaps
+    .map((MedicalGap gap) => context.tr('medical_alert.gap.${gap.name}'))
+    .join(context.tr('medical_alert.separator'));
+
+/// The yellow «!» and «أكمل الملف الطبي» beside it.
+class MedicalAlertTitle extends StatelessWidget {
+  const MedicalAlertTitle({super.key});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: <Widget>[
+      const AttentionMark(),
+      const SizedBox(width: AppSpacing.sm),
+      Expanded(
+        child: Text(
+          context.tr('medical_alert.title'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+      ),
+    ],
+  );
 }

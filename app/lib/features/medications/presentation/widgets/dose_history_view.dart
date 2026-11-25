@@ -1,3 +1,4 @@
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/layout/filtered_history.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
@@ -8,12 +9,12 @@ import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:app/features/medications/domain/entities/medication_version.dart';
 import 'package:app/features/medications/presentation/cubit/extra_dose_history_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_earlier.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_days.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_earlier.dart';
-import 'package:app/features/medications/presentation/widgets/dose_history_empty_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The doses that were read, newest first, under the filter of «سجل
@@ -62,3 +63,13 @@ class DoseHistoryView extends StatelessWidget {
     );
   }
 }
+
+/// Why a medicine's dose history is empty: the treatment has not started
+/// yet, or no dose was due in the days that were read.
+String doseHistoryEmptyText(BuildContext context, DateTime earliest) =>
+    earliest.isAfter(PatientClockScope.of(context).today())
+    ? context.tr(
+        'medications.dose_history_not_started',
+        args: <String>[formatMedicationDate(context, earliest)],
+      )
+    : context.tr('medications.no_dose_history');

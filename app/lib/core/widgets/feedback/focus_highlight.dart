@@ -1,6 +1,6 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:flutter/widgets.dart';
 
 /// [child] under the tint [FocusMark] lays on it, as Telegram marks the

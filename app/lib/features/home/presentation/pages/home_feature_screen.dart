@@ -1,10 +1,8 @@
 import 'package:app/core/widgets/layout/refresh_scope.dart';
-import 'package:app/features/home/presentation/controllers/home_resume_refresh.dart';
-import 'package:app/features/home/presentation/controllers/home_shell_lifecycle.dart';
-import 'package:app/features/home/presentation/controllers/home_shell_wiring.dart';
-import 'package:app/features/home/presentation/controllers/home_state_reactor.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
-import 'package:app/features/home/presentation/cubit/home_state.dart';
+import 'package:app/features/home/presentation/cubit/home_shell_lifecycle.dart';
+import 'package:app/features/home/presentation/cubit/home_shell_wiring.dart';
+import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';
 import 'package:app/features/home/presentation/widgets/home_shell_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

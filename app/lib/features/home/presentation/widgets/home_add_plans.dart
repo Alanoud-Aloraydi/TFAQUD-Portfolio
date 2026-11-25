@@ -1,7 +1,9 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/localization/care_voice.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/home/presentation/widgets/home_add_plan_option.dart';
-import 'package:app/features/home/presentation/widgets/home_add_row_divider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -44,3 +46,15 @@ List<Widget> homeAddPlanRows(List<Widget> plans) => <Widget>[
     plans[i],
   ],
 ];
+
+/// The line between two plans, from the start of their text.
+class HomeAddRowDivider extends StatelessWidget {
+  const HomeAddRowDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) => Divider(
+    height: AppSizes.divider,
+    indent: AppSpacing.lg + AppSizes.avatar + AppSpacing.md,
+    color: AppSemanticColors.textPrimary.withValues(alpha: 0.08),
+  );
+}

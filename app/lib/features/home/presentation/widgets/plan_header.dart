@@ -1,9 +1,9 @@
-import 'package:app/core/l10n/care_voice.dart';
+import 'package:app/core/localization/care_voice.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment_group.dart';
+import 'package:app/features/appointments/domain/entities/appointment_group.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/home/presentation/widgets/home_category_control.dart';
+import 'package:app/features/home/presentation/widgets/home_shell_view.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:easy_localization/easy_localization.dart';

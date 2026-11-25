@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/signed_out.dart';
+import 'package:app/app/router/routers.dart';
+import 'package:app/app/services/signed_out.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:app/features/auth/presentation/cubit/auth_error_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_signed_out_state.dart';
-import 'package:app/features/auth/presentation/cubit/auth_state.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:easy_localization/easy_localization.dart';

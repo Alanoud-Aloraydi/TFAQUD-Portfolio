@@ -1,19 +1,21 @@
+import 'dart:async';
+
+import 'package:app/app/router/care_item_routes.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
-import 'package:app/core/widgets/overlays/glass_sheet.dart';
+import 'package:app/core/widgets/overlays/glass_menu_route.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/core/widgets/status/plan_status.dart';
+import 'package:app/core/widgets/status/plan_status_badge.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/entities/medication_plan_status.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/extra_dose_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/extra_dose_state.dart';
-import 'package:app/features/medications/presentation/widgets/extra_dose_empty.dart';
 import 'package:app/features/medications/presentation/widgets/extra_dose_form.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
 /// Opens «سجّل جرعة الآن» for [circleId]. True when a dose was saved.
 Future<bool> showExtraDoseSheet(
@@ -59,4 +61,22 @@ class ExtraDoseSheet extends StatelessWidget {
       },
     );
   }
+}
+
+/// «سجّل جرعة الآن» with no medicine taken today: the way to add one.
+class ExtraDoseEmpty extends StatelessWidget {
+  const ExtraDoseEmpty({super.key, required this.circleId});
+
+  final String circleId;
+
+  @override
+  Widget build(BuildContext context) => EmptyStateNote(
+    context.tr('medications.dose_now_empty'),
+    actionLabel: context.tr('add.medication'),
+    onAction: () {
+      final GoRouter router = GoRouter.of(context);
+      Navigator.of(context).pop(false);
+      unawaited(router.push<bool>(CareItemRoutes.newMedication(circleId)));
+    },
+  );
 }

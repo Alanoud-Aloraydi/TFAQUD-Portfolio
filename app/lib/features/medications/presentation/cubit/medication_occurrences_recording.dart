@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:app/core/errors/data_failures.dart';
+import 'package:app/core/errors/failure.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/cubit/dose_record_outcome.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_refresh.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_earlier.dart';
+import 'package:app/features/medications/presentation/cubit/medication_occurrences_loading.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_scope.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Writing a dose's answer: the one the person gave, and what the server
@@ -67,3 +69,29 @@ mixin MedicationOccurrencesRecording
     );
   }
 }
+
+/// The doses with the saved answer in place of the one that was asked
+/// about. A dose is the schedule and the day together, so a medicine with
+/// two times a day keeps them apart.
+List<DoseOccurrence> withSavedRecord(
+  List<DoseOccurrence> occurrences,
+  DoseOccurrence answered,
+  DoseRecord saved,
+) => <DoseOccurrence>[
+  for (final item in occurrences)
+    if (item.scheduleId == answered.scheduleId &&
+        item.scheduledOn == answered.scheduledOn)
+      item.withRecord(saved)
+    else
+      item,
+];
+
+/// Whether the refusal means the list is behind: the dose was answered
+/// elsewhere, or it is no longer in its plan.
+bool isStaleDose(Failure failure) =>
+    failure is ConflictFailure || failure is NotFoundFailure;
+
+/// What to say about a refused answer: a dose that is gone says so in its
+/// own words, anything else in the failure's.
+String? doseRefusalKey(Failure failure) =>
+    failure is NotFoundFailure ? 'medications.dose_gone' : failure.messageKey;

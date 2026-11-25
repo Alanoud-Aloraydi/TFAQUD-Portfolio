@@ -1,8 +1,8 @@
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_family_member.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_weather.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

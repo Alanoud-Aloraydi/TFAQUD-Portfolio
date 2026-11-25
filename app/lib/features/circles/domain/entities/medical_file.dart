@@ -1,10 +1,10 @@
-export 'package:app/features/circles/domain/entities/medical_gap.dart';
-export 'package:app/features/circles/domain/entities/patient_basics.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
-import 'package:app/features/circles/domain/entities/medical_gap.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
 import 'package:app/features/circles/domain/entities/patient_basics.dart';
 import 'package:equatable/equatable.dart';
+
+export 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
+export 'package:app/features/circles/domain/entities/patient_basics.dart';
 
 /// The whole medical file page: the patient, the health answers and the
 /// emergency contacts.

@@ -1,9 +1,10 @@
-import 'package:app/features/medications/domain/entities/medication_last_record.dart';
+import 'package:app/core/widgets/status/plan_status_badge.dart';
+import 'package:app/features/medications/domain/entities/medication_schedule_draft.dart';
 import 'package:app/features/medications/domain/entities/medication_version.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/medications/domain/entities/medication_last_record.dart';
 export 'package:app/features/medications/domain/entities/medication_plan_draft.dart';
+export 'package:app/features/medications/domain/entities/medication_schedule_draft.dart';
 export 'package:app/features/medications/domain/entities/medication_version.dart';
 
 /// Holds a medication treatment and its revisions.
@@ -65,4 +66,14 @@ class MedicationPlan extends Equatable {
     lastEditedByAccountId,
     lastEditedByAvatarCode,
   ];
+}
+
+/// Reads a medication plan's [PlanStatus] for a given day.
+extension MedicationPlanStatus on MedicationPlan {
+  PlanStatus statusOn(DateTime day) {
+    if (discontinuedAt != null) return PlanStatus.stopped;
+    if (isPreviousOn(day)) return PlanStatus.completed;
+    if (isScheduledOn(day)) return PlanStatus.scheduled;
+    return PlanStatus.active;
+  }
 }

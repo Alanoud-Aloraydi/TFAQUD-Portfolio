@@ -1,5 +1,6 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// Navigation glass with a readable white tint and an opaque accessible mode.
 abstract class AppGlass {
@@ -36,9 +37,6 @@ abstract class AppGlass {
     stops: const <double>[0, 0.6, 1],
   );
 
-  static Color frostedSurface(Color surface) =>
-      surface.withValues(alpha: tintAlpha);
-
   static List<BoxShadow> tabShadow(Color shadow) => <BoxShadow>[
     BoxShadow(
       color: shadow.withValues(alpha: 0.08),
@@ -48,7 +46,6 @@ abstract class AppGlass {
   ];
 
   static const double blurSigma = 14;
-  static const double tintAlpha = 0.88;
 
   /// A light, soft shadow under floating glass: ink at 8% and 5%. Cards
   /// have no shadow; they have a 1px line edge (AppSurfaces.card).
@@ -56,4 +53,28 @@ abstract class AppGlass {
     BoxShadow(color: Color(0x14202734), blurRadius: 16, offset: Offset(0, 4)),
     BoxShadow(color: Color(0x0D202734), blurRadius: 2, offset: Offset(0, 1)),
   ];
+}
+
+/// Makes the opaque-glass choice (`AppAccessibility.reduceTransparency`: the
+/// iOS Reduce Transparency setting, or an Android phone too old for a smooth
+/// blur) available to custom materials, with Increase Contrast.
+class GlassPreferences extends InheritedWidget {
+  const GlassPreferences({
+    super.key,
+    required this.reduceTransparency,
+    required super.child,
+  });
+
+  final bool reduceTransparency;
+
+  static bool opaqueOf(BuildContext context) {
+    final settings = context
+        .dependOnInheritedWidgetOfExactType<GlassPreferences>();
+    return (settings?.reduceTransparency ?? false) ||
+        MediaQuery.highContrastOf(context);
+  }
+
+  @override
+  bool updateShouldNotify(GlassPreferences oldWidget) =>
+      reduceTransparency != oldWidget.reduceTransparency;
 }

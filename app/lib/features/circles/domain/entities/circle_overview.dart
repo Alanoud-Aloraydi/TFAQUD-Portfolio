@@ -1,10 +1,9 @@
-export 'package:app/features/circles/domain/entities/circle_member.dart';
-export 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
-export 'package:app/features/circles/domain/entities/edit_access.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
-import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
 import 'package:equatable/equatable.dart';
+
+export 'package:app/features/circles/domain/entities/circle_member.dart';
+export 'package:app/features/circles/domain/entities/edit_access.dart';
 
 /// People and pending invitations visible to a circle member.
 class CircleOverview extends Equatable {

@@ -1,10 +1,8 @@
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/permissions/app_settings_page.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
-import 'package:app/features/account/presentation/widgets/calendar_sync_section.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

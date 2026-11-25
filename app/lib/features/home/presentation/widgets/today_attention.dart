@@ -1,10 +1,10 @@
-import 'package:app/core/services/reminders/item_keys.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/app/services/reminders/item_keys.dart';
+import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/focus_mark.dart';
 import 'package:app/features/appointments/presentation/widgets/overdue_appointment_card.dart';
-import 'package:app/features/home/presentation/attention_focus_keys.dart';
-import 'package:app/features/home/presentation/today_snapshot.dart';
+import 'package:app/features/home/presentation/widgets/today_snapshot.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
 import 'package:app/features/medications/presentation/widgets/today_medication_attention_section.dart';
@@ -62,3 +62,16 @@ class TodayAttention extends StatelessWidget {
     );
   }
 }
+
+/// Every item of the «يحتاج انتباهك» box of [snapshot], as a tapped
+/// notification names it (item_keys.dart): its doses, its measurements and
+/// its visits.
+Set<String> attentionFocusKeys(TodaySnapshot snapshot, String circleId) =>
+    <String>{
+      for (final dose in snapshot.medications.attention)
+        doseSnoozeKey(circleId, dose),
+      for (final task in snapshot.overdueMeasurements)
+        measurementSnoozeKey(circleId, task),
+      for (final item in snapshot.overdueAppointments)
+        appointmentItemKey(circleId, item.id),
+    };

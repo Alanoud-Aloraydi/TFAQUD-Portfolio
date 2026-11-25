@@ -1,4 +1,4 @@
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';

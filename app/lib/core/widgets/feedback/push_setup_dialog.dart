@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/core/services/remote_push.dart';
+import 'package:app/app/services/remote_push.dart';
 import 'package:flutter/cupertino.dart';
 
 /// OneSignal's own check dialog, in English for the developer: the setup

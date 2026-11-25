@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/weekdays_text.dart';
+import 'package:app/core/localization/weekdays_text.dart';
 import 'package:app/core/utils/weekdays.dart';
 import 'package:app/core/widgets/display/weekday_strip.dart';
 import 'package:app/core/widgets/forms/weekday_selector.dart';

@@ -1,8 +1,6 @@
 import 'package:app/core/constants/saudi_cities.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
-import 'package:app/features/circles/domain/entities/patient_update.dart';
-import 'package:app/features/circles/domain/medical_form.dart';
+import 'package:app/features/circles/domain/entities/medical_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_state.dart';
 
 /// What the edit page changed against the saved [MedicalFile], worked out

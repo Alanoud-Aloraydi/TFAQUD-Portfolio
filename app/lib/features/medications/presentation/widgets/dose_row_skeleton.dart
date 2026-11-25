@@ -1,7 +1,6 @@
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/loading/skeleton_box.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:app/core/widgets/loading/skeleton_line.dart';
 import 'package:flutter/material.dart';
 

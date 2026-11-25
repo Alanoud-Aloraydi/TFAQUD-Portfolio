@@ -1,11 +1,11 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/dose_history_heading.dart';
-import 'package:app/features/medications/presentation/widgets/dose_history_notes.dart';
+import 'package:app/features/medications/presentation/widgets/dose_history_earlier.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_status.dart';
-import 'package:app/features/medications/presentation/widgets/dose_strength_text.dart';
+import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// The words of a dose in the history: its time right above the medicine,
@@ -53,4 +53,26 @@ class DoseOccurrenceLines extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The small lines under a recorded dose of the history, the words
+/// «جدول اليوم» uses: how long after its time it was taken, and why a
+/// skipped dose was not taken.
+List<Widget> doseHistoryNotes(
+  BuildContext context,
+  DoseRecord record,
+  DoseRowStatus status,
+) {
+  final TextStyle? small = Theme.of(context).textTheme.bodySmall;
+  return <Widget>[
+    if (status.lateBy case final String lateBy) Text(lateBy, style: small),
+    if (record.outcome == DoseOutcome.skipped && record.skipReasonCode != null)
+      Text(
+        context.tr(
+          'medications.skip_reason_line',
+          args: <String>[doseSkipReasonText(context, record)],
+        ),
+        style: small,
+      ),
+  ];
 }

@@ -1,10 +1,9 @@
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/buttons/pill_button.dart';
-import 'package:app/core/widgets/overlays/glass_sheet.dart';
+import 'package:app/core/widgets/overlays/glass_menu_route.dart';
 import 'package:app/features/circles/presentation/widgets/time_zone_list.dart';
-import 'package:app/features/circles/presentation/widgets/time_zone_names.dart';
-import 'package:app/features/circles/presentation/widgets/time_zone_search_field.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
 /// Opens the sheet that picks the zone where the patient lives: every IANA
@@ -62,6 +61,27 @@ class _TimeZoneSheetState extends State<TimeZoneSheet> {
               : () => Navigator.of(context).pop(_selected),
         ),
       ],
+    );
+  }
+}
+
+/// The search field over the zones. The zone names are Latin, so it reads
+/// left to right whatever the app's language.
+class TimeZoneSearchField extends StatelessWidget {
+  const TimeZoneSearchField({super.key, required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      textDirection: TextDirection.ltr,
+      decoration: InputDecoration(
+        hintText: context.tr('circles.time_zone_search'),
+        prefixIcon: const Icon(ActionIcons.search),
+      ),
     );
   }
 }

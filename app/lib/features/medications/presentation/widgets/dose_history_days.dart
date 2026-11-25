@@ -1,6 +1,6 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_history_entry.dart';
 import 'package:app/features/medications/presentation/widgets/dose_occurrence_card.dart';

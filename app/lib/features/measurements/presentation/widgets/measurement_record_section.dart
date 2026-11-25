@@ -1,10 +1,9 @@
-import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/scroll_insets.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_state.dart';
-import 'package:app/features/measurements/presentation/measurement_record_filter.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_loading.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_content.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_record_filter_menu.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_first.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_month.dart';
 import 'package:app/features/measurements/presentation/widgets/month_switcher.dart';

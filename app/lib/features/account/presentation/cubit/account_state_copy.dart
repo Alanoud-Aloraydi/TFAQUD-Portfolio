@@ -1,8 +1,7 @@
-import 'package:app/features/circles/domain/entities/account_deletion.dart';
+import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/account/presentation/cubit/account_state.dart';
 
 /// Replacing some of the fields of an [AccountState].
 extension AccountStateCopy on AccountState {
@@ -39,3 +38,21 @@ extension AccountStateCopy on AccountState {
     );
   }
 }
+
+/// What makes two [AccountState]s equal: every field, in the order the
+/// class declares them.
+List<Object?> accountStateProps(AccountState state) => <Object?>[
+  state.status,
+  state.account,
+  state.circles,
+  state.sent,
+  state.messageKey,
+  state.errorKey,
+  state.noticeKey,
+  state.busyIds,
+  state.deleting,
+  state.deletePrompt,
+  state.deletion,
+  state.signedOut,
+  state.sessionEnded,
+];

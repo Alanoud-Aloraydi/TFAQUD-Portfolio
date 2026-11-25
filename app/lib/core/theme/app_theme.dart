@@ -1,16 +1,13 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/app_color_scheme.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/app_tokens_presets.dart';
 import 'package:app/core/theme/components/button_themes.dart';
-import 'package:app/core/theme/components/feedback_themes.dart';
 import 'package:app/core/theme/components/field_themes.dart';
 import 'package:app/core/theme/components/navigation_themes.dart';
-import 'package:app/core/theme/components/selection_themes.dart';
 import 'package:app/core/theme/components/surface_themes.dart';
-import 'package:app/core/theme/foundations/app_effects.dart';
-import 'package:app/core/theme/ios_page_transitions.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -83,3 +80,15 @@ abstract class AppTheme {
   /// status words turn ink, control borders turn slate.
   static final ThemeData highContrastTheme = _build(AppTokens.contrast);
 }
+
+/// iOS push and pop on every platform.
+const PageTransitionsTheme iosPageTransitions = PageTransitionsTheme(
+  builders: <TargetPlatform, PageTransitionsBuilder>{
+    TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+    TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+    TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+    TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+    TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+    TargetPlatform.fuchsia: CupertinoPageTransitionsBuilder(),
+  },
+);

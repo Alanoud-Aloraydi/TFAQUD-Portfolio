@@ -1,5 +1,5 @@
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_measure_screen.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_keypad.dart';

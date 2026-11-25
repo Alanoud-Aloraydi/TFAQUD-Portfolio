@@ -1,15 +1,16 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/calendar_month.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_state.dart';
-import 'package:app/features/measurements/presentation/measurement_record_filter.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_loading.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_chart_card.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_readings_history.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_record_empty.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// What «السجل»'s measurements show for [state] under the filter and the
@@ -61,4 +62,23 @@ List<Widget> measurementRecordContent(
     const SizedBox(height: AppSpacing.md),
     MeasurementReadingsHistory(circleId: circleId, readings: kept),
   ];
+}
+
+/// «السجل»'s readings when the month has none under the filter: the note,
+/// with «تسجيل قراءة» for someone who may record one, as «الخطة» offers
+/// its own add.
+class MeasurementRecordEmpty extends StatelessWidget {
+  const MeasurementRecordEmpty({super.key, this.onAdd});
+
+  /// Opens the reading sheet; null hides the action.
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) => EmptyStateNote.section(
+    context.tr('measurements.no_records'),
+    actionLabel: onAdd == null
+        ? null
+        : context.tr('measurements.record_reading'),
+    onAction: onAdd,
+  );
 }

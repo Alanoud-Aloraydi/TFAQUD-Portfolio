@@ -1,7 +1,6 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button_tone.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 export 'package:app/features/simplified_mode/presentation/widgets/simplified_button_tone.dart';
 

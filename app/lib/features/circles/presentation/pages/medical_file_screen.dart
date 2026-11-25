@@ -1,4 +1,4 @@
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/content_switcher.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';

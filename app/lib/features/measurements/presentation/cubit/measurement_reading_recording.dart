@@ -1,9 +1,9 @@
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_scope.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_state.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_loading.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Saves a reading, and shows it at once when its day is on screen.

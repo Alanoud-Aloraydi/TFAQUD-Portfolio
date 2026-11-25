@@ -1,11 +1,11 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/features/home/presentation/widgets/next_task_look.dart';
+import 'package:app/features/home/presentation/widgets/next_task_summary.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_circle.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:app/core/theme/app_settings_tile_colors.dart';
 
 /// The top of the next task's card: the round icon of its kind (a dose's
 /// medicine photo when it has one), then which kind of task it is over its

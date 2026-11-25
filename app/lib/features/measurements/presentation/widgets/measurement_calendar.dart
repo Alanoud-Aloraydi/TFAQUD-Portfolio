@@ -1,11 +1,11 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_calendar_selection.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_calendar_weeks.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_calendar_weekdays.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_condition_chips.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Compact Saturday-first calendar with the readings of the selected day
@@ -66,4 +66,26 @@ class _MeasurementCalendarState extends State<MeasurementCalendar> {
       ],
     );
   }
+}
+
+/// The short names of the days over a Saturday-first calendar.
+class MeasurementCalendarWeekdays extends StatelessWidget {
+  const MeasurementCalendarWeekdays({super.key});
+
+  static const List<int> _weekdays = <int>[6, 7, 1, 2, 3, 4, 5];
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: <Widget>[
+      for (final int day in _weekdays)
+        Expanded(
+          child: Center(
+            child: Text(
+              context.tr('medications.weekday_short.$day'),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ),
+        ),
+    ],
+  );
 }

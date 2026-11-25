@@ -1,4 +1,4 @@
-import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 
 /// The general ranges, as the server sends them for a patient with neither
 /// diabetes nor high blood pressure in the medical file.

@@ -1,9 +1,9 @@
-import 'package:app/core/l10n/arabic_counts.dart';
+import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
+import 'package:app/features/medications/presentation/cubit/medication_schedule_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_interval_notes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

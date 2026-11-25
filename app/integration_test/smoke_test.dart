@@ -6,31 +6,31 @@
 // It opens the signed-in app on offline repositories, visits each tab with
 // the bottom bar, opens the add sheet and closes it with the system back,
 // and schedules one real reminder on the phone.
-import 'package:app/core/l10n/dose_reminder_texts.dart';
+import 'package:app/app/router/app_router.dart';
+import 'package:app/app/router/routers.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/push_registration.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/remote_push.dart';
+import 'package:app/core/localization/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/navigation/app_router.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/push_registration.dart';
-import 'package:app/core/services/remote_push.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
-import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/storage/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/utils/time_zones.dart';
-import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/auth/data/datasources/intro_memory.dart';
 import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:app/features/prayer_times/data/prayer_times_repository.dart';
-import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
-import 'package:app/features/shell/widgets/app_bottom_bar.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
+import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
+import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
+import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -150,7 +150,7 @@ void main() {
       PushRegistration(phone, remote: remote),
     );
     di.registerSingleton<PrayerTimesUseCase>(
-      PrayerTimesUseCase(PrayerTimesRepository(SmokePrayerTimes())),
+      PrayerTimesUseCase(PrayerTimesRepositoryImpl(SmokePrayerTimes())),
     );
     di.registerSingleton<PrivatePhotoRepository>(SmokePhotoRepository());
   });

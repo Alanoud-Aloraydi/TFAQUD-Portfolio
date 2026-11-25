@@ -1,7 +1,7 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// Inviting a manager to a circle, and sending or canceling that invitation.
-mixin _ManagerInvitationCalls implements CirclesRepositoryDomain {
+mixin _ManagerInvitationCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
 
   @override

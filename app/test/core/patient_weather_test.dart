@@ -1,4 +1,4 @@
-import 'package:app/core/services/weather/patient_weather.dart';
+import 'package:app/app/services/weather/patient_weather.dart';
 import 'package:app/features/home/presentation/widgets/weather_icon.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';

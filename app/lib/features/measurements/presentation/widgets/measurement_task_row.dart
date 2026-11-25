@@ -1,13 +1,14 @@
-import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/theme/care_visuals.dart';
+import 'package:app/core/utils/recordable_now.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_answer.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_actions.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_details.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_task_recordable.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_status.dart';
 import 'package:flutter/material.dart';
 
@@ -66,4 +67,24 @@ class MeasurementTaskRow extends StatelessWidget {
           : null,
     );
   }
+}
+
+/// Whether [task] can still be answered at [now] (the patient's wall time):
+/// not once it is resolved or [readOnly], and only until the next task of
+/// its kind is due.
+bool canRecordMeasurement(
+  MeasurementOccurrence task,
+  DateTime now, {
+  required bool readOnly,
+}) {
+  final bool resolved =
+      task.status != MeasurementStatus.upcoming &&
+      task.status != MeasurementStatus.due &&
+      task.status != MeasurementStatus.missed;
+  return !readOnly &&
+      canRecordOccurrence(
+        resolved: resolved,
+        scheduledAt: wallClockAt(task.scheduledOn, task.time),
+        now: now,
+      );
 }

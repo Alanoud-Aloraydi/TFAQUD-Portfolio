@@ -1,11 +1,11 @@
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/period_entries.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/period_open_rule.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/prayer_clock.dart';
-import 'package:app/features/home/presentation/widgets/prayer_period/prayer_period_view.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/app/services/tap_focus.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/home/presentation/widgets/period_entries.dart';
+import 'package:app/features/home/presentation/widgets/period_task_rows.dart';
+import 'package:app/features/home/presentation/widgets/prayer_period_view.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
 import 'package:flutter/material.dart';
 
 /// One prayer period of «اليوم»: its name and time, and the doses, readings
@@ -57,3 +57,20 @@ class TodayPrayerPeriod extends StatelessWidget {
     );
   }
 }
+
+/// Whether a prayer period opens by itself: the patient is in it, or the
+/// notification just tapped is about one of its rows ([TapFocus]).
+///
+/// Attention, a missed reading and a visit opened their periods too, so
+/// most of the day stood open and «اليوم» read as one long list. They
+/// are still counted on the closed period's own line.
+bool periodStartsOpen(
+  PeriodEntries entries, {
+  required bool current,
+  required String circleId,
+}) =>
+    current ||
+    entries.sorted.any(
+      (PeriodEntry row) =>
+          periodEntryKey(row, circleId) == TapFocus.instance.key,
+    );

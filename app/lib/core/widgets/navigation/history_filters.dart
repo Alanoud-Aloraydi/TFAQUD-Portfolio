@@ -1,6 +1,5 @@
 import 'package:app/core/utils/history_filter.dart';
 import 'package:app/core/widgets/navigation/glass_filter_button.dart';
-import 'package:app/core/widgets/navigation/history_filter_choice.dart';
 import 'package:app/core/widgets/navigation/history_filter_sections.dart';
 import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:flutter/widgets.dart';

@@ -1,8 +1,8 @@
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/widgets/medication_pending_box.dart';
-import 'package:app/features/medications/presentation/widgets/medication_pending_revision.dart';
+import 'package:app/features/medications/presentation/widgets/cancel_pending_revision.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_card_body.dart';
 import 'package:app/features/medications/presentation/widgets/medication_revision_history.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_row.dart';
 import 'package:app/features/medications/presentation/widgets/medication_version_card.dart';

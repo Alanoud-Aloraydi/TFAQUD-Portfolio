@@ -4,8 +4,6 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/overlays/app_alert_action.dart';
 import 'package:app/core/widgets/overlays/app_alert_buttons.dart';
-import 'package:app/core/widgets/overlays/app_alert_panel.dart';
-import 'package:app/core/widgets/overlays/app_alert_text.dart';
 import 'package:app/core/widgets/overlays/app_alert_transition.dart';
 import 'package:flutter/material.dart';
 

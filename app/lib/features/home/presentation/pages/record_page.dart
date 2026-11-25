@@ -1,13 +1,12 @@
-import 'package:app/core/navigation/fading_branches.dart';
+import 'package:app/app/router/fading_branches.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_record_section.dart';
-import 'package:app/features/home/presentation/widgets/home_category_control.dart';
+import 'package:app/features/home/presentation/widgets/home_shell_view.dart';
 import 'package:app/features/home/presentation/widgets/record_header.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_section.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
 import 'package:app/features/medications/presentation/widgets/medication_history_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

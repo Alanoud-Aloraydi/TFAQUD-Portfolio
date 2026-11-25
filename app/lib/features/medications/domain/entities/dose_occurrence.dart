@@ -1,18 +1,11 @@
+import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/core/constants/plan_limits.dart';
-import 'package:app/core/services/reminders/shared_snooze.dart';
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/features/medications/domain/entities/dose_record.dart';
-import 'package:app/features/medications/domain/entities/dose_timing_state.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/medications/domain/entities/dose_lateness.dart';
-export 'package:app/features/medications/domain/entities/dose_occurrence_copies.dart';
-export 'package:app/features/medications/domain/entities/dose_outcome.dart';
 export 'package:app/features/medications/domain/entities/dose_record.dart';
 export 'package:app/features/medications/domain/entities/dose_record_draft.dart';
-export 'package:app/features/medications/domain/entities/dose_skip_reason.dart';
-export 'package:app/features/medications/domain/entities/dose_timing_state.dart';
 
 /// One expected dose the server computed from a plan's schedule: the
 /// schedule ([scheduleId]) on the patient's day [scheduledOn] at the wall
@@ -87,3 +80,20 @@ class DoseOccurrence extends Equatable {
     snooze,
   ];
 }
+
+/// Where an unrecorded dose stands against its time: not yet, due (its
+/// first 15 minutes), late (until `DoseOccurrence.missedAfterMinutes`) or
+/// missed. The server sends it; `medicationTimingState` recomputes it as
+/// the minutes pass on screen.
+enum DoseTimingState { upcoming, due, late, missed }
+
+/// What was recorded for a dose: taken, or not taken («تخطي»). The API's
+/// words are the names.
+enum DoseOutcome { taken, skipped }
+
+/// Adds dose unit value helpers to its target type.
+extension DoseUnitValue on DoseUnit {
+  String get apiValue => this == DoseUnit.milliliter ? 'mL' : name;
+}
+
+enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }

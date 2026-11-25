@@ -1,16 +1,17 @@
+import 'package:app/app/router/care_item_routes.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/extra_dose_history_cubit.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_cubit.dart';
 import 'package:app/features/medications/presentation/widgets/medication_details_body.dart';
-import 'package:app/features/medications/presentation/widgets/medication_edit_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
 /// The medicine's page: its own month of doses loaded beside it, and its
 /// extra doses.
@@ -66,5 +67,20 @@ class MedicationDetailsContent extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Opens the medicine's form and, when it saved, closes the medicine's page
+/// with it, so the list behind both is reloaded once.
+Future<void> editMedication(
+  BuildContext context,
+  String circleId,
+  String planId,
+) async {
+  final changed = await context.push<bool>(
+    CareItemRoutes.editMedication(circleId, planId),
+  );
+  if (changed == true && context.mounted) {
+    context.pop(true);
   }
 }

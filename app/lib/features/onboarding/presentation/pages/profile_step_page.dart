@@ -1,7 +1,6 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
-import 'package:app/features/onboarding/presentation/pages/profile_shown_changed.dart';
 import 'package:app/features/onboarding/presentation/pages/profile_step_body.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -60,4 +59,17 @@ class ProfileStepPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Whether [current] shows anything different from [previous].
+bool profileShownChanged(OnboardingState previous, OnboardingState current) {
+  bool blank(String value) => value.trim().isEmpty;
+  return previous.showErrors != current.showErrors ||
+      previous.status != current.status ||
+      previous.errorKey != current.errorKey ||
+      previous.birthDate != current.birthDate ||
+      previous.city != current.city ||
+      blank(previous.firstName) != blank(current.firstName) ||
+      blank(previous.lastName) != blank(current.lastName) ||
+      blank(previous.displayName) != blank(current.displayName);
 }

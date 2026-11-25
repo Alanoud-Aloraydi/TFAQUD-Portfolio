@@ -1,11 +1,14 @@
-import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
+import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/circles/domain/entities/circle_pending_invitation.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
-import 'package:app/features/circles/presentation/widgets/circle_small_action.dart';
+import 'package:app/features/circles/presentation/widgets/circle_feature_tile_content.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -63,4 +66,29 @@ Future<void> _act(
     errorKey ?? doneKey,
     kind: errorKey == null ? ToastKind.success : ToastKind.error,
   );
+}
+
+/// An hourglass portrait for pending invitations.
+class CircleRequestAvatar extends StatelessWidget {
+  const CircleRequestAvatar.waiting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Container(
+        width: AppSizes.avatar,
+        height: AppSizes.avatar,
+        alignment: Alignment.center,
+        decoration: const ShapeDecoration(
+          color: AppSemanticColors.surfaceAttention,
+          shape: CircleBorder(),
+        ),
+        child: const Icon(
+          PeopleIcons.hourglass,
+          size: AppSizes.iconSmall,
+          color: AppSemanticColors.doseDueMarker,
+        ),
+      ),
+    );
+  }
 }

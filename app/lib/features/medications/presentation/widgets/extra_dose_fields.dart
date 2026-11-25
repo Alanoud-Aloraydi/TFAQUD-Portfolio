@@ -1,10 +1,8 @@
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
-import 'package:app/features/medications/presentation/widgets/extra_dose_amount_group.dart';
+import 'package:app/features/medications/presentation/cubit/medication_schedule_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/extra_dose_medicines.dart';
 import 'package:app/features/medications/presentation/widgets/extra_dose_save_button.dart';
-import 'package:app/features/medications/presentation/widgets/extra_dose_time_group.dart';
 import 'package:flutter/material.dart';
 
 /// «سجّل جرعة الآن» laid out: the medicines, then, once one is chosen,

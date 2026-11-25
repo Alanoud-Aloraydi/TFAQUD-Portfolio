@@ -1,6 +1,5 @@
-import 'package:app/core/widgets/status/plan_status.dart';
+import 'package:app/core/widgets/status/plan_status_badge.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/entities/medication_plan_status.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 

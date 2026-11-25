@@ -1,5 +1,5 @@
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/presentation/widgets/chart_colors.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/presentation/widgets/chart_axis.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
 import 'package:flutter/material.dart';
 

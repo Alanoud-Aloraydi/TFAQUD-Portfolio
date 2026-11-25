@@ -2,15 +2,13 @@ import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_file_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_header.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_legal.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_sync_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_outlined_danger.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_section_title.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_sign_out_button.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_size_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -53,4 +51,14 @@ List<Widget> simplifiedAccountRows(
       onPressed: context.read<AccountCubit>().startDelete,
     ),
   ];
+}
+
+class SimplifiedSectionTitle extends StatelessWidget {
+  const SimplifiedSectionTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(text, style: SimplifiedStyle.head(SimplifiedStyle.body));
 }

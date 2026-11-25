@@ -4,7 +4,7 @@ import 'package:app/core/widgets/layout/logo_refresh.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_state.dart';
-import 'package:app/features/circles/presentation/widgets/inbox_focus_mark.dart';
+import 'package:app/features/circles/presentation/widgets/inbox_reply_buttons.dart';
 import 'package:app/features/circles/presentation/widgets/notifications_empty.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

@@ -1,11 +1,10 @@
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
-import 'package:app/features/measurements/presentation/widgets/normal_range_caption_line.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_scale.dart';
 import 'package:app/features/measurements/presentation/widgets/normal_range_value.dart';
-import 'package:app/features/measurements/presentation/widgets/normal_range_your_reading.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -63,4 +62,19 @@ class NormalRangeCard extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Which range [range] is (meal state and the patient's condition), under
+/// its values.
+class NormalRangeCaptionLine extends StatelessWidget {
+  const NormalRangeCaptionLine({super.key, required this.range});
+
+  final NormalRange range;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    normalRangeCaption(context, range.kind, range.profile, range.state),
+    style: Theme.of(context).textTheme.bodyMedium
+        ?.copyWith(color: context.tokens.textSecondary),
+  );
 }

@@ -1,10 +1,10 @@
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/core/localization/medication_format.dart';
+import 'package:app/core/localization/weekdays_text.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/widgets/medication_schedule_text.dart';
 import 'package:flutter/material.dart';
 
 /// One dose time in the card, in soft pills on one line: «8:00 ص»،
@@ -56,3 +56,15 @@ class MedicationScheduleRow extends StatelessWidget {
     );
   }
 }
+
+/// Which days a schedule repeats on, in its own way of repeating: the days
+/// of the month, every so many days, or the days of the week.
+String scheduleDaysText(BuildContext context, MedicationSchedule schedule) =>
+    switch (schedule.repeat) {
+      ScheduleRepeat.monthly => formatMonthDays(context, schedule.monthDays),
+      ScheduleRepeat.interval => formatInterval(
+        context,
+        schedule.intervalDays ?? 1,
+      ),
+      ScheduleRepeat.weekly => formatWeekdays(context, schedule.weekdays),
+    };

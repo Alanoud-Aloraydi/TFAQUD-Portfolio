@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/medication_format.dart';
+import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/widgets/layout/plan_card_parts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';

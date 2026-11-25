@@ -1,8 +1,8 @@
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
-import 'package:app/features/medications/presentation/cubit/extra_dose_state.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// «سجّل جرعة الآن» of [circleId]: reads its medicines, then sends one
@@ -48,4 +48,39 @@ class ExtraDoseCubit extends Cubit<ExtraDoseState> {
   void clearError() {
     if (state.errorKey != null) emit(state.copyWith());
   }
+}
+
+/// «سجّل جرعة الآن»: the circle's medicines to choose from, and the dose
+/// while it is sent.
+class ExtraDoseState extends Equatable {
+  const ExtraDoseState({
+    this.plans,
+    this.loadErrorKey,
+    this.saving = false,
+    this.errorKey,
+  });
+
+  /// Null while they load.
+  final List<MedicationPlan>? plans;
+
+  /// Why they did not load: a key in assets/translations.
+  final String? loadErrorKey;
+  final bool saving;
+
+  /// Why the last save failed: a key in assets/translations.
+  final String? errorKey;
+
+  ExtraDoseState copyWith({
+    List<MedicationPlan>? plans,
+    bool? saving,
+    String? errorKey,
+  }) => ExtraDoseState(
+    plans: plans ?? this.plans,
+    loadErrorKey: loadErrorKey,
+    saving: saving ?? this.saving,
+    errorKey: errorKey,
+  );
+
+  @override
+  List<Object?> get props => [plans, loadErrorKey, saving, errorKey];
 }

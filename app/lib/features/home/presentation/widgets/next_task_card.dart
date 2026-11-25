@@ -1,5 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/home/presentation/widgets/next_task_action.dart';
 import 'package:app/features/home/presentation/widgets/next_task_summary.dart';

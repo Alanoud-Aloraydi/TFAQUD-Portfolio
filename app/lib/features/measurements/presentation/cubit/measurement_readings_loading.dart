@@ -1,7 +1,8 @@
 import 'package:app/core/errors/network_exceptions.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_scope.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_readings_state.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Reads the readings of a circle's days, and reads them again.
@@ -64,4 +65,20 @@ mixin MeasurementReadingsLoading
       await load(readCircleId!, readFrom!, readTo!, silent: true);
     }
   }
+}
+
+/// The readings on screen, with the days they cover.
+class MeasurementReadingsState extends Equatable {
+  const MeasurementReadingsState({
+    this.status = MeasurementLoadStatus.initial,
+    this.readings = const [],
+    this.errorKey,
+  });
+
+  final MeasurementLoadStatus status;
+  final List<MeasurementReading> readings;
+  final String? errorKey;
+
+  @override
+  List<Object?> get props => [status, readings, errorKey];
 }

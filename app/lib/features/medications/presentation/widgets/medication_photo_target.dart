@@ -1,9 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:app/core/l10n/spoken_arabic.dart';
-import 'package:app/core/media/photo_edit_badge.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
-import 'package:app/features/medications/presentation/widgets/choose_medication_photo.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/core/media/photo_crop_actions.dart';
+import 'package:app/core/media/photo_crop_page.dart';
+import 'package:app/core/media/private_photo.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
@@ -56,4 +57,26 @@ class MedicationPhotoTarget extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Asks where the medicine's photo comes from, then crops what was picked.
+/// Removing reports no bytes and the removal, so the form knows to delete
+/// the one already saved.
+Future<void> chooseMedicationPhoto(
+  BuildContext context, {
+  required bool hasPhoto,
+  required void Function(Uint8List? bytes, bool removed) onChanged,
+}) async {
+  final source = await showPhotoSourceSheet(
+    context,
+    title: context.tr('photos.medication'),
+    canRemove: hasPhoto,
+  );
+  if (source == null || !context.mounted) return;
+  if (source == PhotoSource.remove) {
+    onChanged(null, true);
+    return;
+  }
+  final bytes = await pickAndCropPhoto(context, source);
+  if (bytes != null) onChanged(bytes, false);
 }

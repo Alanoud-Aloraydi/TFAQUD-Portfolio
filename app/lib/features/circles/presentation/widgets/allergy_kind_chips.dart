@@ -1,8 +1,8 @@
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
-import 'package:app/features/circles/domain/medical_options.dart';
-import 'package:app/features/circles/presentation/widgets/medical_other_field.dart';
+import 'package:app/features/circles/domain/entities/medical_options.dart';
+import 'package:app/features/circles/presentation/widgets/medical_file_edit_form.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

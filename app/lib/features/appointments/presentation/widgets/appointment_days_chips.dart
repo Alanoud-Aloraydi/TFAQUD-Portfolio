@@ -1,5 +1,5 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/l10n/appointment_texts.dart';
+import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;

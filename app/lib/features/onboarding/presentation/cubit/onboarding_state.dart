@@ -1,11 +1,8 @@
-import 'package:app/features/onboarding/presentation/cubit/care_target.dart';
-import 'package:app/features/onboarding/presentation/cubit/onboarding_state_props.dart';
-import 'package:app/features/onboarding/presentation/cubit/onboarding_status.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-export 'package:app/features/onboarding/presentation/cubit/care_target.dart';
-export 'package:app/features/onboarding/presentation/cubit/onboarding_state_copy.dart';
-export 'package:app/features/onboarding/presentation/cubit/onboarding_status.dart';
+export 'package:app/features/onboarding/presentation/cubit/onboarding_saving.dart';
 
 /// Immutable state of `OnboardingCubit`: the answers of the name step and
 /// the choice of the start step, kept while the person moves between them.
@@ -67,4 +64,32 @@ class OnboardingState extends Equatable {
 
   @override
   List<Object?> get props => onboardingStateProps(this);
+}
+
+/// Whether the profile request of the name step is running.
+enum OnboardingStatus { idle, saving }
+
+/// Who the care circle is for, chosen on the start step
+/// («كيف تحب تستخدم تفقُد؟»).
+enum CareTarget { self, other }
+
+/// What makes two [OnboardingState]s equal: every field, in the order the
+/// class declares them.
+List<Object?> onboardingStateProps(OnboardingState state) => <Object?>[
+  state.firstName,
+  state.lastName,
+  state.displayName,
+  state.birthDate,
+  state.city,
+  state.showErrors,
+  state.status,
+  state.errorKey,
+  state.sessionEnded,
+  state.careTarget,
+  state.patientUsesApp,
+];
+
+/// What the onboarding steps are bound to, shared by everything they do.
+mixin OnboardingScope on Cubit<OnboardingState> {
+  ProfileUseCase get profile;
 }

@@ -1,12 +1,12 @@
-import 'package:app/core/feedback/app_toast.dart';
-import 'package:app/core/l10n/duration_text.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/core/localization/duration_text.dart';
 import 'package:app/core/utils/patient_clock.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/core/widgets/feedback/remind_later_check.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_snooze_button.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_snooze_limit_of.dart';
-import 'package:app/features/medications/domain/snooze_limit.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_painter.dart';
+import 'package:app/features/medications/domain/entities/snooze_limit.dart';
 import 'package:app/features/medications/presentation/widgets/registered_dose_reminders.dart';
 import 'package:app/features/medications/presentation/widgets/snooze_sheet.dart';
 import 'package:app/features/medications/presentation/widgets/snooze_task_button.dart';
@@ -67,4 +67,19 @@ class MeasurementSnoozeButtonState extends State<MeasurementSnoozeButton> {
           ),
     );
   }
+}
+
+/// How long the measurement may still be put off: 12 hours, and never
+/// past halfway to the reading that follows it, which the occurrence
+/// carries as [MeasurementOccurrence.nextAt].
+Duration measurementSnoozeLimitOf(
+  BuildContext context,
+  MeasurementOccurrence task,
+) {
+  final PatientClock clock = PatientClockScope.of(context);
+  return snoozeLimit(
+    now: DateTime.now().toUtc(),
+    dose: clock.momentOf(task.scheduledOn, task.time),
+    nextDose: task.nextAt,
+  );
 }

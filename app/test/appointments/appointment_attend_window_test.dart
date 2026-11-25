@@ -1,6 +1,6 @@
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 CareAppointment _visit(

@@ -1,6 +1,7 @@
 import 'package:app/core/utils/schedule_day.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/cubit/medication_occurrences_scope.dart';
-import 'package:app/features/medications/presentation/cubit/medication_occurrences_state.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// «أقدم»: reading the days before the range already shown.
@@ -60,4 +61,35 @@ mixin MedicationOccurrencesEarlier
       ),
     );
   }
+}
+
+enum MedicationOccurrencesStatus {
+  loading,
+  loadingMore,
+  ready,
+  recording,
+  failure,
+}
+
+/// The doses on screen for the days they cover.
+class MedicationOccurrencesState extends Equatable {
+  MedicationOccurrencesState({
+    this.status = MedicationOccurrencesStatus.loading,
+    List<DoseOccurrence> occurrences = const [],
+    this.recordingOccurrence,
+    this.messageKey,
+  }) : occurrences = List.unmodifiable(occurrences);
+
+  final MedicationOccurrencesStatus status;
+  final List<DoseOccurrence> occurrences;
+  final DoseOccurrence? recordingOccurrence;
+  final String? messageKey;
+
+  @override
+  List<Object?> get props => [
+    status,
+    occurrences,
+    recordingOccurrence,
+    messageKey,
+  ];
 }

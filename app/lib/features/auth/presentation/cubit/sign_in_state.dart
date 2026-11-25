@@ -1,11 +1,8 @@
 import 'package:app/core/utils/saudi_mobile.dart';
-import 'package:app/features/auth/presentation/cubit/sign_in_state_props.dart';
-import 'package:app/features/auth/presentation/cubit/sign_in_status.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/auth/presentation/cubit/sign_in_state_copy.dart';
-export 'package:app/features/auth/presentation/cubit/sign_in_status.dart';
+export 'package:app/features/auth/presentation/cubit/sign_in_verifying.dart';
 
 /// State of the sign-in pages (phone number, then code). One cubit serves both
 /// pages, so the code page knows the phone number.
@@ -67,3 +64,19 @@ class SignInState extends Equatable {
   @override
   List<Object?> get props => signInStateProps(this);
 }
+
+enum SignInStatus { idle, sendingCode, codeSent, verifying, verified }
+
+/// What makes two [SignInState]s equal: every field, in the order the
+/// class declares them.
+List<Object?> signInStateProps(SignInState state) => <Object?>[
+  state.phone,
+  state.code,
+  state.status,
+  state.errorKey,
+  state.showPhoneError,
+  state.resendSeconds,
+  state.verificationId,
+  state.needsProfile,
+  state.appMode,
+];

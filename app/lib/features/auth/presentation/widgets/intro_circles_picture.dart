@@ -1,10 +1,9 @@
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
-import 'package:app/core/widgets/overlays/glass_menu_entry.dart';
 import 'package:app/core/widgets/overlays/glass_menu_layout.dart';
 import 'package:app/core/widgets/overlays/glass_menu_row.dart';
 import 'package:easy_localization/easy_localization.dart';

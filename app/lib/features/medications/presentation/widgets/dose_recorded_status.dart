@@ -1,11 +1,10 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_recorded_lines.dart';
-import 'package:app/features/medications/presentation/widgets/dose_recorded_mark.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 /// What the buttons become once the dose is answered: the answer itself,
 /// in a box of its own colour.
@@ -64,4 +63,20 @@ class DoseRecordedStatus extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The sign of what was recorded. The check is knocked out of a filled
+/// green disc, so the mark itself is white: a tick that reads at a glance
+/// across the card. A dose recorded as not taken gets the quiet minus.
+class DoseRecordedMark extends StatelessWidget {
+  const DoseRecordedMark({super.key, required this.taken, required this.color});
+
+  final bool taken;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Icon(
+    taken ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.minus_circle,
+    color: color,
+  );
 }

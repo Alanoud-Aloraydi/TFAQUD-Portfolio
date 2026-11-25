@@ -1,5 +1,4 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';
@@ -9,7 +8,6 @@ import 'package:app/features/circles/presentation/widgets/emergency_card_text.da
 import 'package:app/features/circles/presentation/widgets/emergency_card_top.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_contacts.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_medicines.dart';
-import 'package:app/features/circles/presentation/widgets/emergency_rule.dart';
 import 'package:flutter/material.dart';
 
 /// The card itself: white, a 2-point ink edge, 16 inside.
@@ -62,6 +60,22 @@ class EmergencyCardBody extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A thin line between the parts of the card, 12 above and below.
+class EmergencyRule extends StatelessWidget {
+  const EmergencyRule({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Divider(
+        height: AppSizes.divider,
+        color: AppSemanticColors.segmentTrack,
       ),
     );
   }

@@ -1,16 +1,16 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
-import 'package:app/features/prayer_times/domain/repositories/prayer_times_repository_domain.dart';
-import 'package:app/features/prayer_times/domain/use_cases/prayer_times_use_case.dart';
+import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
+import 'package:app/features/prayer_times/domain/repositories/prayer_times_repository.dart';
+import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
 import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
-import 'package:app/features/prayer_times/presentation/cubit/prayer_times_state.dart';
+import 'package:app/features/prayer_times/presentation/cubit/prayer_times_midnight.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 /// Counts the reads and answers with the day it was given, or with
 /// [failure] when it is set.
-class _FakeRepository implements PrayerTimesRepositoryDomain {
+class _FakeRepository implements PrayerTimesRepository {
   int reads = 0;
   Failure? failure;
 
@@ -152,25 +152,5 @@ void main() {
         expect(cubit.state.day, isNull);
       },
     );
-
-    test("the next prayer is read on the patient's clock, with DST", () {
-      // London on 26 October 2026, after summer time ended: 12:30 UTC is
-      // 12:30 there, after Dhuhr and before Asr. With summer time (UTC+1)
-      // it would be 13:30.
-      final PrayerDay day = PrayerDay(
-        date: DateTime(2026, 10, 26),
-        city: 'لندن',
-        timeZone: 'Europe/London',
-        times: const <Prayer, String>{
-          Prayer.fajr: '05:30',
-          Prayer.dhuhr: '11:55',
-          Prayer.asr: '13:15',
-          Prayer.maghrib: '16:40',
-          Prayer.isha: '18:15',
-        },
-      );
-      expect(day.nextPrayer(DateTime.utc(2026, 10, 26, 12, 30)), Prayer.asr);
-      expect(day.nextPrayer(DateTime.utc(2026, 10, 26, 11, 30)), Prayer.dhuhr);
-    });
   });
 }

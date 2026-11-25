@@ -1,5 +1,5 @@
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/presentation/cubit/contact_choice.dart';
+import 'package:app/features/circles/presentation/cubit/contact_deleting.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:equatable/equatable.dart';
 

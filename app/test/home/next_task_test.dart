@@ -1,8 +1,8 @@
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 MeasurementOccurrence _task({

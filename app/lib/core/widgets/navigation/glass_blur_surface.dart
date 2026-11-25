@@ -1,6 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
-import 'package:app/core/theme/foundations/app_effects.dart';
+import 'package:app/core/theme/foundations/app_motion.dart';
 import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:flutter/material.dart';
 

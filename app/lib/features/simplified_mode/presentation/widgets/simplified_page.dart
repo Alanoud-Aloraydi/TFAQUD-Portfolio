@@ -1,9 +1,6 @@
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_page_back.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_page_footer.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_page_title.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A sub-screen: «رجوع» on top, a big title, the body scrolling, and an
 /// optional action pinned at the bottom.
@@ -65,6 +62,26 @@ class SimplifiedPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The action pinned at the bottom of a sub-screen.
+class SimplifiedPageFooter extends StatelessWidget {
+  const SimplifiedPageFooter({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SimplifiedStyle.page,
+        12,
+        SimplifiedStyle.page,
+        24,
+      ),
+      child: child,
     );
   }
 }

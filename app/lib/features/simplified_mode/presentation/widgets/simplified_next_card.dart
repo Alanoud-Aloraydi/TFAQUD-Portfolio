@@ -1,13 +1,13 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_schedule.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/today_schedule.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_next_content.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_next_lines.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_reading_row.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_snoozed_line.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_weather.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// The next task: the medicine's photo first (how the patient knows it),
 /// then the time, the name and what to take.

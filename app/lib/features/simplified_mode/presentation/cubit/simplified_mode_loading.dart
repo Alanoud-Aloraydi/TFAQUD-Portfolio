@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_scope.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_state.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_writing.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
 

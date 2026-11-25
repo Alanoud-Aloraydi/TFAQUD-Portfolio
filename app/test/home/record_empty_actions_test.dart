@@ -1,6 +1,6 @@
-import 'package:app/features/appointments/presentation/widgets/appointment_record_empty.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_record_section.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/presentation/widgets/medication_record_list.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

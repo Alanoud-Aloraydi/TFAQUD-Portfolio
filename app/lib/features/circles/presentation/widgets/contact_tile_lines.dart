@@ -1,8 +1,8 @@
-import 'package:app/core/l10n/medical_texts.dart';
+import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
-import 'package:app/features/circles/presentation/widgets/contact_verified_badge.dart';
+import 'package:app/features/circles/presentation/widgets/contact_form_props.dart';
 import 'package:flutter/material.dart';
 
 /// What an emergency contact's tile says: the name with whether the number

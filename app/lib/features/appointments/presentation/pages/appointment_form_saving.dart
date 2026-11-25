@@ -1,9 +1,9 @@
-import 'package:app/core/feedback/app_toast.dart';
 import 'package:app/core/utils/schedule_day.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
-import 'package:app/features/appointments/presentation/pages/appointment_form_draft.dart';
+import 'package:app/features/appointments/presentation/pages/appointment_form_fields.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 

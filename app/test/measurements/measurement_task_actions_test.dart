@@ -1,6 +1,6 @@
-import 'package:app/core/theme/foundations/app_item_card.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_task_actions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

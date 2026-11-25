@@ -1,12 +1,9 @@
-import '../support/normal_ranges.dart';
-import '../support/widget_harness.dart';
-
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/features/measurements/domain/repositories/measurement_repository.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
@@ -16,7 +13,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _Measurements extends Fake implements MeasurementRepository {
+import '../support/normal_ranges.dart';
+import '../support/widget_harness.dart';
+
+class _Measurements extends Fake implements MeasurementsRepository {
   @override
   Stream<String> get recorded => const Stream<String>.empty();
 

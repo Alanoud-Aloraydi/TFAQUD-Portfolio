@@ -1,4 +1,3 @@
-import 'package:app/core/widgets/status/plan_status.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -24,4 +23,22 @@ class PlanStatusBadge extends StatelessWidget {
     PlanStatus.completed => StatusTone.neutral,
     PlanStatus.stopped => StatusTone.danger,
   };
+}
+
+/// Where a care plan stands on a given day, the same for every kind of plan.
+enum PlanStatus {
+  /// In effect today.
+  active,
+
+  /// Saved, but its first day has not come yet.
+  scheduled,
+
+  /// Reached its end date.
+  completed,
+
+  /// Stopped by someone before its end date.
+  stopped;
+
+  /// The translation key of the label shown on the badge.
+  String get labelKey => 'plan_status.$name';
 }

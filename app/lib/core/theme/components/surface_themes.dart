@@ -1,6 +1,6 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/theme/app_tokens.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
 import 'package:flutter/material.dart';
@@ -51,4 +51,49 @@ abstract class AppSurfaceThemes {
       shape: AppRadius.shape(AppRadius.s),
     );
   }
+}
+
+/// Shared selection themes for the current application appearance.
+abstract class AppSelectionThemes {
+  AppSelectionThemes._();
+
+  static ChipThemeData chip(AppTokens tokens) {
+    return ChipThemeData(
+      backgroundColor: AppSemanticColors.surfaceContent,
+      selectedColor: AppSemanticColors.selectedSurface,
+      checkmarkColor: AppSemanticColors.textPrimary,
+      disabledColor: AppSemanticColors.borderSubtle,
+      // A chosen chip's line is a deeper shade of its own violet fill,
+      // not a grey ruled around it. An unchosen chip is white, so it
+      // keeps the control grey that makes it read as a thing to press.
+      side: WidgetStateBorderSide.resolveWith(
+        (Set<WidgetState> states) => BorderSide(
+          color: states.contains(WidgetState.selected)
+              ? AppSemanticColors.selectedSurface
+              : tokens.borderControl,
+        ),
+      ),
+      shape: const StadiumBorder(),
+      showCheckmark: true,
+      // The chip theme's label style replaces Material's default, so it must
+      // name the app font itself; without it the options of «الأمراض
+      // المزمنة» and «الحساسية» showed in the system font.
+      labelStyle: const TextStyle(
+        fontFamily: AppTextTheme.fontFamily,
+        color: AppSemanticColors.textPrimary,
+        fontSize: 15,
+        height: 24 / 15,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  static CheckboxThemeData checkbox(AppTokens tokens) => CheckboxThemeData(
+    checkColor: WidgetStatePropertyAll<Color>(AppSemanticColors.surfaceContent),
+    side: BorderSide(color: tokens.borderControl, width: 1.5),
+  );
+
+  static final RadioThemeData radio = RadioThemeData(
+    fillColor: WidgetStatePropertyAll<Color>(AppSemanticColors.textPrimary),
+  );
 }

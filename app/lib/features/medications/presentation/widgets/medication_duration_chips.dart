@@ -1,7 +1,11 @@
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/forms/option_chips.dart';
 import 'package:app/core/widgets/layout/inset_block.dart';
-import 'package:app/core/widgets/pickers/date_picker_sheet.dart';
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/core/widgets/pickers/date_wheel_choice.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -50,5 +54,43 @@ class MedicationDurationChips extends StatelessWidget {
     if (selected == null) return;
     data.endsOn = selected;
     onChanged();
+  }
+}
+
+/// What a field of the medicine's form refused, under the group it belongs
+/// to: the warning sign and [messageKey] in the error colour.
+class MedicationIssueNote extends StatelessWidget {
+  const MedicationIssueNote({super.key, required this.messageKey});
+
+  final String messageKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens tokens = context.tokens;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpacing.lg,
+        end: AppSpacing.lg,
+        top: AppSpacing.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            NoticeIcons.warningCircle,
+            size: AppSizes.iconSmall,
+            color: tokens.error,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              context.tr(messageKey),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: tokens.errorText),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

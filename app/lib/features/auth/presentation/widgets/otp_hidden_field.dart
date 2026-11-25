@@ -1,5 +1,5 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/features/auth/presentation/widgets/otp_digits_formatter.dart';
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -46,6 +46,26 @@ class OtpHiddenField extends StatelessWidget {
         contentPadding: EdgeInsets.zero,
         counterText: '',
       ),
+    );
+  }
+}
+
+/// Keeps only digits (Western or Arabic-Indic) and cuts the text at [length].
+class OtpDigitsFormatter extends TextInputFormatter {
+  OtpDigitsFormatter(this.length);
+
+  final int length;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    String digits = ArabicDigits.digitsOnly(newValue.text);
+    if (digits.length > length) digits = digits.substring(0, length);
+    return TextEditingValue(
+      text: digits,
+      selection: TextSelection.collapsed(offset: digits.length),
     );
   }
 }

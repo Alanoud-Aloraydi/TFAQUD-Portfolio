@@ -1,8 +1,7 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
-import 'package:app/features/simplified_mode/domain/use_cases/simplified_mode_use_case.dart';
-import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_draft.dart';
+import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multiple_result/multiple_result.dart';
@@ -63,5 +62,21 @@ class SimplifiedMeasurementCubit extends Cubit<SimplifiedMeasurementState> {
       ),
     );
     return failure == null;
+  }
+}
+
+/// What a typed reading becomes when it is saved.
+extension SimplifiedReadingDraft on SimplifiedReading {
+  /// The reading as it was measured at [measuredAt].
+  MeasurementReadingDraft toDraft(DateTime measuredAt) {
+    return MeasurementReadingDraft(
+      kind: kind,
+      outcome: 'read',
+      measuredAt: measuredAt,
+      valueOne: valueOne,
+      valueTwo: valueTwo,
+      conditions: conditions,
+      otherCondition: note,
+    );
   }
 }

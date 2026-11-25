@@ -1,9 +1,9 @@
-import 'package:app/core/icons/tafaqod_phosphor_icons.dart';
-import 'package:app/core/l10n/medication_format.dart';
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/constants/icons/tafaqod_phosphor_icons.dart';
+import 'package:app/core/localization/medication_format.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/dose_strength_text.dart';
+import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
 import 'package:app/features/medications/presentation/widgets/navigate_to_medication.dart';
 import 'package:flutter/material.dart';
 

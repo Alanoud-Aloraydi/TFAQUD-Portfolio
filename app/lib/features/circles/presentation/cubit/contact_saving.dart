@@ -1,16 +1,16 @@
 import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
+import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/presentation/cubit/contact_draft_of.dart';
+import 'package:app/features/circles/domain/entities/medical_options.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
-import 'package:app/features/circles/presentation/cubit/contact_form_checks.dart';
-import 'package:app/features/circles/presentation/cubit/contact_kept.dart';
+import 'package:app/features/circles/presentation/cubit/contact_form_opening.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_loading.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_scope.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -67,3 +67,15 @@ mixin ContactSaving
     );
   }
 }
+
+/// The contact as the server takes it, from a form whose relation is
+/// answered: the number typed in its national form goes out in its
+/// international one, and the words of «أخرى» only with «أخرى».
+ContactDraft contactDraftOf(ContactForm form, String name) => ContactDraft(
+  name: name,
+  relation: form.relation!,
+  relationOther: form.relation == MedicalOptions.other
+      ? form.relationOther.trim()
+      : null,
+  phoneNumber: SaudiMobile.international(form.phone),
+);

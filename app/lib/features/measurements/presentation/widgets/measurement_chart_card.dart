@@ -1,14 +1,14 @@
 import 'package:app/core/theme/app_semantic_colors.dart';
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/calendar_month.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_chart_card_header.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_chart_switch.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_month_view.dart';
-import 'package:app/features/measurements/presentation/widgets/reading_count_text.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_task_status.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// A month of one kind of reading: the latest value, the count, and a switch
 /// between the chart and the calendar.
@@ -65,3 +65,18 @@ class _MeasurementChartCardState extends State<MeasurementChartCard> {
     );
   }
 }
+
+/// How many [readings] a month has and how many of them are outside their
+/// range, or that it has none.
+String readingCountText(
+  BuildContext context,
+  List<MeasurementReading> readings,
+) => readings.isEmpty
+    ? context.tr('measurements.no_readings')
+    : context.tr(
+        'measurements.reading_count',
+        args: <String>[
+          '${readings.length}',
+          '${readings.where((r) => r.outsideTarget == true).length}',
+        ],
+      );

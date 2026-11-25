@@ -1,9 +1,10 @@
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/presentation/widgets/member_badges.dart';
-import 'package:app/features/circles/presentation/widgets/member_patient_line.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Who a member is, read as one stop: their photo, their name, the line
@@ -60,4 +61,24 @@ class MemberProfileIdentity extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The line under a patient's name on their card, which says whether they
+/// use the app themselves.
+class MemberPatientLine extends StatelessWidget {
+  const MemberPatientLine({super.key, required this.usesApp});
+
+  final bool usesApp;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    context.tr(
+      usesApp
+          ? 'circle_overview.patient_line'
+          : 'circle_overview.patient_line_no_app',
+    ),
+    textAlign: TextAlign.center,
+    style: Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: context.tokens.textSecondary),
+  );
 }

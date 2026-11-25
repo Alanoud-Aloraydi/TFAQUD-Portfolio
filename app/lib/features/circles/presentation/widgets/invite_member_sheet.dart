@@ -1,9 +1,11 @@
-import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/arabic_digits.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/core/widgets/forms/phone_field.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
-import 'package:app/features/circles/presentation/widgets/invite_send_button.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
@@ -63,6 +65,28 @@ class _InviteMemberSheetState extends State<InviteMemberSheet> {
         const SizedBox(height: AppSpacing.lg),
         InviteSendButton(onPressed: _saving ? null : _send),
       ],
+    );
+  }
+}
+
+/// «إرسال الدعوة» in ink with the paper plane in leaf. Null [onPressed]
+/// while the invitation is on its way.
+class InviteSendButton extends StatelessWidget {
+  const InviteSendButton({super.key, required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppSemanticColors.textPrimary,
+        foregroundColor: AppSemanticColors.surfaceContent,
+        iconColor: AppSemanticColors.accentLeaf,
+      ),
+      icon: const Icon(PeopleIcons.paperPlane, size: AppSizes.iconSmall),
+      label: Text(context.tr('circle_overview.send_invite')),
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:app/features/appointments/data/appointment_model.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/appointments/data/models/appointment_model.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,7 +37,7 @@ AppointmentDraft _draft() => AppointmentDraft(
   companionAccountIds: const <String>['u1'],
 );
 
-class _FakeRepository implements AppointmentsRepositoryDomain {
+class _FakeRepository implements AppointmentsRepository {
   final StreamController<String> _changes = StreamController<String>.broadcast(
     sync: true,
   );

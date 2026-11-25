@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/features/measurements/presentation/widgets/month_switcher.dart';
 import 'package:flutter/cupertino.dart';

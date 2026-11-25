@@ -1,10 +1,12 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/core/theme/app_tokens.dart';
+import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_outcome.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card_status.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_kind_group.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_outcome_change.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -68,3 +70,30 @@ class _OutcomeBadgeState extends State<AppointmentOutcomeBadge> {
     );
   }
 }
+
+/// Under an appointment card's day and time: «الزيارة 2 من 6» when it is one
+/// of several dates booked together (counted among [all]), and its
+/// «ورقة الزيارة» once it was attended.
+List<Widget> appointmentCardBody(
+  BuildContext context, {
+  required CareAppointment value,
+  required List<CareAppointment> all,
+  required String circleId,
+  required bool canManage,
+}) => <Widget>[
+  if (AppointmentSeries.of(value, all) case final AppointmentSeries at)
+    Text(
+      context.tr(
+        'appointments.visit_of_series',
+        args: <String>['${at.index}', '${at.count}'],
+      ),
+      style: Theme.of(context).textTheme.bodySmall
+          ?.copyWith(color: context.tokens.textSecondary),
+    ),
+  if (value.status == AppointmentStatus.completed)
+    AppointmentVisitButton(
+      visit: value,
+      circleId: circleId,
+      canManage: canManage,
+    ),
+];

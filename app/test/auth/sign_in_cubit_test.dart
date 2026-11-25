@@ -2,18 +2,17 @@ import 'dart:async';
 
 import 'package:app/core/errors/failure.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
-import 'package:app/features/auth/domain/entities/sign_in_result.dart';
-import 'package:app/features/auth/domain/failures/invalid_code_failure.dart';
-import 'package:app/features/auth/domain/failures/sign_in_failures.dart';
-import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/auth/domain/entities/invalid_code_failure.dart';
+import 'package:app/features/auth/domain/entities/sign_in_failures.dart';
+import 'package:app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:app/features/auth/presentation/cubit/sign_in_state.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-class _Auth implements AuthRepositoryDomain {
+class _Auth implements AuthRepository {
   final List<({String phone, String? id})> requests =
       <({String phone, String? id})>[];
   int verifies = 0;

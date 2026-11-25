@@ -1,17 +1,15 @@
-import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/scroll_insets.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/circle_overview_state.dart';
-import 'package:app/features/circles/presentation/widgets/add_member_button.dart';
 import 'package:app/features/circles/presentation/widgets/circle_card.dart';
 import 'package:app/features/circles/presentation/widgets/circle_feature_tiles.dart';
 import 'package:app/features/circles/presentation/widgets/circle_members_header.dart';
 import 'package:app/features/circles/presentation/widgets/circle_members_list.dart';
-import 'package:app/features/circles/presentation/widgets/circle_overview_failure.dart';
 import 'package:app/features/circles/presentation/widgets/leave_circle_button.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -66,5 +64,31 @@ class CircleContent extends StatelessWidget {
         LeaveCircleButton(overview: overview),
       ],
     ];
+  }
+}
+
+/// The circle could not be read: why, and a button that reads it again.
+class CircleOverviewFailure extends StatelessWidget {
+  const CircleOverviewFailure({
+    super.key,
+    required this.errorKey,
+    required this.onRetry,
+  });
+
+  final String? errorKey;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Text(
+          context.tr(errorKey ?? 'error.unknown'),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(onPressed: onRetry, child: Text(context.tr('auth.retry'))),
+      ],
+    );
   }
 }

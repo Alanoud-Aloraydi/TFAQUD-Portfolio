@@ -1,11 +1,8 @@
+import 'package:app/core/network/api_endpoints.dart';
+import 'package:app/core/network/auth_interceptor.dart';
 import 'package:dio/dio.dart';
-import 'package:injectable/injectable.dart';
-
-import 'api_options.dart';
-import 'auth_interceptor.dart';
 
 /// Configures the authenticated HTTP client.
-@lazySingleton
 class DioClient {
   late final Dio _dio;
 

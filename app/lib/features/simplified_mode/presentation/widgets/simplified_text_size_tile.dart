@@ -1,7 +1,7 @@
-import 'package:app/features/simplified_mode/domain/entities/simplified_text_size.dart';
+import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/apply_text_scale.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_text_size_tile_decoration.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,4 +58,33 @@ class SimplifiedTextSizeTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Applies the text size chosen in «حسابي» to every simplified screen, on
+/// top of the phone's own text size, and at once when it changes.
+class SimplifiedTextScale extends StatelessWidget {
+  const SimplifiedTextScale({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final double factor = context.select<SimplifiedSettingsCubit, double>(
+      (cubit) => cubit.state.textSize.factor,
+    );
+    return applyTextScale(context, factor, child);
+  }
+}
+
+/// The box of a text-size tile: tinted with a thick ink edge when chosen,
+/// plain with a thin grey edge otherwise.
+BoxDecoration simplifiedTextSizeTileDecoration({required bool selected}) {
+  return BoxDecoration(
+    color: selected ? SimplifiedColors.accentTint : SimplifiedColors.surface,
+    borderRadius: BorderRadius.circular(22),
+    border: Border.all(
+      color: selected ? SimplifiedColors.ink : SimplifiedColors.disabled,
+      width: selected ? 3 : 2,
+    ),
+  );
 }

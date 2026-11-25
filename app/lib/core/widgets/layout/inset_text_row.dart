@@ -1,5 +1,5 @@
 import 'package:app/core/widgets/forms/tap_to_focus.dart';
-import 'package:app/core/widgets/layout/inset_row_error.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/inset_text_field.dart';
 import 'package:app/core/widgets/layout/inset_text_line.dart';
 import 'package:flutter/material.dart';

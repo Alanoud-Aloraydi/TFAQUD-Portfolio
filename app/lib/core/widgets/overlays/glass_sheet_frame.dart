@@ -1,8 +1,7 @@
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
 import 'package:app/core/widgets/overlays/glass_sheet_header.dart';
-import 'package:app/core/widgets/overlays/glass_sheet_metrics.dart';
 import 'package:flutter/material.dart';
 
 /// The glass panel of a sheet: the header on top and, under it, [child] in a

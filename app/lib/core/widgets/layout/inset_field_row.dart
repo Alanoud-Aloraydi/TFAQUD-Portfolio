@@ -1,7 +1,7 @@
+import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/widgets/layout/inset_row_label.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:flutter/material.dart';
 
 /// A row that cannot be tapped, with the small label in its column and any
@@ -44,3 +44,22 @@ class InsetFieldRow extends StatelessWidget {
     );
   }
 }
+
+/// The look of a text field inside a form row: no border and no fill (the
+/// card is its boundary), and a light [hint] while it is empty.
+InputDecoration insetFieldDecoration(TextTheme text, String? hint) =>
+    InputDecoration(
+      hintText: hint,
+      hintStyle: text.bodyMedium?.copyWith(
+        color: AppSemanticColors.borderControlBase,
+      ),
+      filled: false,
+      isDense: true,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      disabledBorder: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+    );

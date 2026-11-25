@@ -1,15 +1,17 @@
-import 'package:app/core/extensions/scroll_insets.dart';
-import 'package:app/core/theme/foundations/app_item_card.dart';
+import 'package:app/app/router/care_item_routes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/scroll_insets.dart';
+import 'package:app/core/widgets/feedback/empty_state_note.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/presentation/cubit/measurement_load_status.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_card.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plans_empty.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// The list of «الخطة»'s measurements: loading, a retry when it failed, the
 /// empty note, or one card for each active plan of [circleId].
@@ -59,4 +61,26 @@ class MeasurementPlanList extends StatelessWidget {
       ],
     );
   }
+}
+
+/// «ما في قياسات»: nothing planned yet, with «إضافة قياس» for someone who
+/// can manage the plans.
+class MeasurementPlansEmpty extends StatelessWidget {
+  const MeasurementPlansEmpty({
+    super.key,
+    required this.circleId,
+    required this.canManage,
+  });
+
+  final String circleId;
+  final bool canManage;
+
+  @override
+  Widget build(BuildContext context) => EmptyStateNote.section(
+    context.tr('measurements.no_plans'),
+    actionLabel: canManage ? context.tr('add.measurement') : null,
+    onAction: canManage
+        ? () => context.push(CareItemRoutes.newMeasurement(circleId))
+        : null,
+  );
 }

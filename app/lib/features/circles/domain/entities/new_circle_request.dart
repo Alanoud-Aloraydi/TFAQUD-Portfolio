@@ -1,4 +1,4 @@
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
 /// What the sender typed to ask a patient who uses the app for a circle. The
@@ -51,5 +51,31 @@ class SentCircleRequest extends Equatable {
     status,
     createdAt,
     respondedAt,
+  ];
+}
+
+/// What the user typed to create a circle for a patient who does not use the
+/// app. The user manages the circle. The names of the patient are typed here,
+/// because there is no account to read them from. Nobody names the circle:
+/// the server names it «دائرة» and the patient's first name.
+class NewPatientCircle extends Equatable {
+  const NewPatientCircle({
+    required this.patientFirstName,
+    required this.patientLastName,
+    required this.birthDate,
+    required this.city,
+  });
+
+  final String patientFirstName;
+  final String patientLastName;
+  final DateTime birthDate;
+  final String city;
+
+  @override
+  List<Object?> get props => [
+    patientFirstName,
+    patientLastName,
+    birthDate,
+    city,
   ];
 }

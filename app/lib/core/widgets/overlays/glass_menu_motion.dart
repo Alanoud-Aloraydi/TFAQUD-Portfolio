@@ -1,7 +1,8 @@
 import 'dart:ui' show lerpDouble;
 
-import 'package:app/core/theme/foundations/app_radius.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/widgets/overlays/glass_menu_layout.dart';
+import 'package:app/core/widgets/overlays/glass_menu_surface.dart';
 import 'package:flutter/material.dart';
 
 /// One frame of the glass menu opening or closing, worked out from the
@@ -39,4 +40,29 @@ class GlassMenuMotion {
   late final double blur;
   late final double anchorOut;
   late final double scale;
+}
+
+/// The control's own content, drawn over the opening menu and fading and
+/// blurring away as the menu grows; [fade] is its opacity.
+class GlassMenuAnchorLayer extends StatelessWidget {
+  const GlassMenuAnchorLayer({
+    super.key,
+    required this.fade,
+    required this.content,
+  });
+
+  final double fade;
+  final Widget content;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Opacity(
+          opacity: fade,
+          child: glassMenuBlurred((1 - fade) * 6, Center(child: content)),
+        ),
+      ),
+    );
+  }
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/features/circles/domain/entities/circle_member.dart';
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_family_member_photo.dart';

@@ -1,11 +1,10 @@
 import 'package:app/core/widgets/forms/tap_to_focus.dart';
-import 'package:app/core/widgets/layout/inset_row_error.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/inset_text_line.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
-import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
-import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
-import 'package:app/features/medications/presentation/widgets/medication_dose_trailing.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
+import 'package:app/features/medications/presentation/widgets/medication_dose_number.dart';
+import 'package:app/features/medications/presentation/widgets/medication_dose_stepper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -45,6 +44,36 @@ class MedicationDoseRow extends StatelessWidget {
         if (issue?.field == MedicationFormField.dose)
           InsetRowError(context.tr('medications.positive_number')),
       ],
+    ),
+  );
+}
+
+/// After the dose's label: + , the number with its unit, − .
+class MedicationDoseTrailing extends StatelessWidget {
+  const MedicationDoseTrailing({
+    super.key,
+    required this.data,
+    required this.units,
+    required this.onChanged,
+    required this.focusNode,
+  });
+
+  final ScheduleFormData data;
+  final List<DoseUnit> units;
+  final VoidCallback onChanged;
+
+  /// The number's focus, which a tap on the row gives it.
+  final FocusNode focusNode;
+
+  @override
+  Widget build(BuildContext context) => MedicationDoseStepper(
+    data: data,
+    onChanged: onChanged,
+    middle: MedicationDoseNumber(
+      data: data,
+      units: units,
+      onChanged: onChanged,
+      focusNode: focusNode,
     ),
   );
 }

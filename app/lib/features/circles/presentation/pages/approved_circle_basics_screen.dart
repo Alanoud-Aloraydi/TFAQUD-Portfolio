@@ -1,15 +1,15 @@
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:app/core/widgets/layout/step_header.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_state.dart';
-import 'package:app/features/circles/presentation/widgets/account_name_field.dart';
-import 'package:app/features/circles/presentation/widgets/circle_basics_error.dart';
+import 'package:app/features/circles/presentation/widgets/account_load_failed.dart';
 import 'package:app/features/circles/presentation/widgets/circle_basics_fields.dart';
 import 'package:app/features/circles/presentation/widgets/circle_basics_scaffold.dart';
 import 'package:app/features/circles/presentation/widgets/circle_name_chips.dart';
 import 'package:app/features/circles/presentation/widgets/create_circle_name_state.dart';
+import 'package:app/features/circles/presentation/widgets/read_only_field.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,6 +52,46 @@ class _ApprovedBasicsState extends State<ApprovedCircleBasicsScreen>
         CircleBasicsFields(cubit: cubit, state: state, topGap: AppSpacing.lg),
         CircleBasicsError(state: state),
       ],
+    );
+  }
+}
+
+/// The patient's name, read from the account and not editable ("من حسابك").
+/// It shows a spinner while the names load, and a retry link when they fail.
+class AccountNameField extends StatelessWidget {
+  const AccountNameField({
+    super.key,
+    required this.state,
+    required this.onRetry,
+  });
+
+  final CreateCircleState state;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget content = switch (state.accountLoad) {
+      AccountLoad.loaded || AccountLoad.notNeeded => Text(
+        state.fullName ?? '',
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
+      AccountLoad.loading => const Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: SizedBox(
+          width: AppSpacing.space5,
+          height: AppSpacing.space5,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      AccountLoad.failed => AccountLoadFailed(
+        messageKey: 'circles.name_failed',
+        onRetry: onRetry,
+      ),
+    };
+    return ReadOnlyField(
+      label: context.tr('circles.name'),
+      note: context.tr('circles.from_account'),
+      child: content,
     );
   }
 }

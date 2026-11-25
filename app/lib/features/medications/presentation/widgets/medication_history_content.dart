@@ -1,13 +1,13 @@
-import 'package:app/core/extensions/scroll_insets.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/scroll_insets.dart';
 import 'package:app/core/widgets/feedback/retry_view.dart';
+import 'package:app/core/widgets/navigation/white_filter_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/medication_record_filter.dart';
-import 'package:app/features/medications/presentation/widgets/medication_record_filter_menu.dart';
-import 'package:app/features/medications/presentation/widgets/medication_record_list.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_details.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_list.dart';
 import 'package:app/features/medications/presentation/widgets/plans_skeleton.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -61,6 +61,31 @@ class MedicationHistoryContent extends StatelessWidget {
           canAdd: canManage && state.plans.isEmpty,
         ),
       ],
+    );
+  }
+}
+
+/// Which medicines «السجل» shows: all of them, or one state of a plan.
+class MedicationRecordFilterMenu extends StatelessWidget {
+  const MedicationRecordFilterMenu({
+    super.key,
+    required this.filter,
+    required this.onChanged,
+  });
+
+  final MedicationRecordFilter filter;
+  final ValueChanged<MedicationRecordFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return WhiteFilterMenu<MedicationRecordFilter>(
+      options: <MedicationRecordFilter, String>{
+        for (final MedicationRecordFilter value
+            in MedicationRecordFilter.values)
+          value: context.tr(value.labelKey),
+      },
+      selected: filter,
+      onChanged: onChanged,
     );
   }
 }

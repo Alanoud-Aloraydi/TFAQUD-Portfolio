@@ -1,7 +1,7 @@
 import 'package:app/core/network/dio_client.dart';
+import 'package:app/core/network/medication_endpoints.dart';
 import 'package:app/features/medications/data/models/medication_plan_model.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/core/network/medication_endpoints.dart';
 
 /// The requests about the medicines themselves: reading them, adding one,
 /// changing one, ending one, and dropping a change that waits.

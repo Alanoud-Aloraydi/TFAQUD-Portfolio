@@ -1,14 +1,16 @@
-import 'package:app/core/l10n/arabic_counts.dart';
 import 'package:app/core/constants/app_icons.dart';
+import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/widgets/buttons/stop_button.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/core/widgets/layout/plan_facts.dart';
-import 'package:app/features/measurements/domain/measurement.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_actions.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_people.dart';
+import 'package:app/core/widgets/overlays/app_alert.dart';
+import 'package:app/features/measurements/domain/entities/measurement.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_plan_form_bar.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_plan_ranges.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_plan_schedule.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// What a measurement plan card opens, in groups: «الجدول» (each time in
 /// bold with its meal state, and the days), «المعدل الطبيعي» of its
@@ -47,4 +49,35 @@ List<Widget> measurementPlanDetails(
         onPressed: () => stopMeasurementPlan(context, plan),
       ),
   ];
+}
+
+/// Asks to confirm, then stops [plan] and says how it went. [context] must
+/// stay mounted while the answer is awaited.
+Future<void> stopMeasurementPlan(
+  BuildContext context,
+  MeasurementPlan plan,
+) async {
+  final bool? confirmed = await showAppAlert<bool>(
+    context,
+    title: context.tr('measurements.stop_plan'),
+    message: context.tr('measurements.stop_confirm'),
+    actions: <AppAlertAction<bool>>[
+      AppAlertAction<bool>(label: context.tr('common.cancel'), value: false),
+      AppAlertAction<bool>(
+        label: context.tr('measurements.stop_plan'),
+        value: true,
+        destructive: true,
+      ),
+    ],
+  );
+  if (confirmed != true || !context.mounted) return;
+  final String? errorKey = await context.read<MeasurementPlansCubit>().stop(
+    plan,
+  );
+  if (!context.mounted) return;
+  if (errorKey == null) {
+    AppToast.show(context, 'toast.measurement_plan_stopped');
+    return;
+  }
+  AppToast.show(context, errorKey, kind: ToastKind.error);
 }

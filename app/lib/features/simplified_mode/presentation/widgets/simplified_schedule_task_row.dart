@@ -1,10 +1,10 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_schedule.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/today_schedule.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_open_task.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_task_line.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_task_texts.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_reading_row.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_task_extras.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
 import 'package:flutter/material.dart';
 
 class SimplifiedScheduleTaskRow extends StatelessWidget {

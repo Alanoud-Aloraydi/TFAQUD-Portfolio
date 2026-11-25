@@ -1,4 +1,3 @@
-import 'package:app/core/theme/foundations/app_item_card.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/layout/care_item_header.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';

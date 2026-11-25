@@ -1,18 +1,13 @@
+import 'package:app/core/network/auth_interceptor.dart';
 import 'package:app/core/network/dio_client.dart';
-import 'package:app/features/auth/data/datasources/base_auth_remote_data_source.dart';
 import 'package:app/features/auth/data/datasources/device_id.dart';
 import 'package:app/features/auth/data/models/account_status_response.dart';
 import 'package:app/features/auth/data/models/verify_code_response.dart';
 import 'package:app/features/auth/domain/entities/code_request.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:injectable/injectable.dart';
-import 'package:app/core/network/auth_endpoints.dart';
-
-export 'package:app/features/auth/data/datasources/base_auth_remote_data_source.dart';
 
 /// Sends auth requests to the API.
-@LazySingleton(as: BaseAuthRemoteDataSource)
 class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
   AuthRemoteDataSource(this._client, FlutterSecureStorage storage)
     : _deviceId = DeviceId(storage);
@@ -71,4 +66,24 @@ class AuthRemoteDataSource implements BaseAuthRemoteDataSource {
     final Object? body = response.data;
     return AccountStatusResponse.fromJson(body is Map ? body['account'] : null);
   }
+}
+
+/// Sends base auth requests to the API.
+abstract class BaseAuthRemoteDataSource {
+  /// Requests an OTP for [phone] and returns its verification identifier and
+  /// the wait before the next code. An existing [verificationId] resends
+  /// within the same request.
+  Future<CodeRequest> requestCode(String phone, {String? verificationId});
+
+  /// Verifies an OTP and returns the session tokens and profile state.
+  Future<VerifyCodeResponse> verifyCode({
+    required String verificationId,
+    required String code,
+  });
+
+  /// Revokes the current session through POST /api/v1/auth/sign-out.
+  Future<void> signOut();
+
+  /// Checks the current session; token renewal is handled by the interceptor.
+  Future<AccountStatusResponse> checkSession();
 }

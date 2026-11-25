@@ -1,4 +1,4 @@
-import 'package:app/core/feedback/app_toast.dart';
+import 'package:app/core/widgets/feedback/app_toast.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;

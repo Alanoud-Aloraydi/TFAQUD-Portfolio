@@ -1,17 +1,18 @@
-import 'package:app/core/l10n/arabic_names.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/utils/recordable_now.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/layout/care_item_row.dart';
+import 'package:app/core/widgets/layout/recorder_line.dart';
 import 'package:app/core/widgets/layout/today_row_card.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/presentation/widgets/dose_controls_layout.dart';
+import 'package:app/features/medications/presentation/widgets/dose_history_outcome.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
-import 'package:app/features/medications/presentation/widgets/dose_row_details.dart';
-import 'package:app/features/medications/presentation/widgets/dose_row_leading.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_status.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_texts.dart';
 import 'package:app/features/medications/presentation/widgets/navigate_to_medication.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// A dose in «اليوم»: a [CareItemRow] whose tap opens the medicine.
@@ -58,4 +59,34 @@ class TodayDoseRow extends StatelessWidget {
           : null,
     );
   }
+}
+
+/// What a dose row says under its two first lines: how late it was, who
+/// recorded it, and the reason a skipped dose was not taken.
+List<Widget> doseRowDetails(
+  BuildContext context,
+  DoseOccurrence occurrence,
+  String circleId,
+  DoseRowStatus status,
+) {
+  final DoseRecord? record = occurrence.record;
+  return <Widget>[
+    if (status.lateBy case final String lateBy)
+      Text(lateBy, style: Theme.of(context).textTheme.bodySmall),
+    if (record?.recordedByName case final String name)
+      RecorderLine(
+        name: name,
+        photoPath: personPhotoPath(circleId, record!.recordedByAccountId),
+        avatarCode: record.recordedByAvatarCode,
+      ),
+    if (record?.outcome == DoseOutcome.skipped &&
+        record?.skipReasonCode != null)
+      Text(
+        context.tr(
+          'medications.skip_reason_line',
+          args: <String>[doseSkipReasonText(context, record!)],
+        ),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+  ];
 }

@@ -1,7 +1,7 @@
-import 'package:app/core/l10n/spoken_arabic.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 class SimplifiedReminderRoundAnswer extends StatelessWidget {
   const SimplifiedReminderRoundAnswer({
@@ -65,4 +65,31 @@ class SimplifiedReminderRoundAnswer extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The picture of a task that has no photo: its kind's icon on its kind's
+/// colour (CareVisuals), filling the reminder's frame.
+class SimplifiedReminderIconHero extends StatelessWidget {
+  const SimplifiedReminderIconHero({
+    super.key,
+    required this.icon,
+    required this.ground,
+    required this.height,
+  });
+
+  final IconData icon;
+  final Color ground;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: ground,
+    child: Center(
+      child: Icon(
+        icon,
+        size: height * .45,
+        color: AppSettingsTileColors.onTile,
+      ),
+    ),
+  );
 }

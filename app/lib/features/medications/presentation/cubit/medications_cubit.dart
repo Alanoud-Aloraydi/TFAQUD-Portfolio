@@ -1,13 +1,11 @@
 import 'dart:async';
 
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/medications/presentation/cubit/medications_loading.dart';
-import 'package:app/features/medications/presentation/cubit/medications_refresh.dart';
-import 'package:app/features/medications/presentation/cubit/medications_revising.dart';
 import 'package:app/features/medications/presentation/cubit/medications_scope.dart';
-import 'package:app/features/medications/presentation/cubit/medications_state.dart';
-import 'package:app/features/medications/presentation/cubit/medications_stopping.dart';
 import 'package:app/features/medications/presentation/cubit/medications_writing.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The medicines of one circle, and their changes.
@@ -44,4 +42,55 @@ class MedicationsCubit extends Cubit<MedicationsState>
     await _changes.cancel();
     return super.close();
   }
+}
+
+/// Changing a medicine that is already in use.
+mixin MedicationsRevising
+    on Cubit<MedicationsState>, MedicationsScope, MedicationsWriting {
+  Future<bool> revise(MedicationPlan plan, MedicationPlanDraft draft) async {
+    final circleId = this.circleId;
+    if (circleId == null || state.status == MedicationsStatus.saving) {
+      return false;
+    }
+    emit(state.copyWith(status: MedicationsStatus.saving, clearMessage: true));
+    // A reading already on its way has the list from before this change.
+    revision++;
+    // The latest version: a change waiting for later is the one replaced.
+    final result = await medications.revisePlan(
+      circleId,
+      plan.id,
+      (plan.pendingVersion ?? plan.version).number,
+      draft,
+    );
+    return replacePlan(result);
+  }
+}
+
+enum MedicationsStatus { initial, loading, ready, saving, failure }
+
+/// The medicines on screen, and whether one is being saved.
+class MedicationsState extends Equatable {
+  MedicationsState({
+    this.status = MedicationsStatus.initial,
+    List<MedicationPlan> plans = const [],
+    this.messageKey,
+  }) : plans = List.unmodifiable(plans);
+
+  final MedicationsStatus status;
+  final List<MedicationPlan> plans;
+  final String? messageKey;
+
+  MedicationsState copyWith({
+    MedicationsStatus? status,
+    List<MedicationPlan>? plans,
+    String? messageKey,
+    bool clearMessage = false,
+  }) => MedicationsState(
+    status: status ?? this.status,
+    plans: plans ?? this.plans,
+    messageKey: clearMessage ? null : (messageKey ?? this.messageKey),
+  );
+
+  @override
+  List<Object?> get props => [status, plans, messageKey];
 }

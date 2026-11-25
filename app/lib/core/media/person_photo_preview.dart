@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:app/core/media/person_photo.dart';
-import 'package:app/core/media/photo_camera_badge.dart';
+import 'package:app/core/media/photo_crop_actions.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:flutter/material.dart';
 

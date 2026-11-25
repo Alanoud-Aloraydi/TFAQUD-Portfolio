@@ -1,5 +1,10 @@
+import 'package:app/core/errors/auth_failures.dart';
+import 'package:app/core/errors/failure.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum InboxStatus { loading, ready, failure }
 
@@ -59,4 +64,17 @@ class InboxState extends Equatable {
     busyIds,
     sessionEnded,
   ];
+}
+
+/// What the inbox is read with, shared by everything it does.
+mixin InboxScope on Cubit<InboxState> {
+  CirclesUseCase get circles;
+  HomeUseCase get home;
+
+  /// Counts the readings, so a slower one cannot overwrite a newer answer.
+  int revision = 0;
+
+  /// Whether the session itself ended, which the page answers by leaving.
+  bool endedSession(Failure failure) =>
+      failure is UnauthorizedFailure || failure is SessionExpiredFailure;
 }

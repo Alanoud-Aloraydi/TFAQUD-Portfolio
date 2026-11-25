@@ -1,5 +1,5 @@
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/features/simplified_mode/presentation/pages/done/simplified_done_content.dart';
+import 'package:app/app/router/routers.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_done_content.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_verdict.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
@@ -7,7 +7,6 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_sty
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// «تم، شكرًا»: says exactly what was saved, and stays until the patient
 /// goes back home.

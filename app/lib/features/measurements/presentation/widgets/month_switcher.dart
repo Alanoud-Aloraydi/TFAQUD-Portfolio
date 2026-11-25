@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/calendar_texts.dart';
+import 'package:app/core/localization/calendar_texts.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';

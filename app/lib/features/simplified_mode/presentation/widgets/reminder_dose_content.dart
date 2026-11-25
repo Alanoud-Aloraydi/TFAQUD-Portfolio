@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_snooze_open.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/medicine_photo.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_content.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_reminder_nothing_waiting.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_chips.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_status.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_texts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

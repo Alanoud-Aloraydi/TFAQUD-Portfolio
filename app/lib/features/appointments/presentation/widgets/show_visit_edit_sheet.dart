@@ -1,5 +1,5 @@
-import 'package:app/core/widgets/overlays/glass_sheet.dart';
-import 'package:app/features/appointments/domain/visit_paper.dart';
+import 'package:app/core/widgets/overlays/glass_menu_route.dart';
+import 'package:app/features/appointments/domain/entities/visit_paper.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/widgets/visit_edit_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
