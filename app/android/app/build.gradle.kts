@@ -75,4 +75,8 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // A plugin brings an older WorkManager whose database the release
+    // build's code shrinking breaks, so the app crashed on start. This
+    // newer one works with it.
+    implementation("androidx.work:work-runtime:2.10.0")
 }
