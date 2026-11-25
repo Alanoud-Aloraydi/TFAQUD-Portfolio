@@ -1,4 +1,3 @@
-import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
@@ -159,7 +158,7 @@ CareAppointment? nextAppointment(
 /// The key a task is put off by, shared with the detailed mode.
 extension TodayTaskSnoozeKey on TodayTask {
   /// The key its «ذكّرني لاحقًا» is kept by in [circleId], the same as
-  /// the detailed mode's ([DoseReminders.snoozes]); null for an
+  /// the detailed mode's (`DoseReminders.snoozes`); null for an
   /// appointment, which is not put off.
   String? snoozeKey(String circleId) => switch ((dose, measurement)) {
     (final DoseOccurrence value, _) => doseSnoozeKey(circleId, value),

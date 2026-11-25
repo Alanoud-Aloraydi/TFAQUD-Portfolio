@@ -6,22 +6,18 @@
 // It opens the signed-in app on offline repositories, visits each tab with
 // the bottom bar, opens the add sheet and closes it with the system back,
 // and schedules one real reminder on the phone.
-
-import '../test/support/circles_fakes.dart';
-import '../test/support/home_fakes.dart';
-import '../test/support/phone_fakes.dart';
-
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/routers.dart';
 import 'package:app/app/services/calendar_sync.dart';
 import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/push_registration.dart';
+import 'package:app/app/services/reminders/arabic_reminder_texts.dart';
 import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/app/services/remote_push.dart';
-import 'package:app/core/localization/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/storage/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/utils/shown_circle_clock.dart';
 import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
@@ -31,6 +27,7 @@ import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/usecases/home_use_case.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
 import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
@@ -47,6 +44,9 @@ import 'package:get_it/get_it.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
+import '../test/support/circles_fakes.dart';
+import '../test/support/home_fakes.dart';
+import '../test/support/phone_fakes.dart';
 import 'smoke_fakes.dart';
 
 /// The tabs in bar order, with the path each one opens.
@@ -128,8 +128,12 @@ void main() {
     di.registerSingleton<MedicationsUseCase>(
       MedicationsUseCase(SmokeMedicationsRepository()),
     );
+    // The Plan tab reads the repository itself, for the normal ranges.
+    final SmokeMeasurementsRepository measurements =
+        SmokeMeasurementsRepository();
+    di.registerSingleton<MeasurementsRepository>(measurements);
     di.registerSingleton<MeasurementsUseCase>(
-      MeasurementsUseCase(SmokeMeasurementsRepository()),
+      MeasurementsUseCase(measurements),
     );
     di.registerSingleton<AppointmentsUseCase>(
       AppointmentsUseCase(SmokeAppointmentsRepository()),
@@ -155,6 +159,8 @@ void main() {
       PrayerTimesUseCase(PrayerTimesRepositoryImpl(SmokePrayerTimes())),
     );
     di.registerSingleton<PrivatePhotoRepository>(SmokePhotoRepository());
+    // The clock of the circle on screen; the home cubit sets it.
+    di.registerSingleton<ShownCircleClock>(ShownCircleClock());
   });
 
   tearDownAll(() => GetIt.I.reset());

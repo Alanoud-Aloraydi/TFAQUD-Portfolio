@@ -1,4 +1,4 @@
-import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
@@ -11,6 +11,7 @@ import 'package:app/features/simplified_mode/domain/entities/reminder_payload.da
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_schedule.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/reminder_taps.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 12:00 in Riyadh on 9 November 2026.

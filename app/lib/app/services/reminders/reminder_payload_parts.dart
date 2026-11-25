@@ -1,8 +1,6 @@
 import 'package:app/app/services/phone_notifications.dart';
-import 'package:app/app/services/reminders/item_keys.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
-import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/core/reminders/item_keys.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
 
 /// Between a payload's circle and the words a snoozable reminder carries,
 /// so «ذكّرني لاحقًا» in the notification can show them again.
@@ -59,18 +57,4 @@ String? reminderCircleId(String payload) {
     }
   }
   return null;
-}
-
-/// A dose put off: its circle, its time of the plan, and its day.
-String doseSnoozeKey(String circleId, DoseOccurrence dose) {
-  final DateTime day = dose.scheduledOn;
-  return '$circleId|${dose.scheduleId}|${day.year}-${day.month}-${day.day}';
-}
-
-/// A measurement put off: its circle, its plan's version, its time and its
-/// day.
-String measurementSnoozeKey(String circleId, MeasurementOccurrence task) {
-  final DateTime day = task.scheduledOn;
-  return '$circleId|measurement|${task.versionId}|${task.time}|'
-      '${day.year}-${day.month}-${day.day}';
 }

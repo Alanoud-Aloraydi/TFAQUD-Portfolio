@@ -3,16 +3,15 @@ import 'dart:convert';
 
 import 'package:app/app/services/permissions/app_permission.dart';
 import 'package:app/app/services/reminder_circle.dart';
-import 'package:app/app/services/reminders/dose_reminders.dart' show TaskSnooze;
-import 'package:app/app/services/reminders/reminder_payloads.dart'
-    show SnoozedTask;
 import 'package:app/app/services/service_texts.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/localization/care_voice.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 import 'package:app/core/utils/coalescing_runner.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
 import 'package:app/features/measurements/domain/entities/measurement_version.dart';

@@ -1,9 +1,9 @@
 import 'package:app/app/router/routers.dart';
 import 'package:app/app/services/reminders/dose_reminders.dart' show TaskSnooze;
-import 'package:app/app/services/reminders/item_keys.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/reminders/item_keys.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';

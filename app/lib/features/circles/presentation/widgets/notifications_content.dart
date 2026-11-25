@@ -1,7 +1,6 @@
 // Each circle page has its own skeleton (design system Skeleton), drawn in
 // the shape of the page it stands for. These pages already have their
 // header and side padding around the body, so the skeletons add neither.
-
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';

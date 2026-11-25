@@ -1,6 +1,6 @@
 import 'package:app/app/router/app_router.dart';
+import 'package:app/app/widgets/app_scopes.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/core/widgets/app_scopes.dart';
 import 'package:app/core/widgets/loading/launch_curtain.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

@@ -45,6 +45,7 @@ void main() {
         'lib/core/widgets',
         'lib/features',
         'lib/app/dev',
+        'lib/app/widgets',
       ]) {
         for (final file in dartFiles(directory)) {
           final path = file.path.replaceAll('\\', '/');

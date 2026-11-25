@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/localization/spoken_arabic.dart';
@@ -23,6 +21,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/widget_harness.dart';
 
 /// 12:00 in Riyadh on 9 November 2026.
 final DateTime _noon = DateTime.utc(2026, 11, 9, 9);

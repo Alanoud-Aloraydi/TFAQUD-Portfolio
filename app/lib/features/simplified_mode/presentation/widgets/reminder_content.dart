@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:app/app/router/routers.dart';
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_choices.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/measurements/domain/entities/measurement.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';

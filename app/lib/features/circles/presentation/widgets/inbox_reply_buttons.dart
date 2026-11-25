@@ -1,4 +1,4 @@
-import 'package:app/app/services/reminders/item_keys.dart';
+import 'package:app/core/reminders/item_keys.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';

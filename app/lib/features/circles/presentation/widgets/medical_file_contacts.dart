@@ -1,5 +1,4 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/media/person_photo.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -15,6 +14,7 @@ import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/contact_form_props.dart';
 import 'package:app/features/circles/presentation/widgets/medical_contact_form.dart';
+import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 

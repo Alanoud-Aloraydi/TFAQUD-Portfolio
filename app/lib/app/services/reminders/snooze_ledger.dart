@@ -5,8 +5,7 @@ import 'package:app/app/services/permissions/app_permission.dart';
 import 'package:app/app/services/reminders/reminder_limits.dart';
 import 'package:app/app/services/reminders/reminder_permission.dart';
 import 'package:app/app/services/reminders/reminders_enabled.dart';
-import 'package:app/app/services/reminders/snoozed_task.dart';
-import 'package:app/app/services/reminders/task_snooze.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

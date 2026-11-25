@@ -48,7 +48,7 @@ jobs:
 
       # The Android Gradle Plugin 9 needs Java 17.
       - name: Install Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -132,7 +132,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -206,34 +206,38 @@ jobs:
         run: flutter pub get
 
       # Picks the oldest or newest iOS runtime installed on this Mac (the
-      # app needs iOS 15 or later), and the last device of that runtime
-      # whose name contains the matrix's device ("iPhone SE": the newest SE
-      # generation the runtime has; "Pro Max": the newest Pro Max), then
-      # creates and boots a simulator of it.
+      # app needs iOS 15 or later) that has a device whose name contains the
+      # matrix's device ("iPhone SE": the newest SE generation; "Pro Max":
+      # the newest Pro Max), then creates and boots a simulator of it. A
+      # runtime without such a device (a new runtime can list none yet) is
+      # skipped, and the log says so.
       - name: Boot the simulator
         id: simulator
         env:
           WHICH: ${{ matrix.runtime }}
           DEVICE: ${{ matrix.device }}
         run: |
-          RUNTIMES=$(xcrun simctl list runtimes --json)
-          RUNTIME=$(printf '%s' "$RUNTIMES" | python3 -c '
+          CHOICE=$(xcrun simctl list runtimes --json | python3 -c '
           import json, os, sys
           runtimes = [r for r in json.load(sys.stdin)["runtimes"]
                       if r["platform"] == "iOS" and r["isAvailable"]
                       and tuple(map(int, r["version"].split(".")[:2])) >= (15, 0)]
           runtimes.sort(key=lambda r: tuple(map(int, r["version"].split("."))))
-          chosen = runtimes[0] if os.environ["WHICH"] == "oldest" else runtimes[-1]
-          print(chosen["identifier"])
+          if os.environ["WHICH"] == "newest":
+              runtimes.reverse()
+          for runtime in runtimes:
+              devices = [d for d in runtime.get("supportedDeviceTypes", [])
+                         if os.environ["DEVICE"] in d["name"]]
+              if devices:
+                  print(runtime["identifier"], devices[-1]["identifier"])
+                  break
+              print("iOS " + runtime["version"] + " has no "
+                    + os.environ["DEVICE"] + "; trying the next one",
+                    file=sys.stderr)
+          else:
+              sys.exit("No iOS runtime on this Mac has a " + os.environ["DEVICE"])
           ')
-          DEVICE_TYPE=$(printf '%s' "$RUNTIMES" | RUNTIME="$RUNTIME" python3 -c '
-          import json, os, sys
-          runtime = next(r for r in json.load(sys.stdin)["runtimes"]
-                         if r["identifier"] == os.environ["RUNTIME"])
-          names = [d for d in runtime["supportedDeviceTypes"]
-                   if os.environ["DEVICE"] in d["name"]]
-          print(names[-1]["identifier"])
-          ')
+          read -r RUNTIME DEVICE_TYPE <<< "$CHOICE"
           echo "Runtime: $RUNTIME, device: $DEVICE_TYPE"
           UDID=$(xcrun simctl create smoke "$DEVICE_TYPE" "$RUNTIME")
           xcrun simctl boot "$UDID"

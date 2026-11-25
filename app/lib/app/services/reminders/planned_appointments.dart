@@ -4,8 +4,9 @@ import 'package:app/app/services/reminders/appointment_lead.dart';
 import 'package:app/app/services/reminders/dose_reminder_texts.dart';
 import 'package:app/app/services/reminders/planned_measurements.dart';
 import 'package:app/app/services/reminders/reminder_limits.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
 import 'package:app/app/services/reminders/reminder_permission.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 
 /// Two reminders for each of [appointments] still to come, inside the

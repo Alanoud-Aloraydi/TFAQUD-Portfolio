@@ -1,6 +1,3 @@
-import '../support/app_shell_harness.dart';
-import '../support/home_fakes.dart';
-
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/fading_branches.dart';
 import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
@@ -12,6 +9,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+
+import '../support/app_shell_harness.dart';
+import '../support/home_fakes.dart';
 
 void main() {
   setUpShellApp();

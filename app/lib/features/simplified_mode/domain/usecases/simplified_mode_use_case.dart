@@ -1,5 +1,3 @@
-import 'package:app/app/services/calendar_sync.dart';
-import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/utils/schedule_day.dart';
@@ -14,6 +12,7 @@ import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
+import 'package:app/features/simplified_mode/domain/repositories/simplified_reminders.dart';
 import 'package:app/features/simplified_mode/domain/usecases/result_attempt.dart';
 import 'package:app/features/simplified_mode/domain/usecases/simplified_reminding.dart';
 import 'package:multiple_result/multiple_result.dart';
@@ -36,8 +35,7 @@ class SimplifiedModeUseCase extends SimplifiedDosing {
     AppointmentsUseCase appointments,
     CirclesUseCase circles,
     PrayerTimesUseCase prayers,
-    DoseReminders reminders,
-    CalendarSync calendar,
+    SimplifiedReminders reminders,
   ) : _appointments = appointments,
       _loader = SimplifiedDayLoader(
         home,
@@ -47,7 +45,7 @@ class SimplifiedModeUseCase extends SimplifiedDosing {
         circles,
         prayers,
       ),
-      super(medications, measurements, reminders, calendar);
+      super(medications, measurements, reminders);
 
   final AppointmentsUseCase _appointments;
   final SimplifiedDayLoader _loader;

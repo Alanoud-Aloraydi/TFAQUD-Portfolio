@@ -1,9 +1,8 @@
 import 'package:app/app/services/reminder_circle.dart';
 import 'package:app/app/services/reminders/dose_reminder_texts.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
 import 'package:app/app/services/reminders/snooze_putter.dart';
 import 'package:app/app/services/reminders/snooze_settling.dart';
-import 'package:app/app/services/reminders/task_snooze.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 import 'package:app/core/utils/time_zones.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';

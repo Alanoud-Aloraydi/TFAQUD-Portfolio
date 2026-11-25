@@ -1,7 +1,7 @@
-import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/utils/birth_date_rules.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
+import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

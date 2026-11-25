@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/errors/auth_failures.dart';
+import 'package:app/core/utils/shown_circle_clock.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';

@@ -1,6 +1,5 @@
 import 'package:app/app/router/care_item_routes.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -11,6 +10,7 @@ import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/domain/entities/visit_paper.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/visit_state.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/appointments/presentation/widgets/show_visit_edit_sheet.dart';
 import 'package:app/features/appointments/presentation/widgets/visit_paper_fields.dart';
 import 'package:easy_localization/easy_localization.dart';

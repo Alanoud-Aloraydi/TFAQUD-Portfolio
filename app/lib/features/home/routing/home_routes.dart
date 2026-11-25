@@ -1,8 +1,8 @@
 import 'package:app/app/router/fading_branches.dart';
 import 'package:app/app/router/page_builders.dart';
 import 'package:app/app/router/routers.dart';
-import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/utils/shown_circle_clock.dart';
 import 'package:app/core/widgets/layout/pull_to_refresh.dart';
 import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
