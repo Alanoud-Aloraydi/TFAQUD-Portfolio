@@ -1,5 +1,4 @@
 import 'package:app/core/localization/arabic_names.dart';
-import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/media/person_photo_editor.dart';
 import 'package:app/core/theme/care_visuals.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
@@ -14,6 +13,7 @@ import 'package:app/features/medications/presentation/widgets/dose_history_outco
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
 import 'package:app/features/medications/presentation/widgets/dose_row_status.dart';
 import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
+import 'package:app/features/medications/presentation/widgets/dose_text.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_border.dart';
 import 'package:app/features/medications/presentation/widgets/medication_photo_circle.dart';
 import 'package:app/features/medications/presentation/widgets/navigate_to_medication.dart';

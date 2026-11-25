@@ -38,3 +38,13 @@ String appointmentCompanionLine(BuildContext context, CareAppointment value) =>
 String appointmentDate(BuildContext context, DateTime date) =>
     '${context.tr('common.weekdays.${date.weekday}')} '
     '${calendarDate(context, date, year: false)}';
+
+/// «مراجعة، عيادة السكري»: the visit's kind, then the clinic or doctor
+/// when one was typed. For notifications and the calendar, with no context.
+String visitName(CareAppointment visit) {
+  final String kind = visit.kind == AppointmentKind.other
+      ? visit.otherKind ?? 'appointments.kinds.other'.tr()
+      : 'appointments.kinds.${visit.kind.name}'.tr();
+  final String? clinic = appointmentClinic(visit);
+  return clinic == null ? kind : '$kind، $clinic';
+}

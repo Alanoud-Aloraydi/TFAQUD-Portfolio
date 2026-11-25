@@ -3,7 +3,12 @@
 import 'dart:async';
 
 import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/push_target.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
+import 'package:app/app/services/reminders/tapped_item.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
 import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';
+import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 
 /// Turns a tap on one of this mode's reminders — on the phone's lock
 /// screen, in its list, or on the notification that started the app —
@@ -68,3 +73,42 @@ class ReminderTaps {
 
   void dispose() => unawaited(_taps.cancel());
 }
+
+/// What a tapped reminder (or snooze) asks about, so the simplified mode
+/// opens its full-screen reminder; null for the note to open the app and
+/// for anything that is not a reminder. A server push about a dose or a
+/// reading put off or missed, or a visit missed, opens that task the same
+/// way.
+ReminderRequest? reminderRequest(String payload) {
+  if (pushKind(payload) case final String kind) {
+    return _pushRequest(kind, pushTapItem(payload));
+  }
+  if (reminderCircleId(payload) == null) return null;
+  final TodayTaskKind? kind =
+      payload.startsWith(doseReminderPayload) ||
+          payload.startsWith(doseSnoozePayload)
+      ? TodayTaskKind.medication
+      : payload.startsWith(measurementReminderPayload) ||
+            payload.startsWith(measurementSnoozePayload)
+      ? TodayTaskKind.measurement
+      : payload.startsWith(appointmentReminderPayload)
+      ? TodayTaskKind.appointment
+      : null;
+  if (kind == null) return null;
+  return ReminderRequest(kind, taskKey: tappedItemKey(payload));
+}
+
+/// A missed visit opens its reminder too: «حضرت» can still be said.
+ReminderRequest? _pushRequest(String kind, String? item) => switch (kind) {
+  'dose_missed' ||
+  'dose_snoozed' => ReminderRequest(TodayTaskKind.medication, taskKey: item),
+  'measurement_missed' || 'measurement_snoozed' => ReminderRequest(
+    TodayTaskKind.measurement,
+    taskKey: item,
+  ),
+  'appointment_missed' => ReminderRequest(
+    TodayTaskKind.appointment,
+    taskKey: item,
+  ),
+  _ => null,
+};

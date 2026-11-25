@@ -1,12 +1,12 @@
 import 'package:app/app/router/routers.dart';
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_verdict.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/utils/shown_circle_clock.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';

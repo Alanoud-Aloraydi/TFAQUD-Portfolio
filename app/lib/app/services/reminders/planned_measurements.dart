@@ -1,8 +1,8 @@
 import 'package:app/app/services/reminder_circle.dart';
 import 'package:app/app/services/reminders/dose_reminder_texts.dart';
-import 'package:app/app/services/reminders/item_keys.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
 import 'package:app/app/services/reminders/reminder_permission.dart';
+import 'package:app/core/reminders/item_keys.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';

@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:app/app/services/phone_notifications.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
 import 'package:app/app/services/reminders/reminder_permission.dart';
 import 'package:app/app/services/reminders/reminders_enabled.dart';
-import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/app/services/reminders/snooze_ledger.dart';
 import 'package:app/app/services/reminders/snooze_reminder.dart';
-import 'package:app/app/services/reminders/task_snooze.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
+import 'package:app/core/reminders/shared_snooze.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 
 /// Puts a task off: sets its reminder at the new time, in the task's own
 /// slot of the [ledger].

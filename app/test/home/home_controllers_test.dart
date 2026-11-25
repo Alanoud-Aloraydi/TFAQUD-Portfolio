@@ -1,7 +1,7 @@
 import 'package:app/app/services/phone_notifications.dart';
-import 'package:app/app/services/reminders/item_keys.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
-import 'package:app/app/services/tap_focus.dart';
+import 'package:app/core/reminders/item_keys.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
+import 'package:app/core/widgets/feedback/tap_focus.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
 import 'package:app/features/home/presentation/cubit/clinical_data_loader.dart';
 import 'package:app/features/home/presentation/cubit/notification_tap_handler.dart';

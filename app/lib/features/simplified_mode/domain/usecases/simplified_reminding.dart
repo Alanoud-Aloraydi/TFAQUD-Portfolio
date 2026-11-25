@@ -1,6 +1,5 @@
-import 'package:app/app/services/calendar_sync.dart';
-import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/errors/failure.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
@@ -10,35 +9,23 @@ import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
+import 'package:app/features/simplified_mode/domain/repositories/simplified_reminders.dart';
 import 'package:app/features/simplified_mode/domain/usecases/result_attempt.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:multiple_result/multiple_result.dart';
 
 /// The phone's reminders and calendar copy, kept for the simplified mode.
 abstract class SimplifiedReminding {
-  SimplifiedReminding(this._reminders, this._calendar);
+  SimplifiedReminding(this._reminders);
 
-  final DoseReminders _reminders;
-  final CalendarSync _calendar;
+  final SimplifiedReminders _reminders;
 
   /// Keeps the phone's reminders, and the calendar copy the person chose,
   /// set for [day]'s circle, as the detailed home does for its circles.
-  Future<void> keepReminding(SimplifiedDay day) {
-    final List<ReminderCircle> circles = <ReminderCircle>[
-      ReminderCircle(
-        id: day.circleId,
-        name: day.circleName,
-        viewerId: day.accountId,
-        viewerIsPatient: day.isPatient,
-        timeZone: day.timeZone,
-      ),
-    ];
-    return (_reminders.sync(circles), _calendar.sync(circles)).wait;
-  }
+  Future<void> keepReminding(SimplifiedDay day) => _reminders.keep(day);
 
   /// Reads the week of reminders again: the app came back to the front.
-  Future<void> refreshReminders() =>
-      (_reminders.refresh(), _calendar.refresh()).wait;
+  Future<void> refreshReminders() => _reminders.refresh();
 
   /// «ذكّرني لاحقًا» on [task] of [circleId]: the same as the detailed
   /// mode's, so its reminder, its card and its calendar copy move to
@@ -65,9 +52,8 @@ abstract class SimplifiedDosing extends SimplifiedMeasuring {
   SimplifiedDosing(
     this._medications,
     MeasurementsUseCase measurements,
-    DoseReminders reminders,
-    CalendarSync calendar,
-  ) : super(measurements, reminders, calendar);
+    SimplifiedReminders reminders,
+  ) : super(measurements, reminders);
 
   final MedicationsUseCase _medications;
 
@@ -104,11 +90,8 @@ abstract class SimplifiedDosing extends SimplifiedMeasuring {
 
 /// The patient's readings: the recent ones, and saving a new one.
 abstract class SimplifiedMeasuring extends SimplifiedReminding {
-  SimplifiedMeasuring(
-    this._measurements,
-    DoseReminders reminders,
-    CalendarSync calendar,
-  ) : super(reminders, calendar);
+  SimplifiedMeasuring(this._measurements, SimplifiedReminders reminders)
+    : super(reminders);
 
   final MeasurementsUseCase _measurements;
 

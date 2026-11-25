@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:app/app/router/routers.dart';
 import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/widgets/calendar_sync_choices.dart';
 import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/localization/calendar_texts.dart';
 import 'package:app/core/theme/app_tokens.dart';
 import 'package:app/core/widgets/calendar_scope.dart';
 import 'package:app/core/widgets/feedback/app_toast.dart';
-import 'package:app/core/widgets/forms/calendar_sync_choices.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/auth/presentation/widgets/sign_out_alert.dart';

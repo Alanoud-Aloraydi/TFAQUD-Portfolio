@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
@@ -9,6 +7,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/widget_harness.dart';
 
 /// No readings yet; nothing else is asked of it before a save.
 class _UseCase implements SimplifiedModeUseCase {

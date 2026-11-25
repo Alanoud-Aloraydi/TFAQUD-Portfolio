@@ -1,5 +1,3 @@
-import '../support/widget_harness.dart';
-
 import 'package:app/core/utils/history_filter.dart';
 import 'package:app/core/utils/history_view.dart';
 import 'package:app/core/widgets/layout/filtered_history.dart';
@@ -7,6 +5,8 @@ import 'package:app/core/widgets/overlays/glass_menu_item.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/widget_harness.dart';
 
 /// A record: its day and who made it (account, name).
 typedef _Record = ({DateTime day, String account, String name});

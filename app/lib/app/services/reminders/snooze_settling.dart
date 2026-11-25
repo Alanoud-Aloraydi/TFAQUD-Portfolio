@@ -1,10 +1,10 @@
 import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/reminder_circle.dart';
 import 'package:app/app/services/reminders/reminder_limits.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
 import 'package:app/app/services/reminders/snooze_ledger.dart';
 import 'package:app/app/services/reminders/snooze_putter.dart';
-import 'package:app/app/services/reminders/task_snooze.dart';
+import 'package:app/core/reminders/task_snooze.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';

@@ -1,11 +1,12 @@
 import 'package:app/app/services/reminders/dose_reminders.dart'
     show SharedSnooze, TaskSnooze;
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/localization/greeting.dart';
 import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/presentation/widgets/dose_text.dart';
 import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
 import 'package:app/features/simplified_mode/domain/entities/prayer_period.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';

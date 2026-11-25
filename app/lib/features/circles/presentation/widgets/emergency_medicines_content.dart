@@ -1,5 +1,4 @@
 import 'package:app/core/constants/app_icons.dart';
-import 'package:app/core/localization/medical_texts.dart';
 import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -10,6 +9,7 @@ import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/presentation/cubit/emergency_card_cubit.dart';
 import 'package:app/features/circles/presentation/widgets/emergency_card_text.dart';
+import 'package:app/features/circles/presentation/widgets/medical_texts.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';

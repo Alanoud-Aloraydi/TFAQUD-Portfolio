@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/push_target.dart';
 import 'package:app/app/services/reminders/dose_reminders.dart';
-import 'package:app/app/services/reminders/item_keys.dart';
 import 'package:app/app/services/reminders/tapped_item.dart';
-import 'package:app/app/services/tap_focus.dart';
+import 'package:app/core/reminders/item_keys.dart';
+import 'package:app/core/widgets/feedback/tap_focus.dart';
 import 'package:flutter/foundation.dart' show VoidCallback;
 
 /// Turns a tap on a notification into what the app does: it opens the

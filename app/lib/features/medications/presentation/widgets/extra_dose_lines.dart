@@ -1,4 +1,3 @@
-import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/dose_history_entry.dart';
@@ -9,6 +8,7 @@ import 'package:app/features/medications/presentation/cubit/medication_schedule_
 import 'package:app/features/medications/presentation/cubit/schedule_form_defaults.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_earlier.dart';
 import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
+import 'package:app/features/medications/presentation/widgets/dose_text.dart';
 import 'package:app/features/medications/presentation/widgets/extra_dose_form.dart';
 import 'package:app/features/medications/presentation/widgets/medication_dose_history.dart';
 import 'package:flutter/material.dart';

@@ -1,4 +1,3 @@
-import 'package:app/core/localization/appointment_texts.dart';
 import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
@@ -6,6 +5,7 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_texts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

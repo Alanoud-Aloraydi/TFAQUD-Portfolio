@@ -4,6 +4,7 @@ import 'package:app/core/localization/greeting.dart';
 import 'package:app/core/localization/medication_format.dart';
 import 'package:app/features/home/data/datasources/home_remote_data_source.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
+import 'package:app/features/medications/presentation/widgets/dose_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

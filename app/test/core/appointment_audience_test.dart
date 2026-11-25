@@ -1,4 +1,4 @@
-import 'package:app/app/services/appointment_audience.dart';
+import 'package:app/core/utils/appointment_audience.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,6 +1,3 @@
-import '../support/app_shell_harness.dart';
-import '../support/circles_fakes.dart';
-
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/routers.dart';
 import 'package:app/core/errors/failure.dart';
@@ -20,6 +17,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+
+import '../support/app_shell_harness.dart';
+import '../support/circles_fakes.dart';
 
 void main() {
   setUpShellApp();

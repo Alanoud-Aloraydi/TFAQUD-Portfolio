@@ -32,11 +32,13 @@ lib/
   main.dart                  starts the app: bootstrap(), then runApp
   app/
     app.dart                 the MaterialApp
-    bootstrap.dart           everything ready before the first frame
-    di/injection.dart        configureDependencies(): calls every feature
+    bootstrap.dart           everything ready before the first frame, and
+                             configureDependencies(): calls every feature
+    di/                      the registrations of the app-wide services
     router/                  the GoRouter and the shared route helpers
     services/                app-wide services (reminders, notifications, push)
-  core/                      shared code: network, errors, storage,
+    widgets/                 widgets that use the app-wide services
+  core/                      shared code: network, errors, storage, reminders,
                              localization, theme, constants, utils, widgets
   features/<feature>/
     data/datasources/        API and device data sources
@@ -58,8 +60,16 @@ presentation  ->  domain  <-  data
 
 - **presentation** imports `domain` only: a cubit calls a use case; it never
   sees a repository implementation, a data source, a model, or Dio.
-- **domain** imports nothing from `data` or `presentation`.
+- **domain** imports nothing from `data`, `presentation`, or `app/`. When a
+  use case needs an app-wide service, the domain declares an interface in
+  `domain/repositories/`, `data/` implements it over the service, and
+  `di/` passes the implementation in.
 - **data** implements the domain contracts and owns models and data sources.
+- **core** imports nothing from `app/` or `features/`: it is the floor every
+  feature and the app shell stand on. Code that needs a feature or an
+  app-wide service moves up to that feature or to `app/`.
+
+`tool/check_structure.dart` fails CI when a file breaks one of these rules.
 
 ## 4. State and dependencies
 
@@ -70,7 +80,8 @@ presentation  ->  domain  <-  data
 Dependencies come from `get_it`. Each feature registers its own in
 `di/<feature>_dependencies.dart`
 (`void register<Feature>Dependencies(GetIt getIt)`), and
-`app/di/injection.dart` calls them all once at start-up. A widget reaches
+`configureDependencies()` in `app/bootstrap.dart` calls them all once at
+start-up. A widget reaches
 into `GetIt` only where it creates a `BlocProvider`.
 
 ## 5. Comments

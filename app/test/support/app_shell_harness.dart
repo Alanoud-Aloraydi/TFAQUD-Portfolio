@@ -1,22 +1,19 @@
 import 'dart:async';
 
-import 'circles_fakes.dart';
-import 'home_fakes.dart';
-
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/routers.dart';
 import 'package:app/app/services/calendar_sync.dart';
 import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/push_registration.dart';
+import 'package:app/app/services/reminders/arabic_reminder_texts.dart';
 import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/app/services/remote_push.dart';
-import 'package:app/app/services/shown_circle_clock.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/localization/app_calendar.dart';
-import 'package:app/core/localization/dose_reminder_texts.dart';
 import 'package:app/core/media/private_photo_repository.dart';
 import 'package:app/core/storage/token_storage.dart';
 import 'package:app/core/theme/app_theme.dart';
+import 'package:app/core/utils/shown_circle_clock.dart';
 import 'package:app/core/widgets/overlays/app_alert.dart';
 import 'package:app/core/widgets/overlays/glass_menu.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
@@ -55,6 +52,8 @@ import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'circles_fakes.dart';
+import 'home_fakes.dart';
 import 'phone_fakes.dart';
 import 'widget_harness.dart';
 

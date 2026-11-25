@@ -1,7 +1,8 @@
 import 'package:app/app/services/phone_notifications.dart';
 import 'package:app/app/services/push_target.dart';
-import 'package:app/app/services/reminders/item_keys.dart';
-import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/reminder_payload_parts.dart';
+import 'package:app/core/reminders/item_keys.dart';
+import 'package:app/core/reminders/reminder_payloads.dart';
 
 /// The key of the item a tapped notification is about (item_keys.dart): a
 /// push's from its data, a dose's or a reading's reminder by its snooze
