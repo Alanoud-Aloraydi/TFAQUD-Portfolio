@@ -1,7 +1,7 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// The emergency contacts and the emergency card.
-mixin _ContactCalls implements CirclesRepositoryDomain {
+mixin _ContactCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
 
   @override

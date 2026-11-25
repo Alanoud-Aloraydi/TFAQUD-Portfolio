@@ -1,10 +1,10 @@
-import '../support/widget_harness.dart';
-
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_instructions_group.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/widget_harness.dart';
 
 class _Host extends StatefulWidget {
   const _Host(this.data);

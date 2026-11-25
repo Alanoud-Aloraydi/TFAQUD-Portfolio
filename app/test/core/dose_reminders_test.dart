@@ -1,28 +1,27 @@
-import '../support/phone_fakes.dart';
-
 import 'dart:async';
 
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/patient_clock.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_reminder_lead.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/phone_fakes.dart';
 
 /// 08:00 in Riyadh on 3 November 2026.
 final DateTime _now = DateTime.utc(2026, 11, 3, 5);
@@ -119,7 +118,7 @@ CareAppointment _appointment(
 );
 
 /// The measurement tasks of each circle.
-class _Measurements extends Fake implements MeasurementsRepositoryDomain {
+class _Measurements extends Fake implements MeasurementsRepository {
   final Map<String, List<MeasurementOccurrence>> tasks =
       <String, List<MeasurementOccurrence>>{};
   final StreamController<String> changed = StreamController<String>.broadcast();
@@ -145,7 +144,7 @@ class _Measurements extends Fake implements MeasurementsRepositoryDomain {
 }
 
 /// The appointments of each circle.
-class _Appointments extends Fake implements AppointmentsRepositoryDomain {
+class _Appointments extends Fake implements AppointmentsRepository {
   final Map<String, List<CareAppointment>> visits =
       <String, List<CareAppointment>>{};
   final StreamController<String> changed = StreamController<String>.broadcast();
@@ -188,7 +187,7 @@ final DoseRecord _taken = DoseRecord(
 );
 
 /// The doses of each circle, and the readings the reminders asked for.
-class _Medications extends Fake implements MedicationsRepositoryDomain {
+class _Medications extends Fake implements MedicationsRepository {
   final Map<String, List<DoseOccurrence>> doses =
       <String, List<DoseOccurrence>>{};
   final List<(String, DateTime, DateTime)> reads =

@@ -1,6 +1,6 @@
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/medications/domain/entities/extra_dose.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// The extra doses of one medicine on its page, newest first: null until

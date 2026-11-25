@@ -1,4 +1,4 @@
-import 'package:app/features/appointments/domain/appointment_days.dart';
+import 'package:app/features/appointments/domain/entities/appointment_days.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

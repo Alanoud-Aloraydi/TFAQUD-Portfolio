@@ -1,7 +1,7 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// Creating a circle, and asking a patient for one.
-mixin _CircleCreationCalls implements CirclesRepositoryDomain {
+mixin _CircleCreationCalls implements CirclesRepository {
   BaseCirclesRemoteDataSource get _remote;
   Future<String> _newPatientZone(String city);
 

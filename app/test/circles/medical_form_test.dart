@@ -1,6 +1,6 @@
+import 'package:app/features/circles/domain/entities/medical_form.dart';
+import 'package:app/features/circles/domain/entities/medical_options.dart';
 import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
-import 'package:app/features/circles/domain/medical_form.dart';
-import 'package:app/features/circles/domain/medical_options.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

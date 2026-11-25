@@ -1,29 +1,98 @@
 """The real sign-in code sender: Authentica (https://api.authentica.sa/api/v2).
 
-Authentica makes the 6-digit code with template 5, sends it by SMS (Arabic
-text), keeps it for the time set in its dashboard (300 seconds) and checks it.
-This file only makes the two calls and reads the answers.
+Authentica makes the 6-digit code, sends it by SMS (Arabic text), keeps it
+for the time set in its dashboard and checks it. Each call has a time limit
+and goes through the circuit breaker; the JSON POST never follows a
+redirect, so the key never goes to another address."""
 
-The HTTP call is a small function (`transport`) that can be replaced. Tests
-give a fake one, so no test opens a network connection. The default one uses
-only the standard library.
+import http.client
+import json
+import logging
+import urllib.error
+import urllib.request
 
-Nothing here writes the key, the phone number or the code to a log or to an
-error message."""
-
-from app.config import ConfigError
+from app.config.values import ConfigError
 from app.resilience import CircuitBreaker
-from app.sms.authentica_balance import read_balance
-from app.sms.authentica_calls import AuthenticaCalls, json_field
-from app.sms.base import SmsSender
-from app.sms.http_post import urllib_get, urllib_post
+from app.sms.authentica_keys import read_balance
+from app.sms.base import SmsDeliveryError, SmsSender
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never follow a redirect: the key would go to the next address too."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """Refuse every redirect."""
+        return None
+
+
+opener = urllib.request.build_opener(_NoRedirect)
+
+
+def _parse_json(raw: bytes):
+    """The JSON of an answer, or None when it cannot be read."""
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return None
+
+
+def urllib_post(url: str, headers: dict, body: dict, timeout: float):
+    """POST `body` as JSON. Returns (HTTP status, parsed JSON or None).
+
+    A 4xx or 5xx answer is returned, not raised: it carries a status that the
+    caller reads. A network problem is raised (OSError, HTTPException).
+    """
+    # The body as JSON, with the caller's headers (the key).
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        method="POST",
+        headers={
+            **headers,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    # Never follow a redirect (`opener`); a 4xx or 5xx comes back as its
+    # status.
+    try:
+        with opener.open(request, timeout=timeout) as response:
+            return response.status, _parse_json(response.read())
+    except urllib.error.HTTPError as error:
+        with error:
+            return error.code, _parse_json(error.read())
+
+
+def urllib_get(url: str, headers: dict, timeout: float):
+    """GET `url`, the same way: (HTTP status, parsed JSON or None), with a
+    4xx or 5xx returned and a network problem raised."""
+    request = urllib.request.Request(
+        url, method="GET", headers={**headers, "Accept": "application/json"}
+    )
+    try:
+        with opener.open(request, timeout=timeout) as response:
+            return response.status, _parse_json(response.read())
+    except urllib.error.HTTPError as error:
+        with error:
+            return error.code, _parse_json(error.read())
+
+
+logger = logging.getLogger(__name__)
+
+
+def json_field(body, name: str):
+    """One field of a JSON object, or None when the body is not an object."""
+    return body.get(name) if isinstance(body, dict) else None
+
 
 DEFAULT_BASE_URL = "https://api.authentica.sa/api/v2"
+
 DEFAULT_TEMPLATE_ID = 5
+
 DEFAULT_TIMEOUT_SECONDS = 10.0
 
 
-class AuthenticaSmsSender(AuthenticaCalls, SmsSender):
+class AuthenticaSmsSender(SmsSender):
     """Sends and checks sign-in codes through Authentica's two calls, send-otp
     and verify-otp.
     """
@@ -90,3 +159,51 @@ class AuthenticaSmsSender(AuthenticaCalls, SmsSender):
         if status == 422 or refused:
             return False
         raise self._error("verify-otp", status)
+
+    # Posts one call and reads the answer, or raises `SmsDeliveryError`.
+    def _post(self, call: str, body: dict):
+        """Make one call to Authentica through the circuit breaker, and answer
+        its HTTP status and JSON.
+        """
+        if not self._breaker.allow():
+            raise SmsDeliveryError(
+                f"Authentica failed several times; {call} was not called.",
+                not_sent=True,
+            )
+        try:
+            status, parsed = self._transport(
+                f"{self._base_url}/{call}",
+                {"X-Authorization": self._api_key},
+                body,
+                self._timeout,
+            )
+        except (OSError, http.client.HTTPException) as error:
+            # The type only: the text of the error could hold the address.
+            logger.warning(
+                "Authentica %s: no answer (%s)", call, type(error).__name__
+            )
+            self._breaker.record_failure()
+            raise SmsDeliveryError(
+                f"Authentica did not answer {call} ({type(error).__name__})."
+            ) from None
+        logger.info("Authentica %s: HTTP %s", call, status)
+        # Sick: a server error, or too many calls. A 401 (wrong key) or a
+        # 422 (wrong code) is an answer, so Authentica is up.
+        if status >= 500 or status == 429:
+            self._breaker.record_failure()
+        else:
+            self._breaker.record_success()
+        return status, parsed
+
+    @staticmethod
+    def _error(call: str, status: int) -> SmsDeliveryError:
+        """The error for an answer that cannot be used, pointing at the key on
+        a 401.
+        """
+        message = (
+            f"Authentica answered {call} with HTTP {status}, "
+            "which cannot be used."
+        )
+        if status == 401:
+            message += " Check AUTHENTICA_API_KEY."
+        return SmsDeliveryError(message, status=status)

@@ -10,15 +10,15 @@ import logging
 from flask import Flask
 
 from app.auth.otp_store import OtpStore
-from app.auth.store import SessionStore
+from app.auth.sessions import SessionStore
 from app.authz import CircleAccess
 from app.clock import SystemClock
 from app.config import load_config
 from app.database import initialize_database
-from app.factory.endpoints import register_commands, register_endpoints
-from app.factory.services import register_services
-from app.minute_scan import install_minute_scan
-from app.factory.stores import Stores, choose_stores
+from app.factory import register_commands, register_endpoints
+from app.factory import register_services
+from app.background import install_minute_scan
+from app.factory import Stores, choose_stores
 from app.push import PushSender, create_push_sender
 from app.sms import SmsSender, create_sms_sender
 from app.users.store import UserStore

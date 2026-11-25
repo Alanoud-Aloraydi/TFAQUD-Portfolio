@@ -1,11 +1,11 @@
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
-import 'package:app/features/home/domain/day_task_times.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_timing.dart';
-import 'package:app/features/medications/domain/dose_timing.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
+import 'package:app/features/home/domain/entities/day_task_times.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading_codec.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/dose_retention.dart';
 
 /// The earliest open task of today: exactly one of [medication],
 /// [measurement] and [appointment] is set, and [at] is its wall time.

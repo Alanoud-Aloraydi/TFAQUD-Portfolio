@@ -1,4 +1,4 @@
-import 'package:app/core/theme/app_tokens_lerp.dart';
+import 'package:app/core/constants/app_colors.dart';
 import 'package:app/core/theme/app_tokens_presets.dart';
 import 'package:flutter/material.dart';
 
@@ -87,4 +87,13 @@ class AppTokens extends ThemeExtension<AppTokens> {
 /// Adds app tokens context helpers to its target type.
 extension AppTokensContext on BuildContext {
   AppTokens get tokens => Theme.of(this).extension<AppTokens>()!;
+}
+
+/// The small rounded squares behind a settings row's icon, as in iOS
+/// Settings: one color per kind of care, the icon in [onTile].
+abstract final class AppSettingsTileColors {
+  static const Color doses = AppColors.leaf;
+  static const Color measurements = AppColors.honey;
+  static const Color appointments = AppColors.slateSoft;
+  static const Color onTile = AppColors.inkViolet;
 }

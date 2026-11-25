@@ -1,24 +1,95 @@
-"""Authorized visit-paper text and voice endpoints: the text here, the
-voice note in visit_audio_routes.py, which joins the blueprint when
-imported here."""
+"""The visit paper endpoints: its text, and its voice note."""
 
-from flask import jsonify
+from uuid import UUID
 
-from app.appointments import visit_audio_routes
-from app.appointments.visit_blueprint import (
-    MEMBERS,
-    VisitRequest,
-    bp,
-    parse_uuid,
-)
-from app.appointments.visit_service import VisitService
-from app.appointments.visit_view import visit_view
+from flask import Blueprint, Response, jsonify, request
+from pydantic import Field
+
+from app.appointments.visits import MAX_AUDIO_BYTES, VisitService, visit_view
 from app.auth.decorators import current_auth
-from app.authz.decorators import require_circle_role
-from app.authz.roles import CircleRole
+from app.authz import require_circle_role
+from app.authz import CircleRole
 from app.database import transaction
+from app.errors import NotFound, ValidationFailed
 from app.extensions import get_clock
-from app.validation import parse_json_body
+from app.validation import Dto, parse_json_body
+
+
+bp = Blueprint(
+    "appointment_visits", __name__,
+    url_prefix=(
+        "/api/v1/circles/<circle_id>/appointments/"
+        "<appointment_id>/visit"
+    ),
+)
+
+MEMBERS = (
+    CircleRole.MANAGER,
+    CircleRole.SIMPLIFIED_PATIENT,
+    CircleRole.MEMBER,
+)
+
+
+class VisitRequest(Dto):
+    """The three editable fields visible in the visit paper."""
+
+    summary: str | None = Field(default=None, max_length=2000)
+    recommendations: str | None = Field(default=None, max_length=2000)
+    follow_up: str | None = Field(default=None, max_length=500)
+
+
+def parse_uuid(value: str) -> UUID:
+    """Hide malformed identifiers behind the not-found response."""
+    try:
+        return UUID(value)
+    except (ValueError, TypeError, AttributeError):
+        raise NotFound() from None
+
+
+@bp.get("/audio")
+@require_circle_role(*MEMBERS)
+def get_visit_audio(circle_id, appointment_id):
+    """Stream the authorized M4A note without caching it."""
+    with transaction() as session:
+        visit = VisitService(session, get_clock().now()).get(
+            parse_uuid(circle_id), parse_uuid(appointment_id)
+        )
+        if visit is None or visit.audio is None:
+            raise NotFound()
+        audio = bytes(visit.audio)
+    response = Response(audio, mimetype="audio/mp4")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Content-Disposition"] = 'inline; filename="visit.m4a"'
+    return response
+
+
+@bp.put("/audio")
+@require_circle_role(CircleRole.MANAGER)
+def save_visit_audio(circle_id, appointment_id):
+    """Accept a bounded iOS M4A recording for one completed visit."""
+    if request.mimetype != "audio/mp4":
+        raise ValidationFailed(code="appointment_invalid_audio")
+    audio = request.stream.read(MAX_AUDIO_BYTES + 1)
+    with transaction() as session:
+        visit = VisitService(session, get_clock().now()).save_audio(
+            parse_uuid(circle_id), parse_uuid(appointment_id),
+            parse_uuid(current_auth().user_id), audio,
+        )
+        value = visit_view(visit)
+    return jsonify(visit=value)
+
+
+@bp.delete("/audio")
+@require_circle_role(CircleRole.MANAGER)
+def remove_visit_audio(circle_id, appointment_id):
+    """Remove a voice note without deleting the visit paper."""
+    with transaction() as session:
+        visit = VisitService(session, get_clock().now()).remove_audio(
+            parse_uuid(circle_id), parse_uuid(appointment_id),
+            parse_uuid(current_auth().user_id),
+        )
+        value = visit_view(visit)
+    return jsonify(visit=value)
 
 
 @bp.get("")
@@ -48,6 +119,3 @@ def save_visit(circle_id, appointment_id):
         )
         value = visit_view(visit)
     return jsonify(visit=value)
-
-
-__all__ = ["bp", "get_visit", "save_visit", "visit_audio_routes"]

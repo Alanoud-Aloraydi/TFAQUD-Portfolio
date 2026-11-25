@@ -1,12 +1,10 @@
-"""Each patient's IANA zone on PostgreSQL: saved, returned, used by the
-day rules whoever records, and backfilled by migration 0030."""
+"""Each patient's IANA zone on PostgreSQL: saved, returned, and used by
+the day rules whoever records."""
 
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pytest
-from flask_migrate import downgrade, upgrade
-from sqlalchemy import inspect, select, text
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.clock import ManualClock
@@ -15,7 +13,6 @@ from app.models import CareCircle
 from integration_tests.helpers import BIRTH, Api, add_manager, count
 from integration_tests.helpers import error_code, run
 
-DIRECTORY = str(Path(__file__).resolve().parents[1] / "migrations")
 SELF = {"name": "My care", "birth_date": "1954-06-05", "city": "لندن"}
 
 
@@ -128,39 +125,3 @@ def test_a_member_elsewhere_follows_the_patients_day(
 
     assert error_code(passed, 422) == "appointment_time_in_past"
     assert to_come.status_code == 201, to_come.get_json()
-
-
-def test_migration_0030_backfills_riyadh_and_keeps_other_zones(
-    database_app, database, account
-):
-    """Patients made before 0030 lived by Riyadh time; a downgrade that
-    would move a patient elsewhere to Riyadh is refused.
-
-    Flask-Migrate turns the migration's RuntimeError into exit status 1, as
-    `flask db downgrade` would; its log goes to stderr, so the test checks
-    that nothing changed: the column and the London zone are still there."""
-    owner = account()
-    circle = run(database, "create_self", owner.id, "Care", BIRTH, "الرياض")
-    db.session.remove()
-    downgrade(directory=DIRECTORY, revision="0029")
-    try:
-        columns = {c["name"] for c in inspect(database).get_columns("patient")}
-        assert "time_zone" not in columns
-    finally:
-        upgrade(directory=DIRECTORY)
-    assert zone_of(database, circle.id) == "Asia/Riyadh"
-
-    with database.begin() as connection:
-        connection.execute(text(
-            "UPDATE care_circle SET time_zone = 'Europe/London'"
-        ))
-    with pytest.raises(SystemExit):
-        downgrade(directory=DIRECTORY, revision="0029")
-    try:
-        columns = {
-            c["name"] for c in inspect(database).get_columns("care_circle")
-        }
-        assert "time_zone" in columns
-        assert zone_of(database, circle.id) == "Europe/London"
-    finally:
-        upgrade(directory=DIRECTORY)

@@ -1,33 +1,31 @@
-import 'dart:typed_data';
-
-import 'package:app/core/errors/failure.dart';
-import 'package:app/core/media/private_photo_repository.dart';
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/reminder_circle.dart';
-import 'package:app/core/services/token_storage.dart';
-import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/auth/domain/entities/code_request.dart';
-import 'package:app/features/auth/domain/entities/sign_in_result.dart';
-import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
-import 'package:app/features/measurements/domain/measurement_occurrence.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/domain/measurement_reading.dart';
-import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
-import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
-import 'package:app/features/prayer_times/data/prayer_day_model.dart';
-import 'package:app/features/prayer_times/data/prayer_times_remote_data_source.dart';
-import 'package:app/features/prayer_times/domain/prayer_day.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:multiple_result/multiple_result.dart';
-
 // The offline repositories of the device smoke flow (smoke_test.dart): a
 // signed-in phone whose server answers with empty plans, so the app opens
 // on its tabs without a network.
+import 'dart:typed_data';
+
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/reminder_circle.dart';
+import 'package:app/core/errors/failure.dart';
+import 'package:app/core/media/private_photo_repository.dart';
+import 'package:app/core/storage/token_storage.dart';
+import 'package:app/features/account/domain/repositories/profile_repository.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/auth/domain/entities/code_request.dart';
+import 'package:app/features/auth/domain/entities/sign_in_failures.dart';
+import 'package:app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/features/medications/domain/entities/medication_plan.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository.dart';
+import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
+import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:multiple_result/multiple_result.dart';
 
 /// A phone that is signed in; the router reads the tokens first.
 class SmokeSignedInTokens implements TokenStorage {
@@ -57,7 +55,7 @@ class SmokeSignedInTokens implements TokenStorage {
 }
 
 /// Answers the account page's sign-in calls without a server.
-class SmokeAuthRepository implements AuthRepositoryDomain {
+class SmokeAuthRepository implements AuthRepository {
   @override
   Future<Result<CodeRequest, Failure>> requestCode(
     String phone, {
@@ -81,7 +79,7 @@ class SmokeAuthRepository implements AuthRepositoryDomain {
 }
 
 /// Saves nothing; the smoke flow never edits the account.
-class SmokeProfileRepository implements ProfileRepositoryDomain {
+class SmokeProfileRepository implements ProfileRepository {
   @override
   Future<Result<void, Failure>> saveProfile({
     required String firstName,
@@ -93,8 +91,7 @@ class SmokeProfileRepository implements ProfileRepositoryDomain {
 }
 
 /// No medication plans and no doses.
-class SmokeMedicationsRepository extends Fake
-    implements MedicationsRepositoryDomain {
+class SmokeMedicationsRepository extends Fake implements MedicationsRepository {
   @override
   Future<Result<List<MedicationPlan>, Failure>> getPlans(
     String circleId,
@@ -111,7 +108,7 @@ class SmokeMedicationsRepository extends Fake
 
 /// No measurement plans and no readings.
 class SmokeMeasurementsRepository extends Fake
-    implements MeasurementsRepositoryDomain {
+    implements MeasurementsRepository {
   @override
   Stream<String> get changes => const Stream<String>.empty();
 
@@ -143,7 +140,7 @@ class SmokeMeasurementsRepository extends Fake
 
 /// No appointments.
 class SmokeAppointmentsRepository extends Fake
-    implements AppointmentsRepositoryDomain {
+    implements AppointmentsRepository {
   @override
   Stream<String> get changes => const Stream<String>.empty();
 

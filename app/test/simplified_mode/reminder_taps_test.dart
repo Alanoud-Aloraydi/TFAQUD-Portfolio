@@ -1,8 +1,8 @@
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/features/simplified_mode/domain/entities/reminder_payload.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
-import 'package:app/features/simplified_mode/domain/reminder_payload.dart';
-import 'package:app/features/simplified_mode/presentation/controllers/reminder_taps.dart';
+import 'package:app/features/simplified_mode/presentation/cubit/reminder_taps.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/phone_fakes.dart';

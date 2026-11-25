@@ -1,22 +1,22 @@
 import 'dart:convert';
 
-import 'package:app/core/errors/failure.dart';
-import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart'
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart'
     show ReminderCircle, SnoozedTask, TaskSnooze;
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/domain/measurement_version.dart';
-import 'package:app/features/measurements/domain/repositories/measurements_repository_domain.dart';
-import 'package:app/features/measurements/domain/use_cases/measurements_use_case.dart';
+import 'package:app/core/errors/failure.dart';
+import 'package:app/core/localization/care_voice.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_reminder_lead.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/domain/entities/measurement_version.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/domain/usecases/measurements_use_case.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
-import 'package:app/features/medications/domain/repositories/medications_repository_domain.dart';
-import 'package:app/features/medications/domain/use_cases/medications_use_case.dart';
+import 'package:app/features/medications/domain/repositories/medications_repository.dart';
+import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:device_calendar_plus/device_calendar_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -246,14 +246,14 @@ class _Calendar extends Fake implements DeviceCalendar {
   ];
 }
 
-class _Medications extends Fake implements MedicationsRepositoryDomain {
+class _Medications extends Fake implements MedicationsRepository {
   @override
   Future<Result<List<MedicationPlan>, Failure>> getPlans(
     String circleId,
   ) async => const Success(<MedicationPlan>[]);
 }
 
-class _Measurements extends Fake implements MeasurementsRepositoryDomain {
+class _Measurements extends Fake implements MeasurementsRepository {
   List<MeasurementPlan> list = const <MeasurementPlan>[];
 
   @override
@@ -278,7 +278,7 @@ final MeasurementPlan _reading = MeasurementPlan(
   history: const <MeasurementVersion>[],
 );
 
-class _Appointments extends Fake implements AppointmentsRepositoryDomain {
+class _Appointments extends Fake implements AppointmentsRepository {
   final Map<String, List<CareAppointment>> visits =
       <String, List<CareAppointment>>{};
   bool offline = false;

@@ -1,10 +1,10 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/features/circles/domain/entities/circle_overview.dart';
-import 'package:app/features/circles/presentation/widgets/circle_card_name.dart';
+import 'package:app/features/circles/presentation/widgets/circle_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 CircleOverview _overview({
   required bool canManage,

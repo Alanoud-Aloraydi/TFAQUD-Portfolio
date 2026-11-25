@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/remote_push.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/remote_push.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The phone's notifications, kept in memory: what is scheduled, how often

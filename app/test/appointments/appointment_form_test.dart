@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:app/core/widgets/pickers/ruler_picker.dart';
-import 'package:app/features/appointments/data/appointment_model.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_companions.dart';
-import 'package:app/features/appointments/domain/repositories/appointments_repository_domain.dart';
-import 'package:app/features/appointments/domain/use_cases/appointments_use_case.dart';
+import 'package:app/features/appointments/data/models/appointment_model.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_group.dart';
+import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/cubit/appointments_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_page.dart';
@@ -26,7 +26,7 @@ const AppointmentCompanion _nora = AppointmentCompanion(
 );
 
 /// One companion to choose; remembers the appointments the form saves.
-class _Appointments extends Fake implements AppointmentsRepositoryDomain {
+class _Appointments extends Fake implements AppointmentsRepository {
   final List<AppointmentDraft> created = <AppointmentDraft>[];
 
   @override

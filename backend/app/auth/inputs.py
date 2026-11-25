@@ -1,19 +1,8 @@
-"""How the sign-in endpoints read a phone number and a code.
+"""How the sign-in endpoints read a phone number and a code, and their
+request bodies.
 
-These are types for the request classes (DTOs). A value that does not fit is
-refused with the error `validation_error` (422) before any rule runs, so a
-badly typed code is never sent to the SMS provider and never counts as a
-wrong try.
-
-  Phone  the Saudi mobile number in international format: +966, then 9
-         digits that start with 5 (for example +966501234567). English
-         digits only. The app builds this from what the user types.
-  Code   the sign-in code: exactly CODE_LENGTH (6) digits. Arabic-Indic and
-         Persian digits are accepted and turned into 0-9, because a user
-         with an Arabic keyboard may type them.
-
-The error never contains the value that was sent (see app/validation.py).
-"""
+A value that does not fit is refused with `validation_error` (422) before
+any rule runs, so a badly typed code is never sent to the SMS provider."""
 
 import re
 from typing import Annotated
@@ -22,8 +11,11 @@ from pydantic import AfterValidator, Field
 from pydantic_core import PydanticCustomError
 
 from app.sms.base import CODE_LENGTH
+from app.validation import Dto
+
 
 _PHONE_PATTERN = re.compile(r"^\+9665[0-9]{8}$")
+
 _CODE_PATTERN = re.compile(rf"^[0-9]{{{CODE_LENGTH}}}$")
 
 # U+0660..U+0669 (Arabic-Indic) and U+06F0..U+06F9 (Persian) -> 0..9.
@@ -60,8 +52,30 @@ def _check_code(value: str) -> str:
 
 
 Phone = Annotated[str, Field(max_length=32), AfterValidator(_check_phone)]
+
 Code = Annotated[str, Field(max_length=32), AfterValidator(_check_code)]
 
 # An id that the server made (32 hex characters). The limit only protects the
 # server from a huge value; whether the id exists is checked by the service.
 VerificationId = Annotated[str, Field(min_length=1, max_length=64)]
+
+
+class RefreshRequest(Dto):
+    """The body of POST /auth/refresh."""
+
+    refresh_token: str
+
+
+class RequestCodeRequest(Dto):
+    """The body of POST /auth/request-code."""
+
+    phone_number: Phone
+    # Send it back to ask for another SMS inside the same request (a resend).
+    verification_id: VerificationId | None = None
+
+
+class VerifyCodeRequest(Dto):
+    """The body of POST /auth/verify-code."""
+
+    verification_id: VerificationId
+    code: Code

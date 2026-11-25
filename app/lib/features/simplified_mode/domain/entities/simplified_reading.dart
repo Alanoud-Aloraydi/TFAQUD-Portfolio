@@ -1,5 +1,5 @@
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/measurement_limits.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan_draft.dart';
 import 'package:equatable/equatable.dart';
 
 /// A reading the patient typed on «تسجيل قياس».
@@ -34,4 +34,17 @@ class SimplifiedReading extends Equatable {
 
   @override
   List<Object?> get props => [kind, valueOne, valueTwo, conditions, note];
+}
+
+/// The simplified mode's text size, chosen in «حسابي»: «صغير»,
+/// «متوسط», «كبير». Its [factor] scales every text of the mode, on top
+/// of the phone's own text size.
+enum SimplifiedTextSize {
+  normal(1),
+  large(1.15),
+  larger(1.3);
+
+  const SimplifiedTextSize(this.factor);
+
+  final double factor;
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/core/services/weather/patient_weather.dart';
+import 'package:app/app/services/weather/patient_weather.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 

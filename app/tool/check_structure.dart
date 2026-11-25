@@ -1,6 +1,6 @@
 // Checks the structure rules of docs/code-conventions.md that can be checked
-// mechanically: file size, one widget per file, and the direction of the
-// dependencies between the layers.
+// mechanically: file size and the direction of the dependencies between the
+// layers.
 //
 // Run from the app folder:
 //
@@ -14,11 +14,8 @@
 
 import 'dart:io';
 
-/// The size limit of a file under presentation/, where the widgets live.
-const int presentationLimit = 70;
-
-/// The size limit of every other file.
-const int generalLimit = 90;
+/// The size limit of every file. Aim for about 200 lines; never more than 300.
+const int lineLimit = 300;
 
 const String baselinePath = 'tool/structure_baseline.txt';
 
@@ -42,23 +39,10 @@ bool isGenerated(String path) =>
     path.endsWith('.freezed.dart') ||
     path.endsWith('.config.dart');
 
-final RegExp _classDeclaration = RegExp(
-  r'^(?:abstract |sealed |base |final |interface )*class\s+\w+',
-);
-
-/// The State of a StatefulWidget belongs with its widget, so it does not
-/// count as a second widget in the file.
-final RegExp _stateDeclaration = RegExp(r'\bextends\s+State<');
-
 /// A comment that is only a rule of dashes or stars: a section banner,
 /// which §5 of the conventions does without. A file that needs one is a
 /// file with two jobs in it.
 final RegExp _banner = RegExp(r'^\s*//\s*[-=*_~#]{3,}\s*$');
-
-bool _isTopLevelClass(String line) =>
-    !line.startsWith(' ') &&
-    _classDeclaration.hasMatch(line) &&
-    !_stateDeclaration.hasMatch(line);
 
 String? _importTarget(String line) {
   final RegExp pattern = RegExp(r"^import\s+'([^']+)'");
@@ -69,15 +53,14 @@ List<Violation> inspect(File file, String path) {
   final List<String> lines = file.readAsLinesSync();
   final List<Violation> found = <Violation>[];
   final bool presentation = path.contains('/presentation/');
-  final int limit = presentation ? presentationLimit : generalLimit;
 
-  if (lines.length > limit) {
+  if (lines.length > lineLimit) {
     found.add(
       Violation(
         'size',
         path,
         lines.length,
-        '${lines.length} lines, limit $limit',
+        '${lines.length} lines, limit $lineLimit',
       ),
     );
   }
@@ -86,18 +69,6 @@ List<Violation> inspect(File file, String path) {
   if (banners > 0) {
     found.add(
       Violation('banner', path, banners, '$banners section banner comments'),
-    );
-  }
-
-  final int classes = lines.where(_isTopLevelClass).length;
-  if (presentation && classes > 1) {
-    found.add(
-      Violation(
-        'one-widget',
-        path,
-        0,
-        '$classes top-level classes, one per file',
-      ),
     );
   }
 

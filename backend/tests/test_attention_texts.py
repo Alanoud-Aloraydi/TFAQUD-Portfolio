@@ -3,8 +3,8 @@ skipped dose with its reason, a cancelled visit."""
 
 import pytest
 
-from app.push.arabic_words import for_visit, with_article
-from app.push.attention_texts import (
+from app.push.texts import for_visit, with_article
+from app.push.texts import (
     appointment_cancelled_text,
     dose_skipped_text,
     reading_unusual_text,

@@ -1,5 +1,4 @@
-import 'package:app/core/services/reminders/shared_snooze.dart';
-import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
+import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 
 /// Maps dose occurrence data between the API and app.

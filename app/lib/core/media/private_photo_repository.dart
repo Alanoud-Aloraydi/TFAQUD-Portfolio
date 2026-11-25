@@ -1,5 +1,5 @@
 import 'package:app/core/network/dio_client.dart';
-import 'package:app/core/services/token_storage.dart';
+import 'package:app/core/storage/token_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 

@@ -1,9 +1,9 @@
-import 'package:app/core/services/phone_notifications.dart';
-import 'package:app/core/services/push_target.dart';
-import 'package:app/core/services/reminders/item_keys.dart';
-import 'package:app/core/services/reminders/reminder_payloads.dart';
-import 'package:app/core/services/reminders/tapped_item.dart';
-import 'package:app/core/services/tap_focus.dart';
+import 'package:app/app/services/phone_notifications.dart';
+import 'package:app/app/services/push_target.dart';
+import 'package:app/app/services/reminders/item_keys.dart';
+import 'package:app/app/services/reminders/reminder_payloads.dart';
+import 'package:app/app/services/reminders/tapped_item.dart';
+import 'package:app/app/services/tap_focus.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/medication_record_filter.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_details.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final DateTime _today = DateTime(2026, 11, 15);

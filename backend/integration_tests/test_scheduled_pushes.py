@@ -122,7 +122,7 @@ def test_the_cron_command_keeps_the_api_awake(
     monkeypatch.setitem(
         database_app.config, "KEEP_AWAKE_URL", "https://api.test/health"
     )
-    monkeypatch.setattr("app.push.tick_command.keep_awake", asked.append)
+    monkeypatch.setattr("app.push.routes.keep_awake", asked.append)
 
     result = database_app.test_cli_runner().invoke(args=["tick"])
 

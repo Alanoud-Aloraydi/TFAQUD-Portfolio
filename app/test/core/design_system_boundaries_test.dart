@@ -41,7 +41,11 @@ void main() {
         r'\bAppColors\.|\bColors\.|\bColor\(0x|\bFontWeight\.|'
         r'\bDuration\(milliseconds:',
       );
-      for (final directory in ['lib/core/widgets', 'lib/features', 'lib/dev']) {
+      for (final directory in [
+        'lib/core/widgets',
+        'lib/features',
+        'lib/app/dev',
+      ]) {
         for (final file in dartFiles(directory)) {
           final path = file.path.replaceAll('\\', '/');
           if (directory == 'lib/features' &&

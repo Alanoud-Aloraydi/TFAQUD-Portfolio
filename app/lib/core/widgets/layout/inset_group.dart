@@ -1,7 +1,7 @@
 import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/theme/materials/surface_style.dart';
-import 'package:app/core/widgets/layout/inset_group_header.dart';
+import 'package:app/core/widgets/layout/inset_text_line.dart';
 import 'package:flutter/material.dart';
 
 /// iOS inset grouped section, as in Settings and Health (design system

@@ -1,12 +1,17 @@
-"""Building a complete circle: the patient, its first manager and its
-leader in one step."""
+"""Making a circle: the patient's birth date, city and zone checked and
+filled in, and the patient, its first manager and its leader built in one
+step, either at once (self-care, or for a patient without an account) or
+when an accepted request is completed.
+
+Where the app's Saudi cities are, for the patient's weather on «اليوم»
+(the phone's own location is never asked for)."""
 
 from datetime import date
 from uuid import UUID
 
 from sqlalchemy import func, true, update
 
-from app.care.city_points import city_point
+from app.clock import DEFAULT_ZONE, is_zone, patient_today, require_old_enough
 from app.errors import ValidationFailed
 from app.models import (
     Account,
@@ -14,6 +19,46 @@ from app.models import (
     CareCircleManager,
     CareCircleRequest,
 )
+
+
+# The app's city list (`SaudiCities.all`) with each city's latitude and
+# longitude. Keep it in step with that list and with
+# `app.prayer_times.cities.SAUDI_CITIES`.
+CITY_POINTS: dict[str, tuple[float, float]] = {
+    "الرياض": (24.7136, 46.6753),
+    "جدة": (21.4858, 39.1925),
+    "مكة المكرمة": (21.3891, 39.8579),
+    "المدينة المنورة": (24.5247, 39.5692),
+    "الدمام": (26.4207, 50.0888),
+    "بريدة": (26.3260, 43.9750),
+    "أبها": (18.2164, 42.5053),
+    "الطائف": (21.2703, 40.4158),
+    "تبوك": (28.3835, 36.5662),
+    "الخبر": (26.2172, 50.1971),
+    "الظهران": (26.2361, 50.0393),
+    "الهفوف": (25.3800, 49.5900),
+    "الجبيل": (27.0174, 49.6225),
+    "حائل": (27.5114, 41.7208),
+    "نجران": (17.5656, 44.2289),
+    "جازان": (16.8892, 42.5511),
+    "ينبع": (24.0895, 38.0618),
+    "القطيف": (26.5654, 49.9964),
+    "خميس مشيط": (18.3060, 42.7290),
+    "الباحة": (20.0129, 41.4677),
+    "عرعر": (30.9753, 41.0381),
+    "سكاكا": (29.9697, 40.2064),
+    "الخرج": (24.1554, 47.3346),
+}
+
+
+def city_point(
+    city: str | None, latitude: float | None, longitude: float | None
+) -> tuple[float | None, float | None]:
+    """The point the app sent; else the centre of a city from the list;
+    else none (a city typed by hand has no weather)."""
+    if latitude is not None and longitude is not None:
+        return latitude, longitude
+    return CITY_POINTS.get((city or "").strip(), (None, None))
 
 
 class CareBuilding:
@@ -98,3 +143,129 @@ class CareBuilding:
                 .returning(request.id)
             ))
         return circle
+
+    # Checks the basics every patient has.
+    def _check_patient_basics(
+        self, circle: CareCircle, birth_date: date, city: str
+    ) -> None:
+        """Birth date, city and zone are required for every patient.
+
+        Runs on the values as they will be saved (on the circle, or on the
+        patient's account): the birth date is checked against the day in
+        the patient's own zone, as the app's date sheet counts it there."""
+        if not city.strip():
+            raise ValidationFailed(
+                "The city cannot be blank.", code="invalid_city"
+            )
+        if not is_zone(circle.time_zone):
+            raise ValidationFailed(
+                "The time zone is not a known IANA zone.",
+                code="invalid_time_zone",
+            )
+        if birth_date > patient_today(circle, self.now):
+            raise ValidationFailed(
+                "The birth date cannot be in the future.",
+                code="invalid_birth_date",
+            )
+        # A patient with an account holds it, so is 15 or older.
+        if circle.account_id is not None:
+            require_old_enough(birth_date, patient_today(circle, self.now))
+
+    @staticmethod
+    def _zone_for(time_zone: str | None, current: str | None = None) -> str:
+        """The patient's zone: the one sent, else the one saved, else
+        `DEFAULT_ZONE`.
+
+        The app sends the zone with every city: Saudi Arabia's for a city
+        of its Saudi list, the phone's for a city typed by hand, and the
+        person can change it later. An app older than zones sends none and
+        offers only the Saudi list, so its patients live by DEFAULT_ZONE."""
+        return time_zone or current or DEFAULT_ZONE
+
+    @staticmethod
+    def _own_basics(
+        account: Account, birth_date: date | None, city: str | None
+    ) -> tuple[date, str]:
+        """The patient's birth date and city when the patient is the caller.
+
+        What the request sends wins; what it leaves out comes from the
+        account (onboarding saves both). An account made before onboarding
+        asked for them has neither, and then the request must send them.
+        """
+        birth_date = birth_date or account.birth_date
+        city = city or account.city
+        if birth_date is None:
+            raise ValidationFailed(
+                "Add your birth date first.", code="birth_date_required"
+            )
+        if city is None:
+            raise ValidationFailed(
+                "Add your city first.", code="city_required"
+            )
+        return birth_date, city
+
+    # Makes a circle at once.
+    def create_self(
+        self,
+        actor_id: UUID,
+        name: str,
+        birth_date: date | None,
+        city: str | None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        time_zone: str | None = None,
+    ) -> CareCircle:
+        """Create self-care with both patient identity and management."""
+        account = self._lock_accounts(actor_id)[actor_id]
+        birth_date, city = self._own_basics(account, birth_date, city)
+        self._assign_app_mode(account, "detailed")
+        self._require_no_patient(actor_id)
+        self._require_room_for_circle(actor_id)
+        return self._create_circle(
+            name,
+            birth_date,
+            city,
+            {actor_id},
+            patient_account=account,
+            latitude=latitude,
+            longitude=longitude,
+            time_zone=time_zone,
+        )
+
+    def create_without_account(
+        self,
+        actor_id: UUID,
+        first_name: str,
+        last_name: str,
+        birth_date: date,
+        city: str,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        time_zone: str | None = None,
+    ) -> CareCircle:
+        """Create a care circle for a patient without an account.
+
+        Nobody chooses its name: everyone sees «دائرة» and the patient's
+        first name (`app.circles.naming`), so the circle stores none.
+        """
+        # The asker manages in the detailed mode, and the patient needs both
+        # names.
+        account = self._lock_accounts(actor_id)[actor_id]
+        self._assign_app_mode(account, "detailed")
+        if not first_name.strip() or not last_name.strip():
+            raise ValidationFailed(
+                "Both patient names are required.",
+                code="patient_name_required",
+            )
+        self._require_room_for_circle(actor_id)
+        return self._create_circle(
+            None,
+            birth_date,
+            city,
+            {actor_id},
+            first_name=first_name.strip(),
+            last_name=last_name.strip(),
+            latitude=latitude,
+            longitude=longitude,
+            time_zone=time_zone,
+        )

@@ -1,14 +1,11 @@
-import '../support/circles_fakes.dart';
-import '../support/widget_harness.dart';
-
 import 'dart:async';
 
-import 'package:app/core/navigation/routers.dart';
+import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_edit_cubit.dart';
 import 'package:app/features/circles/presentation/pages/medical_file_edit_screen.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_detail_scale.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_home_focus.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +13,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/circles_fakes.dart';
+import '../support/widget_harness.dart';
 
 const String _filePage = '/file';
 const String _editPage = '/edit';

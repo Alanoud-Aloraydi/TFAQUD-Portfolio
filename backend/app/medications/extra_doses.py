@@ -1,17 +1,24 @@
-"""Recording an extra dose of «سجّل جرعة الآن»."""
+"""«سجّل جرعة الآن»: recording an extra dose, and the extra doses taken in
+some days."""
 
+from datetime import date, time, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.clock import as_utc
+from app.clock import as_utc, local_moment, patient_zone
 from app.errors import NotFound, ValidationFailed
-from app.medications.inputs import ExtraDoseRequest
-from app.medications.inputs.fields import UNIT_BY_FORM
-from app.medications.retention import doses_kept_from
-from app.models import MedicationExtraDose
-from app.models import MedicationPlan, MedicationPlanVersion
+from app.medications.dose_inputs import ExtraDoseRequest
+from app.medications.doses import doses_kept_from
+from app.medications.inputs import UNIT_BY_FORM
+from app.medications.views import extra_dose_response
+from app.models import (
+    CareCircle,
+    MedicationExtraDose,
+    MedicationPlan,
+    MedicationPlanVersion,
+)
 
 
 class MedicationExtraDoses:
@@ -83,3 +90,34 @@ class MedicationExtraDoses:
             .order_by(MedicationPlanVersion.version_number.desc())
             .limit(1)
         )
+
+
+def extra_doses_between(
+    session: Session,
+    circle_id: UUID,
+    first: date,
+    last: date,
+    plan_id: UUID | None = None,
+) -> list[dict]:
+    """The extra doses taken from `first` to `last`, days of the patient's
+    own clock, newest first, optionally of one medicine."""
+    patient = session.get(CareCircle, circle_id)
+    if patient is None:
+        raise NotFound("The care circle does not exist.")
+    zone = patient_zone(patient)
+    query = (
+        select(MedicationExtraDose)
+        .join(MedicationPlan)
+        .where(
+            MedicationPlan.care_circle_id == circle_id,
+            MedicationExtraDose.taken_at >= local_moment(first, time(0), zone),
+            MedicationExtraDose.taken_at
+            < local_moment(last + timedelta(days=1), time(0), zone),
+        )
+        .order_by(MedicationExtraDose.taken_at.desc())
+    )
+    if plan_id is not None:
+        query = query.where(MedicationExtraDose.medication_plan_id == plan_id)
+    return [
+        extra_dose_response(session, dose) for dose in session.scalars(query)
+    ]

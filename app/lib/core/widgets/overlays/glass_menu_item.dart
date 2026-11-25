@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/overlays/glass_menu_entry.dart';
+import 'package:app/core/widgets/overlays/glass_menu_layout.dart';
 import 'package:app/core/widgets/overlays/glass_menu_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

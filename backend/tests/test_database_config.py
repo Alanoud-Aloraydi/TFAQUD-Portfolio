@@ -2,7 +2,8 @@
 
 import pytest
 
-from app.config import ConfigError, load_config
+from app.config import load_config
+from app.config.values import ConfigError
 
 
 def test_testing_does_not_inherit_database_credentials(monkeypatch):

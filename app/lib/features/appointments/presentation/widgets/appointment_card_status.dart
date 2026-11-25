@@ -1,9 +1,11 @@
+import 'package:app/core/localization/appointment_texts.dart';
+import 'package:app/core/localization/arabic_names.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/core/widgets/status/status_badge.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -67,4 +69,26 @@ class AppointmentCardStatus extends StatelessWidget {
     2 => 'appointments.in_two_days',
     _ => 'appointments.after_days',
   };
+}
+
+/// What an appointment card calls the visit.
+Widget appointmentCardTitle(BuildContext context, CareAppointment value) {
+  return Text(
+    appointmentTitle(context, value),
+    style: Theme.of(context).textTheme.titleMedium,
+  );
+}
+
+/// The clinic or doctor under the title; null when none was typed.
+Widget? appointmentCardClinic(CareAppointment value) {
+  return switch (appointmentClinic(value)) {
+    final String clinic => Text(clinic),
+    null => null,
+  };
+}
+
+/// The date and time a card starts with.
+String appointmentCardStart(BuildContext context, CareAppointment value) {
+  return '${appointmentDate(context, value.scheduledOn)}، '
+      '${clockText(value.time)}';
 }

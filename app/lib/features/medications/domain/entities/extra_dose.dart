@@ -1,4 +1,4 @@
-import 'package:app/features/medications/domain/entities/dose_unit.dart';
+import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:equatable/equatable.dart';
 
 /// A dose of «سجّل جرعة الآن»: taken when the person chose, always on top

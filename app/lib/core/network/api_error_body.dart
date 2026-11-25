@@ -1,4 +1,4 @@
-export 'package:app/core/network/api_error_readers.dart';
+export 'package:app/core/network/api_endpoints.dart';
 
 /// Error codes the Flask API returns (backend/app/errors.py and services).
 abstract class ApiErrorCodes {

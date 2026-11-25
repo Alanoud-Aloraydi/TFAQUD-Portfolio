@@ -1,5 +1,6 @@
 import 'package:app/core/utils/api_date.dart';
-import 'package:app/features/circles/domain/entities/new_patient_circle.dart';
+import 'package:app/features/circles/domain/entities/new_circle_request.dart';
+import 'package:app/features/circles/domain/entities/new_self_circle.dart';
 
 /// The body of POST /api/v1/circles/patient-without-account
 /// (docs/api-contracts.md): the two names of the patient, the birth date,
@@ -14,6 +15,22 @@ class NewPatientCircleModel {
   Map<String, dynamic> toJson() => <String, dynamic>{
     'patient_first_name': _circle.patientFirstName,
     'patient_last_name': _circle.patientLastName,
+    'birth_date': apiDate(_circle.birthDate),
+    'city': _circle.city,
+    'time_zone': ?_timeZone,
+  };
+}
+
+/// The body of POST /api/v1/circles/self (docs/api-contracts.md).
+/// [timeZone] is the patient's IANA zone.
+class NewSelfCircleModel {
+  const NewSelfCircleModel(this._circle, [this._timeZone]);
+
+  final NewSelfCircle _circle;
+  final String? _timeZone;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'name': _circle.name,
     'birth_date': apiDate(_circle.birthDate),
     'city': _circle.city,
     'time_zone': ?_timeZone,

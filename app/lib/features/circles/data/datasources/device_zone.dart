@@ -1,7 +1,6 @@
 import 'package:app/core/utils/time_zones.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:injectable/injectable.dart';
 
 /// The IANA zone this phone is set to: the first guess of a new patient's
 /// zone when their city is not one of the Saudi list. Behind an interface,
@@ -13,7 +12,6 @@ abstract interface class DeviceZone {
 }
 
 /// [DeviceZone] read from iOS or Android with flutter_timezone.
-@LazySingleton(as: DeviceZone)
 class PluginDeviceZone implements DeviceZone {
   @override
   Future<String> current() async {

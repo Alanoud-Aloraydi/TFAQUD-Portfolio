@@ -1,4 +1,4 @@
-"""Private photographs, one table per owner (migration 0042)."""
+"""Private photographs, one table per owner."""
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, ForeignKey, LargeBinary

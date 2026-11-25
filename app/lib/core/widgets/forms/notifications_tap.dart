@@ -1,5 +1,5 @@
-import 'package:app/core/services/permissions/app_permission.dart';
-import 'package:app/core/services/permissions/ask_notifications.dart';
+import 'package:app/app/services/permissions/app_permission.dart';
+import 'package:app/app/services/permissions/ask_notifications.dart';
 import 'package:app/core/widgets/forms/leave_for_settings.dart';
 import 'package:app/core/widgets/forms/permission_confirm.dart';
 import 'package:flutter/material.dart';

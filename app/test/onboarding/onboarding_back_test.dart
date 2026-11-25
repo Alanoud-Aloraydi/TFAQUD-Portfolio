@@ -1,25 +1,20 @@
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
-import '../support/phone_fakes.dart';
-import '../support/widget_harness.dart';
-
+import 'package:app/app/router/routers.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/remote_push.dart';
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/navigation/routers.dart';
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
-import 'package:app/core/services/remote_push.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
-import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
-import 'package:app/features/auth/domain/repositories/auth_repository_domain.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
+import 'package:app/features/account/domain/repositories/profile_repository.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
+import 'package:app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/circles/domain/entities/circle_inbox.dart';
-import 'package:app/features/circles/domain/entities/received_invitation.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/entities/received_circle_request.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/inbox_cubit.dart';
-import 'package:app/features/home/domain/use_cases/home_use_case.dart';
+import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/pages/profile_step_screen.dart';
 import 'package:app/features/onboarding/presentation/pages/start_screen.dart';
@@ -32,7 +27,12 @@ import 'package:go_router/go_router.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _Auth extends Fake implements AuthRepositoryDomain {
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
+import '../support/phone_fakes.dart';
+import '../support/widget_harness.dart';
+
+class _Auth extends Fake implements AuthRepository {
   int signOuts = 0;
 
   @override
@@ -43,7 +43,7 @@ class _Auth extends Fake implements AuthRepositoryDomain {
 }
 
 /// Answers every save with [result].
-class _Profile implements ProfileRepositoryDomain {
+class _Profile implements ProfileRepository {
   Result<void, Failure> result = const Success(null);
 
   @override

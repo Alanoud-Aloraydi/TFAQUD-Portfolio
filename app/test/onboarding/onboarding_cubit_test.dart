@@ -1,14 +1,14 @@
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
-import 'package:app/features/account/domain/repositories/profile_repository_domain.dart';
-import 'package:app/features/account/domain/use_cases/profile_use_case.dart';
+import 'package:app/features/account/domain/repositories/profile_repository.dart';
+import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:app/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-class _Profile implements ProfileRepositoryDomain {
+class _Profile implements ProfileRepository {
   Result<void, Failure> result = const Success(null);
   final List<Map<String, Object?>> saved = <Map<String, Object?>>[];
 

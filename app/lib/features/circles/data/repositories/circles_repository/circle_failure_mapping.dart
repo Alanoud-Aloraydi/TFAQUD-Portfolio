@@ -1,4 +1,4 @@
-part of '../circles_repository_data.dart';
+part of 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 
 /// The API codes that have their own text; every other error is read by
 /// [FailureExceptions].

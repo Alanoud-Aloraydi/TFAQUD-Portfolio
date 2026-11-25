@@ -1,4 +1,4 @@
-import 'package:app/core/services/reminder_circle.dart';
+import 'package:app/app/services/reminder_circle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

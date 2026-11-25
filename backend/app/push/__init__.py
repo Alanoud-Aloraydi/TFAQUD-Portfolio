@@ -6,10 +6,10 @@ its account in OneSignal (its external id), so the server keeps no phone
 tokens.
 """
 
-from app.config import ConfigError
+from app.config.values import ConfigError
+from app.push.onesignal import OneSignalPushSender
 from app.push.sender import (
     NoPushSender,
-    OneSignalPushSender,
     PushMessage,
     PushSender,
     RecordingPushSender,

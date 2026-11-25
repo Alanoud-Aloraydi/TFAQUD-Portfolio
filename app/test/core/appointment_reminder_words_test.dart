@@ -1,8 +1,8 @@
-import 'package:app/core/l10n/dose_reminder_texts.dart';
-import 'package:app/core/l10n/duration_text.dart';
-import 'package:app/core/services/reminder_circle.dart';
-import 'package:app/core/services/reminders/reminder_plan.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/app/services/reminder_circle.dart';
+import 'package:app/app/services/reminders/reminder_plan.dart';
+import 'package:app/core/localization/dose_reminder_texts.dart';
+import 'package:app/core/localization/duration_text.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

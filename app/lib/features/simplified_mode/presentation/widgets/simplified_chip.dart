@@ -1,8 +1,6 @@
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip_fill.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_chip_label.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_task_mark.dart';
 import 'package:flutter/material.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_colors.dart';
 
 /// A small grey label («مع الأكل»), or a tappable choice when [onTap] is
 /// set.
@@ -59,3 +57,17 @@ class SimplifiedChip extends StatelessWidget {
     );
   }
 }
+
+/// The fill of a chip: faint on a dark ground, tinted when chosen, clear
+/// for an unchosen choice, grey for a plain label.
+Color simplifiedChipFill({
+  required bool onDark,
+  required bool selected,
+  required bool choice,
+}) => onDark
+    ? SimplifiedColors.surface.withValues(alpha: .14)
+    : selected
+    ? SimplifiedColors.accentTint
+    : choice
+    ? SimplifiedColors.clear
+    : SimplifiedColors.chip;

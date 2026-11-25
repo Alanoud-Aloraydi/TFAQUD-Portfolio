@@ -5,7 +5,7 @@ from datetime import date
 
 import pytest
 
-from app.medications.schedule_days import applies_on
+from app.medications.schedules import applies_on
 
 
 def test_weekly_uses_the_iso_weekday():

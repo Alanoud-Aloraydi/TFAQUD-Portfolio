@@ -1,16 +1,13 @@
+// easy_localization also exports a TextDirection (from intl); hide it so the
+// name means Flutter's TextDirection.
+import 'package:app/core/utils/arabic_digits.dart';
 import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/forms/field_with_error.dart';
-import 'package:app/core/widgets/forms/phone_number_formatter.dart';
 import 'package:app/core/widgets/layout/inset_group.dart';
 import 'package:app/core/widgets/layout/inset_text_row.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-export 'package:app/core/widgets/forms/phone_number_formatter.dart';
-
-// easy_localization also exports a TextDirection (from intl); hide it so the
-// name means Flutter's TextDirection.
 
 /// The mobile number in the design system's form row, as every text field
 /// of the app: the small label, then the number, which a tap anywhere on
@@ -73,6 +70,29 @@ class PhoneField extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Keeps what the user types as a Saudi mobile number ([SaudiMobile]):
+/// digits only (an Arabic keyboard may type Arabic-Indic digits), no leading
+/// zero, at most nine digits, grouped like "50 123 4567" and shown in English
+/// digits.
+class PhoneNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    String digits = ArabicDigits.digitsOnly(newValue.text);
+    digits = digits.replaceFirst(RegExp(r'^0+'), '');
+    if (digits.length > SaudiMobile.digits) {
+      digits = digits.substring(0, SaudiMobile.digits);
+    }
+    final String text = SaudiMobile.group(digits);
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

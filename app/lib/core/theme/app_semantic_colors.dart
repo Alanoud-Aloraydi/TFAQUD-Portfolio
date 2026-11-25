@@ -28,9 +28,6 @@ abstract class AppSemanticColors {
   /// The folding groups of «السجل», a shade off the page behind them.
   static const Color surfaceFold = AppColors.leafMist;
 
-  /// What a chosen box is filled with where the fill alone must say so,
-  /// the tint being too near white to be seen on its own.
-  static const Color selectedSurfaceStrong = AppColors.leafTintDeep;
   static const Color focusOnAction = AppColors.ink;
   static const Color accentLeaf = AppColors.leaf;
 

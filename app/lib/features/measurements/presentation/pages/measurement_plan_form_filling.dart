@@ -1,9 +1,21 @@
+import 'package:app/core/constants/plan_limits.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/measurements/domain/measurement_plan.dart';
-import 'package:app/features/measurements/domain/measurement_version.dart';
-import 'package:app/features/measurements/presentation/models/plan_reading_draft.dart';
-import 'package:app/features/measurements/presentation/pages/measurement_plan_form_scope.dart';
+import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
+import 'package:app/features/measurements/domain/entities/measurement_version.dart';
+import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_plans_loading.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
+import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
+import 'package:app/features/measurements/presentation/cubit/plan_schedule_draft.dart';
+import 'package:app/features/measurements/presentation/pages/measurement_plan_form_layout.dart';
+import 'package:app/features/measurements/presentation/pages/measurement_plan_form_saving.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_plan_form_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 /// Starts an edit from the plan being changed.
 mixin MeasurementPlanFormFilling on MeasurementPlanFormScope {
@@ -47,4 +59,130 @@ mixin MeasurementPlanFormFilling on MeasurementPlanFormScope {
 TimeOfDay _parseTime(String value) {
   final parts = value.split(':');
   return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+}
+
+/// What the plan form checks before it saves.
+mixin MeasurementPlanFormChecks on MeasurementPlanFormScope {
+  /// The active plan of the kind shown among [plans], when there is one.
+  MeasurementPlan? activePlanOf(List<MeasurementPlan> plans) {
+    for (final item in plans) {
+      if (item.kind == kind && item.stoppedAt == null) return item;
+    }
+    return null;
+  }
+
+  /// Whether the form can be saved; when not, shows why and says false.
+  bool isReady(MeasurementPlan? plan) {
+    if (days.isEmpty) {
+      setState(() => errorKey = 'measurements.days_required');
+      return false;
+    }
+    if (!PlanLimits.isValidMissedAfter(missedAfter)) {
+      setState(() => missedAfterChecked = true);
+      return false;
+    }
+    final times = <String>{for (final item in readings) item.clock};
+    if (times.length != readings.length) {
+      setState(() => errorKey = 'measurements.times_repeat');
+      return false;
+    }
+    return true;
+  }
+}
+
+/// «جدولة قياس» (new, [planId] null) or «تعديل جدولة القياس» of [planId].
+///
+/// An edit starts from the plan's latest version (a change waiting for
+/// later, when there is one) and is saved against that version's number,
+/// so a change made elsewhere meanwhile is refused, not overwritten.
+class MeasurementPlanFormPage extends StatefulWidget {
+  const MeasurementPlanFormPage({
+    super.key,
+    required this.circleId,
+    this.planId,
+  });
+
+  final String circleId;
+  final String? planId;
+
+  @override
+  State<MeasurementPlanFormPage> createState() => MeasurementPlanFormState();
+}
+
+/// The state of [MeasurementPlanFormPage]: its fields, what it does with
+/// them, and the page it builds, each in its own mixin.
+class MeasurementPlanFormState extends State<MeasurementPlanFormPage>
+    with
+        MeasurementPlanFormScope,
+        MeasurementPlanFormFilling,
+        MeasurementPlanFormChecks,
+        MeasurementPlanFormSaving,
+        MeasurementPlanFormReadings,
+        MeasurementPlanFormLayout {
+  @override
+  void initState() {
+    super.initState();
+    ranges = MeasurementRangesCubit(GetIt.I<MeasurementsRepository>())
+      ..load(widget.circleId);
+  }
+
+  @override
+  void dispose() {
+    ranges.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<MeasurementPlansCubit>().state;
+    final MeasurementPlan? plan = editedPlan(state.plans);
+    if (widget.planId != null && plan == null) {
+      return MeasurementPlanFormUnavailable(
+        state: state,
+        circleId: widget.circleId,
+      );
+    }
+    final MeasurementPlan? existing = plan == null
+        ? activePlanOf(state.plans)
+        : null;
+    return Scaffold(
+      appBar: measurementPlanFormBar(
+        context,
+        isNew: plan == null,
+        onSave: saving || existing != null ? null : () => save(plan),
+      ),
+      body: formBody(plan, existing),
+    );
+  }
+}
+
+/// What the plan form shows while the plan to edit is not there: loading,
+/// «حاول مرة ثانية» when it failed to load, or that it was not found.
+class MeasurementPlanFormUnavailable extends StatelessWidget {
+  const MeasurementPlanFormUnavailable({
+    super.key,
+    required this.state,
+    required this.circleId,
+  });
+
+  final MeasurementPlansState state;
+  final String circleId;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(),
+    body: Center(
+      child: switch (state.status) {
+        MeasurementLoadStatus.initial ||
+        MeasurementLoadStatus.loading => const LoadingNote(),
+        MeasurementLoadStatus.failure => TextButton(
+          onPressed: () => context.read<MeasurementPlansCubit>().load(circleId),
+          child: Text(context.tr(state.errorKey ?? 'error.unknown')),
+        ),
+        MeasurementLoadStatus.ready => Text(
+          context.tr('error.resource_not_found'),
+        ),
+      },
+    ),
+  );
 }

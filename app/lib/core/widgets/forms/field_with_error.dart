@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/core/widgets/layout/inset_row_error.dart';
+import 'package:app/core/widgets/layout/inset_text.dart';
 import 'package:flutter/widgets.dart';
 
 /// A form row with its error under it ([InsetRowError]). When an error

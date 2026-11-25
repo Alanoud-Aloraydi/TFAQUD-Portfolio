@@ -1,8 +1,7 @@
 import 'package:app/core/utils/schedule_day.dart';
-import 'package:app/features/appointments/data/appointment_model.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_attend_window.dart';
-import 'package:app/features/appointments/domain/appointment_outcome.dart';
+import 'package:app/features/appointments/data/models/appointment_model.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_outcome.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// A visit at 10:00 on [day] November 2026.

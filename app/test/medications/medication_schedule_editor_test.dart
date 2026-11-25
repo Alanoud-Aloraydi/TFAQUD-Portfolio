@@ -1,7 +1,7 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/models/medication_schedule_form_data.dart';
+import 'package:app/features/medications/presentation/cubit/medication_schedule_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_schedule_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

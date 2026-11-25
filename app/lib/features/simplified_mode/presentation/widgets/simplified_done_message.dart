@@ -1,8 +1,8 @@
-import 'package:app/features/measurements/domain/measurement_kind.dart';
-import 'package:app/features/measurements/domain/normal_range.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
-import 'package:app/features/simplified_mode/presentation/simplified_texts.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_verdict.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_texts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

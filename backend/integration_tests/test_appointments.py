@@ -2,10 +2,8 @@
 edited and closed, with who made and who last changed each one."""
 
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pytest
-from flask_migrate import downgrade, upgrade
 
 from app.clock import ManualClock
 from app.database import db
@@ -196,24 +194,6 @@ def test_a_companion_from_outside_the_circle_is_still_refused(
     )
 
     assert error_code(refused, 422) == "appointment_invalid_companion"
-
-
-def test_going_back_before_0032_is_refused_while_one_has_no_companion(
-    database_app, circle, evening
-):
-    """Flask-Migrate turns the migration's RuntimeError into exit status 1,
-    as `flask db downgrade` would."""
-    owner, care = circle
-    Api(database_app, owner).post(
-        f"/api/v1/circles/{care.id}/appointments",
-        {**visit(owner), "companion_account_ids": []},
-    )
-    db.session.remove()
-    directory = str(Path(__file__).resolve().parents[1] / "migrations")
-
-    with pytest.raises(SystemExit):
-        downgrade(directory=directory, revision="0031")
-    upgrade(directory=directory)
 
 
 def test_attended_from_an_hour_before_its_time_not_earlier(

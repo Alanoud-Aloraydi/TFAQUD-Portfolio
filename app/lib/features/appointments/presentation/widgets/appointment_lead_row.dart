@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:app/core/l10n/arabic_names.dart';
-import 'package:app/core/l10n/duration_text.dart';
+import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/core/localization/duration_text.dart';
 import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/pickers/minutes_sheet.dart';
-import 'package:app/features/appointments/domain/appointment_reminder_lead.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_group.dart';
+import 'package:app/features/appointments/domain/entities/appointment_reminder_lead.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -67,3 +69,29 @@ String appointmentLeadText(BuildContext context, int minutes) => context.tr(
   'appointments.lead_before',
   args: <String>[durationWords(context, minutes)],
 );
+
+/// Which appointments «السجل» shows: every one, the coming ones, or the
+/// ones already behind.
+enum AppointmentRecordFilter {
+  all,
+  upcoming,
+  previous;
+
+  /// Whether an appointment belongs in the list; [upcoming] is one still
+  /// scheduled and not yet past.
+  bool keeps({required bool isUpcoming}) => switch (this) {
+    all => true,
+    AppointmentRecordFilter.upcoming => isUpcoming,
+    previous => !isUpcoming,
+  };
+
+  /// The appointments of [all] it keeps, newest first.
+  List<CareAppointment> pick(List<CareAppointment> all, DateTime now) =>
+      <CareAppointment>[
+        for (final CareAppointment item in all)
+          if (keeps(isUpcoming: isUpcomingAppointment(item, now))) item,
+      ]..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+
+  /// The key of its words, under `appointments.filters`.
+  String get labelKey => 'appointments.filters.$name';
+}

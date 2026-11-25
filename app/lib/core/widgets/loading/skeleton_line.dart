@@ -1,4 +1,4 @@
-import 'package:app/core/widgets/loading/skeleton_box.dart';
+import 'package:app/core/widgets/loading/skeleton.dart';
 import 'package:flutter/material.dart';
 
 /// A line of placeholder text, [widthFactor] of the row's width, from the

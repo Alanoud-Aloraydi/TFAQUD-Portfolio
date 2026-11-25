@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.medications.retention import DOSES_KEPT_DAYS
+from app.medications.doses import DOSES_KEPT_DAYS
 from app.models import (
     MedicationDoseRecord,
     MedicationExtraDose,

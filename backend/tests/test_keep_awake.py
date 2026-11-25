@@ -2,7 +2,7 @@
 
 import httpx
 
-from app.keep_awake import keep_awake
+from app.background import keep_awake
 
 
 class Client:

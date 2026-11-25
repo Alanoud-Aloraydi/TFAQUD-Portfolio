@@ -1,4 +1,4 @@
-import 'package:app/core/l10n/app_calendar.dart';
+import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/history_filter.dart';
 
 /// A history's [items] under a filter: what its menu offers (the months of

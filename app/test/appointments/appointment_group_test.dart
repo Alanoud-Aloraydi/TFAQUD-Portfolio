@@ -1,6 +1,6 @@
-import 'package:app/features/appointments/domain/appointment.dart';
-import 'package:app/features/appointments/domain/appointment_group.dart';
-import 'package:app/features/appointments/presentation/appointment_record_filter.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment_group.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_lead_row.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 10 December 2026, the morning the lists are read.

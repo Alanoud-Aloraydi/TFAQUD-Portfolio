@@ -9,7 +9,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.auth.otp_store import AttemptsExhausted, InMemoryOtpStore
+from app.auth.otp_memory import InMemoryOtpStore
+from app.auth.otp_store import AttemptsExhausted
 
 STORES = [InMemoryOtpStore]
 

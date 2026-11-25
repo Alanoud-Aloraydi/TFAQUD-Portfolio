@@ -1,9 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:app/core/widgets/patient_clock_scope.dart';
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
-import 'package:app/features/medications/presentation/models/medication_form_issue.dart';
-import 'package:app/features/medications/presentation/widgets/medication_form.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
 import 'package:app/features/medications/presentation/widgets/medication_form_page.dart';
 import 'package:flutter/material.dart';
 

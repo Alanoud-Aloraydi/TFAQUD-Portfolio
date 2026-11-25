@@ -1,9 +1,9 @@
-import 'package:app/core/services/app_accessibility.dart';
+import 'package:app/app/services/app_accessibility.dart';
 import 'package:app/core/theme/app_theme.dart';
-import 'package:app/core/theme/materials/glass_preferences.dart';
+import 'package:app/core/theme/materials/glass_style.dart';
 import 'package:app/core/widgets/navigation/glass.dart';
-import 'package:app/core/widgets/overlays/glass_sheet.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/scaled_over_phone.dart';
+import 'package:app/core/widgets/overlays/glass_menu_route.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/apply_text_scale.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

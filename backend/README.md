@@ -75,14 +75,15 @@ pip install -r requirements-dev.txt
 flask --app wsgi run               # the API on http://127.0.0.1:5000
 pytest                             # the tests
 python -m pycodestyle app tests integration_tests migrations
-python tool/check_size.py          # every file of app/ at most 100 lines
+python tool/check_size.py          # every file of app/ at most 300 lines
 ```
 
-Each file of `app/` does one job and has at most 100 lines. A big service
-class keeps its name and is put together from small parts, one file each
-(`class CareService(CareInvitations, CareMembers, ...)`), so its callers
-do not change. `tool/size_baseline.txt` lists the files still to split;
-they may only get shorter.
+Each feature of `app/` is a package (`appointments`, `medications`, ...).
+Its endpoints are in `*routes.py`, its request bodies in `inputs.py`, its
+writes in a service class (one transaction each) and its reads in
+`queries.py` or `views.py`. A file holds code that belongs together: about
+200 lines, never more than 300. The tables are in `app/models`, one module
+for each group of tables.
 
 Without a `.env` file the app starts in the `development` environment with a
 built-in secret key. This works on your computer only.
@@ -96,7 +97,9 @@ endpoints answer 503 `service_unavailable`. To use PostgreSQL, set `DATABASE_URL
 ## Database and migrations
 
 The tables are created by migrations (the files in `migrations/versions`), not
-by hand.
+by hand. `docs/database.md` describes every table, how long rows are kept,
+and the migrations: revision `0070` makes the whole database in one step,
+and each later change is a migration of its own.
 
 | What | Command |
 |---|---|
@@ -259,7 +262,7 @@ request.
 ### Scheduled notifications
 
 The reminders before a task come from the server
-(`app/push/scheduled/reminders/`): each dose and reading time not recorded
+(`app/push/reminders.py`): each dose and reading time not recorded
 yet at its time, and each appointment a day before and at the lead chosen
 for it, to the people the app reminds, in the app's words. The server
 reads the plan at each reminder's moment, so a plan someone changed, a dose
@@ -289,13 +292,13 @@ Render runs the scan every 10 minutes as a **Cron Job** (`tfaqud-tick` in
 same database and OneSignal settings as the API, which sends every push of
 the scan before it ends. It needs no secret, and runs even while the free
 API sleeps. Each run first asks `KEEP_AWAKE_URL` (the API's `/api/v1/health`), so
-the free API never sleeps (`app/keep_awake.py`). A cron job costs at least $1
+the free API never sleeps (`app/background.py`). A cron job costs at least $1
 a month (billed by the second it runs). Locally, run `flask --app wsgi tick`
 when you want a scan.
 
 Each API process also runs the scan every `SCAN_EVERY_SECONDS` (60 on
 Render, 0 in development and tests) from its first request on
-(`app/minute_scan.py`), so a missed task is told within about a minute, and
+(`app/background.py`), so a missed task is told within about a minute, and
 each reminder due before the next scan gets a timer, so it comes on its
 minute; the cron job is the safety net. Claims keep every push to once.
 
@@ -439,7 +442,7 @@ A web page cannot call an API on another address unless the API allows it (CORS)
 When `APP_ENV` is `development` (the default), the API allows pages served from
 `localhost` or `127.0.0.1` and no other website. In `testing`, `staging` and
 `production` it allows none. The iPhone app is not a web page and does not need it.
-The code is in `app/cors.py`.
+The code is in `app/factory.py`.
 
 ## Settings
 

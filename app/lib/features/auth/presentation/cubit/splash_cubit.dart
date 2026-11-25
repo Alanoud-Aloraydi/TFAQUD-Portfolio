@@ -1,6 +1,6 @@
-import 'package:app/features/auth/domain/entities/sign_in_result.dart';
-import 'package:app/features/auth/domain/use_cases/auth_use_case.dart';
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/auth/domain/entities/sign_in_failures.dart';
+import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Where the app goes after it starts. [checking] is the state while it finds

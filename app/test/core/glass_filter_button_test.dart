@@ -1,10 +1,10 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/utils/history_filter.dart';
+import 'package:app/core/widgets/layout/filtered_history.dart';
 import 'package:app/core/widgets/navigation/glass_filter_button.dart';
-import 'package:app/core/widgets/navigation/history_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 Future<void> _show(WidgetTester tester, HistoryFilter filter) => pumpArabic(
   tester,

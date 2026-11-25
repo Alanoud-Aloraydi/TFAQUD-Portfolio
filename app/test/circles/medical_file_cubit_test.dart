@@ -1,19 +1,19 @@
-import '../support/circles_fakes.dart';
-
 import 'dart:async';
 
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
+import 'package:app/core/errors/network_exceptions.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
-import 'package:app/features/circles/domain/failures/circle_failures.dart';
-import 'package:app/features/circles/domain/use_cases/circles_use_case.dart';
+import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+
+import '../support/circles_fakes.dart';
 
 /// The file of Noura with [count] contacts.
 MedicalFile _fileWithContacts(int count) =>

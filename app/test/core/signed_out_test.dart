@@ -1,9 +1,9 @@
-import 'package:app/core/l10n/care_voice.dart';
-import 'package:app/core/services/calendar_sync.dart';
-import 'package:app/core/services/push_registration.dart';
-import 'package:app/core/services/remote_push.dart';
-import 'package:app/core/services/reminders/dose_reminders.dart';
-import 'package:app/core/services/signed_out.dart';
+import 'package:app/app/services/calendar_sync.dart';
+import 'package:app/app/services/push_registration.dart';
+import 'package:app/app/services/reminders/dose_reminders.dart';
+import 'package:app/app/services/remote_push.dart';
+import 'package:app/app/services/signed_out.dart';
+import 'package:app/core/localization/care_voice.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 

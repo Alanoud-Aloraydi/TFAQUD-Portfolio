@@ -6,12 +6,9 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.demo_data import (
-    DEMO_PHONES,
-    INVITED_PHONE,
-    REQUEST_PHONE,
-    rebuild_demo,
-)
+from app.demo import DEMO_PHONES
+from app.demo_data import rebuild_demo
+from app.demo_data.story import INVITED_PHONE, REQUEST_PHONE
 from app.models import (
     Account,
     Appointment,

@@ -1,10 +1,11 @@
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/network_failures.dart';
+import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
 import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/presentation/cubit/contact_form.dart';
-import 'package:app/features/circles/presentation/cubit/medical_file_scope.dart';
+import 'package:app/features/circles/presentation/cubit/medical_file_cubit.dart';
 import 'package:app/features/circles/presentation/cubit/medical_file_state.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Removing the contact of the open form.
@@ -57,4 +58,25 @@ mixin ContactDeleting on Cubit<MedicalFileState>, MedicalFileScope {
     emit(state.copyWith(file: updated, clearForm: true));
     circles.medicalFileSaved(circleId, updated);
   }
+}
+
+/// A circle member who can be picked as an emergency contact: their name,
+/// number and picture fill the form.
+class ContactChoice extends Equatable {
+  const ContactChoice({
+    required this.name,
+    required this.phone,
+    this.accountId,
+    this.avatarCode,
+  });
+
+  final String name;
+
+  /// The nine digits without the country code, as [ContactForm.phone].
+  final String phone;
+  final String? accountId;
+  final String? avatarCode;
+
+  @override
+  List<Object?> get props => [name, phone, accountId, avatarCode];
 }

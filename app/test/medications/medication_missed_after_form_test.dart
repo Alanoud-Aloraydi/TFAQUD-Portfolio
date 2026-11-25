@@ -1,5 +1,5 @@
 import 'package:app/core/constants/plan_limits.dart';
-import 'package:app/features/medications/presentation/models/medication_form_data.dart';
+import 'package:app/features/medications/presentation/cubit/medication_form_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final DateTime _today = DateTime(2026, 11, 10);

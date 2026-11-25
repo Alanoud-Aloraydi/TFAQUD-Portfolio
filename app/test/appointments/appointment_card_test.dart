@@ -1,6 +1,6 @@
 import 'package:app/core/widgets/buttons/edit_action.dart';
 import 'package:app/core/widgets/buttons/stop_button.dart';
-import 'package:app/features/appointments/domain/appointment.dart';
+import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

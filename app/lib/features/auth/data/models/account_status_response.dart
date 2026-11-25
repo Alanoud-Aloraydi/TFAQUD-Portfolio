@@ -1,4 +1,4 @@
-import 'package:app/features/circles/domain/circle_app_mode.dart';
+import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 
 /// Account state shared by verification and session restoration responses.
 class AccountStatusResponse {
