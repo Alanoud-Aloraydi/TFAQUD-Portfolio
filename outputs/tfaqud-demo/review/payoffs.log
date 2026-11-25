@@ -1,0 +1,18 @@
+◆  Capturing 3 frames at [83s, 95s, 96.9s] from edit
+[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (Intel)" renderer="ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x000046A8) Direct3D11 vs_5_0 ps_5_0, D3D11)")
+
+   Fonts: 3 loaded
+   Note: added an end-of-timeline frame at 124.75s. Short beats between your --at times may still be skipped — pass them explicitly.
+[hyperframes] snapshot: frame 1/4 at 83s
+[hyperframes] snapshot: frame 2/4 at 95s
+[hyperframes] snapshot: frame 3/4 at 96.9s
+[hyperframes] snapshot: frame 4/4 at 124.75s
+   Revision: 1a9db345-d2f3-4e01-b49b-5185d85d5737 (recorded-revision)
+   State: C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\edit\.hyperframes\video-state.json
+
+◇  4 snapshots saved to C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\payoffs
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\payoffs\frame-00-at-83s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\payoffs\frame-01-at-95s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\payoffs\frame-02-at-96.9s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\payoffs\frame-03-at-124.75s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\payoffs\contact-sheet.jpg (grid view for AI review)

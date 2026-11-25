@@ -1,0 +1,28 @@
+◆  Capturing 8 frames at [0.3s, 2s, 4s, 100s, 103s, 109s, 112s, 83s] from edit
+[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (Intel)" renderer="ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x000046A8) Direct3D11 vs_5_0 ps_5_0, D3D11)")
+
+   Fonts: 3 loaded
+   Note: added an end-of-timeline frame at 128.68s. Short beats between your --at times may still be skipped — pass them explicitly.
+[hyperframes] snapshot: frame 1/9 at 0.3s
+[hyperframes] snapshot: frame 2/9 at 2s
+[hyperframes] snapshot: frame 3/9 at 4s
+[hyperframes] snapshot: frame 4/9 at 100s
+[hyperframes] snapshot: frame 5/9 at 103s
+[hyperframes] snapshot: frame 6/9 at 109s
+[hyperframes] snapshot: frame 7/9 at 112s
+[hyperframes] snapshot: frame 8/9 at 83s
+[hyperframes] snapshot: frame 9/9 at 128.683s
+   Revision: 74dff13c-e15e-4437-96a5-8ab1f29d0445 (recorded-revision)
+   State: C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\edit\.hyperframes\video-state.json
+
+◇  9 snapshots saved to C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-00-at-0.3s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-01-at-2s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-02-at-4s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-03-at-100s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-04-at-103s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-05-at-109s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-06-at-112s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-07-at-83s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\frame-08-at-128.683s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\final-adjustments\contact-sheet.jpg (grid view for AI review)

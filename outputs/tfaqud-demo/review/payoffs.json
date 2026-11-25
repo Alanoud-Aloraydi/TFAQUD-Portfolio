@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\payoffs",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\payoffs\\frame-00-at-83s.png",
+      "time": 83
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\payoffs\\frame-01-at-95s.png",
+      "time": 95
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\payoffs\\frame-02-at-96.9s.png",
+      "time": 96.9
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\payoffs\\frame-03-at-124.75s.png",
+      "time": 124.75
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\payoffs\\contact-sheet.jpg"
+  ],
+  "_meta": {
+    "version": "0.9.86",
+    "latestVersion": "0.9.86",
+    "updateAvailable": false,
+    "checkedAt": "2026-11-23T18:59:28.153Z",
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

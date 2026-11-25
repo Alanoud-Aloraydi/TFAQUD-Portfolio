@@ -1,0 +1,70 @@
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-00-at-2s.png",
+      "time": 2
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-01-at-9s.png",
+      "time": 9
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-02-at-18s.png",
+      "time": 18
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-03-at-29s.png",
+      "time": 29
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-04-at-44s.png",
+      "time": 44
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-05-at-58s.png",
+      "time": 58
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-06-at-71s.png",
+      "time": 71
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-07-at-84s.png",
+      "time": 84
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-08-at-95s.png",
+      "time": 95
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-09-at-104s.png",
+      "time": 104
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-10-at-112s.png",
+      "time": 112
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-11-at-118s.png",
+      "time": 118
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\frame-12-at-119.85s.png",
+      "time": 119.85
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\contact-sheet-1.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\v2\\contact-sheet-2.jpg"
+  ],
+  "_meta": {
+    "version": "0.9.86",
+    "latestVersion": "0.9.86",
+    "updateAvailable": false,
+    "checkedAt": "2026-11-23T18:59:28.153Z",
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

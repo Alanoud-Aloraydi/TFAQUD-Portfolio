@@ -1,0 +1,56 @@
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:\Users\alano\Downloads\WhatsApp Video 2026-11-23 at 11.34.18 PM.mp4':
+  Metadata:
+    major_brand     : mp42
+    minor_version   : 0
+    compatible_brands: mp42isom
+  Duration: 00:08:42.75, start: 0.000000, bitrate: 1118 kb/s
+  Stream #0:0[0x1](und): Video: h264 (Baseline) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 384x848, 1112 kb/s, 57.70 fps, 60 tbr, 600 tbn (default)
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 2 kb/s (default)
+[Parsed_volumedetect_0 @ 000001851430eec0] n_samples: 0
+Stream mapping:
+  Stream #0:1 -> #0:0 (aac (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, null, to 'NUL':
+  Metadata:
+    major_brand     : mp42
+    minor_version   : 0
+    compatible_brands: mp42isom
+    encoder         : Lavf63.1.102
+  Stream #0:0(und): Audio: pcm_s16le, 44100 Hz, stereo, s16, 1411 kb/s (default)
+    Metadata:
+      encoder         : Lavc63.1.102 pcm_s16le
+[Parsed_volumedetect_0 @ 0000018514825c40] n_samples: 46070016
+[Parsed_volumedetect_0 @ 0000018514825c40] mean_volume: -91.0 dB
+[Parsed_volumedetect_0 @ 0000018514825c40] max_volume: -62.0 dB
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_62db: 34
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_63db: 92
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_64db: 102
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_65db: 144
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_66db: 154
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_67db: 62
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_68db: 196
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_69db: 130
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_70db: 100
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_71db: 124
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_72db: 164
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_73db: 192
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_74db: 212
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_75db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_76db: 356
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_77db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_78db: 542
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_79db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_80db: 794
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_81db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_82db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_83db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_84db: 1500
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_85db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_86db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_87db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_88db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_89db: 0
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_90db: 4362
+[Parsed_volumedetect_0 @ 0000018514825c40] histogram_91db: 46060756
+[out#0/null @ 0000018514c2db80] video:0KiB audio:89980KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=N/A time=00:08:42.33 bitrate=N/A speed=1.15e+03x elapsed=0:00:00.45    

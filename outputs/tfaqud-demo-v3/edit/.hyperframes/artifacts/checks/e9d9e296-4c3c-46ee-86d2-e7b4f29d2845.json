@@ -1,0 +1,756 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "nested_media_start_basis_ambiguous",
+        "severity": "warning",
+        "message": "<video id=\"notification-video\"> has data-start=\"2.6\" inside a sub-composition. Nested media timing is local to its composition by default; a nonzero value can be confused with a legacy root-global timestamp.",
+        "selector": "#notification-video",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\compositions\\notification.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep data-start=\"2.6\" if it is composition-local. If this is a legacy root-global timestamp, add data-hf-media-start-basis=\"global\"; otherwise convert it to local time by subtracting the host start."
+      },
+      {
+        "code": "nested_media_start_basis_ambiguous",
+        "severity": "warning",
+        "message": "<video id=\"reminder-return-video\"> has data-start=\"0.8\" inside a sub-composition. Nested media timing is local to its composition by default; a nonzero value can be confused with a legacy root-global timestamp.",
+        "selector": "#reminder-return-video",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\compositions\\reminder-return.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep data-start=\"0.8\" if it is composition-local. If this is a legacy root-global timestamp, add data-hf-media-start-basis=\"global\"; otherwise convert it to local time by subtracting the host start."
+      }
+    ],
+    "filesScanned": 22
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 190.833,
+    "samples": [
+      10.602,
+      31.806,
+      53.009,
+      74.213,
+      95.417,
+      116.62,
+      137.824,
+      159.028,
+      180.231
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      10.602,
+      53.009,
+      95.417,
+      137.824,
+      180.231
+    ],
+    "checked": 25,
+    "passed": 25
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 20,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"تنبيه الجرعة\" renders at 27 px for 8.60 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "تنبيه الجرعة",
+        "selector": "#notification-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/notification.html",
+        "bbox": {
+          "x": 780.22,
+          "y": 82,
+          "width": 123.78,
+          "height": 40
+        },
+        "time": 0,
+        "times": [
+          0
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 8.602,
+        "elements": [
+          {
+            "selector": "#notification-eyebrow > span:nth-of-type(2)",
+            "text": "تنبيه الجرعة",
+            "fontPx": 27,
+            "time": 0,
+            "seconds": 8.602
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"إنشاء دائرة الرعاية\" renders at 27 px for 9.24 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "إنشاء دائرة الرعاية",
+        "selector": "#circle-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/circle.html",
+        "bbox": {
+          "x": 719.47,
+          "y": 82,
+          "width": 184.53,
+          "height": 40
+        },
+        "time": 8.602,
+        "times": [
+          8.602
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 9.239,
+        "elements": [
+          {
+            "selector": "#circle-eyebrow > span:nth-of-type(2)",
+            "text": "إنشاء دائرة الرعاية",
+            "fontPx": 27,
+            "time": 8.602,
+            "seconds": 9.239
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"الملف الطبي\" renders at 27 px for 8.60 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "الملف الطبي",
+        "selector": "#profile-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/profile.html",
+        "bbox": {
+          "x": 772.16,
+          "y": 82,
+          "width": 131.84,
+          "height": 40
+        },
+        "time": 17.841,
+        "times": [
+          17.841
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 8.602,
+        "elements": [
+          {
+            "selector": "#profile-eyebrow > span:nth-of-type(2)",
+            "text": "الملف الطبي",
+            "fontPx": 27,
+            "time": 17.841,
+            "seconds": 8.602
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"جدولة الدواء\" renders at 27 px for 16.57 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "جدولة الدواء",
+        "selector": "#medicine-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/medicine.html",
+        "bbox": {
+          "x": 769.02,
+          "y": 82,
+          "width": 134.98,
+          "height": 40
+        },
+        "time": 26.443,
+        "times": [
+          26.443
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 16.567,
+        "elements": [
+          {
+            "selector": "#medicine-eyebrow > span:nth-of-type(2)",
+            "text": "جدولة الدواء",
+            "fontPx": 27,
+            "time": 26.443,
+            "seconds": 16.567
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"خطة القياس\" renders at 27 px for 14.97 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "خطة القياس",
+        "selector": "#measurement-plan-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/measurement-plan.html",
+        "bbox": {
+          "x": 772.8,
+          "y": 82,
+          "width": 131.2,
+          "height": 40
+        },
+        "time": 43.009,
+        "times": [
+          43.009
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 14.974,
+        "elements": [
+          {
+            "selector": "#measurement-plan-eyebrow > span:nth-of-type(2)",
+            "text": "خطة القياس",
+            "fontPx": 27,
+            "time": 43.009,
+            "seconds": 14.974
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"تسجيل القراءة\" renders at 27 px for 11.47 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "تسجيل القراءة",
+        "selector": "#first-reading-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/first-reading.html",
+        "bbox": {
+          "x": 754.8,
+          "y": 82,
+          "width": 149.2,
+          "height": 40
+        },
+        "time": 57.983,
+        "times": [
+          57.983
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 11.469,
+        "elements": [
+          {
+            "selector": "#first-reading-eyebrow > span:nth-of-type(2)",
+            "text": "تسجيل القراءة",
+            "fontPx": 27,
+            "time": 57.983,
+            "seconds": 11.469
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"تنظيم المواعيد\" renders at 27 px for 14.97 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "تنظيم المواعيد",
+        "selector": "#appointment-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/appointment.html",
+        "bbox": {
+          "x": 746.13,
+          "y": 82,
+          "width": 157.87,
+          "height": 40
+        },
+        "time": 69.452,
+        "times": [
+          69.452
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 14.974,
+        "elements": [
+          {
+            "selector": "#appointment-eyebrow > span:nth-of-type(2)",
+            "text": "تنظيم المواعيد",
+            "fontPx": 27,
+            "time": 69.452,
+            "seconds": 14.974
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"تسجيل جرعة إضافية\" renders at 27 px for 6.69 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "تسجيل جرعة إضافية",
+        "selector": "#extra-dose-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/extra-dose.html",
+        "bbox": {
+          "x": 686.27,
+          "y": 82,
+          "width": 217.73,
+          "height": 40
+        },
+        "time": 84.425,
+        "times": [
+          84.425
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 6.691,
+        "elements": [
+          {
+            "selector": "#extra-dose-eyebrow > span:nth-of-type(2)",
+            "text": "تسجيل جرعة إضافية",
+            "fontPx": 27,
+            "time": 84.425,
+            "seconds": 6.691
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"قراءة عند الحاجة\" renders at 27 px for 10.83 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "قراءة عند الحاجة",
+        "selector": "#quick-reading-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/quick-reading.html",
+        "bbox": {
+          "x": 728.28,
+          "y": 82,
+          "width": 175.72,
+          "height": 40
+        },
+        "time": 91.116,
+        "times": [
+          91.116
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 10.832,
+        "elements": [
+          {
+            "selector": "#quick-reading-eyebrow > span:nth-of-type(2)",
+            "text": "قراءة عند الحاجة",
+            "fontPx": 27,
+            "time": 91.116,
+            "seconds": 10.832
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"مراجعة سجل القياسات\" renders at 27 px for 8.92 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "مراجعة سجل القياسات",
+        "selector": "#history-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/history.html",
+        "bbox": {
+          "x": 664.83,
+          "y": 82,
+          "width": 239.17,
+          "height": 40
+        },
+        "time": 101.948,
+        "times": [
+          101.948
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 8.92,
+        "elements": [
+          {
+            "selector": "#history-eyebrow > span:nth-of-type(2)",
+            "text": "مراجعة سجل القياسات",
+            "fontPx": 27,
+            "time": 101.948,
+            "seconds": 8.92
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"أعضاء الدائرة وصلاحياتهم\" renders at 27 px for 5.73 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "أعضاء الدائرة وصلاحياتهم",
+        "selector": "#permissions-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/permissions.html",
+        "bbox": {
+          "x": 633.72,
+          "y": 82,
+          "width": 270.28,
+          "height": 40
+        },
+        "time": 110.868,
+        "times": [
+          110.868
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 5.735,
+        "elements": [
+          {
+            "selector": "#permissions-eyebrow > span:nth-of-type(2)",
+            "text": "أعضاء الدائرة وصلاحياتهم",
+            "fontPx": 27,
+            "time": 110.868,
+            "seconds": 5.735
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"تصدير سجل الرعاية\" renders at 27 px for 7.33 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "تصدير سجل الرعاية",
+        "selector": "#export-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/export.html",
+        "bbox": {
+          "x": 702.09,
+          "y": 82,
+          "width": 201.91,
+          "height": 40
+        },
+        "time": 116.602,
+        "times": [
+          116.602
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 7.328,
+        "elements": [
+          {
+            "selector": "#export-eyebrow > span:nth-of-type(2)",
+            "text": "تصدير سجل الرعاية",
+            "fontPx": 27,
+            "time": 116.602,
+            "seconds": 7.328
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"التبديل بين الدوائر\" renders at 27 px for 6.05 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "التبديل بين الدوائر",
+        "selector": "#switch-circle-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/switch-circle.html",
+        "bbox": {
+          "x": 716.64,
+          "y": 82,
+          "width": 187.36,
+          "height": 40
+        },
+        "time": 123.93,
+        "times": [
+          123.93
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 6.053,
+        "elements": [
+          {
+            "selector": "#switch-circle-eyebrow > span:nth-of-type(2)",
+            "text": "التبديل بين الدوائر",
+            "fontPx": 27,
+            "time": 123.93,
+            "seconds": 6.053
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"ورقة الزيارة والمذكرة الصوتية\" renders at 27 px for 10.83 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "ورقة الزيارة والمذكرة الصوتية",
+        "selector": "#visit-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/visit.html",
+        "bbox": {
+          "x": 604.64,
+          "y": 82,
+          "width": 299.36,
+          "height": 40
+        },
+        "time": 129.983,
+        "times": [
+          129.983
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 10.832,
+        "elements": [
+          {
+            "selector": "#visit-eyebrow > span:nth-of-type(2)",
+            "text": "ورقة الزيارة والمذكرة الصوتية",
+            "fontPx": 27,
+            "time": 129.983,
+            "seconds": 10.832
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"التنبيهات وتقويم الجوال\" renders at 27 px for 4.78 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "التنبيهات وتقويم الجوال",
+        "selector": "#settings-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/settings.html",
+        "bbox": {
+          "x": 654.97,
+          "y": 82,
+          "width": 249.03,
+          "height": 40
+        },
+        "time": 140.815,
+        "times": [
+          140.815
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 4.779,
+        "elements": [
+          {
+            "selector": "#settings-eyebrow > span:nth-of-type(2)",
+            "text": "التنبيهات وتقويم الجوال",
+            "fontPx": 27,
+            "time": 140.815,
+            "seconds": 4.779
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"بطاقة الطوارئ\" renders at 27 px for 4.46 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "بطاقة الطوارئ",
+        "selector": "#emergency-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/emergency.html",
+        "bbox": {
+          "x": 754.36,
+          "y": 82,
+          "width": 149.64,
+          "height": 40
+        },
+        "time": 145.594,
+        "times": [
+          145.594
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 4.46,
+        "elements": [
+          {
+            "selector": "#emergency-eyebrow > span:nth-of-type(2)",
+            "text": "بطاقة الطوارئ",
+            "fontPx": 27,
+            "time": 145.594,
+            "seconds": 4.46
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"الوضع المبسّط للمريض\" renders at 27 px for 15.29 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "الوضع المبسّط للمريض",
+        "selector": "#patient-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/patient.html",
+        "bbox": {
+          "x": 654,
+          "y": 82,
+          "width": 250,
+          "height": 40
+        },
+        "time": 150.054,
+        "times": [
+          150.054
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 15.293,
+        "elements": [
+          {
+            "selector": "#patient-eyebrow > span:nth-of-type(2)",
+            "text": "الوضع المبسّط للمريض",
+            "fontPx": 27,
+            "time": 150.054,
+            "seconds": 15.293
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"تأجيل التذكير\" renders at 27 px for 7.01 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "تأجيل التذكير",
+        "selector": "#snooze-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/snooze.html",
+        "bbox": {
+          "x": 771.83,
+          "y": 82,
+          "width": 132.17,
+          "height": 40
+        },
+        "time": 165.346,
+        "times": [
+          165.346
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 7.009,
+        "elements": [
+          {
+            "selector": "#snooze-eyebrow > span:nth-of-type(2)",
+            "text": "تأجيل التذكير",
+            "fontPx": 27,
+            "time": 165.346,
+            "seconds": 7.009
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"إعدادات المريض\" renders at 27 px for 10.83 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "إعدادات المريض",
+        "selector": "#accessibility-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/accessibility.html",
+        "bbox": {
+          "x": 726.2,
+          "y": 82,
+          "width": 177.8,
+          "height": 40
+        },
+        "time": 172.355,
+        "times": [
+          172.355
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 10.832,
+        "elements": [
+          {
+            "selector": "#accessibility-eyebrow > span:nth-of-type(2)",
+            "text": "إعدادات المريض",
+            "fontPx": 27,
+            "time": 172.355,
+            "seconds": 10.832
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"العودة من التنبيه\" renders at 27 px for 4.46 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "العودة من التنبيه",
+        "selector": "#reminder-return-eyebrow > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/reminder-return.html",
+        "bbox": {
+          "x": 728.66,
+          "y": 82,
+          "width": 175.34,
+          "height": 40
+        },
+        "time": 183.187,
+        "times": [
+          183.187
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 4.461,
+        "elements": [
+          {
+            "selector": "#reminder-return-eyebrow > span:nth-of-type(2)",
+            "text": "العودة من التنبيه",
+            "fontPx": 27,
+            "time": 183.187,
+            "seconds": 4.461
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.3189999999999884,
+    "samples": 599
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

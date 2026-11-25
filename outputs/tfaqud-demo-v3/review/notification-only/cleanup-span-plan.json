@@ -1,0 +1,11 @@
+{
+  "target": "C:\\Users\\alano\\AppData\\Local\\Temp\\hf-render-span-NYcVvX",
+  "owner": "LAPTOP-5MVR5QOK\\alano",
+  "bytes": 402151827.0,
+  "files": 5890,
+  "task_evidence": "Cancelled notification-only partial render; copied card hash matches retained task asset",
+  "sample_sha256": "DC92E4D1C10F26103AF1CD7BBDFEE9BE14C6A8DE226F64877CD506CB64E1EC6A",
+  "preserved_card": "C:/Users/alano/PycharmProjects/TFAQUD-Portfolio/outputs/tfaqud-demo-v3/edit/assets/notification-card.png",
+  "disposal": "Interrupted render; no active renderer process; all source and completed exports preserved",
+  "free_before": 1053863936
+}

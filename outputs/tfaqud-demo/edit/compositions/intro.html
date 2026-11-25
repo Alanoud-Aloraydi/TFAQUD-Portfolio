@@ -1,0 +1,17 @@
+<template><style>@font-face{font-family:'PlexArabic';src:url('assets/fonts/IBMPlexSansArabic-Regular.ttf');font-weight:400}@font-face{font-family:'PlexArabic';src:url('assets/fonts/IBMPlexSansArabic-SemiBold.ttf');font-weight:600}@font-face{font-family:'PlexArabic';src:url('assets/fonts/IBMPlexSansArabic-Bold.ttf');font-weight:700}
+#root{position:absolute;inset:0;font-family:'PlexArabic';color:#202734}
+.heading{position:absolute;top:72px;right:108px;left:108px;height:120px;display:flex;align-items:center;gap:22px;direction:rtl}
+.number{font-size:54px;font-weight:700;color:#3F2A65;background:#DCD2F0;min-width:88px;height:88px;display:flex;align-items:center;justify-content:center;border-radius:44px;flex-shrink:0}
+.copy{direction:rtl;text-align:right;flex:1}
+h1{font-size:48px;line-height:1.4;font-weight:700;margin:0;white-space:nowrap}
+.subtitle{font-size:28px;line-height:1.6;color:#36415A;margin-top:3px;white-space:nowrap}
+.phone{position:absolute;left:180px;top:220px;width:720px;height:1590px;object-fit:contain;border-radius:26px;box-shadow:0 15px 44px rgba(63,42,101,.14);clip-path:inset(96px 0 0 0)}
+.progress{position:absolute;left:180px;top:1842px;width:720px;height:5px;background:#E1DDE9;overflow:hidden}
+.progress-fill{height:100%;width:100%;background:#AB98D0;transform-origin:right center}
+
+.intro-title{position:absolute;top:63px;right:108px;left:108px;direction:rtl;text-align:center;font-size:58px;font-weight:700}
+.intro-sub{font-size:30px;font-weight:400;color:#36415A}
+</style><div id="root" data-composition-id="intro" data-width="1080" data-height="1920">
+<video id="intro-video" class="clip phone" src="assets/source.mp4" data-media-start="26" data-start="0" data-duration="3.5" data-track-index="0" muted playsinline></video>
+<div class="clip" data-start="0" data-duration="3.5" data-track-index="1"><div id="intro-title" class="intro-title">تفقّد<div class="intro-sub">رعاية تجمع العائلة</div></div></div>
+</div><script>{const tl=gsap.timeline({paused:true});tl.fromTo('#intro-title',{opacity:0},{opacity:1,duration:.25},0);window.__timelines['intro']=tl;}</script></template>

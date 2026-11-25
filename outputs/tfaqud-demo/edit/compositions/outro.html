@@ -1,0 +1,9 @@
+<template><style>@font-face{font-family:'PlexArabic';src:url('assets/fonts/IBMPlexSansArabic-Regular.ttf');font-weight:400}@font-face{font-family:'PlexArabic';src:url('assets/fonts/IBMPlexSansArabic-SemiBold.ttf');font-weight:600}@font-face{font-family:'PlexArabic';src:url('assets/fonts/IBMPlexSansArabic-Bold.ttf');font-weight:700}
+#root{position:absolute;inset:0;font-family:'PlexArabic';background:#EFEAF8;color:#3F2A65;direction:rtl;text-align:center}
+#end-lockup{position:absolute;top:650px;left:108px;right:108px}
+#end-word{font-size:118px;font-weight:700;line-height:1.5}
+#end-line{font-size:44px;line-height:1.7}
+#end-sub{font-size:30px;color:#36415A;margin-top:45px}
+</style><div id="root" data-composition-id="outro" data-width="1080" data-height="1920">
+<div class="clip" data-start="0" data-duration="4" data-track-index="0"><div id="end-lockup"><div id="end-word">تفقّد</div><div id="end-line">رعاية تجمع العائلة</div><div id="end-sub">الأدوية · القياسات · المواعيد</div></div></div>
+</div><script>{const tl=gsap.timeline({paused:true});tl.fromTo('#end-word',{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0% 0)',duration:.5,ease:'power3.out'},0);tl.fromTo('#end-line',{opacity:0},{opacity:1,duration:.4},.35);tl.fromTo('#end-sub',{opacity:0},{opacity:1,duration:.4},.65);window.__timelines['outro']=tl;}</script></template>

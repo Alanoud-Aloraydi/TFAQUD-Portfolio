@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-00-at-124.2s.png",
+      "time": 124.2
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-01-at-126.8s.png",
+      "time": 126.8
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-02-at-140.95s.png",
+      "time": 140.95
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-03-at-143s.png",
+      "time": 143
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-04-at-121.8s.png",
+      "time": 121.8
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-05-at-154s.png",
+      "time": 154
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-06-at-162s.png",
+      "time": 162
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-07-at-183.4s.png",
+      "time": 183.4
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\frame-08-at-190.583s.png",
+      "time": 190.583
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\final-adjustments\\contact-sheet.jpg"
+  ],
+  "_meta": {
+    "version": "0.9.86",
+    "updateAvailable": false,
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

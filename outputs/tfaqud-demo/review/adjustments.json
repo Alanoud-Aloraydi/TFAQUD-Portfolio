@@ -1,0 +1,53 @@
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-00-at-0.3s.png",
+      "time": 0.3
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-01-at-2s.png",
+      "time": 2
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-02-at-4s.png",
+      "time": 4
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-03-at-100s.png",
+      "time": 100
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-04-at-103s.png",
+      "time": 103
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-05-at-109s.png",
+      "time": 109
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-06-at-112s.png",
+      "time": 112
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-07-at-83s.png",
+      "time": 83
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\frame-08-at-128.683s.png",
+      "time": 128.683
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\final-adjustments\\contact-sheet.jpg"
+  ],
+  "_meta": {
+    "version": "0.9.86",
+    "latestVersion": "0.9.86",
+    "updateAvailable": false,
+    "checkedAt": "2026-11-23T18:59:28.153Z",
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

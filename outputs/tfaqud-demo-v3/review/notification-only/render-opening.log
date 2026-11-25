@@ -1,0 +1,20 @@
+
+◆  Rendering edit → C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\review\notification-only\opening.mp4
+   30fps · delivery · 1 workers
+   GPU: browser GPU (auto-detect)
+
+
+  Lint: 0 error(s), 2 warning(s) — run `hyperframes lint` for full output.
+  Continuing render despite lint issues. Use --strict to block errors.
+
+Checking browser...
+Browser: cache
+[INFO] [plan] stage {"stage":"copy","ms":13267}
+[INFO] Compiled composition metadata {"entryFile":"index.html","staticDuration":190.833,"width":1080,"height":1920,"videoCount":20,"audioCount":2,"renderModeHints":{"recommendScreenshot":false,"reasons":[]}}
+[INFO] [plan] stage {"stage":"compile","ms":7187}
+[INFO] [plan] stage {"stage":"probe","ms":3859}
+[INFO] [plan] stage {"stage":"reference_background","ms":8763}
+[INFO] [plan] extract phases {"resolveMs":8,"cachePublishFailures":0,"cacheGcEvictions":0,"cacheGcBytesFreed":0,"cacheAgedPartialsCleared":0,"hdrProbeMs":2,"hdrPreflightMs":1,"hdrPreflightCount":0,"vfrProbeMs":0,"vfrPreflightMs":0,"vfrPreflightCount":0,"extractMs":52352,"cacheHits":0,"cacheMisses":0,"transientRetries":0}
+[INFO] [plan] stage {"stage":"extract","ms":52611}
+[INFO] [audio] phases {"prepare":962,"groups":0,"mix":1067,"master":0,"encode":2915,"guard":10361}
+[INFO] [plan] stage {"stage":"audio","ms":15338}

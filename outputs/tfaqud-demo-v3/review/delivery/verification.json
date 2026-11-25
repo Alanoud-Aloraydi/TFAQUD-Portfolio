@@ -1,0 +1,46 @@
+{
+  "file": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\TFAQUD-demo-new-ar.mp4",
+  "bytes": 56338204,
+  "sha256": "7a3d9e3b3737040367a80a6573064dc4b8f5193c0a0ef0fed20ef80872609afc",
+  "duration_seconds": 190.833333,
+  "video": {
+    "codec_name": "h264",
+    "width": 1080,
+    "height": 1920,
+    "avg_frame_rate": "30/1",
+    "nb_frames": "5725"
+  },
+  "audio": {
+    "codec_name": "aac",
+    "sample_rate": "48000",
+    "channels": 2
+  },
+  "notification_cues": [
+    {
+      "authored_seconds": 0.08,
+      "detected_seconds": 0.08,
+      "correlation": 0.9982290267944336
+    },
+    {
+      "authored_seconds": 183.18,
+      "detected_seconds": 183.1838125,
+      "correlation": 0.9840148091316223
+    }
+  ],
+  "mono_peak_dbfs": -4.61348819732666,
+  "decoded_visual_sample_times": [
+    0.5,
+    11,
+    34,
+    70,
+    105,
+    117,
+    122.5,
+    147,
+    156,
+    169,
+    178,
+    184,
+    189
+  ]
+}
