@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'circles_fakes.dart';
+import 'home_fakes.dart';
+
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/routers.dart';
 import 'package:app/app/services/calendar_sync.dart';
@@ -30,7 +33,7 @@ import 'package:app/features/auth/domain/repositories/welcome_memory.dart';
 import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/home/domain/usecases/home_use_case.dart';
-import 'package:app/features/home/presentation/widgets/home_widget.dart';
+import 'package:app/features/home/presentation/widgets/home_shell_view.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/entities/measurement_plan.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
@@ -43,7 +46,7 @@ import 'package:app/features/medications/domain/usecases/medications_use_case.da
 import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
 import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
 import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
-import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/presentation/widgets/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,8 +55,6 @@ import 'package:get_it/get_it.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'circles_fakes.dart';
-import 'home_fakes.dart';
 import 'phone_fakes.dart';
 import 'widget_harness.dart';
 

@@ -24,27 +24,25 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:shared_preferences/shared_preferences.dart';
 
-part 'package:app/app/services/calendar/state.dart';
-part 'package:app/app/services/calendar/key_parts.dart';
+part 'package:app/app/services/calendar/appointments.dart';
+part 'package:app/app/services/calendar/calendar_sync_class.dart';
+part 'package:app/app/services/calendar/desired_event.dart';
+part 'package:app/app/services/calendar/device_events.dart';
+part 'package:app/app/services/calendar/doses.dart';
 part 'package:app/app/services/calendar/event_texts.dart';
 part 'package:app/app/services/calendar/event_words.dart';
-part 'package:app/app/services/calendar/desired_event.dart';
-part 'package:app/app/services/calendar/saved_event.dart';
+part 'package:app/app/services/calendar/key_parts.dart';
 part 'package:app/app/services/calendar/keys.dart';
-part 'package:app/app/services/calendar/lifecycle.dart';
-part 'package:app/app/services/calendar/selections.dart';
-part 'package:app/app/services/calendar/run.dart';
-part 'package:app/app/services/calendar/snoozes.dart';
-part 'package:app/app/services/calendar/doses.dart';
 part 'package:app/app/services/calendar/measurements.dart';
-part 'package:app/app/services/calendar/appointments.dart';
-part 'package:app/app/services/calendar/reconcile.dart';
-part 'package:app/app/services/calendar/own_calendar.dart';
-part 'package:app/app/services/calendar/saved_store.dart';
-part 'package:app/app/services/calendar/device_events.dart';
-part 'package:app/app/services/calendar/plan_time.dart';
 part 'package:app/app/services/calendar/moments.dart';
-part 'package:app/app/services/calendar/calendar_sync_class.dart';
+part 'package:app/app/services/calendar/own_calendar.dart';
+part 'package:app/app/services/calendar/plan_time.dart';
+part 'package:app/app/services/calendar/reconcile.dart';
+part 'package:app/app/services/calendar/run.dart';
+part 'package:app/app/services/calendar/saved_event.dart';
+part 'package:app/app/services/calendar/saved_store.dart';
+part 'package:app/app/services/calendar/snoozes.dart';
+part 'package:app/app/services/calendar/state.dart';
 
 /// One kind of event this feature can mirror, switched on per circle.
 enum CalendarSyncCategory { doses, measurements, appointments }

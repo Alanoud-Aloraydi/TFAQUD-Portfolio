@@ -1,16 +1,15 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/widgets/feedback/fact_pill.dart';
 import 'package:app/features/medications/domain/entities/medication_plan.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
-import 'package:app/features/medications/presentation/widgets/cancel_pending_revision.dart';
-import 'package:app/features/medications/presentation/widgets/medication_plan_card_body.dart';
-import 'package:app/features/medications/presentation/widgets/medication_revision_history.dart';
-import 'package:app/features/medications/presentation/widgets/medication_schedule_row.dart';
+import 'package:app/features/medications/presentation/widgets/medication_details.dart';
+import 'package:app/features/medications/presentation/widgets/medication_details_body.dart';
+import 'package:app/features/medications/presentation/widgets/medication_plan_card.dart';
 import 'package:app/features/medications/presentation/widgets/medication_version_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 MedicationSchedule _at(String time, {int? every}) => MedicationSchedule(
   id: 's-$time',

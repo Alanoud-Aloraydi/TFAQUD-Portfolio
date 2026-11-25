@@ -1,4 +1,4 @@
-import 'package:app/app/di/injection.dart';
+import 'package:app/app/bootstrap.dart';
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
@@ -8,7 +8,7 @@ import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
 import 'package:app/features/circles/data/datasources/device_zone.dart';
-import 'package:app/features/circles/data/models/circle_model.dart';
+import 'package:app/features/circles/data/models/circle_overview_model.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/data/models/new_patient_circle_model.dart';

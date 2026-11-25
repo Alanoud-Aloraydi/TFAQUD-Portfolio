@@ -1,11 +1,9 @@
 import 'package:app/app/services/reminders/shared_snooze.dart';
 import 'package:app/core/constants/plan_limits.dart';
+import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/medications/domain/entities/medication_schedule.dart';
 import 'package:equatable/equatable.dart';
-
-export 'package:app/features/medications/domain/entities/dose_record.dart';
-export 'package:app/features/medications/domain/entities/dose_record_draft.dart';
 
 /// One expected dose the server computed from a plan's schedule: the
 /// schedule ([scheduleId]) on the patient's day [scheduledOn] at the wall
@@ -97,3 +95,149 @@ extension DoseUnitValue on DoseUnit {
 }
 
 enum DoseUnit { tablet, capsule, milliliter, drop, puff, unit }
+
+/// The answer to a dose before it is sent: taken at [takenAt] (a real
+/// moment, sent in UTC), or skipped with an optional reason.
+class DoseRecordDraft extends Equatable {
+  const DoseRecordDraft({
+    required this.outcome,
+    this.takenAt,
+    this.skipReasonCode,
+    this.skipReasonNote,
+  });
+
+  final DoseOutcome outcome;
+  final DateTime? takenAt;
+  final String? skipReasonCode;
+  final String? skipReasonNote;
+
+  /// The body of `PUT medication-dose-records/{schedule}/{day}`.
+  Map<String, Object?> toJson() => {
+    'outcome': outcome.name,
+    'taken_at': takenAt?.toUtc().toIso8601String(),
+    'skip_reason_code': skipReasonCode,
+    'skip_reason_note': skipReasonNote,
+  };
+
+  @override
+  List<Object?> get props => [outcome, takenAt, skipReasonCode, skipReasonNote];
+}
+
+/// Whether a dose was taken late, which the «بعد الموعد» line asks.
+extension DoseLateness on DoseOccurrence {
+  /// Whether the dose was taken at or after its missed boundary,
+  /// [missedAfterMinutes] after its time on the patient's [clock] (the
+  /// «بعد الموعد» status). False when it was not taken.
+  bool isTakenLate(PatientClock clock) {
+    final DateTime? takenAt = record?.takenAt;
+    if (record?.outcome != DoseOutcome.taken || takenAt == null) return false;
+    final DateTime boundary = clock
+        .momentOf(scheduledOn, time)
+        .add(Duration(minutes: missedAfterMinutes));
+    return !takenAt.toUtc().isBefore(boundary);
+  }
+}
+
+/// Why a dose was not taken, as offered on the skip sheet.
+enum DoseSkipReason {
+  forgotten,
+  unavailable,
+  sideEffects,
+  patientRefused,
+  other;
+
+  /// The API's word for the reason.
+  String get apiValue => switch (this) {
+    sideEffects => 'side_effects',
+    patientRefused => 'patient_refused',
+    _ => name,
+  };
+}
+
+/// The server's record of one dose explicitly taken or skipped; a dose
+/// with no record has not been answered yet.
+class DoseRecord extends Equatable {
+  const DoseRecord({
+    required this.id,
+    required this.outcome,
+    required this.recordedAt,
+    this.takenAt,
+    this.skipReasonCode,
+    this.skipReasonNote,
+    this.recordedByAccountId,
+    this.recordedByName,
+    this.recordedByAvatarCode,
+  });
+
+  final String id;
+  final DoseOutcome outcome;
+
+  /// The real moment it was taken; null when skipped.
+  final DateTime? takenAt;
+  final String? skipReasonCode;
+  final String? skipReasonNote;
+
+  /// When the server saved it.
+  final DateTime recordedAt;
+
+  /// Who recorded it: null for a dose from before this was tracked.
+  final String? recordedByAccountId;
+  final String? recordedByName;
+  final String? recordedByAvatarCode;
+
+  @override
+  List<Object?> get props => [
+    id,
+    outcome,
+    takenAt,
+    skipReasonCode,
+    skipReasonNote,
+    recordedAt,
+    recordedByAccountId,
+    recordedByName,
+    recordedByAvatarCode,
+  ];
+}
+
+/// The same dose with one thing answered: a dose is immutable, so each
+/// answer is a new one.
+extension DoseOccurrenceCopies on DoseOccurrence {
+  /// This dose answered with [value], as the server saved it.
+  DoseOccurrence withRecord(DoseRecord value) => DoseOccurrence(
+    planId: planId,
+    scheduleId: scheduleId,
+    scheduledOn: scheduledOn,
+    time: time,
+    name: name,
+    strengthValue: strengthValue,
+    strengthUnit: strengthUnit,
+    dosageForm: dosageForm,
+    doseValue: doseValue,
+    doseUnit: doseUnit,
+    missedAfterMinutes: missedAfterMinutes,
+    instructions: instructions,
+    reason: reason,
+    record: value,
+    timingState: null,
+  );
+
+  /// This dose put off by [value], as the server keeps it.
+  DoseOccurrence withSnooze(SharedSnooze? value) => DoseOccurrence(
+    planId: planId,
+    scheduleId: scheduleId,
+    scheduledOn: scheduledOn,
+    time: time,
+    name: name,
+    strengthValue: strengthValue,
+    strengthUnit: strengthUnit,
+    dosageForm: dosageForm,
+    doseValue: doseValue,
+    doseUnit: doseUnit,
+    missedAfterMinutes: missedAfterMinutes,
+    instructions: instructions,
+    reason: reason,
+    record: record,
+    timingState: timingState,
+    snooze: value,
+  );
+}

@@ -1,3 +1,5 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/localization/app_calendar.dart';
 import 'package:app/core/utils/calendar_month.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
@@ -5,13 +7,10 @@ import 'package:app/features/measurements/domain/entities/measurement_reading.da
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_loading.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_tasks_loading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_attention_section.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_chart_card.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_record_content.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 /// [year]'s Gregorian [month], as the chart reads it.
 CalendarMonth _month(int year, int month) =>

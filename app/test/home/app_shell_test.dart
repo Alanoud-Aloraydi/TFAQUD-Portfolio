@@ -1,18 +1,17 @@
+import '../support/app_shell_harness.dart';
+import '../support/home_fakes.dart';
+
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/fading_branches.dart';
 import 'package:app/core/widgets/navigation/glass_capsule_button.dart';
-import 'package:app/features/account/presentation/pages/account_screen.dart';
+import 'package:app/features/account/presentation/pages/account_edit_screen.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/home/presentation/widgets/home_widget.dart';
-import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
-import 'package:app/features/shell/presentation/widgets/glass_add_button.dart';
+import 'package:app/features/home/presentation/widgets/home_shell_view.dart';
+import 'package:app/features/shell/presentation/widgets/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/app_shell_harness.dart';
-import '../support/home_fakes.dart';
 
 void main() {
   setUpShellApp();

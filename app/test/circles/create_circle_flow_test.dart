@@ -1,3 +1,7 @@
+import '../support/app_shell_harness.dart';
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
+
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/widgets/pickers/birth_date_sheet.dart';
 import 'package:app/core/widgets/pickers/city_sheet.dart';
@@ -8,18 +12,13 @@ import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
 import 'package:app/features/circles/presentation/pages/patient_circle_basics_screen.dart';
 import 'package:app/features/circles/presentation/pages/request_patient_screen.dart';
-import 'package:app/features/circles/presentation/pages/self_circle_basics_screen.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/presentation/widgets/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/app_shell_harness.dart';
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
 
 void main() {
   setUpShellApp();

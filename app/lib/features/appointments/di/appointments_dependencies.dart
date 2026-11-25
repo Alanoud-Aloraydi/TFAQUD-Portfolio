@@ -3,7 +3,6 @@ import 'package:app/features/appointments/data/datasources/appointment_remote_da
 import 'package:app/features/appointments/data/datasources/visit_audio_service.dart';
 import 'package:app/features/appointments/data/datasources/visit_remote_data_source.dart';
 import 'package:app/features/appointments/data/repositories/appointments_repository_impl.dart';
-import 'package:app/features/appointments/data/repositories/visits_repository_impl.dart';
 import 'package:app/features/appointments/domain/repositories/appointments_repository.dart';
 import 'package:app/features/appointments/domain/repositories/visit_audio.dart';
 import 'package:app/features/appointments/domain/repositories/visits_repository.dart';

@@ -1,6 +1,4 @@
-import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 export 'package:app/features/onboarding/presentation/cubit/onboarding_saving.dart';
 
@@ -88,8 +86,3 @@ List<Object?> onboardingStateProps(OnboardingState state) => <Object?>[
   state.careTarget,
   state.patientUsesApp,
 ];
-
-/// What the onboarding steps are bound to, shared by everything they do.
-mixin OnboardingScope on Cubit<OnboardingState> {
-  ProfileUseCase get profile;
-}

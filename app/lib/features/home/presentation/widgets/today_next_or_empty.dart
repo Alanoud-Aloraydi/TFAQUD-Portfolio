@@ -1,9 +1,20 @@
+import 'dart:async';
+
 import 'package:app/core/localization/care_voice.dart';
+import 'package:app/core/theme/app_semantic_colors.dart';
+import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
+import 'package:app/core/utils/recordable_now.dart';
+import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/core/widgets/feedback/empty_state_note.dart';
-import 'package:app/features/home/presentation/widgets/next_task_card.dart';
+import 'package:app/features/appointments/presentation/widgets/appointment_today_actions.dart';
+import 'package:app/features/home/presentation/widgets/next_task_summary.dart';
 import 'package:app/features/home/presentation/widgets/today_next_task.dart';
 import 'package:app/features/home/presentation/widgets/today_snapshot.dart';
+import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
+import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
+import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
+import 'package:app/features/medications/presentation/widgets/today_medication_action_dose.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -82,4 +93,113 @@ class TodayEmptyNote extends StatelessWidget {
       onAction: onAdd,
     ),
   );
+}
+
+/// «المهمة القادمة»: the dose to act on now, or the next task with the time
+/// left, and what can be answered on it already ([NextTaskAction]).
+class NextTaskCard extends StatelessWidget {
+  const NextTaskCard({
+    super.key,
+    required this.task,
+    required this.circleId,
+    required this.canManage,
+    required this.now,
+  });
+  final NextTask task;
+  final String circleId;
+  final bool canManage;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context) {
+    final medication = task.medication;
+    final sameDay = DateUtils.isSameDay(task.at, now);
+    if (medication != null && sameDay) {
+      return TodayMedicationActionDose(
+        occurrence: medication,
+        circleId: circleId,
+        canManage: canManage,
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppSemanticColors.surfaceContent,
+        border: Border.all(color: AppSemanticColors.textSupporting),
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            NextTaskSummary(task: task, circleId: circleId, now: now),
+            NextTaskAction(
+              task: task,
+              circleId: circleId,
+              canManage: canManage,
+              now: now,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// What «المهمة القادمة» answers on the card itself: a reading that can be
+/// recorded already, or a visit's buttons as its row in «اليوم» has them
+/// ([appointmentTodayActions]).
+class NextTaskAction extends StatelessWidget {
+  const NextTaskAction({
+    super.key,
+    required this.task,
+    required this.circleId,
+    required this.canManage,
+    required this.now,
+  });
+
+  final NextTask task;
+  final String circleId;
+  final bool canManage;
+  final DateTime now;
+
+  static const EdgeInsets _gap = EdgeInsets.only(top: AppSpacing.sm);
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget? action = _action(context);
+    if (action == null) return const SizedBox.shrink();
+    return Padding(padding: _gap, child: action);
+  }
+
+  Widget? _action(BuildContext context) {
+    final MeasurementOccurrence? measurement = task.measurement;
+    if (measurement != null &&
+        DateUtils.isSameDay(task.at, now) &&
+        canRecordOccurrence(
+          resolved:
+              measurement.status != MeasurementStatus.upcoming &&
+              measurement.status != MeasurementStatus.due &&
+              measurement.status != MeasurementStatus.missed,
+          scheduledAt: wallClockAt(measurement.scheduledOn, measurement.time),
+          now: now,
+        )) {
+      // The tasks read again by themselves when the answer is saved.
+      return FilledButton(
+        onPressed: () => unawaited(
+          showMeasurementReadingSheet(context, occurrence: measurement),
+        ),
+        child: Text(context.tr('measurements.record_reading')),
+      );
+    }
+    final appointment = task.appointment;
+    if (appointment == null) return null;
+    return appointmentTodayActions(
+      context,
+      value: appointment,
+      now: now,
+      circleId: circleId,
+      canManage: canManage,
+    );
+  }
 }

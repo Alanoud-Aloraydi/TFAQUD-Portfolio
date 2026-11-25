@@ -3,8 +3,6 @@ import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:app/features/circles/domain/entities/medical_form.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/circles/presentation/cubit/medical_file_edit_copy.dart';
-
 /// What the edit page of the medical file shows: the answers as the user is
 /// changing them. [file] is the file as the server last saved it, so the cubit
 /// can tell what changed.
@@ -94,4 +92,43 @@ extension MedicalFileEditQuestions on MedicalFileEditState {
 
   /// Whether the zone is still missing for a city that needs one.
   bool get zoneMissing => zoneEditable && timeZone == null;
+}
+
+/// The same page with some answers replaced. [clearError] drops the message
+/// of the save before it, and [clearTimeZone] empties the zone of a city
+/// typed by hand.
+extension MedicalFileEditCopy on MedicalFileEditState {
+  MedicalFileEditState copyWith({
+    MedicalFileEditStatus? status,
+    MedicalFile? file,
+    String? messageKey,
+    String? firstName,
+    String? lastName,
+    DateTime? birthDate,
+    String? city,
+    String? timeZone,
+    MedicalForm? form,
+    bool? showErrors,
+    bool? saving,
+    String? errorKey,
+    bool clearError = false,
+    bool clearTimeZone = false,
+    bool? sessionEnded,
+  }) {
+    return MedicalFileEditState(
+      status: status ?? this.status,
+      file: file ?? this.file,
+      messageKey: messageKey ?? this.messageKey,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      birthDate: birthDate ?? this.birthDate,
+      city: city ?? this.city,
+      timeZone: clearTimeZone ? null : (timeZone ?? this.timeZone),
+      form: form ?? this.form,
+      showErrors: showErrors ?? this.showErrors,
+      saving: saving ?? this.saving,
+      errorKey: clearError ? null : (errorKey ?? this.errorKey),
+      sessionEnded: sessionEnded ?? this.sessionEnded,
+    );
+  }
 }

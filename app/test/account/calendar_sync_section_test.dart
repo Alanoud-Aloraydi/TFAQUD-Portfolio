@@ -1,17 +1,17 @@
+import '../support/phone_fakes.dart';
+import '../support/widget_harness.dart';
+
 import 'package:app/app/services/calendar_sync.dart';
 import 'package:app/app/services/permissions/app_permission.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/core/theme/foundations/app_motion.dart';
-import 'package:app/features/account/presentation/widgets/calendar_sync_circle_list.dart';
+import 'package:app/features/account/presentation/widgets/account_calendar_sync_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../support/phone_fakes.dart';
-import '../support/widget_harness.dart';
 
 void main() {
   group('CalendarSyncCircleList', () {

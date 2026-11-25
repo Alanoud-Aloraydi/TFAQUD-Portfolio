@@ -6,7 +6,6 @@ import 'package:app/core/widgets/layout/inset_row.dart';
 import 'package:app/core/widgets/pickers/time_picker_sheet.dart';
 import 'package:app/features/appointments/presentation/cubit/appointment_companions_cubit.dart';
 import 'package:app/features/appointments/presentation/pages/appointment_form_fields.dart';
-import 'package:app/features/appointments/presentation/widgets/appointment_companions_group.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_dates_row.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_kind_group.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_lead_row.dart';

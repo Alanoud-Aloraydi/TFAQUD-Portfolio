@@ -1,10 +1,9 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/localization/arabic_names.dart';
-import 'package:app/features/home/presentation/widgets/clock_time_slot.dart';
 import 'package:app/features/home/presentation/widgets/prayer_period_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 /// Five rows whose names, times, badges and counts all differ in width.
 const List<({String name, String time, bool current, int count})> _rows = [

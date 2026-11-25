@@ -1,3 +1,7 @@
+import '../support/app_shell_harness.dart';
+import '../support/circles_fakes.dart';
+import '../support/home_fakes.dart';
+
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/localization/medical_texts.dart';
@@ -13,15 +17,11 @@ import 'package:app/features/circles/presentation/pages/medical_file_edit_screen
 import 'package:app/features/circles/presentation/pages/medical_file_screen.dart';
 import 'package:app/features/circles/presentation/widgets/circle_card.dart';
 import 'package:app/features/home/domain/entities/home_entity.dart';
-import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/presentation/widgets/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/app_shell_harness.dart';
-import '../support/circles_fakes.dart';
-import '../support/home_fakes.dart';
 
 void main() {
   setUpShellApp();

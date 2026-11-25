@@ -1,7 +1,5 @@
-import 'package:app/features/home/data/datasources/record_pdf_item_block.dart';
 import 'package:app/features/home/data/datasources/record_pdf_page.dart';
 import 'package:app/features/home/data/datasources/record_pdf_rows.dart';
-import 'package:app/features/home/data/datasources/record_pdf_table_block.dart';
 import 'package:app/features/home/domain/entities/record_pdf_model.dart';
 import 'package:app/features/home/domain/repositories/record_exporter.dart';
 import 'package:flutter/services.dart';
@@ -87,4 +85,173 @@ List<pw.Widget> pdfSection(RecordPdfSection section) {
       ),
     pw.SizedBox(height: 22),
   ];
+}
+
+/// One medicine or appointment: the name and its badge, a short detail, one
+/// line per time, and a box of fields.
+pw.Widget pdfItem(RecordPdfItem item) {
+  final String? badge = item.badge;
+  return pw.Container(
+    margin: const pw.EdgeInsets.only(bottom: 10),
+    padding: const pw.EdgeInsets.all(12),
+    decoration: pw.BoxDecoration(
+      border: pw.Border.all(color: RecordPdfStyle.line),
+      borderRadius: pw.BorderRadius.circular(8),
+    ),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        pw.Row(
+          children: <pw.Widget>[
+            pw.Expanded(
+              child: pw.Text(
+                RecordPdfStyle.plain(item.title),
+                style: pw.TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            if (badge != null) pdfBadge(badge, muted: item.badgeMuted),
+          ],
+        ),
+        if (item.detail.isNotEmpty) ...<pw.Widget>[
+          pw.SizedBox(height: 2),
+          pdfDetail(item.detail),
+        ],
+        if (item.rows.isNotEmpty) ...<pw.Widget>[
+          pw.SizedBox(height: 8),
+          for (final RecordPdfRow row in item.rows) pdfTimeRow(row),
+        ],
+        if (item.fields.isNotEmpty) ...<pw.Widget>[
+          pw.SizedBox(height: 8),
+          pdfBox(item.fields),
+        ],
+      ],
+    ),
+  );
+}
+
+/// A pill with a short word in it: «حالي», «تم أخذها».
+pw.Widget pdfBadge(String text, {required bool muted}) {
+  return pw.Container(
+    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: pw.BoxDecoration(
+      color: muted ? RecordPdfStyle.panel : RecordPdfStyle.leaf,
+      borderRadius: pw.BorderRadius.circular(10),
+    ),
+    child: pw.Text(
+      RecordPdfStyle.plain(text),
+      style: pw.TextStyle(
+        fontSize: 9,
+        color: muted ? RecordPdfStyle.slate : RecordPdfStyle.leafInk,
+      ),
+    ),
+  );
+}
+
+/// The short grey line under a title; each piece keeps its own direction.
+pw.Widget pdfDetail(List<RecordPdfRow> detail) {
+  return pw.Wrap(
+    spacing: 6,
+    children: <pw.Widget>[
+      for (int i = 0; i < detail.length; i++) ...<pw.Widget>[
+        if (i > 0)
+          pw.Text('|', style: pw.TextStyle(color: RecordPdfStyle.slate)),
+        pw.Text(
+          RecordPdfStyle.plain(detail[i].value),
+          textDirection: detail[i].ltr
+              ? pw.TextDirection.ltr
+              : pw.TextDirection.rtl,
+          style: pw.TextStyle(fontSize: 10.5, color: RecordPdfStyle.slate),
+        ),
+      ],
+    ],
+  );
+}
+
+/// One cell: a number or a time is set left to right and pushed to the start
+/// of its column; a value outside its target is bold and darker.
+pw.Widget _cell(RecordPdfCell cell, int flex) {
+  return pw.Expanded(
+    flex: flex,
+    child: pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 3),
+      child: pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Text(
+          RecordPdfStyle.plain(cell.text),
+          textDirection: cell.ltr ? pw.TextDirection.ltr : pw.TextDirection.rtl,
+          style: pw.TextStyle(
+            fontSize: 10,
+            fontWeight: cell.warn ? pw.FontWeight.bold : pw.FontWeight.normal,
+            color: cell.warn ? RecordPdfStyle.warn : RecordPdfStyle.ink,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+pw.Widget _header(RecordPdfTable table) {
+  return pw.Container(
+    color: RecordPdfStyle.panel,
+    padding: const pw.EdgeInsets.symmetric(vertical: 6),
+    child: pw.Row(
+      children: <pw.Widget>[
+        for (int i = 0; i < table.headers.length; i++)
+          pw.Expanded(
+            flex: table.flex[i],
+            child: pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 3),
+              child: pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  RecordPdfStyle.plain(table.headers[i]),
+                  style: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                    color: RecordPdfStyle.slate,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// A titled table: a grey header line, then one line per row with a thin
+/// rule between. Built from rows so the columns follow the page direction.
+pw.Widget pdfTable(RecordPdfTable table) {
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: <pw.Widget>[
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 6),
+        child: pw.Text(
+          RecordPdfStyle.plain(table.title),
+          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+        ),
+      ),
+      _header(table),
+      for (final List<RecordPdfCell> row in table.rows)
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5),
+          decoration: pw.BoxDecoration(
+            border: pw.Border(
+              bottom: pw.BorderSide(color: RecordPdfStyle.line),
+            ),
+          ),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: <pw.Widget>[
+              for (int i = 0; i < row.length; i++) _cell(row[i], table.flex[i]),
+            ],
+          ),
+        ),
+      pw.SizedBox(height: 14),
+    ],
+  );
 }

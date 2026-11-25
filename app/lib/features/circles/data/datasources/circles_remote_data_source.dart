@@ -1,7 +1,6 @@
 import 'package:app/core/network/account_endpoints.dart';
 import 'package:app/core/network/circle_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
-import 'package:app/features/circles/data/models/circle_model.dart';
 import 'package:app/features/circles/data/models/circle_overview_model.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';

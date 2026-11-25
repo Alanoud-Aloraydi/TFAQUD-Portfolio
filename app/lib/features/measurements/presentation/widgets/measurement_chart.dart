@@ -4,10 +4,8 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/entities/chart_target.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
-import 'package:app/features/measurements/presentation/widgets/chart_gestures.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_legend.dart';
 import 'package:app/features/measurements/presentation/widgets/chart_scale.dart';
-import 'package:app/features/measurements/presentation/widgets/chart_tap.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_tile.dart';
 import 'package:flutter/material.dart';
 

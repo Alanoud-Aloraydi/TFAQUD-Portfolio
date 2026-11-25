@@ -1,15 +1,27 @@
+import 'dart:async';
+
 import 'package:app/app/router/routers.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/core/media/person_photo.dart';
+import 'package:app/core/media/photo_crop_page.dart';
+import 'package:app/core/network/account_endpoints.dart';
+import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/app_toast.dart';
+import 'package:app/core/widgets/loading/loading_note.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_rows.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_legal.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_card.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_outlined_danger.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_page.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_schedule_task_text.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -90,3 +102,129 @@ Future<bool?> confirmSimplifiedDelete(BuildContext context) {
     ),
   );
 }
+
+/// Everything «حسابي» shows, in order: who the patient is, the text size
+/// and هجري or ميلادي, whether the phone's notifications are allowed, the
+/// calendar copy, the medical file, the privacy policy and terms, signing
+/// out and deleting.
+List<Widget> simplifiedAccountRows(
+  BuildContext context,
+  AccountState state,
+  String? circleId,
+) {
+  final AccountSummary? account = state.account;
+  return <Widget>[
+    if (account != null)
+      simplifiedAccountHeader(context, account)
+    else if (state.status == AccountStatus.loading)
+      const LoadingNote(),
+    SimplifiedSectionTitle(context.tr('simplified_mode.display')),
+    const SimplifiedTextSizeCard(),
+    const SimplifiedCalendarCard(),
+    SimplifiedSectionTitle(context.tr('account.notifications_title')),
+    const SimplifiedNotificationsCard(),
+    if (circleId != null) ...<Widget>[
+      SimplifiedSectionTitle(context.tr('simplified_mode.calendar_title')),
+      SimplifiedCalendarSyncCard(circleId: circleId),
+      SimplifiedSectionTitle(context.tr('simplified_mode.my_info')),
+      simplifiedAccountFileCard(context, circleId),
+    ],
+    SimplifiedSectionTitle(context.tr('legal.section')),
+    ...simplifiedAccountLegal(context),
+    const SizedBox(height: 8),
+    const SimplifiedSignOutButton(),
+    SimplifiedOutlinedDanger(
+      label: context.tr('simplified_mode.delete_account'),
+      busy: state.deleting,
+      filled: false,
+      onPressed: context.read<AccountCubit>().startDelete,
+    ),
+  ];
+}
+
+class SimplifiedSectionTitle extends StatelessWidget {
+  const SimplifiedSectionTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(text, style: SimplifiedStyle.head(SimplifiedStyle.body));
+}
+
+/// The top of «حسابي»: the photo beside the name and the number.
+Widget simplifiedAccountHeader(BuildContext context, AccountSummary account) =>
+    Row(
+      children: <Widget>[
+        simplifiedAccountPhoto(context, account),
+        const SizedBox(width: SimplifiedStyle.gap),
+        simplifiedAccountIdentity(context, account),
+      ],
+    );
+
+/// The patient's name, number and the hint that the photo can be changed,
+/// read out as one. The number reads left to right.
+Widget simplifiedAccountIdentity(
+  BuildContext context,
+  AccountSummary account,
+) => Expanded(
+  child: MergeSemantics(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          account.displayName,
+          style: SimplifiedStyle.head(SimplifiedStyle.headline),
+        ),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text(
+            SaudiMobile.display(account.phoneNumber),
+            style: SimplifiedStyle.text(SimplifiedStyle.caption),
+          ),
+        ),
+        Text(
+          context.tr('simplified_mode.photo_hint'),
+          style: SimplifiedStyle.text(SimplifiedStyle.caption),
+        ),
+      ],
+    ),
+  ),
+);
+
+/// The patient's photo on «حسابي», tapped to change it, with the small
+/// edit badge on its corner.
+Widget simplifiedAccountPhoto(BuildContext context, AccountSummary account) =>
+    MergeSemantics(
+      child: Semantics(
+        button: true,
+        label: spoken(context.tr('simplified_mode.change_photo')),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => unawaited(
+            showPersonPhotoSheet(
+              context,
+              title: context.tr('photos.your_photo'),
+              name: account.displayName,
+              photoPath: AccountEndpoints.accountPhoto,
+              avatarPath: AccountEndpoints.accountAvatar,
+              avatarCode: account.avatarCode,
+              frontCamera: true,
+              onSaved: () => unawaited(context.read<AccountCubit>().load()),
+            ),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: <Widget>[
+              PersonPhoto(
+                name: account.displayName,
+                photoPath: AccountEndpoints.accountPhoto,
+                avatarCode: account.avatarCode,
+                size: 72,
+              ),
+              const PhotoEditBadge(),
+            ],
+          ),
+        ),
+      ),
+    );

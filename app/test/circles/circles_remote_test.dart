@@ -5,8 +5,7 @@ import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:app/features/circles/domain/entities/complete_circle_request.dart';
 import 'package:app/features/circles/domain/entities/emergency_contact.dart';
-import 'package:app/features/circles/domain/entities/medical_profile_draft.dart';
-import 'package:app/features/circles/domain/entities/patient_basics.dart';
+import 'package:app/features/circles/domain/entities/medical_file.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

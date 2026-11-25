@@ -6,6 +6,11 @@
 // It opens the signed-in app on offline repositories, visits each tab with
 // the bottom bar, opens the add sheet and closes it with the system back,
 // and schedules one real reminder on the phone.
+
+import '../test/support/circles_fakes.dart';
+import '../test/support/home_fakes.dart';
+import '../test/support/phone_fakes.dart';
+
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/routers.dart';
 import 'package:app/app/services/calendar_sync.dart';
@@ -30,7 +35,7 @@ import 'package:app/features/measurements/domain/usecases/measurements_use_case.
 import 'package:app/features/medications/domain/usecases/medications_use_case.dart';
 import 'package:app/features/prayer_times/data/repositories/prayer_times_repository_impl.dart';
 import 'package:app/features/prayer_times/domain/usecases/prayer_times_use_case.dart';
-import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/presentation/widgets/app_shell.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -42,9 +47,6 @@ import 'package:get_it/get_it.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 
-import '../test/support/circles_fakes.dart';
-import '../test/support/home_fakes.dart';
-import '../test/support/phone_fakes.dart';
 import 'smoke_fakes.dart';
 
 /// The tabs in bar order, with the path each one opens.

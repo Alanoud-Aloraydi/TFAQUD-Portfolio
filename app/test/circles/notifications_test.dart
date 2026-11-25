@@ -1,3 +1,6 @@
+import '../support/app_shell_harness.dart';
+import '../support/circles_fakes.dart';
+
 import 'package:app/app/router/app_router.dart';
 import 'package:app/app/router/routers.dart';
 import 'package:app/core/errors/failure.dart';
@@ -9,18 +12,14 @@ import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/entities/previous_notification.dart';
 import 'package:app/features/circles/domain/entities/received_circle_request.dart';
 import 'package:app/features/circles/presentation/cubit/create_circle_cubit.dart';
-import 'package:app/features/circles/presentation/pages/approved_circle_basics_screen.dart';
 import 'package:app/features/circles/presentation/pages/notifications_screen.dart';
 import 'package:app/features/circles/presentation/pages/request_reply_screen.dart';
-import 'package:app/features/shell/presentation/widgets/app_bottom_bar.dart';
+import 'package:app/features/shell/presentation/widgets/app_shell.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/app_shell_harness.dart';
-import '../support/circles_fakes.dart';
 
 void main() {
   setUpShellApp();

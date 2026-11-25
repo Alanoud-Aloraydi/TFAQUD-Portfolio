@@ -1,9 +1,8 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/widgets/layout/group_header.dart';
-import 'package:app/core/widgets/layout/group_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/widget_harness.dart';
 
 void main() {
   setUpAll(initTestLocalization);

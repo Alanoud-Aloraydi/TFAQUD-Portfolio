@@ -1,8 +1,10 @@
+import '../support/widget_harness.dart';
+
 import 'package:app/core/errors/failure.dart';
 import 'package:app/core/widgets/task_viewer_scope.dart';
 import 'package:app/features/appointments/domain/entities/appointment.dart';
 import 'package:app/features/appointments/presentation/widgets/appointment_today_row.dart';
-import 'package:app/features/home/presentation/widgets/next_task_card.dart';
+import 'package:app/features/home/presentation/widgets/today_next_or_empty.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_occurrence.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
@@ -22,8 +24,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-
-import '../support/widget_harness.dart';
 
 /// Records what the measurement row sends to the server.
 class _Measurements extends Fake implements MeasurementsRepository {

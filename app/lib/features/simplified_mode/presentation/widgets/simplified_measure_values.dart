@@ -1,10 +1,11 @@
 import 'package:app/core/localization/spoken_arabic.dart';
+import 'package:app/core/theme/app_text_theme.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_form.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_scaffold.dart';
-import 'package:app/features/simplified_mode/presentation/widgets/simplified_measure_value_card.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_style.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
 /// The number being typed: one big card for glucose, or the upper and the
@@ -81,3 +82,66 @@ String simplifiedInvalidReadingKey(SimplifiedReading? reading) =>
     reading?.kind == MeasurementKind.bp
     ? 'simplified_mode.invalid_bp'
     : 'measurements.invalid_reading';
+
+/// One typed measurement, read out as a single value: the number large and
+/// its unit, in a [SimplifiedMeasureFrame]. A [small] card is one of a blood
+/// pressure's two numbers, its name at the start and the number at the end.
+class SimplifiedMeasureValueCard extends StatelessWidget {
+  const SimplifiedMeasureValueCard({
+    super.key,
+    required this.value,
+    required this.unit,
+    required this.active,
+    this.small = false,
+  });
+
+  final String value;
+  final String unit;
+  final bool active;
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget unitText = Text(
+      unit,
+      style: SimplifiedStyle.text(
+        small ? SimplifiedStyle.body : SimplifiedStyle.caption,
+        weight: small ? AppTextTheme.medium : AppTextTheme.regular,
+      ),
+    );
+    // Numbers read left to right in Arabic too.
+    final Widget number = Text(
+      value.isEmpty ? '–' : value,
+      textDirection: TextDirection.ltr,
+      style: SimplifiedStyle.head(
+        small ? SimplifiedStyle.number : 60,
+        height: 1.1,
+      ),
+    );
+    return Semantics(
+      liveRegion: active,
+      label: spoken(
+        context.tr(
+          'simplified_mode.a11y.typed_value',
+          args: <String>[value.isEmpty ? unit : '$value $unit'],
+        ),
+      ),
+      excludeSemantics: true,
+      child: SimplifiedMeasureFrame(
+        active: active,
+        small: small,
+        child: small
+            ? Row(
+                children: <Widget>[
+                  Expanded(child: unitText),
+                  number,
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[number, unitText],
+              ),
+      ),
+    );
+  }
+}

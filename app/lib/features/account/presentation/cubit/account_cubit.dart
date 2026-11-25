@@ -1,10 +1,11 @@
+import 'package:app/core/errors/failure.dart';
 import 'package:app/features/account/domain/usecases/profile_use_case.dart';
 import 'package:app/features/account/presentation/cubit/account_loading.dart';
-import 'package:app/features/account/presentation/cubit/account_profile_saving.dart';
-import 'package:app/features/account/presentation/cubit/account_requests.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/auth/domain/usecases/auth_use_case.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
+import 'package:app/features/circles/domain/entities/circle_failures.dart';
+import 'package:app/features/circles/domain/entities/new_circle_request.dart';
 import 'package:app/features/circles/domain/usecases/circles_use_case.dart';
 import 'package:app/features/home/domain/usecases/home_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -66,4 +67,149 @@ mixin AccountDeleting on AccountScope, AccountDeleteRun {
   /// The person agreed to delete the circles they are the only manager of.
   Future<void> confirmLastManager() =>
       runDelete(state.deletion.copyWith(deleteLastManagedCircles: true));
+}
+
+/// Changing the names on the account.
+mixin AccountProfileSaving on AccountScope {
+  /// Saves the three names. Returns null when they were saved, and the key of
+  /// the message to show otherwise, so the sheet that asked can stay open.
+  Future<String?> saveProfile({
+    required String firstName,
+    required String lastName,
+    required String displayName,
+  }) async {
+    final AccountSummary? current = state.account;
+    final String first = firstName.trim();
+    final String last = lastName.trim();
+    final String display = displayName.trim();
+    if (current == null || first.isEmpty || last.isEmpty || display.isEmpty) {
+      return 'common.field_required';
+    }
+    final result = await profile.saveProfile(
+      firstName: first,
+      lastName: last,
+      displayName: display,
+    );
+    if (isClosed) return null;
+    return result.when(
+      (_) {
+        emit(
+          state.copyWith(
+            account: AccountSummary(
+              firstName: first,
+              lastName: last,
+              displayName: display,
+              phoneNumber: current.phoneNumber,
+              patientCircleId: current.patientCircleId,
+              birthDate: current.birthDate,
+              city: current.city,
+              avatarCode: current.avatarCode,
+            ),
+            noticeKey: 'account.saved',
+          ),
+        );
+        // The first letter of the display name is on the top bar of the home
+        // screen, which loads again.
+        home.notifyCirclesChanged();
+        return null;
+      },
+      (Failure failure) {
+        if (endsSession(failure)) emit(state.copyWith(sessionEnded: true));
+        return failure.messageKey;
+      },
+    );
+  }
+}
+
+/// Cancelling the requests this account sent, and clearing what the page
+/// showed.
+mixin AccountRequests on AccountScope, AccountLoading {
+  /// Cancels a request this account sent. Returns true when it was canceled.
+  Future<bool> cancelRequest(String id) async {
+    if (state.busyIds.contains(id)) return false;
+    emit(
+      state.copyWith(
+        busyIds: <String>{...state.busyIds, id},
+        clearMessages: true,
+      ),
+    );
+    final result = await circles.cancelRequest(id);
+    if (isClosed) return false;
+    final Set<String> busy = <String>{...state.busyIds}..remove(id);
+    return result.when(
+      (_) {
+        emit(
+          state.copyWith(
+            busyIds: busy,
+            sent: <SentCircleRequest>[
+              for (final SentCircleRequest sent in state.sent)
+                if (sent.id != id) sent,
+            ],
+            noticeKey: 'account.request_canceled',
+          ),
+        );
+        return true;
+      },
+      (Failure failure) {
+        emit(
+          state.copyWith(
+            busyIds: busy,
+            errorKey: failure.messageKey,
+            sessionEnded: endsSession(failure),
+          ),
+        );
+        // The request may be gone already: read the list again.
+        if (failure is RequestUnavailableFailure) load();
+        return false;
+      },
+    );
+  }
+
+  /// Clears the failure and the notice once the page showed them, so that the
+  /// same message can be shown again later.
+  void messagesShown() => emit(state.copyWith(clearMessages: true));
+}
+
+/// Sending the deletion of the account, and what the answer means.
+mixin AccountDeleteRun on AccountScope {
+  /// Asks the server to delete the account with the choices made so far, and
+  /// says where that got to.
+  Future<void> runDelete(AccountDeletion deletion) async {
+    if (state.deleting) return;
+    emit(
+      state.copyWith(
+        deleting: true,
+        deletion: deletion,
+        deletePrompt: DeletePrompt.none,
+        clearMessages: true,
+      ),
+    );
+    final result = await circles.deleteAccount(deletion);
+    if (isClosed) return;
+    if (result.isSuccess()) {
+      // Every sign-in of the account ended on the server. This one is ended on
+      // the phone too: the tokens are removed.
+      await auth.signOut();
+      if (isClosed) return;
+      emit(state.copyWith(deleting: false, signedOut: true));
+      return;
+    }
+    final Failure failure = result.tryGetError()!;
+    emit(
+      state.copyWith(
+        deleting: false,
+        deletePrompt: switch (failure) {
+          PatientChoiceRequiredFailure() => DeletePrompt.patientChoice,
+          LastManagerFailure() => DeletePrompt.lastManager,
+          _ => DeletePrompt.none,
+        },
+        errorKey:
+            failure is PatientChoiceRequiredFailure ||
+                failure is LastManagerFailure
+            ? null
+            : failure.messageKey,
+        sessionEnded: endsSession(failure),
+      ),
+    );
+  }
 }

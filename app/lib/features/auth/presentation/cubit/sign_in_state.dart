@@ -2,8 +2,6 @@ import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/features/circles/domain/entities/circle_app_mode.dart';
 import 'package:equatable/equatable.dart';
 
-export 'package:app/features/auth/presentation/cubit/sign_in_verifying.dart';
-
 /// State of the sign-in pages (phone number, then code). One cubit serves both
 /// pages, so the code page knows the phone number.
 class SignInState extends Equatable {
@@ -80,3 +78,34 @@ List<Object?> signInStateProps(SignInState state) => <Object?>[
   state.needsProfile,
   state.appMode,
 ];
+
+/// A changed copy of a [SignInState].
+extension SignInStateCopy on SignInState {
+  SignInState copyWith({
+    String? phone,
+    String? code,
+    SignInStatus? status,
+    String? errorKey,
+    bool clearError = false,
+    bool? showPhoneError,
+    int? resendSeconds,
+    String? verificationId,
+    bool clearVerificationId = false,
+    bool? needsProfile,
+    CircleAppMode? appMode,
+  }) {
+    return SignInState(
+      phone: phone ?? this.phone,
+      code: code ?? this.code,
+      status: status ?? this.status,
+      errorKey: clearError ? null : (errorKey ?? this.errorKey),
+      showPhoneError: showPhoneError ?? this.showPhoneError,
+      resendSeconds: resendSeconds ?? this.resendSeconds,
+      verificationId: clearVerificationId
+          ? null
+          : (verificationId ?? this.verificationId),
+      needsProfile: needsProfile ?? this.needsProfile,
+      appMode: appMode ?? this.appMode,
+    );
+  }
+}

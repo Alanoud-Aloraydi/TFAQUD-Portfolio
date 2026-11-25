@@ -14,8 +14,8 @@
 
 import 'dart:io';
 
-/// The size limit of every file.
-const int lineLimit = 100;
+/// The size limit of every file. Aim for about 200 lines; never more than 300.
+const int lineLimit = 300;
 
 const String baselinePath = 'tool/structure_baseline.txt';
 

@@ -6,20 +6,22 @@ enforces the ones that can be checked mechanically, and runs in CI
 
 ## 1. Files
 
-Code that changes together lives together, in fewer and fuller files.
+A file holds code that is really connected, and is named after its main
+class.
 
-- A file is named after its main class: `dose_timing_badge.dart` holds
-  `DoseTimingBadge`, and may also hold the small widgets and helpers that
-  `DoseTimingBadge` uses.
-- A helper used by one file only lives in that file. A helper used by
-  several files lives in a file of its own, beside them.
+- Keep together what changes together: a class and its state, a widget and
+  the small widgets only it uses, a data source and the models it reads.
+- Never join code just to have fewer files. Two classes share a file only
+  when one exists to serve the other.
+- A helper used by several files lives in its own file, beside them.
 - Code of different layers never shares a file (see §3).
 
 ## 2. Size limit
 
-Every file has at most **100 lines**, generated files excepted
-(`*.g.dart`, `*.freezed.dart`, `*.config.dart`). A file that grows past
-the limit is split by meaning, not by line count.
+Aim for about 200 lines per file; never more than 300 (generated files
+excepted: `*.g.dart`, `*.freezed.dart`, `*.config.dart`). A class is not cut
+into mixins to meet the limit: a file that outgrows it holds two jobs, and
+is split by meaning.
 
 ## 3. Layout and layers
 

@@ -1,8 +1,8 @@
-import 'package:app/core/widgets/feedback/push_setup_check.dart';
+import '../support/phone_fakes.dart';
+
+import 'package:app/core/widgets/app_scopes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../support/phone_fakes.dart';
 
 const String _title = 'Your OneSignal SDK integration is complete!';
 

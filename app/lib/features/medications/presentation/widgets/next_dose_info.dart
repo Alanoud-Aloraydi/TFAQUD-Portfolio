@@ -1,11 +1,15 @@
+import 'package:app/core/constants/icons/tafaqod_phosphor_icons.dart';
 import 'package:app/core/localization/arabic_names.dart';
+import 'package:app/core/localization/medication_format.dart';
+import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/recordable_now.dart';
 import 'package:app/core/utils/schedule_day.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/presentation/widgets/dose_history_outcome.dart';
 import 'package:app/features/medications/presentation/widgets/dose_record_controls.dart';
-import 'package:app/features/medications/presentation/widgets/next_dose_lines.dart';
+import 'package:app/features/medications/presentation/widgets/dose_strength_line.dart';
+import 'package:app/features/medications/presentation/widgets/navigate_to_medication.dart';
 import 'package:flutter/material.dart';
 
 /// The next dose of «اليوم»: its time, large, beside the medicine and how
@@ -91,6 +95,67 @@ class TodayDoseAnswer extends StatelessWidget {
         layout: DoseControlsLayout.today,
         circleId: circleId,
       ),
+    );
+  }
+}
+
+/// The medicine of the next dose, tapped to open it, and the dose with its
+/// note under the name.
+class NextDoseLines extends StatelessWidget {
+  const NextDoseLines({
+    super.key,
+    required this.occurrence,
+    required this.circleId,
+    required this.canManage,
+  });
+
+  final DoseOccurrence occurrence;
+  final String circleId;
+  final bool canManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    final String strength = doseStrengthText(context, occurrence);
+    final String dose = formatMedicationDose(
+      context,
+      occurrence.doseValue,
+      occurrence.doseUnit,
+    );
+    final String how = occurrence.instructions == null
+        ? dose
+        : '$dose، ${occurrence.instructions}';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MergeSemantics(
+          child: Semantics(
+            button: true,
+            child: InkWell(
+              onTap: () =>
+                  openMedication(context, circleId, occurrence, canManage),
+              child: Row(
+                children: [
+                  const Icon(TafaqodPhosphorIcons.pill, size: 17),
+                  const SizedBox(width: AppSpacing.tight),
+                  Flexible(
+                    child: Text(
+                      '${occurrence.name} $strength',
+                      style: text.titleMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Text(
+          how,
+          semanticsLabel: spoken(how),
+          textAlign: TextAlign.end,
+          style: text.bodyMedium,
+        ),
+      ],
     );
   }
 }

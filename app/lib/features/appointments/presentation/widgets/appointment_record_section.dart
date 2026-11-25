@@ -95,3 +95,53 @@ class AppointmentRecordEmpty extends StatelessWidget {
         : null,
   );
 }
+
+/// The plan tab's appointments: the upcoming ones, soonest first, one card
+/// for each booking.
+class AppointmentPlanSection extends StatelessWidget {
+  const AppointmentPlanSection({
+    super.key,
+    required this.circleId,
+    required this.canManage,
+    required this.header,
+  });
+
+  final String circleId;
+  final bool canManage;
+  final Widget header;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppointmentsState state = context.watch<AppointmentsCubit>().state;
+    final DateTime now = PatientClockScope.of(context).now();
+    final List<AppointmentGroup> values = AppointmentGroup.of(
+      upcomingAppointments(state.appointments, now),
+      state.appointments,
+      now,
+    );
+    return ListView(
+      padding: context.scrollPadding(const EdgeInsets.all(AppSpacing.lg)),
+      children: <Widget>[
+        header,
+        const SizedBox(height: AppSpacing.lg),
+        ...appointmentListBody(
+          context,
+          state: state,
+          values: values,
+          circleId: circleId,
+          empty: EmptyStateNote.section(
+            context.tr('appointments.no_upcoming'),
+            actionLabel: canManage ? context.tr('add.appointment') : null,
+            onAction: canManage
+                ? () => context.push<bool>(
+                    CareItemRoutes.newAppointment(circleId),
+                  )
+                : null,
+          ),
+          canManage: canManage,
+          showRelativeDate: true,
+        ),
+      ],
+    );
+  }
+}

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/core/errors/failure.dart';
-import 'package:app/core/errors/generic_failures.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:dio/dio.dart';

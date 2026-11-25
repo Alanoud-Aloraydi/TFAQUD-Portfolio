@@ -1,4 +1,4 @@
-import 'package:app/app/di/injection.dart';
+import 'package:app/app/bootstrap.dart';
 import 'package:app/core/errors/auth_failures.dart';
 import 'package:app/core/errors/data_failures.dart';
 import 'package:app/features/home/data/datasources/home_remote_data_source.dart';

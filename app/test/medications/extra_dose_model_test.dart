@@ -1,4 +1,4 @@
-import 'package:app/features/medications/data/datasources/medication_extra_dose_requests.dart';
+import 'package:app/features/medications/data/datasources/medications_remote_data_source.dart';
 import 'package:app/features/medications/domain/entities/dose_occurrence.dart';
 import 'package:app/features/medications/domain/entities/extra_dose.dart';
 import 'package:flutter_test/flutter_test.dart';
