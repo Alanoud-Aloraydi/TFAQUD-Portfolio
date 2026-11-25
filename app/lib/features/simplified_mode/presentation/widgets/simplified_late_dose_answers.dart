@@ -4,6 +4,7 @@ import 'package:app/core/constants/app_icons.dart';
 import 'package:app/core/navigation/routers.dart';
 import 'package:app/features/simplified_mode/domain/entities/today_task.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/simplified_snooze_open.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_button.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_done_message.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -40,7 +41,7 @@ class SimplifiedLateDoseAnswers extends StatelessWidget {
       SimplifiedButton(
         label: context.tr('simplified_mode.remind_later'),
         tone: SimplifiedButtonTone.later,
-        onPressed: () => context.push(Routes.simplifiedSnooze, extra: task),
+        onPressed: () => unawaited(openSimplifiedSnooze(context, task)),
       ),
       const SizedBox(height: 12),
       // A dose that will not be taken has somewhere to go: without

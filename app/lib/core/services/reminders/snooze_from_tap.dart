@@ -6,7 +6,7 @@ import 'package:app/core/services/reminders/task_snooze.dart';
 /// «ذكّرني لاحقًا» from a notification: [tap] is the snooze action of a
 /// reminder, which carries its words and its task; that task comes again
 /// in [notificationSnooze], as from its card. False when the tap is not a
-/// snoozable reminder.
+/// snoozable reminder, or the reminders are off ([SnoozePutter.put]).
 Future<bool> snoozeFromTap(
   SnoozePutter putter,
   DateTime Function() now,
@@ -18,7 +18,7 @@ Future<bool> snoozeFromTap(
   final (String, String)? text = reminderText(payload);
   final (String, String)? target = snoozeTarget(payload);
   if (circleId == null || text == null || target == null) return false;
-  await putter.put(
+  return putter.put(
     key: target.$1,
     after: notificationSnooze,
     snooze: TaskSnooze(
@@ -30,5 +30,4 @@ Future<bool> snoozeFromTap(
     title: text.$1,
     body: text.$2,
   );
-  return true;
 }

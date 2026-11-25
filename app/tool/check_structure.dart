@@ -106,9 +106,7 @@ List<Violation> inspect(File file, String path) {
     if (target == null || !target.startsWith('package:app/')) continue;
     final String imported = target.substring('package:app/'.length);
     if (presentation && imported.contains('/data/')) {
-      found.add(
-        Violation('layer', path, 0, 'presentation imports $imported'),
-      );
+      found.add(Violation('layer', path, 0, 'presentation imports $imported'));
     }
     if (path.contains('/domain/') &&
         (imported.contains('/data/') || imported.contains('/presentation/'))) {
@@ -204,8 +202,10 @@ void main(List<String> arguments) {
     stdout.writeln('new      ${v.path}: ${v.message}');
   }
   for (final Violation v in grown) {
-    stdout.writeln('grew     ${v.path}: ${v.message}'
-        ' (was ${baseline[v.key]})');
+    stdout.writeln(
+      'grew     ${v.path}: ${v.message}'
+      ' (was ${baseline[v.key]})',
+    );
   }
 
   final int known = violations.length - fresh.length - grown.length;
