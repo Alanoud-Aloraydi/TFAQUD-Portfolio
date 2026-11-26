@@ -59,6 +59,11 @@ android {
             signingConfig = signingConfigs.getByName(
                 if (keyProperties.isEmpty) "debug" else "upload",
             )
+            // Keeps what the code shrinking would wrongly remove.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
