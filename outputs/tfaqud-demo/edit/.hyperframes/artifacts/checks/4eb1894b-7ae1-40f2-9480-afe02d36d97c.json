@@ -1,0 +1,1064 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "studio_missing_editable_id",
+        "severity": "warning",
+        "message": "<div data-start=\"0\" data-track-index=\"1\"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\compositions\\intro.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add a stable, human-readable id such as id=\"hero-title\" or id=\"scene-1-card\" to every timeline-visible element you want agents or Studio to edit."
+      },
+      {
+        "code": "studio_missing_editable_id",
+        "severity": "warning",
+        "message": "<div data-start=\"0\" data-track-index=\"0\"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\compositions\\outro.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add a stable, human-readable id such as id=\"hero-title\" or id=\"scene-1-card\" to every timeline-visible element you want agents or Studio to edit."
+      }
+    ],
+    "filesScanned": 13
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 27,
+    "infoCount": 0,
+    "findings": [
+      {
+        "selector": "#daily-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/daily.html",
+        "bbox": {
+          "x": 920.41,
+          "y": 91.5,
+          "width": 15.18,
+          "height": 81
+        },
+        "time": 4.886,
+        "rect": {
+          "left": 920.41,
+          "top": 91.5,
+          "right": 935.59,
+          "bottom": 172.5,
+          "width": 15.18,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "١",
+        "message": "<div> \"١\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 4.886,
+        "lastSeen": 14.658,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          4.886,
+          14.658
+        ]
+      },
+      {
+        "selector": "#daily-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/daily.html",
+        "bbox": {
+          "x": 467.63,
+          "y": 71.5,
+          "width": 394.37,
+          "height": 72
+        },
+        "time": 4.886,
+        "rect": {
+          "left": 467.63,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 394.37,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "متابعة الرعاية اليومية",
+        "message": "<h1> \"متابعة الرعاية اليومية\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 4.886,
+        "lastSeen": 14.658,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          4.886,
+          14.658
+        ]
+      },
+      {
+        "selector": "#daily-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/daily.html",
+        "bbox": {
+          "x": 526.47,
+          "y": 145.69,
+          "width": 335.53,
+          "height": 42
+        },
+        "time": 4.886,
+        "rect": {
+          "left": 526.47,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 335.53,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "المهام اليومية وما يحتاج انتباهك",
+        "message": "<p> \"المهام اليومية وما يحتاج انتباهك\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 4.886,
+        "lastSeen": 14.658,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          4.886,
+          14.658
+        ]
+      },
+      {
+        "selector": "#medicines-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/medicines.html",
+        "bbox": {
+          "x": 914.28,
+          "y": 91.5,
+          "width": 27.44,
+          "height": 81
+        },
+        "time": 24.429,
+        "rect": {
+          "left": 914.28,
+          "top": 91.5,
+          "right": 941.72,
+          "bottom": 172.5,
+          "width": 27.44,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٢",
+        "message": "<div> \"٢\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 24.429,
+        "lastSeen": 24.429,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          24.429
+        ]
+      },
+      {
+        "selector": "#medicines-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/medicines.html",
+        "bbox": {
+          "x": 641.09,
+          "y": 71.5,
+          "width": 220.91,
+          "height": 72
+        },
+        "time": 24.429,
+        "rect": {
+          "left": 641.09,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 220.91,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "إدارة الأدوية",
+        "message": "<h1> \"إدارة الأدوية\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 24.429,
+        "lastSeen": 24.429,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          24.429
+        ]
+      },
+      {
+        "selector": "#medicines-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/medicines.html",
+        "bbox": {
+          "x": 555.45,
+          "y": 145.69,
+          "width": 306.55,
+          "height": 42
+        },
+        "time": 24.429,
+        "rect": {
+          "left": 555.45,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 306.55,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "خطة الدواء وتفاصيل الجرعات",
+        "message": "<p> \"خطة الدواء وتفاصيل الجرعات\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 24.429,
+        "lastSeen": 24.429,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          24.429
+        ]
+      },
+      {
+        "selector": "#appointments-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/appointments.html",
+        "bbox": {
+          "x": 910.86,
+          "y": 91.5,
+          "width": 34.3,
+          "height": 81
+        },
+        "time": 34.201,
+        "rect": {
+          "left": 910.86,
+          "top": 91.5,
+          "right": 945.16,
+          "bottom": 172.5,
+          "width": 34.3,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٣",
+        "message": "<div> \"٣\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 34.201,
+        "lastSeen": 43.973,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          34.201,
+          43.973
+        ]
+      },
+      {
+        "selector": "#appointments-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/appointments.html",
+        "bbox": {
+          "x": 573.47,
+          "y": 71.5,
+          "width": 288.53,
+          "height": 72
+        },
+        "time": 34.201,
+        "rect": {
+          "left": 573.47,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 288.53,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "تنظيم المواعيد",
+        "message": "<h1> \"تنظيم المواعيد\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 34.201,
+        "lastSeen": 43.973,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          34.201,
+          43.973
+        ]
+      },
+      {
+        "selector": "#appointments-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/appointments.html",
+        "bbox": {
+          "x": 553.13,
+          "y": 145.69,
+          "width": 308.87,
+          "height": 42
+        },
+        "time": 34.201,
+        "rect": {
+          "left": 553.13,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 308.87,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "الموعد والمرافق في مكان واحد",
+        "message": "<p> \"الموعد والمرافق في مكان واحد\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 34.201,
+        "lastSeen": 43.973,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          34.201,
+          43.973
+        ]
+      },
+      {
+        "selector": "#readings-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/readings.html",
+        "bbox": {
+          "x": 913.86,
+          "y": 91.5,
+          "width": 28.3,
+          "height": 81
+        },
+        "time": 53.745,
+        "rect": {
+          "left": 913.86,
+          "top": 91.5,
+          "right": 942.16,
+          "bottom": 172.5,
+          "width": 28.3,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٤",
+        "message": "<div> \"٤\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 53.745,
+        "lastSeen": 53.745,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          53.745
+        ]
+      },
+      {
+        "selector": "#readings-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/readings.html",
+        "bbox": {
+          "x": 361.11,
+          "y": 71.5,
+          "width": 500.89,
+          "height": 72
+        },
+        "time": 53.745,
+        "rect": {
+          "left": 361.11,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 500.89,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "تسجيل القياسات ومتابعتها",
+        "message": "<h1> \"تسجيل القياسات ومتابعتها\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 53.745,
+        "lastSeen": 53.745,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          53.745
+        ]
+      },
+      {
+        "selector": "#readings-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/readings.html",
+        "bbox": {
+          "x": 547.33,
+          "y": 145.69,
+          "width": 314.67,
+          "height": 42
+        },
+        "time": 53.745,
+        "rect": {
+          "left": 547.33,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 314.67,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "قراءات الضغط والسكر وسجلها",
+        "message": "<p> \"قراءات الضغط والسكر وسجلها\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 53.745,
+        "lastSeen": 53.745,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          53.745
+        ]
+      },
+      {
+        "selector": "#visits-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/visits.html",
+        "bbox": {
+          "x": 912.75,
+          "y": 91.5,
+          "width": 30.52,
+          "height": 81
+        },
+        "time": 63.517,
+        "rect": {
+          "left": 912.75,
+          "top": 91.5,
+          "right": 943.27,
+          "bottom": 172.5,
+          "width": 30.52,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٥",
+        "message": "<div> \"٥\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 63.517,
+        "lastSeen": 73.288,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          63.517,
+          73.288
+        ]
+      },
+      {
+        "selector": "#visits-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/visits.html",
+        "bbox": {
+          "x": 602.84,
+          "y": 71.5,
+          "width": 259.16,
+          "height": 72
+        },
+        "time": 63.517,
+        "rect": {
+          "left": 602.84,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 259.16,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "توثيق الزيارات",
+        "message": "<h1> \"توثيق الزيارات\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 63.517,
+        "lastSeen": 73.288,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          63.517,
+          73.288
+        ]
+      },
+      {
+        "selector": "#visits-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/visits.html",
+        "bbox": {
+          "x": 518.41,
+          "y": 145.69,
+          "width": 343.59,
+          "height": 42
+        },
+        "time": 63.517,
+        "rect": {
+          "left": 518.41,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 343.59,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "ملاحظات الزيارة والمذكرة الصوتية",
+        "message": "<p> \"ملاحظات الزيارة والمذكرة الصوتية\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 63.517,
+        "lastSeen": 73.288,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          63.517,
+          73.288
+        ]
+      },
+      {
+        "selector": "#pdf-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/pdf.html",
+        "bbox": {
+          "x": 914.28,
+          "y": 91.5,
+          "width": 27.44,
+          "height": 81
+        },
+        "time": 83.06,
+        "rect": {
+          "left": 914.28,
+          "top": 91.5,
+          "right": 941.72,
+          "bottom": 172.5,
+          "width": 27.44,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٦",
+        "message": "<div> \"٦\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 83.06,
+        "lastSeen": 83.06,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          83.06
+        ]
+      },
+      {
+        "selector": "#pdf-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/pdf.html",
+        "bbox": {
+          "x": 495.38,
+          "y": 71.5,
+          "width": 366.62,
+          "height": 72
+        },
+        "time": 83.06,
+        "rect": {
+          "left": 495.38,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 366.62,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "تصدير سجل الرعاية",
+        "message": "<h1> \"تصدير سجل الرعاية\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 83.06,
+        "lastSeen": 83.06,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          83.06
+        ]
+      },
+      {
+        "selector": "#pdf-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/pdf.html",
+        "bbox": {
+          "x": 554.08,
+          "y": 145.69,
+          "width": 307.92,
+          "height": 42
+        },
+        "time": 83.06,
+        "rect": {
+          "left": 554.08,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 307.92,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "اختيار محتوى التقرير ومشاركته",
+        "message": "<p> \"اختيار محتوى التقرير ومشاركته\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 83.06,
+        "lastSeen": 83.06,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          83.06
+        ]
+      },
+      {
+        "selector": "#circles-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/circles.html",
+        "bbox": {
+          "x": 913.27,
+          "y": 91.5,
+          "width": 29.48,
+          "height": 81
+        },
+        "time": 92.832,
+        "rect": {
+          "left": 913.27,
+          "top": 91.5,
+          "right": 942.75,
+          "bottom": 172.5,
+          "width": 29.48,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٧",
+        "message": "<div> \"٧\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 92.832,
+        "lastSeen": 92.832,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          92.832
+        ]
+      },
+      {
+        "selector": "#circles-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/circles.html",
+        "bbox": {
+          "x": 542.84,
+          "y": 71.5,
+          "width": 319.16,
+          "height": 72
+        },
+        "time": 92.832,
+        "rect": {
+          "left": 542.84,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 319.16,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "إدارة دوائر الرعاية",
+        "message": "<h1> \"إدارة دوائر الرعاية\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 92.832,
+        "lastSeen": 92.832,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          92.832
+        ]
+      },
+      {
+        "selector": "#circles-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/circles.html",
+        "bbox": {
+          "x": 526.36,
+          "y": 145.69,
+          "width": 335.64,
+          "height": 42
+        },
+        "time": 92.832,
+        "rect": {
+          "left": 526.36,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 335.64,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "أعضاء الدائرة والتبديل بين الدوائر",
+        "message": "<p> \"أعضاء الدائرة والتبديل بين الدوائر\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 92.832,
+        "lastSeen": 92.832,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          92.832
+        ]
+      },
+      {
+        "selector": "#profile-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/profile.html",
+        "bbox": {
+          "x": 913.27,
+          "y": 91.5,
+          "width": 29.48,
+          "height": 81
+        },
+        "time": 102.604,
+        "rect": {
+          "left": 913.27,
+          "top": 91.5,
+          "right": 942.75,
+          "bottom": 172.5,
+          "width": 29.48,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "٨",
+        "message": "<div> \"٨\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 102.604,
+        "lastSeen": 102.604,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          102.604
+        ]
+      },
+      {
+        "selector": "#profile-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/profile.html",
+        "bbox": {
+          "x": 622.05,
+          "y": 71.5,
+          "width": 239.95,
+          "height": 72
+        },
+        "time": 102.604,
+        "rect": {
+          "left": 622.05,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 239.95,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "الملف الطبي",
+        "message": "<h1> \"الملف الطبي\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 102.604,
+        "lastSeen": 102.604,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          102.604
+        ]
+      },
+      {
+        "selector": "#profile-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/profile.html",
+        "bbox": {
+          "x": 431.47,
+          "y": 145.69,
+          "width": 430.53,
+          "height": 42
+        },
+        "time": 102.604,
+        "rect": {
+          "left": 431.47,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 430.53,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "المعلومات الصحية وجهات اتصال الطوارئ",
+        "message": "<p> \"المعلومات الصحية وجهات اتصال الطوارئ\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 102.604,
+        "lastSeen": 102.604,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          102.604
+        ]
+      },
+      {
+        "selector": "#notifications-heading > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/notifications.html",
+        "bbox": {
+          "x": 912.42,
+          "y": 91.5,
+          "width": 31.17,
+          "height": 81
+        },
+        "time": 112.375,
+        "rect": {
+          "left": 912.42,
+          "top": 91.5,
+          "right": 943.59,
+          "bottom": 172.5,
+          "width": 31.17,
+          "height": 81
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "١٠",
+        "message": "<div> \"١٠\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 112.375,
+        "lastSeen": 122.147,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          112.375,
+          122.147
+        ]
+      },
+      {
+        "selector": "#notifications-heading > div:nth-of-type(2) > h1:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "title"
+        },
+        "sourceFile": "compositions/notifications.html",
+        "bbox": {
+          "x": 500.8,
+          "y": 71.5,
+          "width": 361.2,
+          "height": 72
+        },
+        "time": 112.375,
+        "rect": {
+          "left": 500.8,
+          "top": 71.5,
+          "right": 862,
+          "bottom": 143.5,
+          "width": 361.2,
+          "height": 72
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "التحكم في التنبيهات",
+        "message": "<h1> \"التحكم في التنبيهات\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 112.375,
+        "lastSeen": 122.147,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          112.375,
+          122.147
+        ]
+      },
+      {
+        "selector": "#notifications-heading > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {
+          "data-var-text": "subtitle"
+        },
+        "sourceFile": "compositions/notifications.html",
+        "bbox": {
+          "x": 552.38,
+          "y": 145.69,
+          "width": 309.62,
+          "height": 42
+        },
+        "time": 112.375,
+        "rect": {
+          "left": 552.38,
+          "top": 145.69,
+          "right": 862,
+          "bottom": 187.69,
+          "width": 309.62,
+          "height": 42
+        },
+        "code": "outside_safe_zone",
+        "severity": "warning",
+        "text": "إعداد التنبيهات لكل دائرة رعاية",
+        "message": "<p> \"إعداد التنبيهات لكل دائرة رعاية\" is outside the safe area: TikTok (top edge), Instagram Reels (top edge), YouTube Shorts (top edge).",
+        "fixHint": "Move the text inside the safe area, or mark text meant to sit there with data-layout-allow-safe-zone.",
+        "firstSeen": 112.375,
+        "lastSeen": 122.147,
+        "occurrences": 2,
+        "heldMs": 0,
+        "times": [
+          112.375,
+          122.147
+        ]
+      }
+    ],
+    "duration": 127.033,
+    "samples": [
+      4.886,
+      14.658,
+      24.429,
+      34.201,
+      43.973,
+      53.745,
+      63.517,
+      73.288,
+      83.06,
+      92.832,
+      102.604,
+      112.375,
+      122.147
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 27,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      4.886,
+      34.201,
+      63.517,
+      92.832,
+      122.147
+    ],
+    "checked": 15,
+    "passed": 15
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "step": 0.2120000000000033,
+    "samples": 599
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": true,
+    "files": [
+      ".hyperframes\\artifacts\\snapshots\\66f731a6-7c56-4821-9bb2-97b0a6c86ede\\frame-00-at-4.9s.png",
+      ".hyperframes\\artifacts\\snapshots\\66f731a6-7c56-4821-9bb2-97b0a6c86ede\\frame-01-at-34.2s.png",
+      ".hyperframes\\artifacts\\snapshots\\66f731a6-7c56-4821-9bb2-97b0a6c86ede\\frame-02-at-63.5s.png",
+      ".hyperframes\\artifacts\\snapshots\\66f731a6-7c56-4821-9bb2-97b0a6c86ede\\frame-03-at-92.8s.png",
+      ".hyperframes\\artifacts\\snapshots\\66f731a6-7c56-4821-9bb2-97b0a6c86ede\\frame-04-at-122.1s.png"
+    ],
+    "times": [
+      4.886,
+      34.201,
+      63.517,
+      92.832,
+      122.147
+    ],
+    "findingFiles": []
+  }
+}

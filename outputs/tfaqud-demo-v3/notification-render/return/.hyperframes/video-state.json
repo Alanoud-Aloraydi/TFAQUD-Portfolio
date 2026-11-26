@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "historyId": "a80d3226-949d-4c67-ada6-60a109aefd52",
+  "currentRevision": null,
+  "pendingChanges": false,
+  "files": {
+    "assets/fonts/IBMPlexSansArabic-Bold.ttf": {
+      "hash": "1cbe13285dac4ffc05c204b13e8c609242ccc2c7c846bdb7dae81feb926c26b6",
+      "content": "C:\\Users\\alano\\.cache\\hyperframes\\history\\a80d3226-949d-4c67-ada6-60a109aefd52\\blobs\\1c\\1cbe13285dac4ffc05c204b13e8c609242ccc2c7c846bdb7dae81feb926c26b6"
+    },
+    "assets/fonts/IBMPlexSansArabic-Regular.ttf": {
+      "hash": "2585d0456267a5313eaa9c4232383250c7033fb168a3f707f7305aea86ba2225",
+      "content": "C:\\Users\\alano\\.cache\\hyperframes\\history\\a80d3226-949d-4c67-ada6-60a109aefd52\\blobs\\25\\2585d0456267a5313eaa9c4232383250c7033fb168a3f707f7305aea86ba2225"
+    },
+    "assets/fonts/IBMPlexSansArabic-SemiBold.ttf": {
+      "hash": "c225a5a2908ba03f859ceecf618df1b4280a499c8d8ef65d505d0146b36aa35a",
+      "content": "C:\\Users\\alano\\.cache\\hyperframes\\history\\a80d3226-949d-4c67-ada6-60a109aefd52\\blobs\\c2\\c225a5a2908ba03f859ceecf618df1b4280a499c8d8ef65d505d0146b36aa35a"
+    },
+    "assets/notification-logo.png": {
+      "hash": "0a64e9ad3e9bae038766eb0847c7d2efe2766038e17b9eca008df67b9a7649ce",
+      "content": "C:\\Users\\alano\\.cache\\hyperframes\\history\\a80d3226-949d-4c67-ada6-60a109aefd52\\blobs\\0a\\0a64e9ad3e9bae038766eb0847c7d2efe2766038e17b9eca008df67b9a7649ce"
+    },
+    "compositions/reminder-return.html": {
+      "hash": "de6ffdbcba82b5843f4c5c26777db6d7726536096d6cd3489b76514ffb2d6229",
+      "content": "C:\\Users\\alano\\.cache\\hyperframes\\history\\a80d3226-949d-4c67-ada6-60a109aefd52\\blobs\\de\\de6ffdbcba82b5843f4c5c26777db6d7726536096d6cd3489b76514ffb2d6229"
+    },
+    "index.html": {
+      "hash": "334f8faac8be9f7080b1ae409ee44d4526aec3caef24a42252e8d5ae2cdca9b1",
+      "content": "C:\\Users\\alano\\.cache\\hyperframes\\history\\a80d3226-949d-4c67-ada6-60a109aefd52\\blobs\\33\\334f8faac8be9f7080b1ae409ee44d4526aec3caef24a42252e8d5ae2cdca9b1"
+    }
+  },
+  "revisions": {},
+  "checks": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "de965d98-a1eb-462c-ae67-7d6d76a00aaa",
+      "completedAt": 1795470739760,
+      "output": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\review\\notification-only\\return.mp4",
+      "status": "completed",
+      "revision": null
+    },
+    "retainedRevisions": []
+  },
+  "pendingArtifactCleanup": []
+}

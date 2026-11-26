@@ -1,0 +1,789 @@
+{
+  "duration": 190.833,
+  "fps": 30,
+  "sequence_preserved": true,
+  "authorized_replacement": "Earlier export footage in the export position only",
+  "notification_chimes": [
+    0.08,
+    183.18
+  ],
+  "music": false,
+  "notification_cards_only": {
+    "notification": {
+      "source": "01",
+      "frame_seconds": 1.0,
+      "crop": "crop=360:70:12:626",
+      "hold_seconds": 2.6
+    },
+    "reminder-return": {
+      "source": "03",
+      "frame_seconds": 0.15,
+      "crop": "crop=360:70:12:662",
+      "hold_seconds": 1.4
+    }
+  },
+  "chapters": [
+    {
+      "id": "notification",
+      "number": 1,
+      "category": "تنبيه الجرعة",
+      "line1": "حين يحين",
+      "line2": "موعد الجرعة",
+      "description": "تنبيه يفتح المهمة، وتأكيد يحفظ الاستجابة",
+      "start": 0,
+      "duration": 8.467,
+      "cuts": [
+        {
+          "source": "01",
+          "source_in": 0.15,
+          "source_out": 2.75,
+          "speed": 1,
+          "start": 0,
+          "duration": 2.6,
+          "isolate_pdf": false
+        },
+        {
+          "source": "01",
+          "source_in": 6.8,
+          "source_out": 11.75,
+          "speed": 1.15,
+          "start": 2.6,
+          "duration": 4.3,
+          "isolate_pdf": false
+        },
+        {
+          "source": "01",
+          "source_in": 12.0,
+          "source_out": 13.55,
+          "speed": 1,
+          "start": 6.9,
+          "duration": 1.5666666666666667,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "circle",
+      "number": 2,
+      "category": "إنشاء دائرة الرعاية",
+      "line1": "رعايتك تبدأ",
+      "line2": "بدائرة واضحة",
+      "description": "أنشئ دائرتك وأكمل البيانات الأساسية",
+      "start": 8.467,
+      "duration": 9.1,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 7,
+          "source_out": 9.3,
+          "speed": 1,
+          "start": 8.467,
+          "duration": 2.3,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 11.4,
+          "source_out": 15.9,
+          "speed": 1.4,
+          "start": 10.767,
+          "duration": 3.2,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 18.5,
+          "source_out": 22.8,
+          "speed": 1.2,
+          "start": 13.967,
+          "duration": 3.6,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "profile",
+      "number": 3,
+      "category": "الملف الطبي",
+      "line1": "ملفك الطبي،",
+      "line2": "واضح ومحدّث",
+      "description": "فصيلة الدم والحالات المزمنة والحساسيات",
+      "start": 17.567,
+      "duration": 8.733,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 24.7,
+          "source_out": 28.2,
+          "speed": 1.5,
+          "start": 17.567,
+          "duration": 2.3333333333333335,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 30.4,
+          "source_out": 33.6,
+          "speed": 1.3,
+          "start": 19.9,
+          "duration": 2.466666666666667,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 36.7,
+          "source_out": 41.8,
+          "speed": 1.3,
+          "start": 22.367,
+          "duration": 3.933333333333333,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "medicine",
+      "number": 4,
+      "category": "جدولة الدواء",
+      "line1": "من اسم الدواء",
+      "line2": "إلى موعد الجرعة",
+      "description": "الجرعة والتكرار والتنبيه ضمن خطة واحدة",
+      "start": 26.3,
+      "duration": 16.633,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 52,
+          "source_out": 54.6,
+          "speed": 1.5,
+          "start": 26.3,
+          "duration": 1.7333333333333334,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 56.7,
+          "source_out": 60.7,
+          "speed": 1.5,
+          "start": 28.033,
+          "duration": 2.6666666666666665,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 63.4,
+          "source_out": 65.9,
+          "speed": 1.3,
+          "start": 30.7,
+          "duration": 1.9333333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 67.3,
+          "source_out": 73.5,
+          "speed": 1.3,
+          "start": 32.633,
+          "duration": 4.766666666666667,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 76.2,
+          "source_out": 83.4,
+          "speed": 1.3,
+          "start": 37.4,
+          "duration": 5.533333333333333,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "measurement-plan",
+      "number": 5,
+      "category": "خطة القياس",
+      "line1": "موعد للقياس،",
+      "line2": "ونطاق للمقارنة",
+      "description": "اضبط الجدول والتكرار والنطاق المحدّد",
+      "start": 42.933,
+      "duration": 14.8,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 86.1,
+          "source_out": 89.8,
+          "speed": 1.5,
+          "start": 42.933,
+          "duration": 2.466666666666667,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 94.1,
+          "source_out": 98.6,
+          "speed": 1.5,
+          "start": 45.4,
+          "duration": 3.0,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 104.3,
+          "source_out": 112.2,
+          "speed": 1.3,
+          "start": 48.4,
+          "duration": 6.066666666666666,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 116.5,
+          "source_out": 120.4,
+          "speed": 1.2,
+          "start": 54.467,
+          "duration": 3.2666666666666666,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "first-reading",
+      "number": 6,
+      "category": "تسجيل القراءة",
+      "line1": "تُحفظ القراءة،",
+      "line2": "ويبدأ سجلّها",
+      "description": "النتيجة محفوظة مع وقت القياس وسياقه",
+      "start": 57.733,
+      "duration": 11.433,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 132.3,
+          "source_out": 135.2,
+          "speed": 1.5,
+          "start": 57.733,
+          "duration": 1.9333333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 139.9,
+          "source_out": 143.3,
+          "speed": 1.4,
+          "start": 59.667,
+          "duration": 2.433333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 146,
+          "source_out": 155.2,
+          "speed": 1.3,
+          "start": 62.1,
+          "duration": 7.066666666666666,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "appointment",
+      "number": 7,
+      "category": "تنظيم المواعيد",
+      "line1": "كل موعد،",
+      "line2": "بتفاصيله ومرافقه",
+      "description": "المكان والتذكير والمرافق قبل الزيارة",
+      "start": 69.167,
+      "duration": 15.067,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 161,
+          "source_out": 164.8,
+          "speed": 1.4,
+          "start": 69.167,
+          "duration": 2.7,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 170.7,
+          "source_out": 173.6,
+          "speed": 1.4,
+          "start": 71.867,
+          "duration": 2.066666666666667,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 183.8,
+          "source_out": 186.3,
+          "speed": 1.4,
+          "start": 73.933,
+          "duration": 1.8,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 193.1,
+          "source_out": 201.7,
+          "speed": 1.5,
+          "start": 75.733,
+          "duration": 5.733333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 204.6,
+          "source_out": 207.9,
+          "speed": 1.2,
+          "start": 81.467,
+          "duration": 2.7666666666666666,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "extra-dose",
+      "number": 8,
+      "category": "تسجيل جرعة إضافية",
+      "line1": "جرعة خارج الجدول؟",
+      "line2": "لها سجل أيضًا",
+      "description": "احفظ الدواء والكمية ووقت أخذ الجرعة",
+      "start": 84.233,
+      "duration": 6.6,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 210.6,
+          "source_out": 219.2,
+          "speed": 1.3,
+          "start": 84.233,
+          "duration": 6.6,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "quick-reading",
+      "number": 9,
+      "category": "قراءة عند الحاجة",
+      "line1": "قراءة جديدة",
+      "line2": "في سجلّك الصحي",
+      "description": "أدخل النتيجة واحفظها بوقتها",
+      "start": 90.833,
+      "duration": 10.8,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 221.5,
+          "source_out": 224,
+          "speed": 1.3,
+          "start": 90.833,
+          "duration": 1.9333333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 245.2,
+          "source_out": 249.2,
+          "speed": 1.4,
+          "start": 92.767,
+          "duration": 2.8666666666666667,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 252.4,
+          "source_out": 260.2,
+          "speed": 1.3,
+          "start": 95.633,
+          "duration": 6.0,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "number": 10,
+      "category": "مراجعة سجل القياسات",
+      "line1": "راجع التغيّر،",
+      "line2": "قراءة بعد أخرى",
+      "description": "قراءات محفوظة ورسم يوضح تغيّرها",
+      "start": 101.633,
+      "duration": 9.133,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 263,
+          "source_out": 275.8,
+          "speed": 1.4,
+          "start": 101.633,
+          "duration": 9.133333333333333,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "permissions",
+      "number": 11,
+      "category": "أعضاء الدائرة وصلاحياتهم",
+      "line1": "المشاركة في الرعاية",
+      "line2": "بصلاحيات واضحة",
+      "description": "حدّد ما يستطيع كل عضو تعديله",
+      "start": 110.767,
+      "duration": 5.6,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 278.7,
+          "source_out": 284.3,
+          "speed": 1,
+          "start": 110.767,
+          "duration": 5.6,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "number": 12,
+      "category": "تصدير سجل الرعاية",
+      "line1": "اختر ما تشاركه",
+      "line2": "من سجلّك الصحي",
+      "description": "مثال على تجهيز التقرير ومحتوى ملف PDF",
+      "start": 116.367,
+      "duration": 7.433,
+      "cuts": [
+        {
+          "source": "old",
+          "source_in": 135.0,
+          "source_out": 139.0,
+          "speed": 1.2,
+          "start": 116.367,
+          "duration": 3.3333333333333335,
+          "isolate_pdf": false
+        },
+        {
+          "source": "old",
+          "source_in": 140.2,
+          "source_out": 141.8,
+          "speed": 1,
+          "start": 119.7,
+          "duration": 1.6,
+          "isolate_pdf": false
+        },
+        {
+          "source": "old",
+          "source_in": 151.5,
+          "source_out": 154.0,
+          "speed": 1,
+          "start": 121.3,
+          "duration": 2.5,
+          "isolate_pdf": true
+        }
+      ]
+    },
+    {
+      "id": "switch-circle",
+      "number": 13,
+      "category": "التبديل بين الدوائر",
+      "line1": "كل مريض،",
+      "line2": "ودائرة رعايته",
+      "description": "انتقل بين الدوائر وتابع أعضاء كل مريض",
+      "start": 123.8,
+      "duration": 5.9,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 303.2,
+          "source_out": 305.0,
+          "speed": 1,
+          "start": 123.8,
+          "duration": 1.8,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 310.3,
+          "source_out": 314.8,
+          "speed": 1.1,
+          "start": 125.6,
+          "duration": 4.1,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "visit",
+      "number": 14,
+      "category": "ورقة الزيارة والمذكرة الصوتية",
+      "line1": "الزيارة لا تنتهي",
+      "line2": "عند الموعد",
+      "description": "ملاحظات ومذكرة صوتية للرجوع إليها",
+      "start": 129.7,
+      "duration": 10.9,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 319.4,
+          "source_out": 321.9,
+          "speed": 1,
+          "start": 129.7,
+          "duration": 2.5,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 324.7,
+          "source_out": 327,
+          "speed": 1.2,
+          "start": 132.2,
+          "duration": 1.9333333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 330.4,
+          "source_out": 338.8,
+          "speed": 1.3,
+          "start": 134.133,
+          "duration": 6.466666666666667,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "number": 15,
+      "category": "التنبيهات وتقويم الجوال",
+      "line1": "تذكيراتك،",
+      "line2": "على جوالك وتقويمك",
+      "description": "التحكم بالتنبيهات ومزامنة الدائرة",
+      "start": 140.6,
+      "duration": 4.7,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 343.0,
+          "source_out": 343.8,
+          "speed": 1,
+          "start": 140.6,
+          "duration": 0.8,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 346.3,
+          "source_out": 350.2,
+          "speed": 1,
+          "start": 141.4,
+          "duration": 3.9,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "emergency",
+      "number": 16,
+      "category": "بطاقة الطوارئ",
+      "line1": "بطاقة واحدة",
+      "line2": "للمعلومات الضرورية",
+      "description": "الأدوية والحساسيات وجهات اتصال الطوارئ",
+      "start": 145.3,
+      "duration": 4.467,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 364.3,
+          "source_out": 365.4,
+          "speed": 1,
+          "start": 145.3,
+          "duration": 1.1,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 367.3,
+          "source_out": 370.0,
+          "speed": 0.8,
+          "start": 146.4,
+          "duration": 3.3666666666666667,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "patient",
+      "number": 17,
+      "category": "الوضع المبسّط للمريض",
+      "line1": "جرعة مؤكّدة،",
+      "line2": "وقراءة محفوظة",
+      "description": "مهام واضحة وتأكيد بنجاح كل استجابة",
+      "start": 149.767,
+      "duration": 15.267,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 399.8,
+          "source_out": 402.2,
+          "speed": 1,
+          "start": 149.767,
+          "duration": 2.4,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 405,
+          "source_out": 409,
+          "speed": 1,
+          "start": 152.167,
+          "duration": 4.0,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 412.2,
+          "source_out": 415.2,
+          "speed": 1.2,
+          "start": 156.167,
+          "duration": 2.5,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 418.1,
+          "source_out": 420.1,
+          "speed": 1.3,
+          "start": 158.667,
+          "duration": 1.5333333333333334,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 423.5,
+          "source_out": 429.3,
+          "speed": 1.2,
+          "start": 160.2,
+          "duration": 4.833333333333333,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "snooze",
+      "number": 18,
+      "category": "تأجيل التذكير",
+      "line1": "ليس الآن؟",
+      "line2": "حدّد وقت التذكير",
+      "description": "اختر وقتًا آخر مع إبقاء المهمة ظاهرة",
+      "start": 165.033,
+      "duration": 7.133,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 434.6,
+          "source_out": 436.8,
+          "speed": 1.2,
+          "start": 165.033,
+          "duration": 1.8333333333333333,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 437.5,
+          "source_out": 440.5,
+          "speed": 1,
+          "start": 166.867,
+          "duration": 3.0,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 441.8,
+          "source_out": 444.1,
+          "speed": 1,
+          "start": 169.867,
+          "duration": 2.3,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "accessibility",
+      "number": 19,
+      "category": "إعدادات المريض",
+      "line1": "واجهة تتكيّف",
+      "line2": "مع احتياج المريض",
+      "description": "حجم الخط والتاريخ والتنبيهات من حسابك",
+      "start": 172.167,
+      "duration": 10.933,
+      "cuts": [
+        {
+          "source": "02",
+          "source_in": 447,
+          "source_out": 450.4,
+          "speed": 1.2,
+          "start": 172.167,
+          "duration": 2.8333333333333335,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 451.7,
+          "source_out": 454.5,
+          "speed": 1.4,
+          "start": 175.0,
+          "duration": 2.0,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 455.5,
+          "source_out": 460.2,
+          "speed": 1.3,
+          "start": 177.0,
+          "duration": 3.6,
+          "isolate_pdf": false
+        },
+        {
+          "source": "02",
+          "source_in": 462,
+          "source_out": 464.5,
+          "speed": 1,
+          "start": 180.6,
+          "duration": 2.5,
+          "isolate_pdf": false
+        }
+      ]
+    },
+    {
+      "id": "reminder-return",
+      "number": 20,
+      "category": "العودة من التنبيه",
+      "line1": "التذكير يعيدك",
+      "line2": "إلى المهمة",
+      "description": "من التنبيه إلى الجرعة مباشرة",
+      "start": 183.1,
+      "duration": 4.233,
+      "cuts": [
+        {
+          "source": "03",
+          "source_in": 0.15,
+          "source_out": 0.95,
+          "speed": 1,
+          "start": 183.1,
+          "duration": 0.8,
+          "isolate_pdf": false
+        },
+        {
+          "source": "03",
+          "source_in": 1.15,
+          "source_out": 4.6,
+          "speed": 1,
+          "start": 183.9,
+          "duration": 3.433333333333333,
+          "isolate_pdf": false
+        }
+      ]
+    }
+  ]
+}

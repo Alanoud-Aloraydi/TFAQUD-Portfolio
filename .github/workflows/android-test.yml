@@ -47,7 +47,7 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: app
@@ -116,6 +116,27 @@ jobs:
           name: tfaqud-android
           path: app/build/app/outputs/bundle/release/app-release.aab
           retention-days: 14
+
+      # The release app opened on an Android emulator: a crash on start
+      # fails the run here, before anything reaches the testers, and the
+      # crash log shows in this step.
+      - name: Build an APK for the emulator
+        run: flutter build apk --release
+
+      - name: Let the emulator use KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Open the app on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          working-directory: app
+          script: bash ../.github/scripts/smoke_android.sh
 
       # Google's own client library, not a third-party action.
       - name: Send it to Google Play internal testing

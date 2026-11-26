@@ -1,0 +1,69 @@
+◆  Capturing 6 frames at [0.5s, 2.5s, 2.7s, 183.2s, 183.85s, 184s] from edit
+[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (Intel)" renderer="ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x000046A8) Direct3D11 vs_5_0 ps_5_0, D3D11)")
+
+   Fonts: 3 loaded
+   Note: added an end-of-timeline frame at 190.58s. Short beats between your --at times may still be skipped — pass them explicitly.
+[hyperframes] snapshot: frame 1/7 at 0.5s
+[hyperframes] snapshot: frame 2/7 at 2.5s
+[hyperframes] snapshot: frame 3/7 at 2.7s
+[hyperframes] snapshot: frame 4/7 at 183.2s
+[hyperframes] snapshot: frame 5/7 at 183.85s
+[hyperframes] snapshot: frame 6/7 at 184s
+[hyperframes] snapshot: frame 7/7 at 190.583s
+   Revision: 2c8c8447-6945-4b75-b774-f5448078cf6a (recorded-revision)
+   State: C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\video-state.json
+
+◇  7 snapshots saved to C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-00-at-0.5s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-01-at-2.5s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-02-at-2.7s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-03-at-183.2s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-04-at-183.85s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-05-at-184s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\frame-06-at-190.583s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit\.hyperframes\artifacts\snapshots\2f4ecf0b-d407-412a-9366-04c7c162cf02\contact-sheet.jpg (grid view for AI review)
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-00-at-0.5s.png",
+      "time": 0.5
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-01-at-2.5s.png",
+      "time": 2.5
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-02-at-2.7s.png",
+      "time": 2.7
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-03-at-183.2s.png",
+      "time": 183.2
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-04-at-183.85s.png",
+      "time": 183.85
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-05-at-184s.png",
+      "time": 184
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\frame-06-at-190.583s.png",
+      "time": 190.583
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo-v3\\edit\\.hyperframes\\artifacts\\snapshots\\2f4ecf0b-d407-412a-9366-04c7c162cf02\\contact-sheet.jpg"
+  ],
+  "_meta": {
+    "version": "0.9.86",
+    "latestVersion": "0.9.86",
+    "updateAvailable": false,
+    "checkedAt": "2026-11-23T21:01:29.437Z",
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

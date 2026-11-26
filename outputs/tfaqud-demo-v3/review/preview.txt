@@ -1,0 +1,12 @@
+T  hyperframes preview
+
+  Project   edit
+  Studio    http://localhost:3003/#project/edit
+  Server    http://localhost:3003
+  Desktop   Keep editing by chatting with Framey in the HyperFrames desktop app → https://hyperframes.studio/studio/download?os=windows&src=cli
+
+  Running in the background. Log: C:\Users\alano\AppData\Local\hyperframes\previews\76d1429a30194b57.log
+  Changes reload automatically in the studio.
+
+  Stop with: hyperframes preview "C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo-v3\edit" --stop
+

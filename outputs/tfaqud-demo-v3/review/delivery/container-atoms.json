@@ -1,0 +1,22 @@
+[
+  {
+    "type": "ftyp",
+    "offset": 0,
+    "bytes": 32
+  },
+  {
+    "type": "moov",
+    "offset": 32,
+    "bytes": 166419
+  },
+  {
+    "type": "free",
+    "offset": 166451,
+    "bytes": 8
+  },
+  {
+    "type": "mdat",
+    "offset": 166459,
+    "bytes": 56171745
+  }
+]

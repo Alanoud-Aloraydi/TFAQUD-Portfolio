@@ -1,0 +1,7 @@
+{
+  "removed_entries": 31,
+  "removed_bytes": 406498576.0,
+  "free_bytes": 1346281472,
+  "scope_verified": true,
+  "note": "Split-Path inspection emitted nonterminating parameter errors during removal. All 31 literal targets independently revalidated within the exact intended cache root; all absent. No unrelated entries removed."
+}

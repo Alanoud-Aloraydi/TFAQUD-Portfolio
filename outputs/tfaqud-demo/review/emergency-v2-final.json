@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final\\frame-00-at-99.1s.png",
+      "time": 99.1
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final\\frame-01-at-100s.png",
+      "time": 100
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final\\frame-02-at-102s.png",
+      "time": 102
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final\\frame-03-at-104.5s.png",
+      "time": 104.5
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final\\frame-04-at-119.85s.png",
+      "time": 119.85
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\review\\emergency-v2-final\\contact-sheet.jpg"
+  ],
+  "_meta": {
+    "version": "0.9.86",
+    "latestVersion": "0.9.86",
+    "updateAvailable": false,
+    "checkedAt": "2026-11-23T18:59:28.153Z",
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

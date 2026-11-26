@@ -1,0 +1,941 @@
+{
+  "ok": true,
+  "outputDir": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73",
+  "frames": [
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-01-at-0.3s.png",
+      "time": 0.3,
+      "role": "beat",
+      "label": "intro"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-02-at-1.75s.png",
+      "time": 1.75,
+      "role": "beat",
+      "label": "intro mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-03-at-3.8s.png",
+      "time": 3.8,
+      "role": "beat",
+      "label": "daily"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-04-at-10.667s.png",
+      "time": 10.667,
+      "role": "beat",
+      "label": "daily mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-05-at-18.133s.png",
+      "time": 18.133,
+      "role": "beat",
+      "label": "medicines"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-06-at-24.316s.png",
+      "time": 24.316,
+      "role": "beat",
+      "label": "medicines mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-07-at-31.1s.png",
+      "time": 31.1,
+      "role": "beat",
+      "label": "appointments"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-08-at-37.5s.png",
+      "time": 37.5,
+      "role": "beat",
+      "label": "appointments mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-09-at-44.5s.png",
+      "time": 44.5,
+      "role": "beat",
+      "label": "readings"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-10-at-51.984s.png",
+      "time": 51.984,
+      "role": "beat",
+      "label": "readings mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-11-at-60.067s.png",
+      "time": 60.067,
+      "role": "beat",
+      "label": "visits"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-12-at-66.551s.png",
+      "time": 66.551,
+      "role": "beat",
+      "label": "visits mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-13-at-73.633s.png",
+      "time": 73.633,
+      "role": "beat",
+      "label": "pdf"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-14-at-79.783s.png",
+      "time": 79.783,
+      "role": "beat",
+      "label": "pdf mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-15-at-86.533s.png",
+      "time": 86.533,
+      "role": "beat",
+      "label": "circles"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-16-at-94.167s.png",
+      "time": 94.167,
+      "role": "beat",
+      "label": "circles mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-17-at-102.4s.png",
+      "time": 102.4,
+      "role": "beat",
+      "label": "profile"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-18-at-107.717s.png",
+      "time": 107.717,
+      "role": "beat",
+      "label": "profile mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-19-at-113.633s.png",
+      "time": 113.633,
+      "role": "beat",
+      "label": "emergency"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-20-at-116.333s.png",
+      "time": 116.333,
+      "role": "beat",
+      "label": "emergency mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-21-at-119.633s.png",
+      "time": 119.633,
+      "role": "beat",
+      "label": "notifications"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-22-at-124.983s.png",
+      "time": 124.983,
+      "role": "beat",
+      "label": "notifications mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-23-at-130.933s.png",
+      "time": 130.933,
+      "role": "beat",
+      "label": "outro"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-24-at-132.633s.png",
+      "time": 132.633,
+      "role": "beat",
+      "label": "outro mid"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-1-at-3.3s.png",
+      "time": 3.3,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-2-at-3.4s.png",
+      "time": 3.4,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-3-at-3.5s.png",
+      "time": 3.5,
+      "role": "seam",
+      "label": "cut intro -> daily"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-4-at-3.6s.png",
+      "time": 3.6,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-5-at-3.7s.png",
+      "time": 3.7,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-1-at-17.633s.png",
+      "time": 17.633,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-2-at-17.733s.png",
+      "time": 17.733,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-3-at-17.833s.png",
+      "time": 17.833,
+      "role": "seam",
+      "label": "cut daily -> medicines"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-4-at-17.933s.png",
+      "time": 17.933,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-5-at-18.033s.png",
+      "time": 18.033,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-1-at-30.6s.png",
+      "time": 30.6,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-2-at-30.7s.png",
+      "time": 30.7,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-3-at-30.8s.png",
+      "time": 30.8,
+      "role": "seam",
+      "label": "cut medicines -> appointments"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-4-at-30.9s.png",
+      "time": 30.9,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-5-at-31s.png",
+      "time": 31,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-1-at-44s.png",
+      "time": 44,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-2-at-44.1s.png",
+      "time": 44.1,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-3-at-44.2s.png",
+      "time": 44.2,
+      "role": "seam",
+      "label": "cut appointments -> readings"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-4-at-44.3s.png",
+      "time": 44.3,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-5-at-44.4s.png",
+      "time": 44.4,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-1-at-59.567s.png",
+      "time": 59.567,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-2-at-59.667s.png",
+      "time": 59.667,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-3-at-59.767s.png",
+      "time": 59.767,
+      "role": "seam",
+      "label": "cut readings -> visits"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-4-at-59.867s.png",
+      "time": 59.867,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-5-at-59.967s.png",
+      "time": 59.967,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-1-at-73.133s.png",
+      "time": 73.133,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-2-at-73.233s.png",
+      "time": 73.233,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-3-at-73.333s.png",
+      "time": 73.333,
+      "role": "seam",
+      "label": "cut visits -> pdf"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-4-at-73.433s.png",
+      "time": 73.433,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-5-at-73.533s.png",
+      "time": 73.533,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-1-at-86.033s.png",
+      "time": 86.033,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-2-at-86.133s.png",
+      "time": 86.133,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-3-at-86.233s.png",
+      "time": 86.233,
+      "role": "seam",
+      "label": "cut pdf -> circles"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-4-at-86.333s.png",
+      "time": 86.333,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-5-at-86.433s.png",
+      "time": 86.433,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-1-at-101.9s.png",
+      "time": 101.9,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-2-at-102s.png",
+      "time": 102,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-3-at-102.1s.png",
+      "time": 102.1,
+      "role": "seam",
+      "label": "cut circles -> profile"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-4-at-102.2s.png",
+      "time": 102.2,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-5-at-102.3s.png",
+      "time": 102.3,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-1-at-113.133s.png",
+      "time": 113.133,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-2-at-113.233s.png",
+      "time": 113.233,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-3-at-113.333s.png",
+      "time": 113.333,
+      "role": "seam",
+      "label": "cut profile -> emergency"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-4-at-113.433s.png",
+      "time": 113.433,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-5-at-113.533s.png",
+      "time": 113.533,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-1-at-119.133s.png",
+      "time": 119.133,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-2-at-119.233s.png",
+      "time": 119.233,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-3-at-119.333s.png",
+      "time": 119.333,
+      "role": "seam",
+      "label": "cut emergency -> notifications"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-4-at-119.433s.png",
+      "time": 119.433,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-5-at-119.533s.png",
+      "time": 119.533,
+      "role": "seam",
+      "label": "+0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-1-at-130.433s.png",
+      "time": 130.433,
+      "role": "seam",
+      "label": "cut -0.2"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-2-at-130.533s.png",
+      "time": 130.533,
+      "role": "seam",
+      "label": "-0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-3-at-130.633s.png",
+      "time": 130.633,
+      "role": "seam",
+      "label": "cut notifications -> outro"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-4-at-130.733s.png",
+      "time": 130.733,
+      "role": "seam",
+      "label": "+0.1"
+    },
+    {
+      "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-5-at-130.833s.png",
+      "time": 130.833,
+      "role": "seam",
+      "label": "+0.2"
+    }
+  ],
+  "contactSheets": [
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-beats-1.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-beats-2.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-01.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-02.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-03.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-04.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-05.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-06.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-07.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-08.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-09.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-10.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-11.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-phone-1.jpg",
+    "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-phone-2.jpg"
+  ],
+  "review": {
+    "window": [
+      0,
+      134.633
+    ],
+    "scenes": [
+      {
+        "id": "intro",
+        "start": 0,
+        "end": 3.5
+      },
+      {
+        "id": "daily",
+        "start": 3.5,
+        "end": 17.833
+      },
+      {
+        "id": "medicines",
+        "start": 17.833,
+        "end": 30.8
+      },
+      {
+        "id": "appointments",
+        "start": 30.8,
+        "end": 44.2
+      },
+      {
+        "id": "readings",
+        "start": 44.2,
+        "end": 59.767
+      },
+      {
+        "id": "visits",
+        "start": 59.767,
+        "end": 73.334
+      },
+      {
+        "id": "pdf",
+        "start": 73.333,
+        "end": 86.233
+      },
+      {
+        "id": "circles",
+        "start": 86.233,
+        "end": 102.1
+      },
+      {
+        "id": "profile",
+        "start": 102.1,
+        "end": 113.333
+      },
+      {
+        "id": "emergency",
+        "start": 113.333,
+        "end": 119.333
+      },
+      {
+        "id": "notifications",
+        "start": 119.333,
+        "end": 130.633
+      },
+      {
+        "id": "outro",
+        "start": 130.633,
+        "end": 134.633
+      }
+    ],
+    "beats": [
+      {
+        "time": 0.3,
+        "label": "intro",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-01-at-0.3s.png"
+      },
+      {
+        "time": 1.75,
+        "label": "intro mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-02-at-1.75s.png"
+      },
+      {
+        "time": 3.8,
+        "label": "daily",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-03-at-3.8s.png"
+      },
+      {
+        "time": 10.667,
+        "label": "daily mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-04-at-10.667s.png"
+      },
+      {
+        "time": 18.133,
+        "label": "medicines",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-05-at-18.133s.png"
+      },
+      {
+        "time": 24.316,
+        "label": "medicines mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-06-at-24.316s.png"
+      },
+      {
+        "time": 31.1,
+        "label": "appointments",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-07-at-31.1s.png"
+      },
+      {
+        "time": 37.5,
+        "label": "appointments mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-08-at-37.5s.png"
+      },
+      {
+        "time": 44.5,
+        "label": "readings",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-09-at-44.5s.png"
+      },
+      {
+        "time": 51.984,
+        "label": "readings mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-10-at-51.984s.png"
+      },
+      {
+        "time": 60.067,
+        "label": "visits",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-11-at-60.067s.png"
+      },
+      {
+        "time": 66.551,
+        "label": "visits mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-12-at-66.551s.png"
+      },
+      {
+        "time": 73.633,
+        "label": "pdf",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-13-at-73.633s.png"
+      },
+      {
+        "time": 79.783,
+        "label": "pdf mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-14-at-79.783s.png"
+      },
+      {
+        "time": 86.533,
+        "label": "circles",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-15-at-86.533s.png"
+      },
+      {
+        "time": 94.167,
+        "label": "circles mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-16-at-94.167s.png"
+      },
+      {
+        "time": 102.4,
+        "label": "profile",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-17-at-102.4s.png"
+      },
+      {
+        "time": 107.717,
+        "label": "profile mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-18-at-107.717s.png"
+      },
+      {
+        "time": 113.633,
+        "label": "emergency",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-19-at-113.633s.png"
+      },
+      {
+        "time": 116.333,
+        "label": "emergency mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-20-at-116.333s.png"
+      },
+      {
+        "time": 119.633,
+        "label": "notifications",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-21-at-119.633s.png"
+      },
+      {
+        "time": 124.983,
+        "label": "notifications mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-22-at-124.983s.png"
+      },
+      {
+        "time": 130.933,
+        "label": "outro",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-23-at-130.933s.png"
+      },
+      {
+        "time": 132.633,
+        "label": "outro mid",
+        "path": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\beat-24-at-132.633s.png"
+      }
+    ],
+    "seams": [
+      {
+        "time": 3.5,
+        "from": "intro",
+        "to": "daily",
+        "times": [
+          3.3,
+          3.4,
+          3.5,
+          3.6,
+          3.7
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-1-at-3.3s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-2-at-3.4s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-3-at-3.5s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-4-at-3.6s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-01-5-at-3.7s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-01.jpg"
+      },
+      {
+        "time": 17.833,
+        "from": "daily",
+        "to": "medicines",
+        "times": [
+          17.633,
+          17.733,
+          17.833,
+          17.933,
+          18.033
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-1-at-17.633s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-2-at-17.733s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-3-at-17.833s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-4-at-17.933s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-02-5-at-18.033s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-02.jpg"
+      },
+      {
+        "time": 30.8,
+        "from": "medicines",
+        "to": "appointments",
+        "times": [
+          30.6,
+          30.7,
+          30.8,
+          30.9,
+          31
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-1-at-30.6s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-2-at-30.7s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-3-at-30.8s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-4-at-30.9s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-03-5-at-31s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-03.jpg"
+      },
+      {
+        "time": 44.2,
+        "from": "appointments",
+        "to": "readings",
+        "times": [
+          44,
+          44.1,
+          44.2,
+          44.3,
+          44.4
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-1-at-44s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-2-at-44.1s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-3-at-44.2s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-4-at-44.3s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-04-5-at-44.4s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-04.jpg"
+      },
+      {
+        "time": 59.767,
+        "from": "readings",
+        "to": "visits",
+        "times": [
+          59.567,
+          59.667,
+          59.767,
+          59.867,
+          59.967
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-1-at-59.567s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-2-at-59.667s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-3-at-59.767s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-4-at-59.867s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-05-5-at-59.967s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-05.jpg"
+      },
+      {
+        "time": 73.333,
+        "from": "visits",
+        "to": "pdf",
+        "times": [
+          73.133,
+          73.233,
+          73.333,
+          73.433,
+          73.533
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-1-at-73.133s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-2-at-73.233s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-3-at-73.333s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-4-at-73.433s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-06-5-at-73.533s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-06.jpg"
+      },
+      {
+        "time": 86.233,
+        "from": "pdf",
+        "to": "circles",
+        "times": [
+          86.033,
+          86.133,
+          86.233,
+          86.333,
+          86.433
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-1-at-86.033s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-2-at-86.133s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-3-at-86.233s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-4-at-86.333s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-07-5-at-86.433s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-07.jpg"
+      },
+      {
+        "time": 102.1,
+        "from": "circles",
+        "to": "profile",
+        "times": [
+          101.9,
+          102,
+          102.1,
+          102.2,
+          102.3
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-1-at-101.9s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-2-at-102s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-3-at-102.1s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-4-at-102.2s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-08-5-at-102.3s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-08.jpg"
+      },
+      {
+        "time": 113.333,
+        "from": "profile",
+        "to": "emergency",
+        "times": [
+          113.133,
+          113.233,
+          113.333,
+          113.433,
+          113.533
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-1-at-113.133s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-2-at-113.233s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-3-at-113.333s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-4-at-113.433s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-09-5-at-113.533s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-09.jpg"
+      },
+      {
+        "time": 119.333,
+        "from": "emergency",
+        "to": "notifications",
+        "times": [
+          119.133,
+          119.233,
+          119.333,
+          119.433,
+          119.533
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-1-at-119.133s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-2-at-119.233s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-3-at-119.333s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-4-at-119.433s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-10-5-at-119.533s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-10.jpg"
+      },
+      {
+        "time": 130.633,
+        "from": "notifications",
+        "to": "outro",
+        "times": [
+          130.433,
+          130.533,
+          130.633,
+          130.733,
+          130.833
+        ],
+        "paths": [
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-1-at-130.433s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-2-at-130.533s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-3-at-130.633s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-4-at-130.733s.png",
+          "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\seam-11-5-at-130.833s.png"
+        ],
+        "sheet": "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-11.jpg"
+      }
+    ],
+    "sheets": {
+      "beats": [
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-beats-1.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-beats-2.jpg"
+      ],
+      "seams": [
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-01.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-02.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-03.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-04.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-05.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-06.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-07.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-08.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-09.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-10.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-seam-11.jpg"
+      ],
+      "phone": [
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-phone-1.jpg",
+        "C:\\Users\\alano\\PycharmProjects\\TFAQUD-Portfolio\\outputs\\tfaqud-demo\\edit\\.hyperframes\\artifacts\\snapshots\\4f1cd535-641d-40d1-a425-8966b4d4ce73\\review-phone-2.jpg"
+      ]
+    },
+    "notes": []
+  },
+  "_meta": {
+    "version": "0.9.86",
+    "latestVersion": "0.9.86",
+    "updateAvailable": false,
+    "checkedAt": "2026-11-23T18:59:28.153Z",
+    "skillsOutdated": 9,
+    "skillsMissing": 0
+  }
+}

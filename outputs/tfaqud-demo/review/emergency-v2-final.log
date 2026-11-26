@@ -1,0 +1,20 @@
+◆  Capturing 4 frames at [99.1s, 100s, 102s, 104.5s] from edit
+[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (Intel)" renderer="ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x000046A8) Direct3D11 vs_5_0 ps_5_0, D3D11)")
+
+   Fonts: 3 loaded
+   Note: added an end-of-timeline frame at 119.85s. Short beats between your --at times may still be skipped — pass them explicitly.
+[hyperframes] snapshot: frame 1/5 at 99.1s
+[hyperframes] snapshot: frame 2/5 at 100s
+[hyperframes] snapshot: frame 3/5 at 102s
+[hyperframes] snapshot: frame 4/5 at 104.5s
+[hyperframes] snapshot: frame 5/5 at 119.85s
+   Revision: 555c9b14-c832-4abf-b553-02f5bea0fc68 (recorded-revision)
+   State: C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\edit\.hyperframes\video-state.json
+
+◇  5 snapshots saved to C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final\frame-00-at-99.1s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final\frame-01-at-100s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final\frame-02-at-102s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final\frame-03-at-104.5s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final\frame-04-at-119.85s.png
+   C:\Users\alano\PycharmProjects\TFAQUD-Portfolio\outputs\tfaqud-demo\review\emergency-v2-final\contact-sheet.jpg (grid view for AI review)
