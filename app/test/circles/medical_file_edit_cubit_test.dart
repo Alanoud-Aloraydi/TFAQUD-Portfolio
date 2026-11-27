@@ -134,8 +134,6 @@ void main() {
           city: 'بريدة',
           firstName: 'نورة',
           lastName: 'العتيبي',
-          latitude: 26.33,
-          longitude: 43.97,
           timeZone: 'Asia/Riyadh',
         ),
       );
@@ -180,19 +178,6 @@ void main() {
       cubit.cityChanged('جدة');
 
       expect(cubit.state.timeZone, 'Asia/Riyadh');
-    });
-
-    test('a new city drops the old coordinates', () async {
-      cubit.cityChanged('الرياض');
-
-      expect(await cubit.save(), isTrue);
-
-      final PatientUpdate sent = circles.patientUpdates.single;
-      expect(sent.city, 'الرياض');
-      expect(sent.latitude, isNull);
-      expect(sent.longitude, isNull);
-      expect(cubit.state.file!.patient.latitude, isNull);
-      expect(cubit.state.file!.patient.longitude, isNull);
     });
 
     test('new names are sent trimmed', () async {

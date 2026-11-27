@@ -5,7 +5,7 @@ appointments."""
 from datetime import timedelta
 
 from app.care import CareService
-from app.demo_data.story import EVERY_DAY, RIYADH_POINT, dose_at, medicine
+from app.demo_data.story import EVERY_DAY, dose_at, medicine
 from app.measurements.inputs import ReadingRequest
 from app.measurements.service import MeasurementService
 from app.medical import MedicalService
@@ -42,7 +42,6 @@ class DemoUncle:
             request.id,
             khaled.birth_date,
             khaled.city,
-            *RIYADH_POINT,
             name="صحتي",
         )
         invitation = care.invite_manager(

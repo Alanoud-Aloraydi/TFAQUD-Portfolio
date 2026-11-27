@@ -10,7 +10,8 @@ abstract class ProfileRepository {
   /// Saves the full name, the display name other circle members see, and
   /// the birth date and city when given (onboarding gives them, so a circle
   /// for the person's own care needs only its name). A null birth date or
-  /// city keeps the saved one.
+  /// city keeps the saved one. A new city carries its zone to the circle
+  /// the account is the patient of; the weather on «اليوم» follows it.
   Future<Result<void, Failure>> saveProfile({
     required String firstName,
     required String lastName,

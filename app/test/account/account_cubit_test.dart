@@ -53,7 +53,7 @@ class _Profile implements ProfileRepository {
   Result<void, Failure> result = const Success(null);
   final List<List<String>> saved = <List<String>>[];
 
-  /// The birth date and city sent with each save (null from the account page).
+  /// The birth date and city sent with each save (null when unchanged).
   final List<({DateTime? birthDate, String? city})> savedBasics =
       <({DateTime? birthDate, String? city})>[];
 
@@ -235,6 +235,24 @@ void main() {
       );
       cubit.messagesShown();
       expect(cubit.state.noticeKey, isNull);
+    });
+
+    test('a new city is sent and shown; the same city again is not', () async {
+      Future<void> save() => cubit.saveProfile(
+        firstName: 'Reem',
+        lastName: 'Alahmadi',
+        displayName: 'Reem',
+        city: 'جدة',
+      );
+
+      await save();
+      expect(onboarding.savedBasics.last.city, 'جدة');
+      expect(cubit.state.account?.city, 'جدة');
+
+      // Sent again, it would reset the zone of the patient's circle.
+      await save();
+      expect(onboarding.savedBasics.last.city, isNull);
+      expect(cubit.state.account?.city, 'جدة');
     });
   });
 

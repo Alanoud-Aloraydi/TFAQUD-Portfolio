@@ -7,7 +7,6 @@ from uuid import UUID
 
 from sqlalchemy import delete, select
 
-from app.care.building import city_point
 from app.circles.leader import AREAS, patient_leads
 from app.errors import Conflict, Forbidden, NotFound, ValidationFailed
 from app.models import CareCircle, CareCircleManager
@@ -185,8 +184,6 @@ class CareCircleChanges:
         city: str,
         first_name: str | None = None,
         last_name: str | None = None,
-        latitude: float | None = None,
-        longitude: float | None = None,
         time_zone: str | None = None,
     ) -> CareCircle:
         """Let managers and the linked patient edit basic medical identity.
@@ -227,9 +224,6 @@ class CareCircleChanges:
         # Then the zone and the optional point on the circle, and the birth
         # date and city where the patient keeps them, checked together.
         circle.time_zone = self._zone_for(time_zone, circle.time_zone)
-        circle.latitude, circle.longitude = city_point(
-            city, latitude, longitude
-        )
         self._check_patient_basics(circle, birth_date, city)
         holder = (
             accounts[circle.account_id]

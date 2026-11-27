@@ -42,8 +42,6 @@ def test_simplified_patient_can_edit_own_profile(database, account):
         circle.id,
         BIRTH,
         "Buraidah",
-        latitude=26.35,
-        longitude=43.97,
     )
     assert saved.id == circle.id
     with Session(database) as session:

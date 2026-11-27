@@ -101,8 +101,6 @@ def complete(request_id):
             request_uuid,
             body.birth_date,
             body.city,
-            body.latitude,
-            body.longitude,
             name=body.name,
             time_zone=body.time_zone,
         )

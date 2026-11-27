@@ -77,8 +77,8 @@ Widget accountLegalCard(BuildContext context) => SettingsCard(
   ],
 );
 
-/// «بياناتي»: the name the app calls the person by, their full name, and the
-/// phone number the account signs in with.
+/// «بياناتي»: the name the app calls the person by, their full name, their
+/// city, and the phone number the account signs in with.
 Widget accountDataSection(BuildContext context, AccountSummary account) {
   return SettingsSection(
     title: context.tr('account.my_data'),
@@ -88,6 +88,8 @@ Widget accountDataSection(BuildContext context, AccountSummary account) {
         value: account.displayName,
       ),
       InfoRow(label: context.tr('account.full_name'), value: account.fullName),
+      if (account.city case final String city)
+        InfoRow(label: context.tr('circles.city'), value: city),
       InfoRow(
         label: context.tr('account.phone'),
         value: SaudiMobile.display(account.phoneNumber),

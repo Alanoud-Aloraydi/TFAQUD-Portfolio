@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// The weather now in the patient's city, from Apple Weather (WeatherKit)
+/// The weather now in the account's own city, from Apple Weather (WeatherKit)
 /// on the phone, with what Apple asks to show beside it: its mark and a
 /// link to its legal page.
 class PatientWeather extends Equatable {

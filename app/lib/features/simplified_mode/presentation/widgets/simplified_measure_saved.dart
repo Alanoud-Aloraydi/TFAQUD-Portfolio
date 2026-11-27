@@ -26,7 +26,8 @@ Future<void> saveSimplifiedMeasure(
 ) async {
   final SimplifiedReading? reading = simplifiedMeasureReading(form);
   if (reading == null || !reading.isValid) {
-    form.errorKey = simplifiedInvalidReadingKey(reading);
+    // The detailed mode's message for numbers it would refuse.
+    form.errorKey = 'measurements.invalid_reading';
     onChanged();
     return;
   }

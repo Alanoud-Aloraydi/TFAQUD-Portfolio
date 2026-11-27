@@ -77,12 +77,6 @@ SimplifiedReading? simplifiedMeasureReading(SimplifiedMeasureForm form) {
   );
 }
 
-/// Why a typed reading was refused, as a key in assets/translations.
-String simplifiedInvalidReadingKey(SimplifiedReading? reading) =>
-    reading?.kind == MeasurementKind.bp
-    ? 'simplified_mode.invalid_bp'
-    : 'measurements.invalid_reading';
-
 /// One typed measurement, read out as a single value: the number large and
 /// its unit, in a [SimplifiedMeasureFrame]. A [small] card is one of a blood
 /// pressure's two numbers, its name at the start and the number at the end.

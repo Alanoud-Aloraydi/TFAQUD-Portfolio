@@ -272,6 +272,8 @@ def test_the_names_alone_keep_the_saved_birth_date_and_city(client, sms):
         ({"birth_date": "2999-01-01"}, "invalid_birth_date"),
         ({"birth_date": "04/03/1990"}, "validation_error"),
         ({"city": "   "}, "validation_error"),
+        ({"city": "Riyadh", "time_zone": "Mars/Base"}, "invalid_time_zone"),
+        ({"time_zone": "Asia/Riyadh"}, "validation_error"),
     ],
 )
 def test_a_wrong_birth_date_or_city_is_refused(client, sms, change, code):

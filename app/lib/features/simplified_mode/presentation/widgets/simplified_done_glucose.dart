@@ -11,10 +11,11 @@ class SimplifiedDoneGlucose extends SimplifiedDoneMessage {
       context.tr('simplified_mode.done_glucose', args: <String>['$value']);
 
   @override
-  MeasurementVerdict? verdict(BuildContext context) => level == null
-      ? null
-      : MeasurementVerdict(
-          level!.label(context, MeasurementKind.glucose),
-          level!,
-        );
+  MeasurementVerdict? get verdict => switch (level) {
+    final MeasurementLevel level => (
+      kind: MeasurementKind.glucose,
+      level: level,
+    ),
+    null => null,
+  };
 }

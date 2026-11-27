@@ -14,6 +14,7 @@ import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_city.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_legal.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_card.dart';
@@ -26,9 +27,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// «حسابي»: the patient's name and number, the text size and reading,
-/// the calendar copy of appointments, the medical file, signing out and
-/// deleting the account. Needs an [AccountCubit] and an [AuthCubit].
+/// «حسابي»: the patient's name and number, their city, the text size and
+/// reading, the calendar copy of appointments, the medical file, signing
+/// out and deleting the account. Needs an [AccountCubit] and an [AuthCubit].
 class SimplifiedAccountScreen extends StatelessWidget {
   const SimplifiedAccountScreen({super.key});
 
@@ -103,8 +104,8 @@ Future<bool?> confirmSimplifiedDelete(BuildContext context) {
   );
 }
 
-/// Everything «حسابي» shows, in order: who the patient is, the text size
-/// and هجري or ميلادي, whether the phone's notifications are allowed, the
+/// Everything «حسابي» shows, in order: who the patient is, their city, the
+/// text size and هجري or ميلادي, whether the phone's notifications are allowed, the
 /// calendar copy, the medical file, the privacy policy and terms, signing
 /// out and deleting.
 List<Widget> simplifiedAccountRows(
@@ -114,9 +115,11 @@ List<Widget> simplifiedAccountRows(
 ) {
   final AccountSummary? account = state.account;
   return <Widget>[
-    if (account != null)
-      simplifiedAccountHeader(context, account)
-    else if (state.status == AccountStatus.loading)
+    if (account != null) ...<Widget>[
+      simplifiedAccountHeader(context, account),
+      SimplifiedSectionTitle(context.tr('simplified_mode.file.city')),
+      SimplifiedAccountCityCard(account: account),
+    ] else if (state.status == AccountStatus.loading)
       const LoadingNote(),
     SimplifiedSectionTitle(context.tr('simplified_mode.display')),
     const SimplifiedTextSizeCard(),

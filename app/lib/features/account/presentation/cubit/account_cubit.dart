@@ -69,14 +69,16 @@ mixin AccountDeleting on AccountScope, AccountDeleteRun {
       runDelete(state.deletion.copyWith(deleteLastManagedCircles: true));
 }
 
-/// Changing the names on the account.
+/// Changing the names and the city on the account.
 mixin AccountProfileSaving on AccountScope {
-  /// Saves the three names. Returns null when they were saved, and the key of
-  /// the message to show otherwise, so the sheet that asked can stay open.
+  /// Saves the three names, and [city] when it changed. Returns null when
+  /// they were saved, and the key of the message to show otherwise, so the
+  /// page that asked can stay open.
   Future<String?> saveProfile({
     required String firstName,
     required String lastName,
     required String displayName,
+    String? city,
   }) async {
     final AccountSummary? current = state.account;
     final String first = firstName.trim();
@@ -85,10 +87,14 @@ mixin AccountProfileSaving on AccountScope {
     if (current == null || first.isEmpty || last.isEmpty || display.isEmpty) {
       return 'common.field_required';
     }
+    // An unchanged city is not sent: it would set the zone of the circle
+    // the account is the patient of again, over one chosen on its file.
+    final String? newCity = city == current.city ? null : city;
     final result = await profile.saveProfile(
       firstName: first,
       lastName: last,
       displayName: display,
+      city: newCity,
     );
     if (isClosed) return null;
     return result.when(
@@ -102,14 +108,15 @@ mixin AccountProfileSaving on AccountScope {
               phoneNumber: current.phoneNumber,
               patientCircleId: current.patientCircleId,
               birthDate: current.birthDate,
-              city: current.city,
+              city: newCity ?? current.city,
               avatarCode: current.avatarCode,
             ),
             noticeKey: 'account.saved',
           ),
         );
         // The first letter of the display name is on the top bar of the home
-        // screen, which loads again.
+        // screen, and the weather of «اليوم» follows the city: the home
+        // screen loads again.
         home.notifyCirclesChanged();
         return null;
       },

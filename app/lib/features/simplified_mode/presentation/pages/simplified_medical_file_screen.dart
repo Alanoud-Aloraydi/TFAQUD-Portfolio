@@ -176,7 +176,7 @@ class SimplifiedDoneScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String saved = message.text(context);
-    return _screen(context, saved, message.verdict(context));
+    return _screen(context, saved, message.verdict);
   }
 
   Widget _screen(
@@ -261,27 +261,16 @@ class SimplifiedDoneContent extends StatelessWidget {
   }
 }
 
-/// What the saved reading means, in a word beside its mark.
+/// What the saved reading means: the detailed mode's level badge, in its
+/// colour and shape.
 class SimplifiedDoneVerdictRow extends StatelessWidget {
   const SimplifiedDoneVerdictRow({super.key, required this.verdict});
 
   final MeasurementVerdict verdict;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ExcludeSemantics(child: Icon(verdict.level.icon, size: 28)),
-          const SizedBox(width: 8),
-          Text(
-            verdict.label,
-            style: SimplifiedStyle.head(SimplifiedStyle.headline),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 12),
+    child: MeasurementLevelBadge(level: verdict.level, kind: verdict.kind),
+  );
 }

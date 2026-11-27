@@ -6,14 +6,14 @@ from typing import Annotated
 from uuid import UUID
 
 from flask import Blueprint, current_app, jsonify
-from pydantic import AfterValidator, Field
+from pydantic import AfterValidator, Field, model_validator
 from pydantic_core import PydanticCustomError
 from sqlalchemy import select
 
 from app.auth.decorators import current_auth, require_auth
-from app.circles.inputs import City, DeleteAccountInput, IsoDate
+from app.circles.inputs import City, DeleteAccountInput, IsoDate, TimeZone
 from app.circles.support import care_work
-from app.clock import latest_today, require_old_enough
+from app.clock import is_zone, latest_today, require_old_enough
 from app.database import transaction
 from app.errors import NotFound, ValidationFailed
 from app.extensions import get_clock, get_user_store
@@ -56,10 +56,20 @@ class ProfileRequest(Dto):
     first_name: _name(50)
     last_name: _name(50)
     display_name: _name(30)
-    # Onboarding sends both; the account page sends neither, and then the
-    # saved values stay.
+    # Onboarding sends both; the account page sends the city alone. One
+    # left out keeps the saved value.
     birth_date: IsoDate | None = None
     city: City | None = None
+    # The city's IANA zone, sent with it: the zone of the circle the
+    # account is the patient of, if any (`UserStore.update_profile`).
+    time_zone: TimeZone | None = None
+
+    @model_validator(mode="after")
+    def _zone_with_city(self):
+        """A zone is the city's, so it comes only with one."""
+        if self.time_zone is not None and self.city is None:
+            raise ValueError("Send the time zone with the city.")
+        return self
 
 
 @bp.get("/me")
@@ -128,11 +138,13 @@ def delete_account():
 @bp.put("/me/profile")
 @require_auth
 def save_profile():
-    """Save the signed-in account's names, and birth date and city if sent.
+    """Save the signed-in account's names, and birth date, city and zone if
+    sent.
 
-    Called by onboarding (all five fields) and the account page (names
-    only). A birth date in the future is refused with
-    ``invalid_birth_date``. Returns the saved account.
+    Called by onboarding (names, birth date and city) and the account page
+    (names, city and zone). A birth date in the future is refused with
+    ``invalid_birth_date``, a zone that is not an IANA zone with
+    ``invalid_time_zone``. Returns the saved account.
     """
     # A birth date in the future is refused; then the account's profile is
     # saved.
@@ -148,6 +160,11 @@ def save_profile():
         )
     if body.birth_date:
         require_old_enough(body.birth_date, today)
+    if body.time_zone is not None and not is_zone(body.time_zone):
+        raise ValidationFailed(
+            "The time zone is not a known IANA zone.",
+            code="invalid_time_zone",
+        )
     user = get_user_store().update_profile(
         current_auth().user_id,
         body.first_name,
@@ -155,6 +172,7 @@ def save_profile():
         body.display_name,
         birth_date=body.birth_date,
         city=body.city,
+        time_zone=body.time_zone,
     )
     if user is None:
         raise NotFound("This user does not exist.", code="user_not_found")

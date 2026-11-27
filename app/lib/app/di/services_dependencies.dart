@@ -13,6 +13,7 @@ import 'package:app/core/network/account_endpoints.dart';
 import 'package:app/core/network/circle_endpoints.dart';
 import 'package:app/core/network/dio_client.dart';
 import 'package:app/core/storage/token_storage.dart';
+import 'package:app/core/utils/device_zone.dart';
 import 'package:app/core/utils/shown_circle_clock.dart';
 import 'package:app/features/appointments/domain/usecases/appointments_use_case.dart';
 import 'package:app/features/auth/data/datasources/intro_memory.dart';
@@ -27,7 +28,8 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 /// Registers the services the whole app shares that no feature owns: the
 /// care record's PDF, the memory of the welcome pages, the clock a circle
-/// is shown in, the private photos and the weather.
+/// is shown in, the private photos, the weather and the phone's zone (the
+/// circles' new patients and the account's city).
 void registerAppServices(GetIt getIt) {
   // The care record, built as a PDF on the phone.
   getIt.registerLazySingleton<RecordExporter>(RecordPdfExporter.new);
@@ -39,6 +41,7 @@ void registerAppServices(GetIt getIt) {
     dispose: (repository) => repository.dispose(),
   );
   getIt.registerLazySingleton<WeatherSource>(AppleWeather.new);
+  getIt.registerLazySingleton<DeviceZone>(PluginDeviceZone.new);
 }
 
 /// Registers the server's pushes through OneSignal: [RemotePush] (the only

@@ -3,7 +3,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/network/api_error_body.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
-import 'package:app/features/circles/data/datasources/device_zone.dart';
+import 'package:app/core/utils/device_zone.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';
 import 'package:app/features/circles/data/models/new_patient_circle_model.dart';

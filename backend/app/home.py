@@ -8,6 +8,7 @@ from flask import Blueprint, current_app, jsonify
 from sqlalchemy import select
 
 from app.auth.decorators import current_auth, require_auth
+from app.cities import city_point
 from app.circles.leader import AREAS, access_by_circle
 from app.circles.naming import name_for
 from app.database import transaction
@@ -33,8 +34,6 @@ def circle_rows(session, account_id: UUID):
             CareCircle.account_id,
             CareCircle.first_name,
             CareCircle.time_zone,
-            CareCircle.latitude,
-            CareCircle.longitude,
             Account.display_name,
             Account.first_name.label("account_first_name"),
             Account.avatar_code.label("account_avatar_code"),
@@ -86,11 +85,6 @@ def circle_item(row, account_id: UUID, access: dict) -> dict:
         # The patient's IANA zone: the app shows and schedules every time of
         # this circle in it, wherever the phone is.
         "time_zone": row.time_zone,
-        # Where the patient's city is, for its weather on «اليوم» (the
-        # phone's own location is never asked for); null when the city was
-        # typed and not picked from the list.
-        "latitude": row.latitude,
-        "longitude": row.longitude,
     }
 
 
@@ -112,12 +106,17 @@ def home():
             # Read inside the transaction: after it, the row is expired and
             # reading it would open a new transaction that stays open.
             avatar_code = account.avatar_code if account else None
+    # Where the account's own city is, for its weather on «اليوم»; null
+    # without a city, or for one typed by hand.
+    latitude, longitude = city_point(user.city)
     response = jsonify(
         account={
             "id": user.id,
             "display_name": user.display_name,
             "profile_complete": user.profile_complete,
             "avatar_code": avatar_code,
+            "latitude": latitude,
+            "longitude": longitude,
         },
         care_circles=circles,
     )

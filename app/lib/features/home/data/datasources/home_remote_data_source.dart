@@ -37,6 +37,8 @@ class HomeModel {
         displayName: account['display_name'] as String?,
         profileComplete: account['profile_complete'] as bool,
         avatarCode: account['avatar_code'] as String?,
+        latitude: (account['latitude'] as num?)?.toDouble(),
+        longitude: (account['longitude'] as num?)?.toDouble(),
         circles: circles.map((item) {
           final circle = item as Map<String, dynamic>;
           return CareCircleSummary(
@@ -54,8 +56,6 @@ class HomeModel {
                 !(circle['patient_has_account'] as bool? ?? true),
             patientName: circle['patient_name'] as String?,
             timeZone: circle['time_zone'] as String? ?? defaultPatientZone,
-            latitude: (circle['latitude'] as num?)?.toDouble(),
-            longitude: (circle['longitude'] as num?)?.toDouble(),
           );
         }).toList(),
       ),

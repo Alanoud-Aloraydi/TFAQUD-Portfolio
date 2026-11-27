@@ -121,11 +121,8 @@ def test_the_account_page_reads_the_signed_in_account(
         ({"birth_date": "2026-13-40"}, "birth_date"),
         ({"city": ""}, "city"),
         ({"city": "Ri\nyadh"}, "city"),
-        ({"latitude": 26.3}, "body"),
-        ({"latitude": 91, "longitude": 43}, "latitude"),
-        ({"latitude": 26, "longitude": 181}, "longitude"),
-        ({"latitude": "26.3", "longitude": "43.9"}, "latitude"),
-        ({"latitude": True, "longitude": 43}, "latitude"),
+        # The circle has no point any more (0072).
+        ({"latitude": 24.7, "longitude": 46.7}, "latitude"),
         ({"admin": True}, "admin"),
         (
             {"medical_profile": {"blood_type": "C+"}},
