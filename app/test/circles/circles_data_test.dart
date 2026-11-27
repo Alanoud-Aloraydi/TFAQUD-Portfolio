@@ -7,7 +7,7 @@ import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/core/utils/api_date.dart';
 import 'package:app/core/utils/patient_clock.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
-import 'package:app/features/circles/data/datasources/device_zone.dart';
+import 'package:app/core/utils/device_zone.dart';
 import 'package:app/features/circles/data/models/circle_overview_model.dart';
 import 'package:app/features/circles/data/models/circle_request_model.dart';
 import 'package:app/features/circles/data/models/complete_circle_request_model.dart';

@@ -80,8 +80,6 @@ def update_patient(circle_id):
             body.city,
             first_name=body.first_name,
             last_name=body.last_name,
-            latitude=body.latitude,
-            longitude=body.longitude,
             time_zone=body.time_zone,
         )
         view = circle_view(
@@ -128,8 +126,6 @@ def create_self_circle():
             body.name,
             body.birth_date,
             body.city,
-            body.latitude,
-            body.longitude,
             body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)
@@ -154,8 +150,6 @@ def create_offline_circle():
             body.patient_last_name,
             body.birth_date,
             body.city,
-            body.latitude,
-            body.longitude,
             body.time_zone,
         )
         save_medical(work, circle.id, body.medical_profile)

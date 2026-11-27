@@ -64,8 +64,6 @@ class PatientBasics extends Equatable {
     required this.birthDate,
     required this.city,
     required this.hasAccount,
-    this.latitude,
-    this.longitude,
     this.timeZone = defaultPatientZone,
   });
 
@@ -80,9 +78,6 @@ class PatientBasics extends Equatable {
   /// names typed by the managers, so the managers can edit them.
   final bool hasAccount;
 
-  final double? latitude;
-  final double? longitude;
-
   /// The IANA zone where the patient lives; every time of the circle is
   /// wall clock there.
   final String timeZone;
@@ -96,8 +91,6 @@ class PatientBasics extends Equatable {
     birthDate,
     city,
     hasAccount,
-    latitude,
-    longitude,
     timeZone,
   ];
 }
@@ -105,18 +98,16 @@ class PatientBasics extends Equatable {
 /// The basic data of the patient that the edit page saves: PUT
 /// /api/v1/circles/{id}/patient.
 ///
-/// The server replaces the birth date, the city and the coordinates, and the
-/// zone when one is sent. The names are sent for a patient without an
-/// account only; the server refuses them for a patient who has an account,
-/// because those names belong to the account.
+/// The server replaces the birth date and the city, and the zone when one is
+/// sent. The names are sent for a patient without an account only; the
+/// server refuses them for a patient who has an account, because those names
+/// belong to the account.
 class PatientUpdate extends Equatable {
   const PatientUpdate({
     required this.birthDate,
     required this.city,
     this.firstName,
     this.lastName,
-    this.latitude,
-    this.longitude,
     this.timeZone,
   });
 
@@ -127,22 +118,9 @@ class PatientUpdate extends Equatable {
   final String? firstName;
   final String? lastName;
 
-  /// Kept when the city did not change, and null otherwise: the coordinates of
-  /// an old city would be wrong.
-  final double? latitude;
-  final double? longitude;
-
   /// The IANA zone where the patient lives; null keeps the saved one.
   final String? timeZone;
 
   @override
-  List<Object?> get props => [
-    birthDate,
-    city,
-    firstName,
-    lastName,
-    latitude,
-    longitude,
-    timeZone,
-  ];
+  List<Object?> get props => [birthDate, city, firstName, lastName, timeZone];
 }

@@ -400,8 +400,10 @@ values. It is `PUT` because the app sends all three names every time.
 
 Onboarding also sends the person's birth date and city (Built, 2 November 2026).
 They are kept on the account, so a circle for your own care needs only its name
-(see "Creating a circle"). The account page sends only the names; a birth date or
-city that is left out keeps the saved one.
+(see "Creating a circle"). The account page sends the names and the city, with
+the city's `time_zone` (Built, 27 November 2026); a birth date or city that is left
+out keeps the saved one. The zone becomes the zone of the circle the account is the
+patient of, if any: the patient lives in their city.
 
 Body:
 
@@ -441,6 +443,7 @@ Body:
 | One line | A name cannot contain a line break or another control character (detail code `invalid_name`). | To confirm |
 | `birth_date` | Optional. `YYYY-MM-DD`, not before 1900 and not in the future (`invalid_birth_date`). | Built |
 | `city` | Optional. 1 to 60 characters, one line. | Built |
+| `time_zone` | Optional, and only with `city` (422 `validation_error` without it). The city's IANA zone: `Asia/Riyadh` for a city of the Saudi list, the phone's zone for a city typed by hand. Not an IANA zone: 422 `invalid_time_zone`. | Built |
 
 Errors: 400 `invalid_json`, 401 (`missing_token`, `invalid_token`,
 `access_token_expired`, `session_revoked`), 404 `user_not_found`, 422
@@ -610,7 +613,6 @@ the team has not approved them yet.
 |---|---|
 | Ids | Text with hyphens, like the circle ids of `GET /api/v1/home`. The sign-in endpoints still return the account id without hyphens (section 10, point 9). |
 | Dates | `birth_date` is written `YYYY-MM-DD` and cannot be in the future or before 1900. |
-| Location | `latitude` and `longitude` are numbers, sent together or not at all. The city is always required; the location is what "use my location" adds. |
 | Time zone | `time_zone` is the IANA zone where the patient lives (`Asia/Riyadh`, `Europe/London`). Every time of a circle (doses, readings, visits, "today", the birth-date check, prayer times) is wall clock in it, whoever records and wherever their phone is. The app sends it with the city: `Asia/Riyadh` for a city of its Saudi list, the phone's zone for a city typed by hand. Left out, an edit keeps the saved zone and a creation gets `Asia/Riyadh` (an app older than zones offers only Saudi cities). A name that is not an IANA zone gives 422 `invalid_time_zone`. Built 10 November 2026, migration 0030. |
 | One transaction | A request is saved completely or not at all. A circle is never half created: if the medical part of a creation request is wrong, no circle, no patient and no mode change is saved. |
 | Answers | Circle data carries `Cache-Control: no-store`. |
@@ -658,7 +660,10 @@ one of them. In `GET …/circles/{circle_id}` each member has `is_leader` and
 `edit_access`, and the circle has `leader_account_id`, `can_manage_members`,
 `can_hand_over` and `your_edit_access`. `GET /api/v1/home` gives each circle
 `can_manage_medications`, `can_manage_measurements` and
-`can_manage_appointments`.
+`can_manage_appointments`. Its `account` has `latitude` and `longitude`
+(Built 27 November 2026): the centre of the account's own city, for the
+weather on «اليوم» in both modes; `null` without a city or for a city typed by
+hand. Circles have no point since migration 0072.
 
 **The bell's «السابقة» (Built 12 November 2026).** `GET
 /api/v1/notifications/previous` lists, newest first, what was answered in the
@@ -697,8 +702,6 @@ POST /api/v1/circles/self
   "birth_date": "1954-06-05",
   "city": "Riyadh",
   "time_zone": "Asia/Riyadh",
-  "latitude": 24.7136,
-  "longitude": 46.6753,
   "medical_profile": { "blood_type": "O+" }
 }
 ```
@@ -707,7 +710,7 @@ A patient without an account (PROFILE-01B). The caller manages the circle. Same
 body, plus `patient_first_name` and `patient_last_name` (1 to 50 characters each),
 and without `name`: the circle is named automatically (see "Circle names" below).
 An older app still sends `name`; it is accepted and not used. In both bodies
-`time_zone`, `latitude`, `longitude` and `medical_profile` are optional. For self-care `name`
+`time_zone` and `medical_profile` are optional. For self-care `name`
 is 1 to 60 characters: the patient's own name for the circle, for example
 `رعايتي`, `صحتي` or `دائرتي`.
 
@@ -742,8 +745,6 @@ patient's own choice is never shown to the others.
       "birth_date": "1954-06-05",
       "city": "Riyadh",
       "time_zone": "Asia/Riyadh",
-      "latitude": 24.7136,
-      "longitude": 46.6753,
       "has_account": true,
       "app_mode": "detailed",
       "is_you": true
@@ -793,8 +794,7 @@ with an account, as a manager or as a simplified patient, changes their own name
 for it; anyone else in that circle gets 403 `patient_names_circle`. In a circle
 of a patient without an account, a manager names it for everyone (until then
 everyone sees «دائرة» and the first name); a member who only reads gets 403. `PUT .../patient` replaces the basic data of the patient (PROFILE-01):
-`birth_date` and `city` are required; `latitude`/`longitude` are replaced (sending
-none clears them); `time_zone` is optional and, left out, the saved zone stays. A patient without an account also needs `first_name` and
+`birth_date` and `city` are required; `time_zone` is optional and, left out, the saved zone stays. A patient without an account also needs `first_name` and
 `last_name`; for a patient with an account those two fields are an error
 (422 `linked_patient_name`), because the names come from the account.
 
@@ -845,7 +845,7 @@ The flow has three steps. The circle exists only after step 3.
    is consent only. It does not create the circle.
 3. The patient calls `POST .../{request_id}/complete` with the basic data
    (PROFILE-01C): `name` (their own name for the circle, 1 to 60 characters),
-   `birth_date`, `city`, optional `time_zone`, `latitude`, `longitude` and `medical_profile`.
+   `birth_date`, `city`, optional `time_zone` and `medical_profile`.
    This creates the circle (201 `circle`). Calling it again returns the same
    circle. An older app sends no `name`; the circle is then `دائرتي`.
 

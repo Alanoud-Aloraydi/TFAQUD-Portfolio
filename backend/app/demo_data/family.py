@@ -8,10 +8,7 @@ from zoneinfo import ZoneInfo
 from app.care import CareService
 from app.demo_data.story import (
     INVITED_PHONE,
-    JEDDAH_POINT,
-    LONDON_POINT,
     REQUEST_PHONE,
-    RIYADH_POINT,
     Summary,
     dose_at,
     medicine,
@@ -72,7 +69,7 @@ class DemoStory:
     def _lina_own(self, lina, care) -> CareCircle:
         """1. Lina's own care: two simple medicines."""
         own = care.create_self(
-            lina.id, "رعايتي", date(1995, 4, 12), "الرياض", *RIYADH_POINT
+            lina.id, "رعايتي", date(1995, 4, 12), "الرياض"
         )
         self.medical(
             lina,
@@ -128,7 +125,6 @@ class DemoStory:
             "القحطاني",
             date(1948, 1, 20),
             "جدة",
-            *JEDDAH_POINT,
         )
         self.create(
             sara,
@@ -184,7 +180,6 @@ class DemoStory:
             "العتيبي",
             date(1960, 2, 14),
             "لندن",
-            *LONDON_POINT,
             time_zone="Europe/London",
         )
         self.create(

@@ -9,6 +9,8 @@ class HomeEntity extends Equatable {
     required this.displayName,
     required this.profileComplete,
     this.avatarCode,
+    this.latitude,
+    this.longitude,
     required List<CareCircleSummary> circles,
   }) : circles = List.unmodifiable(circles);
 
@@ -16,6 +18,11 @@ class HomeEntity extends Equatable {
   final String? displayName;
   final bool profileComplete;
   final String? avatarCode;
+
+  /// Where the account's own city is, for the weather on «اليوم» in both
+  /// modes; null without a city or for one typed by hand.
+  final double? latitude;
+  final double? longitude;
   final List<CareCircleSummary> circles;
 
   @override
@@ -24,6 +31,8 @@ class HomeEntity extends Equatable {
     displayName,
     profileComplete,
     avatarCode,
+    latitude,
+    longitude,
     circles,
   ];
 }
@@ -41,8 +50,6 @@ class CareCircleSummary extends Equatable {
     this.standsInForPatient = false,
     this.patientName,
     this.timeZone = defaultPatientZone,
-    this.latitude,
-    this.longitude,
   }) : canManageMeasurements = canManageMeasurements ?? canManageMedications,
        canManageAppointments = canManageAppointments ?? canManageMedications;
 
@@ -83,10 +90,6 @@ class CareCircleSummary extends Equatable {
   /// The patient's clock.
   PatientClock get clock => PatientClock(timeZone);
 
-  /// Where the patient's city is, for «اليوم»'s weather; null if typed.
-  final double? latitude;
-  final double? longitude;
-
   @override
   List<Object?> get props => [
     id,
@@ -97,8 +100,6 @@ class CareCircleSummary extends Equatable {
     patientAvatarCode,
     isPatient,
     standsInForPatient,
-    latitude,
-    longitude,
     patientName,
     timeZone,
   ];

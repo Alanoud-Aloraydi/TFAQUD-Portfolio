@@ -157,8 +157,8 @@ class SimplifiedDayLoader {
         family: simplifiedFamily(overview.tryGetSuccess()),
         reasons: simplifiedReasons(plans.tryGetSuccess()),
         prayers: prayers.tryGetSuccess(),
-        latitude: circle.latitude,
-        longitude: circle.longitude,
+        latitude: account.latitude,
+        longitude: account.longitude,
       ),
     );
   }

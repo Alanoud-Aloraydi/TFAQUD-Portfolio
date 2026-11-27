@@ -4,12 +4,12 @@ names, birth date and city."""
 from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from app.database import db, transaction
 from app.errors import ServiceUnavailable
-from app.models import Account
+from app.models import Account, CareCircle
 from app.users.store import User, UserStore
 
 
@@ -80,10 +80,12 @@ class PostgresUserStore(UserStore):
         display_name: str,
         birth_date: date | None = None,
         city: str | None = None,
+        time_zone: str | None = None,
     ) -> User | None:
         """Replace the complete name group in one transaction.
 
-        A birth date or city that is None keeps the saved one.
+        A birth date or city that is None keeps the saved one. `time_zone`
+        becomes the zone of the circle the account is the patient of.
         """
         # An id that is not a UUID is no account; the account is locked while
         # its profile changes.
@@ -99,10 +101,18 @@ class PostgresUserStore(UserStore):
             account.last_name = last_name
             account.display_name = display_name
             # The birth date and city change only when sent (onboarding sends
-            # them, the account page does not).
+            # both, the account page the city alone).
             if birth_date is not None:
                 account.birth_date = birth_date
             if city is not None:
                 account.city = city
+            # The patient lives in their city: their circle's times follow
+            # its zone.
+            if time_zone is not None:
+                db.session.execute(
+                    update(CareCircle)
+                    .where(CareCircle.account_id == account_id)
+                    .values(time_zone=time_zone)
+                )
             db.session.flush()
             return as_user(account)

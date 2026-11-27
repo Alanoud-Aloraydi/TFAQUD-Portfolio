@@ -32,6 +32,9 @@ def test_home_returns_empty_circles_and_own_identity(database_app, account):
             "display_name": "Nora",
             "profile_complete": True,
             "avatar_code": None,
+            # No city yet, so no weather.
+            "latitude": None,
+            "longitude": None,
         },
         "care_circles": [],
     }
@@ -64,8 +67,6 @@ def test_home_excludes_other_circles_and_pending_invitations(
             "patient_name": "Nora",
             "patient_avatar_code": None,
             "time_zone": "Asia/Riyadh",
-            "latitude": None,
-            "longitude": None,
         }
     ]
 
@@ -91,8 +92,6 @@ def test_home_lists_patient_manager_circle_once(
             "patient_name": "Nora",
             "patient_avatar_code": None,
             "time_zone": "Asia/Riyadh",
-            "latitude": None,
-            "longitude": None,
         }
     ]
 

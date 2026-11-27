@@ -72,14 +72,6 @@ IsoDate = Annotated[
     date, BeforeValidator(_iso_date_only), Field(ge=_OLDEST_BIRTH)
 ]
 
-Latitude = Annotated[
-    float, Field(strict=True, ge=-90, le=90, allow_inf_nan=False)
-]
-
-Longitude = Annotated[
-    float, Field(strict=True, ge=-180, le=180, allow_inf_nan=False)
-]
-
 Flag = Annotated[bool, Field(strict=True)]
 
 AppMode = Literal["detailed", "simplified"]

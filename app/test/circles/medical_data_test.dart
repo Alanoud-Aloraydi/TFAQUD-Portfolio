@@ -3,7 +3,7 @@ import 'package:app/core/errors/failure.dart';
 import 'package:app/core/errors/invalid_birth_date_failure.dart';
 import 'package:app/core/errors/network_exceptions.dart';
 import 'package:app/features/circles/data/datasources/circles_remote_data_source.dart';
-import 'package:app/features/circles/data/datasources/device_zone.dart';
+import 'package:app/core/utils/device_zone.dart';
 import 'package:app/features/circles/data/repositories/circles_repository_impl.dart';
 import 'package:app/features/circles/domain/entities/circle_failures.dart';
 import 'package:app/features/circles/domain/entities/emergency_card.dart';

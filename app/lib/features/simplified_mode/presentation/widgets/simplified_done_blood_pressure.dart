@@ -12,7 +12,8 @@ class SimplifiedDoneBloodPressure extends SimplifiedDoneMessage {
       context.tr('simplified_mode.done_bp', args: <String>['$upper', '$lower']);
 
   @override
-  MeasurementVerdict? verdict(BuildContext context) => level == null
-      ? null
-      : MeasurementVerdict(level!.label(context, MeasurementKind.bp), level!);
+  MeasurementVerdict? get verdict => switch (level) {
+    final MeasurementLevel level => (kind: MeasurementKind.bp, level: level),
+    null => null,
+  };
 }

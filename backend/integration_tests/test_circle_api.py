@@ -48,10 +48,7 @@ def test_self_care_circle_is_created_and_listed(
     owner = account()
     api = Api(database_app, owner)
 
-    response = api.post(
-        "/api/v1/circles/self",
-        {**SELF, "latitude": 24.7136, "longitude": 46.6753},
-    )
+    response = api.post("/api/v1/circles/self", SELF)
 
     assert response.status_code == 201
     assert response.headers["Cache-Control"] == "no-store"
@@ -64,8 +61,6 @@ def test_self_care_circle_is_created_and_listed(
         "birth_date": "1954-06-05",
         "city": "Riyadh",
         "time_zone": "Asia/Riyadh",
-        "latitude": 24.7136,
-        "longitude": 46.6753,
         "has_account": True,
         "app_mode": "detailed",
         "is_you": True,
@@ -101,8 +96,6 @@ def test_self_care_circle_is_created_and_listed(
             "patient_name": "Nora",
             "patient_avatar_code": None,
             "time_zone": "Asia/Riyadh",
-            "latitude": 24.7136,
-            "longitude": 46.6753,
         }
     ]
     with Session(database) as session:
@@ -499,8 +492,6 @@ def test_a_manager_edits_the_data_of_a_patient_without_an_account(
             "city": "Jeddah",
             "first_name": "Noura",
             "last_name": "Salem",
-            "latitude": 21.5,
-            "longitude": 39.2,
         },
     )
 
@@ -509,7 +500,6 @@ def test_a_manager_edits_the_data_of_a_patient_without_an_account(
     assert patient["first_name"] == "Noura"
     assert patient["city"] == "Jeddah"
     assert patient["birth_date"] == "1951-03-04"
-    assert patient["latitude"] == 21.5
 
 
 def test_a_patient_without_an_account_keeps_both_names_required(

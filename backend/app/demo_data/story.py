@@ -20,12 +20,6 @@ REQUEST_PHONE = REQUEST_DEMO_PHONE
 # her mother's care, and the invitation waits.
 INVITED_PHONE = "+966559876543"
 
-RIYADH_POINT = (24.7136, 46.6753)
-
-JEDDAH_POINT = (21.4858, 39.1925)
-
-LONDON_POINT = (51.5072, -0.1276)
-
 # The story is told in Riyadh's time: every demo patient lives in a listed
 # Saudi city and has this zone, except Lina's aunt in London, whose doses
 # follow her own zone (`DemoBuilder.aunt`).

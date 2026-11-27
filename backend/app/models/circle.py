@@ -65,8 +65,6 @@ CIRCLE_TABLE_ARGS = (
     CheckConstraint(
         "length(btrim(time_zone)) BETWEEN 1 AND 64", name="time_zone"
     ),
-    CheckConstraint("latitude BETWEEN -90 AND 90", name="latitude"),
-    CheckConstraint("longitude BETWEEN -180 AND 180", name="longitude"),
     CheckConstraint(f"blood_type IN ({BLOOD_SQL})", name="blood_type"),
     CheckConstraint(
         f"avatar_code IS NULL OR avatar_code IN ({AVATARS_SQL})",
@@ -143,8 +141,6 @@ class CareCircle(db.Model):
     # The IANA zone where the patient lives (e.g. "Asia/Riyadh"): every
     # schedule and "today" of the circle follows it (`app.clock`).
     time_zone: Mapped[str] = mapped_column(Text)
-    latitude: Mapped[float | None]
-    longitude: Mapped[float | None]
     blood_type: Mapped[str | None] = mapped_column(Text)
     # Null until the medical file answers the question; none or listed.
     conditions_status: Mapped[str | None] = mapped_column(

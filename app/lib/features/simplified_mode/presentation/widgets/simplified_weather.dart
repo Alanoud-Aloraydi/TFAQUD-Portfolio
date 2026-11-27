@@ -9,7 +9,7 @@ import 'package:app/features/simplified_mode/presentation/widgets/simplified_wea
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-/// The weather where the patient lives, beside the greeting. A tap opens
+/// The weather in the account's own city, beside the greeting. A tap opens
 /// the same sheet the detailed mode opens, which carries Apple's Weather
 /// mark and its sources. Nothing shows without a place or an answer, so
 /// the home never waits for it.

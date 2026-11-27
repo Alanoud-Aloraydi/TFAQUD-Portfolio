@@ -3,7 +3,7 @@ medicines (daily, some weekdays only, coming, finished and stopped)."""
 
 from datetime import date
 
-from app.demo_data.story import EVERY_DAY, RIYADH_POINT, dose_at, medicine
+from app.demo_data.story import EVERY_DAY, dose_at, medicine
 from app.medical import MedicalService
 from app.models import CareCircle
 
@@ -19,7 +19,6 @@ class DemoMother:
             "العتيبي",
             date(1956, 8, 3),
             "الرياض",
-            *RIYADH_POINT,
         )
         self.medical(
             lina,

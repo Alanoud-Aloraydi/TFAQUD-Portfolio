@@ -1,14 +1,11 @@
 import 'package:app/app/router/routers.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
-import 'package:app/core/utils/saudi_mobile.dart';
 import 'package:app/core/widgets/feedback/app_toast.dart';
-import 'package:app/core/widgets/layout/info_row.dart';
-import 'package:app/core/widgets/layout/inset_text.dart';
-import 'package:app/core/widgets/layout/settings_icon_tile.dart';
+import 'package:app/core/widgets/pickers/city_sheet.dart';
 import 'package:app/features/account/presentation/cubit/account_cubit.dart';
 import 'package:app/features/account/presentation/cubit/account_state.dart';
 import 'package:app/features/account/presentation/widgets/account_content.dart';
-import 'package:app/features/account/presentation/widgets/account_name_fields.dart';
+import 'package:app/features/account/presentation/widgets/account_edit_fields.dart';
 import 'package:app/features/account/presentation/widgets/delete_dialogs.dart';
 import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -16,7 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Full-screen account name editor; the verified phone number stays read-only.
+/// Full-screen editor of the account's names and city; the verified phone
+/// number stays read-only.
 class AccountEditScreen extends StatefulWidget {
   const AccountEditScreen({super.key});
 
@@ -58,6 +56,8 @@ class _AccountEditScreenState extends State<AccountEditScreen>
                     first: first,
                     last: last,
                     display: display,
+                    city: city,
+                    onCity: pickCity,
                     phoneNumber: state.account!.phoneNumber,
                     requiredError: requiredError,
                     onChanged: refresh,
@@ -96,13 +96,17 @@ class AccountEditFailure extends StatelessWidget {
   }
 }
 
-/// What the name editor holds while it is open: the three names being typed,
-/// whether the account filled them yet, the names left empty and the save in
-/// flight.
+/// What the editor holds while it is open: the three names being typed, the
+/// city picked, whether the account filled them yet, the names left empty
+/// and the save in flight.
 mixin AccountEditFlow<T extends StatefulWidget> on State<T> {
   final first = TextEditingController();
   final last = TextEditingController();
   final display = TextEditingController();
+
+  /// The account's city, then the one picked; null for an account made
+  /// before onboarding asked, until one is picked.
+  String? city;
   bool filled = false;
   bool saving = false;
 
@@ -117,13 +121,20 @@ mixin AccountEditFlow<T extends StatefulWidget> on State<T> {
     super.dispose();
   }
 
-  /// Puts the account's names in the fields, once.
+  /// Puts the account's names and city in the fields, once.
   void fill(AccountSummary? account) {
     if (filled || account == null) return;
     first.text = account.firstName;
     last.text = account.lastName;
     display.text = account.displayName;
+    city = account.city;
     filled = true;
+  }
+
+  /// Opens the city sheet; a confirmed city replaces the shown one.
+  Future<void> pickCity() async {
+    final String? picked = await showCitySheet(context, selected: city);
+    if (picked != null && mounted) setState(() => city = picked);
   }
 
   /// Shows again what was typed, and the names still empty.
@@ -147,6 +158,7 @@ mixin AccountEditFlow<T extends StatefulWidget> on State<T> {
       firstName: first.text,
       lastName: last.text,
       displayName: display.text,
+      city: city,
     );
     if (!mounted) return;
     if (error == null) {
@@ -156,76 +168,6 @@ mixin AccountEditFlow<T extends StatefulWidget> on State<T> {
     // About no one name: the server, or the connection.
     setState(() => saving = false);
     AppToast.show(context, error, kind: ToastKind.error);
-  }
-}
-
-/// The name editor's form: the first, last and display names, each a row
-/// with «هذا الحقل مطلوب» under it when left empty, the display name's help
-/// and the phone number read-only.
-class AccountEditFields extends StatelessWidget {
-  const AccountEditFields({
-    super.key,
-    required this.first,
-    required this.last,
-    required this.display,
-    required this.phoneNumber,
-    required this.requiredError,
-    required this.onChanged,
-  });
-
-  final TextEditingController first;
-  final TextEditingController last;
-  final TextEditingController display;
-  final String phoneNumber;
-
-  /// The error under a name: «هذا الحقل مطلوب» when it is left empty.
-  final String? Function(TextEditingController name) requiredError;
-
-  /// Called when any of the names is typed in.
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AccountNameFields(
-            first: first,
-            last: last,
-            display: display,
-            requiredError: requiredError,
-            onChanged: onChanged,
-          ),
-          const SizedBox(height: AppSpacing.labelGap),
-          InsetText.note(context.tr('account.display_name_help')),
-          const SizedBox(height: AppSpacing.lg),
-          AccountPhoneSection(phoneNumber: phoneNumber),
-        ],
-      ),
-    );
-  }
-}
-
-/// The verified phone number, shown but not editable.
-class AccountPhoneSection extends StatelessWidget {
-  const AccountPhoneSection({super.key, required this.phoneNumber});
-
-  final String phoneNumber;
-
-  @override
-  Widget build(BuildContext context) {
-    return SettingsSection(
-      title: context.tr('account.phone'),
-      children: [
-        InfoRow(
-          label: context.tr('account.phone'),
-          value: SaudiMobile.display(phoneNumber),
-          ltr: true,
-        ),
-      ],
-    );
   }
 }
 

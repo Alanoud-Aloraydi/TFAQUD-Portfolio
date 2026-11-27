@@ -98,8 +98,6 @@ def test_request_from_sending_to_the_new_circle(
                 "patient_name": "Noura",
                 "patient_avatar_code": None,
                 "time_zone": "Asia/Riyadh",
-                "latitude": None,
-                "longitude": None,
             }
         ]
     with Session(database) as session:
@@ -141,8 +139,6 @@ def test_the_basic_data_and_medical_profile_are_saved_together(
         f"{BASE}/{request_id}/complete",
         {
             **BASICS,
-            "latitude": 26.35,
-            "longitude": 43.97,
             "medical_profile": {
                 "blood_type": "A+",
                 "allergies": {"status": "none"},
@@ -151,7 +147,6 @@ def test_the_basic_data_and_medical_profile_are_saved_together(
     )
 
     circle_id = done.json["circle"]["id"]
-    assert done.json["circle"]["patient"]["latitude"] == 26.35
     profile = receiver.get(f"/api/v1/circles/{circle_id}/medical-profile")
     assert profile.json["medical_profile"]["blood_type"] == "A+"
     assert profile.json["medical_profile"]["allergies"]["status"] == "none"

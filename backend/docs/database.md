@@ -111,6 +111,7 @@ The tables are made and changed only by migrations (`migrations/versions`).
 |---|---|
 | `0070` | The whole database in one step (`0070_schema.sql`). It replaces the first 70 migrations, so a database made before it is already at 0070. |
 | `0071` | Removes what nothing read: the old `measurement_target` table, the four old target columns of plan versions and readings, and `task_snooze.snoozed_at`. |
+| `0072` | Removes `care_circle.latitude` and `longitude`: the weather follows the account's own city, whose centre the server reads from the city list (`app.cities`). |
 
 A new change is a new migration that comes after the last one. Never edit a
 migration that already ran on the server.

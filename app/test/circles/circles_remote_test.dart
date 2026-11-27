@@ -82,8 +82,6 @@ Map<String, dynamic> _medicalFile() => <String, dynamic>{
     'last_name': 'العتيبي',
     'birth_date': '1954-06-05',
     'city': 'بريدة',
-    'latitude': 26.3,
-    'longitude': 43.97,
     'has_account': false,
     'app_mode': null,
     'is_you': false,
@@ -337,7 +335,6 @@ void main() {
           expect(file.patient.fullName, 'نورة العتيبي');
           expect(file.patient.birthDate, DateTime(1954, 6, 5));
           expect(file.patient.city, 'بريدة');
-          expect(file.patient.latitude, 26.3);
           expect(file.patient.hasAccount, isFalse);
           expect(file.profile.bloodType, 'O+');
           expect(
@@ -453,27 +450,18 @@ void main() {
           'city': 'بريدة',
           'first_name': 'نورة',
           'last_name': 'العتيبي',
-          'latitude': null,
-          'longitude': null,
         });
       });
 
       test('a patient with an account is saved without the names', () async {
         await remote.updatePatient(
           'c-1',
-          PatientUpdate(
-            birthDate: DateTime(1954, 6, 5),
-            city: 'بريدة',
-            latitude: 26.3,
-            longitude: 43.97,
-          ),
+          PatientUpdate(birthDate: DateTime(1954, 6, 5), city: 'بريدة'),
         );
 
         expect(client.calls.single.data, <String, dynamic>{
           'birth_date': '1954-06-05',
           'city': 'بريدة',
-          'latitude': 26.3,
-          'longitude': 43.97,
         });
       });
     });

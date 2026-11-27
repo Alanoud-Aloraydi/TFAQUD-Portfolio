@@ -89,7 +89,7 @@ class SimplifiedHomeHeading extends StatelessWidget {
             ),
           ],
         ),
-        // The weather where the patient lives, beside the greeting as
+        // The weather in the account's own city, beside the greeting as
         // it is beside the date in «اليوم». It wraps under the
         // greeting when the text is large.
         SimplifiedWeather(latitude: day.latitude, longitude: day.longitude),

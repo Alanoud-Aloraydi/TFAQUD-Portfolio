@@ -207,9 +207,6 @@ class MedicalFileChanges {
       birthDate: birthDate,
       city: city,
       hasAccount: before.hasAccount,
-      // The coordinates of an old city would be wrong for the new one.
-      latitude: cityChanged ? null : before.latitude,
-      longitude: cityChanged ? null : before.longitude,
       timeZone: timeZone,
     );
     update = PatientUpdate(
@@ -217,8 +214,6 @@ class MedicalFileChanges {
       city: city,
       firstName: editNames ? firstName : null,
       lastName: editNames ? lastName : null,
-      latitude: patient.latitude,
-      longitude: patient.longitude,
       timeZone: timeZone,
     );
   }

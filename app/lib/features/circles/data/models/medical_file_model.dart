@@ -21,8 +21,6 @@ class MedicalFileModel {
           birthDate: parseDate(patient['birth_date'] as String),
           city: patient['city'] as String? ?? '',
           hasAccount: patient['has_account'] as bool? ?? false,
-          latitude: (patient['latitude'] as num?)?.toDouble(),
-          longitude: (patient['longitude'] as num?)?.toDouble(),
           timeZone: patient['time_zone'] as String? ?? defaultPatientZone,
         ),
         profile: MedicalProfileJson.fromJson(
@@ -77,8 +75,6 @@ class PatientUpdateModel {
       'city': _update.city,
       'first_name': ?_update.firstName,
       'last_name': ?_update.lastName,
-      'latitude': _update.latitude,
-      'longitude': _update.longitude,
       'time_zone': ?_update.timeZone,
     };
   }

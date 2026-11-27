@@ -85,11 +85,13 @@ class UserStore(ABC):
         display_name: str,
         birth_date: date | None = None,
         city: str | None = None,
+        time_zone: str | None = None,
     ) -> User | None:
         """Replace all three names, or return None for an unknown account.
 
-        A birth date or city that is None keeps the saved one: the account
-        page sends only the names.
+        A birth date or city that is None keeps the saved one. `time_zone`
+        comes with a new city: it becomes the zone of the circle the
+        account is the patient of, which lives in that city.
         """
 
 
@@ -132,9 +134,11 @@ class InMemoryUserStore(UserStore):
         display_name: str,
         birth_date: date | None = None,
         city: str | None = None,
+        time_zone: str | None = None,
     ) -> User | None:
         """Save the names, and the birth date and city when given; None when
-        there is no such account.
+        there is no such account. There are no circles here, so `time_zone`
+        has nothing to change.
         """
         with self._lock:
             user = self._by_id.get(user_id)

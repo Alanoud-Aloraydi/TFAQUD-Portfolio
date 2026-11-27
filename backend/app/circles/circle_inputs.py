@@ -5,7 +5,6 @@ asking and answering."""
 from uuid import UUID
 
 from pydantic import model_validator
-from pydantic_core import PydanticCustomError
 
 from app.auth.inputs import Phone
 from app.circles.inputs import (
@@ -14,8 +13,6 @@ from app.circles.inputs import (
     City,
     Flag,
     IsoDate,
-    Latitude,
-    Longitude,
     MedicalProfileInput,
     Name50,
     TimeZone,
@@ -89,41 +86,24 @@ class CircleRequestInput(Dto):
     proposed_app_mode: AppMode
 
 
-class _Point(Dto):
-    """The optional point the app got from the phone's location."""
-
-    latitude: Latitude | None = None
-    longitude: Longitude | None = None
-
-    @model_validator(mode="after")
-    def _both_or_neither(self):
-        """Refuse a latitude without a longitude, or the other way round."""
-        if (self.latitude is None) != (self.longitude is None):
-            raise PydanticCustomError(
-                "incomplete_location",
-                "Send both latitude and longitude, or neither.",
-            )
-        return self
-
-
-class _Place(_Point):
-    """City plus the optional point, and the city's IANA zone (left out by
-    an app older than zones; see `CareService._zone_for`)."""
+class _Place(Dto):
+    """City and the city's IANA zone (left out by an app older than zones;
+    see `CareService._zone_for`)."""
 
     city: City
     time_zone: TimeZone | None = None
 
 
 class _PatientBasics(_Place):
-    """A patient who is not the caller: city, birth date, optional point and
-    medical profile.
+    """A patient who is not the caller: city, birth date and medical
+    profile.
     """
 
     birth_date: IsoDate
     medical_profile: MedicalProfileInput | None = None
 
 
-class _OwnBasics(_Point):
+class _OwnBasics(Dto):
     """The patient is the caller: a birth date or city left out is read
     from the account, where onboarding saved it."""
 

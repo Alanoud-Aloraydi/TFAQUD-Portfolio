@@ -16,6 +16,8 @@ import 'package:app/core/widgets/feedback/attention_box.dart';
 import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/home/presentation/cubit/dose_retention_cubit.dart';
+import 'package:app/features/home/presentation/cubit/home_cubit.dart';
+import 'package:app/features/home/presentation/cubit/home_state_reactor.dart';
 import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/record_header.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
@@ -33,7 +35,7 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// «اليوم»: the weather in the patient's city and the greeting, the doses
+/// «اليوم»: the weather in the account's own city and the greeting, the doses
 /// about to be deleted, what needs attention, the next task and the day's
 /// schedule by prayer period, all on the patient's clock.
 class TodayPage extends StatefulWidget {
@@ -69,10 +71,12 @@ class _TodayPageState extends State<TodayPage> {
         children: <Widget>[
           TodayHeader(
             now: PatientClockScope.of(context).now(),
-            // The weather where the patient lives, beside the date.
-            weather: TodayWeather(
-              latitude: circle.latitude,
-              longitude: circle.longitude,
+            // The weather in the account's own city, beside the date.
+            weather: BlocSelector<HomeCubit, HomeState, (double?, double?)>(
+              selector: (state) =>
+                  (state.data?.latitude, state.data?.longitude),
+              builder: (context, point) =>
+                  TodayWeather(latitude: point.$1, longitude: point.$2),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -91,7 +95,7 @@ class _TodayPageState extends State<TodayPage> {
   );
 }
 
-/// The weather now in the patient's city, on the date line under the
+/// The weather now in the account's own city, on the date line under the
 /// greeting of «اليوم»: its icon, the degrees in bold and the condition in
 /// words. A tap opens it large with Apple's Weather mark and its data
 /// sources. Nothing shows without the city's place or an answer, so the

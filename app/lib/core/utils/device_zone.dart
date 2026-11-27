@@ -2,9 +2,9 @@ import 'package:app/core/utils/time_zones.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
-/// The IANA zone this phone is set to: the first guess of a new patient's
-/// zone when their city is not one of the Saudi list. Behind an interface,
-/// so tests give their own.
+/// The IANA zone this phone is set to: the first guess of the zone of a
+/// city that is not one of the Saudi list (a new patient's, or the
+/// account's own). Behind an interface, so tests give their own.
 abstract interface class DeviceZone {
   /// The phone's zone (for example `Europe/London`); [defaultPatientZone]
   /// when the phone does not say.

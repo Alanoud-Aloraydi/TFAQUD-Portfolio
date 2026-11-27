@@ -1,6 +1,5 @@
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/normal_range.dart';
-import 'package:app/features/measurements/presentation/widgets/measurement_level.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/measurement_verdict.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_texts.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -43,7 +42,7 @@ sealed class SimplifiedDoneMessage {
 
   String text(BuildContext context);
 
-  /// How the reading was judged, in one word, or null when there is
-  /// nothing to judge: a dose is taken or not, never «طبيعي».
-  MeasurementVerdict? verdict(BuildContext context) => null;
+  /// How the reading was judged, or null when there is nothing to judge: a
+  /// dose is taken or not, never «طبيعي».
+  MeasurementVerdict? get verdict => null;
 }

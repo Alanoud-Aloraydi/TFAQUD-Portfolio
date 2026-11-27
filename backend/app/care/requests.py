@@ -133,8 +133,6 @@ class CareRequests:
         request_id: UUID,
         birth_date: date | None,
         city: str | None,
-        latitude: float | None = None,
-        longitude: float | None = None,
         *,
         name: str | None = None,
         time_zone: str | None = None,
@@ -191,8 +189,6 @@ class CareRequests:
             managers,
             patient_account=account,
             leader=request.requested_by_account_id,
-            latitude=latitude,
-            longitude=longitude,
             time_zone=time_zone,
             completing=request.id,
         )

@@ -70,8 +70,8 @@ class SimplifiedDay extends Equatable {
   /// Today's prayer times; null when they could not be read.
   final PrayerDay? prayers;
 
-  /// Where the patient's city is, for the weather there; null when the
-  /// city has no place yet, and then no weather is shown.
+  /// Where the account's own city is, for the weather there; null without
+  /// a city or for one typed by hand, and then no weather is shown.
   final double? latitude;
   final double? longitude;
 

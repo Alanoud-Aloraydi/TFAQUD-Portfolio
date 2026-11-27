@@ -45,8 +45,6 @@ def patient_view(session: Session, patient: CareCircle, viewer: UUID) -> dict:
         "city": source.city,
         # Every time of the circle is wall clock in this IANA zone.
         "time_zone": patient.time_zone,
-        "latitude": patient.latitude,
-        "longitude": patient.longitude,
         "has_account": linked is not None,
         "app_mode": linked.app_mode if linked else None,
         "is_you": linked is not None and linked.id == viewer,

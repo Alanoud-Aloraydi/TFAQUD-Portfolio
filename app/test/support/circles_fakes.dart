@@ -83,8 +83,6 @@ class CirclesFakeRepository extends Fake implements CirclesRepository {
       birthDate: DateTime(1954, 6, 5),
       city: 'بريدة',
       hasAccount: false,
-      latitude: 26.33,
-      longitude: 43.97,
     ),
     profile: const MedicalProfileDraft(
       bloodType: 'O+',
@@ -102,8 +100,6 @@ class CirclesFakeRepository extends Fake implements CirclesRepository {
       birthDate: DateTime(1954, 6, 5),
       city: 'بريدة',
       hasAccount: true,
-      latitude: 26.33,
-      longitude: 43.97,
     ),
   );
 

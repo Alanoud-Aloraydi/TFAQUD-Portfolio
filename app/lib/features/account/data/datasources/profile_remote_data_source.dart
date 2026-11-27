@@ -7,17 +7,20 @@ import 'package:app/core/utils/api_date.dart';
 /// Flow: `ProfileRepositoryImpl` → this data source → PUT
 /// /api/v1/accounts/me/profile → the `account` table.
 abstract class BaseProfileRemoteDataSource {
-  /// Sends the three names, and the birth date and city when given.
+  /// Sends the three names, and the birth date and the city with its
+  /// [timeZone] when given.
   ///
-  /// Onboarding sends all five; the account page sends only the names, and
-  /// the server then keeps the saved birth date and city. Throws the
-  /// [DioClient] error on failure.
+  /// Onboarding sends the birth date and city; the account page sends a
+  /// city only when it changed. The server keeps what is left out, and
+  /// moves the zone of the circle the account is the patient of to
+  /// [timeZone]. Throws the [DioClient] error on failure.
   Future<void> saveProfile({
     required String firstName,
     required String lastName,
     required String displayName,
     DateTime? birthDate,
     String? city,
+    String? timeZone,
   });
 }
 
@@ -34,6 +37,7 @@ class ProfileRemoteDataSource implements BaseProfileRemoteDataSource {
     required String displayName,
     DateTime? birthDate,
     String? city,
+    String? timeZone,
   }) async {
     await _client.put(
       AccountEndpoints.profile,
@@ -43,6 +47,7 @@ class ProfileRemoteDataSource implements BaseProfileRemoteDataSource {
         'display_name': displayName,
         if (birthDate != null) 'birth_date': apiDate(birthDate),
         'city': ?city,
+        'time_zone': ?timeZone,
       },
     );
   }
