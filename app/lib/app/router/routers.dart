@@ -69,6 +69,7 @@ class Routes {
   static const String simplifiedSkip = '/simplifiedMode/skip';
   static const String simplifiedDone = '/simplifiedMode/done';
   static const String simplifiedAccount = '/simplifiedMode/account';
+  static const String simplifiedAccountName = '/simplifiedMode/account/name';
   static const String simplifiedMeasurePath =
       '/simplifiedMode/:circleId/measure';
 
