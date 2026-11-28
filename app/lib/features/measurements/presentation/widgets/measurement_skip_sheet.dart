@@ -3,6 +3,7 @@ import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading_draft.dart';
+import 'package:app/features/measurements/presentation/widgets/invalid_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -82,8 +83,7 @@ mixin MeasurementReadingSheetScope on State<MeasurementReadingSheet> {
   String? errorKey;
 
   /// The numbers out of range: said under them, not above the button.
-  String? get outOfRangeKey =>
-      errorKey == 'measurements.invalid_reading' ? errorKey : null;
+  String? get outOfRangeKey => isInvalidReadingKey(errorKey) ? errorKey : null;
 
   @override
   void dispose() {

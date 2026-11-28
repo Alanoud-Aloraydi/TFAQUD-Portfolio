@@ -2,9 +2,6 @@ import 'dart:async';
 
 import 'package:app/app/services/dose_retention_memory.dart';
 import 'package:app/app/services/weather/patient_weather.dart';
-import 'package:app/core/localization/calendar_texts.dart';
-import 'package:app/core/localization/care_voice.dart';
-import 'package:app/core/localization/greeting.dart';
 import 'package:app/core/localization/medication_format.dart';
 import 'package:app/core/localization/spoken_arabic.dart';
 import 'package:app/core/theme/app_semantic_colors.dart';
@@ -13,7 +10,6 @@ import 'package:app/core/theme/foundations/app_sizes.dart';
 import 'package:app/core/theme/foundations/app_spacing.dart';
 import 'package:app/core/utils/scroll_insets.dart';
 import 'package:app/core/widgets/feedback/attention_box.dart';
-import 'package:app/core/widgets/layout/large_title.dart';
 import 'package:app/core/widgets/patient_clock_scope.dart';
 import 'package:app/features/home/presentation/cubit/dose_retention_cubit.dart';
 import 'package:app/features/home/presentation/cubit/home_cubit.dart';
@@ -22,15 +18,13 @@ import 'package:app/features/home/presentation/widgets/home_add_sheet.dart';
 import 'package:app/features/home/presentation/widgets/record_header.dart';
 import 'package:app/features/home/presentation/widgets/selected_circle_builder.dart';
 import 'package:app/features/home/presentation/widgets/today_content.dart';
-import 'package:app/features/home/presentation/widgets/today_snapshot.dart';
+import 'package:app/features/home/presentation/widgets/today_header.dart';
 import 'package:app/features/home/presentation/widgets/weather_icon.dart';
 import 'package:app/features/home/presentation/widgets/weather_now.dart';
 import 'package:app/features/home/presentation/widgets/weather_sheet.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_plans_cubit.dart';
 import 'package:app/features/medications/domain/entities/dose_retention.dart';
 import 'package:app/features/medications/presentation/cubit/medications_cubit.dart';
-import 'package:app/features/prayer_times/domain/entities/prayer_day.dart';
-import 'package:app/features/prayer_times/presentation/cubit/prayer_times_cubit.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -213,37 +207,6 @@ class DoseRetentionNotice extends StatelessWidget {
       },
     ),
   );
-}
-
-/// «صباح الخير، ياسر» from Fajr, «مساء الخير، ياسر» from Dhuhr, with
-/// the patient's date under it and [weather] beside the date; the tab
-/// keeps «اليوم».
-class TodayHeader extends StatelessWidget {
-  const TodayHeader({super.key, required this.now, this.weather});
-
-  final DateTime now;
-  final Widget? weather;
-
-  @override
-  Widget build(BuildContext context) {
-    final PrayerDay? day = todayPrayerDay(
-      context.watch<PrayerTimesCubit>().state,
-      now,
-    );
-    final String weekday = context.tr('common.weekdays.${now.weekday}');
-    final String date = calendarDate(context, now, year: false);
-    return LargeTitle(
-      title: greeting(
-        context,
-        now,
-        CareVoice.viewerName,
-        fajr: day?.times[Prayer.fajr],
-        dhuhr: day?.times[Prayer.dhuhr],
-      ),
-      subtitle: '$weekday $date',
-      subtitleTrailing: weather,
-    );
-  }
 }
 
 /// What the warning before doses are deleted says, and its two answers.

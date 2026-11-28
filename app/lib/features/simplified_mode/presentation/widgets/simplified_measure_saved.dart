@@ -4,6 +4,7 @@ import 'package:app/app/router/routers.dart';
 import 'package:app/features/measurements/domain/entities/measurement_conditions.dart';
 import 'package:app/features/measurements/domain/entities/measurement_kind.dart';
 import 'package:app/features/measurements/domain/entities/normal_range.dart';
+import 'package:app/features/measurements/presentation/widgets/invalid_reading.dart';
 import 'package:app/features/simplified_mode/domain/entities/simplified_reading.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
@@ -26,8 +27,9 @@ Future<void> saveSimplifiedMeasure(
 ) async {
   final SimplifiedReading? reading = simplifiedMeasureReading(form);
   if (reading == null || !reading.isValid) {
-    // The detailed mode's message for numbers it would refuse.
-    form.errorKey = 'measurements.invalid_reading';
+    // The detailed mode's message for numbers it would refuse, about the
+    // kind being typed only.
+    form.errorKey = invalidReadingKey(form.kind ?? MeasurementKind.bp);
     onChanged();
     return;
   }

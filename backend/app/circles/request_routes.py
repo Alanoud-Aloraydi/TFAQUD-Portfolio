@@ -2,7 +2,8 @@
 
 The person who wants to care sends a request to the patient's phone
 number. The patient accepts or declines (consent). After an acceptance,
-the sender completes the request into a circle, or cancels it."""
+the patient gives the basic data, which completes the request into a
+circle; until then the sender or the patient can cancel it."""
 
 from flask import Blueprint
 
