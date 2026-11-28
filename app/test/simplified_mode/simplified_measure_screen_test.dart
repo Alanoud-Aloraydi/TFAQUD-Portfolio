@@ -1,3 +1,5 @@
+import 'dart:ui' show Size;
+
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/simplified_mode/domain/usecases/simplified_mode_use_case.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_measurement_cubit.dart';
@@ -56,6 +58,31 @@ void main() {
       await open(tester);
 
       expect(find.byIcon(CupertinoIcons.delete_left), findsOneWidget);
+    });
+
+    testWidgets('a blood pressure out of range says the blood pressure '
+        'ranges only, not the sugar', (tester) async {
+      await open(tester);
+      // A screen tall enough for the whole form: a finder does not see a
+      // card the list has scrolled away from.
+      tester.view.physicalSize = const Size(400, 2400);
+      await tester.pump();
+      Future<void> tap(Finder finder) async {
+        await tester.tap(finder);
+        await tester.pump();
+      }
+
+      for (final String digit in <String>['1', '2', '4']) {
+        await tap(find.text(digit));
+      }
+      await tap(find.text('simplified_mode.lower'.tr()));
+      for (final String digit in <String>['8', '0', '0']) {
+        await tap(find.text(digit));
+      }
+      await tap(find.text('simplified_mode.save_reading'.tr()));
+
+      expect(find.text('measurements.invalid_pressure'.tr()), findsOneWidget);
+      expect(find.text('measurements.invalid_glucose'.tr()), findsNothing);
     });
   });
 }

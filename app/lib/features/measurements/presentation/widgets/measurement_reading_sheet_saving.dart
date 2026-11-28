@@ -6,6 +6,7 @@ import 'package:app/features/measurements/domain/entities/measurement_plan_draft
 import 'package:app/features/measurements/domain/entities/measurement_reading.dart';
 import 'package:app/features/measurements/domain/entities/measurement_reading_draft.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/invalid_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ mixin MeasurementReadingSheetSaving on MeasurementReadingSheetScope {
         ? int.tryParse(diastolic.text)
         : null;
     if (one == null || !MeasurementLimits.reading(kind, one, two)) {
-      setState(() => errorKey = 'measurements.invalid_reading');
+      setState(() => errorKey = invalidReadingKey(kind));
       return;
     }
     // The time read is the patient's wall clock where they live, wherever

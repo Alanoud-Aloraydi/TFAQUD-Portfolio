@@ -6,6 +6,7 @@ import 'package:app/features/measurements/domain/entities/normal_range.dart';
 import 'package:app/features/measurements/domain/repositories/measurements_repository.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_ranges_cubit.dart';
 import 'package:app/features/measurements/presentation/cubit/measurement_readings_cubit.dart';
+import 'package:app/features/measurements/presentation/widgets/invalid_reading.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet_layout.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_reading_sheet_saving.dart';
 import 'package:app/features/measurements/presentation/widgets/measurement_skip_sheet.dart';
@@ -90,6 +91,8 @@ mixin MeasurementReadingSheetValues on MeasurementReadingSheetScope {
   /// Switches to [value], keeping only the conditions it offers.
   void changeKind(MeasurementKind value) => setState(() {
     kind = value;
+    // The numbers' message was about the other kind.
+    if (isInvalidReadingKey(errorKey)) errorKey = null;
     // Fasting is not for blood pressure.
     final offered = MeasurementConditions.offered(value);
     conditions = [
