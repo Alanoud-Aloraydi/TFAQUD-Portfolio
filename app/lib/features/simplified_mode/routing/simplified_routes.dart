@@ -20,6 +20,7 @@ import 'package:app/features/simplified_mode/presentation/cubit/simplified_measu
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_settings_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_account_screen.dart';
+import 'package:app/features/simplified_mode/presentation/pages/simplified_name_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_measure_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_medical_file_screen.dart';
 import 'package:app/features/simplified_mode/presentation/pages/simplified_reminder_screen.dart';
@@ -83,6 +84,15 @@ ShellRoute simplifiedShell() {
               ),
             ],
             child: const SimplifiedAccountScreen(),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.simplifiedAccountName,
+        pageBuilder: iosPage(
+          (context, state) => BlocProvider(
+            create: (context) => loadedAccountCubit(),
+            child: const SimplifiedNameScreen(),
           ),
         ),
       ),

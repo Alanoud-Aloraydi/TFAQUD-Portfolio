@@ -16,6 +16,7 @@ import 'package:app/features/circles/domain/entities/account_summary.dart';
 import 'package:app/features/simplified_mode/presentation/cubit/simplified_mode_cubit.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_city.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_legal.dart';
+import 'package:app/features/simplified_mode/presentation/widgets/simplified_account_name.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_calendar_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_notifications_card.dart';
 import 'package:app/features/simplified_mode/presentation/widgets/simplified_outlined_danger.dart';
@@ -27,9 +28,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// «حسابي»: the patient's name and number, their city, the text size and
-/// reading, the calendar copy of appointments, the medical file, signing
-/// out and deleting the account. Needs an [AccountCubit] and an [AuthCubit].
+/// «حسابي»: the patient's name and number, the names and the city to
+/// change, the text size and reading, the calendar copy of appointments,
+/// the medical file, signing out and deleting the account. Needs an
+/// [AccountCubit] and an [AuthCubit].
 class SimplifiedAccountScreen extends StatelessWidget {
   const SimplifiedAccountScreen({super.key});
 
@@ -104,10 +106,10 @@ Future<bool?> confirmSimplifiedDelete(BuildContext context) {
   );
 }
 
-/// Everything «حسابي» shows, in order: who the patient is, their city, the
-/// text size and هجري or ميلادي, whether the phone's notifications are allowed, the
-/// calendar copy, the medical file, the privacy policy and terms, signing
-/// out and deleting.
+/// Everything «حسابي» shows, in order: who the patient is, their names,
+/// their city, the text size and هجري or ميلادي, whether the phone's
+/// notifications are allowed, the calendar copy, the medical file, the
+/// privacy policy and terms, signing out and deleting.
 List<Widget> simplifiedAccountRows(
   BuildContext context,
   AccountState state,
@@ -117,6 +119,8 @@ List<Widget> simplifiedAccountRows(
   return <Widget>[
     if (account != null) ...<Widget>[
       simplifiedAccountHeader(context, account),
+      SimplifiedSectionTitle(context.tr('simplified_mode.name_title')),
+      SimplifiedAccountNameCard(account: account),
       SimplifiedSectionTitle(context.tr('simplified_mode.file.city')),
       SimplifiedAccountCityCard(account: account),
     ] else if (state.status == AccountStatus.loading)
